@@ -78,7 +78,7 @@ function Filters({
   state,
   dynamicFilters = true,
   overrideSearchWithCorrection,
-  isOpenFilter = false,
+  isOpenFilter = true,
   setOverrideSearchWithCorrection,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();

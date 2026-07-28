@@ -87,7 +87,7 @@ function FilterCategoryDynamic({
   haveSearch = true,
   showCount = false,
   selectedAsChips = false,
-  isOpenFilter = false,
+  isOpenFilter = true,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState<string>("");
   const debounced = useDebounce(text, 600);
@@ -1157,6 +1157,9 @@ function mapSuggestionToSearchToken(
       keywordKey: s?.entityType,
       values: [s?.entityValue ?? ""],
       filter: true,
+      // isFilter è il flag canonico usato da removeFilterToken e dal ripristino
+      // URL: senza, dopo un refresh il token non combacia e non si rimuove
+      isFilter: true,
       suggestionCategoryId: s?.suggestionCategoryId,
       count: (s?.count as string) ?? undefined,
       ...(forceGoToSuggestion ? { goToSuggestion: true } : {}),
@@ -1167,6 +1170,7 @@ function mapSuggestionToSearchToken(
     keywordKey: s?.keywordKey,
     values: [s?.value ?? ""],
     filter: true,
+    isFilter: true,
     suggestionCategoryId: s?.suggestionCategoryId,
     count: (s?.count as string) ?? undefined,
     ...(forceGoToSuggestion ? { goToSuggestion: true } : {}),

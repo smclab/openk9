@@ -98,109 +98,239 @@ const NO_ANSWER_PATTERN = /no information found in the knowledge base/i;
 // per combaciare con il pannello mockato tramite selettori annidati (scoped
 // dalla classe wrapper, quindi vincono per specificità senza `!important`).
 
-function RealFiltersPanel() {
-  return (
-    <div
-      className="openk9-mock-filters"
-      css={css`
-        ${panelStyle}
-        grid-area: filters;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-        @media (max-width: 1024px) {
-          display: none;
-        }
+function RealFiltersPanel({
+  mobileOpen,
+  onClose,
+}: {
+  mobileOpen: boolean;
+  onClose: () => void;
+}) {
+  const panelRef = React.useRef<HTMLDivElement | null>(null);
+  const restoreFocusRef = React.useRef<HTMLElement | null>(null);
 
-        /* --- ristilizzazione dei filtri reali per matchare il mock --- */
-        /* la search per-categoria si apre con animazione dalla lente */
-        .openk9-filter-category-container-search {
-          margin: 2px 0 12px;
-        }
-        .openk9-filter-category-container {
-          /* separatore delicato, sempre presente, sotto le suggestion */
-          border-bottom: 1px solid #eef0f2;
-          padding: 14px 0;
-          margin-bottom: 0;
-        }
-        .openk9-filter-category-title {
-          margin-left: 0;
-          padding: 0 0 8px;
-          /* separatore persistente tra nome categoria e ricerca */
-          border-bottom: 1px solid #eef0f2;
-        }
-        .openk9-filter-category-title strong,
-        .name-category-filter {
-          text-transform: uppercase;
-          font-size: 13px;
-          font-weight: 700;
-          letter-spacing: 0.3px;
-          color: ${MUTED};
-        }
-        /* pulsanti lente/chevron senza box, così non competono coi bordi */
-        .openk9-toggle-search-button,
-        .openk9-collapsable-filters,
-        .openk9-mobile-collapsable-filters {
-          border: none;
-          background: transparent;
-          padding: 4px;
-          color: ${MUTED};
-        }
-        /* la search filtri (riga a tutta larghezza) usa lo stile del componente */
-        .openk9-filter-form-check-container {
-          padding-left: 0;
-          gap: 10px;
-          margin-top: 12px;
-        }
-        .form-check {
-          align-items: center;
-        }
-        /* checkbox nativo con accent rosso, come nel mock (non il quadro custom) */
-        .form-check-input {
-          appearance: auto;
-          -webkit-appearance: auto;
-          accent-color: ${RED};
-          width: 16px;
-          height: 16px;
-          min-width: 16px;
-          min-height: 16px;
-          border: none;
-          border-radius: 0;
-          background-color: initial;
-          margin-right: 10px;
-          cursor: pointer;
-        }
-        .form-check-label {
-          font-weight: 400;
-          color: #1e1c21;
-          font-size: 14px;
-          line-height: 1.4;
-        }
-        .openk9-container-load-more {
-          justify-content: flex-start;
-          margin-left: 0;
-        }
-        .openk9-load-more-button {
-          color: ${RED};
-          font-weight: 600;
-        }
-      `}
-    >
+  // focus trap: attiva solo quando la modale è realmente presentata (≤1024px).
+  // porta il focus dentro, cicla il Tab, chiude con Escape e ripristina il
+  // focus al trigger in chiusura.
+  React.useEffect(() => {
+    if (!mobileOpen) return;
+    if (!window.matchMedia("(max-width: 1024px)").matches) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    restoreFocusRef.current = document.activeElement as HTMLElement | null;
+
+    const getFocusable = () =>
+      Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => el.offsetParent !== null);
+
+    getFocusable()[0]?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = getFocusable();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    panel.addEventListener("keydown", onKeyDown);
+    return () => {
+      panel.removeEventListener("keydown", onKeyDown);
+      restoreFocusRef.current?.focus?.();
+    };
+  }, [mobileOpen, onClose]);
+
+  return (
+    <>
+      {mobileOpen && (
+        <div
+          aria-hidden="true"
+          onClick={onClose}
+          css={css`
+            display: none;
+            @media (max-width: 1024px) {
+              display: block;
+              position: fixed;
+              inset: 0;
+              background: rgba(0, 0, 0, 0.35);
+              z-index: 1000;
+            }
+          `}
+        />
+      )}
       <div
+        ref={panelRef}
+        className="openk9-mock-filters"
+        role={mobileOpen ? "dialog" : undefined}
+        aria-modal={mobileOpen ? true : undefined}
+        aria-label="Filtri"
         css={css`
-          ${sectionHeaderRowStyle}
+          ${panelStyle}
+          grid-area: filters;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          overflow: auto;
+          /* su tablet/mobile diventa una modale a tutto schermo che sale dal basso */
+          @media (max-width: 1024px) {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            max-width: none;
+            height: 100%;
+            max-height: none;
+            margin: 0;
+            z-index: 1001;
+            border-radius: 0;
+            box-shadow: none;
+            transform: translateY(${mobileOpen ? "0" : "100%"});
+            transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+          }
+
+          /* --- ristilizzazione dei filtri reali per matchare il mock --- */
+          /* la search per-categoria si apre con animazione dalla lente */
+          .openk9-filter-category-container-search {
+            margin: 2px 0 12px;
+          }
+          .openk9-filter-category-container {
+            /* separatore delicato, sempre presente, sotto le suggestion */
+            border-bottom: 1px solid #eef0f2;
+            padding: 14px 0;
+            margin-bottom: 0;
+          }
+          .openk9-filter-category-title {
+            margin-left: 0;
+            padding: 0 0 8px;
+            /* separatore persistente tra nome categoria e ricerca */
+            border-bottom: 1px solid #eef0f2;
+          }
+          .openk9-filter-category-title strong,
+          .name-category-filter {
+            text-transform: uppercase;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            color: ${MUTED};
+          }
+          /* pulsanti lente/chevron senza box, così non competono coi bordi */
+          .openk9-toggle-search-button,
+          .openk9-collapsable-filters,
+          .openk9-mobile-collapsable-filters {
+            border: none;
+            background: transparent;
+            padding: 4px;
+            color: ${MUTED};
+          }
+          /* la search filtri (riga a tutta larghezza) usa lo stile del componente */
+          .openk9-filter-form-check-container {
+            padding-left: 0;
+            gap: 10px;
+            margin-top: 12px;
+          }
+          .form-check {
+            align-items: center;
+          }
+          /* checkbox nativo con accent rosso, come nel mock (non il quadro custom) */
+          .form-check-input {
+            appearance: auto;
+            -webkit-appearance: auto;
+            accent-color: ${RED};
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            min-height: 16px;
+            border: none;
+            border-radius: 0;
+            background-color: initial;
+            margin-right: 10px;
+            cursor: pointer;
+          }
+          .form-check-label {
+            font-weight: 400;
+            color: #1e1c21;
+            font-size: 14px;
+            line-height: 1.4;
+          }
+          .openk9-container-load-more {
+            justify-content: center;
+            margin-left: 0;
+          }
+          .openk9-load-more-button {
+            color: ${RED};
+            font-weight: 600;
+          }
         `}
       >
-        <span
+        <div
           css={css`
-            ${sectionTitleStyle}
+            ${sectionHeaderRowStyle}
           `}
         >
-          Filtri
-        </span>
+          <span
+            css={css`
+              ${sectionTitleStyle}
+            `}
+          >
+            Filtri
+          </span>
+          <button
+            type="button"
+            aria-label="Chiudi i filtri"
+            onClick={onClose}
+            css={css`
+              display: none;
+              @media (max-width: 1024px) {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+                border: none;
+                background: transparent;
+                color: ${MUTED};
+                cursor: pointer;
+                font-size: 22px;
+                line-height: 1;
+              }
+              &:hover {
+                color: ${RED};
+              }
+            `}
+          >
+            ×
+          </button>
+        </div>
+
         <div
           className="openk9-mock-filters-clear"
           css={css`
+            /* desktop: in alto a destra dentro l'header */
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            /* mobile: sotto il separatore, prima dei filtri, così non si
+             confonde con la × di chiusura in alto a destra */
+            @media (max-width: 1024px) {
+              position: static;
+              display: flex;
+              justify-content: flex-end;
+              padding: 12px 20px 0;
+            }
             /* il mock aveva solo il testo rosso, senza icona */
             svg,
             .fa,
@@ -230,29 +360,29 @@ function RealFiltersPanel() {
             })
           }
         />
-      </div>
 
-      <div
-        css={css`
-          flex: 1;
-          box-sizing: border-box;
-          overflow-x: hidden;
-          overflow-y: auto;
-          padding-block: 0 16px;
-          padding-inline: 8px;
-        `}
-        ref={(element) =>
-          openk9.updateConfiguration({
-            filtersConfigurable: {
-              element,
-              haveSearch: true,
-              showCount: true,
-              selectedAsChips: false,
-            },
-          })
-        }
-      />
-    </div>
+        <div
+          css={css`
+            flex: 1;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding-block: 0 16px;
+            padding-inline: 8px;
+          `}
+          ref={(element) =>
+            openk9.updateConfiguration({
+              filtersConfigurable: {
+                element,
+                haveSearch: true,
+                showCount: true,
+                selectedAsChips: false,
+              },
+            })
+          }
+        />
+      </div>
+    </>
   );
 }
 
@@ -282,7 +412,26 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
             ${sectionTitleStyle}
           `}
         >
-          <span aria-hidden="true">📖</span> Fonti utilizzate
+          <span
+            aria-hidden="true"
+            css={css`
+              display: inline-flex;
+              color: ${RED};
+            `}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path
+                fill="currentColor"
+                opacity="0.5"
+                d="M11 4H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h5V4z"
+              />
+              <path
+                fill="currentColor"
+                d="M13 4h5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-5V4z"
+              />
+            </svg>
+          </span>{" "}
+          Fonti utilizzate
         </span>
         <p
           css={css`
@@ -305,13 +454,163 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
         {sources.length === 0 && (
           <div
             css={css`
-              color: ${MUTED};
-              font-size: 13px;
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              gap: 18px;
               padding: 24px 16px;
               text-align: center;
             `}
           >
-            Le fonti compaiono quando K9 IA genera una risposta.
+            <svg
+              aria-hidden="true"
+              width="150"
+              height="120"
+              viewBox="0 0 150 120"
+              fill="none"
+              css={css`
+                color: ${RED};
+              `}
+            >
+              {/* documenti */}
+              <rect
+                x="52"
+                y="16"
+                width="54"
+                height="72"
+                rx="8"
+                fill="#eef0f2"
+              />
+              <rect
+                x="38"
+                y="24"
+                width="54"
+                height="72"
+                rx="8"
+                fill="#ffffff"
+                stroke="#e5e7eb"
+                strokeWidth="2"
+              />
+              <rect x="46" y="36" width="30" height="4" rx="2" fill="#e5e7eb" />
+              <rect x="46" y="46" width="38" height="4" rx="2" fill="#e5e7eb" />
+              <rect x="46" y="56" width="22" height="4" rx="2" fill="#e5e7eb" />
+              {/* mini bar chart */}
+              <rect
+                x="46"
+                y="80"
+                width="5"
+                height="8"
+                rx="1"
+                fill="currentColor"
+                opacity="0.55"
+              />
+              <rect
+                x="54"
+                y="74"
+                width="5"
+                height="14"
+                rx="1"
+                fill="currentColor"
+                opacity="0.55"
+              />
+              <rect
+                x="62"
+                y="70"
+                width="5"
+                height="18"
+                rx="1"
+                fill="currentColor"
+                opacity="0.55"
+              />
+              {/* lente */}
+              <circle
+                cx="98"
+                cy="74"
+                r="16"
+                fill="#ffffff"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <line
+                x1="110"
+                y1="86"
+                x2="122"
+                y2="98"
+                stroke="currentColor"
+                strokeWidth="4"
+                strokeLinecap="round"
+              />
+              {/* sparkle */}
+              <path
+                d="M120 30 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 z"
+                fill="currentColor"
+                opacity="0.4"
+              />
+            </svg>
+            <p
+              css={css`
+                margin: 0;
+                max-width: 240px;
+                color: ${MUTED};
+                font-size: 13px;
+                line-height: 1.5;
+              `}
+            >
+              Le fonti compaiono quando K9 IA genera una risposta.
+            </p>
+            <div
+              css={css`
+                display: flex;
+                gap: 10px;
+                text-align: left;
+                background: color-mix(in srgb, ${RED} 7%, #fff);
+                border: 1px solid color-mix(in srgb, ${RED} 18%, #fff);
+                border-radius: 12px;
+                padding: 12px 14px;
+              `}
+            >
+              <span
+                aria-hidden="true"
+                css={css`
+                  flex-shrink: 0;
+                  color: ${RED};
+                  margin-top: 1px;
+                `}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4.5a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8zM13.3 18h-2.6v-7h2.6z" />
+                </svg>
+              </span>
+              <div>
+                <div
+                  css={css`
+                    font-weight: 700;
+                    font-size: 13px;
+                    color: ${RED};
+                    margin-bottom: 2px;
+                  `}
+                >
+                  Suggerimento
+                </div>
+                <div
+                  css={css`
+                    font-size: 12.5px;
+                    line-height: 1.45;
+                    color: ${MUTED};
+                  `}
+                >
+                  Più dettagli fornisci nella tua domanda, più precise e
+                  rilevanti saranno le risposte e le fonti mostrate.
+                </div>
+              </div>
+            </div>
           </div>
         )}
         {sources.map((source, index) => {
@@ -454,6 +753,11 @@ export function App() {
 
 function AppInner() {
   const [view, setView] = React.useState<"results" | "ai">("results");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false);
+  const closeMobileFilters = React.useCallback(
+    () => setMobileFiltersOpen(false),
+    [],
+  );
 
   return (
     <>
@@ -505,7 +809,12 @@ function AppInner() {
               align-items: center;
               font-size: 20px;
               color: #1e1c21;
-              flex-shrink: 0;
+              /* allinea alla colonna filtri (300) − gap (20) così la search
+                 parte esattamente sopra la colonna risultati */
+              flex: ${view === "ai" ? "1 1 auto" : "0 0 280px"};
+              @media (max-width: 1024px) {
+                flex: 0 0 auto;
+              }
             `}
           >
             <span
@@ -540,25 +849,91 @@ function AppInner() {
             css={css`
               display: flex;
               align-items: center;
+              justify-content: flex-end;
               gap: 10px;
-              flex-shrink: 0;
-              /* i pulsanti restano a destra anche quando la search è nascosta */
-              margin-left: auto;
+              /* stessa larghezza della colonna preview (380) − gap (20),
+                 così i controlli sono allineati alla colonna di destra */
+              flex: 0 0 360px;
+              @media (max-width: 1024px) {
+                flex: 1 1 100%;
+                margin-left: 0;
+              }
             `}
           >
+            {view === "results" && (
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(true)}
+                aria-label="Apri i filtri"
+                css={css`
+                  /* solo icona, visibile quando la colonna filtri è nascosta;
+                     spinta a sinistra, opposta a lingua/login */
+                  display: none;
+                  @media (max-width: 1024px) {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex: 0 0 auto;
+                    margin-right: auto;
+                    width: 42px;
+                    height: 40px;
+                    border: 1px solid color-mix(in srgb, ${RED} 22%, ${BORDER});
+                    border-radius: 10px;
+                    background: color-mix(in srgb, ${RED} 8%, #fff);
+                    color: ${RED};
+                    cursor: pointer;
+                  }
+                  &:hover {
+                    background: color-mix(in srgb, ${RED} 15%, #fff);
+                    border-color: ${RED};
+                    color: ${RED};
+                  }
+                `}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" />
+                </svg>
+              </button>
+            )}
             <div
               ref={(element) =>
                 openk9.updateConfiguration({ changeLanguage: element })
               }
             />
             <div
+              css={css`
+                /* login come CTA primaria: pill pieno rosso, testo/icona bianchi */
+                .openk9-create-label-container-wrapper {
+                  height: 40px;
+                  border-radius: 10px;
+                  background: ${RED};
+                  border: 1px solid ${RED};
+                  color: #fff;
+                }
+                .openk9-create-label-container-wrapper span {
+                  color: #fff;
+                }
+                .openk9-create-label-container-wrapper svg path {
+                  fill: #fff;
+                }
+              `}
               ref={(element) => openk9.updateConfiguration({ login: element })}
             />
           </div>
         </div>
 
         {/* ---- Colonna sinistra: Filtri reali — nascosti in vista K9 IA ---- */}
-        {view === "results" && <RealFiltersPanel />}
+        {view === "results" && (
+          <RealFiltersPanel
+            mobileOpen={mobileFiltersOpen}
+            onClose={closeMobileFilters}
+          />
+        )}
 
         {/* ---- Colonne centrale + destra: gestite dal componente ad hoc ---- */}
         <K9Copilot view={view} setView={setView} />
@@ -589,7 +964,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
   const [pending, setPending] = React.useState<string | null>(null);
   // azioni K9 IA generate dinamicamente dal contesto cercato
   const [actions, setActions] = React.useState<Array<string>>([]);
-  const [actionsLoading, setActionsLoading] = React.useState(false);
+  // NB: il setter è rimosso finché la generazione delle CTA è disabilitata
+  // (vedi effect commentato più sotto). Ripristinare `, setActionsLoading`
+  // quando l'endpoint backend sarà disponibile.
+  const [actionsLoading] = React.useState(false);
   const lastQueryRef = React.useRef<string | null>(null);
   const threadRef = React.useRef<HTMLDivElement | null>(null);
   const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
@@ -658,27 +1036,31 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
   }, [isChatting]);
 
   // ...e vengono rigenerate ad ogni interazione, appena la risposta è completa,
-  // sul contesto dell'ultima domanda posta
-  React.useEffect(() => {
-    const last = messages[messages.length - 1];
-    if (!last || last.status !== "END" || !last.answer) return;
-    let cancelled = false;
-    setActionsLoading(true);
-    openk9.client
-      .getRefinedSearches({ searchText: last.question, language })
-      .then((result) => {
-        if (!cancelled) setActions(result);
-      })
-      .catch(() => {
-        if (!cancelled) setActions([]);
-      })
-      .finally(() => {
-        if (!cancelled) setActionsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [messages, language]);
+  // sul contesto dell'ultima domanda posta.
+  //
+  // TEMPORANEAMENTE DISABILITATO: la generazione delle CTA/azioni contestuali
+  // è commentata in attesa dell'endpoint backend dedicato. Riattivare questo
+  // effect (e la relativa UI) quando l'endpoint sarà disponibile.
+  // React.useEffect(() => {
+  //   const last = messages[messages.length - 1];
+  //   if (!last || last.status !== "END" || !last.answer) return;
+  //   let cancelled = false;
+  //   setActionsLoading(true);
+  //   openk9.client
+  //     .getRefinedSearches({ searchText: last.question, language })
+  //     .then((result) => {
+  //       if (!cancelled) setActions(result);
+  //     })
+  //     .catch(() => {
+  //       if (!cancelled) setActions([]);
+  //     })
+  //     .finally(() => {
+  //       if (!cancelled) setActionsLoading(false);
+  //     });
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [messages, language]);
 
   // autoscroll del thread
   React.useEffect(() => {
@@ -700,6 +1082,88 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
     send({ question: value, searchText: value, language });
   };
 
+  // avvia la conversazione da una delle card suggerite nell'empty-state
+  const askPrompt = (text: string) => {
+    if (isChatting) return;
+    send({ question: text, searchText: text, language });
+  };
+
+  // prompt di partenza mostrati nell'empty-state (demo: testo IT hardcoded).
+  // ogni card ha un'icona SVG, un accento della famiglia rossa e un piccolo
+  // offset verticale, così la disposizione risulta armoniosa e non a griglia.
+  const starterPrompts: {
+    icon: React.ReactNode;
+    accent: string;
+    text: string;
+  }[] = [
+    {
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+          <g fill="currentColor">
+            <rect x="4" y="11" width="3.5" height="8" rx="1" />
+            <rect x="10.25" y="7" width="3.5" height="12" rx="1" />
+            <rect x="16.5" y="4" width="3.5" height="15" rx="1" />
+          </g>
+        </svg>
+      ),
+      accent: RED,
+      text: "Quali sono i trend principali emersi dai risultati?",
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+          <path
+            fill="currentColor"
+            d="M12 2a7 7 0 0 0-4 12.74V16a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1.26A7 7 0 0 0 12 2z"
+          />
+          <rect x="9" y="19" width="6" height="2" rx="1" fill="currentColor" />
+        </svg>
+      ),
+      accent: "#e2555a",
+      text: "Quali sono le implicazioni di questi dati?",
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+          <path
+            fill="currentColor"
+            opacity="0.5"
+            d="M11 4H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h5V4z"
+          />
+          <path
+            fill="currentColor"
+            d="M13 4h5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-5V4z"
+          />
+        </svg>
+      ),
+      accent: "#b3261e",
+      text: "Mostrami le fonti più rilevanti sull'argomento.",
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+          <circle
+            cx="12"
+            cy="12"
+            r="8"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <circle
+            cx="12"
+            cy="12"
+            r="4"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+        </svg>
+      ),
+      accent: "#d1434e",
+      text: "Cosa posso approfondire ulteriormente?",
+    },
+  ];
+
   return (
     <>
       {/* ---- Colonna centrale: risultati oppure conversazione K9 IA ---- */}
@@ -711,6 +1175,9 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
           flex-direction: column;
           overflow: hidden;
           min-height: 0;
+          /* impedisce che il contenuto della chat allarghi la colonna
+             (overflow orizzontale su mobile) */
+          min-width: 0;
         `}
       >
         {view === "results" ? (
@@ -866,7 +1333,27 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   ${sectionTitleStyle}
                 `}
               >
-                <span aria-hidden="true">✨</span> {t("copilot-toggle")}
+                <span
+                  aria-hidden="true"
+                  css={css`
+                    display: inline-flex;
+                    color: ${RED};
+                  `}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M12 2l1.7 5.3a4 4 0 0 0 2.5 2.5L21.5 11.5l-5.3 1.7a4 4 0 0 0-2.5 2.5L12 21l-1.7-5.3a4 4 0 0 0-2.5-2.5L2.5 11.5l5.3-1.7a4 4 0 0 0 2.5-2.5L12 2z" />
+                    <path
+                      d="M19 2.5l.6 1.9 1.9.6-1.9.6-.6 1.9-.6-1.9-1.9-.6 1.9-.6z"
+                      opacity="0.6"
+                    />
+                  </svg>
+                </span>{" "}
+                {t("copilot-toggle")}
               </span>
               <span
                 css={css`
@@ -926,62 +1413,283 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
               css={css`
                 flex: 1;
                 overflow-y: auto;
+                overflow-x: hidden;
                 padding: 16px 20px;
                 display: flex;
                 flex-direction: column;
                 gap: 16px;
                 min-height: 0;
+                min-width: 0;
               `}
             >
               {messages.length === 0 && (
                 <div
                   css={css`
+                    position: relative;
                     margin: auto;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    text-align: center;
-                    gap: 16px;
-                    padding: 24px;
-                    max-width: 640px;
+                    width: 100%;
+                    max-width: 760px;
+                    padding: 28px 20px;
+                    @media (max-width: 620px) {
+                      padding: 0px;
+                    }
                   `}
                 >
                   <div
-                    aria-hidden="true"
                     css={css`
-                      width: 72px;
-                      height: 72px;
-                      border-radius: 50%;
-                      background: #fdeaea;
-                      color: ${RED};
                       display: flex;
+                      flex-direction: column;
                       align-items: center;
-                      justify-content: center;
-                      font-size: 30px;
+                      text-align: center;
+                      gap: 20px;
                     `}
                   >
-                    💬
-                  </div>
-                  <div>
-                    <h3
+                    {/* illustrazione: bolla chat con alone e sparkle */}
+                    <div
+                      aria-hidden="true"
                       css={css`
-                        margin: 0;
-                        font-size: 18px;
-                        color: #1e1c21;
+                        position: relative;
+                        width: 150px;
+                        height: 120px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: ${RED};
+                        &::before {
+                          content: "";
+                          position: absolute;
+                          width: 118px;
+                          height: 118px;
+                          border-radius: 50%;
+                          background: radial-gradient(
+                            circle,
+                            color-mix(in srgb, ${RED} 14%, transparent) 0%,
+                            transparent 68%
+                          );
+                        }
                       `}
                     >
-                      Fai una domanda sui risultati
-                    </h3>
-                    <p
+                      <svg
+                        width="150"
+                        height="120"
+                        viewBox="0 0 150 120"
+                        fill="none"
+                        css={css`
+                          position: relative;
+                        `}
+                      >
+                        <defs>
+                          <linearGradient
+                            id="k9-bubble-grad"
+                            x1="0"
+                            y1="0"
+                            x2="1"
+                            y2="1"
+                          >
+                            <stop offset="0" stopColor="#ef6b6f" />
+                            <stop offset="1" stopColor="#c0272b" />
+                          </linearGradient>
+                        </defs>
+                        <rect
+                          x="34"
+                          y="24"
+                          width="34"
+                          height="26"
+                          rx="10"
+                          fill="currentColor"
+                          opacity="0.18"
+                        />
+                        <rect
+                          x="46"
+                          y="34"
+                          width="74"
+                          height="52"
+                          rx="16"
+                          fill="url(#k9-bubble-grad)"
+                        />
+                        <path
+                          d="M64 82 L64 98 L82 82 Z"
+                          fill="url(#k9-bubble-grad)"
+                        />
+                        <circle cx="70" cy="60" r="4" fill="#fff" />
+                        <circle cx="83" cy="60" r="4" fill="#fff" />
+                        <circle cx="96" cy="60" r="4" fill="#fff" />
+                        <path
+                          d="M126 40 l2.5 6 6 2.5 -6 2.5 -2.5 6 -2.5 -6 -6 -2.5 6 -2.5 z"
+                          fill="currentColor"
+                          opacity="0.55"
+                        />
+                        <path
+                          d="M34 66 l1.8 4.4 4.4 1.8 -4.4 1.8 -1.8 4.4 -1.8 -4.4 -4.4 -1.8 4.4 -1.8 z"
+                          fill="currentColor"
+                          opacity="0.4"
+                        />
+                        <circle
+                          cx="122"
+                          cy="74"
+                          r="3"
+                          fill="currentColor"
+                          opacity="0.35"
+                        />
+                        <circle
+                          cx="30"
+                          cy="42"
+                          r="2.4"
+                          fill="currentColor"
+                          opacity="0.3"
+                        />
+                        <circle
+                          cx="112"
+                          cy="26"
+                          r="2.2"
+                          fill="currentColor"
+                          opacity="0.3"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3
+                        css={css`
+                          margin: 0;
+                          font-size: 26px;
+                          font-weight: 800;
+                          letter-spacing: -0.02em;
+                          color: #1e1c21;
+                        `}
+                      >
+                        Ciao! Sono{" "}
+                        <span
+                          css={css`
+                            color: ${RED};
+                          `}
+                        >
+                          K9 IA
+                        </span>
+                      </h3>
+                      <p
+                        css={css`
+                          margin: 8px auto 0;
+                          max-width: 460px;
+                          font-size: 14px;
+                          line-height: 1.5;
+                          color: ${MUTED};
+                        `}
+                      >
+                        Chiedi ciò che ti serve: analizzo i risultati e ti
+                        fornisco risposte chiare e basate sulle fonti.
+                      </p>
+                    </div>
+
+                    <div
                       css={css`
-                        margin: 6px 0 0;
-                        font-size: 14px;
-                        color: ${MUTED};
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        align-items: start;
+                        gap: 14px;
+                        width: 100%;
+                        max-width: 640px;
+                        @media (max-width: 620px) {
+                          grid-template-columns: 1fr;
+                        }
                       `}
                     >
-                      K9 IA analizza i risultati trovati e ti fornisce risposte
-                      chiare e basate sulle fonti.
-                    </p>
+                      {[
+                        [starterPrompts[0], starterPrompts[2]],
+                        [starterPrompts[1], starterPrompts[3]],
+                      ].map((column, columnIndex) => (
+                        <React.Fragment key={columnIndex}>
+                          <div
+                            css={css`
+                              display: flex;
+                              flex-direction: column;
+                              gap: 14px;
+                            `}
+                          >
+                            {column.map((prompt) => (
+                              <button
+                                key={prompt.text}
+                                type="button"
+                                onClick={() => askPrompt(prompt.text)}
+                                disabled={isChatting}
+                                css={css`
+                                  display: flex;
+                                  align-items: center;
+                                  gap: 12px;
+                                  width: 100%;
+                                  text-align: left;
+                                  background: #fff;
+                                  border: 1px solid ${BORDER};
+                                  border-radius: 16px;
+                                  padding: 12px 14px;
+                                  cursor: pointer;
+                                  box-shadow: 0 2px 10px -6px rgba(0, 0, 0, 0.15);
+                                  transition: transform 140ms ease,
+                                    border-color 140ms ease,
+                                    box-shadow 140ms ease;
+                                  &:hover:not(:disabled) {
+                                    transform: translateY(-2px);
+                                    border-color: color-mix(
+                                      in srgb,
+                                      ${prompt.accent} 45%,
+                                      ${BORDER}
+                                    );
+                                    box-shadow: 0 12px 26px -12px color-mix(in
+                                          srgb, ${prompt.accent} 55%, transparent);
+                                  }
+                                  &:disabled {
+                                    opacity: 0.5;
+                                    cursor: default;
+                                  }
+                                `}
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  css={css`
+                                    flex-shrink: 0;
+                                    width: 40px;
+                                    height: 40px;
+                                    border-radius: 12px;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: ${prompt.accent};
+                                    background: color-mix(
+                                      in srgb,
+                                      ${prompt.accent} 14%,
+                                      #fff
+                                    );
+                                  `}
+                                >
+                                  {prompt.icon}
+                                </span>
+                                <span
+                                  css={css`
+                                    flex: 1;
+                                    min-width: 0;
+                                    font-size: 13px;
+                                    font-weight: 600;
+                                    line-height: 1.35;
+                                    color: #1e1c21;
+                                  `}
+                                >
+                                  {prompt.text}
+                                </span>
+                                <span
+                                  aria-hidden="true"
+                                  css={css`
+                                    flex-shrink: 0;
+                                    color: ${prompt.accent};
+                                    font-size: 16px;
+                                  `}
+                                >
+                                  ›
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </React.Fragment>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1003,6 +1711,8 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                       padding: 8px 12px;
                       max-width: 85%;
                       line-height: 1.4;
+                      overflow-wrap: anywhere;
+                      word-break: break-word;
                     `}
                   >
                     {message.question}
@@ -1016,6 +1726,8 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                       padding: 10px 14px;
                       max-width: 90%;
                       line-height: 1.5;
+                      overflow-wrap: anywhere;
+                      word-break: break-word;
                       p {
                         margin: 0 0 8px;
                       }
@@ -1024,6 +1736,20 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                       }
                       a {
                         color: ${RED};
+                        overflow-wrap: anywhere;
+                      }
+                      pre {
+                        max-width: 100%;
+                        overflow-x: auto;
+                      }
+                      img {
+                        max-width: 100%;
+                        height: auto;
+                      }
+                      table {
+                        display: block;
+                        max-width: 100%;
+                        overflow-x: auto;
                       }
                     `}
                   >
@@ -1109,17 +1835,21 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   gap: 8px;
                   padding: 8px 8px 8px 14px;
                   border: 1px solid ${BORDER};
-                  border-radius: 14px;
+                  border-radius: 16px;
                   background: #fff;
+                  box-shadow: 0 8px 24px -12px color-mix(in srgb, ${RED} 35%, transparent);
                   transition: border-color 120ms ease, box-shadow 120ms ease;
                   &:focus-within {
                     border-color: ${RED};
-                    box-shadow: 0 0 0 3px rgba(192, 39, 43, 0.12);
+                    box-shadow: 0 0 0 3px
+                      color-mix(in srgb, ${RED} 15%, transparent);
                   }
                 `}
               >
                 <textarea
                   ref={inputRef}
+                  id="openk9-copilot-question"
+                  name="openk9-copilot-question"
                   rows={1}
                   value={input}
                   aria-label={t("copilot-input-placeholder") ?? ""}
@@ -1160,21 +1890,28 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   title={t("copilot-send") ?? ""}
                   css={css`
                     flex-shrink: 0;
-                    width: 36px;
-                    height: 36px;
+                    width: 38px;
+                    height: 38px;
                     border: none;
                     border-radius: 50%;
                     background: ${RED};
                     color: #fff;
                     cursor: pointer;
-                    font-size: 15px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
                     &:disabled {
                       opacity: 0.4;
                       cursor: default;
                     }
                   `}
                 >
-                  ➤
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path
+                      fill="#fff"
+                      d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.4.92V9.5c0 .5.37.92.87.98L12 12l-8.13 1.52a1 1 0 0 0-.87.98v4.98a1 1 0 0 0 1.4.92z"
+                    />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -1187,7 +1924,24 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 color: ${MUTED};
               `}
             >
-              🔒 Le risposte di K9 IA possono contenere imprecisioni. Verifica
+              <span
+                aria-hidden="true"
+                css={css`
+                  display: inline-flex;
+                  vertical-align: -2px;
+                  margin-right: 4px;
+                `}
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z" />
+                </svg>
+              </span>
+              Le risposte di K9 IA possono contenere imprecisioni. Verifica
               sempre le informazioni importanti.
             </div>
           </>
