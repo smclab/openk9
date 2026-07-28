@@ -29,7 +29,10 @@ This module provides:
     - `IBM Watsonx`
     - `Google Vertex AI`
     - `Hugging Face`
-    
+    - `AWS Bedrock`
+
+- Multimodal indexing — text and images embedded into the same vector space via the `EmbedContent` streaming RPC
+
 - gRPC interface used internally by OpenK9 services
 
 - Health checks and reflection for easier integration
@@ -97,6 +100,11 @@ To run the embedding model in local you have to:
     ```
 
 ## API Reference
+
+The service exposes two RPCs: `GetMessages` (v1, text-only) and
+`EmbedContent` (v2, server-streaming — text and/or media in one vector space).
+
+### GetMessages (v1)
 
 #### Request: EmbeddingRequest
 
@@ -179,6 +187,89 @@ with grpc.insecure_channel("localhost:5000") as channel:
 - Each chunk is embedded using the configured embedding model
 
 - Embeddings are returned in order with metadata
+
+### EmbedContent (v2)
+
+Indexes text and/or binaries into the same vector space and streams one
+`EmbeddedChunk` per piece. `text` and `refs` are combinable.
+
+#### Request: EmbedContentRequest
+
+| Field            | Type                | Description                                                          |
+| ---------------- | ------------------- | ------------------------------------------------------------------- |
+| `tenantId`       | `string`            | Tenant that owns the request (used in the structured logs)          |
+| `chunk`          | `RequestChunk`      | Text chunking configuration (see Configuration)                     |
+| `embeddingModel` | `EmbeddingModel`    | Provider/model settings; `multimodal=true` enables image embedding  |
+| `vectorDataType` | `VectorDataType`    | Output encoding: `FLOAT32` (0), `BYTE` (1), `BINARY` (2)            |
+| `text`           | `string` (optional) | Inline text to embed                                                |
+| `refs`           | `MediaRef` repeated | Binaries to fetch and embed                                         |
+
+At least one of `text` / `refs` must be set, otherwise the RPC fails with
+`INVALID_ARGUMENT`.
+
+`MediaRef` fields: `url` (short-lived pre-signed GET URL — the module only does
+a plain GET, no storage credentials), `fileId` (copied onto every chunk derived
+from it), `contentType` (drives the modality; the HTTP `Content-Type` is used as
+a fallback when absent).
+
+#### Response: stream of EmbeddedChunk
+
+| Field                | Type                | Description                                          |
+| -------------------- | ------------------- | ---------------------------------------------------- |
+| `number`             | `int32`             | 1-based, progressive over the whole stream           |
+| `total`              | `int32` (optional)  | Total chunk count; set only for a text-only request  |
+| `text`               | `string`            | Chunk text (empty for image chunks)                  |
+| `fileId`             | `string` (optional) | Source binary; absent for inline-text chunks         |
+| `vectorDataType`     | `VectorDataType`    | Same as requested                                    |
+| `dimension`          | `int32`             | Vector dimension                                     |
+| `f32` / `i8` / `bits`| `oneof vector`      | The vector, encoded according to `vectorDataType`    |
+
+**Behavior**
+- Text is chunked and embedded first, then each ref in list order; `number` is
+  progressive over the whole stream.
+
+- Vectors are L2-normalized, then quantized according to `vectorDataType`.
+
+- A ref whose modality has no handler (audio/video/unknown) or that the model
+  cannot embed (image on a text-only model, undecodable binary, provider limits)
+  is skipped: no chunk for that `fileId`, a structured log line, the stream
+  continues with the other refs.
+
+- An error while embedding the inline `text` is fail-fast: the RPC ends with the
+  gRPC `INTERNAL` status (same as `GetMessages`).
+
+- Image embedding requires a multimodal model (`embeddingModel.multimodal=true`)
+  on a provider with a multimodal embedder (AWS Bedrock, Google Vertex AI); other
+  models keep the text-only path and skip image refs.
+
+#### Client Example
+
+See `app/client_multimodal.py` for a runnable smoke client (text + image/audio
+refs, Vertex or Bedrock selected via `MM_PROVIDER`). Minimal call:
+
+```python
+request = embedding_pb2.EmbedContentRequest(
+    tenantId="mew",
+    chunk=embedding_pb2.RequestChunk(type=1, jsonConfig=chunk_json_config),
+    embeddingModel=embedding_pb2.EmbeddingModel(
+        multimodal=True,
+        providerModel=embedding_pb2.ProviderModel(
+            provider="chat_vertex_ai", model="multimodalembedding@001"
+        ),
+        jsonConfig=model_json_config,
+    ),
+    vectorDataType=embedding_pb2.VECTOR_DATA_TYPE_FLOAT32,
+    text="OpenK9 is an open source search platform.",
+    refs=[
+        embedding_pb2.MediaRef(
+            url="https://.../signed-get-url", fileId="img-1", contentType="image/jpeg"
+        )
+    ],
+)
+
+for chunk in stub.EmbedContent(request):
+    print(chunk.number, chunk.fileId or "-", chunk.dimension)
+```
 
 ## Configuration
 **ChunkType**:
