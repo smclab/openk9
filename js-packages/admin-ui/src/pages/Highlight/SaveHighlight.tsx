@@ -253,14 +253,18 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   return (
     <ContainerFluid>
       <>
-        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
             nameEntity="Highlight"
             description="Create or edit a Highlight to configure how search results are highlighted. Choose a highlighter type and associate the document type fields to highlight."
             id={highlightId}
           />
           {view === "view" && (
-            <Button variant="contained" onClick={() => navigate(`/highlight/${highlightId}`)}>
+            <Button
+              variant="contained"
+              onClick={() => navigate(`/highlight/${highlightId}`)}
+              sx={{ height: "fit-content" }}
+            >
               Edit
             </Button>
           )}
