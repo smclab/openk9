@@ -540,10 +540,19 @@ public class IndexMappingService {
 
 	/**
 	 * Create or update a component template that defines an embedding mapping.
+	 * <p>
+	 * The {@code vectorDataType} carried by the component template drives the
+	 * {@code knn_vector} field mapping: its {@code data_type}, {@code engine}
+	 * and {@code space_type}. Quantized types ({@code BYTE}, {@code BINARY})
+	 * also get {@code index.knn.algo_param.ef_search} raised to
+	 * {@link EmbeddingComponentTemplate#EF_SEARCH_QUANTIZED}, while
+	 * {@code FLOAT32} leaves both the method and {@code ef_search} to the
+	 * OpenSearch defaults.
 	 *
 	 * @param session
 	 * @param embeddingComponentTemplate The object containing the name of the component
-	 *                                   template and the dimension of the {@code knnVector}.
+	 *                                   template, the dimension of the {@code knnVector}
+	 *                                   and the {@code vectorDataType} of the vector.
 	 *                                   Must not be {@code null}.
 	 * @return A {@link Uni<Void>} representing the asynchronous operation. If the operation
 	 * succeeds, the result is empty. If the operation fails, the failure is
