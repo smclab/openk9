@@ -147,6 +147,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	private static final String HIGHLIGHT_FRAGMENTER_SIMPLE = "simple";
 	private static final String HIGHLIGHT_FRAGMENTER_SPAN = "span";
 	private static final Logger log = Logger.getLogger(SearcherService.class);
+	private static final Integer DEFAULT_MAX_SEARCH_PAGE_FROM = 10000;
+	private static final Integer DEFAULT_MAX_SEARCH_PAGE_SIZE = 200;
 
 	@Inject
 	BucketService bucketService;
@@ -165,36 +167,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	DefaultJWTParser jwtParser;
 	@Inject
 	LargeLanguageModelService largeLanguageModelService;
-
-	/**
-	 * This value is only used if the associated {@link SearchConfig} entity
-	 * with {@link Bucket} does not have a configured value (is {@code null}). Otherwise, the value
-	 * from SearchConfig takes priority.
-	 *
-	 * @deprecated Configure the value directly in the {@link SearchConfig} entity.
-	 *             This property is maintained only as a fallback.
-	 */
-	@Deprecated
-	@ConfigProperty(
-		name = "openk9.datasource.searcher-service.max-search-page-from",
-		defaultValue = "10000"
-	)
-	Integer defaultMaxSearchPageFrom;
-
-	/**
-	 * This value is only used if the associated {@link SearchConfig} entity
-	 * with {@link Bucket} does not have a configured value (is {@code null}). Otherwise, the value
-	 * from SearchConfig takes priority.
-	 *
-	 * @deprecated Configure the value directly in the {@link SearchConfig} entity.
-	 *             This property is maintained only as a fallback.
-	 */
-	@Deprecated
-	@ConfigProperty(
-		name = "openk9.datasource.searcher-service.max-search-page-size",
-		defaultValue = "200"
-	)
-	Integer defaultMaxSearchPageSize;
 
     @ConfigProperty(
             name = "openk9.datasource.query-analysis.search-text-length",
@@ -1584,11 +1556,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		var maxSearchPageFrom = (bucket.getSearchConfig() != null && bucket.getSearchConfig().getMaxSearchPageFrom() != null)
 			? bucket.getSearchConfig().getMaxSearchPageFrom()
-			: defaultMaxSearchPageFrom;
+			: DEFAULT_MAX_SEARCH_PAGE_FROM;
 
 		var maxSearchPageSize = (bucket.getSearchConfig() != null && bucket.getSearchConfig().getMaxSearchPageSize() != null)
 			? bucket.getSearchConfig().getMaxSearchPageSize()
-			: defaultMaxSearchPageSize;
+			: DEFAULT_MAX_SEARCH_PAGE_SIZE;
 
 		if (request.getRangeCount() == 2) {
 			searchSourceBuilder.from(Math.min(

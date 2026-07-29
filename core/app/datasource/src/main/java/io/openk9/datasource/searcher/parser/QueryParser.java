@@ -25,6 +25,9 @@ import io.smallrye.mutiny.Uni;
 
 public interface QueryParser extends Function<ParserContext, Uni<Void>> {
 
+	// use 0 or a negative value to disable maximum text query length enforcement
+	Integer DEFAULT_MAX_TEXT_QUERY_LENGTH = 0;
+
 	QueryParserType getType();
 
 	default boolean isQueryParserGroup() {

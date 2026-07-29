@@ -17,8 +17,6 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.SearchConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -30,7 +28,6 @@ import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 
 import io.smallrye.mutiny.Uni;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.opensearch.client.opensearch._types.query_dsl.HybridQuery;
 import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
 import org.opensearch.search.builder.SearchSourceBuilder;
@@ -44,22 +41,6 @@ public class HybridQueryParser implements QueryParser {
 
 	@Inject
 	EmbeddingService embeddingService;
-
-	/**
-	 * This value is only used if the associated {@link SearchConfig} entity
-	 * with {@link Bucket} does not have a configured value (is {@code null}). Otherwise, the value
-	 * from SearchConfig takes priority.
-	 *
-	 * @deprecated Configure the value directly in the {@link SearchConfig} entity.
-	 *             This property is maintained only as a fallback.
-	 */
-	@Deprecated
-	@ConfigProperty(
-		// use 0 or a negative value to disable maximum text query length enforcement
-		name = "openk9.datasource.query-parser.max-text-query-length",
-		defaultValue = "0"
-	)
-	Integer defaultMaxTextQueryLength;
 
 	@Override
 	public Uni<Void> apply(ParserContext parserContext) {
@@ -91,7 +72,7 @@ public class HybridQueryParser implements QueryParser {
 		var maxTextQueryLength =
 			(searchConfig != null) && (searchConfig.getMaxTextQueryLength() != null)
 			? searchConfig.getMaxTextQueryLength()
-			: defaultMaxTextQueryLength;
+			: DEFAULT_MAX_TEXT_QUERY_LENGTH;
 
 		if (values.hasNext()) {
 			var value = values.next();

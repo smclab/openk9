@@ -23,7 +23,6 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryParserType;
-import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.util.Fuzziness;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
@@ -35,7 +34,6 @@ import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
 import jakarta.inject.Named;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.MultiMatchQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
@@ -59,22 +57,6 @@ public class TextQueryParser implements QueryParser {
 	public static final String TIE_BREAKER = "tieBreaker";
 	public static final String ALLOW_PHRASE_MATCH_TYPE = "allowPhraseMatchType";
 
-	/**
-	 * This value is only used if the associated {@link SearchConfig} entity
-	 * with {@link Bucket} does not have a configured value (is {@code null}). Otherwise, the value
-	 * from SearchConfig takes priority.
-	 *
-	 * @deprecated Configure the value directly in the {@link SearchConfig} entity.
-	 *             This property is maintained only as a fallback.
-	 */
-	@Deprecated
-	@ConfigProperty(
-		// use 0 or a negative value to disable maximum text query length enforcement
-		name = "openk9.datasource.query-parser.max-text-query-length",
-		defaultValue = "0"
-	)
-	Integer defaultMaxTextQueryLength;
-
 	@Override
 	public QueryParserType getType() {
 		return QueryParserType.TEXT;
@@ -88,7 +70,7 @@ public class TextQueryParser implements QueryParser {
 		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 		var maxTextQueryLength = (bucket.getSearchConfig() != null && bucket.getSearchConfig().getMaxTextQueryLength() != null)
 			? bucket.getSearchConfig().getMaxTextQueryLength()
-			: defaultMaxTextQueryLength;
+			: DEFAULT_MAX_TEXT_QUERY_LENGTH;
 
 		Set<Datasource> datasources = bucket.getDatasources();
 
