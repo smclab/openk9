@@ -184,14 +184,14 @@ def initialize_embedding_model(configuration):
         An instance of an embedding model corresponding to the specified model type.
 
     """
-    api_key = configuration.get("api_key")
     api_url = configuration.get("api_url")
     model_type = configuration.get("model_type", DEFAULT_MODEL_TYPE)
     model = configuration.get("model", DEFAULT_MODEL)
 
+    _apply_credentials(configuration)
+
     match model_type:
         case ModelType.OPENAI.value:
-            os.environ["OPENAI_API_KEY"] = api_key
             if api_url:
                 embeddings = OpenAIEmbeddings(model=model, base_url=api_url)
             else:
@@ -199,7 +199,6 @@ def initialize_embedding_model(configuration):
         case ModelType.OLLAMA.value:
             embeddings = OllamaEmbeddings(model=model, base_url=api_url)
         case ModelType.IBM_WATSONX.value:
-            os.environ["WATSONX_APIKEY"] = api_key
             watsonx_project_id = configuration.get("watsonx_project_id")
             embed_params = {
                 EmbedTextParamsMetaNames.TRUNCATE_INPUT_TOKENS: 3,
@@ -216,7 +215,6 @@ def initialize_embedding_model(configuration):
                 "chat_vertex_ai_model_garden"
             )
             google_credentials = chat_vertex_ai_model_garden.get("credentials")
-            save_google_application_credentials(google_credentials)
             project_id = google_credentials.get("quota_project_id")
             model = configuration.get("model")
 
@@ -228,7 +226,6 @@ def initialize_embedding_model(configuration):
                 model,
             )
         case ModelType.AWS_BEDROCK.value:
-            os.environ["AWS_BEARER_TOKEN_BEDROCK"] = api_key
             aws_bedrock = configuration["aws_bedrock"]
             region_name = aws_bedrock["region_name"]
 
@@ -245,18 +242,30 @@ def initialize_embedding_model(configuration):
     return embeddings
 
 
-def _apply_multimodal_credentials(configuration):
-    """Sets provider credentials for the direct multimodal clients, the
-    same way initialize_embedding_model does for the text-only path."""
-    provider = configuration.get("model_type")
+def _apply_credentials(configuration):
+    """Sets provider credentials (env vars, or the ADC file for Vertex).
 
-    if provider == ModelType.AWS_BEDROCK.value and configuration.get("api_key"):
-        os.environ["AWS_BEARER_TOKEN_BEDROCK"] = configuration["api_key"]
-    elif provider == ModelType.CHAT_VERTEX_AI.value:
-        model_garden = configuration.get("chat_vertex_ai_model_garden") or {}
-        credentials = model_garden.get("credentials")
-        if credentials:
-            save_google_application_credentials(credentials)
+    Shared by the text-only langchain path (initialize_embedding_model)
+    and the direct multimodal clients (build_pipelines,
+    build_query_capabilities), so the credential wiring lives in one place.
+    """
+    provider = configuration.get("model_type", DEFAULT_MODEL_TYPE)
+    api_key = configuration.get("api_key")
+
+    match provider:
+        case ModelType.OPENAI.value:
+            os.environ["OPENAI_API_KEY"] = api_key
+        case ModelType.IBM_WATSONX.value:
+            os.environ["WATSONX_APIKEY"] = api_key
+        case ModelType.AWS_BEDROCK.value:
+            # optional: without a token the standard AWS credential chain is used
+            if api_key:
+                os.environ["AWS_BEARER_TOKEN_BEDROCK"] = api_key
+        case ModelType.CHAT_VERTEX_AI.value:
+            model_garden = configuration.get("chat_vertex_ai_model_garden") or {}
+            credentials = model_garden.get("credentials")
+            if credentials:
+                save_google_application_credentials(credentials)
 
 
 def build_pipelines(configuration, chunker, is_query=False):
@@ -267,7 +276,7 @@ def build_pipelines(configuration, chunker, is_query=False):
     text-only path and cannot embed images (they are skipped).
     """
     if configuration.get("multimodal"):
-        _apply_multimodal_credentials(configuration)
+        _apply_credentials(configuration)
         embedder = build_multimodal_embedder(configuration)
         input_type = "search_query" if is_query else "search_document"
 
@@ -327,7 +336,7 @@ def build_query_capabilities(configuration):
     query text only.
     """
     if configuration.get("multimodal"):
-        _apply_multimodal_credentials(configuration)
+        _apply_credentials(configuration)
         embedder = build_multimodal_embedder(configuration)
 
         return query.QueryCapabilities(
