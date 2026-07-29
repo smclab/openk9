@@ -87,6 +87,7 @@ public class EmbeddingModelDTO extends K9EntityDTO {
 	)
 	private EmbeddingModel.VectorDataType vectorDataType;
 
+	@Nullable
 	@Description(
 		"""
 			Marks the model as multimodal: routes image references to the
@@ -95,6 +96,6 @@ public class EmbeddingModelDTO extends K9EntityDTO {
 			Independent from the provider.
 			"""
 	)
-	private boolean multimodal;
+	private Boolean multimodal = false;
 
 }
