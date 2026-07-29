@@ -77,3 +77,30 @@ class BedrockMultimodalEmbedder:
         )
 
         return vectors[0]
+
+    def embed_mixed(self, text, data, content_type, input_type="search_query"):
+        """Embeds text and an image together as one query, returning a
+        single fused vector. Cohere Embed v4 takes both in one input via a
+        content array and the model produces one vector for the pair (no
+        module-side fusion). The exact wire shape is validated by the
+        query smoke test.
+        """
+        data_uri = (
+            f"data:{content_type};base64,{base64.b64encode(data).decode('ascii')}"
+        )
+        vectors = self._invoke(
+            {
+                "inputs": [
+                    {
+                        "content": [
+                            {"type": "text", "text": text},
+                            {"type": "image_url", "image_url": {"url": data_uri}},
+                        ]
+                    }
+                ],
+                "input_type": input_type,
+                "embedding_types": ["float"],
+            }
+        )
+
+        return vectors[0]
