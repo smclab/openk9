@@ -88,7 +88,7 @@ def test_ref_encoding_error_is_skipped_not_fatal(make_stub):
     # the image embedder returns a dimension that binary quantization cannot
     # pack (not a multiple of 8): building that chunk raises, and the ref must
     # be skipped like any other ref error, not break the whole stream.
-    def pipelines_with_bad_image(configuration, chunker, is_query=False):
+    def pipelines_with_bad_image(configuration, chunker):
         return Pipelines(
             embed_texts=lambda texts: [[3.0, 0, 0, 0, 4.0, 0, 0, 0] for _ in texts],
             chunk=lambda text: text.split(),

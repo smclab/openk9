@@ -44,7 +44,7 @@ STORAGE = {
 }
 
 
-def fake_build_pipelines(configuration, chunker, is_query=False):
+def fake_build_pipelines(configuration, chunker):
     return Pipelines(
         embed_texts=lambda texts: [TEXT_VECTOR for _ in texts],
         # split on whitespace: survives clean_text, unlike punctuation

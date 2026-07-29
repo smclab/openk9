@@ -23,7 +23,7 @@ from app.external_services.grpc.embedding import embedding_pb2
 
 
 def _capturing_pipelines(seen):
-    def build_pipelines(configuration, chunker, is_query=False):
+    def build_pipelines(configuration, chunker):
         seen["multimodal"] = configuration["multimodal"]
         return Pipelines(
             embed_texts=lambda texts: [[1.0, 0, 0, 0, 0, 0, 0, 0] for _ in texts],

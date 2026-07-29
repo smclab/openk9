@@ -29,7 +29,7 @@ def _raise(texts):
     raise RuntimeError("embedding backend down")
 
 
-def _failing_pipelines(configuration, chunker, is_query=False):
+def _failing_pipelines(configuration, chunker):
     return Pipelines(
         embed_texts=_raise,
         chunk=lambda text: text.split(),

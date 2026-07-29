@@ -268,20 +268,22 @@ def _apply_credentials(configuration):
                 save_google_application_credentials(credentials)
 
 
-def build_pipelines(configuration, chunker, is_query=False):
+def build_pipelines(configuration, chunker):
     """Builds the injected capabilities (router.Pipelines) for a request.
 
     A model with multimodal=True embeds text and images through the same
     model (one vector space); every other model keeps the langchain
     text-only path and cannot embed images (they are skipped).
+
+    Indexing always uses the "search_document" input_type; query-time
+    ("search_query") goes through build_query_capabilities instead.
     """
     if configuration.get("multimodal"):
         _apply_credentials(configuration)
         embedder = build_multimodal_embedder(configuration)
-        input_type = "search_query" if is_query else "search_document"
 
         return Pipelines(
-            embed_texts=lambda texts: embedder.embed_texts(texts, input_type),
+            embed_texts=lambda texts: embedder.embed_texts(texts, "search_document"),
             chunk=lambda text: chunking.chunk_text(chunker, text),
             fetch=fetch_url,
             embed_image=embedder.embed_image,
