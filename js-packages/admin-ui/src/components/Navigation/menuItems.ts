@@ -110,6 +110,7 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  { label: "Admin Settings", path: "/admin-settings", IsChildren: false, value: "admin-settings" },
 ];
 
 export const useFilteredMenuItems = (searchTerm: string) => {

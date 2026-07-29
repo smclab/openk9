@@ -78,9 +78,11 @@ export type NamePath =
   | "query-analysis-group"
   | "rag-configuration"
   | "rag-configurations"
-  | "connectors";
+  | "connectors"
+  | "admin-settings";
 
 export const namePath: { label: NamePath; value: NamePath }[] = [
+  { label: "admin-settings", value: "admin-settings" },
   { label: "admin", value: "admin" },
   { label: "dashboard", value: "dashboard" },
   { label: "bucket", value: "buckets" },

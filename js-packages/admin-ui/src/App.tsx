@@ -38,6 +38,7 @@ import {
 } from "@mui/material";
 import { red } from "@mui/material/colors";
 import {
+  AdminSettings,
   Analyzers,
   Annotators,
   CharFilters,
@@ -101,6 +102,7 @@ import { Logo } from "./components/common/Logo";
 import { NavigationFooter } from "./components/Navigation/NavigationFooter";
 import { queryClient } from "./components/queryClient";
 import ThemeSwitcher from "./utils/ThemeSwitcher";
+import { ThemeModeContextProvider, useThemeModeState } from "./utils/themeMode";
 
 export const themeColor = {
   light: {
@@ -510,6 +512,8 @@ const AppRoutes = ({ setExtraFab }: AppRoutesProps) => (
     <Route path="/rag-configurations" element={<RagConfigurations />} />
     <Route path="/rag-configuration/:ragConfigId" element={<SaveRagConfiguration setExtraFab={setExtraFab} />} />
     <Route path="/rag-configuration/:ragConfigId/:view" element={<SaveRagConfiguration setExtraFab={setExtraFab} />} />
+
+    <Route path="/admin-settings" element={<AdminSettings />} />
   </Routes>
 );
 
@@ -521,17 +525,11 @@ export const scrollToTop = () => {
 };
 
 export default function App() {
-  const savedTheme = localStorage.getItem("isDarkMode");
-  const [isDarkMode, setIsDarkMode] = React.useState(savedTheme === "true");
+  const themeMode = useThemeModeState();
+  const { isDarkMode, toggleTheme } = themeMode;
   const memoizedTheme = useMemo(() => (isDarkMode ? darkTheme : lightTheme), [isDarkMode]);
   const [extraFab, setExtraFab] = useState<React.ReactNode | null>(null);
   const recapAnchorRef = React.useRef<HTMLElement | null>(null);
-
-  const toggleTheme = () => {
-    const newTheme = !isDarkMode;
-    setIsDarkMode(newTheme);
-    localStorage.setItem("isDarkMode", newTheme.toString());
-  };
 
   const borderColor = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)";
 
@@ -557,6 +555,7 @@ export default function App() {
   const filteredMenuItems = useFilteredMenuItems(searchTerm);
 
   return (
+    <ThemeModeContextProvider value={themeMode}>
     <ThemeProvider theme={memoizedTheme}>
       <CssBaseline />
       <AuthenticationProvider>
@@ -770,5 +769,6 @@ export default function App() {
       </QueryClientProvider>
       </AuthenticationProvider>
     </ThemeProvider>
+    </ThemeModeContextProvider>
   );
 }
