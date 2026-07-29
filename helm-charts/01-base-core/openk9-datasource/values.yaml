@@ -107,10 +107,6 @@ datasource:
     enricherValidationRegexes: ".*"
 
 ## QueryParser configuration
-queryParser:
-  maxTextQueryLength: 0
-
-## QueryParser configuration
 queryAnalysis:
   searchTextLength: 30
 
@@ -216,12 +212,6 @@ minio:
   keyUserEnvName: "QUARKUS_MINIO_ACCESS_KEY"
   keyPasswordSecret: "password"
   keyPasswordEnvName: "QUARKUS_MINIO_SECRET_KEY"
-
-## Search Page Configuration
-search:
-  page:
-    from: 10000
-    size: 200
 
 ## Opentelemetry configuration
 otel:

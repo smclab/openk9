@@ -95,10 +95,7 @@ Openk9 Datasource service handles query parser and query construction. Following
 
 | Name                             | Description                                                                                 | Value |
 |----------------------------------|---------------------------------------------------------------------------------------------|-------|
-| `queryParser.maxTextQueryLength` | Enforce a maximum text query length (disabled if set to 0 or a negative value)              | `0` |
 | `queryAnalysis.searchTextLength` | Enforce a maximum search text for query analysis (disabled if set to 0 or a negative value) | `0` |
-| `search.page.from` | Enforce a maximum value for search from pagination parameter              | `10000` |
-| `search.page.size` | Enforce a maximum value for search size pagination parameter | `200` |
 
 ### Datasource specific configurations
 
