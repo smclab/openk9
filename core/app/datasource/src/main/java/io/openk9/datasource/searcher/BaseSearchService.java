@@ -55,7 +55,9 @@ import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.searcher.client.dto.InvalidQueryMediaException;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.openk9.searcher.client.dto.QueryMediaValidator;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryParserRequest;
 
@@ -263,13 +265,39 @@ public abstract class BaseSearchService {
 			.map(voids -> boolQueryBuilder);
 	}
 
+	/**
+	 * Maps the tokens of a gRPC request to their internal representation and
+	 * groups them by parser type.
+	 *
+	 * <p>This is where the inline query media is validated, because this service
+	 * is the only door every caller goes through: the searcher validates before
+	 * calling, but the RAG modules invoke this gRPC service directly and would
+	 * otherwise let an oversized or non-image media reach the embedding service.
+	 *
+	 * @param request the gRPC request carrying the search tokens
+	 * @return the tokens grouped by the parser type that will consume them
+	 * @throws StatusRuntimeException with {@link Status#INVALID_ARGUMENT} if a
+	 * token carries an unacceptable media
+	 */
 	protected Map<QueryParserType, List<ParserSearchToken>> createTokenGroup(
 		QueryParserRequest request) {
 
-		return request
+		var tokens = request
 			.getSearchQueryList()
 			.stream()
 			.map(searcherMapper::toParserSearchToken)
+			.toList();
+
+		try {
+			QueryMediaValidator.validate(tokens);
+		}
+		catch (InvalidQueryMediaException e) {
+			throw new StatusRuntimeException(
+				Status.INVALID_ARGUMENT.withDescription(e.getMessage()));
+		}
+
+		return tokens
+			.stream()
 			.collect(Collectors.groupingBy(token ->
 				QueryParserType.valueOf(token.getTokenType())));
 

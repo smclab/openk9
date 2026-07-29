@@ -49,7 +49,9 @@ import jakarta.ws.rs.core.MediaType;
 import io.openk9.common.util.web.InternalHeaders;
 import io.openk9.searcher.client.ExtraParamKeys;
 import io.openk9.searcher.client.dto.AutocompleteRequestDTO;
+import io.openk9.searcher.client.dto.InvalidQueryMediaException;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.openk9.searcher.client.dto.QueryMediaValidator;
 import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.AutocompleteConfigurationsRequest;
@@ -141,9 +143,6 @@ public class SearchResource {
 
 	protected static final String SUGGESTIONS = "suggestions";
 	private static final String AUTOCORRECTION_SUGGESTION = "autocorrection_suggestion";
-	private static final String KNN_TOKEN_TYPE = "KNN";
-	private static final String IMAGE_CONTENT_TYPE_PREFIX = "image/";
-	private static final long MEDIA_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 	private static final String DETAILS_FIELD = "details";
 	private static final String BEARER_PREFIX = "Bearer ";
 	private static final int NONE_STATUS_CODE = 0;
@@ -1740,64 +1739,23 @@ public class SearchResource {
 
 	/**
 	 * Validates the optional inline {@code media} carried by search tokens,
-	 * failing fast with an HTTP 400 on any violation instead of silently
-	 * dropping the media downstream.
+	 * failing fast with an HTTP 400 on any violation instead of paying a gRPC
+	 * round-trip to be told the same thing.
 	 *
-	 * <p>{@code media} is only accepted on KNN tokens, must declare
-	 * an {@code image/*} content type, and must not exceed the maximum
-	 * size.
+	 * <p>The rules live in {@link QueryMediaValidator}, in the module shared
+	 * with the datasource: this method only maps the violation to the HTTP
+	 * error. The datasource validates as well, because the RAG modules reach
+	 * the {@code QueryParser} gRPC service without passing through here.
 	 *
 	 * @param tokens the search tokens to validate; {@code null} is a no-op
 	 * @throws WebApplicationException with status 400 on any violation
 	 */
 	static void validateMediaTokens(List<ParserSearchToken> tokens) {
-		validateMediaTokens(tokens, MEDIA_MAX_SIZE_BYTES);
-	}
-
-	static void validateMediaTokens(
-		List<ParserSearchToken> tokens, long maxSizeBytes) {
-
-		if (tokens == null) {
-			return;
+		try {
+			QueryMediaValidator.validate(tokens);
 		}
-
-		for (ParserSearchToken token : tokens) {
-
-			var media = token.getMedia();
-
-			if (media == null) {
-				continue;
-			}
-
-			if (!KNN_TOKEN_TYPE.equals(token.getTokenType())) {
-				throw badRequestMedia(
-					"media is only supported on KNN tokens, got tokenType="
-						+ token.getTokenType());
-			}
-
-			var contentType = media.getContentType();
-
-			if (contentType == null || !contentType
-				.toLowerCase(Locale.ROOT)
-				.startsWith(IMAGE_CONTENT_TYPE_PREFIX)) {
-
-				throw badRequestMedia(
-					"media.contentType must be image/*, got "
-					+ contentType);
-			}
-
-			var data = media.getData();
-
-			if (data == null || data.length == 0) {
-				throw badRequestMedia("media.data must not be empty");
-			}
-
-			if (maxSizeBytes > 0 && data.length > maxSizeBytes) {
-				throw badRequestMedia(
-					"media exceeds the maximum allowed size of "
-						+ maxSizeBytes
-						+ " bytes");
-			}
+		catch (InvalidQueryMediaException e) {
+			throw badRequestMedia(e.getMessage());
 		}
 	}
 

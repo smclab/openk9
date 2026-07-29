@@ -20,6 +20,7 @@ package io.openk9.searcher.resource;
 import java.util.List;
 
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.openk9.searcher.client.dto.QueryMediaValidator;
 
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.WebApplicationException;
@@ -28,7 +29,6 @@ import org.junit.jupiter.api.Test;
 
 class SearchResourceMediaValidationTest {
 
-	private static final long MAX_SIZE = 1024;
 	private static final byte[] IMAGE_BYTES = {1, 2, 3};
 
 	@Test
@@ -43,8 +43,7 @@ class SearchResourceMediaValidationTest {
 		// 2. validation fails with HTTP 400 naming the violation
 		assertBadRequest(
 			List.of(token),
-			"media is only supported on KNN tokens, got tokenType=TEXT",
-			MAX_SIZE);
+			"media is only supported on KNN tokens, got tokenType=TEXT");
 	}
 
 	@Test
@@ -59,8 +58,7 @@ class SearchResourceMediaValidationTest {
 		// 2. validation fails with HTTP 400 naming the violation
 		assertBadRequest(
 			List.of(token),
-			"media.contentType must be image/*, got application/pdf",
-			MAX_SIZE);
+			"media.contentType must be image/*, got application/pdf");
 	}
 
 	@Test
@@ -73,25 +71,26 @@ class SearchResourceMediaValidationTest {
 			.build();
 
 		// 2. validation fails with HTTP 400 naming the violation
-		assertBadRequest(
-			List.of(token), "media.data must not be empty", MAX_SIZE);
+		assertBadRequest(List.of(token), "media.data must not be empty");
 	}
 
 	@Test
 	void should_reject_media_above_the_size_limit() {
 
-		// 1. a KNN token whose media exceeds the limit
-		var oversized = new byte[] {1, 2, 3, 4, 5};
+		// 1. a KNN token whose media exceeds the published limit by one byte
+		var oversized =
+			new byte[(int) QueryMediaValidator.MEDIA_MAX_SIZE_BYTES + 1];
 		var token = ParserSearchToken.builder()
 			.tokenType("KNN")
 			.media(new ParserSearchToken.Media(oversized, "image/png"))
 			.build();
 
-		// 2. validation fails with HTTP 400 against a tiny limit
+		// 2. validation fails with HTTP 400 naming the limit
 		assertBadRequest(
 			List.of(token),
-			"media exceeds the maximum allowed size of 2 bytes",
-			2);
+			"media exceeds the maximum allowed size of "
+				+ QueryMediaValidator.MEDIA_MAX_SIZE_BYTES
+				+ " bytes");
 	}
 
 	@Test
@@ -106,7 +105,7 @@ class SearchResourceMediaValidationTest {
 
 		// 2. validation passes
 		Assertions.assertDoesNotThrow(
-			() -> SearchResource.validateMediaTokens(List.of(token), MAX_SIZE));
+			() -> SearchResource.validateMediaTokens(List.of(token)));
 	}
 
 	@Test
@@ -120,9 +119,9 @@ class SearchResourceMediaValidationTest {
 
 		// 2. neither triggers validation
 		Assertions.assertDoesNotThrow(
-			() -> SearchResource.validateMediaTokens(List.of(token), MAX_SIZE));
+			() -> SearchResource.validateMediaTokens(List.of(token)));
 		Assertions.assertDoesNotThrow(
-			() -> SearchResource.validateMediaTokens(null, MAX_SIZE));
+			() -> SearchResource.validateMediaTokens(null));
 	}
 
 	/**
@@ -130,11 +129,11 @@ class SearchResourceMediaValidationTest {
 	 * caller in the response body, not just the exception.
 	 */
 	private void assertBadRequest(
-		List<ParserSearchToken> tokens, String expectedDetails, long maxSize) {
+		List<ParserSearchToken> tokens, String expectedDetails) {
 
 		var exception = Assertions.assertThrows(
 			WebApplicationException.class,
-			() -> SearchResource.validateMediaTokens(tokens, maxSize));
+			() -> SearchResource.validateMediaTokens(tokens));
 
 		var response = exception.getResponse();
 

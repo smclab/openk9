@@ -62,9 +62,14 @@ import io.openk9.searcher.grpc.AutocompleteConfigurationsRequest;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
 import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
+import io.openk9.searcher.client.dto.QueryMediaValidator;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
+import io.openk9.searcher.grpc.Media;
+import io.openk9.searcher.grpc.QueryParserRequest;
+import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Searcher;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Struct;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -699,6 +704,154 @@ public class SearcherGrpcTest {
 
 				Assertions.assertEquals(
 					Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
+			});
+	}
+
+	// The RAG modules call queryParser directly, without passing through the
+	// searcher REST resource: the media rules must hold on this door too.
+
+	@Test
+	@RunOnVertxContext
+	void should_fail_query_parser_with_media_on_a_non_knn_token(
+		UniAsserter asserter) {
+
+		// 1. a TEXT token carrying an inline media
+		var token = SearchTokenRequest.newBuilder()
+			.setTokenType("TEXT")
+			.setMedia(Media.newBuilder()
+				.setData(ByteString.copyFrom(new byte[] {1, 2, 3}))
+				.setContentType("image/png")
+				.build())
+			.build();
+
+		// 2. the request is rejected before any bucket is resolved
+		asserter.assertFailedWith(
+			() -> searcher.queryParser(
+				QueryParserRequest.newBuilder()
+					.setTenantId(SCHEMA_NAME)
+					.addSearchQuery(token)
+					.build()
+			),
+			throwable -> {
+				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
+
+				var exception = (StatusRuntimeException) throwable;
+
+				Assertions.assertEquals(
+					Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
+
+				Assertions.assertEquals(
+					"media is only supported on KNN tokens, got tokenType=TEXT",
+					exception.getStatus().getDescription());
+			});
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_fail_query_parser_with_a_non_image_media(UniAsserter asserter) {
+
+		// 1. a KNN token whose media is not an image
+		var token = SearchTokenRequest.newBuilder()
+			.setTokenType("KNN")
+			.setMedia(Media.newBuilder()
+				.setData(ByteString.copyFrom(new byte[] {1, 2, 3}))
+				.setContentType("application/pdf")
+				.build())
+			.build();
+
+		// 2. the request is rejected with the reason in the status description
+		asserter.assertFailedWith(
+			() -> searcher.queryParser(
+				QueryParserRequest.newBuilder()
+					.setTenantId(SCHEMA_NAME)
+					.addSearchQuery(token)
+					.build()
+			),
+			throwable -> {
+				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
+
+				var exception = (StatusRuntimeException) throwable;
+
+				Assertions.assertEquals(
+					Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
+
+				Assertions.assertEquals(
+					"media.contentType must be image/*, got application/pdf",
+					exception.getStatus().getDescription());
+			});
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_fail_query_parser_with_empty_media_data(UniAsserter asserter) {
+
+		// 1. a KNN token whose media carries no bytes
+		var token = SearchTokenRequest.newBuilder()
+			.setTokenType("KNN")
+			.setMedia(Media.newBuilder()
+				.setContentType("image/png")
+				.build())
+			.build();
+
+		// 2. the request is rejected with the reason in the status description
+		asserter.assertFailedWith(
+			() -> searcher.queryParser(
+				QueryParserRequest.newBuilder()
+					.setTenantId(SCHEMA_NAME)
+					.addSearchQuery(token)
+					.build()
+			),
+			throwable -> {
+				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
+
+				var exception = (StatusRuntimeException) throwable;
+
+				Assertions.assertEquals(
+					Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
+
+				Assertions.assertEquals(
+					"media.data must not be empty",
+					exception.getStatus().getDescription());
+			});
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_fail_query_parser_with_media_above_the_size_limit(
+		UniAsserter asserter) {
+
+		// 1. a KNN token exceeding the published limit by one byte
+		var oversized =
+			new byte[(int) QueryMediaValidator.MEDIA_MAX_SIZE_BYTES + 1];
+		var token = SearchTokenRequest.newBuilder()
+			.setTokenType("KNN")
+			.setMedia(Media.newBuilder()
+				.setData(ByteString.copyFrom(oversized))
+				.setContentType("image/png")
+				.build())
+			.build();
+
+		// 2. the request is rejected naming the limit
+		asserter.assertFailedWith(
+			() -> searcher.queryParser(
+				QueryParserRequest.newBuilder()
+					.setTenantId(SCHEMA_NAME)
+					.addSearchQuery(token)
+					.build()
+			),
+			throwable -> {
+				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
+
+				var exception = (StatusRuntimeException) throwable;
+
+				Assertions.assertEquals(
+					Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
+
+				Assertions.assertEquals(
+					"media exceeds the maximum allowed size of "
+						+ QueryMediaValidator.MEDIA_MAX_SIZE_BYTES
+						+ " bytes",
+					exception.getStatus().getDescription());
 			});
 	}
 
