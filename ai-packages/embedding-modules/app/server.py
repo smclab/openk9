@@ -411,16 +411,6 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = []
             chunks = []
 
-            # info_chunk = {
-            #     "text": text,
-            #     "chunk_type": chunk_type,
-            #     "provider": model_type,
-            #     "model": model,
-            #     "chunk_config": chunk_json_config,
-            # }
-
-            # logger.info(info_chunk)
-
             signature = {
                 name: hint
                 for name, hint in get_type_hints(
