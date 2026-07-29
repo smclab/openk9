@@ -48,6 +48,7 @@
   },
   "scripts": {
     "start": "vite",
+    "start:k9-local": "vite --mode k9-local",
     "build": "tsc && vite build",
     "test": "vitest",
     "fetch-schemas": "node ../scripts/fetch-schemas.js app/datasource",
