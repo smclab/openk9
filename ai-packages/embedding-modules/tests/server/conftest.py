@@ -26,6 +26,7 @@ import grpc
 import pytest
 
 from app import server as server_module
+from app.embedding.query import QueryCapabilities
 from app.embedding.router import Pipelines
 from app.external_services.grpc.embedding import embedding_pb2_grpc
 
@@ -33,6 +34,8 @@ DIM = 8
 # norm 5 -> normalizes to [0.6, 0, 0, 0, 0.8, 0, 0, 0]
 TEXT_VECTOR = [3.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0]
 IMAGE_VECTOR = [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+# distinct from text/image, so a mixed query is recognizable in the result
+MIXED_VECTOR = [0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 3.0, 0.0]
 
 STORAGE = {
     "https://signed/img-1": (b"png-1", "image/png"),
@@ -51,15 +54,33 @@ def fake_build_pipelines(configuration, chunker, is_query=False):
     )
 
 
+def fake_build_query_capabilities(configuration):
+    """A fully-capable multimodal model: text, image and native mixed."""
+    return QueryCapabilities(
+        embed_text=lambda text: TEXT_VECTOR,
+        embed_image=lambda data, content_type: IMAGE_VECTOR,
+        embed_mixed=lambda text, data, content_type: MIXED_VECTOR,
+    )
+
+
 @pytest.fixture
 def make_stub(monkeypatch):
-    """Starts an in-process Embedding server and returns a stub. Accepts a
-    build_pipelines override (e.g. one whose embedder raises)."""
+    """Starts an in-process Embedding server and returns a stub. Accepts
+    build_pipelines / build_query_capabilities overrides (e.g. a text-only
+    model, or an embedder that raises)."""
     channels = []
     servers = []
 
-    def _make(build_pipelines=fake_build_pipelines):
+    def _make(
+        build_pipelines=fake_build_pipelines,
+        build_query_capabilities=fake_build_query_capabilities,
+    ):
         monkeypatch.setattr(server_module, "build_pipelines", build_pipelines)
+        monkeypatch.setattr(
+            server_module,
+            "build_query_capabilities",
+            build_query_capabilities,
+        )
         monkeypatch.setattr(
             server_module.chunking, "build_chunker", lambda chunk_type, config: None
         )

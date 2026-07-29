@@ -48,7 +48,7 @@ from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
-from app.embedding import chunking, router
+from app.embedding import chunking, query, router
 from app.embedding.fetch import fetch_url
 from app.embedding.multimodal import build_multimodal_embedder
 from app.embedding.quantization import l2_normalize, quantize_binary, quantize_int8
@@ -318,6 +318,54 @@ def to_chunk_message(piece, number, total, vector_data_type):
     return message
 
 
+def build_query_capabilities(configuration):
+    """Builds the query-time embedding capabilities (query.QueryCapabilities).
+
+    A multimodal model embeds query text and images through the same
+    model and may also support native text+image input (embed_mixed,
+    detected on the concrete embedder); a text-only model can embed
+    query text only.
+    """
+    if configuration.get("multimodal"):
+        _apply_multimodal_credentials(configuration)
+        embedder = build_multimodal_embedder(configuration)
+
+        return query.QueryCapabilities(
+            embed_text=lambda text: embedder.embed_texts([text], "search_query")[0],
+            embed_image=embedder.embed_image,
+            embed_mixed=getattr(embedder, "embed_mixed", None),
+        )
+
+    embeddings = initialize_embedding_model(configuration)
+
+    return query.QueryCapabilities(embed_text=embeddings.embed_query)
+
+
+def to_vector_message(vector, vector_data_type):
+    """Maps a raw query vector onto the EmbeddedVector wire message.
+
+    Same pipeline as the indexed chunks (L2-normalize, then quantize per
+    vectorDataType), so the query vector is KNN-comparable with the
+    documents.
+    """
+    normalized = l2_normalize(vector)
+    dimension = int(normalized.size)
+
+    message = embedding_pb2.EmbeddedVector(
+        vectorDataType=vector_data_type,
+        dimension=dimension,
+    )
+
+    if vector_data_type == embedding_pb2.VECTOR_DATA_TYPE_BYTE:
+        message.i8 = quantize_int8(normalized)
+    elif vector_data_type == embedding_pb2.VECTOR_DATA_TYPE_BINARY:
+        message.bits = quantize_binary(normalized)
+    else:
+        message.f32.values.extend(normalized.tolist())
+
+    return message
+
+
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
     def GetMessages(self, request, context):
         try:
@@ -557,6 +605,47 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             for message in messages:
                 number += 1
                 yield message
+
+    def EmbedQuery(self, request, context):
+        embedding_model = request.embeddingModel
+        embedding_model_json_config = json_format.MessageToDict(
+            embedding_model.jsonConfig
+        )
+
+        configuration = {
+            "api_key": embedding_model.apiKey,
+            "api_url": embedding_model.apiUrl,
+            "model_type": embedding_model.providerModel.provider,
+            "model": embedding_model.providerModel.model,
+            "watsonx_project_id": embedding_model_json_config.get("watsonx_project_id"),
+            "chat_vertex_ai_model_garden": embedding_model_json_config.get(
+                "chat_vertex_ai_model_garden"
+            ),
+            "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
+            "multimodal": embedding_model.multimodal,
+        }
+
+        # query text is cleaned like the v1 GetMessages path; inline stays raw
+        text = clean_text(request.text) if request.HasField("text") else None
+        inline = None
+        if request.HasField("inline"):
+            inline = (request.inline.data, request.inline.contentType)
+
+        # A query returns exactly one vector: no skip. A malformed request is
+        # INVALID_ARGUMENT, a missing model capability is FAILED_PRECONDITION,
+        # any provider/embedding error is INTERNAL.
+        try:
+            capabilities = build_query_capabilities(configuration)
+            vector = query.query_vector(text, inline, capabilities)
+        except query.QueryInvalid as error:
+            context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(error))
+        except query.QueryPrecondition as error:
+            context.abort(grpc.StatusCode.FAILED_PRECONDITION, str(error))
+        except Exception as error:
+            logger.exception("EmbedQuery error")
+            context.abort(grpc.StatusCode.INTERNAL, str(error))
+
+        return to_vector_message(vector, request.vectorDataType)
 
 
 def serve():
