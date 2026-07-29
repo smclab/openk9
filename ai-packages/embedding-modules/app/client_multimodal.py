@@ -207,16 +207,16 @@ if __name__ == "__main__":
     with open(image_path, "rb") as f:
         image_bytes = f.read()
 
+    image_content_type = mimetypes.guess_type(image_path)[0] or "image/jpeg"
     embedding_model = MODELS[provider]()
 
     if mode == "query":
-        image_content_type = mimetypes.guess_type(image_path)[0] or "image/jpeg"
         run_query(embedding_model, image_bytes, image_content_type)
         raise SystemExit
 
     httpd = serve_files(
         {
-            "/image": (image_bytes, "image/jpeg"),
+            "/image": (image_bytes, image_content_type),
             "/note.txt": ("Ricerca semantica cross-modale.".encode(), "text/plain"),
             "/clip.wav": (b"RIFF-fake-audio", "audio/wav"),  # skipped: no handler
         }
@@ -234,7 +234,7 @@ if __name__ == "__main__":
         text="Ricerca semantica.",
         refs=[
             embedding_pb2.MediaRef(
-                url=f"{base}/image", fileId="img-1", contentType="image/jpeg"
+                url=f"{base}/image", fileId="img-1", contentType=image_content_type
             ),
             embedding_pb2.MediaRef(
                 url=f"{base}/note.txt", fileId="note-1", contentType="text/plain"
