@@ -773,12 +773,20 @@ function AppInner() {
           gap: 20px;
           padding: 20px;
           grid-template-columns: ${view === "ai"
-            ? "1fr 380px"
-            : "300px 1fr 380px"};
+            ? "1fr 440px"
+            : "300px 1fr 440px"};
           grid-template-rows: auto 1fr;
           grid-template-areas: ${view === "ai"
             ? '"dockbar dockbar" "dialog detail"'
             : '"dockbar dockbar dockbar" "filters dialog detail"'};
+
+          /* tablet: restringo filtri e preview per non schiacciare i
+             risultati (core della pagina) prima del layout a colonna */
+          @media (max-width: 1280px) {
+            grid-template-columns: ${view === "ai"
+              ? "1fr 340px"
+              : "260px 1fr 340px"};
+          }
 
           @media (max-width: 1024px) {
             grid-template-columns: 1fr;
@@ -812,6 +820,9 @@ function AppInner() {
               /* allinea alla colonna filtri (300) − gap (20) così la search
                  parte esattamente sopra la colonna risultati */
               flex: ${view === "ai" ? "1 1 auto" : "0 0 280px"};
+              @media (max-width: 1280px) {
+                flex: ${view === "ai" ? "1 1 auto" : "0 0 240px"};
+              }
               @media (max-width: 1024px) {
                 flex: 0 0 auto;
               }
@@ -851,9 +862,12 @@ function AppInner() {
               align-items: center;
               justify-content: flex-end;
               gap: 10px;
-              /* stessa larghezza della colonna preview (380) − gap (20),
+              /* stessa larghezza della colonna preview (440) − gap (20),
                  così i controlli sono allineati alla colonna di destra */
-              flex: 0 0 360px;
+              flex: 0 0 420px;
+              @media (max-width: 1280px) {
+                flex: 0 0 320px;
+              }
               @media (max-width: 1024px) {
                 flex: 1 1 100%;
                 margin-left: 0;
