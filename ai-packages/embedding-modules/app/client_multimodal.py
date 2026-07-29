@@ -28,7 +28,9 @@ Start the server first:  python -m app.server
 
 Common configuration:
     MM_PROVIDER   'vertex' or 'bedrock' (default: vertex)
-    MM_IMAGE      path to a local image file to index (required)
+    MM_MODE       'content' (EmbedContent stream) or 'query' (EmbedQuery:
+                  text, inline image, text+inline) (default: content)
+    MM_IMAGE      path to a local image file (required)
 
 Vertex (MM_PROVIDER=vertex):
     VERTEX_CREDENTIALS   path to the ADC / service-account JSON
@@ -47,6 +49,7 @@ Bedrock (MM_PROVIDER=bedrock):
 """
 
 import json
+import mimetypes
 import os
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -155,14 +158,61 @@ def run(request):
             )
 
 
+def run_query(embedding_model, image_bytes, image_content_type):
+    """Drives EmbedQuery in its three modes (text, inline image, text +
+    inline) and prints the vector head or the gRPC status. Mixed input on
+    a model without native support surfaces here as FAILED_PRECONDITION.
+    """
+    inline = embedding_pb2.InlineMedia(
+        data=image_bytes, contentType=image_content_type
+    )
+    cases = {
+        "text": embedding_pb2.EmbedQueryRequest(
+            tenantId="mew",
+            embeddingModel=embedding_model,
+            vectorDataType=embedding_pb2.VECTOR_DATA_TYPE_FLOAT32,
+            text="Un gatto su un tappeto.",
+        ),
+        "inline": embedding_pb2.EmbedQueryRequest(
+            tenantId="mew",
+            embeddingModel=embedding_model,
+            vectorDataType=embedding_pb2.VECTOR_DATA_TYPE_FLOAT32,
+            inline=inline,
+        ),
+        "text+inline": embedding_pb2.EmbedQueryRequest(
+            tenantId="mew",
+            embeddingModel=embedding_model,
+            vectorDataType=embedding_pb2.VECTOR_DATA_TYPE_FLOAT32,
+            text="Un gatto su un tappeto.",
+            inline=inline,
+        ),
+    }
+
+    with grpc.insecure_channel("localhost:5000") as channel:
+        stub = embedding_pb2_grpc.EmbeddingStub(channel)
+        for name, request in cases.items():
+            try:
+                vector = stub.EmbedQuery(request)
+                head = list(vector.f32.values[:3])
+                print(f"query {name:<12} dim={vector.dimension} head={head}")
+            except grpc.RpcError as error:
+                print(f"query {name:<12} {error.code().name}: {error.details()}")
+
+
 if __name__ == "__main__":
     provider = os.getenv("MM_PROVIDER", "vertex").lower()
+    mode = os.getenv("MM_MODE", "content").lower()
     image_path = os.environ["MM_IMAGE"]
 
     with open(image_path, "rb") as f:
         image_bytes = f.read()
 
     embedding_model = MODELS[provider]()
+
+    if mode == "query":
+        image_content_type = mimetypes.guess_type(image_path)[0] or "image/jpeg"
+        run_query(embedding_model, image_bytes, image_content_type)
+        raise SystemExit
 
     httpd = serve_files(
         {
