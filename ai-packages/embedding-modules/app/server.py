@@ -297,25 +297,14 @@ def build_pipelines(configuration, chunker, is_query=False):
     )
 
 
-def to_chunk_message(piece, number, total, vector_data_type):
-    """Maps a router Piece onto the EmbeddedChunk wire message.
-
-    The vector is L2-normalized, then quantized according to the requested
-    vectorDataType.
+def _encode_vector(message, vector, vector_data_type):
+    """L2-normalizes the vector, then sets the message dimension and the
+    quantized payload for the requested vectorDataType. Works for any
+    message carrying dimension + the f32/i8/bits oneof (EmbeddedChunk,
+    EmbeddedVector).
     """
-    normalized = l2_normalize(piece.vector)
-    dimension = int(normalized.size)
-
-    message = embedding_pb2.EmbeddedChunk(
-        number=number,
-        text=piece.text or "",
-        vectorDataType=vector_data_type,
-        dimension=dimension,
-    )
-    if total is not None:
-        message.total = total
-    if piece.file_id is not None:
-        message.fileId = piece.file_id
+    normalized = l2_normalize(vector)
+    message.dimension = int(normalized.size)
 
     if vector_data_type == embedding_pb2.VECTOR_DATA_TYPE_BYTE:
         message.i8 = quantize_int8(normalized)
@@ -323,6 +312,25 @@ def to_chunk_message(piece, number, total, vector_data_type):
         message.bits = quantize_binary(normalized)
     else:
         message.f32.values.extend(normalized.tolist())
+
+
+def to_chunk_message(piece, number, total, vector_data_type):
+    """Maps a router Piece onto the EmbeddedChunk wire message.
+
+    The vector is L2-normalized, then quantized according to the requested
+    vectorDataType.
+    """
+    message = embedding_pb2.EmbeddedChunk(
+        number=number,
+        text=piece.text or "",
+        vectorDataType=vector_data_type,
+    )
+    if total is not None:
+        message.total = total
+    if piece.file_id is not None:
+        message.fileId = piece.file_id
+
+    _encode_vector(message, piece.vector, vector_data_type)
 
     return message
 
@@ -357,22 +365,33 @@ def to_vector_message(vector, vector_data_type):
     vectorDataType), so the query vector is KNN-comparable with the
     documents.
     """
-    normalized = l2_normalize(vector)
-    dimension = int(normalized.size)
-
-    message = embedding_pb2.EmbeddedVector(
-        vectorDataType=vector_data_type,
-        dimension=dimension,
-    )
-
-    if vector_data_type == embedding_pb2.VECTOR_DATA_TYPE_BYTE:
-        message.i8 = quantize_int8(normalized)
-    elif vector_data_type == embedding_pb2.VECTOR_DATA_TYPE_BINARY:
-        message.bits = quantize_binary(normalized)
-    else:
-        message.f32.values.extend(normalized.tolist())
+    message = embedding_pb2.EmbeddedVector(vectorDataType=vector_data_type)
+    _encode_vector(message, vector, vector_data_type)
 
     return message
+
+
+def _build_configuration(embedding_model):
+    """Maps an EmbeddingModel wire message onto the configuration dict
+    shared by the RPCs. The multimodal flag is always present; the
+    text-only path (initialize_embedding_model) ignores it.
+    """
+    embedding_model_json_config = json_format.MessageToDict(
+        embedding_model.jsonConfig
+    )
+
+    return {
+        "api_key": embedding_model.apiKey,
+        "api_url": embedding_model.apiUrl,
+        "model_type": embedding_model.providerModel.provider,
+        "model": embedding_model.providerModel.model,
+        "watsonx_project_id": embedding_model_json_config.get("watsonx_project_id"),
+        "chat_vertex_ai_model_garden": embedding_model_json_config.get(
+            "chat_vertex_ai_model_garden"
+        ),
+        "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
+        "multimodal": embedding_model.multimodal,
+    }
 
 
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
@@ -384,27 +403,8 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             chunk_type = chunk.type
             chunk_json_config = json_format.MessageToDict(chunk.jsonConfig)
             embedding_model = request.embeddingModel
-            model_type = embedding_model.providerModel.provider
-            model = embedding_model.providerModel.model
-            api_key = embedding_model.apiKey
-            api_url = embedding_model.apiUrl
-            embedding_model_json_config = json_format.MessageToDict(
-                embedding_model.jsonConfig
-            )
 
-            configuration = {
-                "api_key": api_key,
-                "api_url": api_url,
-                "model_type": model_type,
-                "model": model,
-                "watsonx_project_id": embedding_model_json_config.get(
-                    "watsonx_project_id"
-                ),
-                "chat_vertex_ai_model_garden": embedding_model_json_config.get(
-                    "chat_vertex_ai_model_garden"
-                ),
-                "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
-            }
+            configuration = _build_configuration(embedding_model)
             embeddings = initialize_embedding_model(configuration)
 
             text = clean_text(request.text)
@@ -521,22 +521,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
     def EmbedContent(self, request, context):
         embedding_model = request.embeddingModel
-        embedding_model_json_config = json_format.MessageToDict(
-            embedding_model.jsonConfig
-        )
-
-        configuration = {
-            "api_key": embedding_model.apiKey,
-            "api_url": embedding_model.apiUrl,
-            "model_type": embedding_model.providerModel.provider,
-            "model": embedding_model.providerModel.model,
-            "watsonx_project_id": embedding_model_json_config.get("watsonx_project_id"),
-            "chat_vertex_ai_model_garden": embedding_model_json_config.get(
-                "chat_vertex_ai_model_garden"
-            ),
-            "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
-            "multimodal": embedding_model.multimodal,
-        }
+        configuration = _build_configuration(embedding_model)
 
         has_text = request.HasField("text")
         refs = list(request.refs)
@@ -617,22 +602,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
     def EmbedQuery(self, request, context):
         embedding_model = request.embeddingModel
-        embedding_model_json_config = json_format.MessageToDict(
-            embedding_model.jsonConfig
-        )
-
-        configuration = {
-            "api_key": embedding_model.apiKey,
-            "api_url": embedding_model.apiUrl,
-            "model_type": embedding_model.providerModel.provider,
-            "model": embedding_model.providerModel.model,
-            "watsonx_project_id": embedding_model_json_config.get("watsonx_project_id"),
-            "chat_vertex_ai_model_garden": embedding_model_json_config.get(
-                "chat_vertex_ai_model_garden"
-            ),
-            "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
-            "multimodal": embedding_model.multimodal,
-        }
+        configuration = _build_configuration(embedding_model)
 
         # query text is cleaned like the v1 GetMessages path; inline stays raw
         text = clean_text(request.text) if request.HasField("text") else None
