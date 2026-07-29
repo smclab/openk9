@@ -33,6 +33,8 @@ This module provides:
 
 - Multimodal indexing — text and images embedded into the same vector space via the `EmbedContent` streaming RPC
 
+- Cross-modal query — a single query vector from text and/or an inline image via the `EmbedQuery` unary RPC
+
 - gRPC interface used internally by OpenK9 services
 
 - Health checks and reflection for easier integration
@@ -101,8 +103,10 @@ To run the embedding model in local you have to:
 
 ## API Reference
 
-The service exposes two RPCs: `GetMessages` (v1, text-only) and
-`EmbedContent` (v2, server-streaming — text and/or media in one vector space).
+The service exposes three RPCs: `GetMessages` (v1, text-only),
+`EmbedContent` (v2, server-streaming — text and/or media in one vector space)
+and `EmbedQuery` (v2, unary — a single query vector from text and/or an inline
+image, in the same vector space as the index).
 
 ### GetMessages (v1)
 
@@ -269,6 +273,75 @@ request = embedding_pb2.EmbedContentRequest(
 
 for chunk in stub.EmbedContent(request):
     print(chunk.number, chunk.fileId or "-", chunk.dimension)
+```
+
+### EmbedQuery (v2)
+
+Embeds a query into a single `EmbeddedVector`, quantized with the same
+`vectorDataType` as the index so it is directly KNN-comparable. No chunking, no
+storage I/O. `text` and `inline` are combinable.
+
+#### Request: EmbedQueryRequest
+
+| Field            | Type                  | Description                                                         |
+| ---------------- | --------------------- | ------------------------------------------------------------------- |
+| `tenantId`       | `string`              | Tenant that owns the request (used in the structured logs)          |
+| `embeddingModel` | `EmbeddingModel`      | Provider/model settings; `multimodal=true` enables image embedding  |
+| `vectorDataType` | `VectorDataType`      | Output encoding: `FLOAT32` (0), `BYTE` (1), `BINARY` (2)            |
+| `text`           | `string` (optional)   | Query text                                                          |
+| `inline`         | `InlineMedia` (optional) | Query image sent inline (`data` bytes + `contentType`, images only) |
+
+At least one of `text` / `inline` must be set, otherwise the RPC fails with
+`INVALID_ARGUMENT`.
+
+#### Response: EmbeddedVector
+
+| Field                | Type             | Description                                       |
+| -------------------- | ---------------- | ------------------------------------------------- |
+| `vectorDataType`     | `VectorDataType` | Same as requested                                 |
+| `dimension`          | `int32`          | Vector dimension                                  |
+| `f32` / `i8` / `bits`| `oneof vector`   | The vector, encoded according to `vectorDataType` |
+
+**Behavior**
+- A query returns exactly one vector, so there is no skip: a capability the
+  model lacks is an error, not a degraded result.
+
+- `text` → a query-time text embedding. `inline` → an image embedding in the
+  same space as the indexed documents.
+
+- `text + inline` is produced **only** by a model with native mixed input (text
+  and image in one call, one vector — e.g. Cohere Embed v4 on AWS Bedrock); there
+  is no module-side fusion of two separate vectors.
+
+- The vector is L2-normalized, then quantized according to `vectorDataType`.
+
+- Error mapping: empty request or non-image `inline` → `INVALID_ARGUMENT`; image
+  on a text-only model or `text + inline` on a model without native mixed input
+  → `FAILED_PRECONDITION`; a provider error → gRPC `INTERNAL`.
+
+#### Client Example
+
+See `app/client_multimodal.py` with `MM_MODE=query` for a runnable smoke client.
+Minimal call:
+
+```python
+vector = stub.EmbedQuery(
+    embedding_pb2.EmbedQueryRequest(
+        tenantId="mew",
+        embeddingModel=embedding_pb2.EmbeddingModel(
+            multimodal=True,
+            providerModel=embedding_pb2.ProviderModel(
+                provider="aws_bedrock", model="cohere.embed-v4:0"
+            ),
+            jsonConfig=model_json_config,
+        ),
+        vectorDataType=embedding_pb2.VECTOR_DATA_TYPE_FLOAT32,
+        text="a cat on a rug",
+        inline=embedding_pb2.InlineMedia(data=image_bytes, contentType="image/jpeg"),
+    )
+)
+
+print(vector.dimension, vector.WhichOneof("vector"))
 ```
 
 ## Configuration
