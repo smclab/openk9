@@ -68,7 +68,7 @@ export function PdfDetail({ result }: PdfDetailProps) {
         icon={<FontAwesomeIcon icon={faFilePdf} />}
         date={lastEdit}
       />
-      {result.source.document.url ? (
+      {result?.source?.document?.url ? (
         <div
           css={css`
             margin-top: 10px;
@@ -76,7 +76,7 @@ export function PdfDetail({ result }: PdfDetailProps) {
           `}
         >
           <ResultLinkTwo
-            href={result.source.document.url}
+            href={result.source.document?.url}
             title="Link Documento"
           >
             <HighlightableText result={result} path="document.url" />
