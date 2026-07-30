@@ -77,7 +77,7 @@ public class SearcherSuggestionsGrpcTest {
 	private static final String SCHEMA_NAME = "public";
 	private static final String SUGGESTION_ONE_NAME = ENTITY_NAME_PREFIX + "Suggestion category 1";
 	private static final String SUGGESTION_TWO_NAME = ENTITY_NAME_PREFIX + "Suggestion category 2";
-	private static final String VIRTUAL_HOST = "test.openk9.local";
+	private static final String TENANT_ID = SCHEMA_NAME;
 
 	@Inject
 	BucketService bucketService;
@@ -157,7 +157,7 @@ public class SearcherSuggestionsGrpcTest {
 		var docTypeField = suggestionCategoryOne.getDocTypeField();
 
 		var request = QueryParserRequest.newBuilder()
-			.setVirtualHost(VIRTUAL_HOST)
+			.setTenantId(TENANT_ID)
 			.setSuggestionCategoryId(suggestionCategoryOne.getId())
 			.build();
 

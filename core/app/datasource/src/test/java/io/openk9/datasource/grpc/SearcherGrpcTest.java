@@ -143,7 +143,7 @@ public class SearcherGrpcTest {
 	private static final Struct STRUCT_JSON_CONFIG = StructUtils.fromJson(JSON_CONFIG);
 	private static final Struct STRUCT_JSON_CONFIG_SHORT = StructUtils.fromJson(JSON_CONFIG_SHORT);
 	private static final String SCHEMA_NAME = "public";
-	private static final String VIRTUAL_HOST = "test.openk9.local";
+	private static final String TENANT_ID = SCHEMA_NAME;
 
 	private static final Logger log = Logger.getLogger(SearcherGrpcTest.class);
 
@@ -377,7 +377,7 @@ public class SearcherGrpcTest {
 		asserter.assertThat(
 			() -> searcher.getEmbeddingModelConfigurations(
 				GetEmbeddingModelConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.build()
 			),
 			response -> {
@@ -410,7 +410,7 @@ public class SearcherGrpcTest {
 		asserter.assertThat(
 			() -> searcher.getEmbeddingModelConfigurations(
 				GetEmbeddingModelConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.build()
 			),
 			response -> {
@@ -435,7 +435,7 @@ public class SearcherGrpcTest {
 		asserter.assertThat(
 			() -> searcher.getEmbeddingModelConfigurations(
 				GetEmbeddingModelConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.build()
 			),
 			response -> {
@@ -451,7 +451,7 @@ public class SearcherGrpcTest {
 	void should_get_llm_configurations(UniAsserter asserter) {
 		asserter.assertThat(
 			() -> searcher.getLLMConfigurations(GetLLMConfigurationsRequest.newBuilder()
-				.setVirtualHost(VIRTUAL_HOST)
+				.setTenantId(TENANT_ID)
 				.build()
 			),
 			response -> {
@@ -475,7 +475,7 @@ public class SearcherGrpcTest {
 		asserter.assertThat(
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_RAG)
 					.build()
 			),
@@ -502,7 +502,7 @@ public class SearcherGrpcTest {
 		asserter.assertThat(
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.setRagType(io.openk9.searcher.grpc.RAGType.SIMPLE_GENERATE)
 					.build()
 			),
@@ -528,7 +528,7 @@ public class SearcherGrpcTest {
 		asserter.assertThat(
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_RAG_TOOL)
 					.build()
 			),
@@ -558,7 +558,7 @@ public class SearcherGrpcTest {
 		asserter.assertThat(
 			() -> searcher.getAutocompleteConfigurations(
 				AutocompleteConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.build()
 			),
 			response -> {
@@ -587,7 +587,7 @@ public class SearcherGrpcTest {
 		asserter.assertThat(
 			() -> searcher.getAutocorrectionConfigurations(
 				AutocorrectionConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.build()
 			),
 			response -> {
@@ -637,7 +637,7 @@ public class SearcherGrpcTest {
 		asserter.assertFailedWith(
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_RAG)
 					.build()
 			),
@@ -653,7 +653,7 @@ public class SearcherGrpcTest {
 		asserter.assertFailedWith(
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.setRagType(io.openk9.searcher.grpc.RAGType.SIMPLE_GENERATE)
 					.build()
 			),
@@ -669,7 +669,7 @@ public class SearcherGrpcTest {
 		asserter.assertFailedWith(
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_RAG_TOOL)
 					.build()
 			),
@@ -689,7 +689,7 @@ public class SearcherGrpcTest {
 		asserter.assertFailedWith(
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
+					.setTenantId(TENANT_ID)
 					.build()
 			),
 			throwable -> {
@@ -702,132 +702,21 @@ public class SearcherGrpcTest {
 			});
 	}
 
-	// tenantId short-circuit: when the proto carries tenantId, the server
-	// must skip TenantRegistry.getTenantId(virtualHost). To prove the short-circuit, we
-	// deliberately send a bogus virtualHost: if the resolver were still consulted the
-	// request would fail; succeeding proves tenantId took precedence.
-
 	@Test
 	@RunOnVertxContext
-	@SuppressWarnings("deprecation")
-	void should_get_embedding_model_configurations_using_tenantId(UniAsserter asserter) {
-		asserter.assertThat(
-			() -> searcher.getEmbeddingModelConfigurations(
-				GetEmbeddingModelConfigurationsRequest.newBuilder()
-					.setTenantId(SCHEMA_NAME)
-					.setVirtualHost("bogus.invalid")
-					.build()
-			),
-			response -> {
-				Assertions.assertEquals(EM_API_URL, response.getApiUrl());
-				Assertions.assertEquals(EM_API_KEY, response.getApiKey());
-				assertEquals(EM_VECTOR_SIZE, response.getVectorSize());
-			}
-		);
-	}
-
-	@Test
-	@RunOnVertxContext
-	@SuppressWarnings("deprecation")
-	void should_get_llm_configurations_using_tenantId(UniAsserter asserter) {
-		asserter.assertThat(
-			() -> searcher.getLLMConfigurations(
-				GetLLMConfigurationsRequest.newBuilder()
-					.setTenantId(SCHEMA_NAME)
-					.setVirtualHost("bogus.invalid")
-					.build()
-			),
-			response -> {
-				Assertions.assertEquals(LLM_API_KEY, response.getApiKey());
-				Assertions.assertEquals(LLM_API_URL, response.getApiUrl());
-			}
-		);
-	}
-
-	@Test
-	@RunOnVertxContext
-	@SuppressWarnings("deprecation")
-	void should_get_rag_configurations_using_tenantId(UniAsserter asserter) {
-		asserter.assertThat(
-			() -> searcher.getRAGConfigurations(
-				GetRAGConfigurationsRequest.newBuilder()
-					.setTenantId(SCHEMA_NAME)
-					.setVirtualHost("bogus.invalid")
-					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_RAG)
-					.build()
-			),
-			response -> {
-				assertEquals(RAG_CHAT_ONE, response.getName());
-				assertEquals(CHUNK_WINDOW, response.getChunkWindow());
-				assertEquals(REFORMULATE, response.getReformulate());
-			}
-		);
-	}
-
-	@Test
-	@RunOnVertxContext
-	@SuppressWarnings("deprecation")
-	void should_get_autocomplete_configurations_using_tenantId(UniAsserter asserter) {
-		asserter.assertThat(
-			() -> searcher.getAutocompleteConfigurations(
-				AutocompleteConfigurationsRequest.newBuilder()
-					.setTenantId(SCHEMA_NAME)
-					.setVirtualHost("bogus.invalid")
-					.build()
-			),
-			response -> {
-				var indexNameList = response.getIndexNameList();
-				String indexNames = String.join(",", indexNameList);
-
-				assertTrue(defaultDataindexNames.equalsIgnoreCase(indexNames));
-				assertFalse(response.getAllFields().isEmpty());
-				assertEquals(2, response.getFieldList().size());
-				assertEquals(RESULT_SIZE, response.getResultSize());
-				assertEquals(Fuzziness.TWO.getValue(), response.getFuzziness());
-				assertEquals(MINIMUM_SHOULD_MATCH, response.getMinimumShouldMatch());
-				assertEquals(OPERATOR.name(), response.getOperator().name());
-				assertTrue(response.getPerfectMatchIncluded());
-			}
-		);
-	}
-
-	@Test
-	@RunOnVertxContext
-	@SuppressWarnings("deprecation")
-	void should_get_autocorrection_configurations_using_tenantId(UniAsserter asserter) {
-		asserter.assertThat(
-			() -> searcher.getAutocorrectionConfigurations(
-				AutocorrectionConfigurationsRequest.newBuilder()
-					.setTenantId(SCHEMA_NAME)
-					.setVirtualHost("bogus.invalid")
-					.build()
-			),
-			response -> {
-				var indexNameList = response.getIndexNameList();
-				String indexNames = String.join(",", indexNameList);
-
-				assertTrue(defaultDataindexNames.equalsIgnoreCase(indexNames));
-				assertEquals(docTypeFieldPath, response.getField());
-				assertEquals(SortType.FREQUENCY.name(), response.getSort().name());
-				assertEquals(SuggestMode.MISSING.name(), response.getSuggestMode().name());
-				assertEquals(MAX_EDIT, response.getMaxEdit());
-				assertEquals(MIN_WORD_LENGTH, response.getMinWordLength());
-				assertEquals(PREFIX_LENGTH, response.getPrefixLength());
-				assertTrue(response.getEnableSearchWithCorrection());
-			}
-		);
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_fail_when_both_tenantId_and_virtualHost_are_missing(UniAsserter asserter) {
+	void should_fail_when_tenantId_is_missing(UniAsserter asserter) {
 		asserter.assertFailedWith(
 			() -> searcher.getEmbeddingModelConfigurations(
 				GetEmbeddingModelConfigurationsRequest.newBuilder().build()
 			),
-			throwable -> Assertions.assertInstanceOf(
-				StatusRuntimeException.class, throwable)
-		);
+			throwable -> {
+				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
+
+				var exception = (StatusRuntimeException) throwable;
+
+				Assertions.assertEquals(
+					Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
+			});
 	}
 
 	@AfterEach
