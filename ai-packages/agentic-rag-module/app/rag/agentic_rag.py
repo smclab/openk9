@@ -1266,6 +1266,7 @@ class RagGraph:
                 context_window=self.configuration.get("context_window"),
                 metadata=self.configuration.get("metadata"),
                 retrieve_type=self.configuration.get("retrieve_type"),
+                score_threshold=self.configuration.get("score_threshold"),
                 opensearch_host=self.configuration.get("opensearch_host"),
                 grpc_host=self.configuration.get("grpc_host_datasource"),
             )

@@ -32,7 +32,6 @@ TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
 HYBRID_RETRIEVE_TYPE = "HYBRID"
 VECTORIAL_RETRIEVE_TYPES = ["KNN", "HYBRID"]
-SCORE_THRESHOLD = 0
 
 
 class OpenSearchRetriever(BaseRetriever):
@@ -56,6 +55,7 @@ class OpenSearchRetriever(BaseRetriever):
     context_window: int
     metadata: Optional[dict] = None
     retrieve_type: str
+    score_threshold: Optional[float] = None
     opensearch_host: str
     grpc_host: str
 
@@ -140,11 +140,25 @@ class OpenSearchRetriever(BaseRetriever):
             max_tokens = self.context_window * MAX_CONTEXT_WINDOW_PERCENTAGE
             total_tokens = 0
 
-            for row in response["hits"]["hits"]:
+            hits = response["hits"]["hits"]
+
+            # The cutoff is relative to the best score of this result set: a
+            # custom sort can override relevance ordering, so the top score is
+            # taken across all hits rather than from the first one.
+            top_score = max((hit.get("_score") or 0 for hit in hits), default=0)
+            score_cutoff = top_score * (self.score_threshold or 0)
+
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    f"[opensearch_query] score_threshold={self.score_threshold}, "
+                    f"top_score={top_score}, score_cutoff={score_cutoff}"
+                )
+
+            for row in hits:
                 # The .get default only covers a missing key: OpenSearch reports
                 # an explicit "_score": null when the query carries a field sort,
                 # and comparing that None raises TypeError.
-                if (score := row.get("_score") or 0) < SCORE_THRESHOLD:
+                if (score := row.get("_score") or 0) < score_cutoff:
                     continue
 
                 document_source = row.get("_source")
