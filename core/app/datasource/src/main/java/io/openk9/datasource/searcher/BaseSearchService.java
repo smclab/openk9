@@ -55,12 +55,13 @@ import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
-import io.openk9.datasource.service.TenantIdResolver;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryParserRequest;
 
 import com.google.protobuf.ByteString;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
@@ -86,8 +87,6 @@ public abstract class BaseSearchService {
 	SearcherMapper searcherMapper;
 	@Inject
 	Mutiny.SessionFactory sf;
-	@Inject
-	protected TenantIdResolver tenantIdResolver;
 
 	public static JsonObject getQueryParserConfig(Bucket bucket, QueryParserType tokenType) {
 
@@ -146,6 +145,31 @@ public abstract class BaseSearchService {
 		}
 
 		return outputStream.toByteString();
+	}
+
+	/**
+	 * Validates the {@code tenantId} carried by an incoming gRPC request. The
+	 * {@code tenantId} is populated by the API Gateway from the {@code X-TENANT-ID}
+	 * header and is the only way to identify the tenant.
+	 * <p>
+	 * The guard is required: without it a blank tenantId would propagate to
+	 * {@code sf.withTransaction("", ...)} and surface as an opaque Hibernate
+	 * {@code IllegalArgumentException: Invalid tenant ID:}.
+	 *
+	 * @param tenantId the tenant id taken from the request (may be {@code null} or blank)
+	 * @return a {@link Uni} emitting the {@code tenantId}, or failing with a
+	 *         {@link StatusRuntimeException} of {@link Status#INVALID_ARGUMENT} when it is missing
+	 */
+	protected static Uni<String> requireTenantId(String tenantId) {
+		if (tenantId == null || tenantId.isBlank()) {
+			return Uni.createFrom().failure(
+				new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("tenantId is missing")
+				)
+			);
+		}
+
+		return Uni.createFrom().item(tenantId);
 	}
 
 	protected Uni<BoolQueryBuilder> createBoolQuery(
