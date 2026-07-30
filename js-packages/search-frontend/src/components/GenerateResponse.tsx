@@ -107,22 +107,31 @@ export default function GenerateResponse({
                 css={css`
                   display: flex;
                   align-items: stretch;
-                  border-radius: 10px;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-md,
+                    12px
+                  );
                   overflow: hidden;
                   width: 100%;
                 `}
               >
                 <div
                   css={css`
-                    padding: 12px;
+                    padding: var(--openk9-embeddable-search--spacing-md, 12px);
                     background: var(--openk9-embeddable-search--primary-color);
                     border: 2px solid
                       var(--openk9-embeddable-search--primary-color);
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    border-top-left-radius: 10px;
-                    border-bottom-left-radius: 10px;
+                    border-top-left-radius: var(
+                      --openk9-embeddable-search--radius-md,
+                      12px
+                    );
+                    border-bottom-left-radius: var(
+                      --openk9-embeddable-search--radius-md,
+                      12px
+                    );
                     min-width: 48px;
                   `}
                 >
@@ -130,7 +139,7 @@ export default function GenerateResponse({
                 </div>
                 <div
                   css={css`
-                    padding: 12px;
+                    padding: var(--openk9-embeddable-search--spacing-md, 12px);
                     border: 2px solid
                       var(--openk9-embeddable-search--primary-color);
                     border-left: none;
@@ -139,10 +148,22 @@ export default function GenerateResponse({
                     align-items: center;
                     font-size: 0.95rem;
                     color: var(--openk9-embeddable-search--primary-color);
-                    font-weight: 700;
-                    background-color: #ffffff;
-                    border-top-right-radius: 10px;
-                    border-bottom-right-radius: 10px;
+                    font-weight: var(
+                      --openk9-embeddable-search--font-weight-bold,
+                      700
+                    );
+                    background-color: var(
+                      --openk9-embeddable-search--primary-background-color,
+                      #ffffff
+                    );
+                    border-top-right-radius: var(
+                      --openk9-embeddable-search--radius-md,
+                      12px
+                    );
+                    border-bottom-right-radius: var(
+                      --openk9-embeddable-search--radius-md,
+                      12px
+                    );
                   `}
                 >
                   {message.answer}
@@ -167,26 +188,26 @@ export default function GenerateResponse({
 
 const Container = styled.div`
   background: white;
-  border-bottom-right-radius: 10px;
-  border-bottom-left-radius: 10px;
-  padding: 16px;
+  border-bottom-right-radius: var(--openk9-embeddable-search--radius-md, 12px);
+  border-bottom-left-radius: var(--openk9-embeddable-search--radius-md, 12px);
+  padding: var(--openk9-embeddable-search--spacing-lg, 16px);
 `;
 
 const ContainerBox = styled.div`
-  padding: 5px;
+  padding: var(--openk9-embeddable-search--spacing-xs, 4px);
 `;
 
 const Question = styled.div`
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: var(--openk9-embeddable-search--spacing-md, 12px);
 `;
 
 const Answer = styled.div`
   font-size: 1rem;
   color: #555;
-  margin-top: 8px;
+  margin-top: var(--openk9-embeddable-search--spacing-sm, 8px);
   white-space: pre-wrap;
 `;
 
@@ -208,7 +229,7 @@ const SmallLoader = styled.div`
   &:before,
   &:after {
     content: "";
-    border-radius: 50%;
+    border-radius: var(--openk9-embeddable-search--radius-circle, 50%);
     position: absolute;
     width: inherit;
     height: inherit;

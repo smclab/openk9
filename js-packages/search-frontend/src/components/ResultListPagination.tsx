@@ -194,17 +194,17 @@ export function InfiniteResults<E>({
         <div
           className="openk9-infinite-results-container-wrapper"
           css={css`
-            padding-bottom: 16px;
+            padding-bottom: var(--openk9-embeddable-search--spacing-lg, 16px);
             ::-webkit-scrollbar {
               width: 10px;
             }
             ::-webkit-scrollbar-track {
               box-shadow: inset 0 0 5px grey;
-              border-radius: 10px;
+              border-radius: var(--openk9-embeddable-search--radius-md, 12px);
             }
             ::-webkit-scrollbar-thumb {
               background: gray;
-              border-radius: 10px;
+              border-radius: var(--openk9-embeddable-search--radius-md, 12px);
               height: 5px;
             }
             ::-webkit-scrollbar-thumb:hover {
@@ -351,7 +351,8 @@ export function SkeletonResult({
             css={css`
               display: flex;
               justify-content: space-between;
-              padding: 8px 16px;
+              padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                var(--openk9-embeddable-search--spacing-lg, 16px);
             `}
           >
             <CustomSkeleton width="80px" backgroundColor={background} />
@@ -359,7 +360,8 @@ export function SkeletonResult({
           </div>
           <div
             css={css`
-              padding: 16px 16px;
+              padding: var(--openk9-embeddable-search--spacing-lg, 16px)
+                var(--openk9-embeddable-search--spacing-lg, 16px);
               overflow: hidden;
             `}
           >

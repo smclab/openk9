@@ -117,10 +117,10 @@ export function SearchMobile({
       <div
         css={css`
           @media (max-width: 480px) {
-            padding-inline: 15px;
+            padding-inline: var(--openk9-embeddable-search--spacing-lg, 16px);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: var(--openk9-embeddable-search--spacing-xl, 20px);
             height: 100%;
             background-color: #d4d4d8;
           }
@@ -129,17 +129,18 @@ export function SearchMobile({
         <div
           className="openk9--search-container"
           css={css`
-            margin-top: 12px;
+            margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: var(--openk9-embeddable-search--spacing-md, 12px);
             width: 100%;
             @media (max-width: 480px) {
               flex-direction: column;
-              margin-top: 15px;
+              margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
             }
             .openk9-focusable:has(input:focus) {
-              border: 1px solid #c22525;
+              border: 1px solid
+                var(--openk9-embeddable-search--primary-color, #c22525);
             }
           `}
         >
@@ -149,7 +150,10 @@ export function SearchMobile({
             css={css`
               display: flex;
               align-items: center;
-              border-radius: 40px;
+              border-radius: var(
+                --openk9-embeddable-search--radius-pill,
+                999px
+              );
               width: 100%;
               max-height: 50px;
               @media (max-width: 480px) {
@@ -162,8 +166,8 @@ export function SearchMobile({
               css={css`
                 border: none;
                 background: inherit;
-                margin-left: 7px;
-                margin-top: 7px;
+                margin-left: var(--openk9-embeddable-search--spacing-sm, 8px);
+                margin-top: var(--openk9-embeddable-search--spacing-sm, 8px);
               `}
               onClick={() => {
                 if (setIsVisible) setIsVisible(false);
@@ -246,7 +250,10 @@ export function SearchMobile({
                   padding: var(--openk9-embeddable-search--input-padding);
                   caret-color: black;
                   font-size: inherit;
-                  font-family: inherit;
+                  font-family: var(
+                    --openk9-embeddable-search--font-family,
+                    inherit
+                  );
                   background-color: inherit;
                   width: 100%;
                   color: ${autoSelect ? "black" : "black"};
@@ -363,7 +370,10 @@ export function SearchMobile({
                     css={css`
                       cursor: pointer;
                       @media (max-width: 480px) {
-                        margin-top: 7px;
+                        margin-top: var(
+                          --openk9-embeddable-search--spacing-sm,
+                          8px
+                        );
                       }
                     `}
                   >
@@ -376,13 +386,20 @@ export function SearchMobile({
                 title="search"
                 aria-label="search"
                 css={css`
-                  padding-right: 16px;
+                  padding-right: var(
+                    --openk9-embeddable-search--spacing-lg,
+                    16px
+                  );
                   display: flex;
                   flex-direction: row;
-                  padding: 4px 8px;
-                  gap: 4px;
+                  padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                    var(--openk9-embeddable-search--spacing-sm, 8px);
+                  gap: var(--openk9-embeddable-search--spacing-xs, 4px);
                   align-items: center;
-                  margin-right: 8px;
+                  margin-right: var(
+                    --openk9-embeddable-search--spacing-sm,
+                    8px
+                  );
                   background: inherit;
                   border: none;
                 `}
@@ -393,7 +410,10 @@ export function SearchMobile({
                     css={css`
                       cursor: pointer;
                       @media (max-width: 480px) {
-                        margin-top: 7px;
+                        margin-top: var(
+                          --openk9-embeddable-search--spacing-sm,
+                          8px
+                        );
                       }
                     `}
                   >
@@ -524,7 +544,8 @@ export function TokenSelectMobile({
   const { t } = useTranslation();
 
   const entryStyle = (isSelected: boolean, isHighlighted: boolean) => css`
-    padding: 8px 16px;
+    padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+      var(--openk9-embeddable-search--spacing-lg, 16px);
     border-bottom: 1px solid #b09c9c12;
     :hover {
     }
@@ -532,10 +553,13 @@ export function TokenSelectMobile({
     border-left: ${isSelected
       ? `8px solid var(--openk9-embeddable-search--active-color)`
       : "none"};
-    padding-left: ${isSelected ? "8px" : "16px"};
+    padding-left: ${isSelected
+      ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
+      : "var(--openk9-embeddable-search--spacing-lg, 16px)"};
   `;
   const deseleziona = (isSelected: boolean) => css`
-    padding: 8px 16px;
+    padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+      var(--openk9-embeddable-search--spacing-lg, 16px);
     :hover {
     }
     background-color: ${"var(--openk9-embeddable-search--secondary-background-color)"};
@@ -552,7 +576,7 @@ export function TokenSelectMobile({
               --openk9-embeddable-search--primary-background-color
             );
             border: 1px solid var(--openk9-embeddable-search--border-color);
-            border-radius: 4px;
+            border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
             z-index: 2;
           `}
         >
@@ -579,7 +603,8 @@ export function TokenSelectMobile({
                   width: 100%;
                   height: 100%;
                   border: none;
-                  padding: 8px 16px;
+                  padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-lg, 16px);
                 `}
               >
                 <div
@@ -622,7 +647,10 @@ export function TokenSelectMobile({
                   <React.Fragment>
                     <div
                       css={css`
-                        padding-inline: 5px;
+                        padding-inline: var(
+                          --openk9-embeddable-search--spacing-xs,
+                          4px
+                        );
                         border: ${index !== 0
                           ? "0.5px solid #E4E4E7;"
                           : "none"};
@@ -631,7 +659,10 @@ export function TokenSelectMobile({
                     <strong
                       className="openk9-token-select-highlighted"
                       css={css`
-                        margin-right: 8px;
+                        margin-right: var(
+                          --openk9-embeddable-search--spacing-sm,
+                          8px
+                        );
                       `}
                     >
                       {option.keywordName}:
@@ -698,8 +729,11 @@ function FactoryTokenType({
               display: flex;
               font-family: "Helvetica";
               font-style: normal;
-              font-weight: 400;
-              font-size: 15px;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-regular,
+                400
+              );
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               line-height: 17px;
             `}
           >
@@ -723,8 +757,11 @@ function FactoryTokenType({
               display: flex;
               font-family: "Helvetica";
               font-style: normal;
-              font-weight: 400;
-              font-size: 15px;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-regular,
+                400
+              );
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               line-height: 17px;
               max-width: 60%;
             `}
@@ -737,22 +774,29 @@ function FactoryTokenType({
               display: flex;
               justify-content: center;
               align-items: center;
-              padding: 4px 8px;
-              gap: 4px;
+              padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                var(--openk9-embeddable-search--spacing-sm, 8px);
+              gap: var(--openk9-embeddable-search--spacing-xs, 4px);
               height: 15px;
-              background: #ffffff;
+              background: var(
+                --openk9-embeddable-search--primary-background-color,
+                #ffffff
+              );
               border: 1px solid
                 var(--openk9-embeddable-search--secondary-active-color);
-              border-radius: 20px;
-              margin-left: 10px;
+              border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
+              margin-left: var(--openk9-embeddable-search--spacing-md, 12px);
             `}
           >
             <div
               className="openk9-token-select-factory-option-label"
               css={css`
                 color: var(--openk9-embeddable-search--secondary-active-color);
-                margin-bottom: 13px;
-                font-size: 12px;
+                margin-bottom: var(
+                  --openk9-embeddable-search--spacing-md,
+                  12px
+                );
+                font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
                 display: block;
                 margin-block-start: 1em;
                 margin-block-end: 1em;

@@ -54,10 +54,14 @@ export default function Autocomplete({
         max-width: none;
         min-width: 320px;
         top: unset;
-        background: #fff;
-        border: 1.5px solid #c22525;
+        background: var(
+          --openk9-embeddable-search--primary-background-color,
+          #fff
+        );
+        border: 1.5px solid
+          var(--openk9-embeddable-search--primary-color, #c22525);
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
+        border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
         max-height: 240px;
         overflow-y: auto;
         z-index: 1000;
@@ -91,7 +95,7 @@ export default function Autocomplete({
               : ""
           }`}
           css={css`
-            padding: 12px 20px;
+            padding: var(--openk9-embeddable-search--spacing-md, 12px) var(--openk9-embeddable-search--spacing-xl, 20px);
             cursor: pointer;
             font-size: 1rem;
             color: #222;
@@ -103,7 +107,7 @@ export default function Autocomplete({
             }
        .openk9--autocomplete-suggestion-item:hover,
         .openk9--autocomplete-suggestion-item.openk9--autocomplete-suggestion-item-highlighted {
-          color: #c22525;
+          color: var(--openk9-embeddable-search--primary-color, #c22525);
           text-decoration: underline;
         }
             @media (max-width: 600px) {

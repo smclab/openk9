@@ -12,7 +12,7 @@ export function DetailHeaderImage({ src }: DetailHeaderImageProps) {
       alt=""
       css={css`
         max-width: 100%;
-        margin-bottom: 8px;
+        margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
       `}
     />
   );

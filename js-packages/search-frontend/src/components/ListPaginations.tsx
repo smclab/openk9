@@ -144,17 +144,17 @@ const PaginationContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 16px;
-  gap: 8px;
+  margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
+  gap: var(--openk9-embeddable-search--spacing-sm, 8px);
 `;
 
 const PaginationsButton = styled.button<{ isActive?: boolean }>`
   ${({ isActive = false }) => css`
-    padding: 6px 14px;
+    padding: var(--openk9-embeddable-search--spacing-sm, 8px) var(--openk9-embeddable-search--spacing-lg, 16px);
     background: ${isActive ? "#c83939" : "#fff"};
-    border-radius: 8px;
+    border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
     border: 2px solid #c83939};
-    font-size: 16px;
+    font-size: var(--openk9-embeddable-search--font-size-md, 16px);
     font-weight: ${isActive ? "bold" : "normal"};
     cursor: pointer;
     color: ${isActive ? "#fff" : "#c83939"};

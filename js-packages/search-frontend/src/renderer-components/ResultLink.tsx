@@ -13,7 +13,7 @@ export function ResultLink({ href, children }: ResultLinkProps) {
       css={css`
         font-size: 0.8em;
         display: block;
-        margin-bottom: 8px;
+        margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
         ${truncatedLineStyle}
       `}
     >

@@ -28,7 +28,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
           justify-content: space-between;
           position: absolute;
           width: 100%;
-          padding: 8px;
+          padding: var(--openk9-embeddable-search--spacing-sm, 8px);
           box-sizing: border-box;
         `}
       >
@@ -47,7 +47,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
               display: flex;
               flex-wrap: wrap;
               justify-content: center;
-              margin: 0px 4px;
+              margin: 0px var(--openk9-embeddable-search--spacing-xs, 4px);
             `}
           >
             {new Array(images.length).fill(0).map((_, index, array) => {
@@ -69,7 +69,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
                       }
                     }}
                     css={css`
-                      margin: 2px;
+                      margin: var(--openk9-embeddable-search--spacing-xs, 4px);
                     `}
                   >
                     <FontAwesomeIcon
@@ -107,7 +107,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
         css={css`
           width: 100%;
           padding-top: 40px;
-          border-radius: 4px;
+          border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
           border: 1px solid var(--openk9-embeddable-search--border-color);
           display: flex;
           align-items: center;

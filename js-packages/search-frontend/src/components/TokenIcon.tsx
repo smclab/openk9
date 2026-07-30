@@ -33,7 +33,7 @@ export function TokenIcon({ token }: TokenIconProps) {
       css={css`
         width: 16px;
         display: flex;
-        margin-right: 8px;
+        margin-right: var(--openk9-embeddable-search--spacing-sm, 8px);
         justify-content: center;
         align-items: center;
       `}

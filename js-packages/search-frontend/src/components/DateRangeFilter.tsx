@@ -164,13 +164,13 @@ export function DateRangeFilter({
   const selectStyle = css`
     height: 28px;
     max-width: 96px;
-    padding: 0 4px;
+    padding: 0 var(--openk9-embeddable-search--spacing-xs, 4px);
     border: 1px solid ${BORDER};
-    border-radius: 8px;
-    background: #fff;
+    border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
+    background: var(--openk9-embeddable-search--primary-background-color, #fff);
     color: ${INK};
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
+    font-weight: var(--openk9-embeddable-search--font-weight-semibold, 600);
     cursor: pointer;
     &:focus {
       outline: none;
@@ -191,7 +191,7 @@ export function DateRangeFilter({
       css={css`
         display: flex;
         justify-content: center;
-        gap: 8px;
+        gap: var(--openk9-embeddable-search--spacing-sm, 8px);
         /* lascia spazio alle frecce di navigazione ai lati del caption */
         padding: 0 34px;
       `}
@@ -266,7 +266,7 @@ export function DateRangeFilter({
         position: relative;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: var(--openk9-embeddable-search--spacing-sm, 8px);
       `}
       onKeyDown={(event) => {
         if (event.key === "Escape" && isOpen) {
@@ -285,14 +285,17 @@ export function DateRangeFilter({
         css={css`
           display: inline-flex;
           align-items: center;
-          gap: 8px;
+          gap: var(--openk9-embeddable-search--spacing-sm, 8px);
           max-width: 260px;
           height: 36px;
-          padding: 0 12px;
-          border-radius: 10px;
+          padding: 0 var(--openk9-embeddable-search--spacing-md, 12px);
+          border-radius: var(--openk9-embeddable-search--radius-md, 12px);
           cursor: pointer;
-          font-size: 13px;
-          font-weight: 600;
+          font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+          font-weight: var(
+            --openk9-embeddable-search--font-weight-semibold,
+            600
+          );
           border: 1px solid ${hasSelection ? RED_TINT : BORDER};
           background: ${hasSelection ? RED_SOFT : "#fff"};
           color: ${hasSelection ? RED : INK};
@@ -305,9 +308,9 @@ export function DateRangeFilter({
           @media (max-width: 1024px) {
             max-width: 190px;
             height: 32px;
-            padding: 0 8px;
-            gap: 6px;
-            font-size: 12px;
+            padding: 0 var(--openk9-embeddable-search--spacing-sm, 8px);
+            gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+            font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
           }
         `}
       >
@@ -343,12 +346,12 @@ export function DateRangeFilter({
             flex-shrink: 0;
             width: 28px;
             height: 28px;
-            border-radius: 8px;
+            border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
             border: none;
             background: transparent;
             color: ${MUTED};
-            font-size: 16px;
-            line-height: 1;
+            font-size: var(--openk9-embeddable-search--font-size-md, 16px);
+            line-height: var(--openk9-embeddable-search--line-height-none, 1);
             cursor: pointer;
             &:hover {
               color: ${RED};
@@ -370,11 +373,14 @@ export function DateRangeFilter({
             top: calc(100% + 8px);
             right: 0;
             z-index: 100;
-            background: #fff;
+            background: var(
+              --openk9-embeddable-search--primary-background-color,
+              #fff
+            );
             border: 1px solid ${BORDER};
-            border-radius: 12px;
+            border-radius: var(--openk9-embeddable-search--radius-md, 12px);
             box-shadow: 0 16px 40px -14px rgba(0, 0, 0, 0.3);
-            padding: 12px;
+            padding: var(--openk9-embeddable-search--spacing-md, 12px);
 
             /* --- tema react-dates sul brand rosso (scoped) --- */
             .CalendarDay__default {
@@ -405,12 +411,15 @@ export function DateRangeFilter({
               color: #fff !important;
             }
             .CalendarDay__today {
-              font-weight: 700;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-bold,
+                700
+              );
             }
             .CalendarMonth_caption {
               color: ${INK};
-              font-size: 15px;
-              padding-top: 15px;
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
+              padding-top: var(--openk9-embeddable-search--spacing-lg, 16px);
               padding-bottom: 38px;
             }
             .DayPicker_weekHeader {
@@ -418,7 +427,7 @@ export function DateRangeFilter({
             }
             .DayPickerNavigation_button__default {
               border-color: ${BORDER};
-              border-radius: 8px;
+              border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
             }
             .DayPickerNavigation_button__default:focus,
             .DayPickerNavigation_button__default:hover {
@@ -426,7 +435,8 @@ export function DateRangeFilter({
             }
             /* frecce spinte ai bordi, così non toccano i select mese/anno */
             .DayPickerNavigation_button__horizontalDefault {
-              padding: 4px 8px;
+              padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                var(--openk9-embeddable-search--spacing-sm, 8px);
               top: 15px;
             }
             .DayPickerNavigation_leftButton__horizontalDefault {
@@ -442,7 +452,7 @@ export function DateRangeFilter({
               display: flex;
               align-items: center;
               justify-content: flex-end;
-              margin-bottom: 8px;
+              margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
             `}
           >
             <button
@@ -462,10 +472,13 @@ export function DateRangeFilter({
                 border: none;
                 background: transparent;
                 color: ${MUTED};
-                font-size: 18px;
-                line-height: 1;
+                font-size: var(--openk9-embeddable-search--font-size-lg, 18px);
+                line-height: var(
+                  --openk9-embeddable-search--line-height-none,
+                  1
+                );
                 cursor: pointer;
-                border-radius: 8px;
+                border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
                 &:hover {
                   color: ${RED};
                 }
@@ -497,9 +510,9 @@ export function DateRangeFilter({
             css={css`
               display: flex;
               flex-wrap: wrap;
-              gap: 6px;
-              margin-top: 10px;
-              padding-top: 10px;
+              gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+              margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
+              padding-top: var(--openk9-embeddable-search--spacing-md, 12px);
               border-top: 1px solid #eef0f2;
             `}
           >
@@ -521,10 +534,20 @@ export function DateRangeFilter({
                     border: 1px solid ${active ? RED : "transparent"};
                     background: ${active ? RED : "#f4f5f7"};
                     color: ${active ? "#fff" : INK};
-                    border-radius: 999px;
-                    padding: 6px 14px;
-                    font-size: 12.5px;
-                    font-weight: 600;
+                    border-radius: var(
+                      --openk9-embeddable-search--radius-pill,
+                      999px
+                    );
+                    padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                      var(--openk9-embeddable-search--spacing-lg, 16px);
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-xs,
+                      12px
+                    );
+                    font-weight: var(
+                      --openk9-embeddable-search--font-weight-semibold,
+                      600
+                    );
                     cursor: pointer;
                     transition: background 120ms ease, color 120ms ease,
                       border-color 120ms ease;
@@ -546,7 +569,7 @@ export function DateRangeFilter({
               css={css`
                 display: flex;
                 justify-content: flex-end;
-                margin-top: 8px;
+                margin-top: var(--openk9-embeddable-search--spacing-sm, 8px);
               `}
             >
               <button
@@ -556,10 +579,17 @@ export function DateRangeFilter({
                   border: none;
                   background: none;
                   color: ${RED};
-                  font-size: 13px;
-                  font-weight: 600;
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-sm,
+                    14px
+                  );
+                  font-weight: var(
+                    --openk9-embeddable-search--font-weight-semibold,
+                    600
+                  );
                   cursor: pointer;
-                  padding: 4px 2px;
+                  padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                    var(--openk9-embeddable-search--spacing-xs, 4px);
                 `}
               >
                 {t("remove-dates") || "Cancella"}

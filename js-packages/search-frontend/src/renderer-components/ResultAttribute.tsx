@@ -10,7 +10,7 @@ export function ResultAttribute({ label, children }: ResultAttributeProps) {
     <div
       className="openk9-embeddable-result-attribute--container"
       css={css`
-        margin-bottom: 8px;
+        margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
       `}
     >
       <strong>{label}: </strong>

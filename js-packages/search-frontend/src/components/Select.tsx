@@ -64,14 +64,16 @@ const Label = styled.label<{ visuallyHidden: boolean }>`
 `;
 
 const Select = styled.select`
-  padding: 7px 40px 7px 12px;
+  padding: var(--openk9-embeddable-search--spacing-sm, 8px) 40px
+    var(--openk9-embeddable-search--spacing-sm, 8px)
+    var(--openk9-embeddable-search--spacing-md, 12px);
   border: 2px solid red;
-  border-radius: 5px;
+  border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
   background: white;
   box-shadow: 0 1px 3px -2px #9098a9;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--openk9-embeddable-search--font-size-md, 16px);
+  font-weight: var(--openk9-embeddable-search--font-weight-semibold, 600);
   color: black;
   transition: all 150ms ease;
   @media (max-width: 768px) {
@@ -82,7 +84,9 @@ const Select = styled.select`
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 0.125rem #fff, 0 0 0 0.25rem #ee4848;
+    box-shadow: 0 0 0 0.125rem
+        var(--openk9-embeddable-search--primary-background-color, #fff),
+      0 0 0 0.25rem var(--openk9-embeddable-search--focus-ring-color, #ee4848);
     outline: 0;
   }
 

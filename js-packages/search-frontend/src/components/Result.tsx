@@ -224,11 +224,11 @@ function CreateButton({
     <div
       className="openk9-wrapper-button-mobile"
       css={css`
-        padding: 24px;
-        padding-top: 8px;
+        padding: var(--openk9-embeddable-search--spacing-2xl, 24px);
+        padding-top: var(--openk9-embeddable-search--spacing-sm, 8px);
         @media (max-width: 480px) {
-          padding: 20px;
-          padding-top: 4px;
+          padding: var(--openk9-embeddable-search--spacing-xl, 20px);
+          padding-top: var(--openk9-embeddable-search--spacing-xs, 4px);
         }
       `}
     >
@@ -238,14 +238,25 @@ function CreateButton({
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 3px;
-          padding: 8px 16px;
-          background-color: #f9edee;
-          border: 1px solid #f9edee;
-          border-radius: 50px;
-          color: #c0272b;
-          font-weight: 500;
-          font-size: 13px;
+          gap: var(--openk9-embeddable-search--spacing-xs, 4px);
+          padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+            var(--openk9-embeddable-search--spacing-lg, 16px);
+          background-color: var(
+            --openk9-embeddable-search--primary-subtle-background-color,
+            #f9edee
+          );
+          border: 1px solid
+            var(
+              --openk9-embeddable-search--primary-subtle-background-color,
+              #f9edee
+            );
+          border-radius: var(--openk9-embeddable-search--radius-pill, 999px);
+          color: var(
+            --openk9-embeddable-search--secondary-active-color,
+            #c0272b
+          );
+          font-weight: var(--openk9-embeddable-search--font-weight-medium, 500);
+          font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
           cursor: pointer;
         `}
         onClick={() => {
@@ -276,11 +287,11 @@ function ButtonDetail<E>({
     <div
       className="openk9-wrapper-button-mobile"
       css={css`
-        padding: 24px;
-        padding-top: 8px;
+        padding: var(--openk9-embeddable-search--spacing-2xl, 24px);
+        padding-top: var(--openk9-embeddable-search--spacing-sm, 8px);
         @media (max-width: 480px) {
-          padding: 20px;
-          padding-top: 4px;
+          padding: var(--openk9-embeddable-search--spacing-xl, 20px);
+          padding-top: var(--openk9-embeddable-search--spacing-xs, 4px);
         }
       `}
     >
@@ -291,14 +302,25 @@ function ButtonDetail<E>({
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 3px;
-          padding: 8px 16px;
-          background-color: #f9edee;
-          border: 1px solid #f9edee;
-          border-radius: 50px;
-          color: #c0272b;
-          font-weight: 500;
-          font-size: 13px;
+          gap: var(--openk9-embeddable-search--spacing-xs, 4px);
+          padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+            var(--openk9-embeddable-search--spacing-lg, 16px);
+          background-color: var(
+            --openk9-embeddable-search--primary-subtle-background-color,
+            #f9edee
+          );
+          border: 1px solid
+            var(
+              --openk9-embeddable-search--primary-subtle-background-color,
+              #f9edee
+            );
+          border-radius: var(--openk9-embeddable-search--radius-pill, 999px);
+          color: var(
+            --openk9-embeddable-search--secondary-active-color,
+            #c0272b
+          );
+          font-weight: var(--openk9-embeddable-search--font-weight-medium, 500);
+          font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
           cursor: pointer;
         `}
         onClick={(e) => {

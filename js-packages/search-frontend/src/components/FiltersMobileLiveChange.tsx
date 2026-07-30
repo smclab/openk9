@@ -122,11 +122,11 @@ function FiltersMobileLiveChange<E>({
         <div
           className="openk9-filter-list-container-title box-title live-change-box"
           css={css`
-            padding: 0px 16px;
+            padding: 0px var(--openk9-embeddable-search--spacing-lg, 16px);
             width: 100%;
             background: white;
-            padding-top: 20px;
-            padding-bottom: 13px;
+            padding-top: var(--openk9-embeddable-search--spacing-xl, 20px);
+            padding-bottom: var(--openk9-embeddable-search--spacing-md, 12px);
             display: flex;
           `}
         >
@@ -134,7 +134,7 @@ function FiltersMobileLiveChange<E>({
             className="openk9-filter-list-container-internal-title live-change-title"
             css={css`
               display: flex;
-              gap: 5px;
+              gap: var(--openk9-embeddable-search--spacing-xs, 4px);
             `}
           >
             <span>
@@ -144,8 +144,14 @@ function FiltersMobileLiveChange<E>({
               <h2
                 css={css`
                   font-style: normal;
-                  font-weight: 700;
-                  font-size: 18px;
+                  font-weight: var(
+                    --openk9-embeddable-search--font-weight-bold,
+                    700
+                  );
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-lg,
+                    18px
+                  );
                   height: 18px;
                   line-height: 22px;
                   display: flex;
@@ -164,14 +170,14 @@ function FiltersMobileLiveChange<E>({
           aria-label={t("close") || "close"}
           css={css`
             color: var(--openk9-grey-stone-600);
-            font-size: 15px;
+            font-size: var(--openk9-embeddable-search--font-size-md, 16px);
             font-family: Nunito Sans;
-            font-weight: 700;
+            font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
             line-height: 12px;
             display: flex;
             align-items: center;
-            gap: 9px;
-            margin-right: 21px;
+            gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+            margin-right: var(--openk9-embeddable-search--spacing-xl, 20px);
             background-color: white;
             border: none;
           `}
@@ -188,7 +194,7 @@ function FiltersMobileLiveChange<E>({
         css={css`
           overflow-y: auto;
           height: calc(100vh - 210px);
-          border-radius: 8px;
+          border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
         `}
       >
         <FiltersMemo
@@ -229,16 +235,16 @@ function FiltersMobileLiveChange<E>({
           bottom: 0;
           left: 0;
           right: 0;
-          padding: 10px;
+          padding: var(--openk9-embeddable-search--spacing-md, 12px);
           background: white;
           @media (max-width: 480px) {
-            padding-inline: 20px;
+            padding-inline: var(--openk9-embeddable-search--spacing-xl, 20px);
             flex-direction: column;
           }
           @media (min-width: 481px) and (max-width: 768px) {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: var(--openk9-embeddable-search--spacing-xl, 20px);
             width: 180px;
           }
         `}
@@ -249,32 +255,50 @@ function FiltersMobileLiveChange<E>({
           css={css`
             font-size: smaller;
             height: 52px;
-            padding: 8px 12px;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-md, 12px);
             white-space: nowrap;
-            border: 1px solid #d6012e;
-            background-color: #d6012e;
-            border-radius: 5px;
+            border: 1px solid
+              var(--openk9-embeddable-search--accent-color, #d6012e);
+            background-color: var(
+              --openk9-embeddable-search--accent-color,
+              #d6012e
+            );
+            border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
             color: white;
-            font-weight: 600;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-semibold,
+              600
+            );
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: var(--openk9-embeddable-search--spacing-xs, 4px);
             @media (max-width: 480px) {
               background: white;
-              border: 1px solid #d6012e;
+              border: 1px solid
+                var(--openk9-embeddable-search--accent-color, #d6012e);
               width: 100%;
               height: auto;
-              margin-top: 20px;
+              margin-top: var(--openk9-embeddable-search--spacing-xl, 20px);
               color: black;
-              border-radius: 50px;
+              border-radius: var(
+                --openk9-embeddable-search--radius-pill,
+                999px
+              );
               display: flex;
               justify-content: center;
-              color: var(--red-tones-500, #c0272b);
+              color: var(
+                --openk9-embeddable-search--secondary-active-color,
+                #c0272b
+              );
               text-align: center;
-              font-size: 16px;
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               font-style: normal;
-              font-weight: 700;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-bold,
+                700
+              );
               line-height: normal;
               align-items: center;
             }
@@ -298,31 +322,49 @@ function FiltersMobileLiveChange<E>({
           css={css`
             font-size: smaller;
             height: 52px;
-            padding: 8px 12px;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-md, 12px);
             white-space: nowrap;
-            border: 1px solid #d6012e;
-            background-color: #d6012e;
-            border-radius: 5px;
+            border: 1px solid
+              var(--openk9-embeddable-search--accent-color, #d6012e);
+            background-color: var(
+              --openk9-embeddable-search--accent-color,
+              #d6012e
+            );
+            border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
             color: white;
-            font-weight: 600;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-semibold,
+              600
+            );
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: var(--openk9-embeddable-search--spacing-xs, 4px);
             @media (max-width: 480px) {
-              background: #d6012e;
-              border: 1px solid #d6012e;
+              background: var(
+                --openk9-embeddable-search--accent-color,
+                #d6012e
+              );
+              border: 1px solid
+                var(--openk9-embeddable-search--accent-color, #d6012e);
               width: 100%;
               height: auto;
-              margin-top: 20px;
+              margin-top: var(--openk9-embeddable-search--spacing-xl, 20px);
               color: white;
-              border-radius: 50px;
+              border-radius: var(
+                --openk9-embeddable-search--radius-pill,
+                999px
+              );
               display: flex;
               justify-content: center;
               text-align: center;
-              font-size: 16px;
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               font-style: normal;
-              font-weight: 700;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-bold,
+                700
+              );
               line-height: normal;
             }
           `}
@@ -374,7 +416,7 @@ function ViewAllTabs({
     <div
       className="openk9-filter-tabs-container"
       css={css`
-        margin-left: 16px;
+        margin-left: var(--openk9-embeddable-search--spacing-lg, 16px);
       `}
     >
       <div
@@ -416,7 +458,7 @@ function ViewAllTabs({
               icon={isOpen ? faChevronDown : faChevronUp}
               css={css`
                 color: var(--openk9-embeddable-search--secondary-text-color);
-                font-size: 15px;
+                font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               `}
             />
           </button>
@@ -426,7 +468,7 @@ function ViewAllTabs({
         className="openk9-filter-tabs-list"
         css={css`
           padding: 0px;
-          margin: 10px 0px;
+          margin: var(--openk9-embeddable-search--spacing-md, 12px) 0px;
         `}
       >
         {isOpen &&
@@ -441,7 +483,7 @@ function ViewAllTabs({
                 className="openk9-filter-tabs-list-item"
                 css={css`
                   display: flex;
-                  gap: 10px;
+                  gap: var(--openk9-embeddable-search--spacing-md, 12px);
                 `}
               >
                 <div
@@ -449,7 +491,7 @@ function ViewAllTabs({
                   css={css`
                     display: flex;
                     align-items: center;
-                    gap: 8px;
+                    gap: var(--openk9-embeddable-search--spacing-sm, 8px);
                   `}
                 >
                   <input
@@ -468,11 +510,14 @@ function ViewAllTabs({
                       appearance: none;
                       width: 17px;
                       height: 16px;
-                      border-radius: 50%;
+                      border-radius: var(
+                        --openk9-embeddable-search--radius-circle,
+                        50%
+                      );
                       border: 2px solid #ccc;
                       background-color: ${selectedTabIndex === index
                         ? "var(--openk9-embeddable-search--secondary-active-color) "
-                        : "#fff "};
+                        : "var(--openk9-embeddable-search--primary-background-color, #fff) "};
                       cursor: pointer;
                     `}
                   />
@@ -481,9 +526,15 @@ function ViewAllTabs({
                     css={css`
                       text-overflow: ellipsis;
                       font-style: normal;
-                      font-weight: 600;
+                      font-weight: var(
+                        --openk9-embeddable-search--font-weight-semibold,
+                        600
+                      );
                       line-height: 22px;
-                      color: #000000;
+                      color: var(
+                        --openk9-embeddable-search--primary-text-color,
+                        #000000
+                      );
                     `}
                   >
                     {capitalize(tabTraslation)}

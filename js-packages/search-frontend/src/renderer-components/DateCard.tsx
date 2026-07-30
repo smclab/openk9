@@ -22,7 +22,7 @@ export function DateCard<E>({
       css={css`
         display: flex;
         flex-direction: row;
-        gap: 5px;
+        gap: var(--openk9-embeddable-search--spacing-xs, 4px);
       `}
     >
       <div
@@ -30,8 +30,11 @@ export function DateCard<E>({
         css={css`
           color: #71717a;
           font-style: normal;
-          font-weight: 400;
-          font-size: 15px;
+          font-weight: var(
+            --openk9-embeddable-search--font-weight-regular,
+            400
+          );
+          font-size: var(--openk9-embeddable-search--font-size-md, 16px);
           line-height: 19px;
         `}
       >
@@ -41,8 +44,11 @@ export function DateCard<E>({
         className="openk9-embeddable-more-detail-card-container-date"
         css={css`
           font-style: normal;
-          font-weight: 600;
-          font-size: 14px;
+          font-weight: var(
+            --openk9-embeddable-search--font-weight-semibold,
+            600
+          );
+          font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
           line-height: 19px;
           color: #3f3f46;
         `}

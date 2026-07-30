@@ -11,7 +11,8 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
       className="openk9-embeddable-result-container"
       css={css`
         display: flex;
-        padding: 8px 16px;
+        padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+          var(--openk9-embeddable-search--spacing-lg, 16px);
       `}
     >
       <div
@@ -21,7 +22,7 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
             display: none;
           }
           width: 30px;
-          margin-right: 8px;
+          margin-right: var(--openk9-embeddable-search--spacing-sm, 8px);
         `}
       >
         <div
@@ -41,7 +42,7 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
       <div
         className="openk9-embeddable-result--children"
         css={css`
-          margin-left: 8px;
+          margin-left: var(--openk9-embeddable-search--spacing-sm, 8px);
           overflow: hidden;
         `}
       >

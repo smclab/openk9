@@ -139,7 +139,7 @@ function Detail<E>(props: DetailProps<E>) {
 
         ::-webkit-scrollbar-thumb {
           background: rgba(0, 0, 0, 0.4);
-          border-radius: 10px;
+          border-radius: var(--openk9-embeddable-search--radius-md, 12px);
           height: 5px;
         }
 
@@ -155,8 +155,8 @@ function Detail<E>(props: DetailProps<E>) {
           width: 100%;
           background: white;
           display: flex;
-          padding: 16px;
-          gap: 3px;
+          padding: var(--openk9-embeddable-search--spacing-lg, 16px);
+          gap: var(--openk9-embeddable-search--spacing-xs, 4px);
           box-sizing: border-box;
           justify-content: space-between;
           border-top-left-radius: ${setDetailMobile ? "20px" : "0px"};
@@ -167,7 +167,7 @@ function Detail<E>(props: DetailProps<E>) {
           className="openk9-icon-and-title-detail"
           css={css`
             display: flex;
-            gap: 5px;
+            gap: var(--openk9-embeddable-search--spacing-xs, 4px);
           `}
         >
           <div className="openk9-preview-icon-wrapper">
@@ -179,8 +179,11 @@ function Detail<E>(props: DetailProps<E>) {
             className="openk9-detail-class-title"
             css={css`
               font-style: normal;
-              font-weight: 700;
-              font-size: 16px;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-bold,
+                700
+              );
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               height: 18px;
               line-height: 22px;
               align-items: center;
@@ -197,11 +200,20 @@ function Detail<E>(props: DetailProps<E>) {
               border: none;
               background: #f3e2e6;
               color: var(--openk9-embeddable-search--primary-color);
-              font-weight: 600;
-              border-radius: 5px;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-semibold,
+                600
+              );
+              border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
               cursor: pointer;
               &:focus-visible {
-                box-shadow: 0 0 0 0.125rem #fff, 0 0 0 0.25rem #ee4848;
+                box-shadow: 0 0 0 0.125rem
+                    var(
+                      --openk9-embeddable-search--primary-background-color,
+                      #fff
+                    ),
+                  0 0 0 0.25rem
+                    var(--openk9-embeddable-search--focus-ring-color, #ee4848);
                 outline: 0;
               }
             `}
@@ -238,7 +250,8 @@ function Detail<E>(props: DetailProps<E>) {
           css={css`
             width: 100%;
             box-sizing: border-box;
-            padding: 8px 16px;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-lg, 16px);
             background: white;
             border-bottom-left-radius: ${setDetailMobile ? "20px" : "0px"};
             border-bottom-right-radius: ${setDetailMobile ? "20px" : "0px"};

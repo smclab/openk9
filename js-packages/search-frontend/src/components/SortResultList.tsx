@@ -91,7 +91,7 @@ function SortResultList({
         css={css`
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: var(--openk9-embeddable-search--spacing-xs, 4px);
         `}
       >
         {props.children}

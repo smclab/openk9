@@ -52,7 +52,7 @@ export function ActiveFilter({
         className="openk9-filters-active-information"
         css={css`
           @media (max-width: 769px) {
-            font-size: 20px;
+            font-size: var(--openk9-embeddable-search--font-size-xl, 20px);
           }
         `}
       >
@@ -60,7 +60,7 @@ export function ActiveFilter({
         <span
           className="openk9-number-filters-active"
           css={css`
-            color: #d6012e;
+            color: var(--openk9-embeddable-search--accent-color, #d6012e);
           `}
         >
           {countTotalValues(filterSearchQuery)}
@@ -86,7 +86,7 @@ export function ActiveFilter({
               className="openk9-container-active-filters"
               css={css`
                 display: flex;
-                gap: 10px;
+                gap: var(--openk9-embeddable-search--spacing-md, 12px);
                 width: 100%;
                 flex-wrap: wrap;
               `}
@@ -108,14 +108,30 @@ export function ActiveFilter({
                           css={css`
                             border: 1px solid red;
                             background: inherit;
-                            padding: 3px 12px;
-                            border-radius: 50px;
-                            color: #bc0012;
-                            font-weight: 700;
+                            padding: var(
+                                --openk9-embeddable-search--spacing-xs,
+                                4px
+                              )
+                              var(--openk9-embeddable-search--spacing-md, 12px);
+                            border-radius: var(
+                              --openk9-embeddable-search--radius-pill,
+                              999px
+                            );
+                            color: var(
+                              --openk9-embeddable-search--accent-dark-color,
+                              #bc0012
+                            );
+                            font-weight: var(
+                              --openk9-embeddable-search--font-weight-bold,
+                              700
+                            );
                             line-height: 24px;
                             display: flex;
                             align-items: center;
-                            gap: 10px;
+                            gap: var(
+                              --openk9-embeddable-search--spacing-md,
+                              12px
+                            );
                             white-space: nowrap;
                             cursor: pointer;
                           `}
@@ -170,13 +186,17 @@ export function ActiveFilter({
               css={css`
                 border: none;
                 background: inherit;
-                padding: 3px 12px;
-                border-radius: 50px;
+                padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                  var(--openk9-embeddable-search--spacing-md, 12px);
+                border-radius: var(
+                  --openk9-embeddable-search--radius-pill,
+                  999px
+                );
                 text-decoration: underline;
                 line-height: 24px;
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: var(--openk9-embeddable-search--spacing-md, 12px);
                 white-space: nowrap;
                 cursor: pointer;
               `}

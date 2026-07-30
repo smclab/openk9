@@ -134,7 +134,7 @@ function FiltersHorizontal({
         css={css`
           overflow-y: auto;
           position: relative;
-          border-radius: 8px;
+          border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
         `}
       >
         {suggestionCategories?.data?.map((suggestion, index) => {
@@ -164,7 +164,7 @@ function FiltersHorizontal({
         <div
           css={css`
             @media (max-width: 480px) {
-              margin-top: 5px;
+              margin-top: var(--openk9-embeddable-search--spacing-xs, 4px);
               border: 0.5px solid rgba(128, 128, 128, 0.48);
             }
           `}
@@ -177,9 +177,9 @@ function FiltersHorizontal({
             display: flex;
             justify-content: flex-end;
             @media (max-width: 480px) {
-              padding-inline: 20px;
+              padding-inline: var(--openk9-embeddable-search--spacing-xl, 20px);
               flex-direction: column;
-              gap: 15px;
+              gap: var(--openk9-embeddable-search--spacing-lg, 16px);
             }
           `}
         >
@@ -192,36 +192,54 @@ function FiltersHorizontal({
             css={css`
               font-size: smaller;
               height: 52px;
-              padding: 8px 12px;
+              padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                var(--openk9-embeddable-search--spacing-md, 12px);
               white-space: nowrap;
-              border: 1px solid #d6012e;
-              background-color: #d6012e;
-              border-radius: 5px;
+              border: 1px solid
+                var(--openk9-embeddable-search--accent-color, #d6012e);
+              background-color: var(
+                --openk9-embeddable-search--accent-color,
+                #d6012e
+              );
+              border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
               color: white;
-              font-weight: 600;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-semibold,
+                600
+              );
               cursor: pointer;
               display: flex;
               align-items: center;
-              gap: 3px;
+              gap: var(--openk9-embeddable-search--spacing-xs, 4px);
               &:disabled {
                 opacity: 0.6;
                 cursor: not-allowed;
               }
               @media (max-width: 480px) {
                 background: white;
-                border: 1px solid #d6012e;
+                border: 1px solid
+                  var(--openk9-embeddable-search--accent-color, #d6012e);
                 width: 100%;
                 height: auto;
-                margin-top: 20px;
+                margin-top: var(--openk9-embeddable-search--spacing-xl, 20px);
                 color: black;
-                border-radius: 50px;
+                border-radius: var(
+                  --openk9-embeddable-search--radius-pill,
+                  999px
+                );
                 display: flex;
                 justify-content: center;
-                color: var(--red-tones-500, #c0272b);
+                color: var(
+                  --openk9-embeddable-search--secondary-active-color,
+                  #c0272b
+                );
                 text-align: center;
-                font-size: 16px;
+                font-size: var(--openk9-embeddable-search--font-size-md, 16px);
                 font-style: normal;
-                font-weight: 700;
+                font-weight: var(
+                  --openk9-embeddable-search--font-weight-bold,
+                  700
+                );
                 line-height: normal;
                 align-items: center;
               }
@@ -249,31 +267,49 @@ function FiltersHorizontal({
             css={css`
               font-size: smaller;
               height: 52px;
-              padding: 8px 12px;
+              padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                var(--openk9-embeddable-search--spacing-md, 12px);
               white-space: nowrap;
-              border: 1px solid #d6012e;
-              background-color: #d6012e;
-              border-radius: 5px;
+              border: 1px solid
+                var(--openk9-embeddable-search--accent-color, #d6012e);
+              background-color: var(
+                --openk9-embeddable-search--accent-color,
+                #d6012e
+              );
+              border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
               color: white;
-              font-weight: 600;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-semibold,
+                600
+              );
               cursor: pointer;
               display: flex;
               align-items: center;
-              gap: 3px;
+              gap: var(--openk9-embeddable-search--spacing-xs, 4px);
               @media (max-width: 480px) {
-                background: #d6012e;
-                border: 1px solid #d6012e;
+                background: var(
+                  --openk9-embeddable-search--accent-color,
+                  #d6012e
+                );
+                border: 1px solid
+                  var(--openk9-embeddable-search--accent-color, #d6012e);
                 width: 100%;
                 height: auto;
-                margin-top: 20px;
+                margin-top: var(--openk9-embeddable-search--spacing-xl, 20px);
                 color: white;
-                border-radius: 50px;
+                border-radius: var(
+                  --openk9-embeddable-search--radius-pill,
+                  999px
+                );
                 display: flex;
                 justify-content: center;
                 text-align: center;
-                font-size: 16px;
+                font-size: var(--openk9-embeddable-search--font-size-md, 16px);
                 font-style: normal;
-                font-weight: 700;
+                font-weight: var(
+                  --openk9-embeddable-search--font-weight-bold,
+                  700
+                );
                 line-height: normal;
               }
               &:disabled {
@@ -344,13 +380,22 @@ function FiltersHorizontal({
             >
               <div
                 css={css`
-                  margin-top: 20px;
-                  margin-bottom: 20px;
+                  margin-top: var(--openk9-embeddable-search--spacing-xl, 20px);
+                  margin-bottom: var(
+                    --openk9-embeddable-search--spacing-xl,
+                    20px
+                  );
                   @media (max-width: 480px) {
                     display: flex;
                     justify-content: space-between;
-                    margin-left: 16px;
-                    margin-bottom: 20px;
+                    margin-left: var(
+                      --openk9-embeddable-search--spacing-lg,
+                      16px
+                    );
+                    margin-bottom: var(
+                      --openk9-embeddable-search--spacing-xl,
+                      20px
+                    );
                   }
                 `}
               >
@@ -358,13 +403,19 @@ function FiltersHorizontal({
                   className="openk9-filters-horizontal-category"
                   css={css`
                     color: #525258;
-                    font-weight: 600;
+                    font-weight: var(
+                      --openk9-embeddable-search--font-weight-semibold,
+                      600
+                    );
                     ::first-letter {
                       text-transform: capitalize;
                     }
                     @media (max-width: 480px) {
                       color: var(--openk9-embeddable-tabs--primary-color);
-                      font-weight: 700;
+                      font-weight: var(
+                        --openk9-embeddable-search--font-weight-bold,
+                        700
+                      );
                     }
                   `}
                 >
@@ -374,7 +425,10 @@ function FiltersHorizontal({
                   aria-label={isOpen ? "chiudi i filtri" : "apri i filtri"}
                   className="openk9-close-filters"
                   css={css`
-                    margin-right: 16px;
+                    margin-right: var(
+                      --openk9-embeddable-search--spacing-lg,
+                      16px
+                    );
                     background: inherit;
                     border: none;
                     @media (min-width: 480px) {
@@ -391,7 +445,10 @@ function FiltersHorizontal({
                       color: var(
                         --openk9-embeddable-search--secondary-text-color
                       );
-                      margin-right: 6px;
+                      margin-right: var(
+                        --openk9-embeddable-search--spacing-sm,
+                        8px
+                      );
                     `}
                   />
                 </button>
@@ -421,12 +478,20 @@ function FiltersHorizontal({
                           css={css`
                             overflow: hidden;
                             text-overflow: ellipsis;
-                            color: ${checked ? "#d6012e" : "black"};
+                            color: ${checked
+                              ? "var(--openk9-embeddable-search--accent-color, #d6012e)"
+                              : "black"};
                             display: flex;
                             align-items: flex-start;
                             @media (max-width: 480px) {
-                              margin-left: 15px;
-                              margin-right: 15px;
+                              margin-left: var(
+                                --openk9-embeddable-search--spacing-lg,
+                                16px
+                              );
+                              margin-right: var(
+                                --openk9-embeddable-search--spacing-lg,
+                                16px
+                              );
                             }
                           `}
                         >
@@ -452,16 +517,22 @@ function FiltersHorizontal({
                               appearance: none;
                               min-width: 15px;
                               min-height: 15px;
-                              border-radius: 4px;
+                              border-radius: var(
+                                --openk9-embeddable-search--radius-xs,
+                                4px
+                              );
                               border: 2px solid #ccc;
                               background-color: ${checked
                                 ? "var(--openk9-embeddable-search--secondary-active-color)"
-                                : "#fff"};
+                                : "var(--openk9-embeddable-search--primary-background-color, #fff)"};
                               background-size: 100%;
                               background-position: center;
                               background-repeat: no-repeat;
                               cursor: pointer;
-                              margin-right: 10px;
+                              margin-right: var(
+                                --openk9-embeddable-search--spacing-md,
+                                12px
+                              );
                             `}
                           />
                           <label
@@ -488,11 +559,17 @@ function FiltersHorizontal({
                   text-align: center;
                   width: 100%;
                   display: flex;
-                  margin-left: 12px;
-                  margin-top: 10px;
+                  margin-left: var(
+                    --openk9-embeddable-search--spacing-md,
+                    12px
+                  );
+                  margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
                   justify-content: center;
                   @media (max-width: 480px) {
-                    margin-top: 15px;
+                    margin-top: var(
+                      --openk9-embeddable-search--spacing-lg,
+                      16px
+                    );
                   }
                 `}
               >
@@ -502,18 +579,28 @@ function FiltersHorizontal({
                   css={css`
                     background: inherit;
                     color: var(--openk9-embeddable-search--primary-color);
-                    font-size: 14px;
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-sm,
+                      14px
+                    );
                     font-style: normal;
-                    font-weight: 700;
+                    font-weight: var(
+                      --openk9-embeddable-search--font-weight-bold,
+                      700
+                    );
                     line-height: normal;
                     display: flex;
                     align-items: center;
-                    gap: 10px;
+                    gap: var(--openk9-embeddable-search--spacing-md, 12px);
                     cursor: pointer;
-                    padding: 8px 16px;
+                    padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                      var(--openk9-embeddable-search--spacing-lg, 16px);
                     border: 1px solid
                       var(--openk9-embeddable-search--primary-color);
-                    border-radius: 20px;
+                    border-radius: var(
+                      --openk9-embeddable-search--radius-xl,
+                      20px
+                    );
                   `}
                   onClick={() => {
                     suggestions.fetchNextPage();
@@ -539,13 +626,13 @@ const GridContainer = ({ children }: { children: any }) => (
     css={css`
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      grid-gap: 15px;
+      grid-gap: var(--openk9-embeddable-search--spacing-lg, 16px);
       grid-auto-rows: auto;
       margin-bottom: 50px;
       @media (max-width: 480px) {
         grid-template-columns: repeat(1, 1fr);
         overflow: auto;
-        margin-bottom: 20px;
+        margin-bottom: var(--openk9-embeddable-search--spacing-xl, 20px);
       }
     `}
   >
@@ -629,8 +716,8 @@ export function NoFilters() {
           align-items: center;
           justify-content: center;
           height: 100%;
-          margin-top: 18px;
-          margin-left: 10px;
+          margin-top: var(--openk9-embeddable-search--spacing-xl, 20px);
+          margin-left: var(--openk9-embeddable-search--spacing-md, 12px);
         `}
       >
         <Logo size={100} />

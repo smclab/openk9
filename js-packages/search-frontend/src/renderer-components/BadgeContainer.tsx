@@ -10,7 +10,7 @@ export function BadgeContainer({ children }: BadgeContainerProps) {
       className="openk9-embeddable-card--badge-container"
       css={css`
         display: flex;
-        margin-bottom: 8px;
+        margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
       `}
     >
       {children}

@@ -355,7 +355,7 @@ export function InfiniteResults<E>({
 
         ::-webkit-scrollbar-thumb {
           background: rgba(0, 0, 0, 0.4);
-          border-radius: 10px;
+          border-radius: var(--openk9-embeddable-search--radius-md, 12px);
           height: 5px;
         }
 
@@ -369,7 +369,7 @@ export function InfiniteResults<E>({
         <div
           className="openk9-infinite-results-container-wrapper"
           css={css`
-            padding-bottom: 16px;
+            padding-bottom: var(--openk9-embeddable-search--spacing-lg, 16px);
           `}
         >
           <ul
@@ -378,7 +378,7 @@ export function InfiniteResults<E>({
               list-style-type: none;
               padding: 0;
               margin: 0;
-              gap: 10px;
+              gap: var(--openk9-embeddable-search--spacing-md, 12px);
               display: flex;
               flex-direction: column;
             `}
@@ -395,8 +395,14 @@ export function InfiniteResults<E>({
                         css={css`
                           background: white;
                           border: 2px solid transparent;
-                          border-radius: 8px;
-                          padding: 8px;
+                          border-radius: var(
+                            --openk9-embeddable-search--radius-sm,
+                            8px
+                          );
+                          padding: var(
+                            --openk9-embeddable-search--spacing-sm,
+                            8px
+                          );
                           &:hover {
                             border: 2px solid gray;
                           }
@@ -426,9 +432,15 @@ export function InfiniteResults<E>({
             <div
               className="openk9-container-embeddable-result-button"
               css={css`
-                padding-inline: 16px;
-                margin-top: 10px;
-                padding-bottom: 16px;
+                padding-inline: var(
+                  --openk9-embeddable-search--spacing-lg,
+                  16px
+                );
+                margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
+                padding-bottom: var(
+                  --openk9-embeddable-search--spacing-lg,
+                  16px
+                );
               `}
             >
               <button
@@ -441,11 +453,18 @@ export function InfiniteResults<E>({
                 css={css`
                   border: 1px solid
                     var(--openk9-embeddable-search--secondary-active-color);
-                  padding: 8px 16px;
+                  padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-lg, 16px);
                   background: inherit;
                   width: 100%;
-                  padding-inline: 16px;
-                  border-radius: 20px;
+                  padding-inline: var(
+                    --openk9-embeddable-search--spacing-lg,
+                    16px
+                  );
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-xl,
+                    20px
+                  );
                   color: var(
                     --openk9-embeddable-search--secondary-active-color
                   );
@@ -551,7 +570,7 @@ export function VirtualResults<E>({
               <div
                 className="openk9-virtual-results-footer"
                 css={css`
-                  padding: 16px;
+                  padding: var(--openk9-embeddable-search--spacing-lg, 16px);
                   display: flex;
                   justify-content: center;
                   align-items: center;

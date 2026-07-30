@@ -10,7 +10,7 @@ export function DetailAttribute({ label, children }: DetailAttributeProps) {
     <div
       className="openk9-embeddable--detail-attribute"
       css={css`
-        margin-bottom: 8px;
+        margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
       `}
     >
       <strong>{label}: </strong>

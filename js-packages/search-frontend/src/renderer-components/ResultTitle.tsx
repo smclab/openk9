@@ -9,8 +9,8 @@ export function ResultTitle({ children }: ResultTitleProps) {
       className="openk9-embeddable-result-title-component"
       css={css`
         font-size: 1.5em;
-        font-weight: 500;
-        margin-bottom: 8px;
+        font-weight: var(--openk9-embeddable-search--font-weight-medium, 500);
+        margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
         ${truncatedLineStyle}
         margin-top: 0px;
       `}

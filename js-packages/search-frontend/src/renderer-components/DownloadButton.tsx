@@ -24,8 +24,8 @@ export function DownloadButton({
         background: none;
         appearance: none;
         border: 1px solid var(--openk9-embeddable-search--primary-color);
-        border-radius: 4px;
-        font-family: inherit;
+        border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
+        font-family: var(--openk9-embeddable-search--font-family, inherit);
         font-size: inherit;
       `}
     >

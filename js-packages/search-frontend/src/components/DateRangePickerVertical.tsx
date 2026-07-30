@@ -185,17 +185,17 @@ export function DataRangePickerVertical({
         height: 100%;
         justify-content: center;
         flex-direction: column;
-        gap: 10px;
+        gap: var(--openk9-embeddable-search--spacing-md, 12px);
       `}
     >
       <div className="DateRangePickerVertical-startDate-container">
         <p
           className="DateRangePickerVertical-date-title"
           css={css`
-            font-size: 14px;
+            font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
             letter-spacing: 0.2px;
             color: var(--openk9-embeddable-search--secondary-text-color);
-            font-weight: 700;
+            font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
           `}
         >
           {translationLabel?.labelContainerDateTitleStart || t("from-date")}
@@ -206,11 +206,15 @@ export function DataRangePickerVertical({
           css={css`
             display: flex;
             align-items: center;
-            border: 1px solid var(--openk9-embeddable-search--border-color, #ced4da);
-            border-radius: 8px;
+            border: 1px solid
+              var(--openk9-embeddable-search--border-color, #ced4da);
+            border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
             transition: border-color 0.15s ease;
             &:focus-within {
-              border-color: var(--openk9-embeddable-search--primary-color, #80bdff);
+              border-color: var(
+                --openk9-embeddable-search--primary-color,
+                #80bdff
+              );
             }
           `}
         >
@@ -256,10 +260,14 @@ export function DataRangePickerVertical({
               min-width: 0;
               border: none;
               background: transparent;
-              padding: 10px 12px;
-              font-size: 14px;
+              padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                var(--openk9-embeddable-search--spacing-md, 12px);
+              font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
               outline: none;
-              color: var(--openk9-embeddable-search--secondary-text-color, #495057);
+              color: var(
+                --openk9-embeddable-search--secondary-text-color,
+                #495057
+              );
               &::placeholder {
                 color: #adb5bd;
               }
@@ -270,7 +278,7 @@ export function DataRangePickerVertical({
               display: flex;
               align-items: center;
               flex-shrink: 0;
-              margin-right: 6px;
+              margin-right: var(--openk9-embeddable-search--spacing-sm, 8px);
             `}
           >
             <div className="openk9-calendar-button">
@@ -328,14 +336,23 @@ export function DataRangePickerVertical({
                   justify-content: center;
                   background: transparent;
                   border: none;
-                  border-radius: 50%;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-circle,
+                    50%
+                  );
                   width: 26px;
                   height: 26px;
                   padding: 0;
                   cursor: pointer;
                   color: #adb5bd;
-                  font-size: 14px;
-                  line-height: 1;
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-sm,
+                    14px
+                  );
+                  line-height: var(
+                    --openk9-embeddable-search--line-height-none,
+                    1
+                  );
                   transition: color 0.15s ease, background-color 0.15s ease;
                   &:hover {
                     color: #dc3545;
@@ -364,10 +381,10 @@ export function DataRangePickerVertical({
         <p
           className="DateRangePickerVertical-date-title"
           css={css`
-            font-size: 14px;
+            font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
             letter-spacing: 0.2px;
             color: var(--openk9-embeddable-search--secondary-text-color);
-            font-weight: 700;
+            font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
           `}
         >
           {translationLabel?.labelContainerDateTitleEnd || t("to-date")}
@@ -380,11 +397,15 @@ export function DataRangePickerVertical({
           css={css`
             display: flex;
             align-items: center;
-            border: 1px solid var(--openk9-embeddable-search--border-color, #ced4da);
-            border-radius: 8px;
+            border: 1px solid
+              var(--openk9-embeddable-search--border-color, #ced4da);
+            border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
             transition: border-color 0.15s ease;
             &:focus-within {
-              border-color: var(--openk9-embeddable-search--primary-color, #80bdff);
+              border-color: var(
+                --openk9-embeddable-search--primary-color,
+                #80bdff
+              );
             }
           `}
         >
@@ -427,10 +448,14 @@ export function DataRangePickerVertical({
               flex: 1;
               border: none;
               background: transparent;
-              padding: 10px 12px;
-              font-size: 14px;
+              padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                var(--openk9-embeddable-search--spacing-md, 12px);
+              font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
               outline: none;
-              color: var(--openk9-embeddable-search--secondary-text-color, #495057);
+              color: var(
+                --openk9-embeddable-search--secondary-text-color,
+                #495057
+              );
               &::placeholder {
                 color: #adb5bd;
               }
@@ -446,7 +471,7 @@ export function DataRangePickerVertical({
               display: flex;
               align-items: center;
               flex-shrink: 0;
-              margin-right: 6px;
+              margin-right: var(--openk9-embeddable-search--spacing-sm, 8px);
             `}
           >
             <div className="openk9-calendar-button">
@@ -502,14 +527,23 @@ export function DataRangePickerVertical({
                   justify-content: center;
                   background: transparent;
                   border: none;
-                  border-radius: 50%;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-circle,
+                    50%
+                  );
                   width: 26px;
                   height: 26px;
                   padding: 0;
                   cursor: pointer;
                   color: #adb5bd;
-                  font-size: 14px;
-                  line-height: 1;
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-sm,
+                    14px
+                  );
+                  line-height: var(
+                    --openk9-embeddable-search--line-height-none,
+                    1
+                  );
                   transition: color 0.15s ease, background-color 0.15s ease;
                   &:hover {
                     color: #dc3545;

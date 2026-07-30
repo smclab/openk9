@@ -11,7 +11,7 @@ export function DetailFavicon({ src }: DetailFaviconProps) {
       src={src}
       alt=""
       css={css`
-        margin-bottom: 8px;
+        margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
       `}
     />
   );

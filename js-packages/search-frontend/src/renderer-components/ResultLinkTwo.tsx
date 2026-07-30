@@ -21,15 +21,26 @@ export function ResultLinkTwo({
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 4px 8px;
-        gap: 4px;
+        padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+          var(--openk9-embeddable-search--spacing-sm, 8px);
+        gap: var(--openk9-embeddable-search--spacing-xs, 4px);
         height: 21px;
         width: 108px;
-        background: #ffffff;
-        border: 1px solid #f9edee;
-        background: #f9edee;
-        border-radius: 20px;
-        margin-top: 20px;
+        background: var(
+          --openk9-embeddable-search--primary-background-color,
+          #ffffff
+        );
+        border: 1px solid
+          var(
+            --openk9-embeddable-search--primary-subtle-background-color,
+            #f9edee
+          );
+        background: var(
+          --openk9-embeddable-search--primary-subtle-background-color,
+          #f9edee
+        );
+        border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
+        margin-top: var(--openk9-embeddable-search--spacing-xl, 20px);
         cursor: pointer;
         white-space: nowrap;
         text-decoration: none;
@@ -38,9 +49,9 @@ export function ResultLinkTwo({
       <div
         css={css`
           color: red;
-          margin-bottom: 14px;
-          font-weight: 500;
-          font-size: 13px;
+          margin-bottom: var(--openk9-embeddable-search--spacing-lg, 16px);
+          font-weight: var(--openk9-embeddable-search--font-weight-medium, 500);
+          font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
           display: block;
           margin-block-start: 1em;
           margin-block-end: 1em;
@@ -52,7 +63,10 @@ export function ResultLinkTwo({
           css={css`
             display: flex;
             align-items: baseline;
-            color: #c0272b;
+            color: var(
+              --openk9-embeddable-search--secondary-active-color,
+              #c0272b
+            );
           `}
         >
           {title}

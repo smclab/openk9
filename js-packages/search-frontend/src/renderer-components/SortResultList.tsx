@@ -25,11 +25,11 @@ export function SortResultList({
         className="form-control openk9-sort-result-select"
         id="regularSelectElement"
         css={css`
-          border-radius: 34px;
+          border-radius: var(--openk9-embeddable-search--radius-pill, 999px);
           border: 1px solid #a292926b;
           height: 30px;
           width: 100%;
-          padding-inline: 10px;
+          padding-inline: var(--openk9-embeddable-search--spacing-md, 12px);
           cursor: pointer;
           :focus {
             border: 1px solid #a292926b;

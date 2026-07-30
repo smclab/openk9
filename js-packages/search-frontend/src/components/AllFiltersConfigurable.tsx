@@ -54,8 +54,8 @@ function CollapsableFilterCategoryLocal({
     <div
       className="openk9-filter-category"
       css={css`
-        padding-inline: 16px;
-        padding-bottom: 16px;
+        padding-inline: var(--openk9-embeddable-search--spacing-lg, 16px);
+        padding-bottom: var(--openk9-embeddable-search--spacing-lg, 16px);
       `}
     >
       <div
@@ -65,9 +65,9 @@ function CollapsableFilterCategoryLocal({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 8px;
-          padding: 6px 0;
-          padding-bottom: 8px;
+          gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+          padding: var(--openk9-embeddable-search--spacing-sm, 8px) 0;
+          padding-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
           border-bottom: 1px solid var(--openk9-embeddable-search--border-color);
         `}
       >
@@ -76,7 +76,7 @@ function CollapsableFilterCategoryLocal({
           css={css`
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--openk9-embeddable-search--spacing-sm, 8px);
             :first-letter {
               text-transform: uppercase;
             }
@@ -85,7 +85,7 @@ function CollapsableFilterCategoryLocal({
           <strong
             className="name-category-filter"
             css={css`
-              font-size: 14px;
+              font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
               letter-spacing: 0.2px;
               color: var(--openk9-embeddable-search--secondary-text-color);
             `}
@@ -104,8 +104,9 @@ function CollapsableFilterCategoryLocal({
           css={css`
             background: transparent;
             border: 1px solid var(--openk9-embeddable-search--border-color);
-            border-radius: 8px;
-            padding: 6px 8px;
+            border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-sm, 8px);
             cursor: pointer;
             transition: transform 120ms ease, background-color 120ms ease,
               border-color 120ms ease;
@@ -131,9 +132,9 @@ function CollapsableFilterCategoryLocal({
         <div
           className="openk9-filter-category-description"
           css={css`
-            font-size: 12px;
+            font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
             color: var(--openk9-embeddable-search--secondary-text-color);
-            margin-bottom: 8px;
+            margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
           `}
         >
           {description}
@@ -144,7 +145,7 @@ function CollapsableFilterCategoryLocal({
         <div
           className="openk9-filter-category-content"
           css={css`
-            padding-top: 16px;
+            padding-top: var(--openk9-embeddable-search--spacing-lg, 16px);
           `}
         >
           {children}
@@ -368,14 +369,18 @@ export default function AllFilters({
             background: var(--openk9-embeddable-search--primary-color, #0078d4);
             color: #fff;
             border: none;
-            border-radius: 8px;
-            padding: 10px 24px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
+            padding: var(--openk9-embeddable-search--spacing-md, 12px)
+              var(--openk9-embeddable-search--spacing-2xl, 24px);
+            font-size: var(--openk9-embeddable-search--font-size-md, 16px);
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-semibold,
+              600
+            );
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             transition: background 0.2s, box-shadow 0.2s;
-            margin-top: 16px;
+            margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
             &:hover {
               background: var(
                 --openk9-embeddable-search--primary-light-color,

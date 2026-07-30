@@ -115,12 +115,12 @@ function TypingIndicator({ label }: { label?: string }) {
       aria-label={label}
       css={css`
         display: inline-flex;
-        gap: 4px;
+        gap: var(--openk9-embeddable-search--spacing-xs, 4px);
         align-items: center;
         span {
           width: 6px;
           height: 6px;
-          border-radius: 50%;
+          border-radius: var(--openk9-embeddable-search--radius-circle, 50%);
           background: ${MUTED};
           animation: ${blink} 1.2s infinite ease-in-out both;
         }
@@ -248,9 +248,9 @@ export function Copilot({
         height: 100%;
         min-height: 0;
         background: ${SURFACE};
-        border-radius: 8px;
+        border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
         overflow: hidden;
-        font-size: 14px;
+        font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
         color: ${TEXT};
         button:focus-visible,
         input:focus-visible,
@@ -265,8 +265,9 @@ export function Copilot({
         css={css`
           display: flex;
           flex-direction: column;
-          gap: 8px;
-          padding: 14px 16px;
+          gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+          padding: var(--openk9-embeddable-search--spacing-lg, 16px)
+            var(--openk9-embeddable-search--spacing-lg, 16px);
           border-bottom: 1px solid ${BORDER};
         `}
       >
@@ -282,8 +283,8 @@ export function Copilot({
             css={css`
               display: inline-flex;
               align-items: center;
-              gap: 6px;
-              font-size: 15px;
+              gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               color: ${PRIMARY};
             `}
           >
@@ -294,7 +295,7 @@ export function Copilot({
             css={css`
               display: flex;
               align-items: center;
-              gap: 8px;
+              gap: var(--openk9-embeddable-search--spacing-sm, 8px);
             `}
           >
             {onClose && (
@@ -311,11 +312,20 @@ export function Copilot({
                   width: 28px;
                   height: 28px;
                   border: none;
-                  border-radius: 50%;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-circle,
+                    50%
+                  );
                   background: none;
                   color: ${MUTED};
-                  font-size: 18px;
-                  line-height: 1;
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-lg,
+                    18px
+                  );
+                  line-height: var(
+                    --openk9-embeddable-search--line-height-none,
+                    1
+                  );
                   cursor: pointer;
                   &:hover {
                     background: ${SURFACE_2};
@@ -336,8 +346,9 @@ export function Copilot({
           css={css`
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            padding: 12px 16px;
+            gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+            padding: var(--openk9-embeddable-search--spacing-md, 12px)
+              var(--openk9-embeddable-search--spacing-lg, 16px);
             border-bottom: 1px solid ${BORDER};
           `}
         >
@@ -351,14 +362,21 @@ export function Copilot({
                 align-self: flex-start;
                 display: inline-flex;
                 align-items: center;
-                gap: 6px;
-                padding: 6px 12px;
+                gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+                padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                  var(--openk9-embeddable-search--spacing-md, 12px);
                 border: 1px solid ${PRIMARY};
-                border-radius: 999px;
+                border-radius: var(
+                  --openk9-embeddable-search--radius-pill,
+                  999px
+                );
                 background: transparent;
                 color: ${PRIMARY};
-                font-size: 13px;
-                font-weight: 600;
+                font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+                font-weight: var(
+                  --openk9-embeddable-search--font-weight-semibold,
+                  600
+                );
                 cursor: pointer;
                 &:disabled {
                   opacity: 0.5;
@@ -375,7 +393,10 @@ export function Copilot({
               <div
                 className="openk9-embeddable-search--copilot-refine-header"
                 css={css`
-                  font-size: 12px;
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-xs,
+                    12px
+                  );
                   color: ${MUTED};
                 `}
               >
@@ -385,7 +406,7 @@ export function Copilot({
                 css={css`
                   display: flex;
                   flex-wrap: wrap;
-                  gap: 6px;
+                  gap: var(--openk9-embeddable-search--spacing-sm, 8px);
                 `}
               >
                 {suggestions.map((suggestion) => (
@@ -399,11 +420,18 @@ export function Copilot({
                     }}
                     disabled={isChatting}
                     css={css`
-                      padding: 6px 12px;
+                      padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                        var(--openk9-embeddable-search--spacing-md, 12px);
                       border: 1px solid ${BORDER};
-                      border-radius: 999px;
+                      border-radius: var(
+                        --openk9-embeddable-search--radius-pill,
+                        999px
+                      );
                       background: ${SURFACE_2};
-                      font-size: 12px;
+                      font-size: var(
+                        --openk9-embeddable-search--font-size-xs,
+                        12px
+                      );
                       cursor: pointer;
                       text-align: left;
                       &:hover {
@@ -438,8 +466,8 @@ export function Copilot({
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          padding: 16px;
+          gap: var(--openk9-embeddable-search--spacing-lg, 16px);
+          padding: var(--openk9-embeddable-search--spacing-lg, 16px);
         `}
       >
         {messages.length === 0 && (
@@ -449,8 +477,8 @@ export function Copilot({
               margin: auto;
               text-align: center;
               color: ${MUTED};
-              font-size: 13px;
-              padding: 24px;
+              font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+              padding: var(--openk9-embeddable-search--spacing-2xl, 24px);
             `}
           >
             {emptyState ?? t("copilot-empty-hint")}
@@ -467,7 +495,7 @@ export function Copilot({
               css={css`
                 display: flex;
                 flex-direction: column;
-                gap: 8px;
+                gap: var(--openk9-embeddable-search--spacing-sm, 8px);
               `}
             >
               <div
@@ -476,8 +504,15 @@ export function Copilot({
                   align-self: flex-end;
                   background: ${PRIMARY};
                   color: white;
-                  border-radius: 14px 14px 2px 14px;
-                  padding: 8px 12px;
+                  border-radius: var(
+                      --openk9-embeddable-search--radius-lg,
+                      16px
+                    )
+                    var(--openk9-embeddable-search--radius-lg, 16px)
+                    var(--openk9-embeddable-search--radius-xs, 4px)
+                    var(--openk9-embeddable-search--radius-lg, 16px);
+                  padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-md, 12px);
                   max-width: 85%;
                   line-height: 1.4;
                   overflow-wrap: anywhere;
@@ -492,14 +527,24 @@ export function Copilot({
                   background: ${isError ? DANGER_BG : SURFACE_2};
                   color: ${isError ? DANGER : "inherit"};
                   border: ${isError ? `1px solid ${DANGER}` : "none"};
-                  border-radius: 14px 14px 14px 2px;
-                  padding: 10px 14px;
+                  border-radius: var(
+                      --openk9-embeddable-search--radius-lg,
+                      16px
+                    )
+                    var(--openk9-embeddable-search--radius-lg, 16px)
+                    var(--openk9-embeddable-search--radius-lg, 16px)
+                    var(--openk9-embeddable-search--radius-xs, 4px);
+                  padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                    var(--openk9-embeddable-search--spacing-lg, 16px);
                   max-width: 90%;
-                  line-height: 1.5;
+                  line-height: var(
+                    --openk9-embeddable-search--line-height-body,
+                    1.5
+                  );
                   overflow-wrap: anywhere;
                   word-break: break-word;
                   p {
-                    margin: 0 0 8px;
+                    margin: 0 0 var(--openk9-embeddable-search--spacing-sm, 8px);
                   }
                   p:last-child {
                     margin-bottom: 0;
@@ -519,9 +564,16 @@ export function Copilot({
                   <ul
                     className="openk9-embeddable-search--copilot-sources"
                     css={css`
-                      margin: 10px 0 0;
-                      padding-left: 18px;
-                      font-size: 12px;
+                      margin: var(--openk9-embeddable-search--spacing-md, 12px)
+                        0 0;
+                      padding-left: var(
+                        --openk9-embeddable-search--spacing-xl,
+                        20px
+                      );
+                      font-size: var(
+                        --openk9-embeddable-search--font-size-xs,
+                        12px
+                      );
                       color: ${MUTED};
                     `}
                   >
@@ -558,9 +610,10 @@ export function Copilot({
         className="openk9-embeddable-search--copilot-input"
         css={css`
           display: flex;
-          gap: 8px;
+          gap: var(--openk9-embeddable-search--spacing-sm, 8px);
           align-items: center;
-          padding: 12px 16px;
+          padding: var(--openk9-embeddable-search--spacing-md, 12px)
+            var(--openk9-embeddable-search--spacing-lg, 16px);
           border-top: 1px solid ${BORDER};
         `}
       >
@@ -577,11 +630,12 @@ export function Copilot({
           }}
           css={css`
             flex: 1;
-            padding: 10px 14px;
+            padding: var(--openk9-embeddable-search--spacing-md, 12px)
+              var(--openk9-embeddable-search--spacing-lg, 16px);
             border: 1px solid ${BORDER};
-            border-radius: 999px;
+            border-radius: var(--openk9-embeddable-search--radius-pill, 999px);
             outline: none;
-            font-size: 14px;
+            font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
             color: ${TEXT};
             background: ${SURFACE};
             &:focus {
@@ -602,7 +656,10 @@ export function Copilot({
               justify-content: center;
               border: 1px solid ${BORDER};
               background: ${SURFACE};
-              border-radius: 50%;
+              border-radius: var(
+                --openk9-embeddable-search--radius-circle,
+                50%
+              );
               width: 38px;
               height: 38px;
               cursor: pointer;
@@ -630,7 +687,10 @@ export function Copilot({
               width: 38px;
               height: 38px;
               border: none;
-              border-radius: 50%;
+              border-radius: var(
+                --openk9-embeddable-search--radius-circle,
+                50%
+              );
               background: ${PRIMARY};
               color: white;
               cursor: pointer;
@@ -653,7 +713,10 @@ export function Copilot({
               width: 38px;
               height: 38px;
               border: none;
-              border-radius: 50%;
+              border-radius: var(
+                --openk9-embeddable-search--radius-circle,
+                50%
+              );
               background: ${PRIMARY};
               color: white;
               cursor: pointer;

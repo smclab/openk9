@@ -77,11 +77,11 @@ function FiltersMobile<E>({
         <div
           className="openk9-filter-list-container-title box-title"
           css={css`
-            padding: 0px 16px;
+            padding: 0px var(--openk9-embeddable-search--spacing-lg, 16px);
             width: 100%;
             background: white;
-            padding-top: 20px;
-            padding-bottom: 13px;
+            padding-top: var(--openk9-embeddable-search--spacing-xl, 20px);
+            padding-bottom: var(--openk9-embeddable-search--spacing-md, 12px);
             display: flex;
           `}
         >
@@ -89,7 +89,7 @@ function FiltersMobile<E>({
             className="openk9-filter-list-container-internal-title "
             css={css`
               display: flex;
-              gap: 5px;
+              gap: var(--openk9-embeddable-search--spacing-xs, 4px);
             `}
           >
             <span>
@@ -99,8 +99,14 @@ function FiltersMobile<E>({
               <h2
                 css={css`
                   font-style: normal;
-                  font-weight: 700;
-                  font-size: 18px;
+                  font-weight: var(
+                    --openk9-embeddable-search--font-weight-bold,
+                    700
+                  );
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-lg,
+                    18px
+                  );
                   height: 18px;
                   line-height: 22px;
                   display: flex;
@@ -118,14 +124,14 @@ function FiltersMobile<E>({
           className="openk9-button-close"
           css={css`
             color: var(--openk9-grey-stone-600);
-            font-size: 10px;
+            font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
             font-family: Nunito Sans;
-            font-weight: 700;
+            font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
             line-height: 12px;
             display: flex;
             align-items: center;
-            gap: 9px;
-            margin-right: 21px;
+            gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+            margin-right: var(--openk9-embeddable-search--spacing-xl, 20px);
             background-color: white;
             border: none;
           `}

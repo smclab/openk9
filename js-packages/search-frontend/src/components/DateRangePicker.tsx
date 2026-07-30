@@ -68,8 +68,9 @@ export function DataRangePicker({
       className="custom-calendar-info"
       css={css`
         display: flex;
-        gap: 5px;
-        padding: 15px 20px;
+        gap: var(--openk9-embeddable-search--spacing-xs, 4px);
+        padding: var(--openk9-embeddable-search--spacing-lg, 16px)
+          var(--openk9-embeddable-search--spacing-xl, 20px);
         overflow: auto;
       `}
     >
@@ -114,7 +115,7 @@ export function DataRangePicker({
           margin-left: auto;
           width: fit-content;
           display: flex;
-          gap: 10px;
+          gap: var(--openk9-embeddable-search--spacing-md, 12px);
         `}
       >
         <CreateLabel
@@ -160,9 +161,9 @@ export function DataRangePicker({
           display: flex;
           align-items: center;
           outline: var(--openk9-embeddable-search--border-color) solid 1px;
-          border-radius: 50px;
+          border-radius: var(--openk9-embeddable-search--radius-pill, 999px);
           background: white;
-          padding-inline: 10px;
+          padding-inline: var(--openk9-embeddable-search--spacing-md, 12px);
           height: 50px;
           @media (max-width: 480px) {
             height: 40px;

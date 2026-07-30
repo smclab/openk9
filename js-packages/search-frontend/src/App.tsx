@@ -46,7 +46,8 @@ export const openk9 = new OpenK9({
 });
 
 const RED = "var(--openk9-embeddable-search--primary-color, #c0272b)";
-const PAGE_BG = "#f5f6f8";
+const PAGE_BG =
+  "var(--openk9-embeddable-search--page-background-color, #f5f6f8)";
 const BORDER = "#e5e7eb";
 const MUTED = "#6b7280";
 
@@ -55,14 +56,15 @@ const MUTED = "#6b7280";
 // anteprima, fonti): stesso contenitore (bordo/raggio/ombra) e stessi header e
 // titoli, così le colonne risultano uniformi tra loro.
 const panelStyle = css`
-  background: #fff;
+  background: var(--openk9-embeddable-search--primary-background-color, #fff);
   border: 1px solid ${BORDER};
-  border-radius: 12px;
+  border-radius: var(--openk9-embeddable-search--radius-md, 12px);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 `;
 
 const sectionHeaderStyle = css`
-  padding: 16px 20px;
+  padding: var(--openk9-embeddable-search--spacing-lg, 16px)
+    var(--openk9-embeddable-search--spacing-xl, 20px);
   border-bottom: 1px solid ${BORDER};
 `;
 
@@ -76,15 +78,15 @@ const sectionHeaderRowStyle = css`
 const sectionTitleStyle = css`
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1e1c21;
+  gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+  font-size: var(--openk9-embeddable-search--font-size-lg, 18px);
+  font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
+  color: var(--openk9-embeddable-search--strong-text-color, #1e1c21);
 `;
 
 const sectionSubtitleStyle = css`
-  margin: 6px 0 0;
-  font-size: 13px;
+  margin: var(--openk9-embeddable-search--spacing-sm, 8px) 0 0;
+  font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
   color: ${MUTED};
 `;
 
@@ -205,25 +207,26 @@ function RealFiltersPanel({
           /* --- ristilizzazione dei filtri reali per matchare il mock --- */
           /* la search per-categoria si apre con animazione dalla lente */
           .openk9-filter-category-container-search {
-            margin: 2px 0 12px;
+            margin: var(--openk9-embeddable-search--spacing-xs, 4px) 0
+              var(--openk9-embeddable-search--spacing-md, 12px);
           }
           .openk9-filter-category-container {
             /* separatore delicato, sempre presente, sotto le suggestion */
             border-bottom: 1px solid #eef0f2;
-            padding: 14px 0;
+            padding: var(--openk9-embeddable-search--spacing-lg, 16px) 0;
             margin-bottom: 0;
           }
           .openk9-filter-category-title {
             margin-left: 0;
-            padding: 0 0 8px;
+            padding: 0 0 var(--openk9-embeddable-search--spacing-sm, 8px);
             /* separatore persistente tra nome categoria e ricerca */
             border-bottom: 1px solid #eef0f2;
           }
           .openk9-filter-category-title strong,
           .name-category-filter {
             text-transform: uppercase;
-            font-size: 13px;
-            font-weight: 700;
+            font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+            font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
             letter-spacing: 0.3px;
             color: ${MUTED};
           }
@@ -233,14 +236,14 @@ function RealFiltersPanel({
           .openk9-mobile-collapsable-filters {
             border: none;
             background: transparent;
-            padding: 4px;
+            padding: var(--openk9-embeddable-search--spacing-xs, 4px);
             color: ${MUTED};
           }
           /* la search filtri (riga a tutta larghezza) usa lo stile del componente */
           .openk9-filter-form-check-container {
             padding-left: 0;
-            gap: 10px;
-            margin-top: 12px;
+            gap: var(--openk9-embeddable-search--spacing-md, 12px);
+            margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
           }
           .form-check {
             align-items: center;
@@ -257,13 +260,16 @@ function RealFiltersPanel({
             border: none;
             border-radius: 0;
             background-color: initial;
-            margin-right: 10px;
+            margin-right: var(--openk9-embeddable-search--spacing-md, 12px);
             cursor: pointer;
           }
           .form-check-label {
-            font-weight: 400;
-            color: #1e1c21;
-            font-size: 14px;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-regular,
+              400
+            );
+            color: var(--openk9-embeddable-search--strong-text-color, #1e1c21);
+            font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
             line-height: 1.4;
           }
           .openk9-container-load-more {
@@ -272,7 +278,10 @@ function RealFiltersPanel({
           }
           .openk9-load-more-button {
             color: ${RED};
-            font-weight: 600;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-semibold,
+              600
+            );
           }
         `}
       >
@@ -305,7 +314,10 @@ function RealFiltersPanel({
                 color: ${MUTED};
                 cursor: pointer;
                 font-size: 22px;
-                line-height: 1;
+                line-height: var(
+                  --openk9-embeddable-search--line-height-none,
+                  1
+                );
               }
               &:hover {
                 color: ${RED};
@@ -329,7 +341,8 @@ function RealFiltersPanel({
               position: static;
               display: flex;
               justify-content: flex-end;
-              padding: 12px 20px 0;
+              padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                var(--openk9-embeddable-search--spacing-xl, 20px) 0;
             }
             /* il mock aveva solo il testo rosso, senza icona */
             svg,
@@ -341,8 +354,11 @@ function RealFiltersPanel({
               border: none;
               background: none;
               color: ${RED};
-              font-size: 13px;
-              font-weight: 600;
+              font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-semibold,
+                600
+              );
               cursor: pointer;
               padding: 0;
               display: inline-flex;
@@ -367,8 +383,8 @@ function RealFiltersPanel({
             box-sizing: border-box;
             overflow-x: hidden;
             overflow-y: auto;
-            padding-block: 0 16px;
-            padding-inline: 8px;
+            padding-block: 0 var(--openk9-embeddable-search--spacing-lg, 16px);
+            padding-inline: var(--openk9-embeddable-search--spacing-sm, 8px);
           `}
           ref={(element) =>
             openk9.updateConfiguration({
@@ -445,10 +461,11 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
         css={css`
           flex: 1;
           overflow: auto;
-          padding: 12px 16px;
+          padding: var(--openk9-embeddable-search--spacing-md, 12px)
+            var(--openk9-embeddable-search--spacing-lg, 16px);
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: var(--openk9-embeddable-search--spacing-md, 12px);
         `}
       >
         {sources.length === 0 && (
@@ -459,8 +476,9 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
               flex-direction: column;
               align-items: center;
               justify-content: center;
-              gap: 18px;
-              padding: 24px 16px;
+              gap: var(--openk9-embeddable-search--spacing-xl, 20px);
+              padding: var(--openk9-embeddable-search--spacing-2xl, 24px)
+                var(--openk9-embeddable-search--spacing-lg, 16px);
               text-align: center;
             `}
           >
@@ -554,8 +572,11 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
                 margin: 0;
                 max-width: 240px;
                 color: ${MUTED};
-                font-size: 13px;
-                line-height: 1.5;
+                font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+                line-height: var(
+                  --openk9-embeddable-search--line-height-body,
+                  1.5
+                );
               `}
             >
               Le fonti compaiono quando K9 IA genera una risposta.
@@ -563,12 +584,13 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
             <div
               css={css`
                 display: flex;
-                gap: 10px;
+                gap: var(--openk9-embeddable-search--spacing-md, 12px);
                 text-align: left;
                 background: color-mix(in srgb, ${RED} 7%, #fff);
                 border: 1px solid color-mix(in srgb, ${RED} 18%, #fff);
-                border-radius: 12px;
-                padding: 12px 14px;
+                border-radius: var(--openk9-embeddable-search--radius-md, 12px);
+                padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                  var(--openk9-embeddable-search--spacing-lg, 16px);
               `}
             >
               <span
@@ -576,7 +598,7 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
                 css={css`
                   flex-shrink: 0;
                   color: ${RED};
-                  margin-top: 1px;
+                  margin-top: var(--openk9-embeddable-search--spacing-xs, 4px);
                 `}
               >
                 <svg
@@ -591,17 +613,29 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
               <div>
                 <div
                   css={css`
-                    font-weight: 700;
-                    font-size: 13px;
+                    font-weight: var(
+                      --openk9-embeddable-search--font-weight-bold,
+                      700
+                    );
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-sm,
+                      14px
+                    );
                     color: ${RED};
-                    margin-bottom: 2px;
+                    margin-bottom: var(
+                      --openk9-embeddable-search--spacing-xs,
+                      4px
+                    );
                   `}
                 >
                   Suggerimento
                 </div>
                 <div
                   css={css`
-                    font-size: 12.5px;
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-xs,
+                      12px
+                    );
                     line-height: 1.45;
                     color: ${MUTED};
                   `}
@@ -620,22 +654,22 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
               key={(source.url ?? "") + index}
               css={css`
                 border: 1px solid ${BORDER};
-                border-radius: 10px;
-                padding: 14px;
+                border-radius: var(--openk9-embeddable-search--radius-md, 12px);
+                padding: var(--openk9-embeddable-search--spacing-lg, 16px);
               `}
             >
               <div
                 css={css`
                   display: flex;
                   justify-content: space-between;
-                  gap: 10px;
+                  gap: var(--openk9-embeddable-search--spacing-md, 12px);
                   align-items: flex-start;
                 `}
               >
                 <div
                   css={css`
                     display: flex;
-                    gap: 10px;
+                    gap: var(--openk9-embeddable-search--spacing-md, 12px);
                     align-items: flex-start;
                   `}
                 >
@@ -647,11 +681,17 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
                       height: 34px;
                       background: ${RED};
                       color: #fff;
-                      border-radius: 8px;
+                      border-radius: var(
+                        --openk9-embeddable-search--radius-sm,
+                        8px
+                      );
                       display: inline-flex;
                       align-items: center;
                       justify-content: center;
-                      font-size: 15px;
+                      font-size: var(
+                        --openk9-embeddable-search--font-size-md,
+                        16px
+                      );
                       font-weight: 800;
                     `}
                   >
@@ -659,9 +699,18 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
                   </span>
                   <span
                     css={css`
-                      font-size: 14px;
-                      font-weight: 700;
-                      color: #1e1c21;
+                      font-size: var(
+                        --openk9-embeddable-search--font-size-sm,
+                        14px
+                      );
+                      font-weight: var(
+                        --openk9-embeddable-search--font-weight-bold,
+                        700
+                      );
+                      color: var(
+                        --openk9-embeddable-search--strong-text-color,
+                        #1e1c21
+                      );
                       line-height: 1.3;
                     `}
                   >
@@ -671,12 +720,28 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
                 <span
                   css={css`
                     flex-shrink: 0;
-                    font-size: 11px;
-                    font-weight: 600;
-                    color: #16a34a;
-                    background: #dcfce7;
-                    border-radius: 999px;
-                    padding: 3px 8px;
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-xs,
+                      12px
+                    );
+                    font-weight: var(
+                      --openk9-embeddable-search--font-weight-semibold,
+                      600
+                    );
+                    color: var(
+                      --openk9-embeddable-search--success-color,
+                      #16a34a
+                    );
+                    background: var(
+                      --openk9-embeddable-search--success-background-color,
+                      #dcfce7
+                    );
+                    border-radius: var(
+                      --openk9-embeddable-search--radius-pill,
+                      999px
+                    );
+                    padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                      var(--openk9-embeddable-search--spacing-sm, 8px);
                     white-space: nowrap;
                   `}
                 >
@@ -690,8 +755,11 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
                   rel="noreferrer"
                   css={css`
                     display: block;
-                    margin: 8px 0 0;
-                    font-size: 12px;
+                    margin: var(--openk9-embeddable-search--spacing-sm, 8px) 0 0;
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-xs,
+                      12px
+                    );
                     color: #2563eb;
                     word-break: break-all;
                   `}
@@ -722,11 +790,11 @@ function TypingDots() {
       aria-label={t("copilot-loading") ?? ""}
       css={css`
         display: inline-flex;
-        gap: 4px;
+        gap: var(--openk9-embeddable-search--spacing-xs, 4px);
         span {
           width: 6px;
           height: 6px;
-          border-radius: 50%;
+          border-radius: var(--openk9-embeddable-search--radius-circle, 50%);
           background: ${MUTED};
           animation: ${blink} 1.2s infinite ease-in-out both;
         }
@@ -770,8 +838,8 @@ function AppInner() {
           height: 100vh;
           box-sizing: border-box;
           display: grid;
-          gap: 20px;
-          padding: 20px;
+          gap: var(--openk9-embeddable-search--spacing-xl, 20px);
+          padding: var(--openk9-embeddable-search--spacing-xl, 20px);
           grid-template-columns: ${view === "ai"
             ? "1fr 440px"
             : "300px 1fr 440px"};
@@ -802,10 +870,11 @@ function AppInner() {
           css={css`
             ${panelStyle}
             grid-area: dockbar;
-            padding: 10px 20px;
+            padding: var(--openk9-embeddable-search--spacing-md, 12px)
+              var(--openk9-embeddable-search--spacing-xl, 20px);
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: var(--openk9-embeddable-search--spacing-xl, 20px);
             @media (max-width: 768.98px) {
               flex-wrap: wrap;
             }
@@ -815,8 +884,11 @@ function AppInner() {
             css={css`
               display: flex;
               align-items: center;
-              font-size: 20px;
-              color: #1e1c21;
+              font-size: var(--openk9-embeddable-search--font-size-xl, 20px);
+              color: var(
+                --openk9-embeddable-search--strong-text-color,
+                #1e1c21
+              );
               /* allinea alla colonna filtri (300) − gap (20) così la search
                  parte esattamente sopra la colonna risultati */
               flex: ${view === "ai" ? "1 1 auto" : "0 0 280px"};
@@ -831,7 +903,7 @@ function AppInner() {
             <span
               css={css`
                 color: ${RED};
-                margin-right: 8px;
+                margin-right: var(--openk9-embeddable-search--spacing-sm, 8px);
               `}
             >
               <Logo size={32} />
@@ -839,7 +911,10 @@ function AppInner() {
             <span>Open</span>
             <span
               css={css`
-                font-weight: 700;
+                font-weight: var(
+                  --openk9-embeddable-search--font-weight-bold,
+                  700
+                );
               `}
             >
               K9
@@ -861,7 +936,7 @@ function AppInner() {
               display: flex;
               align-items: center;
               justify-content: flex-end;
-              gap: 10px;
+              gap: var(--openk9-embeddable-search--spacing-md, 12px);
               /* stessa larghezza della colonna preview (440) − gap (20),
                  così i controlli sono allineati alla colonna di destra */
               flex: 0 0 420px;
@@ -892,7 +967,10 @@ function AppInner() {
                     width: 42px;
                     height: 40px;
                     border: 1px solid color-mix(in srgb, ${RED} 22%, ${BORDER});
-                    border-radius: 10px;
+                    border-radius: var(
+                      --openk9-embeddable-search--radius-md,
+                      12px
+                    );
                     background: color-mix(in srgb, ${RED} 8%, #fff);
                     color: ${RED};
                     cursor: pointer;
@@ -924,7 +1002,10 @@ function AppInner() {
                 /* login come CTA primaria: pill pieno rosso, testo/icona bianchi */
                 .openk9-create-label-container-wrapper {
                   height: 40px;
-                  border-radius: 10px;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-md,
+                    12px
+                  );
                   background: ${RED};
                   border: 1px solid ${RED};
                   color: #fff;
@@ -1202,7 +1283,8 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 ${sectionHeaderRowStyle}
                 @media (max-width: 1024px) {
                   flex-wrap: wrap;
-                  gap: 8px 12px;
+                  gap: var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-md, 12px);
                 }
               `}
             >
@@ -1210,7 +1292,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 css={css`
                   ${sectionTitleStyle}
                   @media (max-width: 1024px) {
-                    font-size: 15px;
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-md,
+                      16px
+                    );
                   }
                 `}
               >
@@ -1218,7 +1303,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 <span
                   css={css`
                     color: ${RED};
-                    margin-left: 6px;
+                    margin-left: var(
+                      --openk9-embeddable-search--spacing-sm,
+                      8px
+                    );
                   `}
                 >
                   {numberOfResults}
@@ -1240,12 +1328,17 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 css={css`
                   display: flex;
                   align-items: center;
-                  gap: 14px;
-                  margin: 14px 20px 0;
-                  padding: 12px 14px;
+                  gap: var(--openk9-embeddable-search--spacing-lg, 16px);
+                  margin: var(--openk9-embeddable-search--spacing-lg, 16px)
+                    var(--openk9-embeddable-search--spacing-xl, 20px) 0;
+                  padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                    var(--openk9-embeddable-search--spacing-lg, 16px);
                   border: 1px solid ${BORDER};
                   border-left: 3px solid ${RED};
-                  border-radius: 10px;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-md,
+                    12px
+                  );
                   background: #fafafa;
                 `}
               >
@@ -1256,7 +1349,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   css={css`
                     flex: 1;
                     min-width: 0;
-                    font-size: 13px;
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-sm,
+                      14px
+                    );
                     line-height: 1.4;
                     color: ${MUTED};
                     display: -webkit-box;
@@ -1282,14 +1378,24 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                     flex-shrink: 0;
                     display: inline-flex;
                     align-items: center;
-                    gap: 6px;
+                    gap: var(--openk9-embeddable-search--spacing-sm, 8px);
                     border: 1px solid ${RED};
                     background: ${RED};
                     color: #fff;
-                    border-radius: 8px;
-                    padding: 8px 14px;
-                    font-size: 13px;
-                    font-weight: 700;
+                    border-radius: var(
+                      --openk9-embeddable-search--radius-sm,
+                      8px
+                    );
+                    padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                      var(--openk9-embeddable-search--spacing-lg, 16px);
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-sm,
+                      14px
+                    );
+                    font-weight: var(
+                      --openk9-embeddable-search--font-weight-bold,
+                      700
+                    );
                     cursor: pointer;
                     white-space: nowrap;
                   `}
@@ -1319,11 +1425,15 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 /* padding-block generoso + scroll-padding così il bordo/raggio
                    della card non viene tagliato di netto contro il bordo dello
                    scroll: entra/esce sfumando (mask) invece di troncarsi */
-                padding: 16px 20px;
-                scroll-padding-block: 16px;
+                padding: var(--openk9-embeddable-search--spacing-lg, 16px)
+                  var(--openk9-embeddable-search--spacing-xl, 20px);
+                scroll-padding-block: var(
+                  --openk9-embeddable-search--spacing-lg,
+                  16px
+                );
                 display: flex;
                 flex-direction: column;
-                gap: 10px;
+                gap: var(--openk9-embeddable-search--spacing-md, 12px);
                 mask-image: linear-gradient(
                   to bottom,
                   transparent 0,
@@ -1387,13 +1497,29 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 css={css`
                   display: inline-flex;
                   align-items: center;
-                  gap: 6px;
-                  font-size: 13px;
-                  font-weight: 600;
-                  color: #16a34a;
-                  background: #dcfce7;
-                  border-radius: 999px;
-                  padding: 5px 12px;
+                  gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-sm,
+                    14px
+                  );
+                  font-weight: var(
+                    --openk9-embeddable-search--font-weight-semibold,
+                    600
+                  );
+                  color: var(
+                    --openk9-embeddable-search--success-color,
+                    #16a34a
+                  );
+                  background: var(
+                    --openk9-embeddable-search--success-background-color,
+                    #dcfce7
+                  );
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-pill,
+                    999px
+                  );
+                  padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                    var(--openk9-embeddable-search--spacing-md, 12px);
                 `}
               >
                 AI attiva
@@ -1402,7 +1528,8 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
 
             <div
               css={css`
-                padding: 12px 20px;
+                padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                  var(--openk9-embeddable-search--spacing-xl, 20px);
                 border-bottom: 1px solid ${BORDER};
               `}
             >
@@ -1412,14 +1539,30 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 css={css`
                   display: inline-flex;
                   align-items: center;
-                  gap: 8px;
+                  gap: var(--openk9-embeddable-search--spacing-sm, 8px);
                   border: 1px solid ${BORDER};
-                  background: #fff;
-                  border-radius: 8px;
-                  padding: 8px 14px;
-                  font-size: 14px;
-                  font-weight: 600;
-                  color: #1e1c21;
+                  background: var(
+                    --openk9-embeddable-search--primary-background-color,
+                    #fff
+                  );
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-sm,
+                    8px
+                  );
+                  padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-lg, 16px);
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-sm,
+                    14px
+                  );
+                  font-weight: var(
+                    --openk9-embeddable-search--font-weight-semibold,
+                    600
+                  );
+                  color: var(
+                    --openk9-embeddable-search--strong-text-color,
+                    #1e1c21
+                  );
                   cursor: pointer;
                   &:hover {
                     border-color: ${RED};
@@ -1442,10 +1585,11 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 flex: 1;
                 overflow-y: auto;
                 overflow-x: hidden;
-                padding: 16px 20px;
+                padding: var(--openk9-embeddable-search--spacing-lg, 16px)
+                  var(--openk9-embeddable-search--spacing-xl, 20px);
                 display: flex;
                 flex-direction: column;
-                gap: 16px;
+                gap: var(--openk9-embeddable-search--spacing-lg, 16px);
                 min-height: 0;
                 min-width: 0;
               `}
@@ -1457,7 +1601,8 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                     margin: auto;
                     width: 100%;
                     max-width: 760px;
-                    padding: 28px 20px;
+                    padding: 28px
+                      var(--openk9-embeddable-search--spacing-xl, 20px);
                     @media (max-width: 620px) {
                       padding: 0px;
                     }
@@ -1469,7 +1614,7 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                       flex-direction: column;
                       align-items: center;
                       text-align: center;
-                      gap: 20px;
+                      gap: var(--openk9-embeddable-search--spacing-xl, 20px);
                     `}
                   >
                     {/* illustrazione: bolla chat con alone e sparkle */}
@@ -1488,7 +1633,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                           position: absolute;
                           width: 118px;
                           height: 118px;
-                          border-radius: 50%;
+                          border-radius: var(
+                            --openk9-embeddable-search--radius-circle,
+                            50%
+                          );
                           background: radial-gradient(
                             circle,
                             color-mix(in srgb, ${RED} 14%, transparent) 0%,
@@ -1582,7 +1730,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                           font-size: 26px;
                           font-weight: 800;
                           letter-spacing: -0.02em;
-                          color: #1e1c21;
+                          color: var(
+                            --openk9-embeddable-search--strong-text-color,
+                            #1e1c21
+                          );
                         `}
                       >
                         Ciao! Sono{" "}
@@ -1596,10 +1747,20 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                       </h3>
                       <p
                         css={css`
-                          margin: 8px auto 0;
+                          margin: var(
+                              --openk9-embeddable-search--spacing-sm,
+                              8px
+                            )
+                            auto 0;
                           max-width: 460px;
-                          font-size: 14px;
-                          line-height: 1.5;
+                          font-size: var(
+                            --openk9-embeddable-search--font-size-sm,
+                            14px
+                          );
+                          line-height: var(
+                            --openk9-embeddable-search--line-height-body,
+                            1.5
+                          );
                           color: ${MUTED};
                         `}
                       >
@@ -1613,7 +1774,7 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                         display: grid;
                         grid-template-columns: 1fr 1fr;
                         align-items: start;
-                        gap: 14px;
+                        gap: var(--openk9-embeddable-search--spacing-lg, 16px);
                         width: 100%;
                         max-width: 640px;
                         @media (max-width: 620px) {
@@ -1630,7 +1791,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                             css={css`
                               display: flex;
                               flex-direction: column;
-                              gap: 14px;
+                              gap: var(
+                                --openk9-embeddable-search--spacing-lg,
+                                16px
+                              );
                             `}
                           >
                             {column.map((prompt) => (
@@ -1642,13 +1806,29 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                                 css={css`
                                   display: flex;
                                   align-items: center;
-                                  gap: 12px;
+                                  gap: var(
+                                    --openk9-embeddable-search--spacing-md,
+                                    12px
+                                  );
                                   width: 100%;
                                   text-align: left;
-                                  background: #fff;
+                                  background: var(
+                                    --openk9-embeddable-search--primary-background-color,
+                                    #fff
+                                  );
                                   border: 1px solid ${BORDER};
-                                  border-radius: 16px;
-                                  padding: 12px 14px;
+                                  border-radius: var(
+                                    --openk9-embeddable-search--radius-lg,
+                                    16px
+                                  );
+                                  padding: var(
+                                      --openk9-embeddable-search--spacing-md,
+                                      12px
+                                    )
+                                    var(
+                                      --openk9-embeddable-search--spacing-lg,
+                                      16px
+                                    );
                                   cursor: pointer;
                                   box-shadow: 0 2px 10px -6px rgba(0, 0, 0, 0.15);
                                   transition: transform 140ms ease,
@@ -1676,7 +1856,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                                     flex-shrink: 0;
                                     width: 40px;
                                     height: 40px;
-                                    border-radius: 12px;
+                                    border-radius: var(
+                                      --openk9-embeddable-search--radius-md,
+                                      12px
+                                    );
                                     display: inline-flex;
                                     align-items: center;
                                     justify-content: center;
@@ -1694,10 +1877,19 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                                   css={css`
                                     flex: 1;
                                     min-width: 0;
-                                    font-size: 13px;
-                                    font-weight: 600;
+                                    font-size: var(
+                                      --openk9-embeddable-search--font-size-sm,
+                                      14px
+                                    );
+                                    font-weight: var(
+                                      --openk9-embeddable-search--font-weight-semibold,
+                                      600
+                                    );
                                     line-height: 1.35;
-                                    color: #1e1c21;
+                                    color: var(
+                                      --openk9-embeddable-search--strong-text-color,
+                                      #1e1c21
+                                    );
                                   `}
                                 >
                                   {prompt.text}
@@ -1707,7 +1899,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                                   css={css`
                                     flex-shrink: 0;
                                     color: ${prompt.accent};
-                                    font-size: 16px;
+                                    font-size: var(
+                                      --openk9-embeddable-search--font-size-md,
+                                      16px
+                                    );
                                   `}
                                 >
                                   ›
@@ -1727,7 +1922,7 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   css={css`
                     display: flex;
                     flex-direction: column;
-                    gap: 8px;
+                    gap: var(--openk9-embeddable-search--spacing-sm, 8px);
                   `}
                 >
                   <div
@@ -1735,8 +1930,15 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                       align-self: flex-end;
                       background: ${RED};
                       color: #fff;
-                      border-radius: 14px 14px 2px 14px;
-                      padding: 8px 12px;
+                      border-radius: var(
+                          --openk9-embeddable-search--radius-lg,
+                          16px
+                        )
+                        var(--openk9-embeddable-search--radius-lg, 16px)
+                        var(--openk9-embeddable-search--radius-xs, 4px)
+                        var(--openk9-embeddable-search--radius-lg, 16px);
+                      padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                        var(--openk9-embeddable-search--spacing-md, 12px);
                       max-width: 85%;
                       line-height: 1.4;
                       overflow-wrap: anywhere;
@@ -1750,14 +1952,25 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                       align-self: flex-start;
                       background: #fbfbfc;
                       border: 1px solid ${BORDER};
-                      border-radius: 14px 14px 14px 2px;
-                      padding: 10px 14px;
+                      border-radius: var(
+                          --openk9-embeddable-search--radius-lg,
+                          16px
+                        )
+                        var(--openk9-embeddable-search--radius-lg, 16px)
+                        var(--openk9-embeddable-search--radius-lg, 16px)
+                        var(--openk9-embeddable-search--radius-xs, 4px);
+                      padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                        var(--openk9-embeddable-search--spacing-lg, 16px);
                       max-width: 90%;
-                      line-height: 1.5;
+                      line-height: var(
+                        --openk9-embeddable-search--line-height-body,
+                        1.5
+                      );
                       overflow-wrap: anywhere;
                       word-break: break-word;
                       p {
-                        margin: 0 0 8px;
+                        margin: 0 0
+                          var(--openk9-embeddable-search--spacing-sm, 8px);
                       }
                       p:last-child {
                         margin-bottom: 0;
@@ -1798,8 +2011,9 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   display: flex;
                   flex-wrap: wrap;
                   align-items: center;
-                  gap: 10px;
-                  padding: 12px 20px;
+                  gap: var(--openk9-embeddable-search--spacing-md, 12px);
+                  padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                    var(--openk9-embeddable-search--spacing-xl, 20px);
                   border-top: 1px solid ${BORDER};
                 `}
               >
@@ -1808,8 +2022,11 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                     css={css`
                       display: inline-flex;
                       align-items: center;
-                      gap: 8px;
-                      font-size: 13px;
+                      gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+                      font-size: var(
+                        --openk9-embeddable-search--font-size-sm,
+                        14px
+                      );
                       color: ${MUTED};
                     `}
                   >
@@ -1826,12 +2043,28 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                     }
                     css={css`
                       border: 1px solid ${BORDER};
-                      background: #fff;
-                      border-radius: 8px;
-                      padding: 8px 14px;
-                      font-size: 14px;
-                      font-weight: 600;
-                      color: #1e1c21;
+                      background: var(
+                        --openk9-embeddable-search--primary-background-color,
+                        #fff
+                      );
+                      border-radius: var(
+                        --openk9-embeddable-search--radius-sm,
+                        8px
+                      );
+                      padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                        var(--openk9-embeddable-search--spacing-lg, 16px);
+                      font-size: var(
+                        --openk9-embeddable-search--font-size-sm,
+                        14px
+                      );
+                      font-weight: var(
+                        --openk9-embeddable-search--font-weight-semibold,
+                        600
+                      );
+                      color: var(
+                        --openk9-embeddable-search--strong-text-color,
+                        #1e1c21
+                      );
                       cursor: pointer;
                       text-align: left;
                       &:hover {
@@ -1853,18 +2086,29 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
             {/* input follow-up (textarea) */}
             <div
               css={css`
-                padding: 12px 20px 8px;
+                padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                  var(--openk9-embeddable-search--spacing-xl, 20px)
+                  var(--openk9-embeddable-search--spacing-sm, 8px);
               `}
             >
               <div
                 css={css`
                   display: flex;
                   align-items: flex-end;
-                  gap: 8px;
-                  padding: 8px 8px 8px 14px;
+                  gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+                  padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-lg, 16px);
                   border: 1px solid ${BORDER};
-                  border-radius: 16px;
-                  background: #fff;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-lg,
+                    16px
+                  );
+                  background: var(
+                    --openk9-embeddable-search--primary-background-color,
+                    #fff
+                  );
                   box-shadow: 0 8px 24px -12px color-mix(in srgb, ${RED} 35%, transparent);
                   transition: border-color 120ms ease, box-shadow 120ms ease;
                   &:focus-within {
@@ -1902,12 +2146,24 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                     outline: none;
                     resize: none;
                     background: transparent;
-                    font-family: inherit;
-                    font-size: 14px;
-                    line-height: 1.5;
+                    font-family: var(
+                      --openk9-embeddable-search--font-family,
+                      inherit
+                    );
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-sm,
+                      14px
+                    );
+                    line-height: var(
+                      --openk9-embeddable-search--line-height-body,
+                      1.5
+                    );
                     max-height: 120px;
-                    padding: 6px 0;
-                    color: #1e1c21;
+                    padding: var(--openk9-embeddable-search--spacing-sm, 8px) 0;
+                    color: var(
+                      --openk9-embeddable-search--strong-text-color,
+                      #1e1c21
+                    );
                   `}
                 />
                 <button
@@ -1921,7 +2177,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                     width: 38px;
                     height: 38px;
                     border: none;
-                    border-radius: 50%;
+                    border-radius: var(
+                      --openk9-embeddable-search--radius-circle,
+                      50%
+                    );
                     background: ${RED};
                     color: #fff;
                     cursor: pointer;
@@ -1946,9 +2205,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
 
             <div
               css={css`
-                padding: 0 20px 14px;
+                padding: 0 var(--openk9-embeddable-search--spacing-xl, 20px)
+                  var(--openk9-embeddable-search--spacing-lg, 16px);
                 text-align: center;
-                font-size: 12px;
+                font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
                 color: ${MUTED};
               `}
             >
@@ -1957,7 +2217,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 css={css`
                   display: inline-flex;
                   vertical-align: -2px;
-                  margin-right: 4px;
+                  margin-right: var(
+                    --openk9-embeddable-search--spacing-xs,
+                    4px
+                  );
                 `}
               >
                 <svg

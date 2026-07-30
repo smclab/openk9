@@ -853,9 +853,13 @@ export function Main({
             css={css`
               display: inline-flex;
               align-items: center;
-              gap: 8px;
-              padding: 8px 18px;
-              border-radius: 999px;
+              gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+              padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                var(--openk9-embeddable-search--spacing-xl, 20px);
+              border-radius: var(
+                --openk9-embeddable-search--radius-pill,
+                999px
+              );
               border: 1px solid
                 var(--openk9-embeddable-search--primary-color, #c0272b);
               background: ${showCopilot
@@ -864,9 +868,12 @@ export function Main({
               color: ${showCopilot
                 ? "#ffffff"
                 : "var(--openk9-embeddable-search--primary-color, #c0272b)"};
-              font-weight: 600;
-              font-size: 14px;
-              line-height: 1;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-semibold,
+                600
+              );
+              font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+              line-height: var(--openk9-embeddable-search--line-height-none, 1);
               cursor: pointer;
               transition: background 140ms ease, color 140ms ease,
                 box-shadow 140ms ease;
@@ -876,7 +883,10 @@ export function Main({
               &:hover {
                 background: var(
                   --openk9-embeddable-search--primary-color,
-                  #c0272b
+                  var(
+                    --openk9-embeddable-search--secondary-active-color,
+                    #c0272b
+                  )
                 );
                 color: #ffffff;
                 box-shadow: 0 2px 8px

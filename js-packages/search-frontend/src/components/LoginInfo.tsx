@@ -122,7 +122,7 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
               );
               border: 1px solid var(--openk9-embeddable-search--border-color);
               z-index: 1;
-              border-radius: 4px;
+              border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
               width: 245px;
               height: 95px;
               overflow: hidden;
@@ -133,7 +133,9 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
           >
             <div
               css={css`
-                padding: 3px 16px 0px 16px;
+                padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                  var(--openk9-embeddable-search--spacing-lg, 16px) 0px
+                  var(--openk9-embeddable-search--spacing-lg, 16px);
                 border-bottom: 1px solid
                   var(--openk9-embeddable-search--border-color);
               `}
@@ -144,10 +146,19 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
                 css={css`
                   font-family: "Helvetica";
                   font-style: normal;
-                  font-weight: 400;
-                  font-size: 14px;
+                  font-weight: var(
+                    --openk9-embeddable-search--font-weight-regular,
+                    400
+                  );
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-sm,
+                    14px
+                  );
                   line-height: 44px;
-                  margin-left: 10px;
+                  margin-left: var(
+                    --openk9-embeddable-search--spacing-md,
+                    12px
+                  );
                   /* or 314% */
 
                   align-items: center;
@@ -160,7 +171,9 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
             </div>
             <div
               css={css`
-                padding: 3px 16px 0px 16px;
+                padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                  var(--openk9-embeddable-search--spacing-lg, 16px) 0px
+                  var(--openk9-embeddable-search--spacing-lg, 16px);
                 border-bottom: 1px solid
                   var(--openk9-embeddable-search--border-color);
                 cursor: pointer;
@@ -175,10 +188,19 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
                 css={css`
                   font-family: "Helvetica";
                   font-style: normal;
-                  font-weight: 700;
-                  font-size: 14px;
+                  font-weight: var(
+                    --openk9-embeddable-search--font-weight-bold,
+                    700
+                  );
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-sm,
+                    14px
+                  );
                   line-height: 44px;
-                  margin-left: 10px;
+                  margin-left: var(
+                    --openk9-embeddable-search--spacing-md,
+                    12px
+                  );
                   /* or 314% */
                   align-items: center;
                   color: #2e2f39;
@@ -197,7 +219,8 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
 export const LoginInfoComponentMemo = React.memo(LoginInfoComponent);
 
 const buttonStyle = css`
-  padding: 4px 8px;
+  padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+    var(--openk9-embeddable-search--spacing-sm, 8px);
   color: inherit;
   :hover {
     color: var(--openk9-embeddable-search--primary-color);
@@ -205,8 +228,8 @@ const buttonStyle = css`
   background: var(--openk9-embeddable-search--primary-background-color);
   appearance: none;
   border: 1px solid var(--openk9-embeddable-search--primary-color);
-  border-radius: 4px;
-  font-family: inherit;
+  border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
+  font-family: var(--openk9-embeddable-search--font-family, inherit);
   font-size: inherit;
 `;
 

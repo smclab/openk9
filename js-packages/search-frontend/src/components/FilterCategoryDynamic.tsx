@@ -215,8 +215,9 @@ function FilterCategoryDynamic({
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        padding: 8px 16px;
+        gap: var(--openk9-embeddable-search--spacing-md, 12px);
+        padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+          var(--openk9-embeddable-search--spacing-lg, 16px);
       `}
     >
       <div
@@ -226,8 +227,8 @@ function FilterCategoryDynamic({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 8px;
-          padding: 6px 0;
+          gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+          padding: var(--openk9-embeddable-search--spacing-sm, 8px) 0;
           border-bottom: 1px solid var(--openk9-embeddable-search--border-color);
         `}
       >
@@ -236,7 +237,7 @@ function FilterCategoryDynamic({
           css={css`
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--openk9-embeddable-search--spacing-sm, 8px);
             :first-letter {
               text-transform: uppercase;
             }
@@ -245,7 +246,7 @@ function FilterCategoryDynamic({
           <strong
             className="name-category-filter"
             css={css`
-              font-size: 14px;
+              font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
               letter-spacing: 0.2px;
               color: var(--openk9-embeddable-search--secondary-text-color);
             `}
@@ -267,16 +268,25 @@ function FilterCategoryDynamic({
                 justify-content: center;
                 min-width: 18px;
                 height: 18px;
-                padding: 0 5px;
-                border-radius: 999px;
+                padding: 0 var(--openk9-embeddable-search--spacing-xs, 4px);
+                border-radius: var(
+                  --openk9-embeddable-search--radius-pill,
+                  999px
+                );
                 background: var(
                   --openk9-embeddable-search--primary-color,
-                  #c22525
+                  var(--openk9-embeddable-search--primary-color, #c22525)
                 );
                 color: #fff;
-                font-size: 11px;
-                font-weight: 700;
-                line-height: 1;
+                font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
+                font-weight: var(
+                  --openk9-embeddable-search--font-weight-bold,
+                  700
+                );
+                line-height: var(
+                  --openk9-embeddable-search--line-height-none,
+                  1
+                );
               `}
             >
               {baseSelectedKeys.size}
@@ -288,7 +298,7 @@ function FilterCategoryDynamic({
           css={css`
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--openk9-embeddable-search--spacing-sm, 8px);
           `}
         >
           <button
@@ -304,8 +314,9 @@ function FilterCategoryDynamic({
             css={css`
               background: transparent;
               border: 1px solid var(--openk9-embeddable-search--border-color);
-              border-radius: 8px;
-              padding: 6px 8px;
+              border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
+              padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                var(--openk9-embeddable-search--spacing-sm, 8px);
               cursor: pointer;
               transition: transform 120ms ease, background-color 120ms ease,
                 border-color 120ms ease;
@@ -337,8 +348,9 @@ function FilterCategoryDynamic({
               css={css`
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                margin: 4px 0 10px;
+                gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+                margin: var(--openk9-embeddable-search--spacing-xs, 4px) 0
+                  var(--openk9-embeddable-search--spacing-md, 12px);
               `}
             >
               <div
@@ -377,11 +389,17 @@ function FilterCategoryDynamic({
                     height: 42px;
                     box-sizing: border-box;
                     padding: 0 40px;
-                    border-radius: 12px;
+                    border-radius: var(
+                      --openk9-embeddable-search--radius-md,
+                      12px
+                    );
                     border: 1px solid
                       var(--openk9-embeddable-search--border-color);
                     background: white;
-                    font-size: 14px;
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-sm,
+                      14px
+                    );
                     :focus {
                       border-color: var(
                         --openk9-embeddable-search--active-color
@@ -415,7 +433,10 @@ function FilterCategoryDynamic({
                       border-top-color: var(
                         --openk9-embeddable-search--primary-color
                       );
-                      border-radius: 50%;
+                      border-radius: var(
+                        --openk9-embeddable-search--radius-circle,
+                        50%
+                      );
                       animation: ${spin} 0.7s linear infinite;
                     `}
                   />
@@ -439,7 +460,10 @@ function FilterCategoryDynamic({
                   background: transparent;
                   border: 1px solid
                     var(--openk9-embeddable-search--border-color);
-                  border-radius: 12px;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-md,
+                    12px
+                  );
                   cursor: pointer;
                   color: var(--openk9-embeddable-search--secondary-text-color);
                   &:hover {
@@ -450,8 +474,14 @@ function FilterCategoryDynamic({
                 <span
                   aria-hidden="true"
                   css={css`
-                    font-size: 18px;
-                    line-height: 1;
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-lg,
+                      18px
+                    );
+                    line-height: var(
+                      --openk9-embeddable-search--line-height-none,
+                      1
+                    );
                   `}
                 >
                   ×
@@ -465,8 +495,9 @@ function FilterCategoryDynamic({
               css={css`
                 display: flex;
                 flex-wrap: wrap;
-                gap: 6px;
-                padding: 4px 0 2px;
+                gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+                padding: var(--openk9-embeddable-search--spacing-xs, 4px) 0
+                  var(--openk9-embeddable-search--spacing-xs, 4px);
               `}
             >
               {filters
@@ -489,17 +520,29 @@ function FilterCategoryDynamic({
                       css={css`
                         display: inline-flex;
                         align-items: center;
-                        gap: 6px;
+                        gap: var(--openk9-embeddable-search--spacing-sm, 8px);
                         max-width: 100%;
                         min-width: 0;
-                        padding: 2px 6px 2px 10px;
-                        border-radius: 999px;
+                        padding: var(
+                            --openk9-embeddable-search--spacing-xs,
+                            4px
+                          )
+                          var(--openk9-embeddable-search--spacing-sm, 8px)
+                          var(--openk9-embeddable-search--spacing-xs, 4px)
+                          var(--openk9-embeddable-search--spacing-md, 12px);
+                        border-radius: var(
+                          --openk9-embeddable-search--radius-pill,
+                          999px
+                        );
                         cursor: pointer;
                         background: color-mix(
                           in srgb,
                           var(
                               --openk9-embeddable-search--primary-color,
-                              #c22525
+                              var(
+                                --openk9-embeddable-search--primary-color,
+                                #c22525
+                              )
                             )
                             10%,
                           transparent
@@ -510,19 +553,31 @@ function FilterCategoryDynamic({
                             in srgb,
                             var(
                                 --openk9-embeddable-search--primary-color,
-                                #c22525
+                                var(
+                                  --openk9-embeddable-search--primary-color,
+                                  #c22525
+                                )
                               )
                               30%,
                             transparent
                           );
-                        font-size: 12px;
-                        font-weight: 600;
+                        font-size: var(
+                          --openk9-embeddable-search--font-size-xs,
+                          12px
+                        );
+                        font-weight: var(
+                          --openk9-embeddable-search--font-weight-semibold,
+                          600
+                        );
                         &:hover {
                           background: color-mix(
                             in srgb,
                             var(
                                 --openk9-embeddable-search--primary-color,
-                                #c22525
+                                var(
+                                  --openk9-embeddable-search--primary-color,
+                                  #c22525
+                                )
                               )
                               20%,
                             transparent
@@ -545,8 +600,14 @@ function FilterCategoryDynamic({
                         aria-hidden="true"
                         css={css`
                           flex-shrink: 0;
-                          font-size: 14px;
-                          line-height: 1;
+                          font-size: var(
+                            --openk9-embeddable-search--font-size-sm,
+                            14px
+                          );
+                          line-height: var(
+                            --openk9-embeddable-search--line-height-none,
+                            1
+                          );
                         `}
                       >
                         ×
@@ -561,7 +622,9 @@ function FilterCategoryDynamic({
             css={css`
               display: flex;
               flex-direction: ${isUniqueLoadMore ? "row" : "column"};
-              gap: ${isUniqueLoadMore ? "0" : "5px"};
+              gap: ${isUniqueLoadMore
+                ? "0"
+                : "var(--openk9-embeddable-search--spacing-xs, 4px)"};
               flex-wrap: ${isUniqueLoadMore ? "wrap" : "initial"};
               padding-left: unset;
               margin: 0;
@@ -574,11 +637,15 @@ function FilterCategoryDynamic({
                 <li
                   css={css`
                     list-style: none;
-                    padding: 12px 4px;
+                    padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                      var(--openk9-embeddable-search--spacing-xs, 4px);
                     color: var(
                       --openk9-embeddable-search--secondary-text-color
                     );
-                    font-size: 13px;
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-sm,
+                      14px
+                    );
                   `}
                 >
                   {t("filter-searching") || "Ricerca in corso…"}
@@ -587,11 +654,15 @@ function FilterCategoryDynamic({
                 <li
                   css={css`
                     list-style: none;
-                    padding: 12px 4px;
+                    padding: var(--openk9-embeddable-search--spacing-md, 12px)
+                      var(--openk9-embeddable-search--spacing-xs, 4px);
                     color: var(
                       --openk9-embeddable-search--secondary-text-color
                     );
-                    font-size: 13px;
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-sm,
+                      14px
+                    );
                   `}
                 >
                   {(t("filter-no-results") || "Nessun risultato per") +
@@ -654,7 +725,9 @@ function FilterCategoryDynamic({
                         display: flex;
                         align-items: ${multiSelect ? "baseline" : "stretch"};
                         width: ${isUniqueLoadMore ? "50%" : "auto"};
-                        margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
+                        margin-bottom: ${isUniqueLoadMore
+                          ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
+                          : "0"};
                         @media (max-width: 768px) {
                           width: 100%;
                           height: ${isUniqueLoadMore ? "50%" : "auto"};
@@ -698,7 +771,10 @@ function FilterCategoryDynamic({
                         css={css`
                           text-overflow: ellipsis;
                           font-style: normal;
-                          font-weight: 400;
+                          font-weight: var(
+                            --openk9-embeddable-search--font-weight-regular,
+                            400
+                          );
                           line-height: 22px;
                           color: ${isChecked
                             ? "var(--openk9-embeddable-search--primary-color)"
@@ -739,17 +815,33 @@ function FilterCategoryDynamic({
                             margin-left: auto;
                             flex-shrink: 0;
                             min-width: 22px;
-                            padding: 1px 8px;
-                            border-radius: 999px;
+                            padding: var(
+                                --openk9-embeddable-search--spacing-xs,
+                                4px
+                              )
+                              var(--openk9-embeddable-search--spacing-sm, 8px);
+                            border-radius: var(
+                              --openk9-embeddable-search--radius-pill,
+                              999px
+                            );
                             background: var(
                               --openk9-embeddable-search--secondary-background-color,
-                              #eeeeee
+                              var(
+                                --openk9-embeddable-search--secondary-background-color,
+                                #eeeeee
+                              )
                             );
                             color: var(
                               --openk9-embeddable-search--secondary-text-color
                             );
-                            font-size: 12px;
-                            font-weight: 600;
+                            font-size: var(
+                              --openk9-embeddable-search--font-size-xs,
+                              12px
+                            );
+                            font-weight: var(
+                              --openk9-embeddable-search--font-weight-semibold,
+                              600
+                            );
                             text-align: center;
                             white-space: nowrap;
                           `}
@@ -769,11 +861,14 @@ function FilterCategoryDynamic({
                 text-align: center;
                 width: 100%;
                 display: flex;
-                margin-top: 10px;
-                margin-bottom: 20px;
+                margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
+                margin-bottom: var(
+                  --openk9-embeddable-search--spacing-xl,
+                  20px
+                );
                 justify-content: center;
                 @media (max-width: 480px) {
-                  margin-top: 15px;
+                  margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
                 }
               `}
             >
@@ -783,18 +878,28 @@ function FilterCategoryDynamic({
                 css={css`
                   background: inherit;
                   color: var(--openk9-embeddable-search--primary-color);
-                  font-size: 14px;
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-sm,
+                    14px
+                  );
                   font-style: normal;
-                  font-weight: 400;
+                  font-weight: var(
+                    --openk9-embeddable-search--font-weight-regular,
+                    400
+                  );
                   line-height: normal;
                   display: flex;
                   align-items: center;
-                  gap: 10px;
+                  gap: var(--openk9-embeddable-search--spacing-md, 12px);
                   cursor: pointer;
-                  padding: 8px 16px;
+                  padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-lg, 16px);
                   border: 1px solid
                     var(--openk9-embeddable-search--primary-color);
-                  border-radius: 8px;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-sm,
+                    8px
+                  );
                 `}
                 onClick={() => {
                   suggestions?.fetchNextPage?.();
@@ -927,7 +1032,10 @@ function SingleSelect({
             appearance: none !important;
             width: 17px !important;
             height: 16px !important;
-            border-radius: 50% !important;
+            border-radius: var(
+              --openk9-embeddable-search--radius-circle,
+              50%
+            ) !important;
             border: 2px solid #ccc !important;
             background-color: ${isChecked
               ? "var(--openk9-embeddable-search--secondary-active-color) !important"
@@ -1187,7 +1295,10 @@ function CapitalizeValue({ value }: { value: string | undefined }) {
         cursor: pointer;
         &:hover {
           color: var(--openk9-embeddable-search--primary-light-color);
-          font-weight: 600;
+          font-weight: var(
+            --openk9-embeddable-search--font-weight-semibold,
+            600
+          );
         }
       `}
       onMouseOver={() => setIsHover(true)}

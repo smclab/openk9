@@ -73,14 +73,18 @@ export function RemoveFilters({
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 8px 12px;
-        gap: 3px;
-        background: #ffffff;
+        padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+          var(--openk9-embeddable-search--spacing-md, 12px);
+        gap: var(--openk9-embeddable-search--spacing-xs, 4px);
+        background: var(
+          --openk9-embeddable-search--primary-background-color,
+          #ffffff
+        );
         border: 1px solid
           var(--openk9-embeddable-search--secondary-active-color);
         white-space: nowrap;
         cursor: pointer;
-        border-radius: 8px;
+        border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
         color: var(--openk9-embeddable-search--secondary-active-color);
       `}
     >

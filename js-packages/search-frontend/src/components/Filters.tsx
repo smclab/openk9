@@ -237,11 +237,14 @@ export function CreateLabel({
         padding: ${padding};
         gap: ${gap};
         height: ${sizeHeight};
-        background: #ffffff;
+        background: var(
+          --openk9-embeddable-search--primary-background-color,
+          #ffffff
+        );
         border: ${hasBorder
           ? "1px solid  var(--openk9-embeddable-search--secondary-active-color);"
           : ""};
-        border-radius: 20px;
+        border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
         white-space: nowrap;
         cursor: pointer;
         color: ${colorLabel};
@@ -307,7 +310,7 @@ export function SkeletonFilters() {
       <div
         className="container-openk9-skeleton-wrapper"
         css={css`
-          padding-inline: 16px;
+          padding-inline: var(--openk9-embeddable-search--spacing-lg, 16px);
         `}
       >
         <CustomSkeleton />
@@ -315,15 +318,15 @@ export function SkeletonFilters() {
       <div
         className="openk9-filters-container-internal"
         css={css`
-          padding-inline: 16px;
-          padding-top: 16px;
+          padding-inline: var(--openk9-embeddable-search--spacing-lg, 16px);
+          padding-top: var(--openk9-embeddable-search--spacing-lg, 16px);
         `}
       >
         <div
           css={css`
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: var(--openk9-embeddable-search--spacing-md, 12px);
           `}
         >
           <CustomSkeleton />
@@ -333,7 +336,7 @@ export function SkeletonFilters() {
               key={index}
               css={css`
                 display: flex;
-                gap: 10px;
+                gap: var(--openk9-embeddable-search--spacing-md, 12px);
                 width: 100%;
               `}
             >
@@ -353,15 +356,15 @@ function SkeletonCategory() {
     <div
       className="openk9-filters-container-internal"
       css={css`
-        padding-inline: 16px;
-        padding-top: 16px;
+        padding-inline: var(--openk9-embeddable-search--spacing-lg, 16px);
+        padding-top: var(--openk9-embeddable-search--spacing-lg, 16px);
       `}
     >
       <div
         css={css`
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: var(--openk9-embeddable-search--spacing-md, 12px);
         `}
       >
         <CustomSkeleton />
@@ -371,7 +374,7 @@ function SkeletonCategory() {
             key={index}
             css={css`
               display: flex;
-              gap: 10px;
+              gap: var(--openk9-embeddable-search--spacing-md, 12px);
               width: 100%;
             `}
           >

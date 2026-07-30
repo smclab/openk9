@@ -9,7 +9,7 @@ export function DetailIconContainer({ children }: DetailIconContainerProps) {
     <div
       className="openk9-embeddable-detail-icon-container"
       css={css`
-        margin-bottom: 8px;
+        margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
         color: var(--openk9-embeddable-search--primary-color);
       `}
     >

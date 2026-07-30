@@ -110,7 +110,7 @@ function FilterCategory({
     <div
       className="openk9-filter-category-container"
       css={css`
-        margin-bottom: 16px;
+        margin-bottom: var(--openk9-embeddable-search--spacing-lg, 16px);
         ${isUniqueLoadMore ? "width: 50%" : null}
         @media (max-width: 768px) {
           ${isUniqueLoadMore ? "height: 50%" : null}
@@ -122,7 +122,7 @@ function FilterCategory({
           className="openk9-filter-category-title"
           css={css`
             user-select: none;
-            margin-left: 16px;
+            margin-left: var(--openk9-embeddable-search--spacing-lg, 16px);
             display: flex;
             align-items: center;
             width: 100% !important;
@@ -155,7 +155,10 @@ function FilterCategory({
                 icon={isOpen ? faChevronDown : faChevronUp}
                 css={css`
                   color: var(--openk9-embeddable-search--secondary-text-color);
-                  margin-right: 8px;
+                  margin-right: var(
+                    --openk9-embeddable-search--spacing-sm,
+                    8px
+                  );
                 `}
               />
             </button>
@@ -170,7 +173,10 @@ function FilterCategory({
               css={css`
                 display: flex;
                 align-items: center;
-                margin-bottom: 10px;
+                margin-bottom: var(
+                  --openk9-embeddable-search--spacing-md,
+                  12px
+                );
                 @media (max-width: 480px) {
                   display: none;
                 }
@@ -180,10 +186,13 @@ function FilterCategory({
                 icon={faSearch}
                 css={css`
                   color: var(--openk9-embeddable-search--secondary-text-color);
-                  margin-left: 25px;
+                  margin-left: var(
+                    --openk9-embeddable-search--spacing-2xl,
+                    24px
+                  );
                   opacity: 0.3;
                   z-index: 3;
-                  margin-top: 16px;
+                  margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
                   height: 15px;
                 `}
               />
@@ -221,16 +230,25 @@ function FilterCategory({
                 placeholder={t("search-filters") || ""}
                 onChange={(event) => setText(event.currentTarget.value)}
                 css={css`
-                  margin-top: 17px;
+                  margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
                   flex-grow: 1;
                   text-indent: 25px;
                   margin-left: -25px;
                   margin-right: -9px;
-                  padding: 8px 16px 8px 8px;
-                  border-radius: 4px;
+                  padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-lg, 16px)
+                    var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-sm, 8px);
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-xs,
+                    4px
+                  );
                   border: 1px solid
                     var(--openk9-embeddable-search--border-color);
-                  border-radius: 20px;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-xl,
+                    20px
+                  );
                   background: white;
                   :focus {
                     border: 1px solid
@@ -239,8 +257,14 @@ function FilterCategory({
                   }
                   ::placeholder {
                     font-style: normal;
-                    font-weight: 400;
-                    font-size: 15px;
+                    font-weight: var(
+                      --openk9-embeddable-search--font-weight-regular,
+                      400
+                    );
+                    font-size: var(
+                      --openk9-embeddable-search--font-size-md,
+                      16px
+                    );
                   }
                 `}
               />
@@ -251,11 +275,13 @@ function FilterCategory({
             css={css`
               display: flex;
               flex-direction: ${isUniqueLoadMore ? "row" : "column"};
-              gap: ${isUniqueLoadMore ? "0" : "5px"};
+              gap: ${isUniqueLoadMore
+                ? "0"
+                : "var(--openk9-embeddable-search--spacing-xs, 4px)"};
               flex-wrap: ${isUniqueLoadMore ? "wrap" : "initial"};
-              padding-left: 13px;
+              padding-left: var(--openk9-embeddable-search--spacing-md, 12px);
               @media (max-width: 480px) {
-                margin-top: 15px;
+                margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
               }
             `}
           >
@@ -282,7 +308,9 @@ function FilterCategory({
                               ? "baseline"
                               : "stretch"};
                             width: ${isUniqueLoadMore ? "50%" : "auto"};
-                            margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
+                            margin-bottom: ${isUniqueLoadMore
+                              ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
+                              : "0"};
                             @media (max-width: 768px) {
                               width: 100%;
                               height: ${isUniqueLoadMore ? "50%" : "auto"};
@@ -328,7 +356,10 @@ function FilterCategory({
                                   appearance: none;
                                   min-width: 15px;
                                   min-height: 15px;
-                                  border-radius: 4px;
+                                  border-radius: var(
+                                    --openk9-embeddable-search--radius-xs,
+                                    4px
+                                  );
                                   border: 2px solid #ccc;
                                   background-color: ${isChecked
                                     ? "var(--openk9-embeddable-search--secondary-active-color)"
@@ -337,7 +368,10 @@ function FilterCategory({
                                   background-position: center;
                                   background-repeat: no-repeat;
                                   cursor: pointer;
-                                  margin-right: 10px;
+                                  margin-right: var(
+                                    --openk9-embeddable-search--spacing-md,
+                                    12px
+                                  );
                                 `}
                               />
                             </React.Fragment>
@@ -359,7 +393,10 @@ function FilterCategory({
                           )}
                           <span
                             css={css`
-                              margin-left: 5px;
+                              margin-left: var(
+                                --openk9-embeddable-search--spacing-xs,
+                                4px
+                              );
                             `}
                           >
                             <label
@@ -372,10 +409,16 @@ function FilterCategory({
                               css={css`
                                 text-overflow: ellipsis;
                                 font-style: normal;
-                                font-weight: 600;
+                                font-weight: var(
+                                  --openk9-embeddable-search--font-weight-semibold,
+                                  600
+                                );
                                 line-height: 22px;
                                 /* or 147% */
-                                color: #000000;
+                                color: var(
+                                  --openk9-embeddable-search--primary-text-color,
+                                  #000000
+                                );
                               `}
                             >
                               {suggestion.tokenType === "ENTITY" ? (
@@ -413,11 +456,11 @@ function FilterCategory({
                 text-align: center;
                 width: 100%;
                 display: flex;
-                margin-left: 12px;
-                margin-top: 10px;
+                margin-left: var(--openk9-embeddable-search--spacing-md, 12px);
+                margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
                 justify-content: center;
                 @media (max-width: 480px) {
-                  margin-top: 15px;
+                  margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
                 }
               `}
             >
@@ -427,18 +470,28 @@ function FilterCategory({
                 css={css`
                   background: inherit;
                   color: var(--openk9-embeddable-search--primary-color);
-                  font-size: 14px;
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-sm,
+                    14px
+                  );
                   font-style: normal;
-                  font-weight: 400;
+                  font-weight: var(
+                    --openk9-embeddable-search--font-weight-regular,
+                    400
+                  );
                   line-height: normal;
                   display: flex;
                   align-items: center;
-                  gap: 10px;
+                  gap: var(--openk9-embeddable-search--spacing-md, 12px);
                   cursor: pointer;
-                  padding: 8px 16px;
+                  padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                    var(--openk9-embeddable-search--spacing-lg, 16px);
                   border: 1px solid
                     var(--openk9-embeddable-search--primary-color);
-                  border-radius: 20px;
+                  border-radius: var(
+                    --openk9-embeddable-search--radius-xl,
+                    20px
+                  );
                 `}
                 onClick={() => {
                   suggestions.fetchNextPage();
@@ -459,14 +512,14 @@ export const FilterCategoryMemo = React.memo(FilterCategory);
 
 export const buttonStyle = css`
   color: inherit;
-  font-weight: bold;
+  font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
   background: none;
   appearance: none;
-  font-family: inherit;
+  font-family: var(--openk9-embeddable-search--font-family, inherit);
   font-size: inherit;
   border: 1px solid var(--openk9-embeddable-search--primary-color);
   color: var(--openk9-embeddable-search--primary-color);
-  border-radius: 4px;
+  border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
   :hover {
     color: var(--openk9-embeddable-search--primary-color);
     cursor: pointer;
@@ -593,7 +646,10 @@ function SingleSelect({
             appearance: none !important;
             width: 17px !important;
             height: 16px !important;
-            border-radius: 50% !important;
+            border-radius: var(
+              --openk9-embeddable-search--radius-circle,
+              50%
+            ) !important;
             border: 2px solid #ccc !important;
             background-color: ${isChecked
               ? "var(--openk9-embeddable-search--secondary-active-color) !important"
@@ -706,8 +762,9 @@ export function NoFilter({
         color: inherit;
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        padding: 8px 16px;
+        gap: var(--openk9-embeddable-search--spacing-md, 12px);
+        padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+          var(--openk9-embeddable-search--spacing-lg, 16px);
       `}
     >
       <div

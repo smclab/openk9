@@ -14,11 +14,11 @@ export function DetailLink({ href, children }: DetailLinkProps) {
       rel="noreferrer"
       css={css`
         font-size: 0.8em;
-        margin-bottom: 8px;
+        margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
         word-wrap: break-word;
         word-break: break-word;
         display: block;
-        color: #c0272b;
+        color: var(--openk9-embeddable-search--secondary-active-color, #c0272b);
       `}
     >
       {children}

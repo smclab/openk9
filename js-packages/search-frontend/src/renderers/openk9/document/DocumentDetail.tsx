@@ -31,9 +31,9 @@ export function DocumentDetail({ result }: DocumentDetailProps) {
       {"document.content" in result.highlight ? (
         <div
           css={css`
-            margin-top: 8px;
+            margin-top: var(--openk9-embeddable-search--spacing-sm, 8px);
             max-width: 100%;
-            line-height: 1em;
+            line-height: var(--openk9-embeddable-search--line-height-none, 1);
             max-height: 6em;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -46,9 +46,9 @@ export function DocumentDetail({ result }: DocumentDetailProps) {
       ) : (
         <div
           css={css`
-            margin-top: 8px;
+            margin-top: var(--openk9-embeddable-search--spacing-sm, 8px);
             max-width: 100%;
-            line-height: 1em;
+            line-height: var(--openk9-embeddable-search--line-height-none, 1);
             max-height: 6em;
             overflow: hidden;
             text-overflow: ellipsis;

@@ -11,10 +11,10 @@ export function ResultTitleTwo({
     <h3
       className="openk9-embeddable-result-title-component"
       css={css`
-        font-weight: 500;
-        margin-bottom: 8px;
-        font-weight: 600;
-        font-size: 19px;
+        font-weight: var(--openk9-embeddable-search--font-weight-medium, 500);
+        margin-bottom: var(--openk9-embeddable-search--spacing-sm, 8px);
+        font-weight: var(--openk9-embeddable-search--font-weight-semibold, 600);
+        font-size: var(--openk9-embeddable-search--font-size-xl, 20px);
         line-height: 26px;
         margin-top: 0px;
         ${isTruncate ? truncatedLineStyle : ""}

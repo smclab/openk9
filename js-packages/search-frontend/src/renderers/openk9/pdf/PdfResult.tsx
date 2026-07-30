@@ -31,16 +31,19 @@ export function PdfResult({ result }: PdfResultProps) {
       {"document.content" in result.highlight ? (
         <div
           css={css`
-            margin-top: 8px;
+            margin-top: var(--openk9-embeddable-search--spacing-sm, 8px);
             max-width: 100%;
-            line-height: 1em;
+            line-height: var(--openk9-embeddable-search--line-height-none, 1);
             max-height: 6em;
             overflow: hidden;
             text-overflow: ellipsis;
             word-wrap: break-word;
             word-break: break-word;
-            font-weight: 400;
-            font-size: 15px;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-regular,
+              400
+            );
+            font-size: var(--openk9-embeddable-search--font-size-md, 16px);
             color: #71717a;
           `}
         >
@@ -49,16 +52,19 @@ export function PdfResult({ result }: PdfResultProps) {
       ) : (
         <div
           css={css`
-            margin-top: 8px;
+            margin-top: var(--openk9-embeddable-search--spacing-sm, 8px);
             max-width: 100%;
-            line-height: 1em;
+            line-height: var(--openk9-embeddable-search--line-height-none, 1);
             max-height: 6em;
             overflow: hidden;
             text-overflow: ellipsis;
             word-wrap: break-word;
             word-break: break-word;
-            font-weight: 400;
-            font-size: 15px;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-regular,
+              400
+            );
+            font-size: var(--openk9-embeddable-search--font-size-md, 16px);
             color: #71717a;
           `}
         >

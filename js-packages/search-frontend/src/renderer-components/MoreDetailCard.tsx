@@ -9,8 +9,11 @@ export function MoreDetailCard({ icon, date }: MoreDetailCars) {
       <div
         className="openk9-embeddable-more-detail-card-icon"
         css={css`
-          margin-top: 11px;
-          color: #c0272b;
+          margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
+          color: var(
+            --openk9-embeddable-search--secondary-active-color,
+            #c0272b
+          );
           display: flex;
           align-items: center;
           justify-content: flex-start;
@@ -22,10 +25,13 @@ export function MoreDetailCard({ icon, date }: MoreDetailCars) {
           css={css`
             color: #71717a;
             font-style: normal;
-            font-weight: 400;
-            font-size: 10px;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-regular,
+              400
+            );
+            font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
             line-height: 14px;
-            margin-left: 5px;
+            margin-left: var(--openk9-embeddable-search--spacing-xs, 4px);
           `}
         >
           PDF
@@ -35,10 +41,13 @@ export function MoreDetailCard({ icon, date }: MoreDetailCars) {
           css={css`
             color: #71717a;
             font-style: normal;
-            font-weight: 400;
-            font-size: 14px;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-regular,
+              400
+            );
+            font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
             line-height: 19px;
-            margin-left: 20px;
+            margin-left: var(--openk9-embeddable-search--spacing-xl, 20px);
           `}
         >
           Last Edit:
@@ -46,10 +55,13 @@ export function MoreDetailCard({ icon, date }: MoreDetailCars) {
             className="openk9-embeddable-more-detail-card-container-date"
             css={css`
               font-style: normal;
-              font-weight: 600;
-              font-size: 14px;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-semibold,
+                600
+              );
+              font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
               line-height: 19px;
-              margin-left: 7px;
+              margin-left: var(--openk9-embeddable-search--spacing-sm, 8px);
               color: #3f3f46;
             `}
           >

@@ -84,17 +84,18 @@ export function SearchWithSuggestions({
       <div
         className="openk9--search-container"
         css={css`
-          margin-top: 12px;
+          margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: var(--openk9-embeddable-search--spacing-md, 12px);
           width: 100%;
           @media (max-width: 480px) {
             flex-direction: column;
-            margin-top: 15px;
+            margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
           }
           .openk9-focusable:has(input:focus) {
-            border: 1px solid #c22525;
+            border: 1px solid
+              var(--openk9-embeddable-search--primary-color, #c22525);
           }
         `}
       >
@@ -104,7 +105,7 @@ export function SearchWithSuggestions({
           css={css`
             display: flex;
             align-items: center;
-            border-radius: 40px;
+            border-radius: var(--openk9-embeddable-search--radius-pill, 999px);
             width: 100%;
             max-height: 50px;
             @media (max-width: 480px) {
@@ -244,7 +245,10 @@ export function SearchWithSuggestions({
                 padding: var(--openk9-embeddable-search--input-padding);
                 caret-color: black;
                 font-size: inherit;
-                font-family: inherit;
+                font-family: var(
+                  --openk9-embeddable-search--font-family,
+                  inherit
+                );
                 background-color: inherit;
                 color: black;
                 @media (max-width: 480px) {
@@ -380,13 +384,14 @@ export function SearchWithSuggestions({
             title={"avvia ricerca"}
             aria-label={labelIcon}
             css={css`
-              padding-right: 16px;
+              padding-right: var(--openk9-embeddable-search--spacing-lg, 16px);
               display: flex;
               flex-direction: row;
-              padding: 4px 8px;
-              gap: 4px;
+              padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                var(--openk9-embeddable-search--spacing-sm, 8px);
+              gap: var(--openk9-embeddable-search--spacing-xs, 4px);
               align-items: center;
-              margin-right: 21px;
+              margin-right: var(--openk9-embeddable-search--spacing-xl, 20px);
               background: inherit;
               border: none;
             `}
@@ -400,7 +405,10 @@ export function SearchWithSuggestions({
                 css={css`
                   cursor: pointer;
                   @media (max-width: 480px) {
-                    margin-top: 7px;
+                    margin-top: var(
+                      --openk9-embeddable-search--spacing-sm,
+                      8px
+                    );
                     display: none;
                   }
                 `}

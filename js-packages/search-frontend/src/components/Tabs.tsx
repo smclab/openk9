@@ -145,7 +145,7 @@ function Tabs({
           overflow-x: hidden;
           white-space: nowrap;
           width: 90vw;
-          margin-left: 15px;
+          margin-left: var(--openk9-embeddable-search--spacing-lg, 16px);
           list-style-type: none;
           margin: 0;
         `}
@@ -164,11 +164,12 @@ function Tabs({
             <button
               className="openk9-button-left-tabs"
               css={css`
-                padding: 8px 12px;
+                padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                  var(--openk9-embeddable-search--spacing-md, 12px);
                 border: 1px solid #80808082;
                 background: #dbdbdb;
                 opacity: 0.9;
-                border-radius: 20px;
+                border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
               `}
               onClick={() => {
                 handleHorizantalScroll({
@@ -198,11 +199,12 @@ function Tabs({
             <button
               className="openk9-button-right-tabs"
               css={css`
-                padding: 8px 12px;
+                padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                  var(--openk9-embeddable-search--spacing-md, 12px);
                 border: 1px solid #80808082;
                 background: #dbdbdb;
                 opacity: 0.9;
-                border-radius: 20px;
+                border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
                 right: 0;
               `}
               onClick={() => {
@@ -243,11 +245,15 @@ function Tabs({
                   }
                   css={css`
                     white-space: nowrap;
-                    padding: 8px 12px;
+                    padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                      var(--openk9-embeddable-search--spacing-md, 12px);
                     background: ${isSelected
                       ? "var(--openk9-embeddable-search--primary-background-tab-color)"
                       : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
-                    border-radius: 8px;
+                    border-radius: var(
+                      --openk9-embeddable-search--radius-sm,
+                      8px
+                    );
                     font: Helvetica Neue LT Std;
                     font-style: normal;
                     display: block;
@@ -320,12 +326,12 @@ function Tabs({
           width: fit-content;
           padding: 0;
           height: fit-content;
-          gap: 16px;
+          gap: var(--openk9-embeddable-search--spacing-lg, 16px);
           margin: 0;
           list-style-type: none;
           margin: 0;
           @media (max-width: 480px) {
-            gap: 10px;
+            gap: var(--openk9-embeddable-search--spacing-md, 12px);
           }
         `}
       >
@@ -366,11 +372,15 @@ function Tabs({
                       background: none;
                       padding: 0;
                       white-space: nowrap;
-                      padding: 8px 12px;
+                      padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                        var(--openk9-embeddable-search--spacing-md, 12px);
                       background: ${isSelected
                         ? "var(--openk9-embeddable-search--primary-background-tab-color)"
                         : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
-                      border-radius: 8px;
+                      border-radius: var(
+                        --openk9-embeddable-search--radius-sm,
+                        8px
+                      );
                       font: Helvetica Neue LT Std;
                       font-style: normal;
                       display: block;
@@ -470,7 +480,8 @@ export default function TabsSkeleton() {
   return (
     <div
       css={css`
-        padding: 8px 16px;
+        padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+          var(--openk9-embeddable-search--spacing-lg, 16px);
       `}
     >
       <CustomSkeleton

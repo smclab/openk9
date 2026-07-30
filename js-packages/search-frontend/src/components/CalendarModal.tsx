@@ -118,18 +118,18 @@ export function CalendarMobile({
           display: flex;
           justify-content: space-beetween;
           background: white;
-          padding-inline: 8px;
+          padding-inline: var(--openk9-embeddable-search--spacing-sm, 8px);
           align-items: center;
         `}
       >
         <div
           className="openk9-filter-list-container-title box-title"
           css={css`
-            padding: 0px 16px;
+            padding: 0px var(--openk9-embeddable-search--spacing-lg, 16px);
             width: 100%;
             background: white;
-            padding-top: 20px;
-            padding-bottom: 13px;
+            padding-top: var(--openk9-embeddable-search--spacing-xl, 20px);
+            padding-bottom: var(--openk9-embeddable-search--spacing-md, 12px);
             display: flex;
             align-items: center;
           `}
@@ -138,7 +138,7 @@ export function CalendarMobile({
             className="openk9-filter-list-container-internal-title "
             css={css`
               display: flex;
-              gap: 5px;
+              gap: var(--openk9-embeddable-search--spacing-xs, 4px);
               align-items: center;
             `}
           >
@@ -149,8 +149,14 @@ export function CalendarMobile({
               <h2
                 css={css`
                   font-style: normal;
-                  font-weight: 700;
-                  font-size: 18px;
+                  font-weight: var(
+                    --openk9-embeddable-search--font-weight-bold,
+                    700
+                  );
+                  font-size: var(
+                    --openk9-embeddable-search--font-size-lg,
+                    18px
+                  );
                   height: 18px;
                   line-height: 22px;
                   display: flex;
@@ -168,14 +174,14 @@ export function CalendarMobile({
           className="openk9-calendar-modal-button-close"
           css={css`
             color: var(--openk9-grey-stone-600);
-            font-size: 16px;
+            font-size: var(--openk9-embeddable-search--font-size-md, 16px);
             font-family: Nunito Sans;
-            font-weight: 700;
+            font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
             line-height: 15px;
             display: flex;
             align-items: center;
-            gap: 9px;
-            margin-right: 21px;
+            gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+            margin-right: var(--openk9-embeddable-search--spacing-xl, 20px);
             align-items: baseline;
             background-color: white;
             border: none;
@@ -198,10 +204,10 @@ export function CalendarMobile({
         className="openk9-button-for-search"
         css={css`
           display: flex;
-          gap: 5px;
+          gap: var(--openk9-embeddable-search--spacing-xs, 4px);
           overflow: scroll;
-          margin-top: 10px;
-          padding-inline: 25px;
+          margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
+          padding-inline: var(--openk9-embeddable-search--spacing-2xl, 24px);
           ::-webkit-scrollbar {
             display: none;
           }
@@ -210,10 +216,14 @@ export function CalendarMobile({
         <button
           css={css`
             background: white;
-            padding: 8px 16px;
-            font-size: 16px;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-lg, 16px);
+            font-size: var(--openk9-embeddable-search--font-size-md, 16px);
             font-style: normal;
-            font-weight: 400;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-regular,
+              400
+            );
             line-height: 22px;
             border: none;
             white-space: nowrap;
@@ -228,10 +238,14 @@ export function CalendarMobile({
         <button
           css={css`
             background: white;
-            padding: 8px 16px;
-            font-size: 16px;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-lg, 16px);
+            font-size: var(--openk9-embeddable-search--font-size-md, 16px);
             font-style: normal;
-            font-weight: 400;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-regular,
+              400
+            );
             line-height: 22px;
             border: none;
             white-space: nowrap;
@@ -246,10 +260,14 @@ export function CalendarMobile({
         <button
           css={css`
             background: white;
-            padding: 8px 16px;
-            font-size: 16px;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-lg, 16px);
+            font-size: var(--openk9-embeddable-search--font-size-md, 16px);
             font-style: normal;
-            font-weight: 400;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-regular,
+              400
+            );
             line-height: 22px;
             border: none;
             white-space: nowrap;
@@ -264,10 +282,14 @@ export function CalendarMobile({
         <button
           css={css`
             background: white;
-            padding: 8px 16px;
-            font-size: 16px;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-lg, 16px);
+            font-size: var(--openk9-embeddable-search--font-size-md, 16px);
             font-style: normal;
-            font-weight: 400;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-regular,
+              400
+            );
             line-height: 22px;
             border: none;
             white-space: nowrap;
@@ -312,17 +334,21 @@ export function CalendarMobile({
           justify-content: center;
           padding-inline: 28px;
           margin-top: -20px;
-          gap: 8px;
+          gap: var(--openk9-embeddable-search--spacing-sm, 8px);
         `}
       >
         <span
           css={css`
             display: inline-flex;
             align-items: center;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-lg, 16px);
+            border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
+            font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-semibold,
+              600
+            );
             color: ${startDate && moment(startDate).isValid()
               ? "#c0272b"
               : "#a1a1aa"};
@@ -343,7 +369,7 @@ export function CalendarMobile({
         <span
           css={css`
             color: #a1a1aa;
-            font-size: 13px;
+            font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
           `}
         >
           &rarr;
@@ -352,10 +378,14 @@ export function CalendarMobile({
           css={css`
             display: inline-flex;
             align-items: center;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-lg, 16px);
+            border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
+            font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-semibold,
+              600
+            );
             color: ${endDate && moment(endDate).isValid()
               ? "#c0272b"
               : "#a1a1aa"};
@@ -377,7 +407,7 @@ export function CalendarMobile({
       <div
         css={css`
           border: 0.5px solid #d4d4d8;
-          margin-top: 20px;
+          margin-top: var(--openk9-embeddable-search--spacing-xl, 20px);
         `}
       ></div>
       <div
@@ -386,7 +416,7 @@ export function CalendarMobile({
           display: flex;
           justify-content: flex-end;
           @media (max-width: 480px) {
-            padding-inline: 20px;
+            padding-inline: var(--openk9-embeddable-search--spacing-xl, 20px);
             flex-direction: column;
           }
         `}
@@ -397,32 +427,50 @@ export function CalendarMobile({
           css={css`
             font-size: smaller;
             height: 52px;
-            padding: 8px 12px;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-md, 12px);
             white-space: nowrap;
-            border: 1px solid #d6012e;
-            background-color: #d6012e;
-            border-radius: 5px;
+            border: 1px solid
+              var(--openk9-embeddable-search--accent-color, #d6012e);
+            background-color: var(
+              --openk9-embeddable-search--accent-color,
+              #d6012e
+            );
+            border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
             color: white;
-            font-weight: 600;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-semibold,
+              600
+            );
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: var(--openk9-embeddable-search--spacing-xs, 4px);
             @media (max-width: 480px) {
               background: white;
-              border: 1px solid #d6012e;
+              border: 1px solid
+                var(--openk9-embeddable-search--accent-color, #d6012e);
               width: 100%;
               height: auto;
-              margin-top: 20px;
+              margin-top: var(--openk9-embeddable-search--spacing-xl, 20px);
               color: black;
-              border-radius: 50px;
+              border-radius: var(
+                --openk9-embeddable-search--radius-pill,
+                999px
+              );
               display: flex;
               justify-content: center;
-              color: var(--red-tones-500, #c0272b);
+              color: var(
+                --openk9-embeddable-search--secondary-active-color,
+                #c0272b
+              );
               text-align: center;
-              font-size: 16px;
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               font-style: normal;
-              font-weight: 700;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-bold,
+                700
+              );
               line-height: normal;
               align-items: center;
             }
@@ -449,31 +497,49 @@ export function CalendarMobile({
           css={css`
             font-size: smaller;
             height: 52px;
-            padding: 8px 12px;
+            padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+              var(--openk9-embeddable-search--spacing-md, 12px);
             white-space: nowrap;
-            border: 1px solid #d6012e;
-            background-color: #d6012e;
-            border-radius: 5px;
+            border: 1px solid
+              var(--openk9-embeddable-search--accent-color, #d6012e);
+            background-color: var(
+              --openk9-embeddable-search--accent-color,
+              #d6012e
+            );
+            border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
             color: white;
-            font-weight: 600;
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-semibold,
+              600
+            );
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: var(--openk9-embeddable-search--spacing-xs, 4px);
             @media (max-width: 480px) {
-              background: #d6012e;
-              border: 1px solid #d6012e;
+              background: var(
+                --openk9-embeddable-search--accent-color,
+                #d6012e
+              );
+              border: 1px solid
+                var(--openk9-embeddable-search--accent-color, #d6012e);
               width: 100%;
               height: auto;
-              margin-top: 20px;
+              margin-top: var(--openk9-embeddable-search--spacing-xl, 20px);
               color: white;
-              border-radius: 50px;
+              border-radius: var(
+                --openk9-embeddable-search--radius-pill,
+                999px
+              );
               display: flex;
               justify-content: center;
               text-align: center;
-              font-size: 16px;
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               font-style: normal;
-              font-weight: 700;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-bold,
+                700
+              );
               line-height: normal;
             }
           `}

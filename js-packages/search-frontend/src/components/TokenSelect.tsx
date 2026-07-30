@@ -82,7 +82,8 @@ export function TokenSelect({
       : "can-select"
     : "not-interactive";
   const entryStyle = (isSelected: boolean, isHighlighted: boolean) => css`
-    padding: 8px 16px;
+    padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+      var(--openk9-embeddable-search--spacing-lg, 16px);
     border-bottom: 1px solid #b09c9c12;
     :hover {
     }
@@ -93,10 +94,13 @@ export function TokenSelect({
     border-left: ${isSelected
       ? `8px solid var(--openk9-embeddable-search--active-color)`
       : "none"};
-    padding-left: ${isSelected ? "8px" : "16px"};
+    padding-left: ${isSelected
+      ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
+      : "var(--openk9-embeddable-search--spacing-lg, 16px)"};
   `;
   const deseleziona = (isSelected: boolean) => css`
-    padding: 8px 16px;
+    padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+      var(--openk9-embeddable-search--spacing-lg, 16px);
     :hover {
     }
     background-color: ${"var(--openk9-embeddable-search--secondary-background-color)"};
@@ -115,7 +119,7 @@ export function TokenSelect({
         css={css`
           white-space: pre;
           ${statusStyles[status]};
-          border-radius: 4px;
+          border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
           border-top: ${isOpen
             ? "2px solid var(--openk9-embeddable-search--active-color)"
             : ""};
@@ -130,18 +134,21 @@ export function TokenSelect({
           css={css`
             position: absolute;
             top: 100%;
-            margin-top: ${isColorSearch ? "0px" : "20px"};
+            margin-top: ${isColorSearch
+              ? "0px"
+              : "var(--openk9-embeddable-search--spacing-xl, 20px)"};
             left: 0px;
             width: 330px;
             background-color: var(
               --openk9-embeddable-search--primary-background-color
             );
             border: 1px solid var(--openk9-embeddable-search--border-color);
-            border-radius: 4px;
+            border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
             background-color: var(
               --openk9-embeddable-search--secondary-background-color
             );
-            margin-bottom: 1px solid red;
+            margin-bottom: var(--openk9-embeddable-search--spacing-xs, 4px)
+              solid red;
 
             z-index: 3; /* workaround for scrollbar overaly problem */
           `}
@@ -168,7 +175,8 @@ export function TokenSelect({
                 width: 100%;
                 height: 100%;
                 border: none;
-                padding: 8px 16px;
+                padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+                  var(--openk9-embeddable-search--spacing-lg, 16px);
               `}
             >
               <div
@@ -231,7 +239,10 @@ export function TokenSelect({
                   <strong
                     className="openk9-token-select-highlighted"
                     css={css`
-                      margin-right: 8px;
+                      margin-right: var(
+                        --openk9-embeddable-search--spacing-sm,
+                        8px
+                      );
                     `}
                   >
                     {option.keywordName}:
@@ -289,8 +300,11 @@ function FactoryTokenType({
               display: flex;
               font-family: "Helvetica";
               font-style: normal;
-              font-weight: 400;
-              font-size: 15px;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-regular,
+                400
+              );
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               line-height: 17px;
             `}
           >
@@ -314,8 +328,11 @@ function FactoryTokenType({
               display: flex;
               font-family: "Helvetica";
               font-style: normal;
-              font-weight: 400;
-              font-size: 15px;
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-regular,
+                400
+              );
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               line-height: 17px;
             `}
           >
@@ -327,22 +344,29 @@ function FactoryTokenType({
               display: flex;
               justify-content: center;
               align-items: center;
-              padding: 4px 8px;
-              gap: 4px;
+              padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                var(--openk9-embeddable-search--spacing-sm, 8px);
+              gap: var(--openk9-embeddable-search--spacing-xs, 4px);
               height: 15px;
-              background: #ffffff;
+              background: var(
+                --openk9-embeddable-search--primary-background-color,
+                #ffffff
+              );
               border: 1px solid
                 var(--openk9-embeddable-search--secondary-active-color);
-              border-radius: 20px;
-              margin-left: 10px;
+              border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
+              margin-left: var(--openk9-embeddable-search--spacing-md, 12px);
             `}
           >
             <div
               className="openk9-token-select-factory-option-label"
               css={css`
                 color: var(--openk9-embeddable-search--secondary-active-color);
-                margin-bottom: 13px;
-                font-size: 12px;
+                margin-bottom: var(
+                  --openk9-embeddable-search--spacing-md,
+                  12px
+                );
+                font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
                 display: block;
                 margin-block-start: 1em;
                 margin-block-end: 1em;

@@ -41,7 +41,7 @@ export function ChangeLanguage({
   setChangeLanguage,
   background = "white",
   minHeight = "40px",
-  color = "#1e1c21",
+  color = "var(--openk9-embeddable-search--strong-text-color, #1e1c21)",
   languages,
   activeLanguage,
 }: {
@@ -112,7 +112,9 @@ export function ChangeLanguage({
         : state.isFocused
         ? `color-mix(in srgb, ${ACCENT} 10%, #fff)`
         : "white",
-      color: state.isSelected ? "white" : "#1e1c21",
+      color: state.isSelected
+        ? "white"
+        : "var(--openk9-embeddable-search--strong-text-color, #1e1c21)",
       cursor: "pointer",
       ":active": {
         backgroundColor: `color-mix(in srgb, ${ACCENT} 18%, #fff)`,
@@ -130,7 +132,7 @@ export function ChangeLanguage({
         css={css`
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: var(--openk9-embeddable-search--spacing-sm, 8px);
         `}
       >
         <GloboSvg />

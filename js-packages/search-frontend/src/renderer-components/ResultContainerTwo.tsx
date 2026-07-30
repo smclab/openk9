@@ -10,7 +10,8 @@ export function ResultContainerTwo({ icon, children }: ResultContainerProps) {
     <div
       css={css`
         display: flex;
-        padding: 8px 16px;
+        padding: var(--openk9-embeddable-search--spacing-sm, 8px)
+          var(--openk9-embeddable-search--spacing-lg, 16px);
       `}
     >
       <div
@@ -19,13 +20,13 @@ export function ResultContainerTwo({ icon, children }: ResultContainerProps) {
             display: none;
           }
           width: 30px;
-          margin-right: 7px;
+          margin-right: var(--openk9-embeddable-search--spacing-sm, 8px);
         `}
       ></div>
       <div
         css={css`
-          margin-left: 2px;
-          margin-right: 5px;
+          margin-left: var(--openk9-embeddable-search--spacing-xs, 4px);
+          margin-right: var(--openk9-embeddable-search--spacing-xs, 4px);
           overflow: hidden;
         `}
       >

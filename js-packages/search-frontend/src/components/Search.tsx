@@ -129,13 +129,14 @@ export function Search({
         css={css`
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: var(--openk9-embeddable-search--spacing-md, 12px);
           width: 100%;
           @media (max-width: 480px) {
             flex-direction: row;
           }
           .openk9-focusable:has(input:focus) {
-            border: 1px solid #c22525;
+            border: 1px solid
+              var(--openk9-embeddable-search--primary-color, #c22525);
           }
         `}
       >
@@ -145,7 +146,7 @@ export function Search({
           css={css`
             display: flex;
             align-items: center;
-            border-radius: 8px;
+            border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
             width: 100%;
             max-height: 50px;
             position: relative;
@@ -158,7 +159,7 @@ export function Search({
             className="openk9--search-icon"
             icon={faSearch}
             css={css`
-              padding-left: 16px;
+              padding-left: var(--openk9-embeddable-search--spacing-lg, 16px);
               opacity: 0.5;
               color: var(--openk9-embeddable-search--secondary-text-color);
             `}
@@ -326,7 +327,10 @@ export function Search({
                 padding: var(--openk9-embeddable-search--input-padding);
                 caret-color: black;
                 font-size: inherit;
-                font-family: inherit;
+                font-family: var(
+                  --openk9-embeddable-search--font-family,
+                  inherit
+                );
                 background-color: inherit;
                 color: ${viewColor
                   ? showSyntax
@@ -490,13 +494,14 @@ export function Search({
             title={t("remove-text") || ""}
             aria-label={t("remove-text") || ""}
             css={css`
-              padding-right: 16px;
+              padding-right: var(--openk9-embeddable-search--spacing-lg, 16px);
               display: flex;
               flex-direction: row;
-              padding: 4px 8px;
-              gap: 4px;
+              padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+                var(--openk9-embeddable-search--spacing-sm, 8px);
+              gap: var(--openk9-embeddable-search--spacing-xs, 4px);
               align-items: center;
-              margin-right: 21px;
+              margin-right: var(--openk9-embeddable-search--spacing-xl, 20px);
               background: inherit;
               border: none;
               position: relative;
@@ -531,7 +536,7 @@ export function Search({
                 min-height: 50px;
                 min-width: 50px;
                 border: 1px solid var(--openk9-embeddable-search--border-color);
-                border-radius: 8px;
+                border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
                 cursor: pointer;
                 background-color: white;
                 display: flex;
