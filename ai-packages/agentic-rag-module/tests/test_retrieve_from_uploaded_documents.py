@@ -81,7 +81,7 @@ def test_uploaded_document_metadata_includes_title_built_from_filename():
     }
 
     with patch.object(
-        uploaded_documents_retriever, "OpenSearch", return_value=client
+        uploaded_documents_retriever, "get_opensearch_client", return_value=client
     ), patch.object(
         uploaded_documents_retriever,
         "documents_embedding",

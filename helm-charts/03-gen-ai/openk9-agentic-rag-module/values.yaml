@@ -62,6 +62,14 @@ service:
 opensearch:
   host: "opensearch-cluster-master-headless"
   port: "9200"
+  ## List of "host:port" entries for a multi-node Opensearch cluster.
+  ## When set, it takes precedence over the single `host`/`port` pair above.
+  ## Example:
+  ## hosts:
+  ##   - "opensearch-node-1:9200"
+  ##   - "opensearch-node-2:9200"
+  ##
+  hosts: []
   username: "opensearch"
   passwordSecretName: "opensearch-password"
   keyPasswordSecret: "password"

@@ -30,7 +30,6 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.opensearch import OpenSearchSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
-from opensearchpy import OpenSearch
 from phoenix.evals import (
     TOOL_CALLING_PROMPT_TEMPLATE,
 )
@@ -58,6 +57,7 @@ from app.utils.conversation_history import (
 from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
+from app.utils.opensearch_client import get_opensearch_client
 from app.utils.query_rewrite import escape_curly_braces, shares_significant_terms
 
 
@@ -240,9 +240,7 @@ class RagGraph:
             "answer_only_with_context", True
         )
         self.opensearch_host = configuration.get("opensearch_host")
-        self.open_search_client = OpenSearch(
-            hosts=[self.opensearch_host],
-        )
+        self.open_search_client = get_opensearch_client(self.opensearch_host)
         self.guardrails_configuration = self.configuration.get(
             "guardrails_configuration"
         )

@@ -116,7 +116,7 @@ def test_retriever_returns_empty_when_embedding_is_empty(module, factory):
     retriever = factory("")
     client = MagicMock()
 
-    with patch.object(module, "OpenSearch", return_value=client), patch.object(
+    with patch.object(module, "get_opensearch_client", return_value=client), patch.object(
         module, "documents_embedding", return_value=[]
     ):
         documents = retriever._get_relevant_documents("", run_manager=MagicMock())
@@ -134,7 +134,7 @@ def test_guardrail_retriever_survives_degenerate_input(label, search_text):
     retriever = _build_guardrail(search_text)
 
     with patch.object(
-        guardrail_documents_retriever, "OpenSearch", return_value=MagicMock()
+        guardrail_documents_retriever, "get_opensearch_client", return_value=MagicMock()
     ), patch.object(
         guardrail_documents_retriever, "documents_embedding", return_value=[]
     ):

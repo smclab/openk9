@@ -17,9 +17,10 @@
 import json
 from datetime import datetime, timezone
 
-from opensearchpy import OpenSearch, helpers
+from opensearchpy import helpers
 
 from app.utils.logger import logger
+from app.utils.opensearch_client import get_opensearch_client
 
 SEARCH_PIPELINE = "nlp-uploaded-documents-search-pipeline"
 
@@ -82,9 +83,7 @@ def delete_documents(opensearch_host, interval_in_days=180):
     >>> delete_documents("https://opensearch.example.com:9200", interval_in_days=90)
     """
 
-    open_search_client = OpenSearch(
-        hosts=[opensearch_host],
-    )
+    open_search_client = get_opensearch_client(opensearch_host)
 
     all_indices = open_search_client.indices.get(index="*")
     all_indices = list(all_indices.keys())
@@ -273,9 +272,7 @@ def save_uploaded_documents(
         * Applies arithmetic mean combination with equal weights (0.5, 0.5)
         * Enables hybrid search combining multiple relevance scores
     """
-    open_search_client = OpenSearch(
-        hosts=[opensearch_host],
-    )
+    open_search_client = get_opensearch_client(opensearch_host)
     uploaded_documents_index = f"{tenant_id}-uploaded-documents-index"
 
     index_actions = []

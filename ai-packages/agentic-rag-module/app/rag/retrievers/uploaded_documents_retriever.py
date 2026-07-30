@@ -3,9 +3,9 @@ from typing import List
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
-from opensearchpy import OpenSearch
 
 from app.utils.embedding import documents_embedding
+from app.utils.opensearch_client import get_opensearch_client
 
 VECTORIAL_RETRIEVE_TYPES = ["KNN", "HYBRID"]
 
@@ -113,9 +113,7 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
             - Always filters by user_id and chat_id for security isolation
             - Returns empty list if the uploaded documents index doesn't exist
         """
-        open_search_client = OpenSearch(
-            hosts=[self.opensearch_host],
-        )
+        open_search_client = get_opensearch_client(self.opensearch_host)
 
         document = {
             "text": self.search_text,

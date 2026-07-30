@@ -135,7 +135,7 @@ def client(monkeypatch):
 def test_get_chat_returns_object_with_messages(client, monkeypatch):
     # Hits returned out of order to prove the response is sorted by sequence.
     hits = [_checkpoint(2, retrieve=True), _checkpoint(1, retrieve=False)]
-    monkeypatch.setattr(server, "OpenSearch", lambda *a, **k: _opensearch_mock(hits))
+    monkeypatch.setattr(server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits))
 
     response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
 
@@ -169,7 +169,7 @@ def test_get_chat_returns_original_question_not_rewritten(client, monkeypatch):
     final_answer = "La garanzia Infortuni del Conducente copre..."
 
     hits = [_rewritten_checkpoint(2, original, rewritten, final_answer)]
-    monkeypatch.setattr(server, "OpenSearch", lambda *a, **k: _opensearch_mock(hits))
+    monkeypatch.setattr(server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits))
 
     response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
 
@@ -184,7 +184,7 @@ def test_get_chat_falls_back_to_current_query_when_not_rewritten(client, monkeyp
     """Turns that were never rewritten have no `original_query`; get_chat must
     fall back to `current_query` (also covers data predating original_query)."""
     hits = [_checkpoint(1, retrieve=False)]
-    monkeypatch.setattr(server, "OpenSearch", lambda *a, **k: _opensearch_mock(hits))
+    monkeypatch.setattr(server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits))
 
     response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
 
@@ -195,7 +195,7 @@ def test_get_chat_falls_back_to_current_query_when_not_rewritten(client, monkeyp
 def test_get_chat_returns_404_when_chat_missing(client, monkeypatch):
     empty = MagicMock()
     empty.indices.exists.return_value = False
-    monkeypatch.setattr(server, "OpenSearch", lambda *a, **k: empty)
+    monkeypatch.setattr(server, "get_opensearch_client", lambda *a, **k: empty)
 
     response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
 
