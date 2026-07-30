@@ -141,7 +141,10 @@ class OpenSearchRetriever(BaseRetriever):
             total_tokens = 0
 
             for row in response["hits"]["hits"]:
-                if (score := row.get("_score", 0)) < SCORE_THRESHOLD:
+                # The .get default only covers a missing key: OpenSearch reports
+                # an explicit "_score": null when the query carries a field sort,
+                # and comparing that None raises TypeError.
+                if (score := row.get("_score") or 0) < SCORE_THRESHOLD:
                     continue
 
                 document_source = row.get("_source")
