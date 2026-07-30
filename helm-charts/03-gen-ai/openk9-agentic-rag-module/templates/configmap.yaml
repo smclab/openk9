@@ -10,7 +10,11 @@ data:
   LOGGING_LEVEL:  {{ .Values.log.level | quote }}
 
   # Opensearch env variables
+  {{- if .Values.opensearch.hosts }}
+  OPENSEARCH_HOST: {{ join "," .Values.opensearch.hosts | quote }}
+  {{- else }}
   OPENSEARCH_HOST: "{{ .Values.opensearch.host }}:{{ .Values.opensearch.port }}"
+  {{- end }}
   OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
 
   # Grpc env variables

@@ -22,11 +22,10 @@ import requests
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
-from opensearchpy import OpenSearch
-
 from app.external_services.grpc.grpc_client import query_parser
 from app.rag.chunk_window import get_context_window_merged
 from app.utils.logger import logger
+from app.utils.opensearch_client import get_opensearch_client
 
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
@@ -127,9 +126,7 @@ class OpenSearchRetriever(BaseRetriever):
             logger.debug("[opensearch_query] empty index list, search skipped")
 
         if len(index_name) > 0:
-            client = OpenSearch(
-                hosts=[self.opensearch_host],
-            )
+            client = get_opensearch_client(self.opensearch_host)
 
             response = client.search(
                 body=query,

@@ -78,12 +78,26 @@ To configure connection to Opensearch following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `opensearch.host`    | Opensearch host                             | `opensearch-cluster-master-headless`            |
-| `opensearch.port`  | Port where Opensearch is exposed                                    | `9200` |
+| `opensearch.host`    | Opensearch host. Ignored when `opensearch.hosts` is set                             | `opensearch-cluster-master-headless`            |
+| `opensearch.port`  | Port where Opensearch is exposed. Ignored when `opensearch.hosts` is set                                    | `9200` |
+| `opensearch.hosts`  | List of `host:port` entries for a multi-node Opensearch cluster. When set, it takes precedence over `opensearch.host`/`opensearch.port`                                    | `[]` |
 | `opensearch.username`  | Opensearch user                                                                               | `opensearch`             |
 | `opensearch.passwordSecretName` | Name of the secret where password is stored                            | `opensearch-password`                       |
 | `opensearch.keyPasswordSecret`       | Name of the key inside the secret where password is stored               | `OPENSEARCH_INITIAL_ADMIN_PASSWORD`                    |
 | `opensearch.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_OPENSEARCH_PASSWORD`   |
+
+To connect to a multi-node Opensearch cluster, list every node under `opensearch.hosts`:
+
+```yaml
+opensearch:
+  hosts:
+    - "opensearch-node-1:9200"
+    - "opensearch-node-2:9200"
+    - "opensearch-node-3:9200"
+```
+
+The module distributes requests across the configured nodes and keeps working
+through the remaining ones when a node is unreachable.
 
 
 ### Configure connections to other Openk9 services

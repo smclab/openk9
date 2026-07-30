@@ -97,6 +97,8 @@ The **Agentic RAG Module** is a Retrieval-Augmented Generation (RAG) system buil
 ORIGINS=*
 
 # Service Endpoints
+# Single host, or a comma-separated list for a multi-node cluster
+# (e.g. opensearch-node-1:9200,opensearch-node-2:9200)
 OPENSEARCH_HOST=opensearch_host:port
 GRPC_DATASOURCE_HOST=grpc_datasource_host:port
 GRPC_EMBEDDING_MODULE_HOST=grpc_embedding_module_host:port

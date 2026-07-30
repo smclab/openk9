@@ -38,6 +38,7 @@ from app.utils.embedding import documents_embedding
 from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import logger
+from app.utils.opensearch_client import get_opensearch_client
 from app.utils.query_validation import (
     blank_query_stream,
     contains_encoded_blob,
@@ -60,7 +61,6 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from opensearchpy import OpenSearch
 from phoenix.otel import register
 from sse_starlette.sse import EventSourceResponse
 
@@ -660,9 +660,7 @@ async def get_user_chats(
     else:
         unauthorized_response()
 
-    open_search_client = OpenSearch(
-        hosts=[OPENSEARCH_HOST],
-    )
+    open_search_client = get_opensearch_client(OPENSEARCH_HOST)
 
     index_name = f"{tenant_id}-{user_id}"
 
@@ -799,9 +797,7 @@ async def get_chat(
     else:
         unauthorized_response()
 
-    open_search_client = OpenSearch(
-        hosts=[OPENSEARCH_HOST],
-    )
+    open_search_client = get_opensearch_client(OPENSEARCH_HOST)
 
     index_name = f"{tenant_id}-{user_id}"
 
@@ -956,9 +952,7 @@ async def delete_chat(
     else:
         unauthorized_response()
 
-    open_search_client = OpenSearch(
-        hosts=[OPENSEARCH_HOST],
-    )
+    open_search_client = get_opensearch_client(OPENSEARCH_HOST)
 
     index_name = f"{tenant_id}-{user_id}"
 
@@ -1080,9 +1074,7 @@ async def rename_chat(
     else:
         unauthorized_response()
 
-    open_search_client = OpenSearch(
-        hosts=[OPENSEARCH_HOST],
-    )
+    open_search_client = get_opensearch_client(OPENSEARCH_HOST)
 
     index_name = f"{tenant_id}-{user_id}"
 
@@ -1293,9 +1285,7 @@ def save_guardrails_documents(opensearch_host: str, documents: list, vector_size
         * Applies arithmetic mean combination with equal weights (0.5, 0.5)
         * Enables hybrid search combining multiple relevance scores
     """
-    open_search_client = OpenSearch(
-        hosts=[opensearch_host],
-    )
+    open_search_client = get_opensearch_client(opensearch_host)
     guardrails_documents_index = "guardrails-documents-index"
 
     index_actions = []
@@ -1612,9 +1602,7 @@ async def upload_files(
 
 
 def save_domains_documents(opensearch_host: str, documents: list, vector_size: int):
-    open_search_client = OpenSearch(
-        hosts=[opensearch_host],
-    )
+    open_search_client = get_opensearch_client(opensearch_host)
     guardrails_documents_index = "domain-documents-index"
 
     index_actions = []

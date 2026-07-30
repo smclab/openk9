@@ -1,10 +1,10 @@
 from typing import List
 
 from app.utils.embedding import documents_embedding
+from app.utils.opensearch_client import get_opensearch_client
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
-from opensearchpy import OpenSearch
 
 VECTORIAL_RETRIEVE_TYPES = ["KNN", "HYBRID"]
 
@@ -110,9 +110,7 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
             - Always filters by user_id and chat_id for security isolation
             - Returns empty list if the uploaded documents index doesn't exist
         """
-        open_search_client = OpenSearch(
-            hosts=[self.opensearch_host],
-        )
+        open_search_client = get_opensearch_client(self.opensearch_host)
 
         document = {
             "text": self.search_text,
@@ -196,9 +194,7 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
         self,
         size: int = 1000,
     ) -> List[str]:
-        open_search_client = OpenSearch(
-            hosts=[self.opensearch_host],
-        )
+        open_search_client = get_opensearch_client(self.opensearch_host)
         if not open_search_client.indices.exists(index=self.uploaded_documents_index):
             return []
 
