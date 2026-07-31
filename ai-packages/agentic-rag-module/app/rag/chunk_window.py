@@ -18,14 +18,20 @@
 from collections import defaultdict
 
 
+def neighbors(chunk, key: str):
+    """Neighbour chunk texts of a chunk, empty when it has none: the first and
+    last chunk of a page (and any single-chunk page) have no prev/next."""
+    return chunk.get(key) or []
+
+
 def init_context(chunk, window_size: int):
-    ctxt = "".join(chunk["prev"][-window_size:])
+    ctxt = "".join(neighbors(chunk, "prev")[-window_size:])
     ctxt += chunk["content"]
     return ctxt
 
 
 def end_context(chunk, window_size: int):
-    ctxt = "".join(chunk["next"][:window_size])
+    ctxt = "".join(neighbors(chunk, "next")[:window_size])
     return ctxt
 
 
@@ -52,29 +58,23 @@ def get_context_window_merged(chunks, window_size: int = 2):
                 # end current context and init next one
                 ctxt += end_context(document_chunks[k - 1], window_size)
                 document = {
-                    "title": document_chunks[0]["title"],
-                    "url": document_chunks[0]["url"],
-                    "document_id": document_chunks[0]["document_id"],
-                    "score": document_chunks[0]["score"],
+                    "metadata": document_chunks[0]["metadata"],
                     "content": ctxt,
                 }
                 documents.append(document)
                 ctxt = init_context(chunk, window_size)
             elif idx_dist <= window_size:
-                ctxt += "".join(document_chunks[k - 1]["next"][:idx_dist])
+                ctxt += "".join(neighbors(document_chunks[k - 1], "next")[:idx_dist])
                 ctxt += chunk["content"]
             else:
-                ctxt += "".join(document_chunks[k - 1]["next"][:window_size])
-                ctxt += "".join(chunk["prev"][-(idx_dist - window_size) :])
+                ctxt += "".join(neighbors(document_chunks[k - 1], "next")[:window_size])
+                ctxt += "".join(neighbors(chunk, "prev")[-(idx_dist - window_size) :])
                 ctxt += chunk["content"]
             prev_chunk_idx = curr_chunk_idx
 
-        ctxt += end_context(chunk, window_size)
+        ctxt += end_context(document_chunks[-1], window_size)
         document = {
-            "title": document_chunks[0]["title"],
-            "url": document_chunks[0]["url"],
-            "document_id": document_chunks[0]["document_id"],
-            "score": document_chunks[0]["score"],
+            "metadata": document_chunks[0]["metadata"],
             "content": ctxt,
         }
         documents.append(document)

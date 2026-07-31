@@ -159,18 +159,12 @@ class OpenSearchRetriever(BaseRetriever):
                 if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
                     page_content = document_source.get("chunkText", "")
                     chunk_idx = document_source.get("number")
-                    previous_chunks = document_source.get("previous")
-                    previous_chunk = (
-                        [element.get("chunkText") for element in previous_chunks]
-                        if previous_chunks
-                        else None
-                    )
-                    next_chunks = document_source.get("next")
-                    next_chunk = (
-                        [element.get("chunkText") for element in next_chunks]
-                        if next_chunks
-                        else None
-                    )
+                    previous_chunks = document_source.get("previous") or []
+                    previous_chunk = [
+                        element.get("chunkText") for element in previous_chunks
+                    ]
+                    next_chunks = document_source.get("next") or []
+                    next_chunk = [element.get("chunkText") for element in next_chunks]
                     metadata = {
                         "document_id": document_id,
                         "score": score,
@@ -228,16 +222,22 @@ class OpenSearchRetriever(BaseRetriever):
             )
             documents = reranked_documents
 
-        if self.chunk_window > 0:
+        # only the vectorial retrieve types carry the per-chunk metadata the
+        # merge needs
+        if self.chunk_window > 0 and self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
             documents_to_merge = [
                 {
                     "document_id": doc.metadata["document_id"],
                     "chunk_idx": doc.metadata["chunk_idx"],
                     "prev": doc.metadata["prev"],
                     "next": doc.metadata["next"],
-                    "title": doc.metadata["title"],
-                    "url": doc.metadata["url"],
-                    "score": doc.metadata["score"],
+                    # carried over to the merged document: the per-chunk keys
+                    # describe a single chunk, not the enlarged window
+                    "metadata": {
+                        key: value
+                        for key, value in doc.metadata.items()
+                        if key not in ("chunk_idx", "prev", "next")
+                    },
                     "content": doc.page_content,
                 }
                 for doc in documents
@@ -246,24 +246,12 @@ class OpenSearchRetriever(BaseRetriever):
                 documents_to_merge, window_size=self.chunk_window
             )
 
-            documents = []
-            for merged_document in merged_documents:
-                page_content = merged_document["content"]
-                title = merged_document["title"]
-                url = merged_document["url"]
-                document_id = merged_document["document_id"]
-                score = merged_document["score"]
-
-                document = Document(
-                    page_content,
-                    metadata={
-                        "title": title,
-                        "url": url,
-                        "document_id": document_id,
-                        "score": score,
-                    },
+            documents = [
+                Document(
+                    merged_document["content"],
+                    metadata=merged_document["metadata"],
                 )
-
-                documents.append(document)
+                for merged_document in merged_documents
+            ]
 
         return documents
