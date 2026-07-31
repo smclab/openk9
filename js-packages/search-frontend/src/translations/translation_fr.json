@@ -63,6 +63,7 @@
     "relevance": "Pertinence",
     "result": "Résultat",
     "results": "Résultats",
+    "results-count": "{{n}} résultats",
     "remove-calendar-filters": "Supprimer le filtre de calendrier",
     "remove-data-filter": "Supprimer le filtre",
     "remove-dates": "supprimer des dates",

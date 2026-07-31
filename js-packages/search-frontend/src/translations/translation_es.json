@@ -62,6 +62,7 @@
     "preview-days": "días por delante",
     "result": "Resultado",
     "results": "Resultados",
+    "results-count": "{{n}} resultados",
     "result-view": "Muéstrame",
     "relevance": "Relevancia",
     "remove-calendar-filters": "Eliminar filtro de calendario",

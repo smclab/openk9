@@ -61,6 +61,7 @@
     "relevance": "Relevanz",
     "result": "Ergebnis",
     "results": "Ergebnisse",
+    "results-count": "{{n}} Ergebnisse",
     "remove-calendar-filters": "Kalenderfilter entfernen",
     "no-results-were-found": "Keine Ergebnisse gefunden.",
     "no-filters": "Keine Filter",

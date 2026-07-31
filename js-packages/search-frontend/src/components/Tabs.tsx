@@ -26,13 +26,52 @@ import { Options } from "./SortResults";
 import CustomSkeleton from "./Skeleton";
 import { TabsCallbackProps } from "../embeddable/entry";
 
+// Underline tabs: the active tab is marked by an accent rule under its label,
+// drawn as an inset shadow so selecting a tab never changes the row's metrics.
+const tabItemStyle = (isSelected: boolean) => css`
+  border: none;
+  background: none;
+  display: block;
+  white-space: nowrap;
+  /* the horizontal padding widens the rule beyond the label, so a short tab
+     ("test") does not end up with a stub of an underline */
+  padding: var(--openk9-embeddable-search--spacing-md, 12px)
+    var(--openk9-embeddable-search--spacing-sm, 8px);
+  font-size: var(--openk9-embeddable-search--font-size-md, 16px);
+  font-weight: ${isSelected
+    ? "var(--openk9-embeddable-search--font-weight-semibold, 600)"
+    : "var(--openk9-embeddable-search--font-weight-regular, 400)"};
+  color: ${isSelected
+    ? "var(--openk9-embeddable-search--primary-color, #c22525)"
+    : "var(--openk9-embeddable-search--secondary-text-color, #3e4244)"};
+  box-shadow: inset 0 -2px 0 ${isSelected ? "var(--openk9-embeddable-search--accent-color, #d6012e)" : "transparent"};
+  cursor: ${isSelected ? "default" : "pointer"};
+  user-select: none;
+  transition: color 120ms ease, box-shadow 120ms ease;
+  /* uppercase only the first letter, so tenant labels that carry an internal
+     capital (SharePoint) keep it */
+  ::first-letter {
+    text-transform: uppercase;
+  }
+  &:hover {
+    color: var(--openk9-embeddable-search--primary-color, #c22525);
+    box-shadow: inset 0 -2px 0 ${isSelected ? "var(--openk9-embeddable-search--accent-color, #d6012e)" : "var(--openk9-embeddable-search--border-color, #ced4da)"};
+  }
+`;
+
 type TabsProps = {
   tabs: Array<Tab>;
   selectedTabIndex: number;
   onSelectedTabIndexChange(index: number): void;
   language: string;
-  scrollMode?: boolean;
   onAction?(): void;
+  /**
+   * No-ops. The row used to collapse into two arrow buttons when scrollMode was
+   * false; it now always scrolls horizontally, so these are only kept so that
+   * existing tabsConfigurable objects keep type-checking.
+   * @deprecated
+   */
+  scrollMode?: boolean;
   speed?: number;
   distance?: number;
   step?: number;
@@ -56,10 +95,6 @@ function Tabs({
   onSelectedTabIndexChange,
   language,
   onAction,
-  scrollMode = true,
-  speed = 10,
-  distance = 700,
-  step = 30,
   reset,
   resetFilter,
   resetSort,
@@ -69,28 +104,6 @@ function Tabs({
   isUnselectTab = false,
   tabsCallbackProps,
 }: TabsProps) {
-  const elementRef = React.useRef(null);
-  const [arrowDisable, setArrowDisable] = React.useState(true);
-  const [arrowRightDisable, setArrowRightDisable] = React.useState(false);
-  let scrollAmount = 0;
-  const handleHorizantalScroll = ({
-    element,
-    step,
-  }: {
-    element: any;
-    speed: number;
-    distance: number;
-    step: number;
-  }) => {
-    element.scrollLeft += step;
-    scrollAmount += Math.abs(step);
-    if (element.scrollLeft === 0) {
-      setArrowDisable(true);
-    } else {
-      setArrowDisable(false);
-    }
-  };
-
   const submitTab = (index: number) => {
     onSelectedTabIndexChange(index);
     if (reset) {
@@ -105,192 +118,11 @@ function Tabs({
     if (onAction) onAction();
   };
 
-  return !scrollMode ? (
-    <div css={css`openk9-container-arrow-tabs`}>
-      <h2
-        id="title-tabs-openk9"
-        className={`${
-          readMessageScreenReader && "visually-hidden title-tabs-openk9"
-        } title-tabs-openk9`}
-        css={css`
-          border: 0;
-          padding: 0;
-          margin: 0;
-          position: absolute !important;
-          height: 1px;
-          width: 1px;
-          overflow: hidden;
-          clip: rect(
-            1px 1px 1px 1px
-          ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
-          clip: rect(
-            1px,
-            1px,
-            1px,
-            1px
-          ); /*maybe deprecated but we need to support legacy browsers */
-          clip-path: inset(50%);
-          white-space: nowrap;
-        `}
-      >
-        {textLabelScreenReader || "filtri e argomenti"}
-      </h2>
-      <ul
-        className="openk9-nav-container-tabs"
-        ref={elementRef}
-        role="list"
-        css={css`
-          display: flex;
-          padding: 0;
-          overflow-x: hidden;
-          white-space: nowrap;
-          width: 90vw;
-          margin-left: var(--openk9-embeddable-search--spacing-lg, 16px);
-          list-style-type: none;
-          margin: 0;
-        `}
-      >
-        <div
-          className={
-            "openk9-nav-container-left-button " + arrowRightDisable
-              ? "disabled"
-              : "not-disabled"
-          }
-          css={css`
-            position: absolute;
-          `}
-        >
-          {!arrowDisable && (
-            <button
-              className="openk9-button-left-tabs"
-              css={css`
-                padding: var(--openk9-embeddable-search--spacing-sm, 8px)
-                  var(--openk9-embeddable-search--spacing-md, 12px);
-                border: 1px solid #80808082;
-                background: #dbdbdb;
-                opacity: 0.9;
-                border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
-              `}
-              onClick={() => {
-                handleHorizantalScroll({
-                  element: elementRef.current,
-                  distance,
-                  speed,
-                  step: -step,
-                });
-              }}
-            >
-              {"<"}
-            </button>
-          )}
-        </div>
-        <div
-          className={
-            "openk9-nav-container-right-button " + arrowRightDisable
-              ? "disabled"
-              : "not-disabled"
-          }
-          css={css`
-            position: absolute;
-            right: 8px;
-          `}
-        >
-          {!arrowRightDisable && (
-            <button
-              className="openk9-button-right-tabs"
-              css={css`
-                padding: var(--openk9-embeddable-search--spacing-sm, 8px)
-                  var(--openk9-embeddable-search--spacing-md, 12px);
-                border: 1px solid #80808082;
-                background: #dbdbdb;
-                opacity: 0.9;
-                border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
-                right: 0;
-              `}
-              onClick={() => {
-                handleHorizantalScroll({
-                  element: elementRef.current,
-                  distance,
-                  speed,
-                  step,
-                });
-              }}
-            >
-              {">"}
-            </button>
-          )}
-        </div>
-        {tabs.map((tab, index) => {
-          const isSelected =
-            selectedTabIndex !== -1 && index === selectedTabIndex;
-          const tabTraslation = translationTab({
-            language: language,
-            tabLanguages: tab.translationMap,
-            defaultValue: tab.label,
-          });
-          return (
-            <li role="listitem" aria-labelledby="title-tabs-openk9" key={index}>
-              <button
-                className={`openk9-single-tab-container`}
-                tabIndex={0}
-                css={css`
-                  border: none;
-                  background: none;
-                `}
-              >
-                <span
-                  className={
-                    "openk9-single-tab " +
-                    (isSelected ? "openk9-active-tab" : "openk9-not-active")
-                  }
-                  css={css`
-                    white-space: nowrap;
-                    padding: var(--openk9-embeddable-search--spacing-sm, 8px)
-                      var(--openk9-embeddable-search--spacing-md, 12px);
-                    background: ${isSelected
-                      ? "var(--openk9-embeddable-search--primary-background-tab-color)"
-                      : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
-                    border-radius: var(
-                      --openk9-embeddable-search--radius-sm,
-                      8px
-                    );
-                    font: Helvetica Neue LT Std;
-                    font-style: normal;
-                    display: block;
-                    color: ${isSelected
-                      ? "var(--openk9-embeddable-search--primary-background-color)"
-                      : "var(--openk9-embeddable-tabs--primary-color)"};
-                    ${isSelected
-                      ? "var(--openk9-embeddable-search--active-color)"
-                      : "transparent"};
-                    cursor: ${isSelected ? "" : "pointer"};
-                    user-select: none;
-                    :hover {
-                      ${isSelected ? "" : "text-decoration: underline;"}
-                    }
-                  `}
-                  onClick={() => {
-                    onSelectedTabIndexChange(index);
-                    if (reset) {
-                      if (reset.filters) resetFilter();
-                      if (reset?.calendar) resetFilterCalendar();
-                      if (reset?.search)
-                        selectionsDispatch({
-                          type: "reset-search",
-                        });
-                    }
-                    if (onAction) onAction();
-                  }}
-                >
-                  {tabTraslation.toUpperCase()}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  ) : (
+  // with no tabs there is nothing to switch between, and rendering the row
+  // anyway would leave its hairline floating on its own
+  if (tabs.length === 0 && !tabsCallbackProps) return null;
+
+  return (
     <React.Fragment>
       <h2
         id="title-tabs-openk9"
@@ -323,13 +155,22 @@ function Tabs({
         role="list"
         css={css`
           display: flex;
-          width: fit-content;
-          padding: 0;
+          align-items: flex-end;
+          width: 100%;
+          box-sizing: border-box;
+          /* indented past the section header above it (which sits at 20px) so
+             the row reads as nested under the count, while its hairline still
+             runs the full width of the panel */
+          padding: 0 var(--openk9-embeddable-search--spacing-2xl, 24px);
           height: fit-content;
-          gap: var(--openk9-embeddable-search--spacing-lg, 16px);
+          gap: var(--openk9-embeddable-search--spacing-xl, 20px);
           margin: 0;
           list-style-type: none;
-          margin: 0;
+          overflow-x: auto;
+          scrollbar-width: none;
+          ::-webkit-scrollbar {
+            display: none;
+          }
           @media (max-width: 480px) {
             gap: var(--openk9-embeddable-search--spacing-md, 12px);
           }
@@ -360,49 +201,19 @@ function Tabs({
                   key={"tabs" + index}
                 >
                   <button
-                    className={
-                      "openk9-single-tab-container" +
-                      "openk9-single-tab " +
-                      (isSelected ? "openk9-active-tab" : "openk9-not-active")
-                    }
+                    className={`openk9-single-tab-container openk9-single-tab ${
+                      isSelected ? "openk9-active-tab" : "openk9-not-active"
+                    }`}
                     key={index}
                     tabIndex={0}
-                    css={css`
-                      border: none;
-                      background: none;
-                      padding: 0;
-                      white-space: nowrap;
-                      padding: var(--openk9-embeddable-search--spacing-sm, 8px)
-                        var(--openk9-embeddable-search--spacing-md, 12px);
-                      background: ${isSelected
-                        ? "var(--openk9-embeddable-search--primary-background-tab-color)"
-                        : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
-                      border-radius: var(
-                        --openk9-embeddable-search--radius-sm,
-                        8px
-                      );
-                      font: Helvetica Neue LT Std;
-                      font-style: normal;
-                      display: block;
-                      color: ${isSelected
-                        ? "var(--openk9-embeddable-search--primary-background-color)"
-                        : "var(--openk9-embeddable-tabs--primary-color)"};
-                      ${isSelected
-                        ? "var(--openk9-embeddable-search--active-color)"
-                        : "transparent"};
-                      cursor: ${isSelected ? "" : "pointer"};
-                      user-select: none;
-                      :hover {
-                        ${isSelected ? "" : "text-decoration: underline;"}
-                      }
-                    `}
+                    css={tabItemStyle(isSelected)}
                     onClick={() => {
                       isSelected
                         ? isUnselectTab && submitTab(-1)
                         : submitTab(index);
                     }}
                   >
-                    {tabTraslation.toUpperCase()}
+                    {tabTraslation}
                   </button>
                 </li>
               );

@@ -21,7 +21,6 @@ import { GenericResultItem, DetailRendererProps } from "./client";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
 import { useRenderers } from "./useRenderers";
-import { PreviewSvg } from "../svgElement/PreviewSvg";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
 import { TemplatesProps } from "../embeddable/entry";
@@ -155,10 +154,16 @@ function Detail<E>(props: DetailProps<E>) {
           width: 100%;
           background: white;
           display: flex;
-          padding: var(--openk9-embeddable-search--spacing-lg, 16px);
+          /* same metrics as the "Filtri" and results headers of the surrounding
+             page, so the three titles and their rules read as one line */
+          padding: var(--openk9-embeddable-search--spacing-lg, 16px)
+            var(--openk9-embeddable-search--spacing-xl, 20px);
           gap: var(--openk9-embeddable-search--spacing-xs, 4px);
           box-sizing: border-box;
+          align-items: center;
           justify-content: space-between;
+          border-bottom: 1px solid
+            var(--openk9-embeddable-search--border-color, #ced4da);
           border-top-left-radius: ${setDetailMobile ? "20px" : "0px"};
           border-top-right-radius: ${setDetailMobile ? "20px" : "0px"};
         `}
@@ -167,12 +172,10 @@ function Detail<E>(props: DetailProps<E>) {
           className="openk9-icon-and-title-detail"
           css={css`
             display: flex;
-            gap: var(--openk9-embeddable-search--spacing-xs, 4px);
+            align-items: center;
+            gap: var(--openk9-embeddable-search--spacing-sm, 8px);
           `}
         >
-          <div className="openk9-preview-icon-wrapper">
-            <PreviewSvg size={23} />
-          </div>
           <h2
             id="title-preview-openk9"
             tabIndex={0}
@@ -183,10 +186,8 @@ function Detail<E>(props: DetailProps<E>) {
                 --openk9-embeddable-search--font-weight-bold,
                 700
               );
-              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
-              height: 18px;
+              font-size: var(--openk9-embeddable-search--font-size-lg, 18px);
               line-height: 22px;
-              align-items: center;
               margin: 0;
             `}
           >

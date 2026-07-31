@@ -1277,10 +1277,14 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
       >
         {view === "results" ? (
           <>
-            {/* header risultati */}
+            {/* header risultati: a differenza di Filtri e Anteprima non porta il
+                filo di separazione, perché sotto ci sono già la riga dei tab e
+                il banner K9 IA e la colonna diventerebbe un pettine di righe */}
             <div
               css={css`
                 ${sectionHeaderRowStyle}
+                border-bottom: none;
+                padding-bottom: 0px;
                 @media (max-width: 1024px) {
                   flex-wrap: wrap;
                   gap: var(--openk9-embeddable-search--spacing-sm, 8px)
@@ -1299,18 +1303,7 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   }
                 `}
               >
-                {t("number-of-results")}
-                <span
-                  css={css`
-                    color: ${RED};
-                    margin-left: var(
-                      --openk9-embeddable-search--spacing-sm,
-                      8px
-                    );
-                  `}
-                >
-                  {numberOfResults}
-                </span>
+                {t("results-count", { n: numberOfResults })}
               </span>
               {/* pulsante "Filtra per data": montato dal widget, accanto al
                   conteggio; mostra "dal X al Y" quando un intervallo è attivo */}
@@ -1318,6 +1311,19 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 ref={(element) =>
                   openk9.updateConfiguration({ dateRangeFilter: element })
                 }
+              />
+            </div>
+
+            <div
+              css={css`
+                margin-bottom: var(
+                  --openk9-embeddable-search--spacing-lg,
+                  16px
+                );
+              `}
+            >
+              <div
+                ref={(element) => openk9.updateConfiguration({ tabs: element })}
               />
             </div>
 
