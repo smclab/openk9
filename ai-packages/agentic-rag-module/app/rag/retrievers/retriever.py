@@ -115,6 +115,7 @@ class OpenSearchRetriever(BaseRetriever):
             query_body = query.decode("utf-8") if isinstance(query, bytes) else query
             logger.debug(
                 f"[opensearch_query] retrieve_type={self.retrieve_type}, "
+                f"chunk_window={self.chunk_window}, "
                 f"index_name={index_name}, "
                 f"params={params}, "
                 f"body={query_body}"
