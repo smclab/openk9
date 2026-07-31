@@ -15,7 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import logging
 from collections import defaultdict
+
+from app.utils.logger import logger
 
 
 def neighbors(chunk, key: str):
@@ -41,6 +44,7 @@ def dist(idx_a, idx_b):
 
 def get_context_window_merged(chunks, window_size: int = 2):
     """Enlarge context with prev and next context and merge them if once enlarged they overlap"""
+    debug = logger.isEnabledFor(logging.DEBUG)
     document_chunks_map = defaultdict(list)
     for chunk in chunks:
         document_chunks_map[chunk["document_id"]].append(chunk)
@@ -48,6 +52,15 @@ def get_context_window_merged(chunks, window_size: int = 2):
     documents = []
     for document_chunks in document_chunks_map.values():
         document_chunks.sort(key=lambda c: c["chunk_idx"])
+
+        if debug:
+            logger.debug(
+                f"[chunk_window] document_id={document_chunks[0]['document_id']}, "
+                f"window_size={window_size}, "
+                f"chunk_idx={[c['chunk_idx'] for c in document_chunks]}, "
+                f"prev_sizes={[len(neighbors(c, 'prev')) for c in document_chunks]}, "
+                f"next_sizes={[len(neighbors(c, 'next')) for c in document_chunks]}"
+            )
 
         ctxt = init_context(document_chunks[0], window_size)
         prev_chunk_idx = int(document_chunks[0]["chunk_idx"])
@@ -78,5 +91,12 @@ def get_context_window_merged(chunks, window_size: int = 2):
             "content": ctxt,
         }
         documents.append(document)
+
+    if debug:
+        logger.debug(
+            f"[chunk_window] merged {len(chunks)} chunks "
+            f"into {len(documents)} documents, "
+            f"content_sizes={[len(d['content']) for d in documents]}"
+        )
 
     return documents
