@@ -68,6 +68,9 @@ type ResultsProps<E> = {
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
     | null;
+  /** id of the result currently shown in the detail panel, so its card can stay
+   *  marked as long as that detail is open instead of only while hovered */
+  idPreview?: string;
 };
 function Results<E>({
   displayMode,
@@ -86,6 +89,7 @@ function Results<E>({
   counterIsVisible = false,
   selectOptions,
   setIdPreview,
+  idPreview,
   memoryResults,
   viewButton,
   NoResultsCustom,
@@ -137,6 +141,7 @@ function Results<E>({
           sortAfterKey={sortAfterKey}
           numberOfResults={numberOfResults}
           setIdPreview={setIdPreview}
+          idPreview={idPreview}
           memoryResults={memoryResults}
           viewButton={viewButton}
           setViewButtonDetail={setViewButtonDetail}
@@ -184,6 +189,8 @@ type ResulListProps<E> = {
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
   numberOfResults: number;
   setIdPreview: React.Dispatch<React.SetStateAction<string>> | undefined | null;
+  /** id of the result currently shown in the detail panel */
+  idPreview?: string;
 };
 
 type FiniteResultsProps<E> = ResulListProps<E> & {
@@ -293,6 +300,7 @@ export function InfiniteResults<E>({
   setTotalResult,
   numberOfResults,
   setIdPreview,
+  idPreview,
   memoryResults,
   noResultsCustom,
   viewButton,
@@ -387,11 +395,18 @@ export function InfiniteResults<E>({
               return (
                 <React.Fragment key={`page-${pageIndex}`}>
                   {page.result.map((result, resultIndex) => {
+                    const isPreviewed =
+                      Boolean(idPreview) && result?.source?.id === idPreview;
                     return (
                       <li
                         role="listitem"
                         aria-labelledby="resultid"
                         key={resultIndex}
+                        className={
+                          isPreviewed
+                            ? "openk9-result-card openk9-result-card--previewed"
+                            : "openk9-result-card"
+                        }
                         css={css`
                           background: white;
                           border: 2px solid transparent;
@@ -403,8 +418,24 @@ export function InfiniteResults<E>({
                             --openk9-embeddable-search--spacing-sm,
                             8px
                           );
+                          transition: border-color 120ms ease,
+                            box-shadow 120ms ease;
+                          /* the accent stripe marks the card whose detail is
+                             open, so it has to survive the pointer leaving.
+                             Drawn as an inset shadow rather than a wider
+                             border-left so it never reflows the card, and so it
+                             follows the corner radius */
+                          border-color: ${isPreviewed
+                            ? "var(--openk9-embeddable-search--border-color, #ced4da)"
+                            : "transparent"};
+                          box-shadow: ${isPreviewed
+                            ? "inset 3px 0 0 var(--openk9-embeddable-search--accent-color, #d6012e), 0 2px 8px rgba(0, 0, 0, 0.06)"
+                            : "none"};
                           &:hover {
-                            border: 2px solid gray;
+                            border-color: var(
+                              --openk9-embeddable-search--border-color,
+                              #ced4da
+                            );
                           }
                         `}
                       >

@@ -670,6 +670,7 @@ export function Main({
               sortAfterKey={sortAfterKey}
               numberOfResults={numberOfResults}
               setIdPreview={setIdPreview}
+              idPreview={idPreview}
               selectOptions={sortList}
               memoryResults={memoryResults}
               viewButton={viewButton}
@@ -735,6 +736,7 @@ export function Main({
                 sortAfterKey={sortAfterKey}
                 numberOfResults={numberOfResults}
                 setIdPreview={setIdPreview}
+                idPreview={idPreview}
                 setSelectedSort={setSelectedSort}
                 counterIsVisible={
                   configuration.resultList?.counterIsVisible || false
