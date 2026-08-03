@@ -27,11 +27,10 @@ public interface TenantRegistry {
 	 * Resolves a {@code virtualHost} to its {@code tenantId} (schema name).
 	 * by issuing a gRPC call to the {@code tenant-manager} service.
 	 * <p>
-	 * Used as a legacy fallback in server-side gRPC handlers that still receive
-	 * {@code virtualHost} instead of {@code tenantId} directly.
-	 * Should also be used in contexts where {@code tenantId} must be resolved
-	 * outside an HTTP request flow (where {@code tenantId} would already be
-	 * available in the request context).
+	 * Used where the {@code tenantId} must be resolved outside an HTTP request
+	 * flow (where it would already be available in the request context),
+	 * starting from the {@code virtualHost} stored in the {@code TenantBinding}
+	 * of the current schema.
 	 * <p>
 	 * New code should receive {@code tenantId} directly from its caller instead.
 	 */
