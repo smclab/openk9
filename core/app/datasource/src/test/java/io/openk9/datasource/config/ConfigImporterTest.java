@@ -34,12 +34,16 @@ import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.base.CharFilterDTO;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.CharFilterService;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
+import io.openk9.datasource.service.RAGConfigurationService;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -71,6 +75,8 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "created-char-filter";
 	private static final String EXISTING_REF_FIELD_NAME =
 		ENTITY_NAME_PREFIX + "existing-ref-field";
+	private static final String RAG_CONFIGURATION_NAME =
+		ENTITY_NAME_PREFIX + "rag-config";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -89,6 +95,9 @@ public class ConfigImporterTest {
 
 	@Inject
 	CharFilterService charFilterService;
+
+	@Inject
+	RAGConfigurationService ragConfigurationService;
 
 	private static final String COUNT_JOIN_ROWS =
 		"select count(i) from EnrichPipelineItem i";
@@ -240,6 +249,50 @@ public class ConfigImporterTest {
 
 		// Created in this method: remove only the field; the doc type pre-existed.
 		EntitiesUtils.removeEntity(fieldId, docTypeFieldService, sessionFactory);
+	}
+
+	@Test
+	void a_new_rag_configuration_is_created_with_its_type() {
+		// RAGConfiguration declares CreateRAGConfigurationDTO as its attributes, a
+		// subtype carrying the mandatory type. Creating one on import must persist
+		// that type: mapping through the entity's base K9EntityMapper (typed on the
+		// base DTO) would drop it and fail the whole import on the NOT NULL column.
+		// The round-trips above never hit this: an existing RAGConfiguration is
+		// SKIP'd (no create) and overwrite leaves the immutable type untouched.
+		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+
+		ConfigEntity newRag = new ConfigEntity(
+			"RAG_CONFIGURATION-NEW",
+			ConfigEntityType.RAG_CONFIGURATION,
+			RAG_CONFIGURATION_NAME,
+			CreateRAGConfigurationDTO.builder()
+				.name(RAG_CONFIGURATION_NAME)
+				.type(RAGType.CHAT_RAG)
+				.build(),
+			new LinkedHashMap<>(),
+			null);
+
+		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
+		entities.add(newRag);
+		ConfigPackage augmented = new ConfigPackage(
+			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
+
+		ImportResult result =
+			configImporter.apply(TENANT_ID, augmented, ImportMode.SKIP)
+				.await().indefinitely();
+
+		Long ragId = result.resolvedIds().get("RAG_CONFIGURATION-NEW");
+		assertNotNull(ragId, "the new RAG configuration must have been created");
+
+		RAGType storedType = sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.find(RAGConfiguration.class, ragId).map(RAGConfiguration::getType)
+		).await().indefinitely();
+
+		assertEquals(RAGType.CHAT_RAG, storedType,
+			"the mandatory type from the declared DTO must be persisted on create");
+
+		// Delete the RAG configuration created by this method.
+		EntitiesUtils.removeEntity(ragId, ragConfigurationService, sessionFactory);
 	}
 
 	@Test

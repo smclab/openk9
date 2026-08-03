@@ -24,11 +24,12 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigMetadata;
@@ -39,7 +40,6 @@ import io.openk9.datasource.config.model.ImportResult;
 import io.openk9.datasource.config.model.PlannedAction;
 import io.openk9.datasource.config.model.representation.AclMappingRepresentation;
 import io.openk9.datasource.config.model.representation.EnrichPipelineItemRepresentation;
-import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
@@ -52,7 +52,6 @@ import io.openk9.datasource.model.LargeLanguageModel;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.PluginDriverDocTypeFieldKey;
 import io.openk9.datasource.model.TenantBinding;
-import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -62,8 +61,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -74,9 +71,11 @@ import org.jboss.logging.Logger;
  * The plan (from {@link ConfigMatcher}) is matched and applied on the same
  * session, so nothing changes between planning and writing. Regular entities are
  * created or overwritten generically: scalars come from the typed attributes DTO
- * through the existing per-type {@link K9EntityMapper}, and every association is
- * (re)wired from the package {@code references} to the real target ids resolved
- * along the way. The two composite-key join entities ({@code EnrichPipelineItem},
+ * through {@link ConfigEntityMapper}, whose {@code entity}/{@code update} overload is
+ * selected by entity type and maps the DTO its own signature declares (so a
+ * create-only field such as {@code RAGConfiguration.type} is mapped on create), and
+ * every association is (re)wired from the package {@code references} to the real
+ * target ids resolved along the way. The two composite-key join entities ({@code EnrichPipelineItem},
  * {@code AclMapping}), which carry no plan action, are rebuilt from their resolved
  * endpoints. Finally the tenant's {@code TenantBinding} is rebound to the imported
  * bucket and models.
@@ -92,23 +91,25 @@ public class ConfigImporter {
 
 	private final Mutiny.SessionFactory sessionFactory;
 	private final ConfigMatcher matcher;
+	private final ConfigEntityMapper configEntityMapper;
 	private final ObjectMapper objectMapper;
 
-	// entity class -> its DTO mapper, resolved once from the CDI container.
-	private final Map<Class<?>, K9EntityMapper<K9Entity, K9EntityDTO>> mappers =
-		new HashMap<>();
+	// Caches of the reflectively-resolved ConfigEntityMapper import methods,
+	// keyed by entity type.
+	private final Map<Class<?>, Method> entityMethods = new ConcurrentHashMap<>();
+	private final Map<Class<?>, Method> updateMethods = new ConcurrentHashMap<>();
 
 	@Inject
 	public ConfigImporter(
 		Mutiny.SessionFactory sessionFactory,
 		ConfigMatcher matcher,
-		@Any Instance<K9EntityMapper<?, ?>> mapperBeans,
+		ConfigEntityMapper configEntityMapper,
 		ObjectMapper objectMapper) {
 
 		this.sessionFactory = sessionFactory;
 		this.matcher = matcher;
+		this.configEntityMapper = configEntityMapper;
 		this.objectMapper = objectMapper;
-		registerMappers(mapperBeans);
 	}
 
 	/**
@@ -141,7 +142,7 @@ public class ConfigImporter {
 			case CREATE -> {
 				Object dto = stripRedacted(
 					entity.getAttributes(), entity.getRedactedFields());
-				K9Entity created = mapperFor(entityClass).create((K9EntityDTO) dto);
+				K9Entity created = toEntity(entityClass, dto);
 				return wireAssociations(
 						s, created, entity.getReferences(), resolvedIds, true)
 					.flatMap(ignore -> s.persist(created).call(s::flush))
@@ -152,7 +153,7 @@ public class ConfigImporter {
 					K9Entity target = (K9Entity) found;
 					Object dto = restoreRedacted(
 						entity.getAttributes(), entity.getRedactedFields(), target);
-					mapperFor(entityClass).update(target, (K9EntityDTO) dto);
+					updateEntity(entityClass, target, dto);
 					return wireAssociations(
 							s, target, entity.getReferences(), resolvedIds, false)
 						.flatMap(ignore -> s.persist(target).call(s::flush))
@@ -203,13 +204,79 @@ public class ConfigImporter {
 				resolvedIds));
 	}
 
-	private K9EntityMapper<K9Entity, K9EntityDTO> mapperFor(Class<?> entityClass) {
-		K9EntityMapper<K9Entity, K9EntityDTO> mapper = mappers.get(entityClass);
-		if (mapper == null) {
-			throw new IllegalStateException(
-				"No K9EntityMapper for " + entityClass.getName());
+	/**
+	 * The cached {@code ConfigEntityMapper.entity(...)} overload for the entity type,
+	 * resolved by its return type. Resolution is by entity type, not by DTO: the
+	 * overload declares in its own signature the DTO it maps.
+	 */
+	private Method entityMethod(Class<?> entityType) {
+		return entityMethods.computeIfAbsent(entityType, type -> importMethod(
+			"entity",
+			m -> m.getParameterCount() == 1 && m.getReturnType() == type,
+			type));
+	}
+
+	/**
+	 * The cached {@code ConfigEntityMapper.update(...)} overload for the entity type,
+	 * resolved by its (first) {@code @MappingTarget} parameter.
+	 */
+	private Method updateMethod(Class<?> entityType) {
+		return updateMethods.computeIfAbsent(entityType, type -> importMethod(
+			"update",
+			m -> m.getParameterCount() == 2 && m.getParameterTypes()[0] == type,
+			type));
+	}
+
+	/**
+	 * The first {@link ConfigEntityMapper} method with the given name that matches;
+	 * fails loudly when a registered exportable type has no matching overload.
+	 */
+	private static Method importMethod(
+		String name, Predicate<Method> match, Class<?> entityType) {
+
+		for (Method method : ConfigEntityMapper.class.getMethods()) {
+			if (method.getName().equals(name) && match.test(method)) {
+				return method;
+			}
 		}
-		return mapper;
+		throw new IllegalStateException(
+			"ConfigEntityMapper has no " + name + "(...) for "
+				+ entityType.getSimpleName());
+	}
+
+	/**
+	 * Maps the typed attributes to a transient entity through the {@code entity}
+	 * overload for the entity type. That overload declares the DTO the
+	 * {@code ConfigEntityType} declares, so create-only fields (e.g.
+	 * {@code RAGConfiguration.type}) are mapped rather than silently narrowed.
+	 */
+	private K9Entity toEntity(Class<?> entityType, Object attributes) {
+		try {
+			return (K9Entity) entityMethod(entityType)
+				.invoke(configEntityMapper, attributes);
+		}
+		catch (ReflectiveOperationException e) {
+			throw new IllegalStateException(
+				"Cannot map attributes to " + entityType.getSimpleName(), e);
+		}
+	}
+
+	/**
+	 * Applies the typed attributes onto an existing managed entity through the
+	 * {@code update} overload for the entity type. That overload may declare the base
+	 * DTO, so immutable create-only fields (e.g. {@code RAGConfiguration.type}) are
+	 * simply not mapped and an overwrite never rewrites them. {@link Method#invoke}
+	 * still accepts the attributes when they are a subtype of the declared DTO.
+	 */
+	private void updateEntity(Class<?> entityType, K9Entity target, Object attributes) {
+		try {
+			updateMethod(entityType).invoke(configEntityMapper, target, attributes);
+		}
+		catch (ReflectiveOperationException e) {
+			throw new IllegalStateException(
+				"Cannot update " + entityType.getSimpleName() + " from its attributes",
+				e);
+		}
 	}
 
 	private JsonNode parsedJsonConfig(ObjectNode tree) {
@@ -338,17 +405,6 @@ public class ConfigImporter {
 			});
 		}
 		return chain;
-	}
-
-	@SuppressWarnings("unchecked")
-	private void registerMappers(Instance<K9EntityMapper<?, ?>> mapperBeans) {
-		for (K9EntityMapper<?, ?> mapper : mapperBeans) {
-			Class<?> entityClass = resolveEntityType(mapper.getClass());
-			if (entityClass != null) {
-				mappers.putIfAbsent(
-					entityClass, (K9EntityMapper<K9Entity, K9EntityDTO>) mapper);
-			}
-		}
 	}
 
 	private List<Object> resolveReferences(
@@ -543,25 +599,6 @@ public class ConfigImporter {
 		}
 	}
 
-	private static void collectParameterizedInterfaces(
-		Class<?> type, List<ParameterizedType> out, Set<Class<?>> seen) {
-
-		if (type == null || type == Object.class || !seen.add(type)) {
-			return;
-		}
-		for (Type genericInterface : type.getGenericInterfaces()) {
-			if (genericInterface instanceof ParameterizedType parameterized) {
-				out.add(parameterized);
-				collectParameterizedInterfaces(
-					(Class<?>) parameterized.getRawType(), out, seen);
-			}
-			else if (genericInterface instanceof Class<?> rawInterface) {
-				collectParameterizedInterfaces(rawInterface, out, seen);
-			}
-		}
-		collectParameterizedInterfaces(type.getSuperclass(), out, seen);
-	}
-
 	private static Class<?> elementType(Field field) {
 		Type generic = field.getGenericType();
 		if (generic instanceof ParameterizedType parameterized) {
@@ -600,8 +637,6 @@ public class ConfigImporter {
 		return null;
 	}
 
-	// --- mapper registry -------------------------------------------------------
-
 	private static Object getField(Object target, Field field) {
 		try {
 			field.setAccessible(true);
@@ -637,26 +672,6 @@ public class ConfigImporter {
 				"Cannot read '" + property + "' from "
 					+ bean.getClass().getSimpleName(), e);
 		}
-	}
-
-	// --- reflection helpers ----------------------------------------------------
-
-	/**
-	 * The {@code ENTITY} type argument of the {@link K9EntityMapper} the bean
-	 * implements, found by walking its (generic) interface hierarchy.
-	 */
-	private static Class<?> resolveEntityType(Class<?> mapperImpl) {
-		List<ParameterizedType> parameterized = new ArrayList<>();
-		collectParameterizedInterfaces(mapperImpl, parameterized, new HashSet<>());
-		for (ParameterizedType type : parameterized) {
-			if (type.getRawType() == K9EntityMapper.class) {
-				Type argument = type.getActualTypeArguments()[0];
-				if (argument instanceof Class<?> entityClass) {
-					return entityClass;
-				}
-			}
-		}
-		return null;
 	}
 
 	private static void restorePlaceholders(JsonNode source, JsonNode target) {

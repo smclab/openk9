@@ -51,39 +51,12 @@ import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.Annotator;
-import io.openk9.datasource.model.dto.base.AnalyzerDTO;
-import io.openk9.datasource.model.dto.base.AnnotatorDTO;
-import io.openk9.datasource.model.dto.base.AutocompleteDTO;
-import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
-import io.openk9.datasource.model.dto.base.BucketDTO;
-import io.openk9.datasource.model.dto.base.CharFilterDTO;
-import io.openk9.datasource.model.dto.base.DatasourceDTO;
-import io.openk9.datasource.model.dto.base.DocTypeDTO;
-import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
-import io.openk9.datasource.model.dto.base.DocTypeTemplateDTO;
-import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
-import io.openk9.datasource.model.dto.base.EnrichItemDTO;
-import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
-import io.openk9.datasource.model.dto.base.HighlightDTO;
-import io.openk9.datasource.model.dto.base.LanguageDTO;
-import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
-import io.openk9.datasource.model.dto.base.PluginDriverDTO;
-import io.openk9.datasource.model.dto.base.ProviderModelDTO;
-import io.openk9.datasource.model.dto.base.QueryAnalysisDTO;
-import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
-import io.openk9.datasource.model.dto.base.RangeDTO;
-import io.openk9.datasource.model.dto.base.RuleDTO;
-import io.openk9.datasource.model.dto.base.SearchConfigDTO;
-import io.openk9.datasource.model.dto.base.SortingDTO;
-import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
-import io.openk9.datasource.model.dto.base.TabDTO;
-import io.openk9.datasource.model.dto.base.TokenFilterDTO;
-import io.openk9.datasource.model.dto.base.TokenTabDTO;
-import io.openk9.datasource.model.dto.base.TokenizerDTO;
+import io.openk9.datasource.model.dto.base.*;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 
 /**
@@ -169,5 +142,134 @@ public interface ConfigEntityMapper {
 	ProviderModelDTO dto(ProviderModel providerModel);
 
 	RangeDTO dto(Range range);
+
+	// Typed DTO → entity mapping for the import side. The importer resolves the
+	// entity(<declaredDto>) overload reflectively from the ConfigEntityType, so
+	// the mapping copies exactly the DTO the enum declares. This is what makes
+	// RAG_CONFIGURATION correct: its declared DTO is CreateRAGConfigurationDTO,
+	// which carries the mandatory type; the per-entity K9EntityMapper is typed on
+	// the base RAGConfigurationDTO and would silently drop it. Associations are
+	// unmapped targets (IGNORE) and (re)wired separately by the importer.
+
+	Bucket entity(BucketDTO dto);
+
+	Datasource entity(DatasourceDTO dto);
+
+	PluginDriver entity(PluginDriverDTO dto);
+
+	EnrichPipeline entity(EnrichPipelineDTO dto);
+
+	EnrichItem entity(EnrichItemDTO dto);
+
+	DocType entity(DocTypeDTO dto);
+
+	DocTypeField entity(DocTypeFieldDTO dto);
+
+	DocTypeTemplate entity(DocTypeTemplateDTO dto);
+
+	Analyzer entity(AnalyzerDTO dto);
+
+	CharFilter entity(CharFilterDTO dto);
+
+	TokenFilter entity(TokenFilterDTO dto);
+
+	Tokenizer entity(TokenizerDTO dto);
+
+	QueryAnalysis entity(QueryAnalysisDTO dto);
+
+	Annotator entity(AnnotatorDTO dto);
+
+	Rule entity(RuleDTO dto);
+
+	QueryParserConfig entity(QueryParserConfigDTO dto);
+
+	SearchConfig entity(SearchConfigDTO dto);
+
+	EmbeddingModel entity(EmbeddingModelDTO dto);
+
+	LargeLanguageModel entity(LargeLanguageModelDTO dto);
+
+	Language entity(LanguageDTO dto);
+
+	RAGConfiguration entity(CreateRAGConfigurationDTO dto);
+
+	SuggestionCategory entity(SuggestionCategoryDTO dto);
+
+	Tab entity(TabDTO dto);
+
+	Sorting entity(SortingDTO dto);
+
+	TokenTab entity(TokenTabDTO dto);
+
+	Autocomplete entity(AutocompleteDTO dto);
+
+	Autocorrection entity(AutocorrectionDTO dto);
+
+	Highlight entity(HighlightDTO dto);
+
+	ProviderModel entity(ProviderModelDTO dto);
+
+	Range entity(RangeDTO dto);
+
+	// Typed DTO → existing-entity update for the overwrite side. Same selection by
+	// declared DTO as entity(...), but onto a managed target. The create/update
+	// distinction of RAGConfiguration lives in exactly one place: type is immutable,
+	// so its update ignores it and an overwrite never rewrites it.
+
+	Bucket update(@MappingTarget Bucket entity, BucketDTO dto);
+
+	Datasource update(@MappingTarget Datasource entity, DatasourceDTO dto);
+
+	PluginDriver update(@MappingTarget PluginDriver entity, PluginDriverDTO dto);
+
+	EnrichPipeline update(@MappingTarget EnrichPipeline entity, EnrichPipelineDTO dto);
+
+	EnrichItem update(@MappingTarget EnrichItem entity, EnrichItemDTO dto);
+
+	DocType update(@MappingTarget DocType entity, DocTypeDTO dto);
+
+	DocTypeField update(@MappingTarget DocTypeField entity, DocTypeFieldDTO dto);
+
+	DocTypeTemplate update(@MappingTarget DocTypeTemplate entity, DocTypeTemplateDTO dto);
+
+	Analyzer update(@MappingTarget Analyzer entity, AnalyzerDTO dto);
+
+	CharFilter update(@MappingTarget CharFilter entity, CharFilterDTO dto);
+
+	TokenFilter update(@MappingTarget TokenFilter entity, TokenFilterDTO dto);
+
+	Tokenizer update(@MappingTarget Tokenizer entity, TokenizerDTO dto);
+
+	QueryAnalysis update(@MappingTarget QueryAnalysis entity, QueryAnalysisDTO dto);
+
+	Annotator update(@MappingTarget Annotator entity, AnnotatorDTO dto);
+
+	Rule update(@MappingTarget Rule entity, RuleDTO dto);
+
+	QueryParserConfig update(@MappingTarget QueryParserConfig entity, QueryParserConfigDTO dto);
+
+	SearchConfig update(@MappingTarget SearchConfig entity, SearchConfigDTO dto);
+
+	EmbeddingModel update(@MappingTarget EmbeddingModel entity, EmbeddingModelDTO dto);
+
+	LargeLanguageModel update(@MappingTarget LargeLanguageModel entity, LargeLanguageModelDTO dto);
+
+	Language update(@MappingTarget Language entity, LanguageDTO dto);
+
+	RAGConfiguration update(@MappingTarget RAGConfiguration entity, RAGConfigurationDTO dto);
+
+	SuggestionCategory update(@MappingTarget SuggestionCategory entity, SuggestionCategoryDTO dto);
+
+	Tab update(@MappingTarget Tab entity, TabDTO dto);
+
+	Sorting update(@MappingTarget Sorting entity, SortingDTO dto);
+
+	TokenTab update(@MappingTarget TokenTab entity, TokenTabDTO dto);
+
+	Autocomplete update(@MappingTarget Autocomplete entity, AutocompleteDTO dto);
+
+	Autocorrection update(@MappingTarget Autocorrection entity, AutocorrectionDTO dto);
+
+	Highlight update(@MappingTarget Highlight entity, HighlightDTO dto);
 
 }
