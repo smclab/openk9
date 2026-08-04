@@ -19,12 +19,14 @@ package io.openk9.datasource.pipeline.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
 
 import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.ProviderModel;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
@@ -32,6 +34,7 @@ import io.openk9.ml.grpc.EmbeddingOuterClass;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 public class EmbeddingServiceUtilsTest {
 
@@ -238,6 +241,73 @@ public class EmbeddingServiceUtilsTest {
 		// the jsonConfig stays unset, as on the text-only wire
 		assertFalse(request.hasJsonConfig());
 		assertFalse(request.getMultimodal());
+	}
+
+	@Test
+	void composeRequest_should_compose_a_text_only_request() {
+
+		// a payload with text in the configured field and no binaries
+		var payload = """
+			{
+				"contentId": "content-1",
+				"datasourceId": 1,
+				"rawContent": "some text to embed",
+				"title": "a title"
+			}""".getBytes();
+
+		var composed = EmbeddingService.composeRequest(
+			"tenant", textOnlyConfig(), payload);
+
+		// the request carries the extracted text, no refs, the model's type
+		var request = composed.request();
+		assertEquals("some text to embed", request.getText());
+		assertEquals(0, request.getRefsCount());
+		assertEquals(
+			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BYTE,
+			request.getVectorDataType());
+		assertEquals("tenant", request.getTenantId());
+
+		// the module re-splits the text in chunks, so the source field must
+		// leave the merged root; the other fields must stay
+		assertFalse(composed.root().containsKey("rawContent"));
+		assertTrue(composed.root().containsKey("title"));
+
+		// no binaries sent, nothing to diff at end of stream
+		assertTrue(composed.sentFileIds().isEmpty());
+		assertEquals("content-1", composed.contentId());
+	}
+
+	@Test
+	void composeRequest_should_fail_without_text_nor_refs() {
+
+		// a payload without the text field and without binaries
+		var payload = """
+			{
+				"contentId": "content-1",
+				"datasourceId": 1,
+				"title": "a title"
+			}""".getBytes();
+
+		var config = textOnlyConfig();
+
+		// the guard fails the document before any gRPC call
+		assertThrows(
+			PayloadEmbeddingFailed.class,
+			() -> EmbeddingService.composeRequest("tenant", config, payload));
+	}
+
+	private static EmbeddingService.EmbeddingChunksRequest textOnlyConfig() {
+
+		// the docTypeField only contributes its path here
+		var docTypeField = Mockito.mock(DocTypeField.class);
+		Mockito.when(docTypeField.getPath()).thenReturn("rawContent");
+
+		return new EmbeddingService.EmbeddingChunksRequest(
+			docTypeField,
+			2,
+			EmbeddingOuterClass.EmbeddingModel.getDefaultInstance(),
+			EmbeddingOuterClass.RequestChunk.getDefaultInstance(),
+			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BYTE);
 	}
 
 }

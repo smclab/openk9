@@ -39,7 +39,8 @@ import java.util.function.Function;
  * with empty windows).
  *
  * <p>Neighbours are counted on what has actually been received; the total
- * number of chunks is never assumed (it is optional in the v2 contract).
+ * number of chunks is never assumed (it is optional in the {@code EmbedContent}
+ * contract).
  *
  * <p>The class is generic over the caller's chunk type {@code T} (which may
  * carry the vector, {@code fileId}, etc.). Window entries expose only the

@@ -174,7 +174,7 @@ public class EmbeddingService {
 	}
 
 	/**
-	 * v2 streaming counterpart of {@link #getEmbeddedPayload}: composes an
+	 * Streaming counterpart of {@link #getEmbeddedPayload}: composes an
 	 * {@code EmbedContentRequest} (text and/or binary refs), drives the
 	 * server-streaming {@code EmbedContent} through the incremental windowing of
 	 * {@link ChunkWindowBuffer}, and emits the finalized chunk-docs in small
@@ -182,9 +182,10 @@ public class EmbeddingService {
 	 * {@link #mapToPayload}). The returned {@link Multi} is fully backpressured:
 	 * the gRPC demand bounds the buffer to {@code O(windowSize)} memory.
 	 *
-	 * <p>Unlike v1 this path bypasses the request/reply event bus for the stream
-	 * itself (single-response, cannot stream); it is called directly on the
-	 * CDI bean by {@code EmbeddingProcessor}.
+	 * <p>Unlike {@link #getEmbeddedPayload} this path bypasses the request/reply
+	 * event bus for the stream itself (single-response, cannot stream); it is
+	 * called directly on the CDI bean by {@code EmbeddingProcessor}. The
+	 * configuration lookup still goes through the event bus.
 	 *
 	 * @param tenantId   the tenant owning the content
 	 * @param scheduleId the running schedule
@@ -205,6 +206,46 @@ public class EmbeddingService {
 	}
 
 	private Multi<byte[]> composeAndStream(
+		String tenantId, EmbeddingChunksRequest config, byte[] payload) {
+
+		ComposedRequest composed;
+		try {
+			composed = composeRequest(tenantId, config, payload);
+		}
+		catch (PayloadEmbeddingFailed e) {
+			return Multi.createFrom().failure(e);
+		}
+
+		Set<String> receivedFileIds = ConcurrentHashMap.newKeySet();
+
+		var chunks = embedding.embedContent(composed.request())
+			.onItem().invoke(chunk -> {
+				if (chunk.hasFileId()) {
+					receivedFileIds.add(chunk.getFileId());
+				}
+			});
+
+		return windowAndBatch(
+				chunks, composed.root(), composed.contentTypeByFileId(),
+				config.chunkWindowSize(), DEFAULT_EMBED_BATCH_SIZE)
+			.onCompletion().invoke(() -> warnMissingRefs(
+				composed.sentFileIds(), receivedFileIds, composed.contentId()));
+	}
+
+	/**
+	 * Composes the {@code EmbedContentRequest} of one document: the text
+	 * extracted from the configured docTypeField (removed from the source, the
+	 * module re-splits it in chunks) plus one {@code MediaRef} per staged
+	 * binary, carrying a just-in-time pre-signed GET URL.
+	 *
+	 * @param tenantId the tenant owning the content
+	 * @param config   the embedding configurations of the running schedule
+	 * @param payload  the {@code DataPayload} JSON of a single document
+	 * @return the request with the source root and the sent refs bookkeeping
+	 * @throws PayloadEmbeddingFailed when the document carries neither text nor
+	 *                                any binary reference
+	 */
+	static ComposedRequest composeRequest(
 		String tenantId, EmbeddingChunksRequest config, byte[] payload) {
 
 		var dataPayload = Json.decodeValue(Buffer.buffer(payload), DataPayload.class);
@@ -263,18 +304,18 @@ public class EmbeddingService {
 
 		var hasText = text != null && !text.isEmpty();
 
-		// v2 relaxes the v1 "fail if no text" guard to "fail only when there is
-		// neither text nor any binary ref to embed".
+		// EmbedContent relaxes the GetMessages "fail if no text" guard to "fail
+		// only when there is neither text nor any binary ref to embed".
 		if (!hasText && refs.isEmpty()) {
-			return Multi.createFrom().failure(new PayloadEmbeddingFailed(
+			throw new PayloadEmbeddingFailed(
 				String.format(
 					"The field %s has no text and there are no binary references",
-					docTypeFieldJsonPath)));
+					docTypeFieldJsonPath));
 		}
 
 		// The embedding module quantizes each vector to this type so it matches
 		// the knn_vector mapping of the index. The type is tenant-global and
-		// comes from EmbeddingModel.vectorDataType (B2 #2269), resolved by
+		// comes from EmbeddingModel.vectorDataType, resolved by
 		// toGrpcVectorDataType, which defaults to FLOAT32 for models predating
 		// that field.
 		var requestBuilder = EmbeddingOuterClass.EmbedContentRequest.newBuilder()
@@ -288,27 +329,15 @@ public class EmbeddingService {
 			requestBuilder.setText(text);
 		}
 
-		var request = requestBuilder.build();
-
-		Set<String> receivedFileIds = ConcurrentHashMap.newKeySet();
-
-		var chunks = embedding.embedContent(request)
-			.onItem().invoke(chunk -> {
-				if (chunk.hasFileId()) {
-					receivedFileIds.add(chunk.getFileId());
-				}
-			});
-
-		return windowAndBatch(
-				chunks, root, contentTypeByFileId,
-				config.chunkWindowSize(), DEFAULT_EMBED_BATCH_SIZE)
-			.onCompletion().invoke(() ->
-				warnMissingRefs(sentFileIds, receivedFileIds, contentId));
+		return new ComposedRequest(
+			requestBuilder.build(), root, contentTypeByFileId,
+			sentFileIds, contentId);
 	}
 
 	/**
-	 * The pure stream transform: window each {@code EmbeddedChunk} exactly as v1
-	 * does (via {@link ChunkWindowBuffer}), map every finalized chunk to a
+	 * The pure stream transform: window each {@code EmbeddedChunk} exactly as
+	 * {@link #mapToPayload} does (via {@link ChunkWindowBuffer}), map every
+	 * finalized chunk to a
 	 * chunk-doc, and group the docs into batches of at most {@code batchSize}
 	 * (also flushing a partial batch every {@link #DEFAULT_EMBED_BATCH_MAX_DELAY}
 	 * so a slow stream stays progressively visible), one {@code byte[]} JSON
@@ -358,11 +387,11 @@ public class EmbeddingService {
 	}
 
 	/**
-	 * Builds a chunk-doc identical to v1 ({@link #mapToDocumentObject} +
-	 * {@link #mapToChunkWindowObject}) and adds the two v2 fields: a flat
-	 * {@code fileId} (omitted for text chunks) and a Core-derived
-	 * {@code media_type} ({@code "text"} when there is no fileId, else the
-	 * contentType of the matching ref).
+	 * Builds a chunk-doc identical to the one of {@link #mapToDocumentObject} +
+	 * {@link #mapToChunkWindowObject}, plus the two fields specific to
+	 * {@code EmbedContent}: a flat {@code fileId} (omitted for text chunks) and
+	 * a Core-derived {@code media_type} ({@code "text"} when there is no
+	 * fileId, else the contentType of the matching ref).
 	 */
 	static JsonObject mapWindowedToDocument(
 		ChunkWindowBuffer.Windowed<EmbeddingOuterClass.EmbeddedChunk> windowed,
@@ -375,8 +404,8 @@ public class EmbeddingService {
 
 		jsonObject.put("number", chunk.getNumber());
 
-		// total is optional in v2 (known for text, maybe not for binaries):
-		// write it only when the module provided it.
+		// total is optional in the EmbedContent contract (known for text, maybe
+		// not for binaries): write it only when the module provided it.
 		if (chunk.hasTotal()) {
 			jsonObject.put("total", chunk.getTotal());
 		}
@@ -384,12 +413,13 @@ public class EmbeddingService {
 		jsonObject.put("chunkText", chunk.getText());
 		jsonObject.put("vector", mapVector(chunk));
 
-		// merge the rest of the source document (same as v1).
+		// merge the rest of the source document (same as mapToDocumentObject).
 		for (Map.Entry<String, Object> entry : root.entrySet()) {
 			jsonObject.put(entry.getKey(), entry.getValue());
 		}
 
-		// v2 additions, written after the merge so they are authoritative.
+		// EmbedContent additions, written after the merge so they are
+		// authoritative.
 		if (chunk.hasFileId()) {
 			jsonObject.put("fileId", chunk.getFileId());
 			jsonObject.put("media_type", Objects.requireNonNullElse(
@@ -418,12 +448,13 @@ public class EmbeddingService {
 
 	/**
 	 * Maps the vector {@code oneof} to a JSON-friendly value. FLOAT32 stays a
-	 * list of floats (as v1). The quantized shapes follow the {@code knn_vector}
-	 * mapping written by B2 #2269, so both are JSON arrays of <em>signed</em>
-	 * integers: OpenSearch reads a {@code byte} or {@code binary} knn_vector as
-	 * Lucene/faiss signed bytes, and rejects any value outside [-128, 127]. i8
-	 * carries one integer per component; bits carries one integer per packed
-	 * group of eight components (MSB first), so its length is dimension / 8.
+	 * list of floats, unchanged from {@link #mapToPayload}. The quantized
+	 * shapes follow the {@code knn_vector} mapping of the vector index, so both
+	 * are JSON arrays of <em>signed</em> integers: OpenSearch reads a
+	 * {@code byte} or {@code binary} knn_vector as Lucene/faiss signed bytes,
+	 * and rejects any value outside [-128, 127]. i8 carries one integer per
+	 * component; bits carries one integer per packed group of eight components
+	 * (MSB first), so its length is dimension / 8.
 	 */
 	static Object mapVector(EmbeddingOuterClass.EmbeddedChunk chunk) {
 
@@ -863,7 +894,19 @@ public class EmbeddingService {
 		String contentType
 	) {}
 
-	private record EmbeddingChunksRequest(
+	/**
+	 * The composed {@code EmbedContent} call of one document: the request plus
+	 * the source-derived context the stream mapping needs.
+	 */
+	record ComposedRequest(
+		EmbeddingOuterClass.EmbedContentRequest request,
+		Map<String, Object> root,
+		Map<String, String> contentTypeByFileId,
+		Set<String> sentFileIds,
+		String contentId
+	) {}
+
+	record EmbeddingChunksRequest(
 		DocTypeField docTypeField,
 		int chunkWindowSize,
 		EmbeddingOuterClass.EmbeddingModel embeddingModel,
