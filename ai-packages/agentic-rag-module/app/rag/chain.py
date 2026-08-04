@@ -18,6 +18,7 @@
 import json
 
 from app.rag.agentic_rag import RagGraph
+from app.utils.error_events import error_event
 from app.utils.llm import (
     initialize_language_model,
 )
@@ -52,6 +53,7 @@ def get_agentic_rag(
     opensearch_host,
     grpc_host_embedding,
     grpc_host_datasource,
+    media=None,
 ):
     try:
         prompt_template = rag_configuration.get("prompt")
@@ -116,6 +118,7 @@ def get_agentic_rag(
         graph_configuration = {
             "rag_type": rag_type,
             "search_query": search_query,
+            "media": media,
             "datasource_ids": datasource_ids,
             "tenant_id": tenant_id,
             "user_id": user_id,
@@ -161,4 +164,4 @@ def get_agentic_rag(
 
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE}: {e}")
-        yield json.dumps({"chunk": UNEXPECTED_ERROR_MESSAGE, "type": "ERROR"})
+        yield json.dumps(error_event(e, UNEXPECTED_ERROR_MESSAGE))

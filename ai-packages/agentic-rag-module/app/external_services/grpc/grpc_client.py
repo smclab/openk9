@@ -91,6 +91,15 @@ def query_parser(
     except grpc.RpcError as e:
         error_message = f"QueryParser gRPC communication failed: {e.details()}"
         logger.error(error_message)
+        # The datasource is the authority on what a query may contain, and it
+        # answers INVALID_ARGUMENT when it refuses one. That is the caller's
+        # fault, not an internal failure, so its reason is forwarded instead of
+        # being flattened into an opaque 500.
+        if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=e.details(),
+            ) from e
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
     raise HTTPException(

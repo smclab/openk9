@@ -54,11 +54,35 @@ from app.utils.conversation_history import (
     load_messages_from_frontend,
     load_messages_from_snapshot,
 )
+from app.utils.error_events import error_event
 from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
 from app.utils.opensearch_client import get_opensearch_client
 from app.utils.query_rewrite import escape_curly_braces
+from app.utils.query_validation import is_blank_query
+
+# Stands in for the written question when the turn carries an image and no
+# text. Every text-driven stage is skipped in that case, but the response node
+# still runs and its prompt interpolates the query: an empty string there would
+# leave the model guessing what it is being asked.
+#
+# Two things the instruction has to work around. The image never reaches the
+# model, which only ever sees the chunk texts, so any visual detail it produced
+# would be invented. And a match retrieved by visual similarity can be a
+# binary, whose chunk text is a caption, a file name or empty: a context made
+# only of those is an empty string, and the no-context short-circuit does not
+# catch it because it tests the document list, not the text.
+MEDIA_ONLY_QUERY_INSTRUCTION = (
+    "The user submitted an image instead of a written question. "
+    "The documents in the context are the closest matches to that "
+    "image, and some may themselves be images whose text is a "
+    "caption, a file name or nothing at all. Summarise what the "
+    "matches contain and what connects them, using only the text "
+    "present in the context: the image itself is not part of it, so "
+    "do not describe visual details. If the matches carry no usable "
+    "text, say so plainly instead of guessing."
+)
 
 
 class GraphState(BaseModel):
@@ -709,7 +733,28 @@ class RagGraph:
 
         return "\n\n".join(doc.page_content for doc in context)
 
+    def _is_media_only_query(self, query) -> bool:
+        """True when the turn is a query by image alone.
+
+        Every text-driven stage of the graph (input guardrail, query analysis
+        and rewriting, domain detection, RAG routing) reads the written
+        question. With a media and no text there is nothing for them to read,
+        so they are skipped rather than run against an empty string: they would
+        spend an LLM or an embedding call to produce a meaningless verdict, and
+        the router could send the turn away from the retriever, which is the
+        one stage that can actually use the image.
+
+        The two stages that do run also ask: the retriever leaves the token's
+        values empty, and the response node swaps in
+        ``MEDIA_ONLY_QUERY_INSTRUCTION``.
+        """
+        return bool(self.configuration.get("media")) and is_blank_query(query)
+
     def input_guardrail_node(self, state: GraphState) -> GraphState:
+        if self._is_media_only_query(state.current_query):
+            logger.debug("[input_guardrail] skipped (media-only query)")
+            return state
+
         if self.input_guardrail.get("enable_input_guardrail"):
             query = state.current_query
             logger.debug(
@@ -939,6 +984,12 @@ class RagGraph:
     def intent_detection_decision(
         self, state: GraphState
     ) -> Literal["input_domain", "rag_router"]:
+        if self._is_media_only_query(state.current_query):
+            logger.debug(
+                "[intent_detection] media-only query -> rag_router "
+                "(domain detection skipped)"
+            )
+            return "rag_router"
         if self.rag_type == "SIMPLE_GENERATE":
             logger.debug(
                 "[intent_detection] rag_type=SIMPLE_GENERATE -> rag_router "
@@ -979,6 +1030,10 @@ class RagGraph:
         return state
 
     def analyze_and_rewrite_query_node(self, state: GraphState) -> GraphState:
+        if self._is_media_only_query(state.current_query):
+            logger.debug("[analyze_and_rewrite_query] skipped (media-only query)")
+            return state
+
         if self.rag_type != "SIMPLE_GENERATE" and self.chat_sequence_number > 1:
             query = state.current_query
             messages = state.messages
@@ -1096,6 +1151,14 @@ class RagGraph:
 
     def rag_router_node(self, state: GraphState) -> GraphState:
         """Node to determine if RAG is necessary or not"""
+        if self._is_media_only_query(state.current_query):
+            # Retrieval is the only stage that can consume the image, so the
+            # turn goes to it unconditionally instead of asking the LLM to
+            # route an empty question.
+            state.use_rag = True
+            logger.debug("[rag_router] media-only query -> use_rag=True (RAG)")
+            return state
+
         bypass_rag = self.configuration.get("bypass_rag")
 
         if bypass_rag:
@@ -1220,15 +1283,21 @@ class RagGraph:
                 logger.debug(
                     f"[opensearch_retriever_node] not search_query={search_query}"
                 )
+                # The token type stays the bucket's retrieve_type: a media on
+                # anything other than a KNN bucket is refused at the gRPC
+                # boundary, which is the intended behaviour for now. With an
+                # image and no text there is no term to search for, so values
+                # is left empty and the media alone drives the query.
                 search_query = [
                     models.SearchToken(
                         tokenType=self.configuration.get("retrieve_type"),
                         keywordKey="",
-                        values=[query],
+                        values=[] if self._is_media_only_query(query) else [query],
                         filter=True,
                         entityType="",
                         entityName="",
                         extra={},
+                        media=self.configuration.get("media"),
                     )
                 ]
 
@@ -1511,6 +1580,11 @@ class RagGraph:
     def llm_response_node(self, state: GraphState) -> GraphState:
         """LLM response node"""
         query = state.current_query
+        if self._is_media_only_query(query):
+            # Only the local query is replaced: state.current_query stays empty
+            # so the later stages still see the turn for what it was.
+            query = MEDIA_ONLY_QUERY_INSTRUCTION
+            logger.debug("[llm_response] media-only query -> dedicated instruction")
         context = state.context or []
         messages = state.messages
 
@@ -2180,4 +2254,4 @@ class RagGraph:
                 yield json.dumps({"chunk": "Guardrail violation", "type": "GUARDRAIL"})
                 yield json.dumps({"chunk": "", "type": "END"})
                 return
-            yield json.dumps({"chunk": str(e), "type": "ERROR"})
+            yield json.dumps(error_event(e, str(e)))

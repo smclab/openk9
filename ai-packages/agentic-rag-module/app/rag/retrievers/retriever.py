@@ -33,6 +33,31 @@ HYBRID_RETRIEVE_TYPE = "HYBRID"
 VECTORIAL_RETRIEVE_TYPES = ["KNN", "HYBRID"]
 
 
+def _token_to_dict(token) -> dict:
+    """Convert a search token to the dict ``ParseDict`` expects.
+
+    The fields are listed by name rather than dumped wholesale so an unmapped
+    model field can never reach the proto conversion. ``media`` is added only
+    when the token carries one: ``ParseDict`` would accept an explicit null and
+    leave the field unset just the same, so this is about keeping a text query's
+    payload exactly the shape it had before rather than about correctness.
+    """
+    token_dict = {
+        "entityType": token.entityType,
+        "entityName": token.entityName,
+        "tokenType": token.tokenType,
+        "keywordKey": token.keywordKey,
+        "values": token.values,
+        "extra": token.extra,
+        "filter": token.filter,
+    }
+
+    if token.media:
+        token_dict["media"] = token.media.model_dump()
+
+    return token_dict
+
+
 class OpenSearchRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving documents."""
 
@@ -62,18 +87,7 @@ class OpenSearchRetriever(BaseRetriever):
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
     ) -> List[Document]:
         search_query = (
-            [
-                {
-                    "entityType": query_element.entityType,
-                    "entityName": query_element.entityName,
-                    "tokenType": query_element.tokenType,
-                    "keywordKey": query_element.keywordKey,
-                    "values": query_element.values,
-                    "extra": query_element.extra,
-                    "filter": query_element.filter,
-                }
-                for query_element in self.search_query
-            ]
+            [_token_to_dict(query_element) for query_element in self.search_query]
             if self.search_query
             else [
                 {

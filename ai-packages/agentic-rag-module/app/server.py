@@ -326,6 +326,8 @@ async def rag_chat(
             - chatHistory: Previous chat messages in the conversation
             - timestamp: Timestamp of the request
             - chatSequenceNumber: Sequence number of the message in chat
+            - media: Optional image used as query, on a KNN bucket; may
+              come with an empty searchText to query by image alone
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
@@ -368,12 +370,16 @@ async def rag_chat(
     search_text = search_query_chat.searchText
     chat_history = search_query_chat.chatHistory
     datasource_ids = search_query_chat.datasourceIds
+    media = search_query_chat.media
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     rag_type = RagType.CHAT_RAG.value
 
     search_text = sanitize_input(search_text)
-    if is_blank_query(search_text):
+    # A media is a query in its own right: querying by image alone carries an
+    # empty searchText, which must not be met with the blank-query courtesy
+    # message.
+    if is_blank_query(search_text) and not media:
         return EventSourceResponse(blank_query_stream())
 
     if contains_encoded_blob(search_text):
@@ -440,6 +446,7 @@ async def rag_chat(
         OPENSEARCH_HOST,
         GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
+        media=media,
     )
     return EventSourceResponse(chain)
 
@@ -473,6 +480,8 @@ async def rag_chat_tool(
             - chatHistory: Previous chat messages in the conversation
             - timestamp: Timestamp of the request
             - chatSequenceNumber: Sequence number of the message in chat
+            - media: Optional image used as query, on a KNN bucket; may
+              come with an empty searchText to query by image alone
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
@@ -518,12 +527,16 @@ async def rag_chat_tool(
     search_text = search_query_chat.searchText
     chat_history = search_query_chat.chatHistory
     datasource_ids = search_query_chat.datasourceIds
+    media = search_query_chat.media
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     rag_type = RagType.CHAT_RAG_TOOL.value
 
     search_text = sanitize_input(search_text)
-    if is_blank_query(search_text):
+    # A media is a query in its own right: querying by image alone carries an
+    # empty searchText, which must not be met with the blank-query courtesy
+    # message.
+    if is_blank_query(search_text) and not media:
         return EventSourceResponse(blank_query_stream())
 
     if contains_encoded_blob(search_text):
@@ -590,6 +603,7 @@ async def rag_chat_tool(
         OPENSEARCH_HOST,
         GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
+        media=media,
     )
     return EventSourceResponse(chain)
 

@@ -200,6 +200,22 @@ API_RAG_CHAT_OPENAPI_EXTRA = {
                             "searchText": "What is OpenK9?",
                             "timestamp": "1731928126578",
                             "chatSequenceNumber": 1,
+                            "media": {
+                                "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGP4DwABAQEAG7buVgAAAABJRU5ErkJggg==",
+                                "contentType": "image/png",
+                            },
+                        },
+                    },
+                    "Image as query": {
+                        "summary": "Querying by image alone, on a KNN bucket",
+                        "value": {
+                            "searchText": "",
+                            "timestamp": "1731928126578",
+                            "chatSequenceNumber": 1,
+                            "media": {
+                                "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGP4DwABAQEAG7buVgAAAABJRU5ErkJggg==",
+                                "contentType": "image/png",
+                            },
                         },
                     },
                     "Example for logged users, retrieving from uploaded documents": {

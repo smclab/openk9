@@ -20,6 +20,24 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+class Media(BaseModel):
+    """Inline media carried by a search token (image-as-query).
+
+    Format, size and the token types that accept a media are validated at the
+    gRPC boundary by the datasource, which is the authority: the rules are not
+    restated here.
+    """
+
+    data: str = Field(
+        ..., description="Base64-encoded raw bytes of the media", example="iVBORw0KGgo="
+    )
+    contentType: str = Field(
+        ...,
+        description="Content type of the media; must be image/*",
+        example="image/png",
+    )
+
+
 class SearchToken(BaseModel):
     """
     SearchToken class model.
@@ -41,6 +59,9 @@ class SearchToken(BaseModel):
     )
     extra: Optional[dict[str, str]] = Field(
         {}, description="Additional metadata for the token", example={}
+    )
+    media: Optional[Media] = Field(
+        None, description="Inline media for image-as-query; only on KNN tokens"
     )
 
 
@@ -165,6 +186,11 @@ class SearchQueryChat(BaseModel):
         None,
         description="Restrict retrieval to these datasource ids",
         example=[1, 2],
+    )
+    media: Optional[Media] = Field(
+        None,
+        description="Inline media used as query; requires a KNN bucket. "
+        "May be sent with an empty searchText to query by image alone.",
     )
 
 
