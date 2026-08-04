@@ -148,6 +148,25 @@ def test_llm_response_uses_the_dedicated_instruction_on_media_only():
     assert state.current_query == ""
 
 
+def test_media_only_takes_precedence_over_bypass_rag():
+    # A tenant configured never to use RAG still retrieves when the turn is an
+    # image alone: there is nothing for bypass_rag to bypass, since the image
+    # can only be consumed by the retriever and no other stage would look at
+    # it. bypass_rag keeps deciding every other turn, which is exactly why the
+    # guard returns before bypass_rag is read.
+    graph, state = _graph(IMAGE, "")
+    graph.configuration["bypass_rag"] = True
+
+    result = graph.rag_router_node(state)
+
+    graph.llm.with_structured_output.assert_not_called()
+    assert result.use_rag is True
+
+    # As soon as the turn carries text the guard no longer fires, so the
+    # decision is bypass_rag's again.
+    assert graph._is_media_only_query("A cosa somiglia questa foto?") is False
+
+
 def test_textless_matches_still_reach_the_model_with_the_instruction():
     # A match retrieved by visual similarity can be a binary whose chunk text
     # is empty, so the context can be an empty string while the document list
