@@ -96,7 +96,6 @@ API_RAG_GENERATE_OPENAPI_EXTRA = {
                                     "filter": True,
                                 }
                             ],
-                            "range": [],
                             "searchText": "What is OpenK9?",
                         },
                     },
@@ -114,7 +113,6 @@ API_RAG_GENERATE_OPENAPI_EXTRA = {
                                     "filter": True,
                                 }
                             ],
-                            "range": [],
                             "afterKey": "page_2",
                             "suggestKeyword": "OpenK9",
                             "suggestionCategoryId": 1,
@@ -124,6 +122,7 @@ API_RAG_GENERATE_OPENAPI_EXTRA = {
                             "language": "it_IT",
                             "searchText": "What is OpenK9?",
                             "reformulate": True,
+                            "datasourceIds": [1, 2],
                         },
                     },
                 }
@@ -189,7 +188,6 @@ API_RAG_CHAT_OPENAPI_EXTRA = {
                         "value": {
                             "chatId": "chat-456",
                             "retrieveFromUploadedDocuments": True,
-                            "range": [0, 5],
                             "afterKey": "some-key",
                             "suggestKeyword": "OpenK9",
                             "suggestionCategoryId": 1,
@@ -198,8 +196,15 @@ API_RAG_CHAT_OPENAPI_EXTRA = {
                             "sortAfterKey": "sort-key",
                             "language": "en",
                             "searchText": "What is OpenK9?",
+                            "chatHistory": [
+                                {
+                                    "question": "What is OpenK9?",
+                                    "answer": "OpenK9 is an open source search engine.",
+                                }
+                            ],
                             "timestamp": "1731928126578",
                             "chatSequenceNumber": 1,
+                            "datasourceIds": [1, 2],
                             "media": {
                                 "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGP4DwABAQEAG7buVgAAAABJRU5ErkJggg==",
                                 "contentType": "image/png",
@@ -356,7 +361,6 @@ API_RAG_CHAT_TOOL_OPENAPI_EXTRA = {
                         "value": {
                             "chatId": "chat-456",
                             "retrieveFromUploadedDocuments": False,
-                            "range": [0, 5],
                             "afterKey": "some-key",
                             "suggestKeyword": "OpenK9",
                             "suggestionCategoryId": 1,

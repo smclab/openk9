@@ -183,6 +183,8 @@ async def rag_generate(
             - sortAfterKey: Pagination key for sorted results
             - language: Language code for localized result
             - searchText: Primary search text input
+            - reformulate: Whether to enable query reformulation
+            - datasourceIds: Restrict retrieval to these datasource ids
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
@@ -326,6 +328,7 @@ async def rag_chat(
             - chatHistory: Previous chat messages in the conversation
             - timestamp: Timestamp of the request
             - chatSequenceNumber: Sequence number of the message in chat
+            - datasourceIds: Restrict retrieval to these datasource ids
             - media: Optional image used as query, on a KNN bucket; may
               come with an empty searchText to query by image alone
         request (Request): FastAPI Request object
@@ -480,6 +483,7 @@ async def rag_chat_tool(
             - chatHistory: Previous chat messages in the conversation
             - timestamp: Timestamp of the request
             - chatSequenceNumber: Sequence number of the message in chat
+            - datasourceIds: Restrict retrieval to these datasource ids
             - media: Optional image used as query, on a KNN bucket; may
               come with an empty searchText to query by image alone
         request (Request): FastAPI Request object
