@@ -147,6 +147,7 @@ scheduling:
 ## pipeline configuration
 pipeline:
   HttpTimeout: '10s'
+  EmbeddingWriteTimeout: '5m'
 
 ## Database configuration
 database:

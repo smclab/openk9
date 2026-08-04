@@ -76,6 +76,7 @@ data:
   IO_OPENK9_SCHEDULING_CONSUMER_TIMEOUT: {{ .Values.scheduling.ConsumerTimeout | quote }}
   OPENK9_DATASOURCE_SCHEDULER_RETENTION_DAYS: {{ .Values.scheduling.retentionDays | quote }}
   IO_OPENK9_PIPELINE_HTTP_TIMEOUT: {{ .Values.pipeline.HttpTimeout | quote }}
+  IO_OPENK9_PIPELINE_EMBEDDING_WRITE_TIMEOUT: {{ .Values.pipeline.EmbeddingWriteTimeout | quote }}
 
   QUARKUS_DATASOURCE_REACTIVE_IDLE_TIMEOUT : {{ .Values.quarkus.ReactiveIdleTimeout | quote }}
   QUARKUS_DATASOURCE_REACTIVE_MAX_SIZE : {{ .Values.quarkus.ReactiveMaxSize | quote }}

@@ -88,6 +88,7 @@ Openk9 Datasource service handles pipelines. Following parameters allow to handl
 | Name                | Description                                      | Value |
 | ------------------- |--------------------------------------------------|-------|
 | `pipeline.HttpTimeout`      | Timeout used by Http client calling enrich items | `10s` |
+| `pipeline.EmbeddingWriteTimeout`      | Timeout for a single embedding batch write (delete + bulk) | `5m` |
 
 ### QueryParser and search configurations
 
