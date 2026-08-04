@@ -134,36 +134,31 @@ public class ConfigImporter {
 		Class<?> entityClass = action.type().getEntityType();
 		String ref = action.ref();
 
-		switch (action.action()) {
+		return switch (action.action()) {
 			case SKIP -> {
 				resolvedIds.put(ref, action.existingId());
-				return Uni.createFrom().voidItem();
+				yield Uni.createFrom().voidItem();
 			}
 			case CREATE -> {
 				Object dto = stripRedacted(
 					entity.getAttributes(), entity.getRedactedFields());
 				K9Entity created = toEntity(entityClass, dto);
-				return wireAssociations(
+				yield wireAssociations(
 						s, created, entity.getReferences(), resolvedIds, true)
 					.flatMap(ignore -> s.persist(created).call(s::flush))
 					.invoke(() -> resolvedIds.put(ref, created.getId()));
 			}
-			case OVERWRITE -> {
-				return s.find(entityClass, action.existingId()).flatMap(found -> {
-					K9Entity target = (K9Entity) found;
-					Object dto = restoreRedacted(
-						entity.getAttributes(), entity.getRedactedFields(), target);
-					updateEntity(entityClass, target, dto);
-					return wireAssociations(
-							s, target, entity.getReferences(), resolvedIds, false)
-						.flatMap(ignore -> s.persist(target).call(s::flush))
-						.invoke(() -> resolvedIds.put(ref, action.existingId()));
-				});
-			}
-			default -> {
-				return Uni.createFrom().voidItem();
-			}
-		}
+			case OVERWRITE -> s.find(entityClass, action.existingId()).flatMap(found -> {
+				K9Entity target = (K9Entity) found;
+				Object dto = restoreRedacted(
+					entity.getAttributes(), entity.getRedactedFields(), target);
+				updateEntity(entityClass, target, dto);
+				return wireAssociations(
+						s, target, entity.getReferences(), resolvedIds, false)
+					.flatMap(ignore -> s.persist(target).call(s::flush))
+					.invoke(() -> resolvedIds.put(ref, action.existingId()));
+			});
+		};
 	}
 
 	private Object bindBack(ObjectNode tree, Class<?> attributesType) {
