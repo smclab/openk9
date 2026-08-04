@@ -111,11 +111,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 				this.replyTo.tell(new Failed(heldMessage, exception));
 				break;
-			case Writer.BatchAck ignored:
-
-				// A batch ack answers the embedding processor's ask directly; it
-				// never reaches the WorkStage adapter. Handled for exhaustiveness.
-				break;
 		}
 
 		return Behaviors.same();
@@ -131,11 +126,11 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				.getSelf()
 				.tell(new Write(success.payload(), heldMessage));
 			case Processor.Skip ignored -> this.replyTo.tell(new Done(heldMessage));
-			case Processor.Complete complete ->
-				// the streaming processor already wrote every matured batch to the
-				// writer; close the single per-document write.
-				this.writer.tell(new Writer.EndStream(
-					complete.heldMessage(), complete.wroteAnyBatch()));
+			case Processor.Complete ignored ->
+				// the streaming processor already wrote every matured batch
+				// through its own writer, and confirmed the last one: there is
+				// nothing left to write, the document is done.
+				this.replyTo.tell(new Done(heldMessage));
 			case Processor.Failure failure -> {
 
 				var exception = failure.exception();
@@ -209,8 +204,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 					Json.encodeToBuffer(dataPayload).getBytes(),
 					scheduler,
 					heldMessage,
-					this.dataProcessAdapter,
-					this.writer
+					this.dataProcessAdapter
 				));
 
 				this.replyTo.tell(new Working(heldMessage, requester));

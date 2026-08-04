@@ -20,8 +20,6 @@ package io.openk9.datasource.pipeline.stages.working;
 import io.openk9.datasource.pipeline.actor.WriterException;
 import io.openk9.datasource.util.CborSerializable;
 
-import org.apache.pekko.actor.typed.ActorRef;
-
 public interface Writer {
 
 	interface Command extends CborSerializable {}
@@ -33,36 +31,8 @@ public interface Writer {
 	record Start(byte[] dataPayload, HeldMessage heldMessage)
 		implements Command {}
 
-	/**
-	 * A single batch of a streaming write. {@code firstBatch} marks the
-	 * first batch of a content: the writer deletes the previously indexed chunks
-	 * of the content before indexing this batch, so an early module failure
-	 * leaves the prior version intact. The writer answers {@code replyTo} with a
-	 * {@link BatchAck} once the batch is durably written, which is what gates the
-	 * caller's next batch (ask-per-batch backpressure).
-	 */
-	record WriteBatch(
-		byte[] dataPayload,
-		boolean firstBatch,
-		HeldMessage heldMessage,
-		ActorRef<Response> replyTo
-	) implements Command {}
-
-	/**
-	 * Signals that the batch stream of a content is exhausted; the writer replies
-	 * {@link Success} once, closing the single per-document write.
-	 * {@code wroteAnyBatch} is {@code false} when no batch was written (a
-	 * zero-chunk stream): the writer completes the write but emits no creation
-	 * event, since nothing was indexed and the prior version is untouched.
-	 */
-	record EndStream(HeldMessage heldMessage, boolean wroteAnyBatch)
-		implements Command {}
-
 	record Success(HeldMessage heldMessage) implements Response {}
 
 	record Failure(WriterException exception, HeldMessage heldMessage) implements Response {}
-
-	/** Acknowledges that a {@link WriteBatch} has been durably written. */
-	record BatchAck(HeldMessage heldMessage) implements Response {}
 
 }

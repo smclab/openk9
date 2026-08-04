@@ -35,11 +35,7 @@ public interface Processor {
 		byte[] ingestPayload,
 		SchedulerDTO scheduler,
 		HeldMessage heldMessage,
-		ActorRef<Response> replyTo,
-		// The document writer, threaded to the terminal streaming processor so it
-		// can drive the writer directly with backpressure. Ignored by the
-		// non-streaming processors.
-		ActorRef<Writer.Command> writerRef
+		ActorRef<Response> replyTo
 	) implements Command {}
 
 	record Skip(HeldMessage heldMessage) implements Response {}
@@ -49,15 +45,12 @@ public interface Processor {
 	) implements Response {}
 
 	/**
-	 * Terminal signal of a streaming processor: every matured batch has already
-	 * been handed to the writer, the stream is exhausted. Routed by the
-	 * WorkStage to a single {@code Writer.EndStream}.
-	 * {@code wroteAnyBatch} is {@code false} when the stream produced no chunk,
-	 * so the writer can skip the spurious per-document creation event.
+	 * Terminal signal of a streaming processor. Such a processor writes every
+	 * matured batch itself, through a writer of its own, so there is no payload
+	 * left for the WorkStage to write: this response is emitted once, only after
+	 * that writer confirmed the end of the stream, and closes the document.
 	 */
-	record Complete(
-		SchedulerDTO scheduler, HeldMessage heldMessage, boolean wroteAnyBatch
-	) implements Response {}
+	record Complete(HeldMessage heldMessage) implements Response {}
 
 	record Failure(
 		DataProcessException exception,

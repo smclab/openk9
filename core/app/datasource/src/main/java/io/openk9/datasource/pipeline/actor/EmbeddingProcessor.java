@@ -19,15 +19,12 @@ package io.openk9.datasource.pipeline.actor;
 
 import java.time.Duration;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.atomic.AtomicBoolean;
 import jakarta.enterprise.inject.spi.CDI;
 
 import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
-import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
-import io.openk9.datasource.pipeline.stages.working.Writer;
 
 import io.smallrye.mutiny.Uni;
 import org.apache.pekko.actor.typed.ActorRef;
@@ -44,12 +41,13 @@ import org.jboss.logging.Logger;
 /**
  * Terminal streaming processor of the embedding path. It drives the
  * server-streaming {@code EmbedContent} through {@link EmbeddingService
- * #embedContentStream} and writes each matured batch to the {@code writer} it
- * receives with {@link Processor.Start}. Backpressure is
- * {@code transformToUniAndConcatenate} + a Pekko ask per batch: exactly one
- * batch is in flight and the next is not pulled until the current bulk
- * completes. On stream completion it emits a single
- * {@link Processor.Complete}; on error a {@link Processor.Failure}.
+ * #embedContentStream} and writes each matured batch through its own
+ * {@link ChunkStreamWriter} child, spawned per document as this processor
+ * itself is. Backpressure is {@code transformToUniAndConcatenate} + a Pekko ask
+ * per batch: exactly one batch is in flight and the next is not pulled until
+ * the current bulk completes. When the stream is exhausted it closes the child
+ * and, only once the child confirms, emits a single {@link Processor.Complete};
+ * on error a {@link Processor.Failure}.
  */
 public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
@@ -66,9 +64,8 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 	private final ShardingKey processKey;
 	private final EmbeddingService embeddingService;
 	private ActorRef<Processor.Response> replyTo;
-	private ActorRef<Writer.Command> writer;
+	private ActorRef<ChunkStreamWriter.Command> writer;
 	private HeldMessage heldMessage;
-	private SchedulerDTO scheduler;
 
 	public EmbeddingProcessor(
 		ActorContext<Processor.Command> context,
@@ -94,6 +91,7 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		return newReceiveBuilder()
 			.onMessage(Processor.Start.class, this::onStart)
 			.onMessage(StreamCompleted.class, this::onStreamCompleted)
+			.onMessage(StreamClosed.class, this::onStreamClosed)
 			.onMessage(StreamFailed.class, this::onStreamFailed)
 			.build();
 	}
@@ -102,52 +100,77 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		var payload = start.ingestPayload();
 		this.heldMessage = start.heldMessage();
 		this.replyTo = start.replyTo();
-		this.scheduler = start.scheduler();
-		this.writer = start.writerRef();
+
+		this.writer = getContext().spawnAnonymous(
+			ChunkStreamWriter.create(start.scheduler(), heldMessage));
 
 		var self = getContext().getSelf();
 		var pekkoScheduler = getContext().getSystem().scheduler();
-		var firstBatch = new AtomicBoolean(true);
 
 		embeddingService
 			.embedContentStream(
 				processKey.tenantId(), processKey.scheduleId(), payload)
 			.onItem().transformToUniAndConcatenate(batch ->
-				askWriter(pekkoScheduler, batch, firstBatch.getAndSet(false)))
+				askWriter(pekkoScheduler, batch))
 			.subscribe().with(
 				ignored -> {},
 				throwable -> self.tell(new StreamFailed(throwable)),
-				// firstBatch is still set only if no batch was ever written.
-				() -> self.tell(new StreamCompleted(!firstBatch.get()))
+				() -> self.tell(new StreamCompleted())
 			);
 
 		return this;
 	}
 
-	private Uni<Writer.Response> askWriter(
-		Scheduler pekkoScheduler, byte[] batch, boolean firstBatch) {
+	private Uni<ChunkStreamWriter.Response> askWriter(
+		Scheduler pekkoScheduler, byte[] batch) {
 
-		CompletionStage<Writer.Response> ask = AskPattern.ask(
+		CompletionStage<ChunkStreamWriter.Response> ask = AskPattern.ask(
 			writer,
-			(ActorRef<Writer.Response> ackTo) ->
-				new Writer.WriteBatch(batch, firstBatch, heldMessage, ackTo),
+			(ActorRef<ChunkStreamWriter.Response> ackTo) ->
+				new ChunkStreamWriter.WriteBatch(batch, ackTo),
 			WRITE_ASK_TIMEOUT,
 			pekkoScheduler
 		);
 
 		return Uni.createFrom().completionStage(ask)
 			.onItem().transformToUni(response -> switch (response) {
-				case Writer.BatchAck ignored -> Uni.createFrom().item(response);
-				case Writer.Success ignored -> Uni.createFrom().item(response);
-				case Writer.Failure failure ->
+				case ChunkStreamWriter.Ack ignored ->
+					Uni.createFrom().item(response);
+				case ChunkStreamWriter.Failure failure ->
 					Uni.createFrom().failure(failure.exception());
 			});
 	}
 
-	private Behavior<Processor.Command> onStreamCompleted(StreamCompleted completed) {
+	private Behavior<Processor.Command> onStreamCompleted(StreamCompleted ignored) {
 
-		replyTo.tell(new Processor.Complete(
-			scheduler, heldMessage, completed.wroteAnyBatch()));
+		// The stream is exhausted and every matured batch is written: close the
+		// child write. The document is not done until the child confirms.
+		CompletionStage<ChunkStreamWriter.Response> ask = AskPattern.ask(
+			writer,
+			(ActorRef<ChunkStreamWriter.Response> ackTo) ->
+				new ChunkStreamWriter.EndStream(ackTo),
+			WRITE_ASK_TIMEOUT,
+			getContext().getSystem().scheduler()
+		);
+
+		getContext().pipeToSelf(ask, StreamClosed::new);
+
+		return this;
+	}
+
+	private Behavior<Processor.Command> onStreamClosed(StreamClosed streamClosed) {
+
+		var throwable = streamClosed.throwable();
+
+		if (throwable != null) {
+			return onStreamFailed(new StreamFailed(throwable));
+		}
+
+		if (streamClosed.response() instanceof ChunkStreamWriter.Failure failure) {
+			return onStreamFailed(new StreamFailed(failure.exception()));
+		}
+
+		replyTo.tell(new Processor.Complete(heldMessage));
 
 		return Behaviors.stopped();
 	}
@@ -166,8 +189,11 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		return Behaviors.stopped();
 	}
 
-	private record StreamCompleted(boolean wroteAnyBatch)
-		implements Processor.Command {}
+	private record StreamCompleted() implements Processor.Command {}
+
+	private record StreamClosed(
+		ChunkStreamWriter.Response response, Throwable throwable
+	) implements Processor.Command {}
 
 	private record StreamFailed(Throwable throwable) implements Processor.Command {}
 
