@@ -16,7 +16,10 @@
 #
 
 
+import base64
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.models import models
 from app.rag.agentic_rag import GraphState, RagGraph
@@ -116,16 +119,50 @@ def test_image_without_text_token_carries_media_and_empty_values():
     assert token.media == IMAGE
 
 
-def test_token_type_stays_the_bucket_retrieve_type():
+@pytest.mark.parametrize("retrieve_type", ["HYBRID", "TEXT"])
+def test_token_type_stays_the_bucket_retrieve_type(retrieve_type):
     # The media does not promote the token to KNN: on a non-KNN bucket the
     # request is meant to be refused at the gRPC boundary, not silently
     # rewritten into something the bucket does not do.
-    graph = _retriever_graph(media=IMAGE, retrieve_type="HYBRID")
+    graph = _retriever_graph(media=IMAGE, retrieve_type=retrieve_type)
 
     search_query = _run_node(graph, "")
 
-    assert search_query[0].tokenType == "HYBRID"
+    assert search_query[0].tokenType == retrieve_type
     assert search_query[0].media == IMAGE
+
+
+@pytest.mark.parametrize(
+    "label, media",
+    [
+        (
+            "non-image content type",
+            models.Media(data=IMAGE.data, contentType="application/pdf"),
+        ),
+        (
+            "over the 2 MiB limit",
+            models.Media(
+                data=base64.b64encode(
+                    b"\x89PNG" + b"\x00" * (2 * 1024 * 1024)
+                ).decode(),
+                contentType="image/png",
+            ),
+        ),
+    ],
+    ids=["non_image", "oversized"],
+)
+def test_unacceptable_media_is_forwarded_untouched(label, media):
+    # The rules on format and size live at the gRPC boundary, which is the
+    # authority, and are deliberately not restated here. So the module must
+    # neither refuse nor reshape what it receives: it forwards it verbatim and
+    # lets the datasource answer INVALID_ARGUMENT. A module that quietly
+    # rejected or shrank the media would hide the real reason from the caller.
+    graph = _retriever_graph(media=media)
+
+    search_query = _run_node(graph, "")
+    sent = _tokens_sent_to_searcher(search_query)[0]
+
+    assert sent["media"] == {"data": media.data, "contentType": media.contentType}
 
 
 def test_media_survives_the_conversion_for_the_searcher():
