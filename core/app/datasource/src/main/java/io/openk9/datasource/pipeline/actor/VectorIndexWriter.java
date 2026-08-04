@@ -53,10 +53,26 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		SchedulerDTO scheduler,
 		ActorRef<Writer.Response> replyTo) {
 
+		this(
+			context,
+			CDI.current().select(OpenSearchAsyncClient.class).get(),
+			scheduler.getIndexName(),
+			scheduler.getDatasourceId(),
+			replyTo
+		);
+	}
+
+	VectorIndexWriter(
+		ActorContext<Writer.Command> context,
+		OpenSearchAsyncClient asyncClient,
+		String indexName,
+		long datasourceId,
+		ActorRef<Writer.Response> replyTo) {
+
 		super(context);
-		this.asyncClient = CDI.current().select(OpenSearchAsyncClient.class).get();
-		this.indexName = scheduler.getIndexName();
-		this.datasourceId = scheduler.getDatasourceId();
+		this.asyncClient = asyncClient;
+		this.indexName = indexName;
+		this.datasourceId = datasourceId;
 		this.replyTo = replyTo;
 	}
 
@@ -65,6 +81,20 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		return Behaviors.setup(ctx ->
 			new VectorIndexWriter(ctx, scheduler, replyTo));
+	}
+
+	/**
+	 * Creates the writer on an explicit OpenSearch client; the actor is not a
+	 * CDI bean, so this is how tests pass a fake one.
+	 */
+	static Behavior<Writer.Command> create(
+		OpenSearchAsyncClient asyncClient,
+		String indexName,
+		long datasourceId,
+		ActorRef<Writer.Response> replyTo) {
+
+		return Behaviors.setup(ctx -> new VectorIndexWriter(
+			ctx, asyncClient, indexName, datasourceId, replyTo));
 	}
 
 	@Override

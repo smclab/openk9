@@ -17,10 +17,7 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.events.DatasourceMessage;
@@ -37,16 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.opensearch.client.json.JsonpMapper;
-import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
-import org.opensearch.client.opensearch.core.BulkRequest;
-import org.opensearch.client.opensearch.core.BulkResponse;
-import org.opensearch.client.opensearch.core.DeleteByQueryRequest;
-import org.opensearch.client.opensearch.core.DeleteByQueryResponse;
-import org.opensearch.client.transport.Endpoint;
-import org.opensearch.client.transport.OpenSearchTransport;
-import org.opensearch.client.transport.TransportOptions;
 
 class ChunkStreamWriterTest {
 
@@ -200,66 +188,6 @@ class ChunkStreamWriterTest {
 			DatasourceMessage.New.class, captor.getValue());
 		Assertions.assertEquals("content-1", message.getContentId());
 		Assertions.assertEquals(INDEX_NAME, message.getIndexName());
-	}
-
-	/**
-	 * Records the OpenSearch operations issued and returns canned successful
-	 * responses; the writer inspects only the completion, not the body.
-	 */
-	static final class RecordingTransport implements OpenSearchTransport {
-
-		final List<String> operations =
-			Collections.synchronizedList(new ArrayList<>());
-		private final JsonpMapper mapper = new JacksonJsonpMapper();
-
-		@Override
-		public <RequestT, ResponseT, ErrorT> ResponseT performRequest(
-			RequestT request,
-			Endpoint<RequestT, ResponseT, ErrorT> endpoint,
-			TransportOptions options) {
-
-			throw new UnsupportedOperationException("async only");
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <RequestT, ResponseT, ErrorT> CompletableFuture<ResponseT>
-		performRequestAsync(
-			RequestT request,
-			Endpoint<RequestT, ResponseT, ErrorT> endpoint,
-			TransportOptions options) {
-
-			if (request instanceof DeleteByQueryRequest) {
-				operations.add("delete");
-				return CompletableFuture.completedFuture(
-					(ResponseT) DeleteByQueryResponse.of(b -> b));
-			}
-
-			if (request instanceof BulkRequest) {
-				operations.add("bulk");
-				return CompletableFuture.completedFuture((ResponseT)
-					BulkResponse.of(b -> b
-						.took(0)
-						.errors(false)
-						.items(List.of())));
-			}
-
-			throw new IllegalArgumentException("unexpected request: " + request);
-		}
-
-		@Override
-		public JsonpMapper jsonpMapper() {
-			return mapper;
-		}
-
-		@Override
-		public TransportOptions options() {
-			return TransportOptions.builder().build();
-		}
-
-		@Override
-		public void close() {
-		}
 	}
 
 }
