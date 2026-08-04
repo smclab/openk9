@@ -30,13 +30,17 @@ class EmbeddingServiceQueryTest {
 	private static final String TENANT_ID = "1";
 	private static final EmbeddingOuterClass.EmbeddingModel MODEL =
 		EmbeddingOuterClass.EmbeddingModel.getDefaultInstance();
+	private static final EmbeddingOuterClass.VectorDataType FLOAT32 =
+		EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_FLOAT32;
+	private static final EmbeddingOuterClass.VectorDataType BYTE =
+		EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BYTE;
 
 	@Test
 	void should_build_a_text_only_query_request() {
 
 		// 1. build a request with text and no media
 		var request = EmbeddingService.buildEmbedQueryRequest(
-			TENANT_ID, MODEL, "hello", null);
+			TENANT_ID, MODEL, FLOAT32, "hello", null);
 
 		// 2. only text is set, quantized as FLOAT32 like the index
 		Assertions.assertEquals(TENANT_ID, request.getTenantId());
@@ -54,7 +58,7 @@ class EmbeddingServiceQueryTest {
 		// 1. build a request with media and no text
 		var imageBytes = new byte[] {1, 2, 3};
 		var request = EmbeddingService.buildEmbedQueryRequest(
-			TENANT_ID, MODEL, null,
+			TENANT_ID, MODEL, FLOAT32, null,
 			new EmbeddingService.QueryMedia(imageBytes, "image/png"));
 
 		// 2. only inline is set, mapped 1:1 to InlineMedia
@@ -72,7 +76,7 @@ class EmbeddingServiceQueryTest {
 		// 1. build a request with both text and media
 		var imageBytes = new byte[] {4, 5};
 		var request = EmbeddingService.buildEmbedQueryRequest(
-			TENANT_ID, MODEL, "a cat",
+			TENANT_ID, MODEL, FLOAT32, "a cat",
 			new EmbeddingService.QueryMedia(imageBytes, "image/jpeg"));
 
 		// 2. both text and inline are set for a single combined vector
@@ -106,17 +110,62 @@ class EmbeddingServiceQueryTest {
 	}
 
 	@Test
-	void should_reject_a_non_float32_vector() {
+	void should_carry_the_configured_vector_data_type() {
 
-		// 1. a quantized BYTE vector, which is not requested at query-time yet
+		// the query must be quantized like the index: a BYTE model produces a
+		// BYTE request, otherwise OpenSearch rejects the KNN query
+		var request = EmbeddingService.buildEmbedQueryRequest(
+			TENANT_ID, MODEL, BYTE, "hello", null);
+
+		Assertions.assertEquals(BYTE, request.getVectorDataType());
+	}
+
+	@Test
+	void should_decode_a_byte_vector_as_signed_components() {
+
+		// 1. an int8 EmbeddedVector, one component per byte
 		var vector = EmbeddingOuterClass.EmbeddedVector.newBuilder()
-			.setVectorDataType(
-				EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BYTE)
+			.setVectorDataType(BYTE)
 			.setDimension(3)
-			.setI8(ByteString.copyFrom(new byte[] {1, 2, 3}))
+			.setI8(ByteString.copyFrom(new byte[] {-128, 0, 127}))
 			.build();
 
-		// 2. decoding fails fast as a contract violation
+		// 2. components keep the sign and stay whole numbers: OpenSearch reads a
+		// byte knn_vector as signed bytes and refuses anything else
+		Assertions.assertEquals(
+			List.of(-128.0f, 0.0f, 127.0f),
+			EmbeddingService.toQueryVector(vector).vector());
+	}
+
+	@Test
+	void should_decode_a_binary_vector_as_signed_packed_bytes() {
+
+		// 1. a binary EmbeddedVector: dimension 24, packed into 3 bytes
+		var vector = EmbeddingOuterClass.EmbeddedVector.newBuilder()
+			.setVectorDataType(
+				EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BINARY)
+			.setDimension(24)
+			.setBits(ByteString.copyFrom(new byte[] {(byte) 0xFF, 0x00, 0x01}))
+			.build();
+
+		// 2. the query vector is dimension / 8 long, like the indexed one, and
+		// 0xFF is -1 rather than 255
+		var queryVector = EmbeddingService.toQueryVector(vector);
+
+		Assertions.assertEquals(3, queryVector.vector().size());
+		Assertions.assertEquals(
+			List.of(-1.0f, 0.0f, 1.0f), queryVector.vector());
+	}
+
+	@Test
+	void should_reject_a_vector_with_no_representation() {
+
+		// a response carrying no vector at all is a contract violation
+		var vector = EmbeddingOuterClass.EmbeddedVector.newBuilder()
+			.setVectorDataType(FLOAT32)
+			.setDimension(3)
+			.build();
+
 		Assertions.assertThrows(
 			PayloadEmbeddingFailed.class,
 			() -> EmbeddingService.toQueryVector(vector));

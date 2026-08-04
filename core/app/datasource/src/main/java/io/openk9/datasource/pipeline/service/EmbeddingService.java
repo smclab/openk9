@@ -18,6 +18,7 @@
 package io.openk9.datasource.pipeline.service;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -277,7 +278,11 @@ public class EmbeddingService {
 					mapToEmbeddingModelRequest(embeddingModel);
 
 				return embedding.embedQuery(buildEmbedQueryRequest(
-					tenantId, embeddingModelRequest, text, media));
+					tenantId,
+					embeddingModelRequest,
+					toGrpcVectorDataType(embeddingModel.getVectorDataType()),
+					text,
+					media));
 			})
 			.map(EmbeddingService::toQueryVector);
 
@@ -287,13 +292,15 @@ public class EmbeddingService {
 	 * Builds the {@code EmbedQueryRequest} for the given query, setting
 	 * {@code text} and/or {@code inline} according to the provided modality.
 	 *
-	 * <p>The query vector must be quantized like the index. The index vector
-	 * data type is not yet a configurable field on the embedding model, so the
-	 * request defaults to {@code FLOAT32}, matching the current behavior; wire
-	 * this through once the vector data type configuration is available.
+	 * <p>The query vector must be quantized like the index, otherwise OpenSearch
+	 * refuses the KNN query: a {@code byte} or {@code binary} knn_vector field
+	 * rejects float components. The type is the tenant-global
+	 * {@code EmbeddingModel.vectorDataType} (B2 #2269), the same source the
+	 * indexing path uses, so query and index stay in the same representation.
 	 *
 	 * @param tenantId       the tenant owning the query
 	 * @param embeddingModel the resolved embedding model request
+	 * @param vectorDataType the representation the index was written with
 	 * @param text           the query text, or {@code null}
 	 * @param media          the inline query image, or {@code null}
 	 * @return the assembled request
@@ -301,14 +308,14 @@ public class EmbeddingService {
 	static EmbeddingOuterClass.EmbedQueryRequest buildEmbedQueryRequest(
 		String tenantId,
 		EmbeddingOuterClass.EmbeddingModel embeddingModel,
+		EmbeddingOuterClass.VectorDataType vectorDataType,
 		String text,
 		QueryMedia media) {
 
 		var builder = EmbeddingOuterClass.EmbedQueryRequest.newBuilder()
 			.setTenantId(tenantId)
 			.setEmbeddingModel(embeddingModel)
-			.setVectorDataType(
-				EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_FLOAT32);
+			.setVectorDataType(vectorDataType);
 
 		if (text != null && !text.isBlank()) {
 			builder.setText(text);
@@ -325,24 +332,39 @@ public class EmbeddingService {
 	}
 
 	/**
-	 * Extracts the float vector from an {@code EmbeddedVector}. Only the
-	 * {@code FLOAT32} representation is decoded, which is the sole vector data
-	 * type requested by {@link #buildEmbedQueryRequest}; a response carrying a
-	 * different representation is a contract violation.
+	 * Extracts the query vector from an {@code EmbeddedVector}, in whichever
+	 * representation the module answered with.
+	 *
+	 * <p>The quantized shapes are decoded as {@code float} components holding
+	 * <em>signed integral</em> values, because that is what OpenSearch accepts
+	 * on a {@code byte} or {@code binary} knn_vector: the value must be a whole
+	 * number inside [-128, 127]. {@code i8} carries one component per byte;
+	 * {@code bits} carries one component per packed group of eight, so a binary
+	 * query vector is dimension / 8 long — as is the indexed one.
 	 *
 	 * @param vector the vector returned by {@code EmbedQuery}
-	 * @return the float components of the query vector
+	 * @return the components of the query vector
 	 */
 	static QueryVector toQueryVector(EmbeddingOuterClass.EmbeddedVector vector) {
 
-		if (vector.getVectorCase()
-			!= EmbeddingOuterClass.EmbeddedVector.VectorCase.F32) {
-
-			throw new PayloadEmbeddingFailed(String.format(
+		return switch (vector.getVectorCase()) {
+			case F32 -> new QueryVector(vector.getF32().getValuesList());
+			case I8 -> new QueryVector(toSignedComponents(vector.getI8()));
+			case BITS -> new QueryVector(toSignedComponents(vector.getBits()));
+			case VECTOR_NOT_SET -> throw new PayloadEmbeddingFailed(String.format(
 				"Unexpected query vector type: %s", vector.getVectorCase()));
+		};
+	}
+
+	private static List<Float> toSignedComponents(ByteString bytes) {
+
+		var components = new ArrayList<Float>(bytes.size());
+
+		for (byte b : bytes.toByteArray()) {
+			components.add((float) b);
 		}
 
-		return new QueryVector(vector.getF32().getValuesList());
+		return components;
 	}
 
 	@ConsumeEvent(GET_EMBEDDING_CHUNKS_CONFIGURATION)
