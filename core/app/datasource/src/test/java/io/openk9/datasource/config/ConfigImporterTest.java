@@ -114,6 +114,10 @@ public class ConfigImporterTest {
 		assertEquals(0, result.created(),
 			"round-trip against the same tenant must create nothing");
 		assertTrue(result.skipped() > 0, "every existing entity must be skipped");
+		assertEquals(
+			pkg.getEntities().size(),
+			result.created() + result.overwritten() + result.skipped(),
+			"every package entity, join entities included, must be counted");
 		assertEquals(itemsBefore, count(COUNT_JOIN_ROWS),
 			"join rows must not be duplicated");
 	}

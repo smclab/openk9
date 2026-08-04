@@ -191,11 +191,12 @@ public class ConfigImporter {
 
 		return chain
 			.flatMap(ignore -> rebuildJoins(s, pkg, resolvedIds))
-			.flatMap(ignore -> rebindTenantBinding(s, pkg.getMetadata(), resolvedIds))
-			.map(ignore -> new ImportResult(
-				(int) plan.count(PlannedAction.Action.CREATE),
-				(int) plan.count(PlannedAction.Action.OVERWRITE),
-				(int) plan.count(PlannedAction.Action.SKIP),
+			.flatMap(joins -> rebindTenantBinding(s, pkg.getMetadata(), resolvedIds)
+				.replaceWith(joins))
+			.map(joins -> new ImportResult(
+				(int) plan.count(PlannedAction.Action.CREATE) + joins.created(),
+				(int) plan.count(PlannedAction.Action.OVERWRITE) + joins.overwritten(),
+				(int) plan.count(PlannedAction.Action.SKIP) + joins.skipped(),
 				resolvedIds));
 	}
 
@@ -321,13 +322,13 @@ public class ConfigImporter {
 		});
 	}
 
-	private Uni<Void> rebuildAclMapping(
+	private Uni<PlannedAction.Action> rebuildAclMapping(
 		Mutiny.Session s, ConfigEntity entity, Map<String, Long> resolvedIds) {
 
 		Long pluginDriverId = endpoint(entity, "pluginDriver", resolvedIds);
 		Long docTypeFieldId = endpoint(entity, "docTypeField", resolvedIds);
 		if (pluginDriverId == null || docTypeFieldId == null) {
-			return Uni.createFrom().voidItem();
+			return Uni.createFrom().item(PlannedAction.Action.SKIP);
 		}
 
 		var userField =
@@ -338,26 +339,28 @@ public class ConfigImporter {
 		return s.find(AclMapping.class, key).flatMap(existing -> {
 			if (existing != null) {
 				existing.setUserField(userField);
-				return s.persist(existing).call(s::flush);
+				return s.persist(existing).call(s::flush)
+					.replaceWith(PlannedAction.Action.OVERWRITE);
 			}
 			AclMapping mapping = new AclMapping();
 			mapping.setKey(key);
 			mapping.setPluginDriver(s.getReference(PluginDriver.class, pluginDriverId));
 			mapping.setDocTypeField(s.getReference(DocTypeField.class, docTypeFieldId));
 			mapping.setUserField(userField);
-			return s.persist(mapping).call(s::flush);
+			return s.persist(mapping).call(s::flush)
+				.replaceWith(PlannedAction.Action.CREATE);
 		});
 	}
 
 	// --- join entities ---------------------------------------------------------
 
-	private Uni<Void> rebuildEnrichPipelineItem(
+	private Uni<PlannedAction.Action> rebuildEnrichPipelineItem(
 		Mutiny.Session s, ConfigEntity entity, Map<String, Long> resolvedIds) {
 
 		Long pipelineId = endpoint(entity, "enrichPipeline", resolvedIds);
 		Long itemId = endpoint(entity, "enrichItem", resolvedIds);
 		if (pipelineId == null || itemId == null) {
-			return Uni.createFrom().voidItem();
+			return Uni.createFrom().item(PlannedAction.Action.SKIP);
 		}
 
 		Float weight =
@@ -367,39 +370,60 @@ public class ConfigImporter {
 		return s.find(EnrichPipelineItem.class, key).flatMap(existing -> {
 			if (existing != null) {
 				existing.setWeight(weight);
-				return s.persist(existing).call(s::flush);
+				return s.persist(existing).call(s::flush)
+					.replaceWith(PlannedAction.Action.OVERWRITE);
 			}
 			EnrichPipelineItem item = new EnrichPipelineItem();
 			item.setKey(key);
 			item.setEnrichPipeline(s.getReference(EnrichPipeline.class, pipelineId));
 			item.setEnrichItem(s.getReference(EnrichItem.class, itemId));
 			item.setWeight(weight);
-			return s.persist(item).call(s::flush);
+			return s.persist(item).call(s::flush)
+				.replaceWith(PlannedAction.Action.CREATE);
 		});
 	}
 
 	/**
 	 * Rebuilds the composite-key join entities from their resolved endpoints. They
 	 * carry no plan action; the exporter emits them with dedicated builders, so the
-	 * importer mirrors that with a dedicated rebuild per join type.
+	 * importer mirrors that with a dedicated rebuild per join type. Each rebuild
+	 * reports its outcome so the joins are reflected in the import counts, which
+	 * would otherwise total fewer than the package: the join entities were applied
+	 * but invisible in the summary.
 	 */
-	private Uni<Void> rebuildJoins(
+	private Uni<JoinCounts> rebuildJoins(
 		Mutiny.Session s, ConfigPackage pkg, Map<String, Long> resolvedIds) {
 
-		Uni<Void> chain = Uni.createFrom().voidItem();
+		Uni<JoinCounts> chain = Uni.createFrom().item(new JoinCounts(0, 0, 0));
 		for (ConfigEntity entity : pkg.getEntities()) {
 			if (!ConfigMatcher.isJoinEntity(entity.getType().getEntityType())) {
 				continue;
 			}
-			chain = chain.flatMap(ignore -> switch (entity.getType()) {
+			chain = chain.flatMap(counts -> (switch (entity.getType()) {
 				case ENRICH_PIPELINE_ITEM ->
 					rebuildEnrichPipelineItem(s, entity, resolvedIds);
 				case ACL_MAPPING ->
 					rebuildAclMapping(s, entity, resolvedIds);
-				default -> Uni.createFrom().voidItem();
-			});
+				default -> throw new IllegalStateException(
+					"not a join type: " + entity.getType());
+			}).map(counts::add));
 		}
 		return chain;
+	}
+
+	/**
+	 * Tally of the join entities rebuilt by {@link #rebuildJoins}, classified with
+	 * the same three outcomes as planned actions so they fold into the import counts.
+	 */
+	private record JoinCounts(int created, int overwritten, int skipped) {
+
+		JoinCounts add(PlannedAction.Action outcome) {
+			return switch (outcome) {
+				case CREATE -> new JoinCounts(created + 1, overwritten, skipped);
+				case OVERWRITE -> new JoinCounts(created, overwritten + 1, skipped);
+				case SKIP -> new JoinCounts(created, overwritten, skipped + 1);
+			};
+		}
 	}
 
 	private List<Object> resolveReferences(

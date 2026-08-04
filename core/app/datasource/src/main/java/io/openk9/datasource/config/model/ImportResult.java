@@ -21,12 +21,13 @@ import java.util.Map;
 
 /**
  * The outcome of applying an {@link ImportPlan}: how many entities were created,
- * overwritten and skipped, and the final {@code handle -> real target id} map
- * (useful to callers that need to locate the imported entities afterwards).
+ * overwritten and skipped — join entities included — and the final
+ * {@code handle -> real target id} map (useful to callers that need to locate the
+ * imported entities afterwards).
  *
- * @param created     number of entities created
- * @param overwritten number of entities overwritten
- * @param skipped     number of entities left untouched
+ * @param created     number of entities created, join entities included
+ * @param overwritten number of entities overwritten, join entities included
+ * @param skipped     number of entities left untouched, join entities included
  * @param resolvedIds package handle to the target-tenant id it resolved to
  */
 public record ImportResult(
