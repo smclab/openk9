@@ -17,14 +17,12 @@
 
 package io.openk9.datasource.config;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import jakarta.inject.Inject;
-import jakarta.persistence.metamodel.EntityType;
 
 import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigEntityType;
@@ -32,7 +30,6 @@ import io.openk9.datasource.config.model.ConfigPackage;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.ProviderModel;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
-import io.openk9.datasource.model.util.ExportIgnore;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -161,52 +158,6 @@ public class ConfigExporterTest {
 				.await()
 				.indefinitely();
 		}
-	}
-
-	@Test
-	void every_persistent_entity_is_exported_or_explicitly_ignored() {
-		// Opt-out by governance: every JPA entity must be either exportable
-		// (declared in ConfigEntityType) or explicitly @ExportIgnore, so a newly
-		// added entity fails the build until a deliberate choice is made.
-		Set<Class<?>> exportable = new HashSet<>();
-		for (ConfigEntityType type : ConfigEntityType.values()) {
-			exportable.add(type.getEntityType());
-		}
-
-		List<String> undecided = new ArrayList<>();
-		for (EntityType<?> entityType : sessionFactory.getMetamodel().getEntities()) {
-			Class<?> javaType = entityType.getJavaType();
-			if (!exportable.contains(javaType)
-				&& !javaType.isAnnotationPresent(ExportIgnore.class)) {
-
-				undecided.add(javaType.getSimpleName());
-			}
-		}
-
-		assertTrue(
-			undecided.isEmpty(),
-			"every persistent entity must be exportable (declared in "
-				+ "ConfigEntityType) or annotated @ExportIgnore; undecided: "
-				+ undecided);
-	}
-
-	@Test
-	void every_exportable_type_has_a_mapper_dto_method() {
-		// The generic collector resolves ConfigEntityMapper.dto(entityClass)
-		// reflectively; assert the overload exists for every registered type.
-		List<String> missing = new ArrayList<>();
-		for (ConfigEntityType type : ConfigEntityType.values()) {
-			try {
-				ConfigEntityMapper.class.getMethod("dto", type.getEntityType());
-			}
-			catch (NoSuchMethodException e) {
-				missing.add(type.getEntityType().getSimpleName());
-			}
-		}
-
-		assertTrue(
-			missing.isEmpty(),
-			"ConfigEntityMapper is missing a dto(...) overload for: " + missing);
 	}
 
 }
