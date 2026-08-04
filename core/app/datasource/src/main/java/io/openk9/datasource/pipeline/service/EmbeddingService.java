@@ -272,17 +272,16 @@ public class EmbeddingService {
 					docTypeFieldJsonPath)));
 		}
 
-		// TODO: the vector type is tenant-global and belongs to the embedding
-		// model configuration (EmbeddingModel.vectorDataType); wire it here once
-		// that field is available. FLOAT32 keeps the current behavior meanwhile.
-		var vectorDataType =
-			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_FLOAT32;
-
+		// The embedding module quantizes each vector to this type so it matches
+		// the knn_vector mapping of the index. The type is tenant-global and
+		// comes from EmbeddingModel.vectorDataType (B2 #2269), resolved by
+		// toGrpcVectorDataType, which defaults to FLOAT32 for models predating
+		// that field.
 		var requestBuilder = EmbeddingOuterClass.EmbedContentRequest.newBuilder()
 			.setTenantId(tenantId)
 			.setChunk(config.requestChunk())
 			.setEmbeddingModel(config.embeddingModel())
-			.setVectorDataType(vectorDataType)
+			.setVectorDataType(config.vectorDataType())
 			.addAllRefs(refs);
 
 		if (hasText) {
@@ -744,7 +743,9 @@ public class EmbeddingService {
 									dataIndex.getEmbeddingDocTypeField(),
 									chunkWindowSize,
 									embeddingModelRequest,
-									requestChunk
+									requestChunk,
+									toGrpcVectorDataType(
+										embeddingModel.getVectorDataType())
 								);
 							})
 						)
@@ -864,7 +865,8 @@ public class EmbeddingService {
 		DocTypeField docTypeField,
 		int chunkWindowSize,
 		EmbeddingOuterClass.EmbeddingModel embeddingModel,
-		EmbeddingOuterClass.RequestChunk requestChunk
+		EmbeddingOuterClass.RequestChunk requestChunk,
+		EmbeddingOuterClass.VectorDataType vectorDataType
 	) {}
 
 	private record GetConfigurationRequest(String tenantId, String scheduleId) {}
