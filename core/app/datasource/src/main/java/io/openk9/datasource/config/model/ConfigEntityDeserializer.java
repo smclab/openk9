@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Binds {@link ConfigEntity#getAttributes()} to the concrete DTO class declared
  * by {@link ConfigEntityType}, so the deserialized package is genuinely typed
- * (ADR-0003 §3c) without forcing the heterogeneous DTOs into a common hierarchy.
+ * without forcing the heterogeneous DTOs into a common hierarchy.
  */
 public class ConfigEntityDeserializer extends JsonDeserializer<ConfigEntity> {
 
