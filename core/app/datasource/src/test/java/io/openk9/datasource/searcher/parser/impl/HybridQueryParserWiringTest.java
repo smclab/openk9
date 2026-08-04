@@ -56,7 +56,6 @@ class HybridQueryParserWiringTest {
 		var parser = new HybridQueryParser();
 		parser.embeddingService = embeddingService;
 		parser.aclQueryParser = aclQueryParser;
-		parser.defaultMaxTextQueryLength = 0;
 
 		var bucket = new Bucket();
 		bucket.setName("bucket test");
