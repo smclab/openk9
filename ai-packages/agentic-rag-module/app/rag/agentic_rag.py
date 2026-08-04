@@ -1140,11 +1140,11 @@ class RagGraph:
                 {"query": query, "context": conversation_context}
             )
 
-        state.use_rag = "RAG" in decision.response.value
-        logger.debug(
-            f"[rag_router] bypass_rag={bypass_rag} -> use_rag={state.use_rag} "
-            f"({'RAG' if state.use_rag else 'DIRECT'})"
-        )
+            state.use_rag = "RAG" in decision.response.value
+            logger.debug(
+                f"[rag_router] bypass_rag={bypass_rag} -> use_rag={state.use_rag} "
+                f"({'RAG' if state.use_rag else 'DIRECT'})"
+            )
 
         return state
 
