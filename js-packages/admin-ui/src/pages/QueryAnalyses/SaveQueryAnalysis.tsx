@@ -30,6 +30,8 @@ import { useToast } from "@components/Form/Form/ToastProvider";
 import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
 import { Box, Button } from "@mui/material";
 import React, { useState } from "react";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   QueryAnalysisAssociationsQuery,
@@ -48,13 +50,17 @@ type ReturnQueryAnalysis = {
   rules: AssociatedUnassociated;
 };
 
-const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
+const getAssociationTabs = (t: TFunction): Array<{ label: string; id: string; tooltip?: string }> => [
   {
-    label: "Annotators",
+    label: t("pages.query-analyses.annotators"),
     id: "annotatorsIds",
-    tooltip: "Annotators associated to current Query Analysis configuration",
+    tooltip: t("pages.query-analyses.annotators-associated-to-current-query-analysis-configuration"),
   },
-  { label: "Rules", id: "rulesIds", tooltip: "Rules associated to current Query Analysis configuration" },
+  {
+    label: t("pages.query-analyses.rules"),
+    id: "rulesIds",
+    tooltip: t("pages.query-analyses.rules-associated-to-current-query-analysis-configuration"),
+  },
 ];
 
 const useQueryAnalysisData = ({
@@ -105,13 +111,15 @@ const useQueryAnalysisData = ({
 };
 
 export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
+  const associationTabs = React.useMemo(() => getAssociationTabs(t), [t]);
   const { queryAnalysisId = "new", view } = useParams();
   const navigate = useNavigate();
   const [selectedAssociationTabs, setSelectedAssociationTabs] = useState<string>(associationTabs[0].id);
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Query Analysis",
-    body: "Are you sure you want to edit this Query Analysis?",
-    labelConfirm: "Edit",
+    title: t("pages.query-analyses.edit-query-analysis"),
+    body: t("pages.query-analyses.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -154,14 +162,14 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
         if (data.queryAnalysisWithLists?.entity) {
           const isNew = queryAnalysisId === "new" ? "created" : "updated";
           toast({
-            title: `Query Analysis ${isNew}`,
-            content: `Query Analysis has been ${isNew} successfully`,
+            title: isNew === "created" ? t("pages.query-analyses.created-title") : t("pages.query-analyses.updated-title"),
+            content: isNew === "created" ? t("pages.query-analyses.created-content") : t("pages.query-analyses.updated-content"),
             displayType: "success",
           });
           navigate(`/query-analyses/`, { replace: true });
         } else {
           toast({
-            title: `Error`,
+            title: t("common.error"),
             content: combineErrorMessages(data.queryAnalysisWithLists?.fieldValidators),
             displayType: "error",
           });
@@ -171,8 +179,8 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
         console.log(error);
         const isNew = queryAnalysisId === "new" ? "create" : "update";
         toast({
-          title: `Error ${isNew}`,
-          content: `Impossible to ${isNew} Query Analysis`,
+          title: isNew === "create" ? t("pages.query-analyses.create-error-title") : t("pages.query-analyses.update-error-title"),
+          content: isNew === "create" ? t("pages.query-analyses.create-error-content") : t("pages.query-analyses.update-error-content"),
           displayType: "error",
         });
       },
@@ -215,11 +223,11 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
     sections: [
       {
         cell: [{ key: "name" }, { key: "description" }, { key: "stopWords" }],
-        label: "Recap Query Analysis",
+        label: t("pages.query-analyses.recap-label"),
       },
       {
         cell: [{ key: "annotatorsIds" }, { key: "rulesIds" }],
-        label: "Associations",
+        label: t("pages.query-analyses.associations"),
       },
     ],
     valueOverride: {
@@ -233,8 +241,8 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
     <>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
         <TitleEntity
-          nameEntity="Query Analysis"
-          description="Configure Query Analysis tool. Add to it rules and annotators to create your Query Analysis logic."
+          nameEntity={t("pages.query-analyses.entity-name")}
+          description={t("pages.query-analyses.configure-query-analysis-tool-add-to-it")}
           id={queryAnalysisId}
         />
         {view === "view" && (
@@ -256,8 +264,8 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
               content: (
                 <>
                   <ContainerFluid flexColumn size="md">
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} />
                     <AssociationsLayout tabs={associationTabs} setTabsId={setSelectedAssociationTabs}>
                       <MultiAssociationCustomQuery
                         list={{
@@ -308,7 +316,7 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
                   </ContainerFluid>
                   <ContainerFluid size="md">
                     <CodeInput
-                      label="Stop Words"
+                      label={t("fields.stop-words")}
                       readonly={view === "view" || page === 1}
                       language="text"
                       {...form.inputProps("stopWords")}
@@ -334,8 +342,8 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </>

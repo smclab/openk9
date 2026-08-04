@@ -32,6 +32,7 @@ import { InformationField } from "@components/Form/utils/informationField";
 import { Box, Button, FormControl, Typography } from "@mui/material";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BoundaryScannerType,
@@ -59,6 +60,7 @@ const unifiedBoundaryScannerDict = {
 };
 
 export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { highlightId = "new", view } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -105,14 +107,14 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       if (data.highlight?.entity) {
         const action = isNew ? "created" : "updated";
         toast({
-          title: `Highlight ${action}`,
-          content: `Highlight has been ${action} successfully`,
+          title: action === "created" ? t("pages.highlights.created-title") : t("pages.highlights.updated-title"),
+          content: action === "created" ? t("pages.highlights.created-content") : t("pages.highlights.updated-content"),
           displayType: "success",
         });
         navigate(`/highlights/`, { replace: true });
       } else {
         toast({
-          title: "Error",
+          title: t("common.error"),
           content: combineErrorMessages(data.highlight?.fieldValidators),
           displayType: "error",
         });
@@ -122,8 +124,8 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       console.error(error);
       const action = isNew ? "create" : "update";
       toast({
-        title: `Error ${action}`,
-        content: `Impossible to ${action} Highlight`,
+        title: action === "create" ? t("pages.highlights.create-error-title") : t("pages.highlights.update-error-title"),
+        content: action === "create" ? t("pages.highlights.create-error-content") : t("pages.highlights.update-error-content"),
         displayType: "error",
       });
     },
@@ -214,18 +216,18 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         form: form as any,
         sections: [
           {
-            label: "Recap Highlight",
+            label: t("pages.highlights.recap-label"),
             cell: [
               { key: "name" },
               { key: "description" },
               { key: "type" },
-              { key: "fields", label: "Fields" },
-              ...(showBoundaryScanner ? [{ key: "boundaryScanner", label: "Boundary Scanner" }] : []),
-              ...(showBoundaryChars ? [{ key: "boundaryChars", label: "Boundary Chars" }] : []),
-              ...(showFragmenter ? [{ key: "fragmenter", label: "Fragmenter" }] : []),
-              { key: "fragmentSize", label: "Fragment Size" },
-              { key: "numberOfFragments", label: "Number Of Fragments" },
-              { key: "order", label: "Order" },
+              { key: "fields", label: t("fields.fields") },
+              ...(showBoundaryScanner ? [{ key: "boundaryScanner", label: t("fields.boundary-scanner") }] : []),
+              ...(showBoundaryChars ? [{ key: "boundaryChars", label: t("fields.boundary-chars") }] : []),
+              ...(showFragmenter ? [{ key: "fragmenter", label: t("fields.fragmenter") }] : []),
+              { key: "fragmentSize", label: t("fields.fragment-size") },
+              { key: "numberOfFragments", label: t("fields.number-of-fragments") },
+              { key: "order", label: t("fields.order") },
             ],
           },
         ],
@@ -243,8 +245,8 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Highlight"
-            description="Create or edit a Highlight to configure how search results are highlighted. Choose a highlighter type and associate the document type fields to highlight."
+            nameEntity={t("pages.highlights.entity-name")}
+            description={t("pages.highlights.entity-description")}
             id={highlightId}
           />
           {view === "view" && (
@@ -272,9 +274,14 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                 validation: false,
                 content: (
                   <>
-                    <TextInput label="Name" {...form.inputProps("name")} disabled={disabled} />
-                    <TextArea label="Description" {...form.inputProps("description")} disabled={disabled} />
-                    <CustomSelect label="Type" dict={HighlightType} {...form.inputProps("type")} disabled={disabled} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} disabled={disabled} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} disabled={disabled} />
+                    <CustomSelect
+                      label={t("fields.type")}
+                      dict={HighlightType}
+                      {...form.inputProps("type")}
+                      disabled={disabled}
+                    />
                     <FormControl fullWidth sx={{ marginBottom: 2 }}>
                       <Box
                         sx={{ marginBottom: 1 }}
@@ -284,9 +291,9 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                         gap="4px"
                       >
                         <Typography variant="subtitle1" component="label">
-                          Fields
+                          {t("fields.fields")}
                         </Typography>
-                        <InformationField description="Document type fields highlighted by current highlight" />
+                        <InformationField description={t("pages.highlights.fields-info")} />
                       </Box>
                       <MultiAssociationCustomQuery
                         list={{
@@ -302,7 +309,7 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                     </FormControl>
                     {showBoundaryScanner && (
                       <CustomSelect
-                        label="Boundary Scanner"
+                        label={t("fields.boundary-scanner")}
                         dict={isFvh ? BoundaryScannerType : unifiedBoundaryScannerDict}
                         {...form.inputProps("boundaryScanner")}
                         disabled={disabled}
@@ -310,31 +317,31 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                     )}
                     {showBoundaryChars && (
                       <TextInput
-                        label="Boundary Chars"
+                        label={t("fields.boundary-chars")}
                         {...form.inputProps("boundaryChars")}
                         disabled={disabled}
                       />
                     )}
                     {showFragmenter && (
                       <CustomSelect
-                        label="Fragmenter"
+                        label={t("fields.fragmenter")}
                         dict={FragmenterType}
                         {...form.inputProps("fragmenter")}
                         disabled={disabled}
                       />
                     )}
                     <NumberInput
-                      label="Fragment Size"
+                      label={t("fields.fragment-size")}
                       {...form.inputProps("fragmentSize")}
                       description={isFvh ? `For the FVH highlighter the fragment size must be at least ${MIN_FVH_FRAGMENT_SIZE}.` : undefined}
                       disabled={disabled}
                     />
                     <NumberInput
-                      label="Number Of Fragments"
+                      label={t("fields.number-of-fragments")}
                       {...form.inputProps("numberOfFragments")}
                       disabled={disabled}
                     />
-                    <CustomSelect label="Order" dict={OrderType} {...form.inputProps("order")} disabled={disabled} />
+                    <CustomSelect label={t("fields.order")} dict={OrderType} {...form.inputProps("order")} disabled={disabled} />
                   </>
                 ),
               },
@@ -351,8 +358,8 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           actions={{
             onBack: () => setPage(0),
             onSubmit: () => form.submit(),
-            submitLabel: isNew ? "Create entity" : "Update entity",
-            backLabel: "Back",
+            submitLabel: isNew ? t("entity.create") : t("entity.update"),
+            backLabel: t("common.back"),
           }}
         />
       </>

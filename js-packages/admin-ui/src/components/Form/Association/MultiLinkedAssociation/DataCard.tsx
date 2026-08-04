@@ -39,6 +39,7 @@ import {
 } from "@mui/material";
 import { aclOption } from "@pages";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { defaultActions, row, RowItem } from "./DataCardManager";
 import { DataFormElementConfig, RowInfo } from "./types";
 
@@ -64,6 +65,7 @@ const FieldItem = ({
   doctypeOptions: any;
   position: number;
 }) => {
+  const { t } = useTranslation();
   const [tempFields, setTempFields] = useState<RowInfo | null>();
   return (
     <ListItem>
@@ -86,7 +88,9 @@ const FieldItem = ({
                   ItemId: newValue?.value || "",
                 });
               }}
-              renderInput={(params) => <TextField {...params} label="User Field" placeholder="Select user field..." />}
+              renderInput={(params) => (
+                <TextField {...params} label={t("data-card.user-field")} placeholder={t("data-card.select-user-field")} />
+              )}
             />
           </FormControl>
 
@@ -108,14 +112,18 @@ const FieldItem = ({
                 });
               }}
               renderInput={(params) => (
-                <TextField {...params} label="Document Type Field" placeholder="Select document type..." />
+                <TextField
+                  {...params}
+                  label={t("data-card.document-type-field")}
+                  placeholder={t("data-card.select-document-type")}
+                />
               )}
             />
           </FormControl>
 
           <Stack direction="row" spacing={1} justifyContent="flex-end">
             <Button size="small" startIcon={<CloseIcon />} onClick={closeFieldItem}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               size="small"
@@ -127,7 +135,7 @@ const FieldItem = ({
               }}
               // disabled={!tempFields.fieldName || !tempFields.userField}
             >
-              Save
+              {t("common.save")}
             </Button>
           </Stack>
         </Stack>
@@ -205,6 +213,7 @@ export default function DataCard({
   isSearcheable,
   isCreateButtonVisible,
 }: DataCardProps) {
+  const { t } = useTranslation();
   return (
     <Card
       sx={{
@@ -232,7 +241,7 @@ export default function DataCard({
           <Box sx={{ position: "relative", mb: 2 }}>
             <TextField
               variant="outlined"
-              placeholder={`Search ${config.title}`}
+              placeholder={t("data-card.search", { title: config.title })}
               fullWidth
               size="small"
               InputProps={{
@@ -276,9 +285,9 @@ export default function DataCard({
           <Box sx={{ textAlign: "center", p: 4, color: "#757575" }}>
             <InsertDriveFileOutlinedIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
             <Typography variant="body1" sx={{ mb: 1 }}>
-              No {config.title} found
+              {t("data-card.empty-title", { title: config.title })}
             </Typography>
-            <Typography variant="body2">Create your first {config.title} by clicking on the button above</Typography>
+            <Typography variant="body2">{t("data-card.empty-description", { title: config.title })}</Typography>
           </Box>
         ) : (
           <List disablePadding>

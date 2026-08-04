@@ -37,7 +37,9 @@ import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import { Box, Button, Typography } from "@mui/material";
 import { ApolloError } from "@apollo/client";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import i18n from "../../i18n";
 import {
   DocTypeUserDtoInput,
   InputMaybe,
@@ -90,14 +92,15 @@ export const SavePluginnDriverModel = React.forwardRef(
     },
     ref: React.Ref<{ submit: () => void }>,
   ) => {
+    const { t } = useTranslation();
     const pluginDrivers = usePluginDriversQuery();
     const { pluginDriverId = "new", view } = useParams();
     const restClient = useRestClient();
     const navigate = useNavigate();
     const { openConfirmModal, ConfirmModal } = useConfirmModal({
-      title: "Edit Connector",
-      body: "Are you sure you want to edit this Connector?",
-      labelConfirm: "Edit",
+      title: t("pages.connectors.edit-connector"),
+      body: t("pages.connectors.are-you-sure-you-want-to-edit"),
+      labelConfirm: t("common.edit"),
     });
     const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean | undefined; id: number | undefined }>(
       {
@@ -151,16 +154,16 @@ export const SavePluginnDriverModel = React.forwardRef(
       const userFieldValue = form.inputProps("userFieldsSelectedOptions").value;
       if (!userFieldValue?.id || !userFieldValue?.name) {
         toast({
-          title: "User field required",
-          content: "Select a user field option before adding ACL mappings.",
+          title: t("pages.connectors.user-field-required"),
+          content: t("pages.connectors.select-a-user-field-option-before-adding"),
           displayType: "warning",
         });
         return;
       }
       if (selectedItems.length === 0) {
         toast({
-          title: "Document type field required",
-          content: "Select at least one document type field before adding ACL mappings.",
+          title: t("pages.connectors.document-type-field-required"),
+          content: t("pages.connectors.select-at-least-one-document-type-field"),
           displayType: "warning",
         });
         return;
@@ -193,8 +196,8 @@ export const SavePluginnDriverModel = React.forwardRef(
 
       if (duplicates.length > 0) {
         toast({
-          title: "Duplicate associations",
-          content: `The following associations could not be added because they already exist: ${duplicates
+          title: t("pages.connectors.duplicate-associations"),
+          content: t("pages.connectors.duplicate-associations-content") + `: ${duplicates
             .map((d) => `"${d.userField}" - "${d.fieldName}"`)
             .join(", ")}`,
           displayType: "warning",
@@ -214,14 +217,14 @@ export const SavePluginnDriverModel = React.forwardRef(
         if (data.pluginDriverWithDocType?.entity) {
           const isNew = pluginDriverId === "new" ? "created" : "updated";
           toast({
-            title: `Connector ${isNew}`,
-            content: `Connector has been ${isNew} successfully`,
+            title: isNew === "created" ? t("pages.connectors.created-title") : t("pages.connectors.updated-title"),
+            content: isNew === "created" ? t("pages.connectors.created-content") : t("pages.connectors.updated-content"),
             displayType: "success",
           });
           !isConnector && navigate(`/plugin-drivers/`, { replace: true });
         } else {
           toast({
-            title: `Error`,
+            title: t("common.error"),
             content: combineErrorMessages(data.pluginDriverWithDocType?.fieldValidators),
             displayType: "error",
           });
@@ -242,8 +245,12 @@ export const SavePluginnDriverModel = React.forwardRef(
         }
 
         toast({
-          title: `Error during ${isNew}`,
-          content: `Unable to ${isNew} Connector`,
+          title:
+            isNew === "create" ? t("pages.connectors.create-error-title") : t("pages.connectors.update-error-title"),
+          content:
+            isNew === "create"
+              ? t("pages.connectors.create-error-content")
+              : t("pages.connectors.update-error-content"),
           displayType: "error",
         });
       },
@@ -298,8 +305,8 @@ export const SavePluginnDriverModel = React.forwardRef(
         const invalidMapping = fields?.some((field) => !field.userFieldId || !field.docTypeId);
         if (invalidMapping) {
           toast({
-            title: "Incomplete ACL mapping",
-            content: "Each ACL mapping must have both a user field option and a document type field.",
+            title: t("pages.connectors.incomplete-acl-mapping"),
+            content: t("pages.connectors.each-acl-mapping-must-have-both-a"),
             displayType: "error",
           });
           return;
@@ -348,14 +355,14 @@ export const SavePluginnDriverModel = React.forwardRef(
             { key: "name" },
             { key: "description" },
             { key: "type" },
-            { key: "jsonConfig", label: "JSON Config" },
-            { key: "baseUri", label: "Base URI" },
+            { key: "jsonConfig", label: t("fields.json-config") },
+            { key: "baseUri", label: t("fields.base-uri") },
             { key: "secure" },
             { key: "path" },
             { key: "method" },
-            { key: "aclMapping", label: "ACL Mapping" },
+            { key: "aclMapping", label: t("pages.connectors.acl-mapping") },
           ],
-          label: "Recap Connector",
+          label: t("pages.connectors.recap-label"),
         },
       ],
       valueOverride: {
@@ -370,8 +377,8 @@ export const SavePluginnDriverModel = React.forwardRef(
         <>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
             <TitleEntity
-              nameEntity="Connector"
-              description="Create or Edit a Connector and hook up a Openk9 connector."
+              nameEntity={t("pages.connectors.entity-name")}
+              description={t("pages.connectors.create-or-edit-a-connector-and-hook")}
               id={pluginDriverId}
             />
             {view === "view" && (
@@ -404,11 +411,11 @@ export const SavePluginnDriverModel = React.forwardRef(
                 {
                   content: (
                     <Box>
-                      <TextInput label="Name" {...form.inputProps("name")} />
-                      <TextArea label="Description" {...form.inputProps("description")} />
-                      <CustomSelect label="Type" dict={PluginDriverType} {...form.inputProps("type")} />
+                      <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                      <TextArea label={t("common.description")} {...form.inputProps("description")} />
+                      <CustomSelect label={t("fields.type")} dict={PluginDriverType} {...form.inputProps("type")} />
                       <TextInput
-                        label="Base Uri"
+                        label={t("fields.base-uri")}
                         value={config?.baseUri || ""}
                         validationMessages={[]}
                         onChange={(e) =>
@@ -420,8 +427,8 @@ export const SavePluginnDriverModel = React.forwardRef(
                         disabled={false}
                       />
                       <TextInput
-                        label="Path"
-                        description="Api call used to trigger data extraction"
+                        label={t("fields.path")}
+                        description={t("pages.connectors.api-call-used-to-trigger-data-extraction")}
                         id={pluginDriverId}
                         value={config?.path || ""}
                         onChange={(e) =>
@@ -516,7 +523,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                       <DataCardManager
                         options={userFieldsOptions}
                         config={{
-                          title: "Associate Acl mappings",
+                          title: t("pages.connectors.associate-acl-mappings"),
                           description: "Associate user fields with document types to manage access control.",
                           addLabel: "Add",
                         }}
@@ -559,7 +566,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                         <Box sx={{ width: "100%", display: "grid", gridColumn: "span 2" }}>
                           <CustomSelectRelationsOneToOne
                             options={aclOption}
-                            label="UserFieldsOptions"
+                            label={t("fields.userfieldsoptions")}
                             onChange={(val) =>
                               form.inputProps("userFieldsSelectedOptions").onChange({ id: val.id, name: val.name })
                             }
@@ -597,31 +604,31 @@ export const SavePluginnDriverModel = React.forwardRef(
               actions={{
                 onBack: () => setPage(0),
                 onSubmit: () => form.submit(),
-                submitLabel: isNew ? "Create entity" : "Update entity",
-                backLabel: "Back",
+                submitLabel: isNew ? t("entity.create") : t("entity.update"),
+                backLabel: t("common.back"),
               }}
             />
           )}
         </>
         {viewDeleteModal.view && (
           <ModalConfirm
-            title="Generate document types"
+            title={t("pages.connectors.generate-document-types")}
             body="are you sure you want to regenerate the document types?"
-            labelConfirm="Generate"
+            labelConfirm={t("pages.connectors.generate")}
             actionConfirm={async () => {
               try {
                 const result = await restClient.pluginDriverResource.postApiDatasourcePluginDriversDocumentTypes(
                   Number(pluginDriverId),
                 );
                 toast({
-                  title: "Document types generation",
+                  title: t("pages.connectors.document-types-generation"),
                   content: result ? "Document types generated successfully" : "Error generating document types",
                   displayType: result ? "success" : "error",
                 });
               } catch (error) {
                 toast({
-                  title: "Document types generation",
-                  content: "Error generating document types",
+                  title: t("pages.connectors.document-types-generation"),
+                  content: t("pages.connectors.error-generating-document-types"),
                   displayType: "error",
                 });
               }
@@ -657,7 +664,7 @@ function extractCustomGraphQLError(error: ApolloError): {
   if (!code) {
     return {
       hasCustomError: false,
-      title: "Error",
+      title: i18n.t("common.error"),
       content: description ?? error.message,
     };
   }

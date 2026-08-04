@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { Box, Button, Card, CardContent, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { DataFormCardProps } from "./types";
 
 export default function DataFormCard({
@@ -28,6 +29,7 @@ export default function DataFormCard({
   onReset?: () => void;
   onAddField?: () => void;
 }) {
+  const { t } = useTranslation();
   if (!isVisible) {
     return (
       <Card
@@ -42,10 +44,10 @@ export default function DataFormCard({
       >
         <CardContent sx={{ textAlign: "center" }}>
           <Typography variant="h6" gutterBottom>
-            No element selected
+            {t("data-form.no-element-selected")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400, mx: "auto", mb: 4 }}>
-            Select an existing element from the list or create a new {config.title} to configure search settings.
+            {t("data-form.no-element-selected-description", { title: config.title })}
           </Typography>
         </CardContent>
       </Card>
@@ -59,7 +61,7 @@ export default function DataFormCard({
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
             <Typography variant="h6">{config.title}</Typography>
             <Button variant="outlined" color="inherit" onClick={onCancel}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -79,10 +81,10 @@ export default function DataFormCard({
           </Box>
         </Box>
         <Box sx={{ gridColumn: "span 2", display: "flex", justifyContent: "flex-end", gap: 2, mt: 2 }}>
-          {onReset && <Button onClick={onReset}>{config.resetLabel ?? "Reset"}</Button>}
+          {onReset && <Button onClick={onReset}>{config.resetLabel ?? t("common.reset")}</Button>}
           {config.addLabel && (
             <Button variant="contained" color="primary" onClick={onAddField}>
-              {config.addLabel ?? "Add"}
+              {config.addLabel ?? t("common.add")}
             </Button>
           )}
         </Box>

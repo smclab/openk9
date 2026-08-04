@@ -17,12 +17,14 @@
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { ModalConfirm } from "@components/Form";
 import { Table } from "../../components/Table/Table";
 import { useDeleteSearchConfigMutation, useSearchConfigsQuery } from "../../graphql-generated";
 
 export function SearchConfigs() {
+  const { t } = useTranslation();
   const searchConfigQuery = useSearchConfigsQuery();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
@@ -35,8 +37,8 @@ export function SearchConfigs() {
     onCompleted(data) {
       if (data.deleteSearchConfig?.id) {
         toast({
-          title: "Search Config Deleted",
-          content: "Search Config has been deleted successfully",
+          title: t("pages.search-configs.deleted-title"),
+          content: t("pages.search-configs.deleted-content"),
           displayType: "success",
         });
       }
@@ -44,8 +46,8 @@ export function SearchConfigs() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Search Config",
+        title: t("common.delete-error"),
+        content: t("pages.search-configs.delete-error-content"),
         displayType: "error",
       });
     },
@@ -56,17 +58,14 @@ export function SearchConfigs() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Search Configs
+            {t("pages.search-configs.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Search Config. Configuring Search Config you can handle some
-            specific aspects on how search is performed and results are returned.
-          </Typography>
+          <Typography variant="body1">{t("pages.search-configs.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/search-config/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Search Config
+              {t("pages.search-configs.create-new")}
             </Button>
           </Link>
         </Box>
@@ -89,7 +88,7 @@ export function SearchConfigs() {
           }}
           rowActions={[
             {
-              label: "View",
+              label: t("common.view"),
               action: (searchConfig) => {
                 navigate(`/search-config/${searchConfig?.id}/view`, {
                   replace: true,
@@ -97,7 +96,7 @@ export function SearchConfigs() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (searchConfig) => {
                 searchConfig.id &&
                   navigate(`/search-config/${searchConfig?.id}`, {
@@ -106,7 +105,7 @@ export function SearchConfigs() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (searchConfig) => {
                 if (searchConfig?.id) setViewDeleteModal({ view: true, id: searchConfig.id });
               },
@@ -114,11 +113,11 @@ export function SearchConfigs() {
           ]}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (searchConfig) => <Box fontWeight="bolder">{searchConfig?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (searchConfig) => (
                 <Typography variant="body2" className="pipeline-title">
                   {searchConfig?.description}
@@ -130,9 +129,9 @@ export function SearchConfigs() {
       </Box>
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this search config? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.search-configs.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteSearchConfigMutate({
               variables: { id: viewDeleteModal.id || "" },

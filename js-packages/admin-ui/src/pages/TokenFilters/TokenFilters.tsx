@@ -17,6 +17,7 @@
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { ModalAddSingle, ModalConfirm } from "@components/Form";
 import { Table } from "../../components/Table/Table";
@@ -28,6 +29,7 @@ import {
 } from "../../graphql-generated";
 
 export function TokenFilters() {
+  const { t } = useTranslation();
   const tokenFiltersQuery = useTokenFiltersQuery();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
@@ -46,8 +48,8 @@ export function TokenFilters() {
     onCompleted(data) {
       if (data.deleteTokenFilter?.id) {
         toast({
-          title: "Token Filter Deleted",
-          content: "Token Filter has been deleted successfully",
+          title: t("pages.token-filters.deleted-title"),
+          content: t("pages.token-filters.deleted-content"),
           displayType: "success",
         });
       }
@@ -55,8 +57,8 @@ export function TokenFilters() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Token Filter",
+        title: t("common.delete-error"),
+        content: t("pages.token-filters.delete-error-content"),
         displayType: "error",
       });
     },
@@ -69,17 +71,14 @@ export function TokenFilters() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Token Filters
+            {t("pages.token-filters.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Token Filters to use to define advanced analysis logic and bind to
-            a custom Analyzer. To go into detail about Token Filters check official Opensearch Documentation.
-          </Typography>
+          <Typography variant="body1">{t("pages.token-filters.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/token-filter/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Token Filters
+              {t("pages.token-filters.create-new")}
             </Button>
           </Link>
         </Box>
@@ -102,13 +101,13 @@ export function TokenFilters() {
           }}
           rowActions={[
             {
-              label: "Add",
+              label: t("common.add"),
               action: (tokenFilters) => {
                 setIsAdd({ id: tokenFilters.id, isVisible: true });
               },
             },
             {
-              label: "View",
+              label: t("common.view"),
               action: (tokenFilters) => {
                 navigate(`/token-filter/${tokenFilters?.id}/view`, {
                   replace: true,
@@ -116,7 +115,7 @@ export function TokenFilters() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (tokenFilters) => {
                 tokenFilters.id &&
                   navigate(`/token-filter/${tokenFilters?.id}`, {
@@ -125,7 +124,7 @@ export function TokenFilters() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (tokenfilters) => {
                 if (tokenfilters?.id) setViewDeleteModal({ view: true, id: tokenfilters.id });
               },
@@ -133,11 +132,11 @@ export function TokenFilters() {
           ]}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (tab) => <Box fontWeight="bolder">{tab?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (tab) => (
                 <Typography variant="body2" className="pipeline-title">
                   {tab?.description}
@@ -149,9 +148,9 @@ export function TokenFilters() {
       </Box>
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this token filters? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.token-filters.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteTokenFiltersMutate({
               variables: { id: viewDeleteModal.id || "" },
@@ -165,8 +164,8 @@ export function TokenFilters() {
         <ModalAddSingle
           id={isAdd.id}
           list={unboundListAnalyzer.data?.unboundAnalyzersByTokenFilter}
-          messageSuccess="Token Filter added to Analyzer"
-          title="Association to Analyzer"
+          messageSuccess={t("pages.token-filters.added-to-analyzer")}
+          title={t("pages.token-filters.association-title")}
           association={({ parentId, childId, onSuccessCallback, onErrorCallback }) => {
             addMutate({
               variables: { parentId, childId },

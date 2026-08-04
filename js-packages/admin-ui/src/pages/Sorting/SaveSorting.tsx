@@ -32,19 +32,21 @@ import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdo
 import { Box, Button } from "@mui/material";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { SortingType, useCreateOrUpdateSortingMutation, useSortingQuery } from "../../graphql-generated";
 import { isValidId, useDocTypeOptions } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { sortingId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Sorting",
-    body: "Are you sure you want to edit this Sorting?",
-    labelConfirm: "Edit",
+    title: t("pages.sortings.edit-sorting"),
+    body: t("pages.sortings.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -69,8 +71,8 @@ export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
       if (data.sortingWithDocTypeField?.entity) {
         const action = sortingId === "new" ? "created" : "updated";
         toast({
-          title: `Sorting ${action}`,
-          content: `Sorting has been ${action} successfully`,
+          title: action === "created" ? t("pages.sortings.created-title") : t("pages.sortings.updated-title"),
+          content: action === "created" ? t("pages.sortings.created-content") : t("pages.sortings.updated-content"),
           displayType: "success",
         });
         navigate(`/sortings/`, {
@@ -78,7 +80,7 @@ export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
         });
       } else {
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: combineErrorMessages(data.sortingWithDocTypeField?.fieldValidators),
           displayType: "error",
         });
@@ -87,8 +89,8 @@ export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
     onError() {
       const action = sortingId === "new" ? "create" : "update";
       toast({
-        title: `Error ${action}`,
-        content: `Impossible to ${action} Sorting`,
+        title: action === "create" ? t("pages.sortings.create-error-title") : t("pages.sortings.update-error-title"),
+        content: action === "create" ? t("pages.sortings.create-error-content") : t("pages.sortings.update-error-content"),
         displayType: "error",
       });
     },
@@ -147,11 +149,11 @@ export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
           { key: "name" },
           { key: "description" },
           { key: "priority" },
-          { key: "type", label: "Type" },
-          { key: "defaultSort", label: "Default Sort" },
-          { key: "docTypeFieldId", label: "Document Type Field" },
+          { key: "type", label: t("common.type") },
+          { key: "defaultSort", label: t("fields.default-sort") },
+          { key: "docTypeFieldId", label: t("pages.sortings.document-type-field") },
         ],
-        label: "Recap Sorting",
+        label: t("pages.sortings.recap-label"),
       },
     ],
     valueOverride: {
@@ -164,8 +166,8 @@ export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Sorting"
-            description="Create or Edit a Sorting to define how search results are ordered, then add it to a Tab to use it."
+            nameEntity={t("pages.sortings.entity-name")}
+            description={t("pages.sortings.create-or-edit-a-sorting-to-define")}
             id={sortingId}
           />
 
@@ -188,22 +190,22 @@ export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
               {
                 content: (
                   <>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} />
                     <NumberInput
-                      label="Priority"
+                      label={t("fields.priority")}
                       {...form.inputProps("priority")}
-                      description="Priority according to which sortings are ordered"
+                      description={t("pages.sortings.priority-according-to-which-sortings-are-ordered")}
                     />
                     <CustomSelect
-                      label="Type"
+                      label={t("fields.type")}
                       dict={SortingType}
                       {...form.inputProps("type")}
                       disabled={disabled}
-                      description="Sorting direction applied to the results"
+                      description={t("pages.sortings.sorting-direction-applied-to-the-results")}
                     />
                     <AutocompleteDropdown
-                      label="DocType Field"
+                      label={t("fields.doctype-field")}
                       onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
                       value={
                         !form?.inputProps("docTypeFieldId")?.value?.id
@@ -217,7 +219,7 @@ export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                       disabled={page === 1}
                       useOptions={useDocTypeOptions}
                     />
-                    <BooleanInput label="Default Sort" {...form.inputProps("defaultSort")} disabled={disabled} />
+                    <BooleanInput label={t("fields.default-sort")} {...form.inputProps("defaultSort")} disabled={disabled} />
                   </>
                 ),
                 page: 0,
@@ -239,8 +241,8 @@ export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </ContainerFluid>

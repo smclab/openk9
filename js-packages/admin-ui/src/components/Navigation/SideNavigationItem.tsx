@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import { ListItem, ListItemText, ListItemButton, Collapse, List, useTheme } from "@mui/material";
 import ExpandLess from '@mui/icons-material/ExpandLess';
@@ -30,6 +31,7 @@ interface SideNavigationItemProps {
 
 export function SideNavigationItem({ item, level = 0 }: SideNavigationItemProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { navigation, changaSideNavigation } = useSideNavigation();
   const [open, setOpen] = React.useState(false);
 
@@ -95,7 +97,7 @@ export function SideNavigationItem({ item, level = 0 }: SideNavigationItemProps)
               />
             )}
             <ListItemText 
-              primary={item.label}
+              primary={t(item.labelKey)}
               primaryTypographyProps={{ 
                 fontSize: '0.9rem',
                 fontWeight: isActiveParent && !open ? 'bold' : 'normal'
@@ -130,7 +132,7 @@ export function SideNavigationItem({ item, level = 0 }: SideNavigationItemProps)
             }}
           >
             <ListItemText
-              primary={item.label}
+              primary={t(item.labelKey)}
               primaryTypographyProps={{ 
                 fontSize: '0.9rem',
                 fontWeight: isSelect ? 'bold' : 'normal',

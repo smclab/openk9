@@ -18,11 +18,13 @@ import { ModalConfirm } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import { useDeletePluginDriverMutation, usePluginDriversInfoQueryQuery } from "../../graphql-generated";
 
 export function PluginDrivers() {
+  const { t } = useTranslation();
   const pluginDriverQuery = usePluginDriversInfoQueryQuery({
     fetchPolicy: "network-only",
   });
@@ -38,8 +40,8 @@ export function PluginDrivers() {
     onCompleted(data) {
       if (data.deletePluginDriver?.id) {
         toast({
-          title: "Connector Deleted",
-          content: "Connector has been deleted successfully",
+          title: t("pages.connectors.deleted-title"),
+          content: t("pages.connectors.deleted-content"),
           displayType: "success",
         });
       }
@@ -47,8 +49,8 @@ export function PluginDrivers() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Connector",
+        title: t("common.delete-error"),
+        content: t("pages.connectors.delete-error-content"),
         displayType: "error",
       });
     },
@@ -58,17 +60,14 @@ export function PluginDrivers() {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Connectors
+            {t("pages.connectors.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Connectors. A Connector defines hook up to external Openk9
-            connector and how to call it when Openk9 needs to trigger data ingestion.
-          </Typography>
+          <Typography variant="body1">{t("pages.connectors.description")}</Typography>
         </Box>
         <Box>
           <Link to="/plugin-driver/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Connector
+              {t("pages.connectors.create-new")}
             </Button>
           </Link>
         </Box>
@@ -84,7 +83,7 @@ export function PluginDrivers() {
           pageInfoPath="pluginDrivers.pageInfo"
           rowActions={[
             {
-              label: "View",
+              label: t("common.view"),
               action: (pluginDriver) => {
                 navigate(`/plugin-driver/${pluginDriver?.id}/view`, {
                   replace: true,
@@ -92,7 +91,7 @@ export function PluginDrivers() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (pluginDriver) => {
                 pluginDriver.id &&
                   navigate(`/plugin-driver/${pluginDriver?.id}`, {
@@ -101,7 +100,7 @@ export function PluginDrivers() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (tab) => {
                 tab.id && setViewDeleteModal({ view: true, id: tab.id });
               },
@@ -113,11 +112,11 @@ export function PluginDrivers() {
           }}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (pluginDriverModel) => <Box fontWeight="bolder">{pluginDriverModel?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (pluginDriverModel) => pluginDriverModel?.description,
             },
           ]}
@@ -125,9 +124,9 @@ export function PluginDrivers() {
       </Box>
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this Connectors? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.connectors.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deletePluginDriverMutate({
               variables: { id: viewDeleteModal.id || "" },

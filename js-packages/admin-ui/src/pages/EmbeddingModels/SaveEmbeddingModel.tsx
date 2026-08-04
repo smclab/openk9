@@ -30,6 +30,8 @@ import {
   fromFieldValidators,
 } from "@components/Form";
 import React from "react";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateEmbeddingModelMutation, useEmbeddingModelQuery, VectorDataType } from "../../graphql-generated";
 import { Box, Button } from "@mui/material";
@@ -37,28 +39,31 @@ import { AutocompleteDropdownWithOptions } from "@components/Form/Select/Autocom
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-const PROVIDER_OPTIONS = [
-  { value: "openai", label: "OpenAI" },
-  { value: "ollama", label: "Ollama" },
-  { value: "watsonx", label: "IBM WatsonX" },
-  { value: "chat_vertex_ai", label: "Chat Vertex AI" },
-  { value: "aws_bedrock", label: "AWS Bedrock" },
+const getProviderOptions = (t: TFunction) => [
+  { value: "openai", label: t("pages.embedding-models.openai") },
+  { value: "ollama", label: t("pages.embedding-models.ollama") },
+  { value: "watsonx", label: t("pages.embedding-models.ibm-watsonx") },
+  { value: "chat_vertex_ai", label: t("pages.embedding-models.chat-vertex-ai") },
+  { value: "aws_bedrock", label: t("pages.embedding-models.aws-bedrock") },
 ];
 
-const VECTOR_DATA_TYPE_OPTIONS = [
-  { value: "FLOAT32", label: "Float32 (full precision, default)" },
-  { value: "BYTE", label: "Byte (int8 quantized)" },
-  { value: "BINARY", label: "Binary (packed, vector size multiple of 8)" },
+const getVectorDataTypeOptions = (t: TFunction) => [
+  { value: "FLOAT32", label: t("pages.embedding-models.float32-full-precision-default") },
+  { value: "BYTE", label: t("pages.embedding-models.byte-int8-quantized") },
+  { value: "BINARY", label: t("pages.embedding-models.binary-packed-vector-size-multiple-of-8") },
 ];
 
 export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
+  const PROVIDER_OPTIONS = React.useMemo(() => getProviderOptions(t), [t]);
+  const VECTOR_DATA_TYPE_OPTIONS = React.useMemo(() => getVectorDataTypeOptions(t), [t]);
   const { embeddingModelsId = "new", view } = useParams();
   const navigate = useNavigate();
   const [isCleaning, setIsCleaning] = React.useState(false);
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Embedding Model",
-    body: "Are you sure you want to edit this Embedding Model?",
-    labelConfirm: "Edit",
+    title: t("pages.embedding-models.edit-embedding-model"),
+    body: t("pages.embedding-models.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -89,8 +94,8 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
         if (data.embeddingModel?.entity) {
           const isNew = embeddingModelsId === "new" ? "created" : "updated";
           toast({
-            title: `Embedding Model ${isNew}`,
-            content: `Embedding Model has been ${isNew} successfully`,
+            title: isNew === "created" ? t("pages.embedding-models.created-title") : t("pages.embedding-models.updated-title"),
+            content: isNew === "created" ? t("pages.embedding-models.created-content") : t("pages.embedding-models.updated-content"),
             displayType: "success",
           });
           navigate(`/embedding-models/`, { replace: true });
@@ -99,7 +104,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
           // open would hide the per-field messages the backend just returned.
           setPage(0);
           toast({
-            title: `Error`,
+            title: t("common.error"),
             content: combineErrorMessages(data.embeddingModel?.fieldValidators),
             displayType: "error",
           });
@@ -109,8 +114,8 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
         console.log(error);
         const isNew = embeddingModelsId === "new" ? "create" : "update";
         toast({
-          title: `Error ${isNew}`,
-          content: `Impossible to ${isNew} Embedding Model`,
+          title: isNew === "create" ? t("pages.embedding-models.create-error-title") : t("pages.embedding-models.update-error-title"),
+          content: isNew === "create" ? t("pages.embedding-models.create-error-content") : t("pages.embedding-models.update-error-content"),
           displayType: "error",
         });
       },
@@ -172,16 +177,16 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
         cell: [
           { key: "name" },
           { key: "description" },
-          { key: "vectorSize", label: "Vector Size" },
-          { key: "vectorDataType", label: "Vector Data Type" },
-          { key: "multimodal", label: "Multimodal" },
+          { key: "vectorSize", label: t("fields.vector-size") },
+          { key: "vectorDataType", label: t("fields.vector-data-type") },
+          { key: "multimodal", label: t("fields.multimodal") },
           { key: "provider" },
           { key: "model" },
-          { key: "apiKey", label: "API Key" },
-          { key: "apiUrl", label: "API URL" },
-          { key: "jsonConfig", label: "JSON Config", jsonView: true },
+          { key: "apiKey", label: t("fields.api-key") },
+          { key: "apiUrl", label: t("pages.embedding-models.api-url") },
+          { key: "jsonConfig", label: t("fields.json-config"), jsonView: true },
         ],
-        label: "Recap Embedding Model",
+        label: t("pages.embedding-models.recap-label"),
       },
     ],
   });
@@ -191,9 +196,8 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Embedding Model"
-            description="Create or Edit a Embedding Model to define hookup to a service exposing features to vectorize your data.
-          Define url to service or specify api key in caso of use of services like OpenAi."
+            nameEntity={t("pages.embedding-models.entity-name")}
+            description={t("pages.embedding-models.create-or-edit-a-embedding-model-to")}
             id={embeddingModelsId}
           />
           {view === "view" && (
@@ -215,30 +219,30 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                 content: (
                   <div>
                     <TextInput
-                      label="Name"
+                      label={t("common.name")}
                       {...form.inputProps("name")}
-                      description="Unique identifier of the Embedding Model configuration."
+                      description={t("pages.embedding-models.unique-identifier-of-the-embedding-model-configuration")}
                     />
                     <TextArea
-                      label="Description"
+                      label={t("common.description")}
                       {...form.inputProps("description")}
-                      description="Free-text description of the embedding model (e.g. provider, intended usage)."
+                      description={t("pages.embedding-models.free-text-description-of-the-embedding-model")}
                     />
                     <NumberInput
-                      label="Vector Size"
+                      label={t("fields.vector-size")}
                       {...form.inputProps("vectorSize")}
                       isNumber={false}
-                      description="Dimensionality of the embedding vectors produced by the model. Must match the model output."
+                      description={t("pages.embedding-models.dimensionality-of-the-embedding-vectors-produced-by")}
                     />
                     <BooleanInput
-                      label="Multimodal"
+                      label={t("fields.multimodal")}
                       {...form.inputProps("multimodal")}
                       disabled={view ? true : false}
-                      description="Marks the model as multimodal: image refs are routed to the multimodal embedder and the same model must also serve text. Leave off for text-only models (default)."
+                      description={t("pages.embedding-models.marks-the-model-as-multimodal-image-refs")}
                     />
                     <AutocompleteDropdownWithOptions
-                      label="Vector Data Type"
-                      description="Type of the vector written to the index. Drives the quantization applied by the embedding module and the knn_vector mapping on OpenSearch. Defaults to FLOAT32 (no quantization). BINARY requires a vector size multiple of 8."
+                      label={t("fields.vector-data-type")}
+                      description={t("pages.embedding-models.type-of-the-vector-written-to-the")}
                       allowClear={false}
                       disabled={view ? true : false}
                       optionsDefault={VECTOR_DATA_TYPE_OPTIONS}
@@ -252,8 +256,8 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       }}
                     />
                     <AutocompleteDropdownWithOptions
-                      label="Provider"
-                      description="Embedding provider/integration to use (e.g. OpenAI, Ollama, IBM WatsonX, Vertex AI, AWS Bedrock)."
+                      label={t("fields.provider")}
+                      description={t("pages.embedding-models.embedding-provider-integration-to-use-e-g")}
                       allowClear={false}
                       disabled={view ? true : false}
                       optionsDefault={PROVIDER_OPTIONS}
@@ -268,7 +272,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       }}
                     />
                     <TextInput
-                      label="Model"
+                      label={t("fields.model")}
                       id="modelId"
                       onChange={(s) => {
                         setProviderModel((value) => ({ ...value, model: s }));
@@ -276,11 +280,11 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       validationMessages={[]}
                       value={providerModel.model || ""}
                       disabled={view ? true : false}
-                      description="Specific embedding model identifier of the selected provider (e.g. text-embedding-3-small, nomic-embed-text)."
+                      description={t("pages.embedding-models.specific-embedding-model-identifier-of-the-selected")}
                     />
                     <TooltipDescription informationDescription="Api key in case of external api service">
                       <TextInput
-                        label="Api key"
+                        label={t("fields.api-key")}
                         {...form.inputProps("apiKey")}
                         value={
                           viewMaskApiKey && !isCleaning
@@ -297,13 +301,13 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       />
                     </TooltipDescription>
                     <TooltipDescription informationDescription="Api url in case of service hosted on on premise service">
-                      <TextInput label="Api url" {...form.inputProps("apiUrl")} />
+                      <TextInput label={t("fields.api-url")} {...form.inputProps("apiUrl")} />
                     </TooltipDescription>
                     <ContainerFluid size="md" style={{ marginRight: 0 }}>
                       <CodeInput
                         id="settings-code-input"
                         readonly={page === 1 || view === "view"}
-                        label="Settings"
+                        label={t("fields.settings")}
                         value={form.inputProps("jsonConfig").value}
                         onChange={(value) => form.inputProps("jsonConfig").onChange(value)}
                         language="json"
@@ -336,8 +340,8 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </ContainerFluid>

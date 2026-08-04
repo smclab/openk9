@@ -29,6 +29,7 @@ import { tabsType } from "../../../datasourceType";
 import { ConnectionData } from "../../../types";
 import { BoxArea } from "../../BoxArea";
 import { PluginDriverCards } from "./PluginDriverCards";
+import { useTranslation } from "react-i18next";
 
 export type Section = "selectConnectos" | "preconfiguredConnectorsa" | "card";
 
@@ -63,6 +64,7 @@ function ButtonAddPluginDrivers({
   pluginDriverRefetch: any;
   setExtraFab: (fab: React.ReactNode | null) => void;
 }) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState(false);
   const theme = useTheme();
   const formRef = React.useRef<{ submit: () => void } | null>(null);
@@ -115,7 +117,7 @@ function ButtonAddPluginDrivers({
               )}
               <CardContent sx={{ justifyContent: "center", alignItems: "center" }}>
                 <Typography variant="h5" sx={{ opacity: disabled ? "0.3" : "unset" }}>
-                  Add new connector
+                  {t("pages.datasources.connectors-section.add-new-connector")}
                 </Typography>
                 <AddIcon sx={{ opacity: disabled ? "0.3" : "unset" }} />
               </CardContent>
@@ -128,8 +130,8 @@ function ButtonAddPluginDrivers({
           fullWidth
           maxWidth="lg"
           actionConfirm={handleConfirm}
-          labelConfirm="Save"
-          title="Add new connector"
+          labelConfirm={t("common.save")}
+          title={t("pages.datasources.connectors-section.add-new-connector")}
           body=""
           close={() => setSelected(false)}
         >
@@ -158,6 +160,7 @@ export function ConfigureConnectors({
   setShowDialog,
   setExtraFab,
 }: ConfigureConnectorsProps) {
+  const { t } = useTranslation();
   const pluginDrivers = usePluginDriversQuery();
   const navigate = useNavigate();
 
@@ -181,7 +184,7 @@ export function ConfigureConnectors({
           {systemPluginDrivers && systemPluginDrivers.length > 0 && (
             <>
               <Typography variant="h3" gutterBottom>
-                Preconfigured Connectors
+                {t("pages.datasources.connectors-section.preconfigured-connectors")}
               </Typography>
               <PluginDriverCards
                 systemPluginDrivers={systemPluginDrivers}
@@ -226,7 +229,7 @@ export function ConfigureConnectors({
           {userPluginDrivers && userPluginDrivers.length > 0 && (
             <>
               <Typography variant="h3" gutterBottom>
-                Custom Connectors
+                {t("pages.datasources.connectors-section.custom-connectors")}
               </Typography>
               <PluginDriverCards
                 systemPluginDrivers={userPluginDrivers}
@@ -295,8 +298,8 @@ export function ConfigureConnectors({
           paddingBlock: "20px",
         }}
       >
-        <Button variant="contained" color="secondary" aria-label="Back" onClick={() => navigate("/data-sources")}>
-          Back
+        <Button variant="contained" color="secondary" aria-label={t("common.back")} onClick={() => navigate("/data-sources")}>
+          {t("common.back")}
         </Button>
         <Tooltip title={isDisabledNextStep ? "Please select on plugin or create one" : ""}>
           <span style={{ cursor: "pointer" }}>
@@ -311,7 +314,7 @@ export function ConfigureConnectors({
                 }
               }}
             >
-              Next step
+              {t("common.next-step")}
             </Button>
           </span>
         </Tooltip>

@@ -24,6 +24,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Box, Container, Divider, IconButton, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
 import { DataSourcesQuery } from "@pages/datasources/gql";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useDataIndexInformationQuery } from "../../graphql-generated";
 import DashboardCard from "./DashboardCard";
@@ -90,6 +91,7 @@ type SchedulerData = {
 };
 
 export function DashBoard() {
+  const { t, i18n } = useTranslation();
   const dashboardQuery = useDataIndexInformationQuery();
   const theme = useTheme();
   const { data: datasourcesFetched } = useQuery(DataSourcesQuery, {
@@ -179,9 +181,9 @@ export function DashBoard() {
         firstCardNumber={docCount || 0}
         secondCardNumber={documentDeleted || 0}
         thirdCardNumber={bytesToMegabytes(byteCount) || 0}
-        firstCardLabel={"Document counts"}
-        secondCardLabel={"Document deleted"}
-        thirdCardLabel={"Store size megabyte"}
+        firstCardLabel={t("pages.dashboard.document-counts")}
+        secondCardLabel={t("pages.dashboard.document-deleted")}
+        thirdCardLabel={t("pages.dashboard.store-size-megabyte")}
         thirdCardUnity={""}
       />
       <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr min(360px)" }} gap="24px" marginTop={"2rem"}>
@@ -190,7 +192,7 @@ export function DashBoard() {
           title={
             <Box display={"flex"} flexDirection="row" gap={1} justifyContent={"space-between"} alignItems="center">
               <Typography variant="h4" sx={{ fontWeight: 600, color: "text.primary", mb: 0.5 }}>
-                Alert schedulations
+                {t("pages.dashboard.alert-schedulations")}
               </Typography>
               <Box display="flex" alignItems="center" gap={2}>
                 <Box
@@ -205,7 +207,7 @@ export function DashBoard() {
                 >
                   <ErrorOutlineIcon sx={{ color: theme.palette.error.main, fontSize: 18 }} />
                   <Typography variant="caption" color="error" fontWeight={600}>
-                    Error
+                    {t("common.error")}
                   </Typography>
                 </Box>
                 <Box
@@ -220,7 +222,7 @@ export function DashBoard() {
                 >
                   <ErrorOutlineIcon sx={{ color: theme.palette.warning.main, fontSize: 18 }} />
                   <Typography variant="caption" color="warning.main" fontWeight={600}>
-                    Failure
+                    {t("pages.dashboard.failure")}
                   </Typography>
                 </Box>
               </Box>
@@ -238,13 +240,13 @@ export function DashBoard() {
               <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={3}>
                 <ErrorOutlineIcon sx={{ color: theme.palette.text.disabled, fontSize: 40, mb: 1 }} />
                 <Typography variant="body2" color="text.secondary">
-                  There is no alert schedule present
+                  {t("pages.dashboard.no-alert-schedule")}
                 </Typography>
               </Box>
             )}
             {filteredSchedulerData?.map((item, index, arr) => {
               const date = new Date(item.node.modifiedDate);
-              const formattedDate = date.toLocaleString("it-IT", {
+              const formattedDate = date.toLocaleString(i18n.language, {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
@@ -277,7 +279,11 @@ export function DashBoard() {
                               <VisibilityIcon />
                             </IconButton>
                           </Link>
-                          <IconButton size="small" onClick={() => handleExpandClick(index)} aria-label="Show Error">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleExpandClick(index)}
+                            aria-label={t("pages.dashboard.show-error")}
+                          >
                             <ArrowDropDownIcon
                               sx={{
                                 transform: expandedIndex === index ? "rotate(180deg)" : "rotate(0deg)",
@@ -289,7 +295,7 @@ export function DashBoard() {
                             <IconButton
                               size="small"
                               onClick={(e) => handleActionMenuOpen(e, index)}
-                              aria-label="Azioni"
+                              aria-label={t("table.actions")}
                             >
                               <MoreVertIcon />
                             </IconButton>
@@ -315,7 +321,7 @@ export function DashBoard() {
                                 );
                               }}
                             >
-                              Reprocess failed messages
+                              {t("pages.dashboard.reprocess-failed-messages")}
                             </MenuItem>
                             <MenuItem
                               onClick={async () => {
@@ -324,7 +330,7 @@ export function DashBoard() {
                                 );
                               }}
                             >
-                              Close
+                              {t("common.close")}
                             </MenuItem>
                             <MenuItem
                               onClick={async () => {
@@ -333,7 +339,7 @@ export function DashBoard() {
                                 );
                               }}
                             >
-                              Cancel
+                              {t("common.cancel")}
                             </MenuItem>
                           </Menu>
                         </Stack>
@@ -358,7 +364,7 @@ export function DashBoard() {
                         }}
                       >
                         <Typography variant="body2" color="error">
-                          {item.node.errorDescription || "Nessun errore"}
+                          {item.node.errorDescription || t("pages.dashboard.no-error")}
                         </Typography>
                       </Box>
                     )}

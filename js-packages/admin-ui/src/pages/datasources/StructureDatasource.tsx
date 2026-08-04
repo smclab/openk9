@@ -27,6 +27,7 @@ import ConfigurePipeline from "./components/Sections/Pipeline/ConfigurePipeline"
 import ReindexArea from "./components/Sections/ReindexArea";
 import { HeaderType, tabsPropsConstructor } from "./datasourceType";
 import { ConnectionData } from "./types";
+import { useTranslation } from "react-i18next";
 
 export const TabsSection = ({
   tabs,
@@ -250,10 +251,11 @@ export const Header = ({
   generateDocumentTypes,
   setActiveTab,
 }: HeaderType) => {
+  const { t } = useTranslation();
   const initialStateEditMessage = {
-    title: "Edit Datasource",
-    body: "Are you sure you want to edit this datasource?",
-    labelConfirm: "Edit",
+    title: t("pages.datasources.structure.edit-datasource"),
+    body: t("pages.datasources.structure.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   };
   type modalMessageType = { title: string; body: string; labelConfirm: string };
   const [modalMessage, setModalMessage] = useState<modalMessageType>(initialStateEditMessage);
@@ -270,13 +272,13 @@ export const Header = ({
     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
       <TitleEntity
         nameEntity="Datasource"
-        description="Create or Edit a Datasource to define the connection to an external or internal data source. Configure indexing options, document type associations, and connector to control how data is ingested and processed by Openk9."
+        description={t("pages.datasources.structure.create-or-edit-a-datasource-to-define")}
         id="new"
       />
       <Box sx={{ display: "flex", gap: "10px" }}>
         {mode === "view" && (
           <Button variant="contained" onClick={() => handleEditClick("editModal")}>
-            Edit
+            {t("common.edit")}
           </Button>
         )}
       </Box>

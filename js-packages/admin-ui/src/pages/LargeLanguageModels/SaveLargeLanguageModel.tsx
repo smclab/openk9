@@ -32,29 +32,33 @@ import { Box, Button } from "@mui/material";
 import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import { maskApiKey } from "@pages/EmbeddingModels";
 import React from "react";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateLargeLanguageModelMutation, useLargeLanguageModelQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-const PROVIDER_OPTIONS = [
-  { value: "openai", label: "OpenAI" },
-  { value: "ollama", label: "Ollama" },
-  { value: "hugging-face-custom", label: "Hugging Face Custom" },
-  { value: "watsonx", label: "IBM WatsonX" },
-  { value: "chat_vertex_ai", label: "Chat Vertex AI" },
-  { value: "chat_vertex_ai_model_garden", label: "Chat Vertex AI Model Garden" },
-  { value: "aws_bedrock", label: "AWS Bedrock" },
+const getProviderOptions = (t: TFunction) => [
+  { value: "openai", label: t("pages.large-language-models.openai") },
+  { value: "ollama", label: t("pages.large-language-models.ollama") },
+  { value: "hugging-face-custom", label: t("pages.large-language-models.hugging-face-custom") },
+  { value: "watsonx", label: t("pages.large-language-models.ibm-watsonx") },
+  { value: "chat_vertex_ai", label: t("pages.large-language-models.chat-vertex-ai") },
+  { value: "chat_vertex_ai_model_garden", label: t("pages.large-language-models.chat-vertex-ai-model-garden") },
+  { value: "aws_bedrock", label: t("pages.large-language-models.aws-bedrock") },
 ];
 
 export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
+  const PROVIDER_OPTIONS = React.useMemo(() => getProviderOptions(t), [t]);
   const { LargeLanguageModelId = "new", view } = useParams();
   const navigate = useNavigate();
   const [isCleaning, setIsCleaning] = React.useState(false);
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Large Language Model",
-    body: "Are you sure you want to edit this Large Language Model?",
-    labelConfirm: "Edit",
+    title: t("pages.large-language-models.edit-large-language-model"),
+    body: t("pages.large-language-models.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -78,14 +82,14 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
         if (data.largeLanguageModel?.entity) {
           const isNew = LargeLanguageModelId === "new" ? "created" : "updated";
           toast({
-            title: `Large Language Model ${isNew}`,
-            content: `Large Language Model has been ${isNew} successfully`,
+            title: isNew === "created" ? t("pages.large-language-models.created-title") : t("pages.large-language-models.updated-title"),
+            content: isNew === "created" ? t("pages.large-language-models.created-content") : t("pages.large-language-models.updated-content"),
             displayType: "success",
           });
           navigate(`/large-languages-model/`, { replace: true });
         } else {
           toast({
-            title: `Error`,
+            title: t("common.error"),
             content: combineErrorMessages(data.largeLanguageModel?.fieldValidators),
             displayType: "error",
           });
@@ -95,8 +99,8 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
         console.log(error);
         const isNew = LargeLanguageModelId === "new" ? "create" : "update";
         toast({
-          title: `Error ${isNew}`,
-          content: `Impossible to ${isNew} Large Language Model`,
+          title: isNew === "create" ? t("pages.large-language-models.create-error-title") : t("pages.large-language-models.update-error-title"),
+          content: isNew === "create" ? t("pages.large-language-models.create-error-content") : t("pages.large-language-models.update-error-content"),
           displayType: "error",
         });
       },
@@ -158,15 +162,15 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
         cell: [
           { key: "name" },
           { key: "description" },
-          { key: "apiKey", label: "API Key" },
-          { key: "apiUrl", label: "API URL" },
-          { key: "contextWindow", label: "Context Window" },
-          { key: "retrieveCitations", label: "Retrieve Citations" },
-          { key: "provider", label: "Provider" },
-          { key: "model", label: "Model" },
-          { key: "jsonConfig", label: "JSON Config", jsonView: true },
+          { key: "apiKey", label: t("fields.api-key") },
+          { key: "apiUrl", label: t("pages.large-language-models.api-url") },
+          { key: "contextWindow", label: t("fields.context-window") },
+          { key: "retrieveCitations", label: t("fields.retrieve-citations") },
+          { key: "provider", label: t("fields.provider") },
+          { key: "model", label: t("fields.model") },
+          { key: "jsonConfig", label: t("fields.json-config"), jsonView: true },
         ],
-        label: "Recap Large Language Model",
+        label: t("pages.large-language-models.recap-label"),
       },
     ],
   });
@@ -175,9 +179,8 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
     <>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
         <TitleEntity
-          nameEntity="Large Language Modal"
-          description="Create or Edit a Large Languae Model to define hookup to a chat LLM service.
-          Define url to service or specify api key in caso of use of services like OpenAi."
+          nameEntity={t("pages.large-language-models.entity-name")}
+          description={t("pages.large-language-models.create-or-edit-a-large-languae-model")}
           id={LargeLanguageModelId}
         />
         {view === "view" && (
@@ -200,18 +203,18 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
                 <>
                   <ContainerFluid flexColumn>
                     <TextInput
-                      label="Name"
+                      label={t("common.name")}
                       {...form.inputProps("name")}
-                      description="Unique identifier of the Large Language Model configuration."
+                      description={t("pages.large-language-models.unique-identifier-of-the-large-language-model")}
                     />
                     <TextArea
-                      label="Description"
+                      label={t("common.description")}
                       {...form.inputProps("description")}
-                      description="Free-text description of the LLM (e.g. provider, intended usage)."
+                      description={t("pages.large-language-models.free-text-description-of-the-llm-e")}
                     />
                     <TooltipDescription informationDescription="Api key in case of external api service">
                       <TextInput
-                        label="Api key"
+                        label={t("fields.api-key")}
                         {...form.inputProps("apiKey")}
                         value={
                           viewMaskApiKey && !isCleaning
@@ -228,22 +231,22 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
                       />
                     </TooltipDescription>
                     <TooltipDescription informationDescription="Api url in case of service hosted on on premise service">
-                      <TextInput label="Api url" {...form.inputProps("apiUrl")} />
+                      <TextInput label={t("fields.api-url")} {...form.inputProps("apiUrl")} />
                     </TooltipDescription>
                     <NumberInput
-                      label="Context Window"
+                      label={t("fields.context-window")}
                       {...form.inputProps("contextWindow")}
                       isNumber={false}
-                      description="Maximum number of tokens the model can handle in a single request (input + output)."
+                      description={t("pages.large-language-models.maximum-number-of-tokens-the-model-can")}
                     />
                     <BooleanInput
-                      label="Retrieve Citations"
+                      label={t("fields.retrieve-citations")}
                       {...form.inputProps("retrieveCitations")}
-                      description="If enabled, the model is asked to return citations to the source documents used to generate the answer."
+                      description={t("pages.large-language-models.if-enabled-the-model-is-asked-to")}
                     />
                     <AutocompleteDropdownWithOptions
-                      label="Provider"
-                      description="LLM provider/integration to use (e.g. OpenAI, Ollama, Hugging Face Custom, IBM WatsonX, Vertex AI, AWS Bedrock)."
+                      label={t("fields.provider")}
+                      description={t("pages.large-language-models.llm-provider-integration-to-use-e-g")}
                       allowClear={false}
                       disabled={view ? true : false}
                       optionsDefault={PROVIDER_OPTIONS}
@@ -258,7 +261,7 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
                       }}
                     />
                     <TextInput
-                      label="Model"
+                      label={t("fields.model")}
                       id="modelId"
                       onChange={(s) => {
                         setProviderModel((value) => ({ ...value, model: s }));
@@ -267,14 +270,14 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
                       validationMessages={[]}
                       value={providerModel.model || ""}
                       disabled={view ? true : false}
-                      description="Specific model identifier of the selected provider (e.g. gpt-4o-mini, llama3.1:8b)."
+                      description={t("pages.large-language-models.specific-model-identifier-of-the-selected-provider")}
                     />
                   </ContainerFluid>
                   <ContainerFluid size="md" style={{ marginRight: 0 }}>
                     <CodeInput
                       id="settings-code-input"
                       readonly={page === 1 || view === "view"}
-                      label="Settings"
+                      label={t("fields.settings")}
                       value={form.inputProps("jsonConfig").value}
                       onChange={(value) => form.inputProps("jsonConfig").onChange(value)}
                       language="json"
@@ -306,8 +309,8 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </>

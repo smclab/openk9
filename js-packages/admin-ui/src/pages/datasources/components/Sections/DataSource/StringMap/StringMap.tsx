@@ -23,6 +23,7 @@ import { DEFAULT_JSONPATH_TEST_TEXT, DEFAULT_REGEX_TEST_TEXT, DEFAULT_XPATH_TEST
 import { ModalStringMap } from "./ModalStringMap";
 import { testJsonPath, testXPath } from "./TestPath";
 import { InformationField } from "@components/Form/utils/informationField";
+import { useTranslation } from "react-i18next";
 
 export type Entry = { key: string; value: string; error?: boolean };
 type StringMapInputProps = {
@@ -32,6 +33,7 @@ type StringMapInputProps = {
   onChange: (newMap: Entry[]) => void;
 };
 export function StringMapInput({ defaultValue, label, description, onChange }: StringMapInputProps) {
+  const { t } = useTranslation();
   const [entries, setEntries] = React.useState<Entry[]>([...(defaultValue ? defaultValue : [])]);
 
   const [testModalOpen, setTestModalOpen] = React.useState(false);
@@ -143,7 +145,7 @@ export function StringMapInput({ defaultValue, label, description, onChange }: S
           {description && <InformationField description={description} />}
         </Box>
         <Box>
-          <IconButton aria-label="Add" onClick={handleAdd} color="primary" size="small">
+          <IconButton aria-label={t("common.add")} onClick={handleAdd} color="primary" size="small">
             <AddIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -152,7 +154,7 @@ export function StringMapInput({ defaultValue, label, description, onChange }: S
         {entries.map((entry, idx) => (
           <Box key={idx} display="flex" alignItems="center" gap={1}>
             <TextField
-              label="Key"
+              label={t("common.key")}
               value={entry.key}
               error={entry.error}
               helperText={entry.error ? "Duplicate key" : ""}
@@ -161,14 +163,14 @@ export function StringMapInput({ defaultValue, label, description, onChange }: S
               sx={{ flex: 1 }}
             />
             <TextField
-              label="Value"
+              label={t("fields.value")}
               value={entry.value}
               size="small"
               onChange={(e) => handleChange(idx, "value", e.target.value)}
               sx={{ flex: 2 }}
             />
             <IconButton
-              aria-label="Test"
+              aria-label={t("common.test")}
               onClick={() => {
                 openTestModal(idx, true);
                 setInputValueModal(entry.value || "");
@@ -178,7 +180,7 @@ export function StringMapInput({ defaultValue, label, description, onChange }: S
             >
               <SearchIcon fontSize="small" />
             </IconButton>
-            <IconButton aria-label="Remove" onClick={() => handleRemove(idx)} color="error" size="small">
+            <IconButton aria-label={t("common.remove")} onClick={() => handleRemove(idx)} color="error" size="small">
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Box>
@@ -200,7 +202,7 @@ export function StringMapInput({ defaultValue, label, description, onChange }: S
             }}
             disabled={entries.length === 0 || entries.every((e) => !e.value)}
           >
-            Test
+            {t("common.test")}
           </Button>
         </Box>
       )}

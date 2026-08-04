@@ -19,6 +19,7 @@ import { Box, Button } from "@mui/material";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { AutocompleteDropdown } from "@pages/SuggestionCategories/AutocompleateOptionList";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BooleanInput,
@@ -43,6 +44,7 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import { autocorrectionsConfigOptions, autocorrectionValue } from "./gql";
 
 export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { autocorrectionId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
@@ -54,9 +56,9 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
   });
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Autocorrection",
-    body: "Are you sure you want to edit this Autocorrection?",
-    labelConfirm: "Edit",
+    title: t("pages.autocorrections.edit-autocorrection"),
+    body: t("pages.autocorrections.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -78,17 +80,17 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
         }
         if (parentId) {
           toast({
-            content: "Autocorrection has been created successfully",
+            content: t("pages.autocorrections.autocorrection-has-been-created-successfully"),
             displayType: "success",
-            title: "Autocorrection Created",
+            title: t("pages.autocorrections.autocorrection-created"),
           });
           navigate(`/autocorrections`);
         }
       } catch (err: any) {
         console.error("Error during onCompleted processing:", err);
         toast({
-          title: `An unexpected error occurred`,
-          content: `Impossible to ${err.message} Autocorrection`,
+          title: t("pages.autocorrections.unexpected-error"),
+          content: t("pages.autocorrections.impossible-to-action", { action: err.message }),
           displayType: "error",
         });
       }
@@ -96,8 +98,12 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
     onError(error) {
       console.error("Mutation error:", error);
       toast({
-        title: "Error " + isNew ? "create" : "update",
-        content: `Impossible to ${isNew} Autocorrection`,
+        title: isNew
+          ? t("pages.autocorrections.create-error-title")
+          : t("pages.autocorrections.update-error-title"),
+        content: isNew
+          ? t("pages.autocorrections.create-error-content")
+          : t("pages.autocorrections.update-error-content"),
         displayType: "error",
       });
     },
@@ -141,15 +147,15 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
       {
         cell: [
           { key: "name" },
-          { key: "prefixLength", label: "Prefix Lenght" },
-          { key: "minWordLength", label: "Min Word Length" },
-          { key: "maxEdit", label: "Max Edits" },
+          { key: "prefixLength", label: t("fields.prefix-lenght") },
+          { key: "minWordLength", label: t("fields.min-word-length") },
+          { key: "maxEdit", label: t("pages.autocorrections.max-edits") },
           { key: "sort" },
-          { key: "suggestMode", label: "Suggest Mode" },
-          { key: "enableSearchWithCorrection", label: "Search With Correction" },
-          { key: "docTypeFields", label: "Document Type Field" },
+          { key: "suggestMode", label: t("pages.autocorrections.suggest-mode") },
+          { key: "enableSearchWithCorrection", label: t("pages.autocorrections.search-with-correction") },
+          { key: "docTypeFields", label: t("pages.autocorrections.document-type-field") },
         ],
-        label: "Recap Autocorrection",
+        label: t("pages.autocorrections.recap-label"),
       },
     ],
     valueOverride: {
@@ -162,8 +168,8 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Autocorrection"
-            description="Create or Edit a Autocorrection and add to it Token Tabs to create yoy personalized search to perform by tab."
+            nameEntity={t("pages.autocorrections.entity-name")}
+            description={t("pages.autocorrections.create-or-edit-a-autocorrection-and-add")}
             id={autocorrectionId}
           />
           {view === "view" && (
@@ -185,24 +191,24 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                 content: (
                   <div>
                     <TextInput
-                      label="Name"
+                      label={t("common.name")}
                       {...form.inputProps("name")}
-                      description="Unique identifier of the autocorrection configuration."
+                      description={t("pages.autocorrections.unique-identifier-of-the-autocorrection-configuration")}
                     />
                     <NumberInput
-                      label="Prefix Lenght"
+                      label={t("fields.prefix-lenght")}
                       {...form.inputProps("prefixLength")}
-                      description="Number of initial characters of the input term that must match exactly before correction is attempted."
+                      description={t("pages.autocorrections.number-of-initial-characters-of-the-input")}
                     />
                     <NumberInput
-                      label="Min Word Length"
+                      label={t("fields.min-word-length")}
                       {...form.inputProps("minWordLength")}
-                      description="The minimum length a suggestion must be in order to be included."
+                      description={t("pages.autocorrections.the-minimum-length-a-suggestion-must-be")}
                     />
                     <NumberInput
-                      label="Max edits"
+                      label={t("fields.max-edits")}
                       {...form.inputProps("maxEdit")}
-                      description="Maximum Levenshtein edit distance allowed between the input term and a suggestion. Allowed values: 1 or 2."
+                      description={t("pages.autocorrections.maximum-levenshtein-edit-distance-allowed-between-the")}
                     />
                     <CustomSelect
                       label={"Sort"}
@@ -212,7 +218,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                       dict={SortType}
                       id={"HybridSearch"}
                       onChange={(e: SortType) => form.inputProps("sort").onChange(e)}
-                      description="Order in which candidate suggestions are returned (by score or by frequency)."
+                      description={t("pages.autocorrections.order-in-which-candidate-suggestions-are-returned")}
                     />
                     <CustomSelect
                       label={"Suggest Mode"}
@@ -222,16 +228,16 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                       dict={SuggestMode}
                       id={"HybridSearch"}
                       onChange={(e: SuggestMode) => form.inputProps("suggestMode").onChange(e)}
-                      description="When suggestions are produced: MISSING (only for terms not in index), POPULAR (only more frequent than input), ALWAYS."
+                      description={t("pages.autocorrections.when-suggestions-are-produced-missing-only-for")}
                     />
                     <BooleanInput
-                      label="Search with correction"
+                      label={t("fields.search-with-correction")}
                       {...form.inputProps("enableSearchWithCorrection")}
-                      description="If enabled, when a correction is found the search is executed using the corrected term instead of the original."
+                      description={t("pages.autocorrections.if-enabled-when-a-correction-is-found")}
                     />
                     <AutocompleteDropdown
-                      label="Doc type field"
-                      description="Document Type Field used by the suggester to look up candidate corrections."
+                      label={t("fields.doc-type-field")}
+                      description={t("pages.autocorrections.document-type-field-used-by-the-suggester")}
                       onChange={(val) => form.inputProps("docTypeFields").onChange({ id: val.id, name: val.name })}
                       value={
                         !form?.inputProps("docTypeFields")?.value?.id
@@ -266,8 +272,8 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </ContainerFluid>

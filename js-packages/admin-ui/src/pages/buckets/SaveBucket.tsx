@@ -34,6 +34,8 @@ import { TooltipDescription } from "@components/Form/utils";
 import { Box, Button } from "@mui/material";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React, { useState } from "react";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BucketDataSourcesQuery,
@@ -60,27 +62,37 @@ import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { sxCheckbox, sxControl } from "../../utils/styleConfig";
 
-const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
-  { label: "datasource", id: "datasourceIds", tooltip: "Datasources associated to current bucket" },
+const getAssociationTabs = (t: TFunction): Array<{ label: string; id: string; tooltip?: string }> => [
   {
-    label: "suggestion category",
-    id: "suggestionCategoryIds",
-    tooltip: "Suggestion Categories associated to current bucket",
+    label: t("pages.buckets.tab-datasource"),
+    id: "datasourceIds",
+    tooltip: t("pages.buckets.datasources-associated-to-current-bucket"),
   },
-  { label: "tabs", id: "tabIds", tooltip: "Tabs associated to current bucket" },
-  { label: "language", id: "languageIds", tooltip: "Languages associated to current bucket" },
+  {
+    label: t("pages.buckets.tab-suggestion-category"),
+    id: "suggestionCategoryIds",
+    tooltip: t("pages.buckets.suggestion-categories-associated-to-current-bucket"),
+  },
+  { label: t("pages.buckets.tab-tabs"), id: "tabIds", tooltip: t("pages.buckets.tabs-associated-to-current-bucket") },
+  {
+    label: t("pages.buckets.tab-language"),
+    id: "languageIds",
+    tooltip: t("pages.buckets.languages-associated-to-current-bucket"),
+  },
 ];
 
 export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
+  const associationTabs = React.useMemo(() => getAssociationTabs(t), [t]);
   const { bucketId = "new", view } = useParams();
   const [page, setPage] = React.useState<number>(0);
   const isRecap = page === 1;
   const isNew = bucketId === "new";
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Bucket",
-    body: "Are you sure you want to edit this bucket?",
-    labelConfirm: "Edit",
+    title: t("pages.buckets.edit-bucket"),
+    body: t("pages.buckets.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const [selectedAssociationTabs, setSelectedAssociationTabs] = useState<string>(associationTabs[0].id);
@@ -151,15 +163,15 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
       if (data.bucketWithLists?.entity) {
         const isNew = bucketId === "new" ? "created" : "updated";
         toast({
-          title: `Bucket ${isNew}`,
-          content: `Bucket has been ${isNew} successfully`,
+          title: isNew === "created" ? t("pages.buckets.created-title") : t("pages.buckets.updated-title"),
+          content: isNew === "created" ? t("pages.buckets.created-content") : t("pages.buckets.updated-content"),
           displayType: "success",
         });
         const redirectPath = `/buckets/`;
         navigate(redirectPath, { replace: true });
       } else {
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: combineErrorMessages(data.bucketWithLists?.fieldValidators),
           displayType: "error",
         });
@@ -168,8 +180,8 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
     onError(error) {
       const isNew = bucketId === "new" ? "create" : "update";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} Bucket`,
+        title: isNew === "create" ? t("pages.buckets.create-error-title") : t("pages.buckets.update-error-title"),
+        content: isNew === "create" ? t("pages.buckets.create-error-content") : t("pages.buckets.update-error-content"),
         displayType: "error",
       });
     },
@@ -295,24 +307,24 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
         cell: [
           { key: "name" },
           { key: "description" },
-          { key: "refreshOnDate", label: "Refresh On Date" },
-          { key: "refreshOnQuery", label: "Refresh On Query" },
-          { key: "refreshOnSuggestionCategory", label: "Refresh On Suggestion Category" },
-          { key: "refreshOnTab", label: "Refresh On Tab" },
-          { key: "retrieveType", label: "Retriever Type" },
-          { key: "datasourceIds", label: "Datasources" },
-          { key: "suggestionCategoryIds", label: "Suggestion Categories" },
-          { key: "tabIds", label: "Tabs" },
-          { key: "languageIds", label: "Languages" },
-          { key: "queryAnalysisId", label: "Query Analysis" },
-          { key: "defaultLanguageId", label: "Default Language" },
-          { key: "searchConfigId", label: "Search Configuration" },
-          { key: "ragConfigurationChatId", label: "RAG Configuration Chat" },
-          { key: "ragConfigurationChatToolId", label: "RAG Configuration Chat Tool" },
-          { key: "ragConfigurationSimpleGenerateId", label: "RAG Configuration Simple Generate" },
-          { key: "highlightId", label: "Highlight" },
+          { key: "refreshOnDate", label: t("pages.buckets.refresh-on-date") },
+          { key: "refreshOnQuery", label: t("pages.buckets.refresh-on-query") },
+          { key: "refreshOnSuggestionCategory", label: t("pages.buckets.refresh-on-suggestion-category") },
+          { key: "refreshOnTab", label: t("pages.buckets.refresh-on-tab") },
+          { key: "retrieveType", label: t("pages.buckets.retriever-type") },
+          { key: "datasourceIds", label: t("pages.buckets.datasources") },
+          { key: "suggestionCategoryIds", label: t("pages.buckets.suggestion-categories") },
+          { key: "tabIds", label: t("pages.buckets.tabs") },
+          { key: "languageIds", label: t("pages.buckets.languages") },
+          { key: "queryAnalysisId", label: t("pages.buckets.query-analysis") },
+          { key: "defaultLanguageId", label: t("pages.buckets.default-language") },
+          { key: "searchConfigId", label: t("pages.buckets.search-configuration") },
+          { key: "ragConfigurationChatId", label: t("pages.buckets.rag-configuration-chat") },
+          { key: "ragConfigurationChatToolId", label: t("pages.buckets.rag-configuration-chat-tool") },
+          { key: "ragConfigurationSimpleGenerateId", label: t("pages.buckets.rag-configuration-simple-generate") },
+          { key: "highlightId", label: t("pages.highlights.entity-name") },
         ],
-        label: "Recap Bucket",
+        label: t("pages.buckets.recap-label"),
       },
     ],
     valueOverride: {
@@ -338,10 +350,8 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Bucket"
-            description="Create or Edit a Bucket to construct your search engine configuration. 
-          You can add or remove from it data sources, tabs or filters.
-          Bind to it your default language or search configuration."
+            nameEntity={t("pages.buckets.entity-name")}
+            description={t("pages.buckets.create-or-edit-a-bucket-to-construct")}
             id={bucketId}
           />
           {view === "view" && (
@@ -362,45 +372,44 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
               {
                 content: (
                   <>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} />
                     <RefreshOptionsLayout>
                       <BooleanInput
                         sxCheckbox={sxCheckbox}
                         sxControl={sxControl}
-                        label="Date"
+                        label={t("fields.date")}
                         {...form.inputProps("refreshOnDate")}
                       />
                       <TooltipDescription informationDescription="Refresh filters when date filter is applied" />
                       <BooleanInput
                         sxCheckbox={sxCheckbox}
                         sxControl={sxControl}
-                        label="Query"
+                        label={t("fields.query")}
                         {...form.inputProps("refreshOnQuery")}
                       />
                       <TooltipDescription informationDescription="Refresh filters when query search is performed" />
                       <BooleanInput
                         sxCheckbox={sxCheckbox}
                         sxControl={sxControl}
-                        label="SuggestionCategory"
+                        label={t("fields.suggestioncategory")}
                         {...form.inputProps("refreshOnSuggestionCategory")}
                       />
                       <TooltipDescription informationDescription="Refresh filters when filters are applied" />
                       <BooleanInput
                         sxCheckbox={sxCheckbox}
                         sxControl={sxControl}
-                        label="Tab"
+                        label={t("fields.tab")}
                         {...form.inputProps("refreshOnTab")}
                       />
                       <TooltipDescription informationDescription="Refresh filters Tab is applied" />
                     </RefreshOptionsLayout>
 
                     <CustomSelect
-                      label="Retriver Type"
+                      label={t("fields.retriver-type")}
                       dict={RetrieveType}
                       {...form.inputProps("retrieveType")}
-                      description="Retriever Type used to search data. If match performs text search 
-                    otherwise performs vector/hybrid search"
+                      description={t("pages.buckets.retriever-type-used-to-search-data-if")}
                     />
                     <AssociationsLayout tabs={associationTabs} setTabsId={setSelectedAssociationTabs}>
                       <MultiAssociationCustomQuery
@@ -505,7 +514,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                     </AssociationsLayout>
                     <Box display={"grid"} gridTemplateColumns={"1fr 1fr"} gap={"10px"} mt={"16px"}>
                       <AutocompleteDropdown
-                        label="Search Config"
+                        label={t("fields.search-config")}
                         onChange={(val) => form.inputProps("searchConfigId").onChange({ id: val.id, name: val.name })}
                         value={
                           !form?.inputProps("searchConfigId")?.value?.id
@@ -520,7 +529,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         useOptions={useOptionSearchConfig}
                       />
                       <AutocompleteDropdown
-                        label="Language"
+                        label={t("fields.language")}
                         onChange={(val) =>
                           form.inputProps("defaultLanguageId").onChange({ id: val.id, name: val.name })
                         }
@@ -537,7 +546,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         useOptions={useLanguages}
                       />
                       <AutocompleteDropdown
-                        label="Query analysis"
+                        label={t("fields.query-analysis")}
                         onChange={(val) => form.inputProps("queryAnalysisId").onChange({ id: val.id, name: val.name })}
                         value={
                           !form?.inputProps("queryAnalysisId")?.value?.id
@@ -552,7 +561,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         useOptions={useQueryAnaylyses}
                       />
                       <AutocompleteDropdownWithOptions
-                        label="Chat Rag "
+                        label={t("fields.chat-rag")}
                         onChange={(val) =>
                           form.inputProps("ragConfigurationChatId").onChange({ id: val.id, name: val.name })
                         }
@@ -574,7 +583,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         }
                       />
                       <AutocompleteDropdownWithOptions
-                        label="Chat Rag Tool"
+                        label={t("fields.chat-rag-tool")}
                         onChange={(val) =>
                           form.inputProps("ragConfigurationChatToolId").onChange({ id: val.id, name: val.name })
                         }
@@ -597,7 +606,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                       />
                       <CustomSelectRelationsOneToOne
                         options={autocorrectionOption}
-                        label="Autocorrection"
+                        label={t("fields.autocorrection")}
                         onChange={(val) => form.inputProps("autocorrectionId").onChange({ id: val.id, name: val.name })}
                         value={{
                           id: form.inputProps("autocorrectionId").value.id,
@@ -607,7 +616,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                       />
                       <CustomSelectRelationsOneToOne
                         options={autocompleteOption}
-                        label="Autocomplete"
+                        label={t("fields.autocomplete")}
                         onChange={(val) => form.inputProps("autocompleteId").onChange({ id: val.id, name: val.name })}
                         value={{
                           id: form.inputProps("autocompleteId").value.id,
@@ -617,8 +626,8 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                       />
                       <CustomSelectRelationsOneToOne
                         options={highlightOption}
-                        label="Highlight"
-                        description="Highlight configuration used to build the highlight section of the search query"
+                        label={t("pages.highlights.entity-name")}
+                        description={t("pages.buckets.highlight-configuration-used-to-build-the")}
                         onChange={(val) => form.inputProps("highlightId").onChange({ id: val.id, name: val.name })}
                         value={{
                           id: form.inputProps("highlightId").value.id,
@@ -627,7 +636,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         disabled={page === 1}
                       />
                       <AutocompleteDropdownWithOptions
-                        label="Simple Generate"
+                        label={t("fields.simple-generate")}
                         onChange={(val) =>
                           form.inputProps("ragConfigurationSimpleGenerateId").onChange({ id: val.id, name: val.name })
                         }
@@ -656,8 +665,8 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                       actions={{
                         onBack: () => setPage(0),
                         onSubmit: () => form.submit(),
-                        submitLabel: isNew ? "Create entity" : "Update entity",
-                        backLabel: "Back",
+                        submitLabel: isNew ? t("entity.create") : t("entity.update"),
+                        backLabel: t("common.back"),
                       }}
                     />
                   </>

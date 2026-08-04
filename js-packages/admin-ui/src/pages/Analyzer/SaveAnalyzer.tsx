@@ -32,6 +32,8 @@ import useTemplate, { createJsonString } from "@components/Form/Hook/Template";
 import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
 import { Box, Button } from "@mui/material";
 import React, { useMemo, useState } from "react";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   AnalyzersAssociationsQuery,
@@ -47,12 +49,14 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import { TemplateAnalyzers } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
-  { label: "Char Filters", id: "charFilters" },
-  { label: "Token Filters", id: "tokenFilters" },
+const getAssociationTabs = (t: TFunction): Array<{ label: string; id: string; tooltip?: string }> => [
+  { label: t("pages.analyzers.char-filters"), id: "charFilters" },
+  { label: t("pages.analyzers.token-filters"), id: "tokenFilters" },
 ];
 
 export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
+  const associationTabs = React.useMemo(() => getAssociationTabs(t), [t]);
   const { analyzerId = "new", view } = useParams();
   const [page, setPage] = useState(0);
   const navigate = useNavigate();
@@ -62,9 +66,9 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
   const isNewAnalyzer = analyzerId === "new";
 
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Analyzer",
-    body: "Are you sure you want to edit this analyzer?",
-    labelConfirm: "Edit",
+    title: t("pages.analyzers.edit-analyzer"),
+    body: t("pages.analyzers.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -106,14 +110,14 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       if (data.analyzerWithLists?.entity) {
         const action = isNewAnalyzer ? "created" : "updated";
         toast({
-          title: `Analyzer ${action}`,
-          content: `Analyzer has been ${action} successfully`,
+          title: action === "created" ? t("pages.analyzers.created-title") : t("pages.analyzers.updated-title"),
+          content: action === "created" ? t("pages.analyzers.created-content") : t("pages.analyzers.updated-content"),
           displayType: "success",
         });
         navigate(`/analyzers/`, { replace: true });
       } else {
         toast({
-          title: "Error",
+          title: t("common.error"),
           content: combineErrorMessages(data.analyzerWithLists?.fieldValidators),
           displayType: "error",
         });
@@ -123,8 +127,8 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       console.error(error);
       const action = isNewAnalyzer ? "create" : "update";
       toast({
-        title: `Error ${action}`,
-        content: `Impossible to ${action} Analyzer`,
+        title: action === "create" ? t("pages.analyzers.create-error-title") : t("pages.analyzers.update-error-title"),
+        content: action === "create" ? t("pages.analyzers.create-error-content") : t("pages.analyzers.update-error-content"),
         displayType: "error",
       });
     },
@@ -205,14 +209,14 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
               { key: "type" },
               ...(typeSelected === "custom"
                 ? [
-                  { key: "charFilters", label: "Char Filters" },
-                  { key: "tokenFilters", label: "Token Filters" },
-                  { key: "tokenizerId", label: "Tokenizer" },
+                  { key: "charFilters", label: t("pages.analyzers.char-filters") },
+                  { key: "tokenFilters", label: t("pages.analyzers.token-filters") },
+                  { key: "tokenizerId", label: t("fields.tokenizer") },
                 ]
                 : []),
-              ...(typeSelected ? [{ key: "jsonConfig", label: "JSON Config", keyNotView: "type" }] : []),
+              ...(typeSelected ? [{ key: "jsonConfig", label: t("fields.json-config"), keyNotView: "type" }] : []),
             ],
-            label: "Recap Analyzer",
+            label: t("pages.analyzers.recap-label"),
           },
         ],
         valueOverride: {
@@ -244,10 +248,8 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Analyzer"
-            description="Create or Edit an analyzer to definire a specific analysis logic to apply to fields.
-          You can choose between pre-built analyzer or create your custom analyzer.
-          In case of custom analyzer associate to it tokenizers, token filters or char filters."
+            nameEntity={t("pages.analyzers.entity-name")}
+            description={t("pages.analyzers.create-or-edit-an-analyzer-to-definire")}
             id={analyzerId}
           />
           {view === "view" && (
@@ -268,8 +270,8 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
               {
                 content: (
                   <>
-                    <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
-                    <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} disabled={isRecap} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} disabled={isRecap} />
                     <GenerateDynamicFieldsMemo
                       templates={TemplateAnalyzers}
                       type={typeSelected}
@@ -301,7 +303,7 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                         <CustomSelectRelationsOneToOne
                           sx={{ mt: 2 }}
                           options={OptionsTokenizer}
-                          label="Tokenizer"
+                          label={t("fields.tokenizer")}
                           onChange={(val) => form.inputProps("tokenizerId").onChange({ id: val.id, name: val.name })}
                           value={{
                             id: form.inputProps("tokenizerId").value.id,
@@ -318,8 +320,8 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                       actions={{
                         onBack: () => setPage(0),
                         onSubmit: () => form.submit(),
-                        submitLabel: isNew ? "Create entity" : "Update entity",
-                        backLabel: "Back",
+                        submitLabel: isNew ? t("entity.create") : t("entity.update"),
+                        backLabel: t("common.back"),
                       }}
                     />
                   </>

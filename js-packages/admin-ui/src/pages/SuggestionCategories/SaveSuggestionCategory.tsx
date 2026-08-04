@@ -29,6 +29,7 @@ import {
 } from "@components/Form";
 import { Box, Button } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   useCreateOrUpdateSuggestionCategoryMutation,
@@ -41,14 +42,15 @@ import { DocTypeFieldAutocompleteDropdown } from "./DocTypeFieldAutocompleteDrop
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { suggestionCategoryId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const isNew = suggestionCategoryId === "new";
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Filter",
-    body: "Are you sure you want to edit this Filter?",
-    labelConfirm: "Edit",
+    title: t("pages.filters.edit-filter"),
+    body: t("pages.filters.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -73,14 +75,14 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
         if (data.suggestionCategoryWithDocTypeField?.entity) {
           const isNew = suggestionCategoryId === "new" ? "created" : "updated";
           toast({
-            title: `Filter ${isNew}`,
-            content: `Filter has been ${isNew} successfully`,
+            title: isNew === "created" ? t("pages.filters.created-title") : t("pages.filters.updated-title"),
+            content: isNew === "created" ? t("pages.filters.created-content") : t("pages.filters.updated-content"),
             displayType: "success",
           });
           navigate(`/suggestion-categories/`, { replace: true });
         } else {
           toast({
-            title: `Error`,
+            title: t("common.error"),
             content: combineErrorMessages(data.suggestionCategoryWithDocTypeField?.fieldValidators),
             displayType: "error",
           });
@@ -90,8 +92,8 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
         console.log(error);
         const isNew = suggestionCategoryId === "new" ? "create" : "update";
         toast({
-          title: `Error ${isNew}`,
-          content: `Impossible to ${isNew} Filter`,
+          title: isNew === "create" ? t("pages.filters.create-error-title") : t("pages.filters.update-error-title"),
+          content: isNew === "create" ? t("pages.filters.create-error-content") : t("pages.filters.update-error-content"),
           displayType: "error",
         });
       },
@@ -136,9 +138,9 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
           { key: "description" },
           { key: "priority" },
           { key: "multiSelect" },
-          { key: "docTypeFieldId", label: "Search Config" },
+          { key: "docTypeFieldId", label: t("fields.search-config") },
         ],
-        label: "Recap Suggestion Category",
+        label: t("pages.filters.recap-label"),
       },
     ],
     valueOverride: {
@@ -151,9 +153,8 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Filter"
-            description="Create or Edit a Filter to define a search filter.
-          Choose between a single o multi select filter and associate to it a specific field to retrieve option for the filter."
+            nameEntity={t("pages.filters.entity-name")}
+            description={t("pages.filters.create-or-edit-a-filter-to-define")}
             id={suggestionCategoryId}
           />
           {view === "view" && (
@@ -174,21 +175,20 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
               {
                 content: (
                   <div>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} />
                     <NumberInput
-                      label="Priority"
+                      label={t("fields.priority")}
                       {...form.inputProps("priority")}
-                      description="Define priority according to which suggestion cateogories are
-        orderder by search frontend during rendering"
+                      description={t("pages.filters.define-priority-according-to-which-suggestion-cateogories")}
                     />
                     <BooleanInput
-                      label="Multi Select"
+                      label={t("fields.multi-select")}
                       {...form.inputProps("multiSelect")}
-                      description="If currente Filter is rendered as multi label filter or not"
+                      description={t("pages.filters.if-currente-filter-is-rendered-as-multi")}
                     />
                     <DocTypeFieldAutocompleteDropdown
-                      label="Search Config"
+                      label={t("fields.search-config")}
                       disabled={page === 1}
                       suggestionCategoryId={
                         Number.isNaN(numericSuggestionCategoryId) ? null : numericSuggestionCategoryId
@@ -225,8 +225,8 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </ContainerFluid>

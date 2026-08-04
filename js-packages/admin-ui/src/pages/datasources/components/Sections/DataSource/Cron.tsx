@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -38,6 +38,8 @@ import cronstrue from "cronstrue";
 import React, { useEffect, useState } from "react";
 import { useToast } from "../../../../../components/Form/Form/ToastProvider";
 import { ConnectionData } from "../../../types";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 
 interface CronValues {
   [key: string]: string;
@@ -56,14 +58,17 @@ interface FieldIcon {
   tooltip: string;
 }
 
-const fieldIcons = (isPurge: boolean): Record<string, { icon: React.ReactNode; tooltip: string }> => {
+const fieldIcons = (
+  isPurge: boolean,
+  t: TFunction,
+): Record<string, { icon: React.ReactNode; tooltip: string }> => {
   return {
-    Minute: { icon: <TimerIcon />, tooltip: "Minutes (0-59)" },
-    Hour: { icon: <TimerIcon />, tooltip: "Hours (0-23)" },
-    DayOfMonth: { icon: <CalendarTodayIcon />, tooltip: "Days of Month (1-31)" },
-    Month: { icon: <DateRangeIcon />, tooltip: "Months (1-12)" },
-    DayOfWeek: { icon: <ViewWeekIcon />, tooltip: "Days of Week (1-7)" },
-    ...(isPurge ? { maxPurgeAge: { icon: <EventIcon />, tooltip: "Max Purge Age" } } : {}),
+    Minute: { icon: <TimerIcon />, tooltip: t("pages.datasources.cron.minutes-0-59") },
+    Hour: { icon: <TimerIcon />, tooltip: t("pages.datasources.cron.hours-0-23") },
+    DayOfMonth: { icon: <CalendarTodayIcon />, tooltip: t("pages.datasources.cron.days-of-month-1-31") },
+    Month: { icon: <DateRangeIcon />, tooltip: t("pages.datasources.cron.months-1-12") },
+    DayOfWeek: { icon: <ViewWeekIcon />, tooltip: t("pages.datasources.cron.days-of-week-1-7") },
+    ...(isPurge ? { maxPurgeAge: { icon: <EventIcon />, tooltip: t("pages.datasources.cron.max-purge-age") } } : {}),
   };
 };
 
@@ -216,6 +221,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
   isView,
   // onChangeData,
 }) => {
+  const { t } = useTranslation();
   const getCronFromType = () => {
     const defaultCronValues = {
       reindex: "0 0 1 * * ?",
@@ -261,47 +267,47 @@ const CronEditor: React.FC<CronEditorProps> = ({
 
   const suggestions: Record<CronFieldType | "maxPurgeAge", Suggestion[]> = {
     Minute: [
-      { value: "*", label: "Every minute", description: "Run every minute" },
-      { value: "*/5", label: "Every 5 min", description: "Run every 5 minutes (0, 5, 10, ...)" },
-      { value: "*/15", label: "Every 15 min", description: "Run every 15 minutes (0, 15, 30, 45)" },
-      { value: "*/30", label: "Every 30 min", description: "Run every 30 minutes (0, 30)" },
-      { value: "0", label: "At minute 0", description: "Run at the start of every hour" },
-      { value: "0,30", label: "Minutes 0 and 30", description: "Run at minutes 0 and 30 of every hour" },
+      { value: "*", label: t("pages.datasources.cron.every-minute"), description: t("pages.datasources.cron.run-every-minute") },
+      { value: "*/5", label: t("pages.datasources.cron.every-5-min"), description: t("pages.datasources.cron.run-every-5-minutes-0-5-10") },
+      { value: "*/15", label: t("pages.datasources.cron.every-15-min"), description: t("pages.datasources.cron.run-every-15-minutes-0-15-30") },
+      { value: "*/30", label: t("pages.datasources.cron.every-30-min"), description: t("pages.datasources.cron.run-every-30-minutes-0-30") },
+      { value: "0", label: t("pages.datasources.cron.at-minute-0"), description: t("pages.datasources.cron.run-at-the-start-of-every-hour") },
+      { value: "0,30", label: t("pages.datasources.cron.minutes-0-and-30"), description: t("pages.datasources.cron.run-at-minutes-0-and-30-of") },
     ],
     Hour: [
-      { value: "*", label: "Every hour", description: "Run every hour" },
-      { value: "*/2", label: "Every 2 hours", description: "Run every 2 hours" },
-      { value: "*/6", label: "Every 6 hours", description: "Run every 6 hours (0, 6, 12, 18)" },
-      { value: "9-17", label: "Working hours", description: "Run during working hours (9-17)" },
-      { value: "0", label: "At midnight", description: "Run at midnight (00:00)" },
-      { value: "12", label: "At noon", description: "Run at noon (12:00)" },
+      { value: "*", label: t("pages.datasources.cron.every-hour"), description: t("pages.datasources.cron.run-every-hour") },
+      { value: "*/2", label: t("pages.datasources.cron.every-2-hours"), description: t("pages.datasources.cron.run-every-2-hours") },
+      { value: "*/6", label: t("pages.datasources.cron.every-6-hours"), description: t("pages.datasources.cron.run-every-6-hours-0-6-12") },
+      { value: "9-17", label: t("pages.datasources.cron.working-hours"), description: t("pages.datasources.cron.run-during-working-hours-9-17") },
+      { value: "0", label: t("pages.datasources.cron.at-midnight"), description: t("pages.datasources.cron.run-at-midnight-00-00") },
+      { value: "12", label: t("pages.datasources.cron.at-noon"), description: t("pages.datasources.cron.run-at-noon-12-00") },
     ],
     DayOfMonth: [
-      { value: "*", label: "Every day", description: "Run every day of the month" },
-      { value: "1", label: "1st of month", description: "Run on the first day of every month" },
-      { value: "15", label: "15th of month", description: "Run on the 15th day of every month" },
-      { value: "L", label: "Last day", description: "Run on the last day of every month" },
-      { value: "1-5", label: "Days 1-5", description: "Run on the first 5 days of the month" },
+      { value: "*", label: t("pages.datasources.cron.every-day"), description: t("pages.datasources.cron.run-every-day-of-the-month") },
+      { value: "1", label: "1st of month", description: t("pages.datasources.cron.run-on-the-first-day-of-every") },
+      { value: "15", label: "15th of month", description: t("pages.datasources.cron.run-on-the-15th-day-of-every") },
+      { value: "L", label: t("pages.datasources.cron.last-day"), description: t("pages.datasources.cron.run-on-the-last-day-of-every") },
+      { value: "1-5", label: t("pages.datasources.cron.days-1-5"), description: t("pages.datasources.cron.run-on-the-first-5-days-of") },
     ],
     Month: [
-      { value: "*", label: "Every month", description: "Run every month" },
-      { value: "1,4,7,10", label: "Quarterly", description: "Run every three months (Jan, Apr, Jul, Oct)" },
-      { value: "1-6", label: "First half", description: "Run from January to June" },
-      { value: "7-12", label: "Second half", description: "Run from July to December" },
+      { value: "*", label: t("pages.datasources.cron.every-month"), description: t("pages.datasources.cron.run-every-month") },
+      { value: "1,4,7,10", label: t("pages.datasources.cron.quarterly"), description: t("pages.datasources.cron.run-every-three-months-jan-apr-jul") },
+      { value: "1-6", label: t("pages.datasources.cron.first-half"), description: t("pages.datasources.cron.run-from-january-to-june") },
+      { value: "7-12", label: t("pages.datasources.cron.second-half"), description: t("pages.datasources.cron.run-from-july-to-december") },
     ],
     DayOfWeek: [
-      { value: "*", label: "Every day", description: "Run every day of the week" },
-      { value: "2-6", label: "Mon-Fri", description: "Run from Monday to Friday" },
-      { value: "1,7", label: "Weekend", description: "Run on Saturday and Sunday" },
-      { value: "2", label: "Monday", description: "Run only on Monday" },
+      { value: "*", label: t("pages.datasources.cron.every-day"), description: t("pages.datasources.cron.run-every-day-of-the-week") },
+      { value: "2-6", label: t("pages.datasources.cron.mon-fri"), description: t("pages.datasources.cron.run-from-monday-to-friday") },
+      { value: "1,7", label: t("pages.datasources.cron.weekend"), description: t("pages.datasources.cron.run-on-saturday-and-sunday") },
+      { value: "2", label: t("pages.datasources.cron.monday"), description: t("pages.datasources.cron.run-only-on-monday") },
     ],
     maxPurgeAge: [
-      { value: "1d", label: "1 days", description: "Purge data older than 1 day" },
-      { value: "2d", label: "2 days", description: "Purge data older than 2 days" },
-      { value: "3d", label: "3 days", description: "Purge data older than 3 days" },
-      { value: "7d", label: "1 week", description: "Purge data older than 7 days, 1 week" },
-      { value: "15d", label: "15 days", description: "Purge data older than 15 days" },
-      { value: "30d", label: "30 days", description: "Purge data older than 30 days" },
+      { value: "1d", label: "1 days", description: t("pages.datasources.cron.purge-data-older-than-1-day") },
+      { value: "2d", label: "2 days", description: t("pages.datasources.cron.purge-data-older-than-2-days") },
+      { value: "3d", label: "3 days", description: t("pages.datasources.cron.purge-data-older-than-3-days") },
+      { value: "7d", label: "1 week", description: t("pages.datasources.cron.purge-data-older-than-7-days-1") },
+      { value: "15d", label: "15 days", description: t("pages.datasources.cron.purge-data-older-than-15-days") },
+      { value: "30d", label: "30 days", description: t("pages.datasources.cron.purge-data-older-than-30-days") },
     ],
   };
 
@@ -397,7 +403,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
         return (
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              Select minute:
+              {t("pages.datasources.cron.select-minute")}
             </Typography>
             <SliderTimeSelector value={fieldValue} onChange={applySuggestion} max={59} label="minutes" />
           </Box>
@@ -406,7 +412,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
         return (
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              Select hour:
+              {t("pages.datasources.cron.select-hour")}
             </Typography>
             <SliderTimeSelector value={fieldValue} onChange={applySuggestion} max={23} label="hours" />
           </Box>
@@ -415,7 +421,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
         return (
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              Select day:
+              {t("pages.datasources.cron.select-day")}
             </Typography>
             <GridSelector
               values={Array.from(
@@ -432,7 +438,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
         return (
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              Select month:
+              {t("pages.datasources.cron.select-month")}
             </Typography>
             <GridSelector
               values={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
@@ -446,7 +452,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
         return (
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              Select day of the week:
+              {t("pages.datasources.cron.select-day-of-week")}
             </Typography>
             <GridSelector
               values={[1, 2, 3, 4, 5, 6, 7]} // 1 = Sunday, 7 = Saturday
@@ -490,8 +496,8 @@ const CronEditor: React.FC<CronEditorProps> = ({
     ) {
       showToast({
         displayType: "error",
-        title: "Invalid Cron Expression",
-        content: "Cannot specify both Day of Month and Day of Week. Please specify only one.",
+        title: t("pages.datasources.cron.invalid-cron-expression"),
+        content: t("pages.datasources.cron.cannot-specify-both-day-of-month-and"),
       });
       return;
     }
@@ -522,8 +528,8 @@ const CronEditor: React.FC<CronEditorProps> = ({
     if (!validateCronExpression(newCronExpression)) {
       showToast({
         displayType: "error",
-        title: "Invalid Cron Expression",
-        content: "Please check your cron expression values and try again.",
+        title: t("pages.datasources.cron.invalid-cron-expression"),
+        content: t("pages.datasources.cron.please-check-your-cron-expression-values-and"),
       });
       return;
     }
@@ -540,7 +546,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
 
     showToast({
       displayType: "success",
-      title: "Success",
+      title: t("pages.datasources.cron.success"),
       content: `${title} configuration has been saved successfully.`,
     });
   };
@@ -555,7 +561,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
         <Box sx={{ mt: 3, mb: 4, opacity: isView || isActive ? 1 : 0.6 }}>
           <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
             <Stack direction="row" spacing={1}>
-              {Object.entries(fieldIcons(title.toLowerCase() === "purge")).map(([field, { icon, tooltip }]) => (
+              {Object.entries(fieldIcons(title.toLowerCase() === "purge", t)).map(([field, { icon, tooltip }]) => (
                 <Tooltip key={field} title={tooltip}>
                   <Button
                     variant={selectedField === field ? "contained" : "outlined"}
@@ -603,7 +609,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      {fieldIcons(title.toLowerCase() === "purge")[selectedField].icon}
+                      {fieldIcons(title.toLowerCase() === "purge", t)[selectedField].icon}
                     </InputAdornment>
                   ),
                 }}
@@ -616,7 +622,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
             <Stack direction="row" spacing={2}>
               <Box flex={1}>
                 <Typography variant="subtitle2" gutterBottom>
-                  Generic suggestions:
+                  {t("pages.datasources.cron.generic-suggestions")}
                 </Typography>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
                   {suggestions[selectedField].map((suggestion) => (
@@ -653,7 +659,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
           <Typography variant="subtitle1" sx={{ opacity: isView || isActive ? 1 : 0.7 }}>
-            Cron Expression:
+            {t("pages.datasources.cron.cron-expression")}
           </Typography>
           <Box
             sx={{
@@ -691,7 +697,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
           }}
         >
           <Typography variant="subtitle1" gutterBottom>
-            Complete Cron Expression:
+            {t("pages.datasources.cron.complete-cron-expression")}
           </Typography>
           <Typography variant="body1" sx={{ fontFamily: "monospace", fontSize: "1.1rem" }}>
             {cronExpression}
@@ -701,14 +707,14 @@ const CronEditor: React.FC<CronEditorProps> = ({
           </Typography>
           <Divider />
           <Typography variant="subtitle1" sx={{ mt: 2 }} gutterBottom>
-            In simple words:
+            {t("pages.datasources.cron.in-simple-words")}
           </Typography>
           <Typography variant="body1">{getReadableCronDescription()}</Typography>
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3, gap: 2 }}>
           <Button disabled={isView} variant="contained" color="primary" onClick={handleSave}>
-            SAVE
+            {t("common.save")}
           </Button>
         </Box>
       </CardContent>

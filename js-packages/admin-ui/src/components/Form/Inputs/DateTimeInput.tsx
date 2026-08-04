@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { Box, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { styled } from "styled-components";
 
 export const DateTimeInput = ({
@@ -28,13 +29,14 @@ export const DateTimeInput = ({
   setDateTime: any;
   step?: number;
 }) => {
+  const { t } = useTranslation();
   const handleChange = (event: any) => {
     setDateTime(event.target.value);
   };
 
   return (
     <Box display={"flex"} flexDirection={"column"} gap={"10px"}>
-      <Typography variant="body1">Select Date and Time:</Typography>
+      <Typography variant="body1">{t("form.select-date-and-time")}</Typography>
       <DateTimeInputCustom
         id="datetime-input"
         type="datetime-local"

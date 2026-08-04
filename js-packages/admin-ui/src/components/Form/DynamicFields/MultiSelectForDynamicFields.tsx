@@ -16,6 +16,7 @@
 */
 import { Box, FormControl, InputLabel, MenuItem, SelectChangeEvent, Select as SelectMaterial } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 export function MultiSelectForDinamicFields({
   id,
@@ -38,6 +39,7 @@ export function MultiSelectForDinamicFields({
   valueSelect: string | null;
   setValueSelect: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
+  const { t } = useTranslation();
   return (
     <React.Fragment>
       <Box paddingBottom={"20px"} role="tablist">
@@ -46,9 +48,9 @@ export function MultiSelectForDinamicFields({
         </div> */}
         {/* <CustomFormGroup> */}
         <FormControl fullWidth>
-          <InputLabel id="type-select-helper-label">Type</InputLabel>
+          <InputLabel id="type-select-helper-label">{t("common.type")}</InputLabel>
           <SelectMaterial
-            label={"Type"}
+            label={t("common.type")}
             labelId="type-select-helper-label"
             value={valueSelect || ""}
             disabled={disabled}

@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
 *
 * This program is free software: you can redistribute it and/or modify
@@ -18,11 +18,13 @@ import { ModalConfirm } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import { useDeleteSortingMutation, useSortingsQuery } from "../../graphql-generated";
 
 export function Sortings() {
+  const { t } = useTranslation();
   const sortingsQuery = useSortingsQuery();
   const navigate = useNavigate();
   const toast = useToast();
@@ -31,8 +33,8 @@ export function Sortings() {
     onCompleted(data) {
       if (data.deleteSorting?.id) {
         toast({
-          title: "Sorting Deleted",
-          content: "Sorting has been deleted successfully",
+          title: t("pages.sortings.deleted-title"),
+          content: t("pages.sortings.deleted-content"),
           displayType: "success",
         });
       }
@@ -40,8 +42,8 @@ export function Sortings() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Sorting",
+        title: t("common.delete-error"),
+        content: t("pages.sortings.delete-error-content"),
         displayType: "error",
       });
     },
@@ -56,17 +58,14 @@ export function Sortings() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Sortings
+            {t("pages.sortings.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Sortings to define how search results are ordered. Add them to Tab
-            to use.
-          </Typography>
+          <Typography variant="body1">{t("pages.sortings.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/sorting/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Sorting
+              {t("pages.sortings.create-new")}
             </Button>
           </Link>
         </Box>
@@ -89,7 +88,7 @@ export function Sortings() {
           }}
           rowActions={[
             {
-              label: "View",
+              label: t("common.view"),
               action: (sorting) => {
                 navigate(`/sorting/${sorting?.id}/view`, {
                   replace: true,
@@ -97,7 +96,7 @@ export function Sortings() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (sorting) => {
                 sorting.id &&
                   navigate(`/sorting/${sorting?.id}`, {
@@ -106,7 +105,7 @@ export function Sortings() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (sorting) => {
                 sorting.id && setViewDeleteModal({ view: true, id: sorting.id });
               },
@@ -114,11 +113,11 @@ export function Sortings() {
           ]}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (sorting) => <Box fontWeight="bolder">{sorting?.name}</Box>,
             },
             {
-              header: "Type",
+              header: t("common.type"),
               content: (sorting) => (
                 <Typography variant="body2" className="sorting-type-title">
                   {sorting?.type}
@@ -126,7 +125,7 @@ export function Sortings() {
               ),
             },
             {
-              header: "Priority",
+              header: t("common.priority"),
               content: (sorting) => (
                 <Typography variant="body2" className="sorting-priority-title">
                   {sorting?.priority}
@@ -139,9 +138,9 @@ export function Sortings() {
 
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this sorting? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.sortings.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteSortingMutate({ variables: { id: viewDeleteModal.id || "" } });
           }}

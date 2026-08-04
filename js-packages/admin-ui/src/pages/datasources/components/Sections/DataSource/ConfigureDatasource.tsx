@@ -49,6 +49,7 @@ import { ConnectionData } from "../../../types";
 import { BoxArea } from "../../BoxArea";
 import { DateTimeSection } from "./DateTimeSection";
 import { ChangeValueKey, GenerateDynamicForm, Template } from "./DynamicForm";
+import { useTranslation } from "react-i18next";
 
 export const defaultModal = {
   isShow: false,
@@ -88,6 +89,7 @@ export function ConfigureDatasource({
   dynamicTemplate: Template | null;
   changeValueTemplate: ChangeValueKey;
 }) {
+  const { t } = useTranslation();
   const [areaState, setAreaState] = useState<{
     schedulingArea: SchedulingRadioType | null;
     // pipelineArea: PipelineRadioType | null;
@@ -119,13 +121,13 @@ export function ConfigureDatasource({
               ) : (
                 <CodeInput
                   language="json"
-                  label="Configuration"
+                  label={t("pages.datasources.configure.configuration")}
                   disabled={false}
                   id="code-input-datasource"
                   onChange={handleJsonConfigChange}
                   validationMessages={[]}
                   value={dataDatasource.jsonConfig || ""}
-                  description="Json configuration sended to corresponding external parser when execution start"
+                  description={t("pages.datasources.configure.json-configuration-sended-to-corresponding-external-parser")}
                 />
               )
             ) : (
@@ -148,7 +150,7 @@ export function ConfigureDatasource({
               <Button
                 variant="contained"
                 color="secondary"
-                aria-label="Back"
+                aria-label={t("common.back")}
                 onClick={() => {
                   setActiveTab("connectors");
                   const pipelineTab = tabs.find((tab) => tab.value === "connectors");
@@ -157,11 +159,11 @@ export function ConfigureDatasource({
                   }
                 }}
               >
-                Back
+                {t("common.back")}
               </Button>
               <Button
                 variant="contained"
-                aria-label="Recap"
+                aria-label={t("common.recap")}
                 disabled={!areaState.schedulingArea || isPipelineDisabled}
                 onClick={() => {
                   if (isPipelineDisabled) return;
@@ -169,7 +171,7 @@ export function ConfigureDatasource({
                   if (pipelineTab) navigate(pipelineTab.path);
                 }}
               >
-                Next Step
+                {t("common.next-step")}
               </Button>
             </Box>
           </Box>
@@ -192,6 +194,7 @@ export function EnrichItemsTable({
   isView: boolean;
   isNew: boolean;
 }) {
+  const { t } = useTranslation();
   const enrichItems = useEnrichItemsQuery({
     fetchPolicy: "network-only",
   });
@@ -254,10 +257,10 @@ export function EnrichItemsTable({
     <div>
       {modalDataLost && (
         <ModalConfirm
-          title="Confirm to leave from this page?"
-          body="Are you sure you want to leave this page? This action is irreversible and all associated data will be lost."
+          title={t("pages.datasources.configure.confirm-to-leave-from-this-page")}
+          body={t("pages.datasources.configure.are-you-sure-you-want-to-leave")}
           type="info"
-          labelConfirm="Confirm"
+          labelConfirm={t("common.confirm")}
           actionConfirm={() => {
             setModalDataLost(false);
             navigate("/enrich-item/new");
@@ -270,9 +273,9 @@ export function EnrichItemsTable({
       )}
       {showDialog.isShow && (
         <ModalConfirm
-          title="Confirm Change"
+          title={t("pages.datasources.configure.confirm-change")}
           body={showDialog.message}
-          labelConfirm="Change"
+          labelConfirm={t("common.change")}
           actionConfirm={() => {
             showDialog.callbackConfirm();
           }}
@@ -332,7 +335,7 @@ export function EnrichItemsTable({
                           <TableCell>{item?.node?.description}</TableCell>
                           <TableCell>
                             <Link component="button" variant="body2" onClick={() => handleEnrichItemLink(item)}>
-                              Link
+                              {t("pages.datasources.configure.link")}
                             </Link>
                           </TableCell>
                         </TableRow>
@@ -346,7 +349,7 @@ export function EnrichItemsTable({
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenModal(false)} color="primary">
-              Apply
+              {t("common.apply")}
             </Button>
           </DialogActions>
         </Dialog>
@@ -398,7 +401,7 @@ export function EnrichItemsTable({
                             }));
                           }}
                         >
-                          Unlink
+                          {t("pages.datasources.configure.unlink")}
                         </Link>
                       </div>
                     </TableCell>
@@ -418,7 +421,7 @@ export function EnrichItemsTable({
               }}
             >
               <Button color="primary" variant="outlined" onClick={() => setOpenModal(true)}>
-                Add Enrich Item
+                {t("pages.datasources.configure.add-enrich-item")}
               </Button>
               <Button
                 color="primary"
@@ -427,7 +430,7 @@ export function EnrichItemsTable({
                   setModalDataLost(true);
                 }}
               >
-                Create Enrich Item
+                {t("pages.datasources.configure.create-enrich-item")}
               </Button>
             </div>
           )}

@@ -29,6 +29,7 @@ import { useToast } from "@components/Form/Form/ToastProvider";
 import useTemplate, { createJsonString } from "@components/Form/Hook/Template";
 import { Box, Button } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenFilterMutation, useTokenFilterQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
@@ -36,12 +37,13 @@ import { Filters } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { tokenFilterId = "new", view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Token Filter",
-    body: "Are you sure you want to edit this Token Filter?",
-    labelConfirm: "Edit",
+    title: t("pages.token-filters.edit-token-filter"),
+    body: t("pages.token-filters.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -66,14 +68,14 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
       if (data.tokenFilter?.entity) {
         const isNew = tokenFilterId === "new" ? "created" : "updated";
         toast({
-          title: `Token Filter ${isNew}`,
-          content: `Token Filter has been ${isNew} successfully`,
+          title: isNew === "created" ? t("pages.token-filters.created-title") : t("pages.token-filters.updated-title"),
+          content: isNew === "created" ? t("pages.token-filters.created-content") : t("pages.token-filters.updated-content"),
           displayType: "success",
         });
         navigate(`/token-filters/`, { replace: true });
       } else {
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: combineErrorMessages(data.tokenFilter?.fieldValidators),
           displayType: "error",
         });
@@ -83,8 +85,8 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
       console.log(error);
       const isNew = tokenFilterId === "new" ? "create" : "update";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} Token Filter`,
+        title: isNew === "create" ? t("pages.token-filters.create-error-title") : t("pages.token-filters.update-error-title"),
+        content: isNew === "create" ? t("pages.token-filters.create-error-content") : t("pages.token-filters.update-error-content"),
         displayType: "error",
       });
     },
@@ -144,12 +146,12 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
         form: form as any,
         sections: [
           {
-            label: "Recap Char Filter",
+            label: t("pages.token-filters.recap-label"),
             cell: [
               { key: "name" },
               { key: "description" },
               { key: "type" },
-              { key: "jsonConfig", label: "JSON Config", keyNotView: "type" },
+              { key: "jsonConfig", label: t("fields.json-config"), keyNotView: "type" },
             ],
           },
         ],
@@ -170,9 +172,8 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Token Filter"
-            description="Create or Edit an Token Filter to definire a specific token analysis logic to apply to fields. 
-            You can choose between pre-built Token Filters choosing prefer type."
+            nameEntity={t("pages.token-filters.entity-name")}
+            description={t("pages.token-filters.create-or-edit-an-token-filter-to")}
             id={tokenFilterId}
           />
           {view === "view" && (
@@ -193,8 +194,8 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
               {
                 content: (
                   <>
-                    <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
-                    <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} disabled={isRecap} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} disabled={isRecap} />
                     <GenerateDynamicFieldsMemo
                       templates={Filters}
                       type={typeSelected}
@@ -224,8 +225,8 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </ContainerFluid>

@@ -26,6 +26,7 @@ import {
   TextField,
 } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../Form/ToastProvider";
 
 export function ModalAdd<TAssociation, TRemove>({
@@ -56,6 +57,7 @@ export function ModalAdd<TAssociation, TRemove>({
   association: () => MutationTuple<TAssociation, any>;
   remove: () => MutationTuple<TRemove, any>;
 }) {
+  const { t } = useTranslation();
   const [add] = association();
   const [deleteMutation] = remove();
   const [open, setOpen] = React.useState(true);
@@ -99,8 +101,8 @@ export function ModalAdd<TAssociation, TRemove>({
             onError: (error) => {
               toast({
                 displayType: "error",
-                title: "Errore",
-                content: error.message || "Si Ã¨ verificato un errore.",
+                title: t("common.error"),
+                content: error.message || t("common.generic-error"),
               });
               callbackClose();
             },
@@ -113,7 +115,7 @@ export function ModalAdd<TAssociation, TRemove>({
 
   return (
     <Dialog open={open} onClose={callbackClose} fullWidth={true}>
-      <DialogTitle>{title || "Association"}</DialogTitle>
+      <DialogTitle>{title || t("association.title")}</DialogTitle>
       <DialogContent>
         <Autocomplete
           multiple
@@ -126,15 +128,15 @@ export function ModalAdd<TAssociation, TRemove>({
           getOptionLabel={(option) => option.label}
           value={items}
           onChange={(event, newValue) => setItems(newValue)}
-          renderInput={(params) => <TextField {...params} label="Select Items" />}
+          renderInput={(params) => <TextField {...params} label={t("form.select-items")} />}
         />
       </DialogContent>
       <DialogActions>
         <Button onClick={callbackClose} color="primary">
-          Close
+          {t("common.close")}
         </Button>
         <Button onClick={handleApply} color="primary">
-          Apply
+          {t("common.apply")}
         </Button>
       </DialogActions>
     </Dialog>
@@ -167,6 +169,7 @@ export function ModalAddSingle({
   }) => void;
 }) {
   // const [open, setOpen] = React.useState(true);
+  const { t } = useTranslation();
   const [items, setItems] = React.useState<{
     label: string;
     value: string;
@@ -180,7 +183,7 @@ export function ModalAddSingle({
       onSuccessCallback: () => {
         toast({
           displayType: "success",
-          title: "Association",
+          title: t("association.title"),
           content: messageSuccess || "",
         });
         callbackClose();
@@ -188,8 +191,8 @@ export function ModalAddSingle({
       onErrorCallback: (error) => {
         toast({
           displayType: "error",
-          title: "Errore",
-          content: error.message || "Si Ã¨ verificato un errore.",
+          title: t("common.error"),
+          content: error.message || t("common.generic-error"),
         });
       },
       // onCompleted: () => {
@@ -222,7 +225,7 @@ export function ModalAddSingle({
 
   return (
     <Dialog open onClose={handleClose} fullWidth={true}>
-      <DialogTitle>{title ? title : "Association"}</DialogTitle>
+      <DialogTitle>{title ? title : t("association.title")}</DialogTitle>
       <DialogContent>
         <>
           <Autocomplete
@@ -230,16 +233,16 @@ export function ModalAddSingle({
             getOptionLabel={(option) => option.label}
             value={items}
             onChange={(event, newValue) => setItems(newValue)}
-            renderInput={(params) => <TextField {...params} label="Select Items" />}
+            renderInput={(params) => <TextField {...params} label={t("form.select-items")} />}
           />
         </>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} color="secondary">
-          Close
+          {t("common.close")}
         </Button>
         <Button onClick={handleApply} color="primary">
-          Apply
+          {t("common.apply")}
         </Button>
       </DialogActions>
     </Dialog>

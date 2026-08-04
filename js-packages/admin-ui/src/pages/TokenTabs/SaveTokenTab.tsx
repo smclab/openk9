@@ -31,6 +31,7 @@ import { useToast } from "@components/Form/Form/ToastProvider";
 import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { Box, Button, ClickAwayListener, TextField } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { isValidId, useDocTypeTokenTab } from "../../utils/RelationOneToOne";
 import { TokenType, useCreateOrUpdateTabTokenMutation, useTabTokenTabQuery } from "../../graphql-generated";
@@ -82,12 +83,14 @@ type TokenTypeAutocompleteProps<TokenType> = {
 };
 
 function TokenTypeAutocomplete<TokenType extends string>({
-  label = "Token Type",
+  label,
   value,
   dict,
   onChange,
   disabled,
 }: TokenTypeAutocompleteProps<TokenType>) {
+  const { t } = useTranslation();
+  const resolvedLabel = label ?? t("fields.token-type");
   const [open, setOpen] = React.useState(false);
   const [highlightedIndex, setHighlightedIndex] = React.useState(0);
 
@@ -115,7 +118,7 @@ function TokenTypeAutocomplete<TokenType extends string>({
     <ClickAwayListener onClickAway={() => setOpen(false)}>
       <Box sx={{ position: "relative" }}>
         <TextField
-          label={label}
+          label={resolvedLabel}
           fullWidth
           value={selectedOption?.label ?? ""}
           onClick={() => !disabled && setOpen((prev) => !prev)}
@@ -142,13 +145,14 @@ function TokenTypeAutocomplete<TokenType extends string>({
 }
 
 export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { tokenTabId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Token Tab",
-    body: "Are you sure you want to edit this Token Tab?",
-    labelConfirm: "Edit",
+    title: t("pages.token-tabs.edit-token-tab"),
+    body: t("pages.token-tabs.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -178,8 +182,8 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       if (data.tokenTabWithDocTypeField?.entity) {
         const isNew = tokenTabId === "new" ? "created" : "updated";
         toast({
-          title: `Token Tab ${isNew}`,
-          content: `Token Tab has been ${isNew} successfully`,
+          title: isNew === "created" ? t("pages.token-tabs.created-title") : t("pages.token-tabs.updated-title"),
+          content: isNew === "created" ? t("pages.token-tabs.created-content") : t("pages.token-tabs.updated-content"),
           displayType: "success",
         });
         navigate(`/token-tabs/`, {
@@ -187,7 +191,7 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         });
       } else {
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: combineErrorMessages(data.tokenTab?.fieldValidators),
           displayType: "error",
         });
@@ -196,8 +200,8 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
     onError() {
       const isNew = tokenTabId === "new" ? "create" : "update";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} Token Tab`,
+        title: isNew === "create" ? t("pages.token-tabs.create-error-title") : t("pages.token-tabs.update-error-title"),
+        content: isNew === "create" ? t("pages.token-tabs.create-error-content") : t("pages.token-tabs.update-error-content"),
         displayType: "error",
       });
     },
@@ -282,19 +286,19 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           { key: "name" },
           { key: "description" },
           { key: "value" },
-          { key: "tokenType", label: "Token Type" },
-          { key: "docTypeFieldId", label: "Document Type Field" },
+          { key: "tokenType", label: t("fields.token-type") },
+          { key: "docTypeFieldId", label: t("pages.token-tabs.document-type-field") },
           ...(form.inputProps("tokenType").value === "FILTER" || form.inputProps("tokenType").value === "TEXT"
             ? [
               { key: "boost" },
-              { key: "valuesQueryType", label: "Values Query Type" },
-              { key: "globalQueryType", label: "Global Query Type" },
+              { key: "valuesQueryType", label: t("pages.token-tabs.values-query-type") },
+              { key: "globalQueryType", label: t("pages.token-tabs.global-query-type") },
               { key: "fuzziness" },
             ]
             : []),
           { key: "filter" },
         ],
-        label: "Recap Token Tab",
+        label: t("pages.token-tabs.recap-label"),
       },
     ],
     valueOverride: {
@@ -307,9 +311,8 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Token Tab"
-            description="Create or Edit a Token Tab and add to Tab to create yoy personalized search to perform by tab.
-          Choose between differe Token Tabs depending on the search you want to configure."
+            nameEntity={t("pages.token-tabs.entity-name")}
+            description={t("pages.token-tabs.create-or-edit-a-token-tab-and")}
             id={tokenTabId}
           />
 
@@ -332,17 +335,17 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
               {
                 content: (
                   <>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} />
                     <TextInput
-                      label="Value"
+                      label={t("fields.value")}
                       {...form.inputProps("value")}
-                      description="Value it must match for this token"
+                      description={t("pages.token-tabs.value-it-must-match-for-this-token")}
                     />
 
                     <TooltipDescription informationDescription="Type of Token Tab. Every type implements a different search logic.">
                       <TokenTypeAutocomplete<TokenType>
-                        label="Token Type"
+                        label={t("fields.token-type")}
                         dict={TokenType}
                         value={form.inputProps("tokenType").value}
                         onChange={(tokenType: TokenType) => {
@@ -368,7 +371,7 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                     </TooltipDescription>
 
                     <AutocompleteDropdown
-                      label="DocType Field"
+                      label={t("fields.doctype-field")}
                       onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
                       value={
                         !form?.inputProps("docTypeFieldId")?.value?.id
@@ -386,24 +389,24 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                     {(form.inputProps("tokenType").value === "TEXT" ||
                       form.inputProps("tokenType").value === "FILTER") && (
                         <div>
-                          <TextInput label="boost" {...form.inputProps("boost")} disabled={disabled} />
+                          <TextInput label={t("fields.boost")} {...form.inputProps("boost")} disabled={disabled} />
 
                           <CustomSelect
-                            label="valuesQueryType"
+                            label={t("fields.valuesquerytype")}
                             dict={valuesQueryType}
                             {...form.inputProps("valuesQueryType")}
                             disabled={disabled}
                           />
 
                           <CustomSelect
-                            label="globalQueryType"
+                            label={t("fields.globalquerytype")}
                             dict={globalQueryType}
                             {...form.inputProps("globalQueryType")}
                             disabled={disabled}
                           />
 
                           <CustomSelect
-                            label="fuzziness"
+                            label={t("fields.fuzziness")}
                             dict={fuzziness}
                             {...form.inputProps("fuzziness")}
                             disabled={disabled}
@@ -411,7 +414,7 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                         </div>
                       )}
 
-                    <BooleanInput label="Filter" {...form.inputProps("filter")} disabled={disabled} />
+                    <BooleanInput label={t("fields.filter")} {...form.inputProps("filter")} disabled={disabled} />
                   </>
                 ),
                 page: 0,
@@ -433,8 +436,8 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </ContainerFluid>

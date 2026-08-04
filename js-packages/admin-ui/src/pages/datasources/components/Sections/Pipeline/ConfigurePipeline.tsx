@@ -24,6 +24,7 @@ import { tabsType } from "../../../datasourceType";
 import { defaultModal, EnrichItemsTable, PipelineRadioType } from "../DataSource/ConfigureDatasource";
 import { ConnectionData } from "../../../types";
 import { BoxArea } from "../../BoxArea";
+import { useTranslation } from "react-i18next";
 
 interface ConfigurePipelineProps {
   dataDatasource: ConnectionData;
@@ -46,6 +47,7 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
   setIsRecap,
   setActiveTab,
 }) => {
+  const { t } = useTranslation();
   const [showDialog, setShowDialog] = useState(defaultModal);
   const navigate = useNavigate();
   const [pipelineArea, setPipelineArea] = useState<PipelineRadioType>("no-pipeline");
@@ -62,8 +64,8 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
         onChange={(e) => {
           setShowDialog({
             isShow: true,
-            message: "Are you sure you want to change pipelines? You would lose all other previously selected changes.",
-            title: "Area scheduling",
+            message: t("pages.datasources.pipeline-section.are-you-sure-you-want-to-change"),
+            title: t("pages.datasources.pipeline-section.area-scheduling"),
             callbackClose: () => {
               setShowDialog(defaultModal);
             },
@@ -84,17 +86,17 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
         <FormControlLabel
           value="no-pipeline"
           control={<Radio disabled={disabled} color={disabled ? "default" : "primary"} />}
-          label="No pipeline"
+          label={t("pages.datasources.pipeline-section.no-pipeline")}
         />
         <FormControlLabel
           value="present-pipeline"
           control={<Radio disabled={disabled} color={disabled ? "default" : "primary"} />}
-          label="Select pipeline from preset elements"
+          label={t("pages.datasources.pipeline-section.select-pipeline-from-preset-elements")}
         />
         <Box sx={{ display: "flex", flexWrap: "wrap" }}>
           <BoxArea isActive={pipelineArea === "present-pipeline"}>
             <AutocompleteDropdown
-              label="Select Pipeline"
+              label={t("pages.datasources.pipeline-section.select-pipeline")}
               disabled={disabled || pipelineArea !== "present-pipeline"}
               value={
                 dataDatasource.enrichPipeline?.id
@@ -123,7 +125,7 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
         <FormControlLabel
           value="custom-pipeline"
           control={<Radio disabled={disabled} color={disabled ? "default" : "primary"} />}
-          label="Create custom pipeline"
+          label={t("pages.datasources.pipeline-section.create-custom-pipeline")}
         />
         {datasourceId && (
           <EnrichItemsTable
@@ -146,7 +148,7 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
         <Button
           variant="contained"
           color="secondary"
-          aria-label="Back"
+          aria-label={t("common.back")}
           onClick={() => {
             setActiveTab("datasource");
             const pipelineTab = tabs.find((tab) => tab.value === "datasource");
@@ -155,23 +157,23 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
             }
           }}
         >
-          Back
+          {t("common.back")}
         </Button>
         <Button
           variant="contained"
-          aria-label="Recap"
+          aria-label={t("common.recap")}
           onClick={() => {
             setActiveTab("dataIndex");
           }}
         >
-          Next Step
+          {t("common.next-step")}
         </Button>
       </Box>
       {showDialog.isShow && (
         <ModalConfirm
-          title="Confirm Change"
+          title={t("pages.datasources.pipeline-section.confirm-change")}
           body={showDialog.message}
-          labelConfirm="Change"
+          labelConfirm={t("common.change")}
           actionConfirm={() => {
             showDialog.callbackConfirm();
           }}

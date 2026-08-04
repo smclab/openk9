@@ -28,6 +28,7 @@ import {
   Breakpoint,
 } from "@mui/material";
 import React, { ReactNode } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 
 export function ModalConfirm({
@@ -53,6 +54,7 @@ export function ModalConfirm({
   type?: "success" | "info" | "error" | "warning";
   confirmationWord?: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = React.useState(true);
   const [inputValue, setInputValue] = React.useState("");
   const theme = useTheme();
@@ -118,7 +120,11 @@ export function ModalConfirm({
             }}
           >
             <Typography variant="body2" sx={{ mb: 1 }}>
-              Please type <strong>{confirmationWord}</strong> to confirm:
+              <Trans
+                i18nKey="modal.type-to-confirm"
+                values={{ word: confirmationWord }}
+                components={{ strong: <strong /> }}
+              />
             </Typography>
             <input
               type="text"
@@ -147,7 +153,7 @@ export function ModalConfirm({
             fontWeight: "bold",
           }}
         >
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           onClick={() => {

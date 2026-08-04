@@ -18,10 +18,12 @@ import { ModalConfirm, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useAnnotatorsQuery, useDeleteAnnotatosMutation } from "../../graphql-generated";
 
 export function Annotators() {
+  const { t } = useTranslation();
   const annotatorsQuery = useAnnotatorsQuery();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
@@ -33,8 +35,8 @@ export function Annotators() {
     onCompleted(data) {
       if (data.deleteAnnotator?.id) {
         toast({
-          title: "Annotator Deleted",
-          content: "Annotator has been deleted successfully",
+          title: t("pages.annotators.deleted-title"),
+          content: t("pages.annotators.deleted-content"),
           displayType: "success",
         });
       }
@@ -42,8 +44,8 @@ export function Annotators() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Annotator",
+        title: t("common.delete-error"),
+        content: t("pages.annotators.delete-error-content"),
         displayType: "error",
       });
     },
@@ -56,16 +58,14 @@ export function Annotators() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Annotators
+            {t("pages.annotators.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Annotators and use them to configure Query Analysis tool.
-          </Typography>
+          <Typography variant="body1">{t("pages.annotators.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/annotator/new" style={{ textDecoration: "none" }}>
-            <Button variant="contained" color="primary" aria-label="new annotator">
-              Create New Annotator
+            <Button variant="contained" color="primary" aria-label={t("pages.annotators.create-new-aria")}>
+              {t("pages.annotators.create-new")}
             </Button>
           </Link>
         </Box>
@@ -85,11 +85,11 @@ export function Annotators() {
           pageInfoPath="annotators.pageInfo"
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (annotator) => <Box fontWeight="bolder">{annotator?.name}</Box>,
             },
             {
-              header: "Field Name",
+              header: t("pages.annotators.field-name"),
               content: (annotator) => (
                 <Typography variant="body2" className="pipeline-title">
                   {annotator?.fieldName}
@@ -97,7 +97,7 @@ export function Annotators() {
               ),
             },
             {
-              header: "Fuziness",
+              header: t("pages.annotators.fuziness"),
               content: (annotator) => (
                 <Typography variant="body2" className="pipeline-title">
                   {annotator?.fuziness}
@@ -105,7 +105,7 @@ export function Annotators() {
               ),
             },
             {
-              header: "Type",
+              header: t("common.type"),
               content: (annotator) => (
                 <Typography variant="body2" className="pipeline-title">
                   {annotator?.type}
@@ -115,7 +115,7 @@ export function Annotators() {
           ]}
           rowActions={[
             {
-              label: "View",
+              label: t("common.view"),
               action: (annotator) => {
                 navigate(`/annotator/${annotator?.id}/view`, {
                   replace: true,
@@ -123,7 +123,7 @@ export function Annotators() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (annotator) => {
                 annotator.id &&
                   navigate(`/annotator/${annotator?.id}`, {
@@ -132,7 +132,7 @@ export function Annotators() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (annotator) => {
                 if (annotator?.id) setViewDeleteModal({ view: true, id: annotator.id });
               },
@@ -142,9 +142,9 @@ export function Annotators() {
       </Box>
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this annotator? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.annotators.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteAnnotatorMutate({
               variables: { id: viewDeleteModal.id || "" },

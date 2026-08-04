@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,11 +27,13 @@ import {
   Typography,
 } from "@mui/material";
 import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 
-const TEST_MODE_OPTIONS = [
-  { value: "regex", label: "Regex" },
-  { value: "xpath", label: "XPath" },
-  { value: "jsonpath", label: "JsonPath" },
+const getTestModeOptions = (t: TFunction) => [
+  { value: "regex", label: t("pages.datasources.string-map.regex") },
+  { value: "xpath", label: t("pages.datasources.string-map.xpath") },
+  { value: "jsonpath", label: t("pages.datasources.string-map.jsonpath") },
 ];
 
 type ModalStringMapProps = {
@@ -68,17 +70,20 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
   value,
   setValue,
   handleTest,
-}) => (
+}) => {
+  const { t } = useTranslation();
+  const testModeOptions = getTestModeOptions(t);
+  return (
   <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
     <DialogTitle>
       <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
         <AutocompleteDropdownWithOptions
-          label="Type"
+          label={t("common.type")}
           allowClear={false}
-          optionsDefault={TEST_MODE_OPTIONS}
+          optionsDefault={testModeOptions}
           value={{
             id: testMode,
-            name: TEST_MODE_OPTIONS.find((o) => o.value === testMode)?.label || testMode,
+            name: testModeOptions.find((o) => o.value === testMode)?.label || testMode,
           }}
           onChange={(val) => setTestMode(val.id as "regex" | "xpath" | "jsonpath")}
           sx={{ minWidth: 160 }}
@@ -94,7 +99,7 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
           placeholder={`Insert ${testMode} here...`}
         />
         <IconButton
-          aria-label="Copy"
+          aria-label={t("common.copy")}
           onClick={() => {
             if (selectedIdx !== null) {
               navigator.clipboard.writeText(value || "");
@@ -113,7 +118,7 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
     <DialogContent sx={{ display: "flex", gap: 2 }}>
       <Box flex={2}>
         <Typography variant="subtitle2" gutterBottom>
-          Text to test
+          {t("pages.datasources.string-map.text-to-test")}
         </Typography>
         {testResult !== null ? (
           <>
@@ -152,7 +157,7 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
               ) : (
                 <Box>
                   <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    Results:
+                    {t("pages.datasources.string-map.results")}
                   </Typography>
                   {matchedLines.length > 0 ? (
                     matchedLines.map((res, idx) => (
@@ -183,7 +188,7 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
                     ))
                   ) : (
                     <Typography variant="body2" sx={{ color: "error.main" }}>
-                      Nessun risultato trovato.
+                      {t("pages.datasources.string-map.no-results")}
                     </Typography>
                   )}
                 </Box>
@@ -198,7 +203,7 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
                 setMatchedLines([]);
               }}
             >
-              Edit text
+              {t("pages.datasources.string-map.edit-text")}
             </Button>
           </>
         ) : (
@@ -208,7 +213,7 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
             fullWidth
             value={testText}
             onChange={(e) => setTestText(e.target.value)}
-            placeholder="Insert text here..."
+            placeholder={t("pages.datasources.string-map.insert-text-here")}
           />
         )}
       </Box>
@@ -221,9 +226,10 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
           onClick={handleTest}
           disabled={selectedIdx === null || !entries[selectedIdx]?.value}
         >
-          Test
+          {t("common.test")}
         </Button>
       </Box>
     </DialogActions>
   </Dialog>
-);
+  );
+};

@@ -18,6 +18,7 @@ import useDebounced from "@components/common/useDebounced";
 import { Box, SxProps, TextField, Theme, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { UseOptionsHook } from "utils/RelationOneToOne";
 import { InformationField } from "../utils/informationField";
 import { AutocompleteOptionsList } from "./AutocompleteOptionsList";
@@ -62,7 +63,7 @@ export function AutocompleteDropdown({
   onChange,
   onClear,
   allowClear = true,
-  clearLabel = "Clear selection",
+  clearLabel,
   label,
   value,
   disabled,
@@ -71,6 +72,7 @@ export function AutocompleteDropdown({
   extraVariables = {},
   sx,
 }: Props) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -82,7 +84,11 @@ export function AutocompleteDropdown({
 
   const { options, loading, hasNextPage, loadMore } = useOptions(debouncedText, { ...extraVariables });
 
-  const CLEAR_OPTION: Option = useMemo(() => ({ value: "__CLEAR__", label: clearLabel }), [clearLabel]);
+  const resolvedClearLabel = clearLabel ?? t("form.clear-selection");
+  const CLEAR_OPTION: Option = useMemo(
+    () => ({ value: "__CLEAR__", label: resolvedClearLabel }),
+    [resolvedClearLabel],
+  );
 
   const showClear = allowClear && !!value;
   const visibleOptions = useMemo<Option[]>(
@@ -268,7 +274,7 @@ export function AutocompleteDropdown({
           onClick={openWithReset}
           onBlur={validateAndClose}
           onKeyDown={handleKeyDown}
-          placeholder="Select..."
+          placeholder={t("form.select-placeholder")}
           inputProps={{
             autoComplete: "off",
             role: "combobox",
@@ -322,7 +328,7 @@ export function AutocompleteDropdownWithOptions({
   onChange,
   onClear,
   allowClear = true,
-  clearLabel = "Clear selection",
+  clearLabel,
   label,
   value,
   disabled,
@@ -330,6 +336,7 @@ export function AutocompleteDropdownWithOptions({
   description,
   sx,
 }: PropsWithOptions) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -338,7 +345,11 @@ export function AutocompleteDropdownWithOptions({
 
   const debouncedText = useDebounced(inputValue, 300);
 
-  const CLEAR_OPTION: Option = useMemo(() => ({ value: "__CLEAR__", label: clearLabel }), [clearLabel]);
+  const resolvedClearLabel = clearLabel ?? t("form.clear-selection");
+  const CLEAR_OPTION: Option = useMemo(
+    () => ({ value: "__CLEAR__", label: resolvedClearLabel }),
+    [resolvedClearLabel],
+  );
   const options = optionsDefault.filter((option) => option.label.toLowerCase().includes(debouncedText.toLowerCase()));
   const showClear = allowClear && !!value;
   const visibleOptions = useMemo<Option[]>(
@@ -511,7 +522,7 @@ export function AutocompleteDropdownWithOptions({
           onClick={openWithReset}
           onBlur={validateAndClose}
           onKeyDown={handleKeyDown}
-          placeholder="Select..."
+          placeholder={t("form.select-placeholder")}
           inputProps={{
             autoComplete: "off",
             role: "combobox",

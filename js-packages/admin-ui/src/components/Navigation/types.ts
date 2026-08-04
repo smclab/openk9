@@ -17,7 +17,7 @@
 import { NamePath } from "../sideNavigationContext";
 
 export type MenuItem = {
-  label: string;
+  labelKey: string;
   path?: string;
   IsChildren: boolean;
   value: NamePath;

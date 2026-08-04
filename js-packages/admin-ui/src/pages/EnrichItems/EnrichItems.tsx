@@ -17,6 +17,7 @@
 import { ModalAddSingle, ModalConfirm, useToast } from "@components/Form";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import {
@@ -27,6 +28,7 @@ import {
 } from "../../graphql-generated";
 
 export function EnrichItems() {
+  const { t } = useTranslation();
   const enrichItemsQuery = useEnrichItemsQuery();
   const navigate = useNavigate();
   const toast = useToast();
@@ -38,8 +40,8 @@ export function EnrichItems() {
     onCompleted(data) {
       if (data.deleteEnrichItem?.id) {
         toast({
-          title: "Enrich Item Deleted",
-          content: "Enrich Item has been deleted successfully",
+          title: t("pages.enrich-items.deleted-title"),
+          content: t("pages.enrich-items.deleted-content"),
           displayType: "success",
         });
       }
@@ -47,8 +49,8 @@ export function EnrichItems() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Enrich Item",
+        title: t("common.delete-error"),
+        content: t("pages.enrich-items.delete-error-content"),
         displayType: "error",
       });
     },
@@ -73,17 +75,14 @@ export function EnrichItems() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Enrich Items
+            {t("pages.enrich-items.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Enrich Items. Add them to Enrich Pipelines to perform enrich
-            activities on data.
-          </Typography>
+          <Typography variant="body1">{t("pages.enrich-items.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/enrich-item/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Enrich Item
+              {t("pages.enrich-items.create-new")}
             </Button>
           </Link>
         </Box>
@@ -100,13 +99,13 @@ export function EnrichItems() {
           pageInfoPath="enrichItems.pageInfo"
           rowActions={[
             {
-              label: "Add",
+              label: t("common.add"),
               action: (enrichItem) => {
                 setIsAdd({ id: enrichItem?.id, isVisible: true });
               },
             },
             {
-              label: "View",
+              label: t("common.view"),
               action: (enrichItem) => {
                 navigate(`/enrich-item/${enrichItem?.id}/view`, {
                   replace: true,
@@ -114,7 +113,7 @@ export function EnrichItems() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (enrichItem) => {
                 enrichItem.id &&
                   navigate(`/enrich-item/${enrichItem?.id}`, {
@@ -123,7 +122,7 @@ export function EnrichItems() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (enrichItem) => {
                 enrichItem.id && setViewDeleteModal({ view: true, id: enrichItem.id });
               },
@@ -134,11 +133,11 @@ export function EnrichItems() {
           }}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (enrich) => <Box fontWeight="bolder">{enrich?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (enrichItem) => enrichItem?.description,
             },
           ]}
@@ -149,7 +148,7 @@ export function EnrichItems() {
         <ModalAddSingle
           id={isAdd.id}
           callbackClose={() => setIsAdd({ id: null, isVisible: false })}
-          title="Associate To Pipeline"
+          title={t("pages.enrich-items.association-title")}
           messageSuccess={"Enrich Item added to Pipeline"}
           list={unboundListEnrichPipeline.data?.unboundEnrichPipelines}
           association={({ parentId, childId, onSuccessCallback, onErrorCallback }) => {
@@ -168,9 +167,9 @@ export function EnrichItems() {
 
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this Enrich Item? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.enrich-items.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteEnrichItemMutate({
               variables: { id: viewDeleteModal.id || "" },

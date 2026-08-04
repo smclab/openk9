@@ -19,9 +19,11 @@ import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography } from "@mui/material";
 import { useAutocorrectionsOptionsQuery, useDeleteAutocorrectionMutation } from "../../graphql-generated";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function Autocorrections() {
+  const { t } = useTranslation();
   const autocorrectionQuery = useAutocorrectionsOptionsQuery();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
@@ -34,8 +36,8 @@ export default function Autocorrections() {
     onCompleted(data) {
       if (data.deleteAutocorrection?.id) {
         toast({
-          title: "Autocorrection Deleted",
-          content: "Autocorrection has been deleted successfully",
+          title: t("pages.autocorrections.deleted-title"),
+          content: t("pages.autocorrections.deleted-content"),
           displayType: "success",
         });
       }
@@ -44,8 +46,8 @@ export default function Autocorrections() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Autocorrection",
+        title: t("common.delete-error"),
+        content: t("pages.autocorrections.delete-error-content"),
         displayType: "error",
       });
     },
@@ -63,18 +65,14 @@ export default function Autocorrections() {
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Box sx={{ width: "50%", ml: 2 }}>
               <Typography component="h1" variant="h1" fontWeight="600">
-                Autocorrections
+                {t("pages.autocorrections.title")}
               </Typography>
-              <Typography variant="body1">
-                In this section you can create and handle autocorrections to use to define advanced analysis logic when
-                you create Data Indices. To go into detail about autocorrections check official Opensearch
-                Documentation.
-              </Typography>
+              <Typography variant="body1">{t("pages.autocorrections.description")}</Typography>
             </Box>
             <Box>
               <Link to="/autocorrection/new" style={{ textDecoration: "none" }}>
-                <Button variant="contained" color="primary" aria-label="create new autocorrection">
-                  Create New autocorrection
+                <Button variant="contained" color="primary" aria-label={t("pages.autocorrections.create-new-aria")}>
+                  {t("pages.autocorrections.create-new")}
                 </Button>
               </Link>
             </Box>
@@ -97,13 +95,13 @@ export default function Autocorrections() {
               pageInfoPath="autocorrections.pageInfo"
               rowActions={[
                 {
-                  label: "View",
+                  label: t("common.view"),
                   action: (autocorrection) => {
                     if (autocorrection?.id) navigate(`/autocorrection/${autocorrection?.id}/view`);
                   },
                 },
                 {
-                  label: "Edit",
+                  label: t("common.edit"),
                   action: (autocorrection) => {
                     if (autocorrection?.id)
                       navigate(`/autocorrection/${autocorrection?.id}`, {
@@ -112,7 +110,7 @@ export default function Autocorrections() {
                   },
                 },
                 {
-                  label: "Delete",
+                  label: t("common.delete"),
                   action: (autocorrection) => {
                     autocorrection?.id && setViewDeleteModal({ view: true, id: autocorrection.id });
                   },
@@ -120,11 +118,11 @@ export default function Autocorrections() {
               ]}
               columns={[
                 {
-                  header: "Name",
+                  header: t("common.name"),
                   content: (autocorrection) => <Box fontWeight="bolder">{autocorrection?.name}</Box>,
                 },
                 {
-                  header: "Description",
+                  header: t("common.description"),
                   content: (autocorrection) => (
                     <Typography variant="body2" className="pipeline-title">
                       {autocorrection?.description}
@@ -137,9 +135,9 @@ export default function Autocorrections() {
 
           {viewDeleteModal.view && (
             <ModalConfirm
-              title="Confirm Deletion"
-              body="Are you sure you want to delete this autocorrection? This action is irreversible and all associated data will be lost."
-              labelConfirm="Delete"
+              title={t("modal.confirm-deletion")}
+              body={t("pages.autocorrections.delete-body")}
+              labelConfirm={t("common.delete")}
               actionConfirm={() => {
                 deleteAutocorrection({
                   variables: { id: viewDeleteModal.id || "" },

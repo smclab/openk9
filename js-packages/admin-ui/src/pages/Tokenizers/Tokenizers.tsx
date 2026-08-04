@@ -17,11 +17,13 @@
 import { ModalConfirm, useToast } from "@components/Form";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import { useDeleteTokenizerMutation, useTokenizersQuery } from "../../graphql-generated";
 
 export function Tokenizers() {
+  const { t } = useTranslation();
   const tokenizersQuery = useTokenizersQuery();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
@@ -33,8 +35,8 @@ export function Tokenizers() {
     onCompleted(data) {
       if (data.deleteTokenizer?.id) {
         toast({
-          title: "Tokenizer Deleted",
-          content: "Tokenizer has been deleted successfully",
+          title: t("pages.tokenizers.deleted-title"),
+          content: t("pages.tokenizers.deleted-content"),
           displayType: "success",
         });
       }
@@ -42,8 +44,8 @@ export function Tokenizers() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Tokenizer",
+        title: t("common.delete-error"),
+        content: t("pages.tokenizers.delete-error-content"),
         displayType: "error",
       });
     },
@@ -56,17 +58,14 @@ export function Tokenizers() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Tokenizers
+            {t("pages.tokenizers.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Tokenizers to use to define advanced analysis logic and bind to a
-            custom Analyzer. To go into detail about Tokenizers check official Opensearch Documentation.
-          </Typography>
+          <Typography variant="body1">{t("pages.tokenizers.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/tokenizer/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Tokenizer
+              {t("pages.tokenizers.create-new")}
             </Button>
           </Link>
         </Box>
@@ -82,7 +81,7 @@ export function Tokenizers() {
           pageInfoPath="tokenizers.pageInfo"
           rowActions={[
             {
-              label: "View",
+              label: t("common.view"),
               action: (tokenizer) => {
                 navigate(`/tokenizer/${tokenizer?.id}/view`, {
                   replace: true,
@@ -90,7 +89,7 @@ export function Tokenizers() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (tokenizer) => {
                 tokenizer.id &&
                   navigate(`/tokenizer/${tokenizer?.id}`, {
@@ -99,7 +98,7 @@ export function Tokenizers() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (tokenizer) => {
                 if (tokenizer?.id) setViewDeleteModal({ view: true, id: tokenizer.id });
               },
@@ -111,11 +110,11 @@ export function Tokenizers() {
           }}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (pluginDriver) => <Box fontWeight="bolder">{pluginDriver?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (pluginDriver) => (
                 <Typography variant="body2" className="pipeline-title">
                   {pluginDriver?.description}
@@ -127,9 +126,9 @@ export function Tokenizers() {
       </Box>
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this tokenizer? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.tokenizers.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteTokenizersMutate({
               variables: { id: viewDeleteModal.id || "" },

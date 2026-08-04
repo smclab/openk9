@@ -17,11 +17,13 @@
 import { ModalConfirm, useToast } from "@components/Form";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import { useDeleteQueryAnalysisMutation, useQueryAnalysesQuery } from "../../graphql-generated";
 
 export function QueryAnalyses() {
+  const { t } = useTranslation();
   const queryAnalysesQuery = useQueryAnalysesQuery();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
@@ -34,8 +36,8 @@ export function QueryAnalyses() {
     onCompleted(data) {
       if (data.deleteQueryAnalysis?.id) {
         toast({
-          title: "Query Analysis Deleted",
-          content: "Query Analysis has been deleted successfully",
+          title: t("pages.query-analyses.deleted-title"),
+          content: t("pages.query-analyses.deleted-content"),
           displayType: "success",
         });
       }
@@ -43,8 +45,8 @@ export function QueryAnalyses() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Query Analysis",
+        title: t("common.delete-error"),
+        content: t("pages.query-analyses.delete-error-content"),
         displayType: "error",
       });
     },
@@ -55,14 +57,14 @@ export function QueryAnalyses() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Query Analyses
+            {t("pages.query-analyses.title")}
           </Typography>
-          <Typography variant="body1">In this section you can create and configure Query Analysis tool.</Typography>
+          <Typography variant="body1">{t("pages.query-analyses.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/query-analysis/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Query Analyses
+              {t("pages.query-analyses.create-new")}
             </Button>
           </Link>
         </Box>
@@ -85,7 +87,7 @@ export function QueryAnalyses() {
           }}
           rowActions={[
             {
-              label: "View",
+              label: t("common.view"),
               action: (queryAnalyses) => {
                 navigate(`/query-analysis/${queryAnalyses?.id}/view`, {
                   replace: true,
@@ -93,7 +95,7 @@ export function QueryAnalyses() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (queryAnalyses) => {
                 queryAnalyses.id &&
                   navigate(`/query-analysis/${queryAnalyses?.id}`, {
@@ -102,7 +104,7 @@ export function QueryAnalyses() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (queryAnalyses) => {
                 if (queryAnalyses?.id) setViewDeleteModal({ view: true, id: queryAnalyses.id });
               },
@@ -110,11 +112,11 @@ export function QueryAnalyses() {
           ]}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (queryAnalyses) => <Box fontWeight="bolder">{queryAnalyses?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (queryAnalyses) => (
                 <Typography variant="body2" className="pipeline-title">
                   {queryAnalyses?.description}
@@ -126,9 +128,9 @@ export function QueryAnalyses() {
       </Box>
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this query analysys? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.query-analyses.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteQueryAnalysisMutate({
               variables: { id: viewDeleteModal.id || "" },

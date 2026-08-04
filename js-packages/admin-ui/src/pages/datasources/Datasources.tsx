@@ -19,6 +19,7 @@ import { ModalAddSingle, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography, useTheme } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import {
   useAddDataSourceToBucketMutation,
@@ -28,6 +29,7 @@ import {
 } from "../../graphql-generated";
 
 export function Datasources() {
+  const { t } = useTranslation();
   const datasourcesQuery = useDataSourcesQuery();
   const theme = useTheme();
   const navigate = useNavigate();
@@ -44,8 +46,8 @@ export function Datasources() {
     onCompleted(data) {
       if (data.deleteDatasource?.id) {
         toast({
-          title: "Datasource Deleted",
-          content: "Datasource has been deleted successfully",
+          title: t("pages.datasources.deleted-title"),
+          content: t("pages.datasources.deleted-content"),
           displayType: "success",
         });
       }
@@ -53,8 +55,8 @@ export function Datasources() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Datasource",
+        title: t("common.delete-error"),
+        content: t("pages.datasources.delete-error-content"),
         displayType: "error",
       });
     },
@@ -66,17 +68,14 @@ export function Datasources() {
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Box sx={{ width: "50%", ml: 2 }}>
             <Typography component="h1" variant="h1" fontWeight="600">
-              Datasources
+              {t("pages.datasources.title")}
             </Typography>
-            <Typography variant="body1">
-              In this section you can create and handle Datasources. A Datasource defines the connection to an external
-              or internal data source and how it is indexed and processed within Openk9.
-            </Typography>
+            <Typography variant="body1">{t("pages.datasources.description")}</Typography>
           </Box>
           <Box>
             <Link to="/data-source/new/mode/create/landingTab/0" style={{ textDecoration: "none" }}>
               <Button variant="contained" color="primary">
-                Create New Datasource
+                {t("pages.datasources.create-new")}
               </Button>
             </Link>
           </Box>
@@ -94,22 +93,22 @@ export function Datasources() {
             edgesPath="datasources.edges"
             pageInfoPath="datasources.pageInfo"
             deleted={{
-              title: "Datasource",
-              messsage: "Deleting the datasource will remove all entities and related indexes.",
-              wordConfirm: "Delete",
+              title: t("pages.datasources.delete-title"),
+              messsage: t("pages.datasources.delete-message"),
+              wordConfirm: t("common.delete"),
               actionDeleted: (id: string, name: string) => {
                 deleteDataSource({ variables: { id, datasourceName: name } });
               },
             }}
             rowActions={[
               {
-                label: "Add",
+                label: t("common.add"),
                 action: (datasources) => {
                   setIsAdd({ id: datasources.id, isVisible: true });
                 },
               },
               {
-                label: "View",
+                label: t("common.view"),
                 action: (datasources) => {
                   navigate(`/data-source/${datasources?.id}/mode/view/landingTab/monitoring`, {
                     replace: true,
@@ -117,7 +116,7 @@ export function Datasources() {
                 },
               },
               {
-                label: "Edit",
+                label: t("common.edit"),
                 action: (datasources) => {
                   datasources.id &&
                     navigate(`/data-source/${datasources?.id}/mode/edit/landingTab/datasource`, {
@@ -128,11 +127,11 @@ export function Datasources() {
             ]}
             columns={[
               {
-                header: "Name",
+                header: t("common.name"),
                 content: (datasource) => <Box fontWeight="bolder">{datasource?.name}</Box>,
               },
               {
-                header: "Last Ingestion Date",
+                header: t("pages.datasources.last-ingestion-date"),
                 content: (datasource) => (
                   <Typography variant="body2" className="datasource-title">
                     {formatDate(datasource?.lastIngestionDate)}
@@ -140,7 +139,7 @@ export function Datasources() {
                 ),
               },
               {
-                header: "schedulable / reindexable",
+                header: t("pages.datasources.schedulable-reindexable"),
                 content: (datasource) => {
                   const isScheduled = datasource?.schedulable;
                   const isReindex = datasource?.reindexable;
@@ -186,8 +185,8 @@ export function Datasources() {
         <ModalAddSingle
           id={isAdd.id}
           list={unboundListBuckets.data?.unboundBucketsByDatasource}
-          messageSuccess="Datasource added to Bucket"
-          title="Association to Bucket"
+          messageSuccess={t("pages.datasources.added-to-bucket")}
+          title={t("pages.datasources.association-title")}
           association={({ parentId, childId, onSuccessCallback, onErrorCallback }) => {
             addMutate({
               variables: { parentId, childId },

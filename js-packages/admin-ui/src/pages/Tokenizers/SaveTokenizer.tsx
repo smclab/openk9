@@ -29,6 +29,7 @@ import { GenerateDynamicFieldsMemo } from "@components/Form/Form/GenerateDynamic
 import useTemplate, { createJsonString } from "@components/Form/Hook/Template";
 import { Box, Button } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenizerMutation, useTokenizerQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
@@ -36,12 +37,13 @@ import { TemplateTokenizer } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { tokenizerId = "new", view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Tokenizer",
-    body: "Are you sure you want to edit this Tokenizer?",
-    labelConfirm: "Edit",
+    title: t("pages.tokenizers.edit-tokenizer"),
+    body: t("pages.tokenizers.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -65,14 +67,14 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       if (data.tokenizer?.entity) {
         const isNew = tokenizerId === "new" ? "created" : "updated";
         toast({
-          title: `Tokenizer ${isNew}`,
-          content: `Tokenizer has been ${isNew} successfully`,
+          title: isNew === "created" ? t("pages.tokenizers.created-title") : t("pages.tokenizers.updated-title"),
+          content: isNew === "created" ? t("pages.tokenizers.created-content") : t("pages.tokenizers.updated-content"),
           displayType: "success",
         });
         navigate(`/tokenizers/`, { replace: true });
       } else {
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: combineErrorMessages(data.tokenizer?.fieldValidators),
           displayType: "error",
         });
@@ -82,8 +84,8 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       console.log(error);
       const isNew = tokenizerId === "new" ? "create" : "update";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} Tokenizer`,
+        title: isNew === "create" ? t("pages.tokenizers.create-error-title") : t("pages.tokenizers.update-error-title"),
+        content: isNew === "create" ? t("pages.tokenizers.create-error-content") : t("pages.tokenizers.update-error-content"),
         displayType: "error",
       });
     },
@@ -149,9 +151,9 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
               { key: "name" },
               { key: "description" },
               { key: "type" },
-              { key: "jsonConfig", label: "JSON Config", keyNotView: "type" },
+              { key: "jsonConfig", label: t("fields.json-config"), keyNotView: "type" },
             ],
-            label: "Recap Tokenizer",
+            label: t("pages.tokenizers.recap-label"),
           },
         ],
         valueOverride: {
@@ -171,9 +173,8 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Tokenizers"
-            description="Create or Edit an Tokenizer to definire a specific token splitting logic to apply to fields. 
-            You can choose between pre-built Tokenizers choosing prefer type."
+            nameEntity={t("pages.tokenizers.entity-name")}
+            description={t("pages.tokenizers.create-or-edit-an-tokenizer-to-definire")}
             id={tokenizerId}
           />
           {view === "view" && (
@@ -194,8 +195,8 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
               {
                 content: (
                   <>
-                    <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
-                    <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} disabled={isRecap} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} disabled={isRecap} />
                     <GenerateDynamicFieldsMemo
                       templates={TemplateTokenizer}
                       type={typeSelected}
@@ -224,8 +225,8 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           actions={{
             onBack: () => setPage(0),
             onSubmit: () => form.submit(),
-            submitLabel: isNew ? "Create entity" : "Update entity",
-            backLabel: "Back",
+            submitLabel: isNew ? t("entity.create") : t("entity.update"),
+            backLabel: t("common.back"),
           }}
         />
       </>

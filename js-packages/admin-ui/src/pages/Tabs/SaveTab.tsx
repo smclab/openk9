@@ -18,6 +18,7 @@ import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button } from "@mui/material";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ContainerFluid,
@@ -43,6 +44,7 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import { ReturnUserTabData } from "./gql";
 
 export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { tabId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
@@ -53,9 +55,9 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
   });
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Tab",
-    body: "Are you sure you want to edit this Tab?",
-    labelConfirm: "Edit",
+    title: t("pages.tabs.edit-tab"),
+    body: t("pages.tabs.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -77,17 +79,17 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
         }
         if (parentId) {
           toast({
-            content: "Tab has been created successfully",
+            content: t("pages.tabs.tab-has-been-created-successfully"),
             displayType: "success",
-            title: "Tab Created",
+            title: t("pages.tabs.tab-created"),
           });
           navigate(`/tabs`);
         }
       } catch (err: any) {
         console.error("Error during onCompleted processing:", err);
         toast({
-          title: `An unexpected error occurred`,
-          content: `Impossible to ${err.message} Tab`,
+          title: t("pages.tabs.unexpected-error"),
+          content: t("pages.tabs.impossible-to-action", { action: err.message }),
           displayType: "error",
         });
       }
@@ -96,8 +98,8 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
       console.error("Mutation error:", error);
       const isNew = tabId === "new" ? "create" : "update";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} Tab`,
+        title: isNew === "create" ? t("pages.tabs.create-error-title") : t("pages.tabs.update-error-title"),
+        content: isNew === "create" ? t("pages.tabs.create-error-content") : t("pages.tabs.update-error-content"),
         displayType: "error",
       });
     },
@@ -156,10 +158,10 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
           { key: "name" },
           { key: "description" },
           { key: "priority" },
-          { key: "tokenTabIds", label: "Token Tabs" },
-          { key: "sortingIds", label: "Sortings" },
+          { key: "tokenTabIds", label: t("pages.tabs.token-tabs") },
+          { key: "sortingIds", label: t("pages.tabs.sortings") },
         ],
-        label: "Recap Tab",
+        label: t("pages.tabs.recap-label"),
       },
     ],
     valueOverride: {
@@ -173,8 +175,8 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Tab"
-            description="Create or Edit a Tab and add to it Token Tabs to create yoy personalized search to perform by tab."
+            nameEntity={t("pages.tabs.entity-name")}
+            description={t("pages.tabs.create-or-edit-a-tab-and-add")}
             id={tabId}
           />
           {view === "view" && (
@@ -195,13 +197,12 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
               {
                 content: (
                   <div>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} />
                     <NumberInput
-                      label="Priority"
+                      label={t("fields.priority")}
                       {...form.inputProps("priority")}
-                      description="Define priority according to which suggestion cateogories are
-      orderder by search frontend during rendering"
+                      description={t("pages.tabs.define-priority-according-to-which-suggestion-cateogories")}
                     />
                     <TooltipDescription informationDescription="Token Tabs associated to current Tab">
                       <MultiAssociationCustomQuery
@@ -274,8 +275,8 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
           actions={{
             onBack: () => setPage(0),
             onSubmit: () => form.submit(),
-            submitLabel: isNew ? "Create entity" : "Update entity",
-            backLabel: "Back",
+            submitLabel: isNew ? t("entity.create") : t("entity.update"),
+            backLabel: t("common.back"),
           }}
         />
       </>

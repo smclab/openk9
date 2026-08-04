@@ -26,6 +26,7 @@ import {
 import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { Box, Button } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateDocTypeWithTemplateMutation, useDocumentTypeQuery } from "../../graphql-generated";
 import { isValidId, useDocTypesTemplates } from "../../utils/RelationOneToOne";
@@ -33,12 +34,13 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { documentTypeId = "new", view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Document Type",
-    body: "Are you sure you want to edit this Document Type?",
-    labelConfirm: "Edit",
+    title: t("pages.document-types.edit-document-type"),
+    body: t("pages.document-types.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
   const handleEditClick = async () => {
     const confirmed = await openConfirmModal();
@@ -60,8 +62,8 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
       onCompleted(data) {
         if (data.docTypeWithTemplate?.entity) {
           if (documentTypeId === "new") {
-            toast({ displayType: "success", title: "Document Type Create", content: "" });
-          } else toast({ displayType: "info", title: "Document Type Update", content: "" });
+            toast({ displayType: "success", title: t("pages.document-types.document-type-create"), content: "" });
+          } else toast({ displayType: "info", title: t("pages.document-types.document-type-update"), content: "" });
           navigate(`/document-types/`, { replace: true });
         }
       },
@@ -94,8 +96,8 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
     form: form as any,
     sections: [
       {
-        cell: [{ key: "name" }, { key: "description" }, { key: "docTypeTemplateId", label: "Document Type Template" }],
-        label: "Recap Document Type",
+        cell: [{ key: "name" }, { key: "description" }, { key: "docTypeTemplateId", label: t("pages.document-types.document-type-template") }],
+        label: t("pages.document-types.recap-label"),
       },
     ],
     valueOverride: {
@@ -108,9 +110,8 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Document Type"
-            description="Create or Edit a Document Type to define hookup to a service exposing features to vectorize your data.
-          Define url to service or specify api key in caso of use of services like OpenAi."
+            nameEntity={t("pages.document-types.entity-name")}
+            description={t("pages.document-types.create-or-edit-a-document-type-to")}
             id={documentTypeId}
           />
           {view === "view" && (
@@ -131,10 +132,10 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
               {
                 content: (
                   <div>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} />
                     <AutocompleteDropdown
-                      label="Document type template"
+                      label={t("fields.document-type-template")}
                       onChange={(val) =>
                         form
                           .inputProps("docTypeTemplateId")
@@ -171,8 +172,8 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
           actions={{
             onBack: () => setPage(0),
             onSubmit: () => form.submit(),
-            submitLabel: isNew ? "Create entity" : "Update entity",
-            backLabel: "Back",
+            submitLabel: isNew ? t("entity.create") : t("entity.update"),
+            backLabel: t("common.back"),
           }}
         />
       </>

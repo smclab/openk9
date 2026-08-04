@@ -46,9 +46,11 @@ import {
 } from "../../../../graphql-generated";
 import { formatOffsetDateTime } from "../../../../utils/formatOffsetDateTime";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "@components/Form";
 
 export function MonitoringTab({ id }: { id: string }) {
+  const { t } = useTranslation();
   const [schedulingId, setSchedulingId] = React.useState<number>(-1);
   const [modalMessage, setModalMessage] = React.useState<string>("");
   const [modalAction, setModalAction] = React.useState<string>("");
@@ -244,10 +246,10 @@ export function MonitoringTab({ id }: { id: string }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="secondary">
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleAction} color="primary">
-            Apply
+            {t("common.apply")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -281,7 +283,7 @@ export function MonitoringTab({ id }: { id: string }) {
       </div>
 
       <Typography variant="h5" gutterBottom style={{ marginTop: "24px" }}>
-        Data source's activities
+        {t("pages.datasources.monitoring.activities-title")}
       </Typography>
 
       <TableContainer component={Paper}>
@@ -341,10 +343,10 @@ export function MonitoringTab({ id }: { id: string }) {
                     }}
                   >
                     <Typography variant="h6" gutterBottom>
-                      No activities
+                      {t("pages.datasources.monitoring.no-activities")}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      There are no matching unassociated activities
+                      {t("pages.datasources.monitoring.no-activities-description")}
                     </Typography>
                   </Box>
                 </TableCell>

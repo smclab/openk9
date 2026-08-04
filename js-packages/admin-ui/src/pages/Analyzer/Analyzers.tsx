@@ -17,11 +17,13 @@
 import { ModalConfirm, useToast } from "@components/Form";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import { useAnalyzersQuery, useDeleteAnalyzerMutation } from "../../graphql-generated";
 
 export function Analyzers() {
+  const { t } = useTranslation();
   const analyzerQuery = useAnalyzersQuery();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
@@ -34,8 +36,8 @@ export function Analyzers() {
     onCompleted(data) {
       if (data.deleteAnalyzer?.id) {
         toast({
-          title: "Analyzer Deleted",
-          content: "Analyzer has been deleted successfully",
+          title: t("pages.analyzers.deleted-title"),
+          content: t("pages.analyzers.deleted-content"),
           displayType: "success",
         });
       }
@@ -44,8 +46,8 @@ export function Analyzers() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Analyzer",
+        title: t("common.delete-error"),
+        content: t("pages.analyzers.delete-error-content"),
         displayType: "error",
       });
     },
@@ -63,17 +65,14 @@ export function Analyzers() {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box sx={{ width: "50%", ml: 2 }}>
             <Typography component="h1" variant="h1" fontWeight="600">
-              Analyzers
+              {t("pages.analyzers.title")}
             </Typography>
-            <Typography variant="body1">
-              In this section you can create and handle Analyzers to use to define advanced analysis logic when you
-              create Data Indices. To go into detail about Analyzers check official Opensearch Documentation.
-            </Typography>
+            <Typography variant="body1">{t("pages.analyzers.description")}</Typography>
           </Box>
           <Box>
             <Link to="/analyzer/new" style={{ textDecoration: "none" }}>
-              <Button variant="contained" color="primary" aria-label="create new analyzer">
-                Create New Analyzer
+              <Button variant="contained" color="primary" aria-label={t("pages.analyzers.create-new-aria")}>
+                {t("pages.analyzers.create-new")}
               </Button>
             </Link>
           </Box>
@@ -96,7 +95,7 @@ export function Analyzers() {
             pageInfoPath="analyzers.pageInfo"
             rowActions={[
               // {
-              //   label: "Start",
+              //   label: t("common.start"),
               //   action: (analyzer) => {
               //     if (analyzer?.id)
               //       updateBucketsMutate({
@@ -105,13 +104,13 @@ export function Analyzers() {
               //   },
               // },
               {
-                label: "View",
+                label: t("common.view"),
                 action: (analyzer) => {
                   if (analyzer?.id) navigate(`/analyzer/${analyzer?.id}/view`);
                 },
               },
               {
-                label: "Edit",
+                label: t("common.edit"),
                 action: (analyzer) => {
                   if (analyzer?.id)
                     navigate(`/analyzer/${analyzer?.id}`, {
@@ -120,7 +119,7 @@ export function Analyzers() {
                 },
               },
               {
-                label: "Delete",
+                label: t("common.delete"),
                 action: (analyzer) => {
                   analyzer?.id && setViewDeleteModal({ view: true, id: analyzer.id });
                 },
@@ -128,11 +127,11 @@ export function Analyzers() {
             ]}
             columns={[
               {
-                header: "Name",
+                header: t("common.name"),
                 content: (analyzer) => <Box fontWeight="bolder">{analyzer?.name}</Box>,
               },
               {
-                header: "Description",
+                header: t("common.description"),
                 content: (analyzer) => (
                   <Typography variant="body2" className="pipeline-title">
                     {analyzer?.description}
@@ -140,7 +139,7 @@ export function Analyzers() {
                 ),
               },
               {
-                header: "Type",
+                header: t("common.type"),
                 content: (analyzer) => (
                   <Typography variant="body2" className="pipeline-title">
                     {analyzer?.type}
@@ -153,9 +152,9 @@ export function Analyzers() {
 
         {viewDeleteModal.view && (
           <ModalConfirm
-            title="Confirm Deletion"
-            body="Are you sure you want to delete this analyzer? This action is irreversible and all associated data will be lost."
-            labelConfirm="Delete"
+            title={t("modal.confirm-deletion")}
+            body={t("pages.analyzers.delete-body")}
+            labelConfirm={t("common.delete")}
             actionConfirm={() => {
               deleteAnalyzerMutate({
                 variables: { id: viewDeleteModal.id || "" },

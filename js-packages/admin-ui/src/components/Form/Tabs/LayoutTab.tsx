@@ -16,6 +16,7 @@
 */
 import { Box, Paper, Tab, Tabs, Typography } from "@mui/material";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { TooltipDescription } from "../utils";
 
 function a11yProps(tabId: string) {
@@ -26,7 +27,7 @@ function a11yProps(tabId: string) {
 
 export default function AssociationsLayout({
   children,
-  title = "Associations",
+  title,
   tabs,
   setTabsId,
 }: {
@@ -35,6 +36,7 @@ export default function AssociationsLayout({
   tabs: Array<{ label: string; id: string; tooltip?: string }>;
   setTabsId: React.Dispatch<string>;
 }) {
+  const { t } = useTranslation();
   const [value, setValue] = useState<string>(tabs[0]?.id || "");
 
   const handleChange = (event: any, newValue: string) => {
@@ -50,7 +52,7 @@ export default function AssociationsLayout({
           margin: "8px 0",
         }}
       >
-        {title}
+        {title ?? t("form.associations")}
       </Typography>
 
       <Paper
@@ -66,7 +68,7 @@ export default function AssociationsLayout({
           <Tabs
             value={value}
             onChange={handleChange}
-            aria-label="association tabs"
+            aria-label={t("form.association-tabs")}
             variant="fullWidth"
             sx={{
               "& .MuiTab-root": {

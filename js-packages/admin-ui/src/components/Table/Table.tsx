@@ -33,8 +33,10 @@ import {
   useTheme,
 } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { TableVirtuoso } from "react-virtuoso";
+import i18n from "../../i18n";
 import useDebounced from "../common/useDebounced";
 import { EmptySpace, ModalConfirm } from "../Form";
 
@@ -61,9 +63,9 @@ export function formatName(value: { id?: string | null; name?: string | null } |
 export function formatBoolean(value: boolean | undefined) {
   switch (value) {
     case true:
-      return "yes";
+      return i18n.t("common.yes");
     case false:
-      return "no";
+      return i18n.t("common.no");
   }
 }
 
@@ -114,6 +116,7 @@ export function Table<
   rowActions: Array<{ label: string; action(suggestionCategory?: any): void; isDisabled?: (dat: any) => boolean }>;
   maxVisibleActions?: number;
 }) {
+  const { t } = useTranslation();
   const [searchText, setSearchText] = React.useState("");
   const searchTextDebounced = useDebounced(searchText);
   const [showSelectedItemsTable] = React.useState(false);
@@ -168,7 +171,7 @@ export function Table<
         <ModalConfirm
           title={deleted?.title}
           body={deleted?.messsage}
-          labelConfirm="Delete"
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleted?.actionDeleted(viewDeleteModal.id, viewDeleteModal.name);
           }}
@@ -194,7 +197,7 @@ export function Table<
         >
           <TextField
             id="basicInputTypeText"
-            placeholder="Search"
+            placeholder={t("common.search")}
             type="text"
             value={searchText}
             onChange={(e) => setSearchText(e.currentTarget.value)}
@@ -229,8 +232,8 @@ export function Table<
               <TableRow>
                 <TableCell colSpan={columns.length + 1 + (isItemsSelectable ? 1 : 0)}>
                   <EmptySpace
-                    description="There are no matching unassociated entities"
-                    title="No entities"
+                    description={t("table.no-entities-description")}
+                    title={t("table.no-entities")}
                     extraClass="c-empty-state-animation"
                   />
                 </TableCell>
@@ -246,7 +249,7 @@ export function Table<
                 </TableCell>
               ))}
               <TableCell>
-                <Typography variant="subtitle2">Actions</Typography>
+                <Typography variant="subtitle2">{t("table.actions")}</Typography>
               </TableCell>
             </>
           )}
@@ -303,12 +306,12 @@ export function Table<
                           ? [
                               {
                                 key: "delete" as const,
-                                label: "Delete",
+                                label: t("common.delete"),
                                 isActive: true,
                                 onClick: () => {
                                   setViewDeleteModal({
                                     isView: true,
-                                    name: row?.name || "Unnamed",
+                                    name: row?.name || t("common.unnamed"),
                                     id: row?.id || "",
                                   });
                                 },

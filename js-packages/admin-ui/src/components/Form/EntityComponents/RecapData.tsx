@@ -16,6 +16,7 @@
 */
 import { Stack, Box, Typography, TextField, Paper, Button } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ContainerFluid } from "../Containers";
 
@@ -96,6 +97,7 @@ export function RecapData({
     validation?: boolean;
   }>;
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const allData = Data.map((dat) => dat.content);
   const [viewPreSubmit, setViewPreSubmit] = React.useState(false);
@@ -166,7 +168,7 @@ export function RecapData({
                 }
               }}
             >
-              BACK
+              {t("common.back")}
             </Button>
             {submit && (
               <Button
@@ -180,7 +182,7 @@ export function RecapData({
                   }
                 }}
               >
-                {isCreate ? "Create entity" : "Update entity"}
+                {isCreate ? t("entity.create") : t("entity.update")}
               </Button>
             )}
           </Box>

@@ -26,6 +26,7 @@ import {
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { useTranslation } from "react-i18next";
 
 type PropsModalConfirmRadio = {
   title: string;
@@ -34,6 +35,7 @@ type PropsModalConfirmRadio = {
   message: string;
 };
 export function ModalConfirmRadio({ title, callbackConfirm, callbackClose, message }: PropsModalConfirmRadio) {
+  const { t } = useTranslation();
   return (
     <Dialog
       open
@@ -89,7 +91,7 @@ export function ModalConfirmRadio({ title, callbackConfirm, callbackClose, messa
             boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
           }}
         >
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           onClick={() => {
@@ -105,7 +107,7 @@ export function ModalConfirmRadio({ title, callbackConfirm, callbackClose, messa
             boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
           }}
         >
-          Ok
+          {t("common.ok")}
         </Button>
       </DialogActions>
     </Dialog>

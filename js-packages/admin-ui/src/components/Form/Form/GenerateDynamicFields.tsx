@@ -17,6 +17,7 @@
 import { Box, FormControl, MenuItem, Select, Typography } from "@mui/material";
 import { TemplateType } from "@pages/Analyzer/gql";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { BooleanInput, NumberInputSimple, TextInputSimple } from "../Inputs";
 import { AutocompleteDropdownWithOptions } from "../Select/AutocompleteDropdown";
 import { InformationField } from "../utils/informationField";
@@ -37,6 +38,7 @@ function GenerateDynamicFields<E extends Record<string, any>>({
   type: string;
   template: TemplateType | null | undefined;
 }) {
+  const { t } = useTranslation();
   const renderField = (template: TemplateType) => {
     const values = template?.value;
     const jsx = values?.map((constructField) => {
@@ -135,10 +137,10 @@ function GenerateDynamicFields<E extends Record<string, any>>({
         <Box display={"flex"} flexDirection={"column"}>
           <AutocompleteDropdownWithOptions
             onChange={(event) => setType(event.id as E[string])}
-            label="Type"
+            label={t("common.type")}
             disabled={isRecap}
             value={{ id: type, name: type }}
-            clearLabel="Unset"
+            clearLabel={t("common.unset")}
             onClear={() => setType("")}
             optionsDefault={templates.map((item) => ({ label: item.title, value: item.title }))}
           />

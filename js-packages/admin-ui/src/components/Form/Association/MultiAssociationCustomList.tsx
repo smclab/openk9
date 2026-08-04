@@ -29,6 +29,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso } from "react-virtuoso";
 import { associateType } from "utils";
@@ -66,6 +67,7 @@ export function MultiAssociationCustomQuery<Q>({
   const [inUseItems, setInUseItems] = React.useState<{ label: string; value: string }[]>([]);
   const [availableItems, setAvailableItems] = React.useState<{ label: string; value: string }[]>([]);
   const [isViewModal, setIsViewModal] = React.useState(false);
+  const { t } = useTranslation();
   const { changaSideNavigation } = useSideNavigation();
   const navigate = useNavigate();
 
@@ -151,10 +153,10 @@ export function MultiAssociationCustomQuery<Q>({
       </Box>
       {isViewModal && (
         <ModalConfirm
-          title="Confirm to leave from this page?"
-          body="Are you sure you want to leave this page? This action is irreversible and all associated data will be lost."
+          title={t("association.leave-page-title")}
+          body={t("association.leave-page-body")}
           type="info"
-          labelConfirm="Confirm"
+          labelConfirm={t("common.confirm")}
           actionConfirm={() => {
             if (createPath?.path && createPath.entity) {
               window.scrollTo({ top: 0, behavior: "smooth" });
@@ -237,13 +239,13 @@ export function MultiAssociationCustomQuery<Q>({
       >
         <Box sx={{ minWidth: isRecap ? "300px" : "unset" }}>
           {renderList(
-            "In Use",
+            t("association.in-use"),
             inUseItems,
             selectedInUse,
             (item) => {
               return !disabled && toggleSelection(item, setSelectedInUse);
             },
-            !isRecap ? "Associated Items" : "",
+            !isRecap ? t("association.associated-items") : "",
           )}
         </Box>
         {!isRecap && (
@@ -254,7 +256,7 @@ export function MultiAssociationCustomQuery<Q>({
                 size="small"
                 onClick={() => handleItemsChange({ isAdded: true })}
                 disabled={selectedInUse.length === 0 || disabled}
-                aria-label="move selected to available"
+                aria-label={t("association.move-to-available")}
               >
                 &gt;
               </Button>
@@ -263,18 +265,18 @@ export function MultiAssociationCustomQuery<Q>({
                 size="small"
                 onClick={() => handleItemsChange({ isAdded: false })}
                 disabled={selectedAvailable.length === 0 || disabled}
-                aria-label="move selected to in use"
+                aria-label={t("association.move-to-in-use")}
               >
                 &lt;
               </Button>
             </Box>
             <Box>
               {renderList(
-                "Available",
+                t("association.available"),
                 availableItems,
                 selectedAvailable,
                 (item) => !disabled && toggleSelection(item, setSelectedAvailable),
-                "Unassociated Items",
+                t("association.unassociated-items"),
                 createPath,
               )}
             </Box>

@@ -18,6 +18,7 @@ import { ModalAddSingle, ModalConfirm, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import {
   useAddCharFiltersToAnalyzerMutation,
@@ -27,6 +28,7 @@ import {
 } from "../../graphql-generated";
 
 export function CharFilters() {
+  const { t } = useTranslation();
   const charFiltersQuery = useCharfiltersQuery();
   const toast = useToast();
   const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
@@ -41,8 +43,8 @@ export function CharFilters() {
     onCompleted(data) {
       if (data.deleteCharFilter?.id) {
         toast({
-          title: "Char Filter Deleted",
-          content: "Char Filter has been deleted successfully",
+          title: t("pages.char-filters.deleted-title"),
+          content: t("pages.char-filters.deleted-content"),
           displayType: "success",
         });
       }
@@ -50,8 +52,8 @@ export function CharFilters() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Char Filter",
+        title: t("common.delete-error"),
+        content: t("pages.char-filters.delete-error-content"),
         displayType: "error",
       });
     },
@@ -66,17 +68,14 @@ export function CharFilters() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Char filters
+            {t("pages.char-filters.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Char Filters to use to define advanced analysis logic and bind to
-            a custom Analyzer. To go into detail about Char Filters check official Opensearch Documentation.
-          </Typography>
+          <Typography variant="body1">{t("pages.char-filters.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/char-filter/new" style={{ textDecoration: "none" }}>
-            <Button variant="contained" color="primary" aria-label="new char filters">
-              Create New Char Filters
+            <Button variant="contained" color="primary" aria-label={t("pages.char-filters.create-new-aria")}>
+              {t("pages.char-filters.create-new")}
             </Button>
           </Link>
         </Box>
@@ -92,13 +91,13 @@ export function CharFilters() {
           pageInfoPath="charFilters.pageInfo"
           rowActions={[
             {
-              label: "Add",
+              label: t("common.add"),
               action: (charFilters) => {
                 setIsAdd({ id: charFilters.id, isVisible: true });
               },
             },
             {
-              label: "View",
+              label: t("common.view"),
               action: (charFilters) => {
                 navigate(`/char-filter/${charFilters?.id}/view`, {
                   replace: true,
@@ -106,7 +105,7 @@ export function CharFilters() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (charFilters) => {
                 charFilters.id &&
                   navigate(`/char-filter/${charFilters?.id}`, {
@@ -115,7 +114,7 @@ export function CharFilters() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (charFilters) => {
                 if (charFilters?.id) setViewDeleteModal({ view: true, id: charFilters.id });
               },
@@ -127,11 +126,11 @@ export function CharFilters() {
           }}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (pluginDriver) => <Box fontWeight="bolder"> {pluginDriver?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (pluginDriver) => (
                 <Typography variant="body2" className="pipeline-title">
                   {pluginDriver?.description}
@@ -143,9 +142,9 @@ export function CharFilters() {
       </Box>
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this char filter? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.char-filters.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteCharFilterMutate({
               variables: { id: viewDeleteModal.id || "" },
@@ -158,8 +157,8 @@ export function CharFilters() {
         <ModalAddSingle
           id={isAdd.id}
           list={unboundListAnalyzer.data?.unboundAnalyzersByCharFilter}
-          messageSuccess="Char Filter added to Analyzer"
-          title="Char Filter to Analyzer"
+          messageSuccess={t("pages.char-filters.added-to-analyzer")}
+          title={t("pages.char-filters.association-title")}
           association={({ parentId, childId, onSuccessCallback, onErrorCallback }) => {
             addMutate({
               variables: { parentId, childId },

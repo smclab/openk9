@@ -18,10 +18,12 @@ import { ModalConfirm, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useAutocompletesQuery, useDeleteAutocompleteMutation } from "../../graphql-generated";
 
 export function Autocompletes() {
+  const { t } = useTranslation();
   const autocompletesQuery = useAutocompletesQuery();
   const navigate = useNavigate();
   const toast = useToast();
@@ -30,8 +32,8 @@ export function Autocompletes() {
     onCompleted(data) {
       if (data.deleteAutocomplete?.id) {
         toast({
-          title: "Autocomplete Deleted",
-          content: "Autocompletes has been deleted successfully",
+          title: t("pages.autocompletes.deleted-title"),
+          content: t("pages.autocompletes.deleted-content"),
           displayType: "success",
         });
       }
@@ -39,8 +41,8 @@ export function Autocompletes() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Autocomplete",
+        title: t("common.delete-error"),
+        content: t("pages.autocompletes.delete-error-content"),
         displayType: "error",
       });
     },
@@ -57,17 +59,14 @@ export function Autocompletes() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Autcomplete
+            {t("pages.autocompletes.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Autocomplete. A Document Type Template permits to define how to
-            render result in Search Frontend for a specific Document Type.
-          </Typography>
+          <Typography variant="body1">{t("pages.autocompletes.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/autocomplete/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Autocomplete
+              {t("pages.autocompletes.create-new")}
             </Button>
           </Link>
         </Box>
@@ -84,7 +83,7 @@ export function Autocompletes() {
           pageInfoPath="autocompletes.pageInfo"
           rowActions={[
             {
-              label: "View",
+              label: t("common.view"),
               action: (autocomplete) => {
                 navigate(`/autocomplete/${autocomplete?.id}/view`, {
                   replace: true,
@@ -92,7 +91,7 @@ export function Autocompletes() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (autocomplete) => {
                 autocomplete.id &&
                   navigate(`/autocomplete/${autocomplete?.id}`, {
@@ -101,7 +100,7 @@ export function Autocompletes() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (autocomplete) => {
                 autocomplete.id && setViewDeleteModal({ view: true, id: autocomplete.id });
               },
@@ -115,7 +114,7 @@ export function Autocompletes() {
           }}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (enrich) => <Box fontWeight="bolder">{enrich?.name}</Box>,
             },
           ]}
@@ -123,9 +122,9 @@ export function Autocompletes() {
       </Box>
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this Autocomplete? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.autocompletes.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteAutocompleteMutate({
               variables: { id: viewDeleteModal.id || "" },

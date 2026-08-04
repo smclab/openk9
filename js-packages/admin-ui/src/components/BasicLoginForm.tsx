@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Button, TextField, Typography, Paper } from "@mui/material";
 import { Logo } from "./common/Logo";
 
@@ -24,6 +25,7 @@ type BasicLoginFormProps = {
 };
 
 export function BasicLoginForm({ title, onLogin }: BasicLoginFormProps) {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -69,7 +71,7 @@ export function BasicLoginForm({ title, onLogin }: BasicLoginFormProps) {
         </Typography>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%" }}>
           <TextField
-            label="Username"
+            label={t("auth.username")}
             variant="outlined"
             size="small"
             fullWidth
@@ -78,7 +80,7 @@ export function BasicLoginForm({ title, onLogin }: BasicLoginFormProps) {
             required
           />
           <TextField
-            label="Password"
+            label={t("auth.password")}
             type="password"
             variant="outlined"
             size="small"
@@ -88,7 +90,7 @@ export function BasicLoginForm({ title, onLogin }: BasicLoginFormProps) {
             required
           />
           <Button type="submit" variant="contained" color="primary" size="large">
-            Login
+            {t("auth.login")}
           </Button>
         </form>
       </Paper>

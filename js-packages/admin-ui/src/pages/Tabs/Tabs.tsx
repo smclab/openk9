@@ -17,6 +17,7 @@
 import { ModalAddSingle, ModalConfirm, useToast } from "@components/Form";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import TranslationDialog from "../../components/Form/Modals/translateModal";
@@ -29,6 +30,7 @@ import {
 } from "../../graphql-generated";
 
 export function Tabs() {
+  const { t } = useTranslation();
   const tabsQuery = useTabsQuery();
   const toast = useToast();
   const [deleteTabMutate] = useDeleteTabsMutation({
@@ -36,8 +38,8 @@ export function Tabs() {
     onCompleted(data) {
       if (data.deleteTab?.id) {
         toast({
-          title: "Tab Deleted",
-          content: "Tab has been deleted successfully",
+          title: t("pages.tabs.deleted-title"),
+          content: t("pages.tabs.deleted-content"),
           displayType: "success",
         });
       }
@@ -45,8 +47,8 @@ export function Tabs() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Tab",
+        title: t("common.delete-error"),
+        content: t("pages.tabs.delete-error-content"),
         displayType: "error",
       });
     },
@@ -73,17 +75,14 @@ export function Tabs() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Tabs
+            {t("pages.tabs.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Tabs to define personalized searches to hookup to tabs in search
-            frontend. Add them to Bucket to make it usable.
-          </Typography>
+          <Typography variant="body1">{t("pages.tabs.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/tab/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Tab
+              {t("pages.tabs.create-new")}
             </Button>
           </Link>
         </Box>
@@ -107,19 +106,19 @@ export function Tabs() {
           }}
           rowActions={[
             {
-              label: "Add",
+              label: t("common.add"),
               action: (bucket) => {
                 setIsAdd({ id: bucket.id, isVisible: true });
               },
             },
             {
-              label: "Add Translation",
+              label: t("common.add-translation"),
               action: (datasources) => {
                 setIsAddTranslation({ id: datasources.id, isVisible: true });
               },
             },
             {
-              label: "View",
+              label: t("common.view"),
               action: (tabs) => {
                 navigate(`/tab/${tabs?.id}/view`, {
                   replace: true,
@@ -127,7 +126,7 @@ export function Tabs() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (tabs) => {
                 tabs.id &&
                   navigate(`/tab/${tabs?.id}`, {
@@ -136,7 +135,7 @@ export function Tabs() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (tab) => {
                 tab.id && setViewDeleteModal({ view: true, id: tab.id });
               },
@@ -144,11 +143,11 @@ export function Tabs() {
           ]}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (tab) => <Box fontWeight="bolder">{tab?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (tab) => (
                 <Typography variant="body2" className="pipeline-title">
                   {tab?.description}
@@ -156,7 +155,7 @@ export function Tabs() {
               ),
             },
             {
-              header: "Priority",
+              header: t("common.priority"),
               content: (tab) => (
                 <Typography variant="body2" className="pipeline-title">
                   {tab?.priority}
@@ -169,9 +168,9 @@ export function Tabs() {
 
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this tab? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.tabs.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteTabMutate({ variables: { id: viewDeleteModal.id || "" } });
           }}
@@ -183,7 +182,7 @@ export function Tabs() {
         <ModalAddSingle
           id={isAdd.id}
           list={unboundListEnrichPipeline.data?.unboundBucketsByTab}
-          messageSuccess="Tab has been associated successfully"
+          messageSuccess={t("pages.tabs.associated")}
           association={({ parentId, childId, onSuccessCallback, onErrorCallback }) => {
             addMutate({
               variables: { parentId, childId },
@@ -195,7 +194,7 @@ export function Tabs() {
               },
             });
           }}
-          title="Association to bucket"
+          title={t("pages.tabs.association-title")}
           callbackClose={() => {
             setIsAdd({ id: null, isVisible: false });
           }}

@@ -38,6 +38,7 @@ import { PluginDriverDocType } from "openapi-generated";
 import React, { useEffect, useState } from "react";
 import { useDocTypeOptions } from "../../../../../utils/RelationOneToOne";
 import { ChunkType } from "../../../../../graphql-generated";
+import { useTranslation } from "react-i18next";
 
 interface DefaultDataIndex {
   id: string;
@@ -113,6 +114,7 @@ export default function DataIndexFormsource({
   extraParamsDataIndex,
   changeExtraParamsDataIndex,
 }: DataIndexFormsourceProps) {
+  const { t } = useTranslation();
   const restClient = useRestClient();
   const [documentTypes, setDocumentTypes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -223,7 +225,7 @@ export default function DataIndexFormsource({
                 </Typography>
               </Box>
               <TextField
-                placeholder="Insert text here"
+                placeholder={t("pages.datasources.data-index-section.insert-text-here")}
                 id="name-create-data-index"
                 disabled={isDisabled}
                 value={microForm.name || ""}
@@ -242,7 +244,7 @@ export default function DataIndexFormsource({
                 </Typography>
               </Box>
               <TextField
-                placeholder="Insert description here"
+                placeholder={t("pages.datasources.data-index-section.insert-description-here")}
                 id="description-create-data-index"
                 disabled={isDisabled}
                 value={microForm.description || ""}
@@ -303,13 +305,13 @@ export default function DataIndexFormsource({
                     }}
                   />
                 }
-                label="Enable KNN Index"
+                label={t("pages.datasources.data-index-section.enable-knn-index")}
               />
               {extraParamsDataIndex.knnIndex === true && (
                 <>
                   <Box sx={{ marginBottom: 1 }}>
                     <AutocompleteDropdownWithOptions
-                      label="Chunk Type"
+                      label={t("pages.datasources.data-index-section.chunk-type")}
                       allowClear={false}
                       disabled={isDisabled}
                       optionsDefault={Object.entries(ChunkType)
@@ -330,7 +332,7 @@ export default function DataIndexFormsource({
                       changeExtraParamsDataIndex("chunkWindowSize", Number(e));
                     }}
                     id="chunk-window-size"
-                    label="Chunk Window Size"
+                    label={t("pages.datasources.data-index-section.chunk-window-size")}
                     validationMessages={[]}
                   />
                   <CodeInput
@@ -342,13 +344,13 @@ export default function DataIndexFormsource({
                       changeExtraParamsDataIndex("embeddingJsonConfig", e);
                     }}
                     id="embedding-json-config"
-                    label="Embedding JSON Config"
+                    label={t("pages.datasources.data-index-section.embedding-json-config")}
                     validationMessages={[]}
                   />
                 </>
               )}
               <AutocompleteDropdown
-                label="Doc Type Field"
+                label={t("pages.datasources.data-index-section.doc-type-field")}
                 onChange={(val) =>
                   changeExtraParamsDataIndex("embeddingDocTypeFieldId", { id: val.id, name: val.name })
                 }
@@ -379,16 +381,16 @@ export default function DataIndexFormsource({
         <Button
           variant="contained"
           color="secondary"
-          aria-label="Back"
+          aria-label={t("common.back")}
           onClick={() => {
             setActiveTab("datasource");
           }}
         >
-          Back
+          {t("common.back")}
         </Button>
         <Button
           variant="contained"
-          aria-label="Recap"
+          aria-label={t("common.recap")}
           onClick={() => {
             if (isCreated) {
               if (!microForm.name?.trim()) {
@@ -401,7 +403,7 @@ export default function DataIndexFormsource({
             }
           }}
         >
-          Recap
+          {t("common.recap")}
         </Button>
       </Box>
     </div>

@@ -19,6 +19,7 @@ import { useRestClient } from "@components/queryClient";
 import { extractProblemDetails, mapHealthStatus } from "../../utils/health";
 import Recap, { mappingCardRecap, RecapSingleSection } from "@pages/Recap/SaveRecap";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { Provisioning, useDataSourceQuery } from "../../graphql-generated";
 import { Section } from "./components/Sections/Connectors/ConfigureConnectors";
@@ -30,6 +31,7 @@ import { constructTabs, useRecoveryForm } from "./RecoveryData";
 import { FormSection, Header, TabsSection } from "./StructureDatasource";
 
 export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { datasourceId = "new", mode = "view", landingTabId = "monitoring" } = useParams();
   const [areaEnabled, setAreaEnabled] = useState<Section>("card");
   const [isRecap, setIsRecap] = React.useState(false);
@@ -73,7 +75,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   const hasMissingRequiredDynamic = !!dynamicTemplate?.fields?.some((f: any) => f?.required && isFieldEmpty(f));
 
   const isDisabledNextStep = baseDisabled || hasMissingRequiredDynamic;
-  const tabs = constructTabs({ datasourceId, isDisabledNextStep, mode, isRecap });
+  const tabs = constructTabs({ datasourceId, isDisabledNextStep, mode, isRecap, t });
 
   const isView = mode === "view";
 
@@ -123,11 +125,11 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
       const response = await restClient.pluginDriverResource.getApiDatasourcePluginDriversHealth(id);
       const ui = mapHealthStatus(response.status);
       if (ui === "success") {
-        toast({ displayType: "success", title: "Success", content: "Connection successful" });
+        toast({ displayType: "success", title: t("pages.datasources.success"), content: t("pages.datasources.connection-successful") });
       } else if (ui === "down") {
-        toast({ displayType: "error", title: "Service unavailable", content: "The service is reachable but reports DOWN" });
+        toast({ displayType: "error", title: t("pages.datasources.service-unavailable"), content: t("pages.datasources.the-service-is-reachable-but-reports-down") });
       } else {
-        toast({ displayType: "warning", title: "Service status unknown", content: `Unexpected status: ${response.status}` });
+        toast({ displayType: "warning", title: t("pages.datasources.service-status-unknown"), content: t("pages.datasources.unexpected-status", { status: response.status }) });
       }
     } catch (error) {
       const { title, detail } = extractProblemDetails(error);
@@ -187,7 +189,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         onError: (error) => {
           setActiveTab("recap");
           toast({
-            title: "Error Updating Datasource",
+            title: t("pages.datasources.error-updating-datasource"),
             content: error.message || "An error occurred while updating the datasource",
             displayType: "error",
           });
@@ -217,8 +219,8 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         refetchQueries: ["DataSources"],
         onCompleted: () => {
           toast({
-            title: `Datasource ${isNewDatasource ? "Created" : "Updated"}`,
-            content: `The datasource has been ${isNewDatasource ? "created" : "updated"} successfully.`,
+            title: isNewDatasource ? t("pages.datasources.created-title") : t("pages.datasources.updated-title"),
+            content: isNewDatasource ? t("pages.datasources.created-content") : t("pages.datasources.updated-content"),
             displayType: "success",
           });
           navigate(`/data-sources/`, { replace: true });
@@ -226,7 +228,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         onError: (error) => {
           setActiveTab("recap");
           toast({
-            title: "Error Creating Datasource",
+            title: t("pages.datasources.error-creating-datasource"),
             content: error.message || "An error occurred while creating the datasource",
             displayType: "error",
           });
@@ -325,19 +327,19 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
 
   const connectorSection: RecapSingleSection = {
     id: "Recap",
-    title: "Recap",
+    title: t("common.recap"),
     section: { sectionId: "Connector", sectionLabel: "Connector" },
     fields: [
       {
         key: "pluginDriverSelect.nameConnectors",
-        label: "Name",
+        label: t("common.name"),
         value: formValues.pluginDriverSelect?.nameConnectors ?? null,
         type: typeof formValues.pluginDriverSelect?.nameConnectors === "number" ? "number" : "string",
         isValid: true,
       },
       {
         key: "pluginDriverSelect.provisioning",
-        label: "Provisioning",
+        label: t("pages.datasources.provisioning"),
         value: formValues.pluginDriverSelect?.provisioning ?? null,
         type: typeof formValues.pluginDriverSelect?.provisioning === "boolean" ? "boolean" : "string",
         isValid: true,
@@ -353,7 +355,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
       fields: [
         {
           key: "enrichPipeline.name",
-          label: "Name",
+          label: t("common.name"),
           value: formValues.enrichPipeline.name,
           type: "string",
           isValid: true,
@@ -374,7 +376,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
       fields: [
         {
           key: "enrichPipelineCustom.linkedEnrichItems",
-          label: "Enrich Item Custom",
+          label: t("pages.datasources.enrich-item-custom"),
           value: formValues.enrichPipelineCustom.linkedEnrichItems,
           type: "array",
           isValid: true,
@@ -390,16 +392,16 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     },
     sections: [
       {
-        label: "Datasource",
+        label: t("pages.datasources.datasource"),
         cell: [
-          { key: "name", label: "Name" },
-          { key: "isCronSectionreindex", label: "Reindexing" },
-          { key: "isCronSectionscheduling", label: "Scheduling" },
-          { key: "isCronSectionpurge", label: "Purging" },
-          { key: "reindexing", label: "Reindexing" },
-          { key: "scheduling", label: "Scheduling" },
-          { key: "purging", label: "Purging" },
-          { key: "dynamicFormJson", label: "Json" },
+          { key: "name", label: t("common.name") },
+          { key: "isCronSectionreindex", label: t("pages.datasources.reindexing") },
+          { key: "isCronSectionscheduling", label: t("pages.datasources.scheduling") },
+          { key: "isCronSectionpurge", label: t("pages.datasources.purging") },
+          { key: "reindexing", label: t("pages.datasources.reindexing") },
+          { key: "scheduling", label: t("pages.datasources.scheduling") },
+          { key: "purging", label: t("pages.datasources.purging") },
+          { key: "dynamicFormJson", label: t("pages.datasources.json") },
         ],
       },
     ],
@@ -409,15 +411,15 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     form: form as any,
     sections: [
       {
-        label: "Data Index",
+        label: t("pages.datasources.data-index"),
         cell: [
-          { key: "dataIndex.name", label: "Name" },
-          { key: "dataIndex.description", label: "Description" },
+          { key: "dataIndex.name", label: t("common.name") },
+          { key: "dataIndex.description", label: t("common.description") },
           { key: "vectorIndex.chunkType", label: "chunk Type" },
           { key: "vectorIndex.chunkWindowSize", label: "chunk Window Size" },
-          { key: "vectorIndex.embeddingJsonConfig", label: "Embedding json Config" },
-          { key: "vectorIndex.knnIndex", label: "Embedding knn index" },
-          { key: "vectorIndex.embeddingDocTypeFieldId.name", label: "Doc Type" },
+          { key: "vectorIndex.embeddingJsonConfig", label: t("pages.datasources.embedding-json-config") },
+          { key: "vectorIndex.knnIndex", label: t("pages.datasources.embedding-knn-index") },
+          { key: "vectorIndex.embeddingDocTypeFieldId.name", label: t("fields.doc-type") },
           { key: "dataIndices", label: "dataIndices" },
         ],
       },
@@ -441,15 +443,15 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
             modalHeaderButton.action();
             setModalHeaderButton(undefined);
           }}
-          title="Confirm Decision"
+          title={t("pages.datasources.confirm-decision")}
           message={modalHeaderButton.label || ""}
         />
       )}
       {showDialog.isShow && (
         <ModalConfirm
-          title="Confirm Change"
+          title={t("pages.datasources.confirm-change")}
           body={showDialog.message}
-          labelConfirm="Change"
+          labelConfirm={t("common.change")}
           actionConfirm={() => {
             showDialog.callbackConfirm();
           }}
@@ -498,7 +500,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
             setActiveTab("dataIndex");
             setIsRecap(false);
           },
-          submitLabel: datasourceId === "new" ? "Create entity" : "Update entity",
+          submitLabel: datasourceId === "new" ? t("entity.create") : t("entity.update"),
           onSubmit: () => {
             handleDatasource();
           },

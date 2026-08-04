@@ -24,6 +24,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { RecapData } from "./RecapData";
 
@@ -191,6 +192,7 @@ function FooterButton({
   isSubmit: boolean;
   pathComeBack: string;
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -216,7 +218,7 @@ function FooterButton({
           }
         }}
       >
-        BACK
+        {t("common.back")}
       </Button>
       {isSubmit && (
         <Button
@@ -230,7 +232,7 @@ function FooterButton({
             setPage((p) => p + 1);
           }}
         >
-          {"SAVE AND CONTINUE"}
+          {t("common.save-and-continue")}
         </Button>
       )}
     </div>
@@ -238,6 +240,7 @@ function FooterButton({
 }
 
 const CustomSelect: React.FC<Props> = ({ options, defaultSelect, onChange, label }) => {
+  const { t } = useTranslation();
   const handleChange = (event: SelectChangeEvent<string>) => {
     const selectedValue = event.target.value as string | null | undefined;
     const selectedLabel = options.find((option) => option.value === selectedValue)?.label ?? "";
@@ -257,11 +260,11 @@ const CustomSelect: React.FC<Props> = ({ options, defaultSelect, onChange, label
       </Box>
       <SelectMaterial value={defaultSelect?.value || ""} id={"label" + label} onChange={handleChange} displayEmpty>
         <MenuItem value="">
-          <em>Select an option</em>
+          <em>{t("form.select-an-option")}</em>
         </MenuItem>
         {options.map((option) => (
           <MenuItem key={option.value || ""} value={option.value || ""}>
-            {option.label || "Unnamed option"}
+            {option.label || t("form.unnamed-option")}
           </MenuItem>
         ))}
       </SelectMaterial>

@@ -19,10 +19,12 @@ import { Box, Button, FormControl, FormControlLabel, Radio, RadioGroup } from "@
 import React from "react";
 import { useReindexMutation } from "../components/Sections/MonitoringTab";
 import { BoxArea } from "../components/BoxArea";
+import { useTranslation } from "react-i18next";
 
 type ReindexType = "reindex" | "partial-reindex";
 
 export default function Reindex({ id, data }: { id: string; data: any }) {
+  const { t } = useTranslation();
   const [areaState, setAreaState] = React.useState<ReindexType>("reindex");
   const [modalHeaderButton, setModalHeaderButton] = React.useState<
     { label: string | null | undefined; action(): void } | null | undefined
@@ -36,7 +38,7 @@ export default function Reindex({ id, data }: { id: string; data: any }) {
         value={areaState}
         onChange={(e) => {
           setModalHeaderButton({
-            label: "Sicuro di voler cambiare la configurazione?",
+            label: t("pages.datasources.reindex.sicuro-di-voler-cambiare-la-configurazione"),
             action: () => {
               setAreaState(e.target.value as ReindexType);
               setStartData(convertToInputFormat(data));
@@ -44,8 +46,8 @@ export default function Reindex({ id, data }: { id: string; data: any }) {
           });
         }}
       >
-        <FormControlLabel value="reindex" control={<Radio />} label="Full Reindex" />
-        <FormControlLabel value="partial-reindex" control={<Radio />} label="Partial Reindex"></FormControlLabel>
+        <FormControlLabel value="reindex" control={<Radio />} label={t("pages.datasources.reindex.full-reindex")} />
+        <FormControlLabel value="partial-reindex" control={<Radio />} label={t("pages.datasources.reindex.partial-reindex")}></FormControlLabel>
         <Box sx={{ display: "flex", flexWrap: "wrap" }}>
           <BoxArea isActive={areaState === "partial-reindex"} sx={{ width: "100%" }}>
             <FormControl fullWidth>
@@ -75,7 +77,7 @@ export default function Reindex({ id, data }: { id: string; data: any }) {
             });
           }}
         >
-          Reindex
+          {t("common.reindex")}
         </Button>
       </Box>
       {modalHeaderButton && (

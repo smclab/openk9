@@ -41,6 +41,7 @@ import {
 } from "@mui/material";
 import { EnrichPipelinesOptionsQuery } from "@pages/pipelines/gql";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   TemplateType,
@@ -53,15 +54,16 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { documentTypeTemplateId = "new", name, view } = useParams();
   const isNew = documentTypeTemplateId === "new";
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Document Type Template",
-    body: "Are you sure you want to edit this Document Type Template?",
-    labelConfirm: "Edit",
+    title: t("pages.document-type-templates.edit-document-type-template"),
+    body: t("pages.document-type-templates.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -82,14 +84,14 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
         if (data.docTypeTemplate?.entity) {
           const isNew = documentTypeTemplateId === "new" ? "created" : "updated";
           toast({
-            title: `Document Type Template ${isNew}`,
-            content: `Document Type Template has been ${isNew} successfully`,
+            title: isNew === "created" ? t("pages.document-type-templates.created-title") : t("pages.document-type-templates.updated-title"),
+            content: isNew === "created" ? t("pages.document-type-templates.created-content") : t("pages.document-type-templates.updated-content"),
             displayType: "success",
           });
           navigate(`/document-type-templates/`, { replace: true });
         } else {
           toast({
-            title: `Error`,
+            title: t("common.error"),
             content: combineErrorMessages(data.docTypeTemplate?.fieldValidators),
             displayType: "error",
           });
@@ -99,8 +101,8 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
         console.log(error);
         const isNew = documentTypeTemplateId === "new" ? "create" : "update";
         toast({
-          title: `Error ${isNew}`,
-          content: `Impossible to ${isNew} Document Type Template`,
+          title: isNew === "create" ? t("pages.document-type-templates.create-error-title") : t("pages.document-type-templates.update-error-title"),
+          content: isNew === "create" ? t("pages.document-type-templates.create-error-content") : t("pages.document-type-templates.update-error-content"),
           displayType: "error",
         });
       },
@@ -156,13 +158,13 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
         cell: [
           { key: "name" },
           { key: "description" },
-          { key: "templateType", label: "Template Type" },
+          { key: "templateType", label: t("fields.template-type") },
           ...(form.inputProps("templateType").value === "JAVASCRIPT_SOURCE" ||
             form.inputProps("templateType").value === "TYPESCRIPT_SOURCE"
             ? [{ key: "source", jsonView: true }]
             : [{ key: "compiled", jsonView: true }]),
         ],
-        label: "Recap Document Type Template",
+        label: t("pages.document-type-templates.recap-label"),
       },
     ],
     // valueOverride: {
@@ -175,9 +177,8 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Document Type Template"
-            description="Create or Edit a Document Type Template to define a render template for specific data. 
-          Choose type and editing ti using Openk9 renderer components."
+            nameEntity={t("pages.document-type-templates.entity-name")}
+            description={t("pages.document-type-templates.create-or-edit-a-document-type-template")}
             id={documentTypeTemplateId}
           />
           {view === "view" && (
@@ -205,10 +206,10 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
                       width: "100%",
                     }}
                   >
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} />
                     <CustomSelect
-                      label="Template Type"
+                      label={t("fields.template-type")}
                       dict={TemplateType}
                       {...form.inputProps("templateType")}
                       description={"If template is written in Typescript or Javascript"}
@@ -219,7 +220,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
                           return documentTypeTemplateQuery.data?.docTypeTemplate?.templateType ===
                             TemplateType.TypescriptSource ? (
                             <CodeInput
-                              label="Source"
+                              label={t("fields.source")}
                               readonly={page === 1 || !(view === undefined)}
                               language="typescript-react"
                               height="80vh"
@@ -227,7 +228,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
                             />
                           ) : (
                             <CodeInput
-                              label="Source"
+                              label={t("fields.source")}
                               readonly={page === 1 || !(view === undefined)}
                               language="typescript-react"
                               height="80vh"
@@ -239,7 +240,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
                           return documentTypeTemplateQuery.data?.docTypeTemplate?.templateType ===
                             TemplateType.JavascriptCompiled ? (
                             <CodeInput
-                              label="Source"
+                              label={t("fields.source")}
                               language="javascript-react"
                               height="80vh"
                               readonly={page === 1 || !(view === undefined)}
@@ -247,7 +248,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
                             />
                           ) : (
                             <CodeInput
-                              label="Source"
+                              label={t("fields.source")}
                               language="javascript-react"
                               height="80vh"
                               readonly={page === 1 || !(view === undefined)}
@@ -258,7 +259,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
                         case TemplateType.JavascriptCompiled: {
                           return (
                             <CodeInput
-                              label="Compiled"
+                              label={t("fields.compiled")}
                               readonly={true}
                               language="javascript"
                               height="80vh"
@@ -289,8 +290,8 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
         disclaimer={
           !isNew && !view ? (

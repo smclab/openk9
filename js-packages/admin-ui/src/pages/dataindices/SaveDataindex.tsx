@@ -42,6 +42,7 @@ import {
 } from "@mui/material";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ChunkType,
@@ -101,6 +102,7 @@ const DEFAULT_DATAINDEX_VALUES: DataindexData = {
 };
 
 export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { dataindexId = "new", mode, view } = useParams();
   const isNew = dataindexId === "new";
   const navigate = useNavigate();
@@ -171,14 +173,14 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     onCompleted(data) {
       if (data.dataIndex?.entity) {
         toast({
-          title: "Data Index creato con successo",
+          title: t("pages.data-indices.created-successfully"),
           content: "",
           displayType: "success",
         });
         navigate("/dataindices/");
       } else {
         toast({
-          title: "Errore",
+          title: t("common.error"),
           content: "",
           displayType: "error",
         });
@@ -187,8 +189,8 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     onError(error) {
       console.error(error);
       toast({
-        title: "Errore nella creazione",
-        content: "Impossibile creare il Data Index Model",
+        title: t("pages.data-indices.creation-error"),
+        content: t("pages.data-indices.impossible-to-create"),
         displayType: "error",
       });
     },
@@ -311,9 +313,9 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             cell: [
               { key: "name" },
               { key: "description" },
-              { key: "datasourceId", label: "Datasource" },
-              { key: "docTypeIds", label: "Document Types" },
-              { key: "knnIndex", label: "KNN Index" },
+              { key: "datasourceId", label: t("pages.data-indices.datasource") },
+              { key: "docTypeIds", label: t("pages.data-indices.document-types") },
+              { key: "knnIndex", label: t("pages.data-indices.knn-index") },
               ...(form.inputProps("knnIndex").value
                 ? [
                     { key: "chunkType" },
@@ -323,11 +325,11 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                   ]
                 : []),
             ],
-            label: "Recap Data Index",
+            label: t("pages.data-indices.recap-label"),
           },
           {
-            cell: [{ key: "settings", label: "Settings", jsonView: true }],
-            label: "Settings",
+            cell: [{ key: "settings", label: t("fields.settings"), jsonView: true }],
+            label: t("fields.settings"),
           },
         ],
         valueOverride: {
@@ -417,7 +419,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
   const renderConfigureStandard = () => (
     <>
-      <TitleEntity nameEntity="Data Index" description="" id={dataindexData.dataindexId} />
+      <TitleEntity nameEntity={t("pages.data-indices.entity-name")} description="" id={dataindexData.dataindexId} />
 
       <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
         <CreateDataEntity
@@ -432,10 +434,10 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             {
               content: (
                 <div>
-                  <TextInput label="Name" {...form.inputProps("name")} />
-                  <TextInput label="Description" {...form.inputProps("description")} />
+                  <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                  <TextInput label={t("common.description")} {...form.inputProps("description")} />
                   <AutocompleteDropdown
-                    label="Associate Datasource"
+                    label={t("fields.associate-datasource")}
                     onChange={(val) => form.inputProps("datasourceId").onChange({ id: val.id, name: val.name })}
                     value={form.inputProps("datasourceId").value || { id: "", name: "" }}
                     disabled={isReadOnly}
@@ -454,13 +456,13 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                         }}
                       />
                     }
-                    label="Enable KNN Index"
+                    label={t("fields.enable-knn-index")}
                   />
 
                   {form.inputProps("knnIndex").value && (
                     <>
                       <AutocompleteDropdownWithOptions
-                        label="Chunk Type"
+                        label={t("fields.chunk-type")}
                         allowClear={false}
                         disabled={isReadOnly}
                         optionsDefault={chunkTypeOptions}
@@ -474,7 +476,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                         onChange={(val) => form.inputProps("chunkType").onChange(val.id as ChunkType)}
                       />
                       <NumberInput
-                        label="Chunk Window Size"
+                        label={t("fields.chunk-window-size")}
                         disabled={isReadOnly}
                         id="chunk-window-size"
                         validationMessages={[]}
@@ -484,7 +486,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                       <Box sx={{ mt: 2 }}>
                         <CodeInput
                           id="code-input"
-                          label="Embedding Json Config"
+                          label={t("fields.embedding-json-config")}
                           height="200px"
                           disabled={isReadOnly}
                           readonly={isReadOnly}
@@ -495,7 +497,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                         />
                       </Box>
                       <AutocompleteDropdown
-                        label="Doc Type"
+                        label={t("fields.doc-type")}
                         onChange={(val) =>
                           form.inputProps("embeddingDocTypeFieldId").onChange({ id: val.id, name: val.name })
                         }
@@ -561,7 +563,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         <CodeInput
           id="settings-code-input"
           readonly={isReadOnly}
-          label="Settings"
+          label={t("fields.settings")}
           value={settings}
           onChange={setSettings}
           language="json"
@@ -606,7 +608,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         <CodeInput
           id="mappings-code-input"
           readonly
-          label="Mappings"
+          label={t("fields.mappings")}
           value={mappings}
           onChange={() => {}}
           language="json"
@@ -647,8 +649,8 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </ContainerFluid>

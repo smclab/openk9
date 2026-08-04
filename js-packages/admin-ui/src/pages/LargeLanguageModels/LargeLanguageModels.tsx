@@ -17,6 +17,7 @@
 import { ModalConfirm, useToast } from "@components/Form";
 import { Box, Button, Container, Typography, useTheme } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import {
@@ -26,6 +27,7 @@ import {
 } from "../../graphql-generated";
 
 export function LargeLanguageModels() {
+  const { t } = useTranslation();
   const largeLanguageModelsQuery = useLargeLanguageModelsQuery();
   const theme = useTheme();
   const toast = useToast();
@@ -34,8 +36,8 @@ export function LargeLanguageModels() {
     onCompleted(data) {
       if (data.deleteLargeLanguageModel?.id) {
         toast({
-          title: "Large Language Model Deleted",
-          content: "Large Language Model has been deleted successfully",
+          title: t("pages.large-language-models.deleted-title"),
+          content: t("pages.large-language-models.deleted-content"),
           displayType: "success",
         });
       }
@@ -43,8 +45,8 @@ export function LargeLanguageModels() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Large Language Model",
+        title: t("common.delete-error"),
+        content: t("pages.large-language-models.delete-error-content"),
         displayType: "error",
       });
     },
@@ -73,17 +75,14 @@ export function LargeLanguageModels() {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Large Language Models
+            {t("pages.large-language-models.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Large Language Model. An Large Language Model can be used to
-            enable Rag and Chat feature on Openk9.
-          </Typography>
+          <Typography variant="body1">{t("pages.large-language-models.description")}</Typography>
         </Box>
         <Box>
           <Link to="/large-language-model/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Large Language Model
+              {t("pages.large-language-models.create-new")}
             </Button>
           </Link>
         </Box>
@@ -99,7 +98,7 @@ export function LargeLanguageModels() {
           pageInfoPath="largeLanguageModels.pageInfo"
           rowActions={[
             {
-              label: "Start",
+              label: t("common.start"),
 
               isDisabled: (largeLanguageModel) => !largeLanguageModel?.enabled,
               action: (largeLanguage) => {
@@ -110,7 +109,7 @@ export function LargeLanguageModels() {
               },
             },
             {
-              label: "View",
+              label: t("common.view"),
               action: (largeLanguage) => {
                 navigate(`/large-language-model/${largeLanguage?.id}/view`, {
                   replace: true,
@@ -118,7 +117,7 @@ export function LargeLanguageModels() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (largeLanguage) => {
                 largeLanguage.id &&
                   navigate(`/large-language-model/${largeLanguage?.id}`, {
@@ -127,7 +126,7 @@ export function LargeLanguageModels() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (tab) => {
                 tab.id && setViewDeleteModal({ view: true, id: tab.id });
               },
@@ -139,17 +138,17 @@ export function LargeLanguageModels() {
           }}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (largeLanguageModel) => <Box fontWeight="bolder">{largeLanguageModel?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (largeLanguageModel) => largeLanguageModel?.description,
             },
             {
-              header: "Status",
+              header: t("common.status"),
               content: (largeLanguage) => {
-                const statusText = largeLanguage?.enabled ? "Active" : "Inactive";
+                const statusText = largeLanguage?.enabled ? t("common.active") : t("common.inactive");
                 const backgroundColor = largeLanguage?.enabled ? theme.palette.success.main : theme.palette.grey[500];
 
                 return (
@@ -169,9 +168,9 @@ export function LargeLanguageModels() {
 
                     {/* {viewDeleteModal.view && (
                       <ModalConfirm
-                        title="Confirm Deletion"
-                        body="Are you sure you want to delete this large language models? This action is irreversible and all associated data will be lost."
-                        labelConfirm="Delete"
+                        title={t("modal.confirm-deletion")}
+                        body={t("pages.large-language-models.delete-body")}
+                        labelConfirm={t("common.delete")}
                         actionConfirm={() => {
                           deleteTabMutate({
                             variables: { id: viewDeleteModal.id || "" },
@@ -189,9 +188,9 @@ export function LargeLanguageModels() {
       </Box>
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this large language models? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.large-language-models.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteTabMutate({
               variables: { id: viewDeleteModal.id || "" },

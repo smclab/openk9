@@ -16,6 +16,7 @@
 */
 import { Box, Button } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -39,6 +40,7 @@ import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { CharFilters } from "./gql";
 
 export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { charFilterId = "new", view } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -72,14 +74,14 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
     onCompleted(data) {
       if (data.charFilter?.entity) {
         toast({
-          title: "Char Filter saved",
-          content: "Char Filter saved successfully",
+          title: t("pages.char-filters.char-filter-saved"),
+          content: t("pages.char-filters.char-filter-saved-successfully"),
           displayType: "success",
         });
         navigate(`/char-filters/`, { replace: true });
       } else {
         toast({
-          title: "Error",
+          title: t("common.error"),
           content: combineErrorMessages(data.charFilter?.fieldValidators),
           displayType: "error",
         });
@@ -124,7 +126,7 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
         form: form as any,
         sections: [
           {
-            label: "Recap Char Filter",
+            label: t("pages.char-filters.recap-label"),
             cell: [{ key: "name" }, { key: "description" }, { key: "type" }, { key: "jsonConfig" }],
           },
         ],
@@ -142,7 +144,7 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
     <ContainerFluid>
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-          <TitleEntity nameEntity="Char Filter" description="Create or edit a Char Filter" id={charFilterId} />
+          <TitleEntity nameEntity={t("pages.char-filters.entity-name")} description={t("pages.char-filters.entity-description")} id={charFilterId} />
 
           {view === "view" && (
             <Button variant="contained" onClick={() => navigate(`/char-filter/${charFilterId}`)}>
@@ -165,8 +167,8 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
                 validation: false,
                 content: (
                   <>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} />
 
                     <GenerateDynamicFieldsMemo
                       templates={CharFilters}
@@ -192,8 +194,8 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
           actions={{
             onBack: () => setPage(0),
             onSubmit: () => form.submit(),
-            submitLabel: isNew ? "Create entity" : "Update entity",
-            backLabel: "Back",
+            submitLabel: isNew ? t("entity.create") : t("entity.update"),
+            backLabel: t("common.back"),
           }}
         />
       </>

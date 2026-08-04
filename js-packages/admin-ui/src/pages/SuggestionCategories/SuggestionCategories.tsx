@@ -18,6 +18,7 @@ import { ModalAddSingle, ModalConfirm } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import {
@@ -30,6 +31,7 @@ import TranslationDialog from "../../components/Form/Modals/translateModal";
 import { ADD_SUGGESTION_CATEGORY_TRANSLATION } from "./gql";
 
 export function SuggestionCategories() {
+  const { t } = useTranslation();
   const suggestionCategoriesQuery = useSuggestionCategoriesQuery();
   const navigate = useNavigate();
   const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
@@ -50,8 +52,8 @@ export function SuggestionCategories() {
     onCompleted(data) {
       if (data.deleteSuggestionCategory?.id) {
         toast({
-          title: "Filter Deleted",
-          content: "Filter has been deleted successfully",
+          title: t("pages.filters.deleted-title"),
+          content: t("pages.filters.deleted-content"),
           displayType: "success",
         });
       }
@@ -59,8 +61,8 @@ export function SuggestionCategories() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Filter",
+        title: t("common.delete-error"),
+        content: t("pages.filters.delete-error-content"),
         displayType: "error",
       });
     },
@@ -71,17 +73,14 @@ export function SuggestionCategories() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Filters
+            {t("pages.filters.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Suggestion Categories to define search filters. Add them to Bucket
-            to make it usable.
-          </Typography>
+          <Typography variant="body1">{t("pages.filters.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/suggestion-category/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Filter
+              {t("pages.filters.create-new")}
             </Button>
           </Link>
         </Box>
@@ -101,19 +100,19 @@ export function SuggestionCategories() {
           }}
           rowActions={[
             {
-              label: "Add",
+              label: t("common.add"),
               action: (datasources) => {
                 setIsAdd({ id: datasources.id, isVisible: true });
               },
             },
             {
-              label: "Add Translation",
+              label: t("common.add-translation"),
               action: (datasources) => {
                 setIsAddTranslation({ id: datasources.id, isVisible: true });
               },
             },
             {
-              label: "View",
+              label: t("common.view"),
               action: (suggestionCategory) => {
                 navigate(`/suggestion-category/${suggestionCategory?.id}/view`, {
                   replace: true,
@@ -121,7 +120,7 @@ export function SuggestionCategories() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (suggestionCategory) => {
                 suggestionCategory.id &&
                   navigate(`/suggestion-category/${suggestionCategory?.id}`, {
@@ -130,7 +129,7 @@ export function SuggestionCategories() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (suggestionCategory) => {
                 suggestionCategory.id && setViewDeleteModal({ view: true, id: suggestionCategory.id });
               },
@@ -138,11 +137,11 @@ export function SuggestionCategories() {
           ]}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (suggestionCategory) => <Box fontWeight="bolder">{suggestionCategory?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (suggestionCategory) => (
                 <Typography variant="body2" className="pipeline-title">
                   {suggestionCategory?.description}
@@ -150,7 +149,7 @@ export function SuggestionCategories() {
               ),
             },
             {
-              header: "Priority",
+              header: t("common.priority"),
               content: (suggestionCategory) => suggestionCategory?.priority,
             },
           ]}
@@ -159,9 +158,9 @@ export function SuggestionCategories() {
 
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this Filter? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.filters.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteSuggestionCategoryMutate({
               variables: { id: viewDeleteModal.id || "" },
@@ -175,8 +174,8 @@ export function SuggestionCategories() {
         <ModalAddSingle
           id={isAdd.id}
           list={unboundListSuggestionCategory.data?.unboundBucketsBySuggestionCategory}
-          messageSuccess="Filter added to Bucket"
-          title="Association to Bucket"
+          messageSuccess={t("pages.filters.added-to-bucket")}
+          title={t("pages.filters.association-title")}
           association={({ parentId, childId, onSuccessCallback, onErrorCallback }) => {
             addMutate({
               variables: { parentId, childId },

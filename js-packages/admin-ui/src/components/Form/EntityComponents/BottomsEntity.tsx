@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { Button } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 export function BottomsEntity({
   controll,
@@ -27,6 +28,7 @@ export function BottomsEntity({
   actionBack(): void;
   submit: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -43,7 +45,7 @@ export function BottomsEntity({
           actionBack();
         }}
       >
-        BACK
+        {t("common.back")}
       </Button>
       {submit && (
         <Button
@@ -55,7 +57,7 @@ export function BottomsEntity({
             actionSave();
           }}
         >
-          {"SAVE AND CONTINUE"}
+          {t("common.save-and-continue")}
         </Button>
       )}
     </div>

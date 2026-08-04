@@ -1,4 +1,4 @@
-﻿/*
+/*
 * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
 *
 * This program is free software: you can redistribute it and/or modify
@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React from "react";
+import type { TFunction } from "i18next";
 import { Field, Template } from "./components/Sections/DataSource/DynamicForm";
 import { CustomForm } from "./Function";
 
@@ -142,35 +143,37 @@ export const constructTabs = ({
   mode,
   isDisabledNextStep,
   isRecap,
+  t,
 }: {
   datasourceId: string;
   mode: string;
   isDisabledNextStep: boolean;
   isRecap: boolean;
+  t: TFunction;
 }) => [
   {
-    label: "CONNECTORS",
+    label: t("pages.datasources.recovery.connectors"),
     value: "connectors",
     step: 1,
     path: `/data-source/${datasourceId}/mode/${mode}/landingTab/connectors`,
     disabled: isDisabledNextStep,
   },
   {
-    label: "DATASOURCE",
+    label: t("pages.datasources.recovery.datasource"),
     value: "datasource",
     step: 2,
     path: `/data-source/${datasourceId}/mode/${mode}/landingTab/datasource`,
     disabled: isDisabledNextStep,
   },
   {
-    label: "PIPELINE",
+    label: t("pages.datasources.recovery.pipeline"),
     value: "pipeline",
     step: 3,
     path: `/data-source/${datasourceId}/mode/${mode}/landingTab/pipeline`,
     disabled: isDisabledNextStep,
   },
   {
-    label: "Data Index",
+    label: t("pages.datasources.recovery.data-index"),
     value: "dataIndex",
     step: 4,
     path: `/data-source/${datasourceId}/mode/${mode}/landingTab/dataIndex`,
@@ -179,7 +182,7 @@ export const constructTabs = ({
   ...(isRecap
     ? [
         {
-          label: "RECAP",
+          label: t("common.recap"),
           value: "recap",
           step: 5,
           path: `/data-source/${datasourceId}/mode/${mode}/landingTab/recap`,
@@ -190,7 +193,7 @@ export const constructTabs = ({
   ...(datasourceId !== "new"
     ? [
         {
-          label: "Monitoring",
+          label: t("pages.datasources.recovery.monitoring"),
           value: "monitoring",
           path: `/data-source/${datasourceId}/mode/${mode}/landingTab/monitoring`,
         },
@@ -199,7 +202,7 @@ export const constructTabs = ({
   ...(datasourceId !== "new"
     ? [
         {
-          label: "Reindex",
+          label: t("pages.datasources.recovery.reindex"),
           value: "reindex",
           path: `/data-source/${datasourceId}/mode/${mode}/landingTab/reindex`,
         },

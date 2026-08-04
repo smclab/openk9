@@ -23,6 +23,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { defaultModal } from "../../Function";
 import { ConnectionData } from "../../types";
+import { useTranslation } from "react-i18next";
 
 export default function ReindexArea({
   connectionData,
@@ -39,6 +40,7 @@ export default function ReindexArea({
   setActiveTab: React.Dispatch<React.SetStateAction<string>>;
   setIsRecap: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [showDialog, setShowDialog] = useState(defaultModal);
 
@@ -56,7 +58,7 @@ export default function ReindexArea({
           <ModalConfirm
             title={showDialog.title || "Leave wizard?"}
             body={showDialog.message}
-            labelConfirm="Leave and create"
+            labelConfirm={t("pages.datasources.reindex.leave-and-create")}
             type="warning"
             actionConfirm={() => {
               showDialog.callbackConfirm();
@@ -66,7 +68,7 @@ export default function ReindexArea({
         )}
         <Box sx={{ width: "100%", maxWidth: 600 }}>
           <AutocompleteDropdownWithOptions
-            label="Data Index"
+            label={t("pages.datasources.reindex.data-index")}
             value={
               connectionData?.dataIndex?.id
                 ? { id: connectionData.dataIndex.id, name: connectionData.dataIndex.name ?? "" }
@@ -86,26 +88,26 @@ export default function ReindexArea({
             }}
             disabled={isView}
             optionsDefault={connectionData.optionDataindex.map((item: any) => ({ value: item.id, label: item.name }))}
-            description="Select the data index to reindex your data into."
+            description={t("pages.datasources.reindex.select-the-data-index-to-reindex-your")}
             sx={{ width: "100%" }}
           />
           <Divider sx={{ marginBlock: "20px" }} />
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "8px" }}>
             <Typography variant="body2" color="text.primary">
-              Can't find your Data Index? Go and create a new one.
+              {t("pages.datasources.reindex.cannot-find-data-index")}
             </Typography>
             <Button
               variant="outlined"
               color="info"
               disabled={isView}
-              aria-label="Shortcut to create a new Data Index (leaves the current wizard)"
+              aria-label={t("pages.datasources.reindex.shortcut-to-create-a-new-data-index")}
               endIcon={<OpenInNewIcon fontSize="small" />}
               onClick={() => {
                 setShowDialog({
                   isShow: true,
                   message:
                     "You are about to leave the Datasource wizard to create a new Data Index. The data entered in the previous steps will be lost. Do you want to continue?",
-                  title: "Leave wizard?",
+                  title: t("pages.datasources.reindex.leave-wizard"),
                   callbackClose: () => {
                     setShowDialog(defaultModal);
                   },
@@ -117,7 +119,7 @@ export default function ReindexArea({
               }}
               sx={{ textTransform: "none" }}
             >
-              Create new Data Index
+              {t("pages.datasources.reindex.create-new-data-index")}
             </Button>
             <Box
               sx={{
@@ -147,19 +149,19 @@ export default function ReindexArea({
         <Button
           variant="outlined"
           color="secondary"
-          aria-label="Back"
+          aria-label={t("common.back")}
           onClick={() => {
             setActiveTab("pipeline");
           }}
         >
-          Back
+          {t("common.back")}
         </Button>
         {!isView && (
           <Button
             variant="contained"
             color="primary"
             size="large"
-            aria-label="Recap"
+            aria-label={t("common.recap")}
             onClick={() => {
               setIsRecap(true);
             }}
@@ -169,7 +171,7 @@ export default function ReindexArea({
               boxShadow: 3,
             }}
           >
-            Recap
+            {t("common.recap")}
           </Button>
         )}
       </Box>

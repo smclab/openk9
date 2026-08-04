@@ -17,6 +17,7 @@
 import { Refresh as RefreshIcon } from "@mui/icons-material";
 import { Paper, Stack, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface RefreshOptionsLayoutProps {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ interface RefreshOptionsLayoutProps {
 }
 
 const RefreshOptionsLayout: React.FC<RefreshOptionsLayoutProps> = ({ children, title }) => {
+  const { t } = useTranslation();
   return (
     <Paper
       variant="outlined"
@@ -42,7 +44,7 @@ const RefreshOptionsLayout: React.FC<RefreshOptionsLayoutProps> = ({ children, t
               fontWeight: 500,
             }}
           >
-            {title || "Refresh on:"}
+            {title || t("form.refresh-on")}
           </Typography>
         </Stack>
 

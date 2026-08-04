@@ -38,6 +38,7 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLanguagesOptionsQuery, useSuggestionCategoryQuery, useTabQuery } from "../../../graphql-generated";
 
 type EntityType = "suggestionCategory" | "tab";
@@ -69,6 +70,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
   entityType = "suggestionCategory",
   customMutation,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const color = theme.palette.primary.main;
   const toast = useToast();
@@ -109,9 +111,9 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
     entityType === "suggestionCategory" ? scQuery.data?.suggestionCategory?.name : tabQuery.data?.tab?.name;
 
   const translatedNameLanguages = useMemo(() => {
-    const t = translations || [];
+    const list = translations || [];
     const langsWithName = new Set<string>();
-    t.forEach((tr) => {
+    list.forEach((tr) => {
       if (tr?.key === "name" && (tr?.value || "").trim() !== "" && tr?.language) {
         langsWithName.add(norm(tr.language));
       }
@@ -203,15 +205,15 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
       onCompleted() {
         toast({
           displayType: "success",
-          title: "Translation",
-          content: "Translated successfully",
+          title: t("translation.title"),
+          content: t("translation.success"),
         });
       },
       onError(data) {
         toast({
           displayType: "error",
-          title: "Error",
-          content: data.message || "Generic Error",
+          title: t("common.error"),
+          content: data.message || t("common.generic-error"),
         });
       },
     });
@@ -283,9 +285,9 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
           fontSize: "unset",
         }}
       >
-        {`Add Translate - ${entityName ?? ""}`}
+        {t("translation.add-translation", { name: entityName ?? "" })}
         <IconButton
-          aria-label="close"
+          aria-label={t("common.close")}
           onClick={() => onClose()}
           sx={{
             position: "absolute",
@@ -303,10 +305,10 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
           <Grid container spacing={2}>
             <Grid item xs={12} sm={4}>
               <FormControl fullWidth>
-                <InputLabel>Language</InputLabel>
+                <InputLabel>{t("common.language")}</InputLabel>
                 <Select
                   value={config.language}
-                  label="Language"
+                  label={t("common.language")}
                   onChange={(e) => handleInputChange("language", e.target.value)}
                 >
                   {availableLanguages.map((lang) => (
@@ -323,7 +325,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
             <Grid item xs={12} sm={8}>
               <TextField
                 fullWidth
-                label="Name"
+                label={t("common.name")}
                 value={config.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 error={!!validation.name}
@@ -335,7 +337,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
 
           <TextField
             fullWidth
-            label="Description"
+            label={t("common.description")}
             multiline
             rows={3}
             value={config.description}
@@ -355,7 +357,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
               onClick={() => toggleSection("translated")}
             >
               <Typography variant="h6" color="primary">
-                Translated
+                {t("translation.translated")}
               </Typography>
               {expandedSections.translated ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </Box>
@@ -376,7 +378,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
                   renderLanguageChips(config.translatedLanguages)
                 ) : (
                   <Typography variant="body2" color="text.secondary">
-                    No translated languages
+                    {t("translation.no-translated-languages")}
                   </Typography>
                 )}
               </Box>
@@ -393,7 +395,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
               onClick={() => toggleSection("notTranslated")}
             >
               <Typography variant="h6" color="text.secondary">
-                Not translated in
+                {t("translation.not-translated-in")}
               </Typography>
               {expandedSections.notTranslated ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </Box>
@@ -414,7 +416,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
                   renderLanguageChips(config.notTranslatedLanguages)
                 ) : (
                   <Typography variant="body2" color="text.secondary">
-                    All languages are translated
+                    {t("translation.all-languages-translated")}
                   </Typography>
                 )}
               </Box>
@@ -434,7 +436,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
             fontWeight: 500,
           }}
         >
-          SET CHANGES
+          {t("translation.set-changes")}
         </Button>
       </DialogActions>
     </Dialog>

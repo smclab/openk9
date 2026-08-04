@@ -48,6 +48,7 @@ import {
 import { styled, useTheme } from "@mui/material/styles";
 import cronstrue from "cronstrue";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { scrollToTop, themeColor } from "../../../App";
 import { useConfirmModal } from "../../../utils/useConfirmModal";
@@ -98,6 +99,7 @@ const TypeAvatar = styled(Avatar)<{ bgcolor: string }>(({ theme, bgcolor }) => (
 }));
 
 const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
+  const { t } = useTranslation();
   const [datasources, setDatasources] = useState<Datasource[]>([]);
   React.useEffect(() => {
     if (datasourcesData?.length > 0) {
@@ -107,9 +109,9 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
   const navigate = useNavigate();
 
   const initialStateEditMessage = (type: "Edit" | "Create" = "Edit") => ({
-    title: `${type} Datasource`,
-    body: `Are you sure you want to ${type.toLocaleLowerCase()} this datasource?`,
-    labelConfirm: `${type}`,
+    title: type === "Edit" ? t("datasource-cards.edit-title") : t("datasource-cards.create-title"),
+    body: type === "Edit" ? t("datasource-cards.edit-body") : t("datasource-cards.create-body"),
+    labelConfirm: type === "Edit" ? t("common.edit") : t("common.create"),
   });
   type modalMessageType = { title: string; body: string; labelConfirm: string };
   const [modalMessage, setModalMessage] = useState<modalMessageType>(initialStateEditMessage);
@@ -145,7 +147,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
       const fullCronExpression = `${cronExpression}`;
       return cronstrue.toString(fullCronExpression);
     } catch (error) {
-      return "Invalid cron expression";
+      return t("datasource-cards.invalid-cron");
     }
   };
 
@@ -197,7 +199,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
         type: newDatasource.type,
         status: "active",
         documentsCount: 0,
-        lastSync: "Just now",
+        lastSync: t("datasource-cards.just-now"),
       };
       setDatasources([...datasources, newItem]);
       setNewDatasource({ name: "", type: "database", description: "" });
@@ -212,10 +214,10 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
           <DatabaseIcon sx={{ fontSize: 32, color: "#9e9e9e" }} />
         </TypeAvatar>
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-          No Datasources Configured
+          {t("datasource-cards.empty-title")}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 300, mx: "auto" }}>
-          Start by creating your first datasource to index and search your data.
+          {t("datasource-cards.empty-description")}
         </Typography>
       </CardContent>
     </StyledCard>
@@ -285,10 +287,10 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
               <Stack>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Sync
+                    {t("datasource-cards.sync")}
                   </Typography>
                   <Chip
-                    label={datasource?.schedulable ? "active" : "idle"}
+                    label={datasource?.schedulable ? t("datasource-cards.status-active") : t("datasource-cards.status-idle")}
                     size="small"
                     color={getStatusColor(datasource?.schedulable ? "active" : "syncing")}
                     variant="filled"
@@ -302,10 +304,10 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
                 </Box>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Reindex
+                    {t("datasource-cards.reindex")}
                   </Typography>
                   <Chip
-                    label={datasource?.reindexable ? "active" : "idle"}
+                    label={datasource?.reindexable ? t("datasource-cards.status-active") : t("datasource-cards.status-idle")}
                     size="small"
                     color={datasource?.reindexable ? "info" : "default"}
                     variant="filled"
@@ -320,8 +322,10 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
                     {datasource?.schedulable
-                      ? `Sync: ${getReadableCronDescription(datasource?.scheduling)}`
-                      : "Sync not scheduled"}
+                      ? t("datasource-cards.sync-schedule", {
+                          schedule: getReadableCronDescription(datasource?.scheduling),
+                        })
+                      : t("datasource-cards.sync-not-scheduled")}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -357,10 +361,10 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 600, color: "text.primary", mb: 0.5 }}>
-              Recent Datasources
+              {t("datasource-cards.recent-title")}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Last created datasources
+              {t("datasource-cards.recent-description")}
             </Typography>
           </Box>
           <Box display={"flex"} gap={"10px"} flexWrap={"wrap"} justifyContent={"end"}>
@@ -369,9 +373,9 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
               startIcon={<VisibilityIcon />}
               onClick={async () => {
                 const view = {
-                  title: `View all Datasources`,
-                  body: `Are you sure you want to view all datasources?`,
-                  labelConfirm: `View`,
+                  title: t("datasource-cards.view-all-title"),
+                  body: t("datasource-cards.view-all-body"),
+                  labelConfirm: t("common.view"),
                 };
                 setModalMessage(view);
                 const confirmed = await openConfirmModal();
@@ -380,7 +384,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
               }}
               sx={{ borderRadius: "10px" }}
             >
-              {"View Datasources"}
+              {t("datasource-cards.view-datasources")}
             </Button>
             <Button
               variant="contained"
@@ -388,7 +392,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
               onClick={() => handleEditOrCreateClick({ type: "Create" })}
               sx={{ borderRadius: "10px" }}
             >
-              {datasources.length === 0 ? "Create First Datasource" : "New Datasource"}
+              {datasources.length === 0 ? t("datasource-cards.create-first") : t("datasource-cards.new")}
             </Button>
           </Box>
         </Box>
@@ -423,7 +427,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              New Datasource
+              {t("datasource-cards.new")}
             </Typography>
             <IconButton onClick={() => setShowCreateForm(false)} size="small" sx={{ color: "text.secondary" }}>
               <CloseIcon />
@@ -434,10 +438,10 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
             <Stack spacing={3}>
               <TextField
                 fullWidth
-                label="Name"
+                label={t("common.name")}
                 value={newDatasource.name}
                 onChange={(e) => setNewDatasource({ ...newDatasource, name: e.target.value })}
-                placeholder="Datasource name"
+                placeholder={t("datasource-cards.name-placeholder")}
                 variant="outlined"
                 sx={{
                   "& .MuiOutlinedInput-root": {
@@ -453,10 +457,10 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
               />
 
               <FormControl fullWidth>
-                <InputLabel>Type</InputLabel>
+                <InputLabel>{t("common.type")}</InputLabel>
                 <Select
                   value={newDatasource.type}
-                  label="Type"
+                  label={t("common.type")}
                   onChange={(e) => setNewDatasource({ ...newDatasource, type: e.target.value })}
                   sx={{
                     borderRadius: 2,
@@ -477,10 +481,10 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
 
               <TextField
                 fullWidth
-                label="Description"
+                label={t("common.description")}
                 value={newDatasource.description}
                 onChange={(e) => setNewDatasource({ ...newDatasource, description: e.target.value })}
-                placeholder="Optional description..."
+                placeholder={t("datasource-cards.description-placeholder")}
                 multiline
                 rows={3}
                 variant="outlined"
@@ -516,7 +520,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
                 },
               }}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={handleCreateDatasource}
@@ -535,7 +539,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
                 },
               }}
             >
-              Create
+              {t("common.create")}
             </Button>
           </DialogActions>
         </StyledDialog>

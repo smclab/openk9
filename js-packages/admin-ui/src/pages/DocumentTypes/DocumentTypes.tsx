@@ -18,10 +18,12 @@ import { ModalConfirm, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDeleteDocumentTypeMutation, useDocumentTypesQuery } from "../../graphql-generated";
 
 export default function DocumentTypes() {
+  const { t } = useTranslation();
   const documentTypeQuery = useDocumentTypesQuery();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
@@ -34,8 +36,8 @@ export default function DocumentTypes() {
     onCompleted(data) {
       if (data.deleteDocType?.id) {
         toast({
-          title: "Document Type Deleted",
-          content: "Document Type has been deleted successfully",
+          title: t("pages.document-types.deleted-title"),
+          content: t("pages.document-types.deleted-content"),
           displayType: "success",
         });
       }
@@ -43,8 +45,8 @@ export default function DocumentTypes() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Document Type",
+        title: t("common.delete-error"),
+        content: t("pages.document-types.delete-error-content"),
         displayType: "error",
       });
     },
@@ -61,14 +63,14 @@ export default function DocumentTypes() {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box sx={{ width: "50%", ml: 2 }}>
             <Typography component="h1" variant="h1" fontWeight="600">
-              Document Types
+              {t("pages.document-types.title")}
             </Typography>
             <Typography variant="body1"></Typography>
           </Box>
           <Box>
             <Link to="/document-type/new" style={{ textDecoration: "none" }}>
-              <Button variant="contained" color="primary" aria-label="create new documentType">
-                Create New Document Type
+              <Button variant="contained" color="primary" aria-label={t("pages.document-types.create-new-aria")}>
+                {t("pages.document-types.create-new")}
               </Button>
             </Link>
           </Box>
@@ -88,16 +90,16 @@ export default function DocumentTypes() {
               }
             }}
             deleted={{
-              title: "Delete Document Type",
-              messsage: "Deleting the Document type will remove all entities and related indexes.",
-              wordConfirm: "Delete",
+              title: t("pages.document-types.delete-title"),
+              messsage: t("pages.document-types.delete-message"),
+              wordConfirm: t("common.delete"),
               actionDeleted: (id: string, name: string) => {
                 deleteDocumentTypeMutate({ variables: { id, docTypeName: name } });
               },
             }}
             rowActions={[
               {
-                label: "View",
+                label: t("common.view"),
                 action: (documentType) => {
                   if (documentType?.id)
                     navigate(`/document-type/${documentType?.id}/view`, {
@@ -106,7 +108,7 @@ export default function DocumentTypes() {
                 },
               },
               {
-                label: "Edit",
+                label: t("common.edit"),
                 action: (documentType) => {
                   if (documentType?.id)
                     navigate(`/document-type/${documentType?.id}`, {
@@ -115,7 +117,7 @@ export default function DocumentTypes() {
                 },
               },
               {
-                label: "Handle Fields",
+                label: t("pages.document-types.handle-fields"),
                 action: (documentType) => {
                   if (documentType?.id)
                     navigate(`/sub-document-type/${documentType?.id}`, {
@@ -126,11 +128,11 @@ export default function DocumentTypes() {
             ]}
             columns={[
               {
-                header: "Name",
+                header: t("common.name"),
                 content: (documentType) => <Box fontWeight="bolder">{documentType?.name}</Box>,
               },
               {
-                header: "Description",
+                header: t("common.description"),
                 content: (documentType) => (
                   <Typography variant="body2" className="pipeline-title">
                     {documentType?.description}
@@ -143,9 +145,9 @@ export default function DocumentTypes() {
 
         {viewDeleteModal.view && (
           <ModalConfirm
-            title="Confirm Deletion"
-            body="Are you sure you want to delete this documentType? This action is irreversible and all associated data will be lost."
-            labelConfirm="Delete"
+            title={t("modal.confirm-deletion")}
+            body={t("pages.document-types.delete-body")}
+            labelConfirm={t("common.delete")}
             actionConfirm={() => {
               deleteDocumentTypeMutate({
                 variables: { id: viewDeleteModal.id || "" },

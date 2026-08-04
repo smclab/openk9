@@ -29,6 +29,7 @@ import {
   useToast,
 } from "@components/Form";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BehaviorMergeType,
@@ -51,24 +52,25 @@ import {
 import useDynamicForm from "../datasources/components/Sections/DataSource/DynamicForm";
 
 export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { enrichItemId = "new", name, view } = useParams();
   const [testResult, setTestResult] = React.useState<"success" | "down" | "unknown" | "error" | null>(null);
   const [testError, setTestError] = React.useState<{ title?: string; detail?: string } | null>(null);
   const STATUS_CONFIG = {
-    null: { color: "text.secondary", label: "Waiting for test" },
-    success: { color: "success.main", label: "Connection successful" },
-    down: { color: "error.main", label: "Service unavailable" },
-    unknown: { color: "warning.main", label: "Service status unknown" },
-    error: { color: "error.main", label: "Endpoint unreachable" },
+    null: { color: "text.secondary", label: t("pages.enrich-items.waiting-for-test") },
+    success: { color: "success.main", label: t("pages.enrich-items.connection-successful") },
+    down: { color: "error.main", label: t("pages.enrich-items.service-unavailable") },
+    unknown: { color: "warning.main", label: t("pages.enrich-items.service-status-unknown") },
+    error: { color: "error.main", label: t("pages.enrich-items.endpoint-unreachable") },
   } as const;
 
   const statusKey = testResult === null ? "null" : testResult;
   const { color, label } = STATUS_CONFIG[statusKey];
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Enrich Item",
-    body: "Are you sure you want to edit this Enrich Item?",
-    labelConfirm: "Edit",
+    title: t("pages.enrich-items.edit-enrich-item"),
+    body: t("pages.enrich-items.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
   const restClient = useRestClient();
 
@@ -100,14 +102,14 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
       if (data.enrichItem?.entity) {
         const isNew = enrichItemId === "new" ? "created" : "updated";
         toast({
-          title: `Enrich Item ${isNew}`,
-          content: `Enrich Item has been ${isNew} successfully`,
+          title: isNew === "created" ? t("pages.enrich-items.created-title") : t("pages.enrich-items.updated-title"),
+          content: isNew === "created" ? t("pages.enrich-items.created-content") : t("pages.enrich-items.updated-content"),
           displayType: "success",
         });
         navigate(`/enrich-items/`, { replace: true });
       } else {
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: combineErrorMessages(data.enrichItem?.fieldValidators),
           displayType: "error",
         });
@@ -117,8 +119,8 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
       console.log(error);
       const isNew = enrichItemId === "new" ? "create" : "update";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} Enrich Item`,
+        title: isNew === "create" ? t("pages.enrich-items.create-error-title") : t("pages.enrich-items.update-error-title"),
+        content: isNew === "create" ? t("pages.enrich-items.create-error-content") : t("pages.enrich-items.update-error-content"),
         displayType: "error",
       });
     },
@@ -208,8 +210,8 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
 
     if (!name) {
       toast({
-        title: "Missing data",
-        content: "Please provide a Name for the Enrich Item",
+        title: t("pages.enrich-items.missing-data"),
+        content: t("pages.enrich-items.please-provide-a-name-for-the-enrich"),
         displayType: "error",
       });
       return;
@@ -217,8 +219,8 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
 
     if (!baseUri || !path) {
       toast({
-        title: "Missing data",
-        content: "Please provide both Base URI and Path",
+        title: t("pages.enrich-items.missing-data"),
+        content: t("pages.enrich-items.please-provide-both-base-uri-and-path"),
         displayType: "error",
       });
       return;
@@ -227,8 +229,8 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
     const connectionNotVerified = testResult !== "success";
     if (connectionNotVerified) {
       toast({
-        title: "Connection not verified",
-        content: "Please test the connection before proceeding, or ensure the endpoint is reachable.",
+        title: t("pages.enrich-items.connection-not-verified"),
+        content: t("pages.enrich-items.please-test-the-connection-before-proceeding-or"),
         displayType: "warning",
       });
     }
@@ -246,8 +248,8 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
     } catch (e) {
       if (!connectionNotVerified) {
         toast({
-          title: "Error",
-          content: "Impossible to fetch dynamic form. Check connection settings.",
+          title: t("common.error"),
+          content: t("pages.enrich-items.impossible-to-fetch-dynamic-form-check-connection"),
           displayType: "warning",
         });
       }
@@ -265,28 +267,28 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
           { key: "name" },
           { key: "description" },
           { key: "type" },
-          { key: "baseUri", label: "Base URI" },
-          { key: "path", label: "Path" },
-          { key: "jsonPath", label: "Json Path" },
-          { key: "requestTimeout", label: "Request Timeout" },
-          { key: "behaviorMergeType", label: "Behavior Merge Type" },
-          { key: "behaviorOnError", label: "Behavior On Error" },
+          { key: "baseUri", label: t("fields.base-uri") },
+          { key: "path", label: t("fields.path") },
+          { key: "jsonPath", label: t("fields.json-path") },
+          { key: "requestTimeout", label: t("pages.enrich-items.request-timeout") },
+          { key: "behaviorMergeType", label: t("fields.behavior-merge-type") },
+          { key: "behaviorOnError", label: t("fields.behavior-on-error") },
           ...(form.inputProps("type").value === EnrichItemType.GroovyScript
             ? [
                 {
                   key: "script",
-                  label: "Script",
+                  label: t("fields.script"),
                   jsonView: true,
                 },
               ]
             : []),
           {
             key: "jsonConfig",
-            label: "Configuration",
+            label: t("fields.configuration"),
             jsonView: true,
           },
         ],
-        label: "Recap Enrich Item",
+        label: t("pages.enrich-items.recap-label"),
       },
     ],
     valueOverride: {
@@ -298,9 +300,8 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
     <>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
         <TitleEntity
-          nameEntity="Enrich Item"
-          description="Create or Edit a Enrich Item to define enrichment steps to perform on ingested data.
-          Choose between the possibility of hook up external sync/async service or configure internal Groovys script enrichment."
+          nameEntity={t("pages.enrich-items.entity-name")}
+          description={t("pages.enrich-items.create-or-edit-a-enrich-item-to")}
           id={enrichItemId}
         />
         {view === "view" && (
@@ -324,14 +325,14 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                 content: (
                   <>
                     <ContainerFluid flexColumn>
-                      <TextInput label="Name" {...form.inputProps("name")} />
-                      <TextArea label="Description" {...form.inputProps("description")} />
+                      <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                      <TextArea label={t("common.description")} {...form.inputProps("description")} />
                       <TextInput
-                        label="Base URI"
+                        label={t("fields.base-uri")}
                         {...form.inputProps("baseUri")}
                         description={"Base URL where enrich service listens"}
                       />
-                      <TextInput label="Path" {...form.inputProps("path")} description={"API endpoint path"} />
+                      <TextInput label={t("fields.path")} {...form.inputProps("path")} description={"API endpoint path"} />
                       <Box sx={{ display: "flex", marginBlock: 2, alignItems: "center", gap: 2 }}>
                         <Button
                           onClick={async () => {
@@ -368,17 +369,17 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                         </Box>
                       </Box>
                       <NumberInput
-                        label="Request Timeout - Milliseconds"
+                        label={t("fields.request-timeout-milliseconds")}
                         {...form.inputProps("requestTimeout")}
                         description={"the value is expressed in milliseconds"}
                       />
                       <TextInput
-                        label="Json Path"
+                        label={t("fields.json-path")}
                         {...form.inputProps("jsonPath")}
                         description={"Json Path for merging result. To merge entire Json response set $"}
                       />
                       <CustomSelect
-                        label="Type"
+                        label={t("fields.type")}
                         dict={EnrichItemType}
                         {...form.inputProps("type")}
                         description={
@@ -386,13 +387,13 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                         }
                       />
                       <CustomSelect
-                        label="Behavior Merge Type"
+                        label={t("fields.behavior-merge-type")}
                         dict={BehaviorMergeType}
                         {...form.inputProps("behaviorMergeType")}
                         description={"If merge or replace original message with enrich response"}
                       />
                       <CustomSelect
-                        label="Behavior On Error"
+                        label={t("fields.behavior-on-error")}
                         dict={BehaviorOnError}
                         {...form.inputProps("behaviorOnError")}
                         description={
@@ -427,7 +428,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <CodeInput
                     language="groovy"
-                    label="Script"
+                    label={t("fields.script")}
                     disabled={!!view}
                     id="code-input-enricher-script"
                     onChange={(e) => {
@@ -435,11 +436,11 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                     }}
                     validationMessages={[]}
                     value={form.inputProps("script").value || ""}
-                    description="Groovy script executed during enrich step"
+                    description={t("pages.enrich-items.groovy-script-executed-during-enrich-step")}
                   />
                   <CodeInput
                     language="json"
-                    label="Json Config"
+                    label={t("fields.json-config")}
                     disabled={!!view}
                     id="code-input-enricher-json-config"
                     onChange={(e) => {
@@ -447,13 +448,13 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                     }}
                     validationMessages={[]}
                     value={form.inputProps("jsonConfig").value || ""}
-                    description="Json configuration sended to corresponding external parser when execution start"
+                    description={t("pages.enrich-items.json-configuration-sended-to-corresponding-external-parser")}
                   />
                 </Box>
               ) : (
                 <CodeInput
                   language="json"
-                  label="Configuration"
+                  label={t("fields.configuration")}
                   disabled={!!view}
                   id="code-input-enricher"
                   onChange={(e) => {
@@ -461,7 +462,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                   }}
                   validationMessages={[]}
                   value={form.inputProps("jsonConfig").value || ""}
-                  description="Json configuration sended to corresponding external parser when execution start"
+                  description={t("pages.enrich-items.json-configuration-sended-to-corresponding-external-parser")}
                 />
               )
             ) : (
@@ -512,8 +513,8 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </>

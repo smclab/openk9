@@ -25,6 +25,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { InformationField } from "../utils/informationField";
 
 type OptionRelationOneToOne = {
@@ -58,6 +59,7 @@ export function CustomSelectRelationsOneToOne({
   loadMoreOptions,
   sx,
 }: CustomSelectProps) {
+  const { t } = useTranslation();
   const [currentOptions, setCurrentOptions] = useState<OptionRelationOneToOne[]>(options);
   const [loading, setLoading] = useState(false);
 
@@ -66,7 +68,7 @@ export function CustomSelectRelationsOneToOne({
     if (selectedOption) {
       onChange({ id: selectedOption.value, name: selectedOption.label });
     } else {
-      onChange({ id: "-1", name: "No selection" });
+      onChange({ id: "-1", name: t("form.no-selection") });
     }
   };
 
@@ -107,7 +109,7 @@ export function CustomSelectRelationsOneToOne({
         }}
       >
         <MenuItem key="-1" value="-1">
-          No selection
+          {t("form.no-selection")}
         </MenuItem>
         {selectedOptionNotInOptions && Number(value.id) > 0 && (
           <MenuItem key={value.id} value={value.id}>

@@ -16,12 +16,14 @@
 */
 import { Box, Button, Container, Typography, useTheme } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { ModalConfirm, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { useBucketsQuery, useDeleteBucketMutation, useEnableBucketMutation } from "../../graphql-generated";
 
 export function Buckets() {
+  const { t } = useTranslation();
   const bucketsQuery = useBucketsQuery();
   const theme = useTheme();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
@@ -38,8 +40,8 @@ export function Buckets() {
     onCompleted(data) {
       if (data.deleteBucket?.id) {
         toast({
-          title: "Bucket Deleted",
-          content: "Bucket has been deleted successfully",
+          title: t("pages.buckets.deleted-title"),
+          content: t("pages.buckets.deleted-content"),
           displayType: "success",
         });
       }
@@ -47,8 +49,8 @@ export function Buckets() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Bucket",
+        title: t("common.delete-error"),
+        content: t("pages.buckets.delete-error-content"),
         displayType: "error",
       });
     },
@@ -65,18 +67,14 @@ export function Buckets() {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box sx={{ width: "50%", ml: 2 }}>
             <Typography component="h1" variant="h1" fontWeight="600">
-              Buckets
+              {t("pages.buckets.title")}
             </Typography>
-            <Typography variant="body1">
-              In this section you can create and handle Buckets. A Bucket define runtime objects search enging use. You
-              can add and remove to it datasources, filters or tabs you want to make searchable. You can also configure
-              details like search configuration aspects, language or query analysis to use.
-            </Typography>
+            <Typography variant="body1">{t("pages.buckets.description")}</Typography>
           </Box>
           <Box>
             <Link to="/bucket/new" style={{ textDecoration: "none" }}>
-              <Button variant="contained" color="primary" aria-label="create new bucket">
-                Create New Bucket
+              <Button variant="contained" color="primary" aria-label={t("pages.buckets.create-new-aria")}>
+                {t("pages.buckets.create-new")}
               </Button>
             </Link>
           </Box>
@@ -99,7 +97,7 @@ export function Buckets() {
             }}
             rowActions={[
               {
-                label: "Start",
+                label: t("common.start"),
                 isDisabled: (bucket) => !bucket?.enabled,
                 action: (bucket) => {
                   if (bucket?.id)
@@ -109,7 +107,7 @@ export function Buckets() {
                 },
               },
               {
-                label: "View",
+                label: t("common.view"),
                 action: (bucket) => {
                   if (bucket?.id)
                     navigate(`/bucket/${bucket?.id}/view`, {
@@ -118,7 +116,7 @@ export function Buckets() {
                 },
               },
               {
-                label: "Edit",
+                label: t("common.edit"),
                 action: (bucket) => {
                   if (bucket?.id)
                     navigate(`/bucket/${bucket?.id}`, {
@@ -127,7 +125,7 @@ export function Buckets() {
                 },
               },
               {
-                label: "Delete",
+                label: t("common.delete"),
                 action: (bucket) => {
                   if (bucket?.id) setViewDeleteModal({ view: true, id: bucket.id });
                 },
@@ -135,11 +133,11 @@ export function Buckets() {
             ]}
             columns={[
               {
-                header: "Name",
+                header: t("common.name"),
                 content: (bucket) => <Box fontWeight="bolder">{bucket?.name}</Box>,
               },
               {
-                header: "Description",
+                header: t("common.description"),
                 content: (bucket) => (
                   <Typography variant="body2" className="pipeline-title">
                     {bucket?.description}
@@ -147,9 +145,9 @@ export function Buckets() {
                 ),
               },
               {
-                header: "Status",
+                header: t("common.status"),
                 content: (bucket) => {
-                  const statusText = bucket?.enabled ? "Active" : "Inactive";
+                  const statusText = bucket?.enabled ? t("common.active") : t("common.inactive");
                   const backgroundColor = bucket?.enabled ? theme.palette.success.main : theme.palette.grey[500];
 
                   return (
@@ -174,9 +172,9 @@ export function Buckets() {
 
         {viewDeleteModal.view && (
           <ModalConfirm
-            title="Confirm Deletion"
-            body="Are you sure you want to delete this bucket? This action is irreversible and all associated data will be lost."
-            labelConfirm="Delete"
+            title={t("modal.confirm-deletion")}
+            body={t("pages.buckets.delete-body")}
+            labelConfirm={t("common.delete")}
             actionConfirm={() => {
               deleteBucketMutate({
                 variables: { id: viewDeleteModal.id || "" },

@@ -26,6 +26,7 @@ import {
   useToast,
 } from "@components/Form";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   FieldType,
   OffsetSourceType,
@@ -53,6 +54,7 @@ export function SaveSubDocType({
   isChild: boolean;
   setExtraFab: (fab: React.ReactNode | null) => void;
 }) {
+  const { t } = useTranslation();
   const documentTypeFieldQuery = useDocumentTypeFieldQuery({
     variables: { id: subDocTypesId as string },
     skip: !subDocTypesId || subDocTypesId === "new",
@@ -70,7 +72,7 @@ export function SaveSubDocType({
       if (data.docTypeFieldWithAnalyzer?.entity?.id) {
         toast({
           displayType: "success",
-          title: "Document Type Field " + (subDocTypesId === "new" ? "Create" : "Update"),
+          title: t("pages.document-types.document-type-field") + (subDocTypesId === "new" ? "Create" : "Update"),
           content: "",
         });
       } else {
@@ -90,7 +92,7 @@ export function SaveSubDocType({
       if (data.createSubField?.entity?.id) {
         toast({
           displayType: "success",
-          title: "Document Type Field " + (subDocTypesId === "new" ? "Create" : "Update"),
+          title: t("pages.document-types.document-type-field") + (subDocTypesId === "new" ? "Create" : "Update"),
           content: "",
         });
       } else {
@@ -160,30 +162,30 @@ export function SaveSubDocType({
           form.submit();
         }}
       >
-        <TextInput label="Name" {...form.inputProps("name")} />
+        <TextInput label={t("common.name")} {...form.inputProps("name")} />
         <TextInput
-          label="Field Name"
+          label={t("fields.field-name")}
           {...form.inputProps("fieldName")}
-          description="Name used to retrive field mapping, composed of Document Type and the name of indexed field"
+          description={t("pages.document-types.name-used-to-retrive-field-mapping-composed")}
         />
-        <TextArea label="Description" {...form.inputProps("description")} />
+        <TextArea label={t("common.description")} {...form.inputProps("description")} />
         <CustomSelect
-          label="Field Type"
+          label={t("fields.field-type")}
           dict={FieldType}
           {...form.inputProps("fieldType")}
-          description="Type associated to field. See OpenSearch documentation for field data types"
+          description={t("pages.document-types.type-associated-to-field-see-opensearch-documentation")}
         />
         {form.inputProps("fieldType").value === FieldType.Text && (
           <CustomSelect
-            label="Offset Source"
+            label={t("fields.offset-source")}
             dict={OffsetSourceType}
             {...form.inputProps("offsetSource")}
-            description="Source used to load offsets for highlighting (TERM_VECTOR / INDEX_OPTIONS / NONE). Configurable only for TEXT fields; TERM_VECTOR fields are selectable when creating an FVH Highlight."
+            description={t("pages.document-types.source-used-to-load-offsets-for-highlighting")}
           />
         )}
         <CustomSelectRelationsOneToOne
           options={analyzerOption}
-          label="Analyzer association"
+          label={t("fields.analyzer-association")}
           onChange={(val) => {
             form.inputProps("analyzer").onChange({ id: val.id, name: val.name });
           }}
@@ -191,11 +193,11 @@ export function SaveSubDocType({
             id: form.inputProps("analyzer").value.id || "-1",
             name: form.inputProps("analyzer").value.name || "",
           }}
-          description="Analyzer association for Document Type Field"
+          description={t("pages.document-types.analyzer-association-for-document-type-field")}
         />
         <CustomSelectRelationsOneToOne
           options={analyzerOption}
-          label="Search Analyzer association"
+          label={t("fields.search-analyzer-association")}
           onChange={(val) => {
             form.inputProps("searchAnalyzer").onChange({ id: val.id, name: val.name });
           }}
@@ -203,26 +205,26 @@ export function SaveSubDocType({
             id: form.inputProps("searchAnalyzer").value.id || "-1",
             name: form.inputProps("searchAnalyzer").value.name || "",
           }}
-          description="Search Analyzer association for Document Type Field. Used as search_analyzer at query time."
+          description={t("pages.document-types.search-analyzer-association-for-document-type-field")}
         />
         <NumberInput
-          label="Boost"
+          label={t("fields.boost")}
           {...form.inputProps("boost")}
-          description="Define how much score is boosted in case of match on this field"
+          description={t("pages.document-types.define-how-much-score-is-boosted-in")}
         />
 
         <BooleanInput
-          label="Searchable"
+          label={t("fields.searchable")}
           {...form.inputProps("searchable")}
-          description="If field is searchable or not"
+          description={t("pages.document-types.if-field-is-searchable-or-not")}
         />
         <BooleanInput
-          label="Exclude"
+          label={t("fields.exclude")}
           {...form.inputProps("exclude")}
-          description="If field need to be excluded from search response or not"
+          description={t("pages.document-types.if-field-need-to-be-excluded-from")}
         />
-        <BooleanInput label="Sortable" {...form.inputProps("sortable")} description="If field is sortable or not" />
-        <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
+        <BooleanInput label={t("fields.sortable")} {...form.inputProps("sortable")} description={t("pages.document-types.if-field-is-sortable-or-not")} />
+        <CodeInput language="json" label={t("fields.configuration")} {...form.inputProps("jsonConfig")} />
       </form>
     </>
   );

@@ -27,6 +27,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import { MutationHook, QueryHook } from "../Hook";
 import useDebounced from "@components/common/useDebounced";
@@ -83,6 +84,7 @@ export function SearchSelect<
   useRemoveMutation: MutationHook<any, Remove>;
   invalidate(): void;
 }) {
+  const { t } = useTranslation();
   const [searchText, setSearchText] = React.useState("");
   const searchTextDebounced = useDebounced(searchText);
   const valueQuery = useValueQuery({
@@ -116,7 +118,7 @@ export function SearchSelect<
           disabled={disabled}
           onClick={() => setOpen(true)}
         >
-          Change
+          {t("common.change")}
         </Button>
         <Button
           variant="outlined"
@@ -133,7 +135,7 @@ export function SearchSelect<
             }
           }}
         >
-          Remove
+          {t("common.remove")}
         </Button>
       </Box>
 
@@ -144,7 +146,7 @@ export function SearchSelect<
           </Typography>
           <TextField
             fullWidth
-            placeholder="Search..."
+            placeholder={t("common.search-placeholder")}
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
             InputProps={{
@@ -182,7 +184,7 @@ export function SearchSelect<
                       }
                     >
                       <ListItemText
-                        primary={row?.name || "No Name"}
+                        primary={row?.name || t("common.no-name")}
                         secondary={row?.description || ""}
                       />
                     </ListItem>

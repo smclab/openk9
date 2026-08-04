@@ -56,6 +56,7 @@ import {
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateSearchConfigMutation, useSearchConfigQuery } from "../../graphql-generated";
 import { CombinationTechnique, HybridSearchPipelineDto, NormalizationTechnique } from "../../openapi-generated";
@@ -110,15 +111,16 @@ export function useConfigureHybridSearchMutation({
 }
 
 export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { searchConfigId = "new", view } = useParams();
   const navigate = useNavigate();
   const [types, setTypes] = React.useState<Array<{ itemLabel: string; itemLabelId: string }>>([]);
   const [activeType, setActiveType] = React.useState<string | undefined | null>();
   const openFormRef = React.useRef<(() => void) | null>(null);
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Search Config",
-    body: "Are you sure you want to edit this Search Config?",
-    labelConfirm: "Edit",
+    title: t("pages.search-configs.edit-search-config"),
+    body: t("pages.search-configs.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -155,14 +157,14 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
       if (data.searchConfigWithQueryParsers?.entity) {
         const isNew = searchConfigId === "new" ? "created" : "updated";
         toast({
-          title: `Search Config ${isNew}`,
-          content: `Search Config has been ${isNew} successfully`,
+          title: isNew === "created" ? t("pages.search-configs.created-title") : t("pages.search-configs.updated-title"),
+          content: isNew === "created" ? t("pages.search-configs.created-content") : t("pages.search-configs.updated-content"),
           displayType: "success",
         });
         navigate(`/search-configs/`, { replace: true });
       } else {
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: combineErrorMessages(data.searchConfigWithQueryParsers?.fieldValidators),
           displayType: "error",
         });
@@ -172,8 +174,8 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
       console.log(error);
       const isNew = searchConfigId === "new" ? "create" : "update";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} Search Config`,
+        title: isNew === "create" ? t("pages.search-configs.create-error-title") : t("pages.search-configs.update-error-title"),
+        content: isNew === "create" ? t("pages.search-configs.create-error-content") : t("pages.search-configs.update-error-content"),
         displayType: "error",
       });
     },
@@ -300,25 +302,25 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
         cell: [
           { key: "name" },
           { key: "description" },
-          { key: "minScore", label: "Min Score" },
-          { key: "minScoreSuggestions", label: "Min Score Suggestions" },
-          { key: "minScoreSearch", label: "Min Score Search" },
-          { key: "maxSearchPageFrom", label: "Max Search Page From" },
-          { key: "maxSearchPageSize", label: "Max Search Page Size" },
-          { key: "maxTextQueryLength", label: "Max Text Query Length" },
-          // { key: "jsonConfig", label: "JSON Config" },
+          { key: "minScore", label: t("pages.search-configs.min-score") },
+          { key: "minScoreSuggestions", label: t("pages.search-configs.min-score-suggestions") },
+          { key: "minScoreSearch", label: t("pages.search-configs.min-score-search") },
+          { key: "maxSearchPageFrom", label: t("fields.max-search-page-from") },
+          { key: "maxSearchPageSize", label: t("fields.max-search-page-size") },
+          { key: "maxTextQueryLength", label: t("fields.max-text-query-length") },
+          // { key: "jsonConfig", label: t("fields.json-config") },
         ],
-        label: "Search Config",
+        label: t("fields.search-config"),
       },
       {
-        cell: [{ key: "queryParserConfig", label: "Query Parser Config" }],
-        label: "Query Parser",
+        cell: [{ key: "queryParserConfig", label: t("pages.search-configs.query-parser-config") }],
+        label: t("pages.search-configs.query-parser"),
       },
       ...(searchConfigId !== "new"
         ? [
             {
-              cell: [{ key: "HybridSearch", label: "Hybrid Search Config" }],
-              label: "Hybrid Search",
+              cell: [{ key: "HybridSearch", label: t("pages.search-configs.hybrid-search-config") }],
+              label: t("pages.search-configs.hybrid-search"),
             },
           ]
         : []),
@@ -335,9 +337,8 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
         <>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
             <TitleEntity
-              nameEntity="Search config "
-              description="Create or Edit a Search Config and define search behavior. 
-          Configure specific search terms or how scores are handled and customize how search engine returns results."
+              nameEntity={t("pages.search-configs.entity-name")}
+              description={t("pages.search-configs.create-or-edit-a-search-config-and")}
               id={searchConfigId}
             />
             {view === "view" && (
@@ -358,42 +359,42 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                 {
                   content: (
                     <div>
-                      <TextInput label="Name" {...form.inputProps("name")} />
-                      <TextArea label="Description" {...form.inputProps("description")} />
+                      <TextInput label={t("common.name")} {...form.inputProps("name")} />
+                      <TextArea label={t("common.description")} {...form.inputProps("description")} />
                       {/* <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}> */}
                       <NumberInput
-                        label="minScore"
+                        label={t("fields.minscore")}
                         {...form.inputProps("minScore")}
-                        description="Define score threshold used to filter results after query has been done"
+                        description={t("pages.search-configs.define-score-threshold-used-to-filter-results")}
                       />
-                      <RefreshOptionsLayout title="Min Score">
+                      <RefreshOptionsLayout title={t("pages.search-configs.min-score")}>
                         <BooleanInput
-                          label="Suggestions"
+                          label={t("fields.suggestions")}
                           sxControl={sxControl}
                           {...form.inputProps("minScoreSuggestions")}
-                          description="If use configured min score to filter search results"
+                          description={t("pages.search-configs.if-use-configured-min-score-to-filter")}
                         />
                         <BooleanInput
-                          label="Search"
+                          label={t("fields.search")}
                           sxControl={sxControl}
                           {...form.inputProps("minScoreSearch")}
-                          description="If use configured min score to filter suggestions"
+                          description={t("pages.search-configs.if-use-configured-min-score-to-filter-2")}
                         />
                       </RefreshOptionsLayout>
                       <NumberInput
-                        label="Max Search Page From"
+                        label={t("fields.max-search-page-from")}
                         {...form.inputProps("maxSearchPageFrom")}
-                        description="Maximum value allowed for the 'from' pagination parameter"
+                        description={t("pages.search-configs.maximum-value-allowed-for-the-from-pagination")}
                       />
                       <NumberInput
-                        label="Max Search Page Size"
+                        label={t("fields.max-search-page-size")}
                         {...form.inputProps("maxSearchPageSize")}
-                        description="Maximum number of results per page"
+                        description={t("pages.search-configs.maximum-number-of-results-per-page")}
                       />
                       <NumberInput
-                        label="Max Text Query Length"
+                        label={t("fields.max-text-query-length")}
                         {...form.inputProps("maxTextQueryLength")}
-                        description="Maximum length allowed for text search queries"
+                        description={t("pages.search-configs.maximum-length-allowed-for-text-search-queries")}
                       />
                       {/* </Box> */}
                       <TooltipDescription informationDescription="Set Hybrid Search after creation">
@@ -413,7 +414,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                       <DataCardManager
                         options={[]}
                         config={{
-                          title: "Set Query Parser",
+                          title: t("pages.search-configs.set-query-parser"),
                           description: activeType ? `${activeType}` : "Query Parser Configuration",
                         }}
                         onAddField={() => {
@@ -428,7 +429,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                           customActions: [
                             {
                               icon: <EditIcon fontSize="small" />,
-                              // label: "Modify",
+                              // label: t("pages.search-configs.modify"),
                               action: (id) => {
                                 setActiveType(id);
                                 openFormRef.current?.();
@@ -473,8 +474,8 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
           actions={{
             onBack: () => setPage(0),
             onSubmit: () => form.submit(),
-            submitLabel: isNew ? "Create entity" : "Update entity",
-            backLabel: "Back",
+            submitLabel: isNew ? t("entity.create") : t("entity.update"),
+            backLabel: t("common.back"),
           }}
         />
       </ContainerFluid>
@@ -498,6 +499,7 @@ interface CustomizedDialogsProps {
 }
 
 const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, configuration, onClose }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const color = theme.palette.primary.main;
   const { initialConfigValue, config, setConfig } = configuration;
@@ -559,16 +561,16 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
         configureHybridSearch(config, {
           onSuccess: () => {
             toast({
-              title: "Hybrid Search",
-              content: "Hybrid Search configuration updated successfully",
+              title: t("pages.search-configs.hybrid-search"),
+              content: t("pages.search-configs.hybrid-search-configuration-updated-successfully"),
               displayType: "success",
             });
             handleClose();
           },
           onError: () => {
             toast({
-              title: "Error",
-              content: "Impossible to update Hybrid Search configuration",
+              title: t("common.error"),
+              content: t("pages.search-configs.impossible-to-update-hybrid-search-configuration"),
               displayType: "error",
             });
           },
@@ -586,7 +588,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
 
   const showErrorToast = (message: string) => {
     toast({
-      title: "Error",
+      title: t("common.error"),
       content: message,
       displayType: "error",
     });
@@ -625,7 +627,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
           >
             Hybrid Search Config
             <IconButton
-              aria-label="close"
+              aria-label={t("common.close")}
               onClick={handleClose} // Chiudi la modale quando clicchi sull'icona
               sx={(theme) => ({
                 position: "absolute",

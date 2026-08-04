@@ -16,6 +16,7 @@
 */
 import { Box, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 export function TitleEntity({
   nameEntity,
@@ -26,11 +27,12 @@ export function TitleEntity({
   description?: string;
   id: string;
 }) {
+  const { t } = useTranslation();
   return (
     <React.Fragment>
       <Box>
         <Typography component="h1" variant="h1" fontWeight="600">
-          {id === "new" ? `Create new ${nameEntity}` : `Edit ${nameEntity}`}
+          {id === "new" ? t("entity.create-new", { name: nameEntity }) : t("entity.edit", { name: nameEntity })}
         </Typography>
         <p>{description}</p>
       </Box>

@@ -21,6 +21,7 @@ import { ConnectionData } from "../../../types";
 import { Lock as LockIcon, LockOpen as LockOpenIcon } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { darken } from "@mui/material/styles";
+import { useTranslation } from "react-i18next";
 
 interface DateTimeSectionProps {
   dataDatasource: ConnectionData;
@@ -46,6 +47,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
   disabled = false,
   //   isActive = false
 }) => {
+  const { t } = useTranslation();
   const [activeSection, setActiveSection] = React.useState<"reindex" | "scheduling" | "purge">("reindex");
   const [expandedLockSection, setExpandedLockSection] = useState<string | null>(null);
   const theme = useTheme();
@@ -53,17 +55,17 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
   const sections = [
     {
       id: "reindex",
-      title: "Reindex",
+      title: t("pages.datasources.date-time.reindex"),
       active: dataDatasource.isCronSectionreindex,
     },
     {
       id: "scheduling",
-      title: "Scheduling",
+      title: t("pages.datasources.date-time.scheduling"),
       active: dataDatasource.isCronSectionscheduling,
     },
     {
       id: "purge",
-      title: "Purge",
+      title: t("pages.datasources.date-time.purge"),
       active: dataDatasource.isCronSectionpurge,
     },
   ];

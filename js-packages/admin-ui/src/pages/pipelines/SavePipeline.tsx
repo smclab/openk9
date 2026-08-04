@@ -37,6 +37,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   useAssociatedEnrichPipelineEnrichItemsQuery,
@@ -48,6 +49,7 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { pipelineId = "new", mode } = useParams();
   type KeyValue = {
     [key: string]: any;
@@ -106,9 +108,9 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
   };
 
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Enrich Item",
-    body: "Are you sure you want to edit this Enrich Item?",
-    labelConfirm: "Edit",
+    title: t("pages.pipelines.edit-enrich-item"),
+    body: t("pages.pipelines.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -129,14 +131,14 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       if (data.enrichPipelineWithEnrichItems?.entity) {
         const isNew = pipelineId === "new" ? "created" : "updated";
         toast({
-          title: `Enrich Pipeline ${isNew}`,
-          content: `Enrich Pipeline has been ${isNew} successfully`,
+          title: isNew === "created" ? t("pages.pipelines.created-title") : t("pages.pipelines.updated-title"),
+          content: isNew === "created" ? t("pages.pipelines.created-content") : t("pages.pipelines.updated-content"),
           displayType: "success",
         });
         navigate(`/pipelines/`, { replace: true });
       } else {
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: combineErrorMessages(data.enrichPipelineWithEnrichItems?.fieldValidators),
           displayType: "error",
         });
@@ -146,8 +148,8 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       console.log(error);
       const isNew = pipelineId === "new" ? "create" : "update";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} Enrich Pipeline`,
+        title: isNew === "create" ? t("pages.pipelines.create-error-title") : t("pages.pipelines.update-error-title"),
+        content: isNew === "create" ? t("pages.pipelines.create-error-content") : t("pages.pipelines.update-error-content"),
         displayType: "error",
       });
     },
@@ -252,9 +254,9 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         cell: [
           { key: "name" },
           { key: "description" },
-          { key: "associatedEnrichItems", label: "Associated Enrich Items" },
+          { key: "associatedEnrichItems", label: t("pages.pipelines.associated-enrich-items") },
         ],
-        label: "Recap Enrich Pipeline",
+        label: t("pages.pipelines.recap-label"),
       },
     ],
     valueOverride: {
@@ -272,7 +274,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           <DialogTitle>
             {modalDataLost ? "Attention" : "Enrich Items"}
             <IconButton
-              aria-label="close"
+              aria-label={t("common.close")}
               onClick={() => setOpen(false)}
               sx={{ position: "absolute", right: 8, top: 8 }}
             >
@@ -349,10 +351,10 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       )}
       {modalDataLost && (
         <ModalConfirm
-          title="Confirm to leave from this page?"
-          body="Are you sure you want to leave this page? This action is irreversible and all associated data will be lost."
+          title={t("pages.pipelines.confirm-to-leave-from-this-page")}
+          body={t("pages.pipelines.are-you-sure-you-want-to-leave")}
           type="info"
-          labelConfirm="Confirm"
+          labelConfirm={t("common.confirm")}
           actionConfirm={() => {
             setModalDataLost(false);
             setOpen(false);
@@ -369,9 +371,8 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       <Container>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Pipeline"
-            description="Create or Edit an Enrich Pipeline to construct a series of enrichment steps to enrich and trasform data. Add
-          Enrich Items to it or go to create it if not present."
+            nameEntity={t("pages.pipelines.entity-name")}
+            description={t("pages.pipelines.create-or-edit-an-enrich-pipeline-to")}
             id={pipelineId}
           />
           {verifyData === "view" && (
@@ -523,7 +524,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           <Button
             variant="contained"
             color="secondary"
-            aria-label="Back"
+            aria-label={t("common.back")}
             onClick={() => {
               navigate("/pipelines");
             }}
@@ -586,7 +587,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
               },
             });
           },
-          submitLabel: pipelineData.pipelineId === "new" ? "Create entity" : "Update entity",
+          submitLabel: pipelineData.pipelineId === "new" ? t("entity.create") : t("entity.update"),
         }}
       />
     </>

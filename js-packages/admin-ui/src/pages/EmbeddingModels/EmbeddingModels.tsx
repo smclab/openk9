@@ -17,6 +17,7 @@
 import { ModalConfirm, useToast } from "@components/Form";
 import { Box, Button, Container, Typography, useTheme } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import {
@@ -26,6 +27,7 @@ import {
 } from "../../graphql-generated";
 
 export function EmbeddingModels() {
+  const { t } = useTranslation();
   const embeddingModelsQuery = useEmbeddingModelsQuery();
   const theme = useTheme();
   const toast = useToast();
@@ -34,8 +36,8 @@ export function EmbeddingModels() {
     onCompleted(data) {
       if (data.deleteEmbeddingModel?.id) {
         toast({
-          title: "Embedding Model Deleted",
-          content: "Embedding Model has been deleted successfully",
+          title: t("pages.embedding-models.deleted-title"),
+          content: t("pages.embedding-models.deleted-content"),
           displayType: "success",
         });
       }
@@ -43,8 +45,8 @@ export function EmbeddingModels() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Embedding Model",
+        title: t("common.delete-error"),
+        content: t("pages.embedding-models.delete-error-content"),
         displayType: "error",
       });
     },
@@ -64,17 +66,14 @@ export function EmbeddingModels() {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Embedding models
+            {t("pages.embedding-models.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Embedding Model. An Embedding Model can be used to vectorize data
-            and enable Semantic Search features.
-          </Typography>
+          <Typography variant="body1">{t("pages.embedding-models.description")}</Typography>
         </Box>
         <Box>
           <Link to="/embedding-model/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Embedding Model
+              {t("pages.embedding-models.create-new")}
             </Button>
           </Link>
         </Box>
@@ -90,7 +89,7 @@ export function EmbeddingModels() {
           pageInfoPath="embeddingModels.pageInfo"
           rowActions={[
             {
-              label: "Start",
+              label: t("common.start"),
               isDisabled: (embeddingModels) => !embeddingModels?.enabled,
               action: (embeddingModel) => {
                 if (embeddingModel?.id)
@@ -100,7 +99,7 @@ export function EmbeddingModels() {
               },
             },
             {
-              label: "View",
+              label: t("common.view"),
               action: (embeddingModels) => {
                 navigate(`/embedding-model/${embeddingModels?.id}/view`, {
                   replace: true,
@@ -108,7 +107,7 @@ export function EmbeddingModels() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (embeddingModels) => {
                 embeddingModels.id &&
                   navigate(`/embedding-model/${embeddingModels?.id}`, {
@@ -117,7 +116,7 @@ export function EmbeddingModels() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (tab) => {
                 tab.id && setViewDeleteModal({ view: true, id: tab.id });
               },
@@ -129,17 +128,17 @@ export function EmbeddingModels() {
           }}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (embeddingModel) => <Box fontWeight="bolder">{embeddingModel?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (embeddingModel) => embeddingModel?.description,
             },
             {
-              header: "Status",
+              header: t("common.status"),
               content: (embeddingModel) => {
-                const statusText = embeddingModel?.enabled ? "Active" : "Inactive";
+                const statusText = embeddingModel?.enabled ? t("common.active") : t("common.inactive");
                 const backgroundColor = embeddingModel?.enabled ? theme.palette.success.main : theme.palette.grey[500];
 
                 return (
@@ -159,9 +158,9 @@ export function EmbeddingModels() {
 
                     {viewDeleteModal.view && (
                       <ModalConfirm
-                        title="Confirm Deletion"
-                        body="Are you sure you want to delete this embedding models? This action is irreversible and all associated data will be lost."
-                        labelConfirm="Delete"
+                        title={t("modal.confirm-deletion")}
+                        body={t("pages.embedding-models.delete-body")}
+                        labelConfirm={t("common.delete")}
                         actionConfirm={() => {
                           deleteEmbeddingMutate({
                             variables: { id: viewDeleteModal.id || "" },

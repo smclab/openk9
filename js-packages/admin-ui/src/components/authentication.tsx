@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React, { useEffect, useState, createContext, useContext } from "react";
+import { useTranslation } from "react-i18next";
 import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 import { BasicLoginForm } from "./BasicLoginForm";
 
@@ -214,6 +215,7 @@ function OidcAuthenticationProvider({ children }: { children: React.ReactNode })
 }
 
 function BasicAuthenticationProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     () => !!sessionStorage.getItem("basic_auth_token"),
   );
@@ -229,7 +231,7 @@ function BasicAuthenticationProvider({ children }: { children: React.ReactNode }
   };
 
   if (!isAuthenticated) {
-    return <BasicLoginForm title="Admin Login" onLogin={handleBasicLogin} />;
+    return <BasicLoginForm title={t("auth.admin-login")} onLogin={handleBasicLogin} />;
   }
 
   const value: AuthenticationContextValue = {

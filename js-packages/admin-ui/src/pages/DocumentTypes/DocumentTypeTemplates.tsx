@@ -18,10 +18,12 @@ import { ModalConfirm, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDeleteDocumentTypeTemplateMutation, useDocumentTypeTemplatesQuery } from "../../graphql-generated";
 
 export function DocumentTypeTemplates() {
+  const { t } = useTranslation();
   const docTypeTemplatesQuery = useDocumentTypeTemplatesQuery();
   const navigate = useNavigate();
   const toast = useToast();
@@ -30,8 +32,8 @@ export function DocumentTypeTemplates() {
     onCompleted(data) {
       if (data.deleteDocTypeTemplate?.id) {
         toast({
-          title: "Document Type Template Deleted",
-          content: "Document Type Template has been deleted successfully",
+          title: t("pages.document-type-templates.deleted-title"),
+          content: t("pages.document-type-templates.deleted-content"),
           displayType: "success",
         });
       }
@@ -39,8 +41,8 @@ export function DocumentTypeTemplates() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Document Type Template",
+        title: t("common.delete-error"),
+        content: t("pages.document-type-templates.delete-error-content"),
         displayType: "error",
       });
     },
@@ -57,17 +59,14 @@ export function DocumentTypeTemplates() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Document Type Templates
+            {t("pages.document-type-templates.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Document Type Templates. A Document Type Template permits to
-            define how to render result in Search Frontend for a specific Document Type.
-          </Typography>
+          <Typography variant="body1">{t("pages.document-type-templates.description")}</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mb={3}>
           <Link to="/document-type-template/new" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Document Type Templates
+              {t("pages.document-type-templates.create-new")}
             </Button>
           </Link>
         </Box>
@@ -82,7 +81,7 @@ export function DocumentTypeTemplates() {
           onCreatePath="/document-type-template/new"
           rowActions={[
             {
-              label: "View",
+              label: t("common.view"),
               action: (docTypeTemplate) => {
                 navigate(`/document-type-template/${docTypeTemplate?.id}/view`, {
                   replace: true,
@@ -90,7 +89,7 @@ export function DocumentTypeTemplates() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (docTypeTemplate) => {
                 docTypeTemplate.id &&
                   navigate(`/document-type-template/${docTypeTemplate?.id}`, {
@@ -99,7 +98,7 @@ export function DocumentTypeTemplates() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (docTypeTemplate) => {
                 docTypeTemplate.id && setViewDeleteModal({ view: true, id: docTypeTemplate.id });
               },
@@ -113,11 +112,11 @@ export function DocumentTypeTemplates() {
           }}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (enrich) => <Box fontWeight="bolder">{enrich?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (docTypeTemplate) => docTypeTemplate?.description,
             },
           ]}
@@ -125,9 +124,9 @@ export function DocumentTypeTemplates() {
       </Box>
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this Document Type Template? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.document-type-templates.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteDocumentTypeTemplateMutate({
               variables: { id: viewDeleteModal.id || "" },

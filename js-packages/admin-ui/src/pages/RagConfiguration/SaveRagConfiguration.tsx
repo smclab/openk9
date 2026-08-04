@@ -27,6 +27,7 @@ import {
 import { NumberInput, TextArea, TextInput } from "@components/Form/Inputs";
 import { Box, Button, Checkbox, FormControlLabel, FormHelperText } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   RagType,
@@ -39,6 +40,7 @@ import { RagConfigurationQuery } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { ragConfigId = "new", view } = useParams();
   const [page, setPage] = React.useState<number>(0);
   const isRecap = page === 1;
@@ -47,9 +49,9 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
   const toast = useToast();
 
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit RAG Configuration",
-    body: "Are you sure you want to edit this RAG Configuration?",
-    labelConfirm: "Edit",
+    title: t("pages.rag-configurations.edit-rag-configuration"),
+    body: t("pages.rag-configurations.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -71,15 +73,15 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
       if (data.createRAGConfiguration?.entity) {
         const isNew = ragConfigId === "new" ? "created" : "updated";
         toast({
-          title: `RAG Configuration ${isNew}`,
-          content: `RAG Configuration has been ${isNew} successfully`,
+          title: isNew === "created" ? t("pages.rag-configurations.created-title") : t("pages.rag-configurations.updated-title"),
+          content: isNew === "created" ? t("pages.rag-configurations.created-content") : t("pages.rag-configurations.updated-content"),
           displayType: "success",
         });
         const redirectPath = `/rag-configurations/`;
         navigate(redirectPath, { replace: true });
       } else {
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: fromFieldValidators(data.createRAGConfiguration?.fieldValidators)("") || "Validation error",
           displayType: "error",
         });
@@ -89,8 +91,8 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
       console.log(error);
       const isNew = ragConfigId === "new" ? "create" : "update";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} RAG Configuration`,
+        title: isNew === "create" ? t("pages.rag-configurations.create-error-title") : t("pages.rag-configurations.update-error-title"),
+        content: isNew === "create" ? t("pages.rag-configurations.create-error-content") : t("pages.rag-configurations.update-error-content"),
         displayType: "error",
       });
     },
@@ -101,15 +103,15 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
     onCompleted(data) {
       if (data.updateRAGConfiguration?.entity) {
         toast({
-          title: `RAG Configuration Updated`,
-          content: `RAG Configuration has been updated successfully`,
+          title: t("pages.rag-configurations.updated-title"),
+          content: t("pages.rag-configurations.updated-content"),
           displayType: "success",
         });
         const redirectPath = `/rag-configurations/`;
         navigate(redirectPath, { replace: true });
       } else {
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: fromFieldValidators(data.updateRAGConfiguration?.fieldValidators)("") || "Validation error",
           displayType: "error",
         });
@@ -118,8 +120,8 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
     onError(error) {
       console.log(error);
       toast({
-        title: `Error Update`,
-        content: `Impossible to Update RAG Configuration`,
+        title: t("pages.rag-configurations.update-error-title"),
+        content: t("pages.rag-configurations.update-error-content"),
         displayType: "error",
       });
     },
@@ -189,21 +191,21 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
           { key: "type" },
           { key: "prompt" },
           { key: "reformulate" },
-          { key: "rephrasePrompt", label: "Rephrase Prompt" },
+          { key: "rephrasePrompt", label: t("fields.rephrase-prompt") },
           { key: "chunkWindow" },
-          { key: "jsonConfig", label: "JSON Config", jsonView: true },
-          { key: "enableConversationTitle", label: "Enable Conversation Title" },
-          { key: "rangeStart", label: "Range Start" },
-          { key: "rangeEnd", label: "Range End" },
+          { key: "jsonConfig", label: t("fields.json-config"), jsonView: true },
+          { key: "enableConversationTitle", label: t("fields.enable-conversation-title") },
+          { key: "rangeStart", label: t("fields.range-start") },
+          { key: "rangeEnd", label: t("fields.range-end") },
           ...(form.inputProps("type").value === RagType.ChatRag ||
             form.inputProps("type").value === RagType.ChatRagTool
             ? [
-              { key: "ragToolDescription", label: "RAG Tool Description" },
-              { key: "promptNoRag", label: "Prompt No RAG" },
+              { key: "ragToolDescription", label: t("fields.rag-tool-description") },
+              { key: "promptNoRag", label: t("fields.prompt-no-rag") },
             ]
             : []),
         ],
-        label: "Recap RAG Configuration",
+        label: t("pages.rag-configurations.recap-label"),
       },
     ],
   });
@@ -213,8 +215,8 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="RAG Configuration"
-            description="Create or Edit a RAG Configuration to define how your RAG system will behave."
+            nameEntity={t("pages.rag-configurations.entity-name")}
+            description={t("pages.rag-configurations.create-or-edit-a-rag-configuration-to")}
             id={ragConfigId}
           />
           {view === "view" && (
@@ -237,32 +239,32 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                 content: (
                   <>
                     <TextInput
-                      label="Name"
+                      label={t("common.name")}
                       {...form.inputProps("name")}
                       disabled={view === "view"}
-                      description="Unique identifier of the RAG Configuration."
+                      description={t("pages.rag-configurations.unique-identifier-of-the-rag-configuration")}
                     />
                     <TextArea
-                      label="Description"
+                      label={t("common.description")}
                       {...form.inputProps("description")}
                       disabled={view === "view"}
-                      description="Free-text description explaining the purpose of this RAG Configuration."
+                      description={t("pages.rag-configurations.free-text-description-explaining-the-purpose-of")}
                     />
                     {ragConfigId === "new" && (
                       <CustomSelect
-                        label="Type"
+                        label={t("fields.type")}
                         dict={RagType}
                         {...form.inputProps("type")}
                         disabled={view === "view" || page === 1}
-                        description="Type of RAG Configuration"
+                        description={t("pages.rag-configurations.type-of-rag-configuration")}
                       />
                     )}
                     <>
                       <TextArea
-                        label="Prompt"
+                        label={t("fields.prompt")}
                         {...form.inputProps("prompt")}
                         disabled={view === "view" || page === 1}
-                        description="The main prompt for the RAG system"
+                        description={t("pages.rag-configurations.the-main-prompt-for-the-rag-system")}
                       />
                       <TooltipDescription informationDescription="If enabled, the user question is reformulated using the Rephrase Prompt before being sent to the retriever.">
                         <FormControlLabel
@@ -275,29 +277,29 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                             />
                           }
                           sx={{ marginLeft: "0", marginRight: "0", marginBottom: "16px" }}
-                          label="Reformulate"
+                          label={t("fields.reformulate")}
                           labelPlacement="start"
                         />
                       </TooltipDescription>
                       <TextArea
-                        label="Rephrase Prompt"
+                        label={t("fields.rephrase-prompt")}
                         {...form.inputProps("rephrasePrompt")}
                         disabled={view === "view" || page === 1}
-                        description="Prompt used for rephrasing"
+                        description={t("pages.rag-configurations.prompt-used-for-rephrasing")}
                       />
 
                       <NumberInput
-                        label="Chunk Window"
+                        label={t("fields.chunk-window")}
                         {...form.inputProps("chunkWindow")}
                         disabled={view === "view" || page === 1}
-                        description="Number of chunk to consider during retrieve"
+                        description={t("pages.rag-configurations.number-of-chunk-to-consider-during-retrieve")}
                       />
 
                       <TextArea
-                        label="JSON Config"
+                        label={t("fields.json-config")}
                         {...form.inputProps("jsonConfig")}
                         disabled={view === "view" || page === 1}
-                        description="JSON configuration for the RAG system"
+                        description={t("pages.rag-configurations.json-configuration-for-the-rag-system")}
                       />
                       <TooltipDescription informationDescription="If enabled, an automatic title is generated for each conversation based on its content.">
                         <FormControlLabel
@@ -310,23 +312,23 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                             />
                           }
                           sx={{ marginLeft: "0", marginRight: "0", marginBottom: "16px" }}
-                          label="Enable Conversation Title"
+                          label={t("fields.enable-conversation-title")}
                           labelPlacement="start"
                         />
                       </TooltipDescription>
 
                       <Box sx={{ display: "flex", gap: 2 }}>
                         <NumberInput
-                          label="Range Start"
+                          label={t("fields.range-start")}
                           {...form.inputProps("rangeStart")}
                           disabled={view === "view" || page === 1}
-                          description="Start of range (must be >= 0 and less than end)"
+                          description={t("pages.rag-configurations.start-of-range-must-be-0-and")}
                         />
                         <NumberInput
-                          label="Range End"
+                          label={t("fields.range-end")}
                           {...form.inputProps("rangeEnd")}
                           disabled={view === "view" || page === 1}
-                          description="End of range (must be > start)"
+                          description={t("pages.rag-configurations.end-of-range-must-be-start")}
                         />
                       </Box>
                       {rangeError && (
@@ -338,17 +340,17 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                       {(selectedType === RagType.ChatRag || selectedType === RagType.ChatRagTool) && (
                         <>
                           <TextArea
-                            label="RAG Tool Description"
+                            label={t("fields.rag-tool-description")}
                             {...form.inputProps("ragToolDescription")}
                             disabled={view === "view" || page === 1}
-                            description="Description of the RAG tool"
+                            description={t("pages.rag-configurations.description-of-the-rag-tool")}
                           />
 
                           <TextArea
-                            label="Prompt No RAG"
+                            label={t("fields.prompt-no-rag")}
                             {...form.inputProps("promptNoRag")}
                             disabled={view === "view" || page === 1}
-                            description="Prompt to use when RAG is not available"
+                            description={t("pages.rag-configurations.prompt-to-use-when-rag-is-not")}
                           />
                         </>
                       )}
@@ -374,8 +376,8 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: isNew ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: isNew ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </ContainerFluid>

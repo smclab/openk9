@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
 *
 * This program is free software: you can redistribute it and/or modify
@@ -17,11 +17,13 @@
 import { ModalConfirm, useToast } from "@components/Form";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import { useDeleteHighlightMutation, useHighlightsQuery } from "../../graphql-generated";
 
 export function Highlights() {
+  const { t } = useTranslation();
   const highlightsQuery = useHighlightsQuery();
   const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
@@ -34,8 +36,8 @@ export function Highlights() {
     onCompleted(data) {
       if (data.deleteHighlight?.id) {
         toast({
-          title: "Highlight Deleted",
-          content: "Highlight has been deleted successfully",
+          title: t("pages.highlights.deleted-title"),
+          content: t("pages.highlights.deleted-content"),
           displayType: "success",
         });
       }
@@ -44,8 +46,8 @@ export function Highlights() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Highlight",
+        title: t("common.delete-error"),
+        content: t("pages.highlights.delete-error-content"),
         displayType: "error",
       });
     },
@@ -61,17 +63,14 @@ export function Highlights() {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box sx={{ width: "50%", ml: 2 }}>
             <Typography component="h1" variant="h1" fontWeight="600">
-              Highlights
+              {t("pages.highlights.title")}
             </Typography>
-            <Typography variant="body1">
-              In this section you can create and handle Highlights to configure how search results are highlighted.
-              Choose a highlighter type and associate the document type fields to highlight.
-            </Typography>
+            <Typography variant="body1">{t("pages.highlights.description")}</Typography>
           </Box>
           <Box>
             <Link to="/highlight/new" style={{ textDecoration: "none" }}>
-              <Button variant="contained" color="primary" aria-label="create new highlight">
-                Create New Highlight
+              <Button variant="contained" color="primary" aria-label={t("pages.highlights.create-new-aria")}>
+                {t("pages.highlights.create-new")}
               </Button>
             </Link>
           </Box>
@@ -99,13 +98,13 @@ export function Highlights() {
             pageInfoPath="highlights.pageInfo"
             rowActions={[
               {
-                label: "View",
+                label: t("common.view"),
                 action: (highlight) => {
                   if (highlight?.id) navigate(`/highlight/${highlight?.id}/view`);
                 },
               },
               {
-                label: "Edit",
+                label: t("common.edit"),
                 action: (highlight) => {
                   if (highlight?.id)
                     navigate(`/highlight/${highlight?.id}`, {
@@ -114,7 +113,7 @@ export function Highlights() {
                 },
               },
               {
-                label: "Delete",
+                label: t("common.delete"),
                 action: (highlight) => {
                   highlight?.id && setViewDeleteModal({ view: true, id: highlight.id });
                 },
@@ -122,11 +121,11 @@ export function Highlights() {
             ]}
             columns={[
               {
-                header: "Name",
+                header: t("common.name"),
                 content: (highlight) => <Box fontWeight="bolder">{highlight?.name}</Box>,
               },
               {
-                header: "Description",
+                header: t("common.description"),
                 content: (highlight) => (
                   <Typography variant="body2" className="pipeline-title">
                     {highlight?.description}
@@ -134,7 +133,7 @@ export function Highlights() {
                 ),
               },
               {
-                header: "Type",
+                header: t("common.type"),
                 content: (highlight) => (
                   <Typography variant="body2" className="pipeline-title">
                     {highlight?.type}
@@ -147,9 +146,9 @@ export function Highlights() {
 
         {viewDeleteModal.view && (
           <ModalConfirm
-            title="Confirm Deletion"
-            body="Are you sure you want to delete this highlight? This action is irreversible and all associated data will be lost."
-            labelConfirm="Delete"
+            title={t("modal.confirm-deletion")}
+            body={t("pages.highlights.delete-body")}
+            labelConfirm={t("common.delete")}
             actionConfirm={() => {
               deleteHighlightMutate({
                 variables: { id: viewDeleteModal.id || "" },

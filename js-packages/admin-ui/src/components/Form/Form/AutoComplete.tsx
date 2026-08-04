@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import * as React from "react";
+import { Trans } from "react-i18next";
 import { Autocomplete as AutocompleteMaterial, Chip, TextField, Typography } from "@mui/material";
 
 type Props = {
@@ -84,7 +85,7 @@ export default function Autocomplete({ defaultChip, setChips, disabled }: Props)
           helperText={
             !disabled && inputValue.trim().length > 0 ? (
               <Typography variant="caption">
-                Press <b>Enter</b> or click the suggestion to add it
+                <Trans i18nKey="form.press-enter-to-add" components={{ bold: <b /> }} />
               </Typography>
             ) : (
               " "

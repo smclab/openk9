@@ -30,6 +30,7 @@ import {
 import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { Box, Button } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { isValidId, useDocTypesAnnotators } from "../../utils/RelationOneToOne";
 import {
@@ -42,6 +43,7 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { annotatorId = "new", view } = useParams();
   const annotatorQuery = useAnnotatorQuery({
     variables: { id: annotatorId as string },
@@ -53,9 +55,9 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   const isRecap = page === 1;
   const toast = useToast();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Annotator",
-    body: "Are you sure you want to edit this annotator?",
-    labelConfirm: "Edit",
+    title: t("pages.annotators.edit-annotator"),
+    body: t("pages.annotators.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -71,8 +73,8 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         const isNew = annotatorId === "new" ? "created" : "updated";
 
         toast({
-          title: `Annotator ${isNew}`,
-          content: `Annotator has been ${isNew} successfully`,
+          title: isNew === "created" ? t("pages.annotators.created-title") : t("pages.annotators.updated-title"),
+          content: isNew === "created" ? t("pages.annotators.created-content") : t("pages.annotators.updated-content"),
           displayType: "success",
         });
 
@@ -80,7 +82,7 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       } else {
         const errorMessage = combineErrorMessages(data.annotatorWithDocTypeField?.fieldValidators || []);
         toast({
-          title: `Error`,
+          title: t("common.error"),
           content: errorMessage || "An unknown error occurred.",
           displayType: "error",
         });
@@ -90,7 +92,7 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       console.error("Error creating or updating annotator:", error);
       const isNew = annotatorId === "new" ? "create" : "update";
       toast({
-        title: `Error ${isNew}`,
+        title: isNew === "create" ? t("pages.annotators.create-error-title") : t("pages.annotators.update-error-title"),
         content: error.message || `Impossible to ${isNew} Annotator`,
         displayType: "error",
       });
@@ -189,13 +191,13 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             AnnotatorType.Aggregator,
           ].includes(form.inputProps("type").value)
             ? [
-              { key: "valuesQueryType", label: "Values Query Type" },
-              { key: "globalQueryType", label: "Global Query Type" },
-              { key: "docTypeFieldId", label: "Document Type Field" },
+              { key: "valuesQueryType", label: t("pages.annotators.values-query-type") },
+              { key: "globalQueryType", label: t("pages.annotators.global-query-type") },
+              { key: "docTypeFieldId", label: t("pages.annotators.document-type-field") },
             ]
             : []),
         ],
-        label: "Recap Annotator",
+        label: t("pages.annotators.recap-label"),
       },
     ],
   });
@@ -205,10 +207,8 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Annotator"
-            description="Create or Edit an Annotator to definire a specific logic to annotates and recognizes user intents
-        when a user query is analyzesd.
-          You can choose between pre-built annotator types and link to them a specific document type field when allowed."
+            nameEntity={t("pages.annotators.entity-name")}
+            description={t("pages.annotators.create-or-edit-an-annotator-to-definire")}
             id={annotatorId}
           />
           {view === "view" && (
@@ -230,23 +230,23 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
               {
                 content: (
                   <div>
-                    <TextInput label="Name" {...form.inputProps("name")} />
+                    <TextInput label={t("common.name")} {...form.inputProps("name")} />
                     <TextInput
-                      label="Field Name"
+                      label={t("fields.field-name")}
                       {...form.inputProps("fieldName")}
-                      description="Field name used by annotator to get result"
+                      description={t("pages.annotators.field-name-used-by-annotator-to-get")}
                     />
                     <CustomSelect
-                      label="Fuziness"
+                      label={t("fields.fuziness")}
                       dict={Fuzziness}
                       {...form.inputProps("fuziness")}
-                      description="Fuzziness used by annotator to search result"
+                      description={t("pages.annotators.fuzziness-used-by-annotator-to-search-result")}
                     />
                     <CustomSelect
-                      label="Type"
+                      label={t("fields.type")}
                       dict={AnnotatorType}
                       {...form.inputProps("type")}
-                      description="Annotator type. Read documentation for more information"
+                      description={t("pages.annotators.annotator-type-read-documentation-for-more-information")}
                       onChange={(annotatorType: AnnotatorType) => {
                         form.inputProps("type").onChange(annotatorType);
                         if (annotatorType !== annotatorTypeInitialValue) {
@@ -268,14 +268,14 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                         }
                       }}
                     />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextArea label={t("common.description")} {...form.inputProps("description")} />
                     <NumberInput
-                      label="Size"
+                      label={t("fields.size")}
                       {...form.inputProps("size")}
-                      description="Size for result retrieved by annotator"
+                      description={t("pages.annotators.size-for-result-retrieved-by-annotator")}
                     />
                     <AutocompleteDropdown
-                      label="Doc type field"
+                      label={t("fields.doc-type-field")}
                       onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
                       value={
                         !form?.inputProps("docTypeFieldId")?.value?.id
@@ -291,14 +291,14 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                     />
                     {/* <CustomSelectRelationsOneToOne
                       options={OptionSearchConfig}
-                      label="Doc type field"
+                      label={t("fields.doc-type-field")}
                       onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
                       value={{
                         id: "" + form.inputProps("docTypeFieldId").value.id,
                         name: form.inputProps("docTypeFieldId").value.name || "",
                       }}
                       disabled={page === 1}
-                      description="Search Configuration for current bucket"
+                      description={t("pages.annotators.search-configuration-for-current-bucket")}
                       loadMoreOptions={{
                         response: loadMoreOptions,
                         hasNextPage: DocTypeQuery.data?.options?.pageInfo?.hasNextPage || false,
@@ -312,15 +312,15 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                       AnnotatorType.Aggregator,
                     ].includes(form.inputProps("type").value) && (
                         <div>
-                          <TextInput label="boost" {...form.inputProps("boost")} disabled={isDisabled("boost")} />
+                          <TextInput label={t("fields.boost")} {...form.inputProps("boost")} disabled={isDisabled("boost")} />
                           <CustomSelect
-                            label="valuesQueryType"
+                            label={t("fields.valuesquerytype")}
                             dict={valuesQueryType}
                             {...form.inputProps("valuesQueryType")}
                             disabled={isDisabled("valuesQueryType")}
                           />
                           <CustomSelect
-                            label="globalQueryType"
+                            label={t("fields.globalquerytype")}
                             dict={globalQueryType}
                             {...form.inputProps("globalQueryType")}
                             disabled={isDisabled("globalQueryType")}
@@ -348,8 +348,8 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: annotatorId === "new" ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: annotatorId === "new" ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </ContainerFluid>

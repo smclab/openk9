@@ -16,12 +16,14 @@
 */
 import { Box, Button, Container, Typography, useTheme } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { ModalConfirm, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { useRagConfigurationsQuery, useDeleteRagConfigurationMutation } from "../../graphql-generated";
 
 export function RagConfigurations() {
+  const { t } = useTranslation();
   const ragConfigurationsQuery = useRagConfigurationsQuery();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
@@ -34,8 +36,8 @@ export function RagConfigurations() {
     onCompleted(data) {
       if (data.deleteRAGConfiguration?.id) {
         toast({
-          title: "RAG Configuration Deleted",
-          content: "RAG Configuration has been deleted successfully",
+          title: t("pages.rag-configurations.deleted-title"),
+          content: t("pages.rag-configurations.deleted-content"),
           displayType: "success",
         });
       }
@@ -43,8 +45,8 @@ export function RagConfigurations() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete RAG Configuration",
+        title: t("common.delete-error"),
+        content: t("pages.rag-configurations.delete-error-content"),
         displayType: "error",
       });
     },
@@ -56,17 +58,14 @@ export function RagConfigurations() {
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Box sx={{ width: "50%", ml: 2 }}>
             <Typography component="h1" variant="h1" fontWeight="600">
-              RAG Configurations
+              {t("pages.rag-configurations.title")}
             </Typography>
-            <Typography variant="body1">
-              In this section you can create and handle the RAG configurations. A RAG configuration can be used to
-              customize the retrieved data behaviours.
-            </Typography>
+            <Typography variant="body1">{t("pages.rag-configurations.description")}</Typography>
           </Box>
           <Box>
             <Link to="/rag-configuration/new">
               <Button variant="contained" color="primary">
-                Create new RAG Configuration
+                {t("pages.rag-configurations.create-new")}
               </Button>
             </Link>
           </Box>
@@ -98,7 +97,7 @@ export function RagConfigurations() {
             }}
             rowActions={[
               {
-                label: "View",
+                label: t("common.view"),
                 action: (ragConfig) => {
                   if (ragConfig?.id)
                     navigate(`/rag-configuration/${ragConfig?.id}/view`, {
@@ -107,7 +106,7 @@ export function RagConfigurations() {
                 },
               },
               {
-                label: "Edit",
+                label: t("common.edit"),
                 action: (ragConfig) => {
                   if (ragConfig?.id)
                     navigate(`/rag-configuration/${ragConfig?.id}`, {
@@ -116,7 +115,7 @@ export function RagConfigurations() {
                 },
               },
               {
-                label: "Delete",
+                label: t("common.delete"),
                 action: (ragConfig) => {
                   if (ragConfig?.id) setViewDeleteModal({ view: true, id: ragConfig.id });
                 },
@@ -124,11 +123,11 @@ export function RagConfigurations() {
             ]}
             columns={[
               {
-                header: "Name",
+                header: t("common.name"),
                 content: (ragConfig) => <Box fontWeight="bolder">{ragConfig?.name}</Box>,
               },
               {
-                header: "Description",
+                header: t("common.description"),
                 content: (ragConfig) => (
                   <Typography variant="body2" className="pipeline-title">
                     {ragConfig?.description}
@@ -136,7 +135,7 @@ export function RagConfigurations() {
                 ),
               },
               {
-                header: "Type",
+                header: t("common.type"),
                 content: (ragConfig) => <Typography variant="body2">{ragConfig?.type}</Typography>,
               },
             ]}
@@ -145,9 +144,9 @@ export function RagConfigurations() {
 
         {viewDeleteModal.view && (
           <ModalConfirm
-            title="Confirm Deletion"
-            body="Are you sure you want to delete this RAG Configuration? This action is irreversible and all associated data will be lost."
-            labelConfirm="Delete"
+            title={t("modal.confirm-deletion")}
+            body={t("pages.rag-configurations.delete-body")}
+            labelConfirm={t("common.delete")}
             actionConfirm={() => {
               deleteRagConfigurationMutate({
                 variables: { id: viewDeleteModal.id || "" },

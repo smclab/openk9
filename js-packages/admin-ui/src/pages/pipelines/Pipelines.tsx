@@ -17,12 +17,14 @@
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { ModalConfirm } from "@components/Form";
 import { Table } from "../../components/Table/Table";
 import { useDeleteEnrichPipelineMutation, useEnrichPipelinesQuery } from "../../graphql-generated";
 
 export function Pipelines() {
+  const { t } = useTranslation();
   const pipelinesQuery = useEnrichPipelinesQuery();
   const navigate = useNavigate();
   const toast = useToast();
@@ -31,8 +33,8 @@ export function Pipelines() {
     onCompleted(data) {
       if (data.deleteEnrichPipeline?.id) {
         toast({
-          title: "Enrich Pipeline Deleted",
-          content: "Enrich Pipeline has been deleted successfully",
+          title: t("pages.pipelines.deleted-title"),
+          content: t("pages.pipelines.deleted-content"),
           displayType: "success",
         });
       }
@@ -40,8 +42,8 @@ export function Pipelines() {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Enrich Pipeline",
+        title: t("common.delete-error"),
+        content: t("pages.pipelines.delete-error-content"),
         displayType: "error",
       });
     },
@@ -63,17 +65,14 @@ export function Pipelines() {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Pipelines
+            {t("pages.pipelines.title")}
           </Typography>
-          <Typography variant="body1">
-            In this section you can create and handle Pipelines. A Pipeline define series of enrichment steps to
-            performs to data. You can add and remove Enrich Items to it it and add to DataSource.
-          </Typography>
+          <Typography variant="body1">{t("pages.pipelines.description")}</Typography>
         </Box>
         <Box>
           <Link to="/pipeline/new/mode/edit" style={{ textDecoration: "none" }}>
             <Button variant="contained" color="primary">
-              Create New Pipeline
+              {t("pages.pipelines.create-new")}
             </Button>
           </Link>
         </Box>
@@ -96,7 +95,7 @@ export function Pipelines() {
           }}
           rowActions={[
             {
-              label: "View",
+              label: t("common.view"),
               action: (pipelines) => {
                 pipelines.id &&
                   navigate(`/pipeline/${pipelines.id}/mode/view`, {
@@ -105,7 +104,7 @@ export function Pipelines() {
               },
             },
             {
-              label: "Edit",
+              label: t("common.edit"),
               action: (pipelines) => {
                 pipelines.id &&
                   navigate(`/pipeline/${pipelines.id}/mode/edit`, {
@@ -114,7 +113,7 @@ export function Pipelines() {
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               action: (pipeline) => {
                 pipeline.id && setViewDeleteModal({ view: true, id: pipeline.id });
               },
@@ -122,11 +121,11 @@ export function Pipelines() {
           ]}
           columns={[
             {
-              header: "Name",
+              header: t("common.name"),
               content: (pipeline) => <Box fontWeight="bolder">{pipeline?.name}</Box>,
             },
             {
-              header: "Description",
+              header: t("common.description"),
               content: (pipeline) => (
                 <Typography variant="body2" className="pipeline-title">
                   {pipeline?.description}
@@ -134,7 +133,7 @@ export function Pipelines() {
               ),
             },
             {
-              header: "Priority",
+              header: t("common.priority"),
               content: (pipeline: any) => (
                 <Typography variant="body2" className="pipeline-title">
                   {pipeline?.priority}
@@ -147,9 +146,9 @@ export function Pipelines() {
 
       {viewDeleteModal.view && (
         <ModalConfirm
-          title="Confirm Deletion"
-          body="Are you sure you want to delete this pipeline? This action is irreversible and all associated data will be lost."
-          labelConfirm="Delete"
+          title={t("modal.confirm-deletion")}
+          body={t("pages.pipelines.delete-body")}
+          labelConfirm={t("common.delete")}
           actionConfirm={() => {
             deleteEnrichPipelineMutate({
               variables: { id: viewDeleteModal.id || "" },

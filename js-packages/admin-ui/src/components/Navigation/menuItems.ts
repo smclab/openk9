@@ -14,106 +14,114 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+import { useTranslation } from "react-i18next";
 import { MenuItem } from "./types";
 
 export const menuItems: MenuItem[] = [
-  { label: "Dashboard", path: "/", IsChildren: false, value: "dashboard" },
-  { label: "Buckets", path: "/buckets", IsChildren: false, value: "buckets" },
+  { labelKey: "nav.dashboard", path: "/", IsChildren: false, value: "dashboard" },
+  { labelKey: "nav.buckets", path: "/buckets", IsChildren: false, value: "buckets" },
   {
-    label: "Datasource and Data Enrichments",
+    labelKey: "nav.datasource-group",
     isGroup: true,
     IsChildren: false,
     value: "datasource-group",
     children: [
-      { label: "Data Sources", path: "/data-sources", IsChildren: true, value: "data-sources" },
-      { label: "Connectors", path: "/plugin-drivers", IsChildren: true, value: "plugin-drivers" },
-      { label: "Pipelines", path: "/pipelines", IsChildren: true, value: "pipelines" },
-      { label: "Enrich Items", path: "/enrich-items", IsChildren: true, value: "enrich-items" },
+      { labelKey: "nav.data-sources", path: "/data-sources", IsChildren: true, value: "data-sources" },
+      { labelKey: "nav.connectors", path: "/plugin-drivers", IsChildren: true, value: "plugin-drivers" },
+      { labelKey: "nav.pipelines", path: "/pipelines", IsChildren: true, value: "pipelines" },
+      { labelKey: "nav.enrich-items", path: "/enrich-items", IsChildren: true, value: "enrich-items" },
     ],
   },
   {
-    label: "Mappings",
+    labelKey: "nav.mappings-group",
     isGroup: true,
     IsChildren: false,
     value: "mappings-group",
     children: [
-      { label: "Data Indices", path: "/dataindices", IsChildren: true, value: "dataindices" },
-      { label: "Document Types", path: "/document-types", IsChildren: true, value: "document-types" },
+      { labelKey: "nav.data-indices", path: "/dataindices", IsChildren: true, value: "dataindices" },
+      { labelKey: "nav.document-types", path: "/document-types", IsChildren: true, value: "document-types" },
       {
-        label: "Document Type Templates",
+        labelKey: "nav.document-type-templates",
         path: "/document-type-templates",
         IsChildren: true,
         value: "document-type-templates",
       },
       {
-        label: "Analysis",
+        labelKey: "nav.analysis-group",
         isGroup: true,
         IsChildren: true,
         value: "analysis-group",
         children: [
-          { label: "Analyzers", path: "/analyzers", IsChildren: true, value: "analyzers" },
-          { label: "Tokenizers", path: "/tokenizers", IsChildren: true, value: "tokenizers" },
-          { label: "Token Filters", path: "/token-filters", IsChildren: true, value: "token-filters" },
-          { label: "Char Filters", path: "/char-filters", IsChildren: true, value: "char-filters" },
+          { labelKey: "nav.analyzers", path: "/analyzers", IsChildren: true, value: "analyzers" },
+          { labelKey: "nav.tokenizers", path: "/tokenizers", IsChildren: true, value: "tokenizers" },
+          { labelKey: "nav.token-filters", path: "/token-filters", IsChildren: true, value: "token-filters" },
+          { labelKey: "nav.char-filters", path: "/char-filters", IsChildren: true, value: "char-filters" },
         ],
       },
     ],
   },
   {
-    label: "Search Configuration",
+    labelKey: "nav.search-config-group",
     isGroup: true,
     IsChildren: false,
     value: "search-config-group",
     children: [
-      { label: "Search Config", path: "/search-configs", IsChildren: true, value: "search-configs" },
-      { label: "Filters", path: "/suggestion-categories", IsChildren: true, value: "suggestion-categories" },
-      { label: "Highlights", path: "/highlights", IsChildren: true, value: "highlights" },
-      { label: "Tabs", path: "/tabs", IsChildren: true, value: "tabs" },
-      { label: "Token Tabs", path: "/token-tabs", IsChildren: true, value: "token-tabs" },
-      { label: "Sortings", path: "/sortings", IsChildren: true, value: "sortings" },
-      { label: "Autocorrections", path: "/autocorrections", IsChildren: true, value: "autocorrections" },
-      { label: "Autocompletes", path: "/autocompletes", IsChildren: true, value: "autocompletes" },
+      { labelKey: "nav.search-config", path: "/search-configs", IsChildren: true, value: "search-configs" },
+      { labelKey: "nav.filters", path: "/suggestion-categories", IsChildren: true, value: "suggestion-categories" },
+      { labelKey: "nav.highlights", path: "/highlights", IsChildren: true, value: "highlights" },
+      { labelKey: "nav.tabs", path: "/tabs", IsChildren: true, value: "tabs" },
+      { labelKey: "nav.token-tabs", path: "/token-tabs", IsChildren: true, value: "token-tabs" },
+      { labelKey: "nav.sortings", path: "/sortings", IsChildren: true, value: "sortings" },
+      { labelKey: "nav.autocorrections", path: "/autocorrections", IsChildren: true, value: "autocorrections" },
+      { labelKey: "nav.autocompletes", path: "/autocompletes", IsChildren: true, value: "autocompletes" },
     ],
   },
   {
-    label: "AI Tools Configuration",
+    labelKey: "nav.ai-tools-group",
     isGroup: true,
     IsChildren: false,
     value: "ai-tools-group",
     children: [
       {
-        label: "Generative AI Configuration",
+        labelKey: "nav.generative-ai-group",
         isGroup: true,
         IsChildren: true,
         value: "generative-ai-group",
         children: [
           {
-            label: "Large Language Models",
+            labelKey: "nav.large-language-models",
             path: "/large-languages-model",
             IsChildren: true,
             value: "large-languages-model",
           },
-          { label: "Embedding Models", path: "/embedding-models", IsChildren: true, value: "embedding-models" },
-          { label: "RAG Configuration", path: "/rag-configurations", IsChildren: true, value: "rag-configurations" },
+          { labelKey: "nav.embedding-models", path: "/embedding-models", IsChildren: true, value: "embedding-models" },
+          {
+            labelKey: "nav.rag-configuration",
+            path: "/rag-configurations",
+            IsChildren: true,
+            value: "rag-configurations",
+          },
         ],
       },
       {
-        label: "Query Analysis Configuration",
+        labelKey: "nav.query-analysis-group",
         isGroup: true,
         IsChildren: true,
         value: "query-analysis-group",
         children: [
-          { label: "Query Analysis", path: "/query-analyses", IsChildren: true, value: "query-analyses" },
-          { label: "Rules", path: "/rules", IsChildren: true, value: "rules" },
-          { label: "Annotators", path: "/annotators", IsChildren: true, value: "annotators" },
+          { labelKey: "nav.query-analysis", path: "/query-analyses", IsChildren: true, value: "query-analyses" },
+          { labelKey: "nav.rules", path: "/rules", IsChildren: true, value: "rules" },
+          { labelKey: "nav.annotators", path: "/annotators", IsChildren: true, value: "annotators" },
         ],
       },
     ],
   },
-  { label: "Admin Settings", path: "/admin-settings", IsChildren: false, value: "admin-settings" },
+  { labelKey: "nav.admin-settings", path: "/admin-settings", IsChildren: false, value: "admin-settings" },
 ];
 
 export const useFilteredMenuItems = (searchTerm: string) => {
+  const { t } = useTranslation();
+
   const flattenItems = (items: MenuItem[]): MenuItem[] => {
     return items.reduce((acc: MenuItem[], item) => {
       if (item.children) {
@@ -127,7 +135,7 @@ export const useFilteredMenuItems = (searchTerm: string) => {
     if (!searchTerm) return items;
 
     const flattenedItems = flattenItems(items);
-    return flattenedItems.filter((item) => item.label.toLowerCase().includes(searchTerm.toLowerCase()));
+    return flattenedItems.filter((item) => t(item.labelKey).toLowerCase().includes(searchTerm.toLowerCase()));
   };
 
   return filterItems(menuItems);

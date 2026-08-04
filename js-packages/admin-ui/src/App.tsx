@@ -94,6 +94,7 @@ import { SavePluginnDriverModel } from "@pages/PluginDriver/SavePluginDriver";
 import { RagConfigurations, SaveRagConfiguration } from "@pages/RagConfiguration";
 import { QueryClientProvider } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import "./app.css";
 import { apolloClient } from "./components/apolloClient";
@@ -101,6 +102,7 @@ import { AuthenticationProvider } from "./components/authentication";
 import { Logo } from "./components/common/Logo";
 import { NavigationFooter } from "./components/Navigation/NavigationFooter";
 import { queryClient } from "./components/queryClient";
+import LanguageSwitcher from "./utils/LanguageSwitcher";
 import ThemeSwitcher from "./utils/ThemeSwitcher";
 import { ThemeModeContextProvider, useThemeModeState } from "./utils/themeMode";
 
@@ -527,6 +529,7 @@ export const scrollToTop = () => {
 export default function App() {
   const themeMode = useThemeModeState();
   const { isDarkMode, toggleTheme } = themeMode;
+  const { t } = useTranslation();
   const memoizedTheme = useMemo(() => (isDarkMode ? darkTheme : lightTheme), [isDarkMode]);
   const [extraFab, setExtraFab] = useState<React.ReactNode | null>(null);
   const recapAnchorRef = React.useRef<HTMLElement | null>(null);
@@ -622,6 +625,8 @@ export default function App() {
                             }}
                           />
 
+                          <LanguageSwitcher />
+
                           <ThemeSwitcher isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
                         </Box>
                       </Toolbar>
@@ -653,7 +658,7 @@ export default function App() {
                         <TextField
                           fullWidth
                           size="small"
-                          placeholder="Search section..."
+                          placeholder={t("app.search-section")}
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           sx={{
@@ -746,7 +751,7 @@ export default function App() {
                                 <Fab
                                   color="primary"
                                   size="medium"
-                                  aria-label="scroll back to top"
+                                  aria-label={t("app.scroll-to-top")}
                                   onClick={scrollToTop}
                                   sx={{
                                     boxShadow: 6,
