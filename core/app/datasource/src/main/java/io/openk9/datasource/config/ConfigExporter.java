@@ -72,8 +72,8 @@ import org.hibernate.reactive.mutiny.Mutiny;
  * reference graph acyclic (the property {@link ConfigEntitySorter} relies on).
  * The set of edges is <em>derived</em> from the JPA model (see
  * {@link #deriveEdges()}): every owning association of an exportable entity that
- * points to another exportable type is followed, unless the field is annotated
- * {@link ExportIgnore}. Each edge is then collected with one flat
+ * points to another exportable type is followed. Each edge is then collected
+ * with one flat
  * {@code select owner.id, target.id} query: the inner join skips unset foreign
  * keys and, unlike navigating a lazy to-one getter, never depends on the
  * association being fetched into the reactive session. Entities marked
@@ -421,8 +421,7 @@ public class ConfigExporter {
 	 * Builds the edge list by reflecting over the entity classes registered in
 	 * {@link ConfigEntityType}: for each exportable entity (composite-key join
 	 * entities excepted, they are handled by dedicated builders) every owning
-	 * association whose target is itself exportable becomes an edge, unless the
-	 * field is annotated {@link ExportIgnore}.
+	 * association whose target is itself exportable becomes an edge.
 	 */
 	private static List<EdgeSpec> deriveEdges() {
 		Map<Class<?>, ConfigEntityType> typeByEntity = new HashMap<>();
@@ -437,9 +436,6 @@ public class ConfigExporter {
 				continue;
 			}
 			for (Field field : associationFields(owner)) {
-				if (field.isAnnotationPresent(ExportIgnore.class)) {
-					continue;
-				}
 				Class<?> target = owningTarget(field);
 				ConfigEntityType targetType =
 					target == null ? null : typeByEntity.get(target);
