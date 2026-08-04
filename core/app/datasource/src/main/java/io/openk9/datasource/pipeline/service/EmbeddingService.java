@@ -418,10 +418,12 @@ public class EmbeddingService {
 
 	/**
 	 * Maps the vector {@code oneof} to a JSON-friendly value. FLOAT32 stays a
-	 * list of floats (as v1). The quantized shapes are a provisional
-	 * representation pending the knn_vector mapping decision (out of this
-	 * module): i8 as a JSON array of signed integers (one per
-	 * component), bits as a JSON array of unsigned bytes (packed, MSB first).
+	 * list of floats (as v1). The quantized shapes follow the {@code knn_vector}
+	 * mapping written by B2 #2269, so both are JSON arrays of <em>signed</em>
+	 * integers: OpenSearch reads a {@code byte} or {@code binary} knn_vector as
+	 * Lucene/faiss signed bytes, and rejects any value outside [-128, 127]. i8
+	 * carries one integer per component; bits carries one integer per packed
+	 * group of eight components (MSB first), so its length is dimension / 8.
 	 */
 	static Object mapVector(EmbeddingOuterClass.EmbeddedChunk chunk) {
 
@@ -440,7 +442,7 @@ public class EmbeddingService {
 				var bytes = chunk.getBits().toByteArray();
 				var values = new ArrayList<Integer>(bytes.length);
 				for (byte b : bytes) {
-					values.add(b & 0xFF);
+					values.add((int) b);
 				}
 				return values;
 			}

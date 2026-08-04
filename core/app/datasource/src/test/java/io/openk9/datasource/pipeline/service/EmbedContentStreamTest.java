@@ -320,13 +320,29 @@ class EmbedContentStreamTest {
 		Assertions.assertEquals(
 			List.of(-128, 0, 127), EmbeddingService.mapVector(i8));
 
+		// Packed bits keep the sign, like i8: a binary knn_vector is read by
+		// OpenSearch as signed bytes, and any value above 127 is rejected with
+		// "KNN vector values are not within in the byte range [-128, 127]".
+		// 0xFF is therefore -1, not 255.
 		var bits = EmbeddedChunk.newBuilder()
 			.setNumber(1)
 			.setVectorDataType(VectorDataType.VECTOR_DATA_TYPE_BINARY)
 			.setBits(ByteString.copyFrom(new byte[] {(byte) 0xFF, 0x00, 0x01}))
 			.build();
 		Assertions.assertEquals(
-			List.of(255, 0, 1), EmbeddingService.mapVector(bits));
+			List.of(-1, 0, 1), EmbeddingService.mapVector(bits));
+
+		var allBitsSet = EmbeddedChunk.newBuilder()
+			.setNumber(1)
+			.setVectorDataType(VectorDataType.VECTOR_DATA_TYPE_BINARY)
+			.setBits(ByteString.copyFrom(
+				new byte[] {(byte) 0x80, (byte) 0xC0, 0x7F}))
+			.build();
+		Assertions.assertTrue(
+			((List<?>) EmbeddingService.mapVector(allBitsSet)).stream()
+				.map(Integer.class::cast)
+				.allMatch(value -> value >= -128 && value <= 127),
+			"packed bits must stay inside the OpenSearch byte range");
 	}
 
 	@Test
