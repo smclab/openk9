@@ -18,10 +18,12 @@
 package io.openk9.datasource.pipeline.actor;
 
 import java.time.Duration;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import jakarta.enterprise.inject.spi.CDI;
 
 import io.openk9.common.util.ingestion.ShardingKey;
+import io.openk9.datasource.actor.PekkoUtils;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
@@ -56,13 +58,16 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
 	// Upper bound for a single batch write (delete + bulk); generous on purpose,
 	// the write is normally sub-second.
-	// TODO: promote to a configuration property.
-	private static final Duration WRITE_ASK_TIMEOUT = Duration.ofMinutes(5);
+	public static final String WRITE_TIMEOUT =
+		"io.openk9.pipeline.embedding.write-timeout";
+
+	private static final Duration WRITE_TIMEOUT_DEFAULT = Duration.ofMinutes(5);
 
 	private static final Logger log = Logger.getLogger(EmbeddingProcessor.class);
 
 	private final ShardingKey processKey;
 	private final EmbeddingService embeddingService;
+	private final Duration writeTimeout;
 	private ActorRef<Processor.Response> replyTo;
 	private ActorRef<ChunkStreamWriter.Command> writer;
 	private HeldMessage heldMessage;
@@ -75,6 +80,10 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		this.processKey = processKey;
 		this.embeddingService =
 			CDI.current().select(EmbeddingService.class).get();
+		this.writeTimeout = PekkoUtils.getDuration(
+			context.getSystem().settings().config(),
+			WRITE_TIMEOUT,
+			WRITE_TIMEOUT_DEFAULT);
 
 	}
 
@@ -104,19 +113,24 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		this.writer = getContext().spawnAnonymous(
 			ChunkStreamWriter.create(start.scheduler(), heldMessage));
 
-		var self = getContext().getSelf();
 		var pekkoScheduler = getContext().getSystem().scheduler();
 
-		embeddingService
+		// Collapse the stream to its terminal outcome and pipe it back as a
+		// message: every batch is already written along the way (ask-per-batch),
+		// so completion and failure are the only events left to observe.
+		var streamOutcome = embeddingService
 			.embedContentStream(
 				processKey.tenantId(), processKey.scheduleId(), payload)
 			.onItem().transformToUniAndConcatenate(batch ->
 				askWriter(pekkoScheduler, batch))
-			.subscribe().with(
-				ignored -> {},
-				throwable -> self.tell(new StreamFailed(throwable)),
-				() -> self.tell(new StreamCompleted())
-			);
+			.collect().last()
+			.subscribeAsCompletionStage();
+
+		getContext().pipeToSelf(
+			streamOutcome,
+			(ignored, throwable) -> throwable == null
+				? new StreamCompleted()
+				: new StreamFailed(unwrap(throwable)));
 
 		return this;
 	}
@@ -128,7 +142,7 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 			writer,
 			(ActorRef<ChunkStreamWriter.Response> ackTo) ->
 				new ChunkStreamWriter.WriteBatch(batch, ackTo),
-			WRITE_ASK_TIMEOUT,
+			writeTimeout,
 			pekkoScheduler
 		);
 
@@ -149,7 +163,7 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 			writer,
 			(ActorRef<ChunkStreamWriter.Response> ackTo) ->
 				new ChunkStreamWriter.EndStream(ackTo),
-			WRITE_ASK_TIMEOUT,
+			writeTimeout,
 			getContext().getSystem().scheduler()
 		);
 
@@ -187,6 +201,15 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 			new DataProcessException(streamFailed.throwable()), heldMessage));
 
 		return Behaviors.stopped();
+	}
+
+	// CompletionStage failures may surface wrapped in a CompletionException;
+	// report the cause, as the direct subscription used to.
+	private static Throwable unwrap(Throwable throwable) {
+		return throwable instanceof CompletionException wrapped
+			&& wrapped.getCause() != null
+				? wrapped.getCause()
+				: throwable;
 	}
 
 	private record StreamCompleted() implements Processor.Command {}
