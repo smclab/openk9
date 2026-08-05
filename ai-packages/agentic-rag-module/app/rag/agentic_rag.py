@@ -1007,18 +1007,23 @@ class RagGraph:
                 )
             else:
                 analyze_query_prompt_template = """
-                    Analyze the relationship between the current question and the previous conversation.
+                    Classify whether the CURRENT QUESTION is a follow-up to the PREVIOUS CONVERSATION or a new, self-contained question.
 
-                    **Classification Criteria:**
+                    DECISIVE TEST - self-containedness, not topical similarity:
+                    Ask: "Could the current question be fully understood and answered ON ITS OWN, without the previous conversation?"
+                    - YES -> NEW_QUESTION (even if it concerns the same broad subject area, even if it starts with a connector).
+                    - NO, because it relies on the previous turn to resolve an unresolved reference (a pronoun: it/they/this/that/its; an ellipsis like "and for X?"; an implicit object; "the above/that one") -> FOLLOW_UP.
 
-                    1.  Respond "FOLLOW_UP" if the current question:
-                        - Explicitly or implicitly refers to information present in the previous conversation.
-                        - Asks for clarification, further details, extensions, or applications of concepts already discussed.
+                    RULES:
+                    - Ignore leading connectors/fillers ("ok", "and", "so", "another thing", "by the way", and their equivalents in other languages): strip them and judge the core question underneath.
+                    - Sharing the same broad domain is NOT enough for FOLLOW_UP. A change of subject, entity, or intent is a NEW_QUESTION even when both turns belong to the same domain.
+                    - A question that names its own subject and is complete on its own is a NEW_QUESTION, even right after a related turn.
 
-                    2.  Respond "NEW_QUESTION" if the current question:
-                        - Introduces a new topic, unrelated to the previous conversation.
-                        - Contains no direct or indirect references to what was previously said.
-                        - Represents a clear and distinct change of subject.
+                    EXAMPLES:
+                    - Prev "What is the Alpha module?" / Current "Which cases is it used for?" -> FOLLOW_UP ("it" refers to Alpha).
+                    - Prev "Do you cover topic X?" / Current "And topic Y?" -> FOLLOW_UP (ellipsis).
+                    - Prev "Tell me about area A." / Current "By the way, what is B?" -> NEW_QUESTION (self-contained; connector ignored).
+                    - Prev "Explain feature P." / Current "Where is the documentation?" -> NEW_QUESTION (change of intent).
                     """
 
                 analyze_query_prompt = (
