@@ -991,6 +991,7 @@ class RagGraph:
             conversation_context = self._get_conversation_context(messages)
 
             if self.configuration.get("analyze_query_prompt_template"):
+                prompt_source = "tenant"
                 analyze_query_prompt_template = escape_curly_braces(
                     self.configuration.get("analyze_query_prompt_template")
                 )
@@ -1006,6 +1007,7 @@ class RagGraph:
                         """
                 )
             else:
+                prompt_source = "default"
                 analyze_query_prompt_template = """
                     Classify whether the CURRENT QUESTION is a follow-up to the PREVIOUS CONVERSATION or a new, self-contained question.
 
@@ -1051,6 +1053,10 @@ class RagGraph:
             decision = analyze_query_chain.invoke(
                 {"query": query, "context": conversation_context}
             )
+            logger.debug(
+                f"[analyze_query] decision={decision.response.value} "
+                f"prompt={prompt_source}"
+            )
 
             if decision.response.value == "FOLLOW_UP":
                 previous_query = next(
@@ -1077,7 +1083,15 @@ class RagGraph:
                         )
                         state.original_query = query
                         state.current_query = rewrited_query
+                        logger.debug(
+                            f"[analyze_query] rewritten: {query!r} -> "
+                            f"{rewrited_query!r}"
+                        )
                 else:
+                    logger.debug(
+                        "[analyze_query] FOLLOW_UP without a usable previous "
+                        "exchange -> NEW_QUESTION"
+                    )
                     state.domain = ["NEW_QUESTION"]
             else:
                 state.domain = ["NEW_QUESTION"]
