@@ -58,7 +58,7 @@ from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
 from app.utils.opensearch_client import get_opensearch_client
-from app.utils.query_rewrite import escape_curly_braces, shares_significant_terms
+from app.utils.query_rewrite import escape_curly_braces
 
 
 class GraphState(BaseModel):
@@ -410,9 +410,6 @@ class RagGraph:
                 "previous_response": previous_response,
             }
         )
-
-        if not shares_significant_terms(response, previous_query):
-            return f"{previous_query} {response}".strip()
 
         return response
 
