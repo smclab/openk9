@@ -232,6 +232,10 @@ export const BucketQueryBucket = gql`
         id
         name
       }
+      highlight {
+        id
+        name
+      }
     }
   }
 `;
@@ -321,6 +325,7 @@ export const CreateUpdateBucketRecap = gql`
     $ragConfigurationSimpleGenerate: BigInteger
     $autocorrection: BigInteger
     $autocomplete: BigInteger
+    $highlightId: BigInteger
     $languageIds: [BigInteger]
   ) {
     bucketWithLists(
@@ -344,6 +349,7 @@ export const CreateUpdateBucketRecap = gql`
         ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate
         autocorrectionId: $autocorrection
         autocompleteId: $autocomplete
+        highlightId: $highlightId
         languageIds: $languageIds
       }
     ) {

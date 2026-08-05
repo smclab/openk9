@@ -45,6 +45,7 @@ import {
   useBucketQuery,
   useCreateOrUpdateBucketMutation,
   useDataSourcesQuery,
+  useHighlightsQuery,
   useLanguagesQuery,
   useSuggestionCategoriesQuery,
   useTabsQuery,
@@ -134,6 +135,12 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
     queryKeyPath: "autocompletes.edges",
     useQuery: useAutocompletesOptionsQuery,
     accessKey: "node",
+    isNetworkOnly: true,
+  });
+
+  const { OptionQuery: highlightOption } = useOptions({
+    queryKeyPath: "highlights",
+    useQuery: useHighlightsQuery,
     isNetworkOnly: true,
   });
 
@@ -233,6 +240,10 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
           id: bucketQuery.data?.bucket?.autocomplete?.id || "-1",
           name: bucketQuery.data?.bucket?.autocomplete?.name || "",
         },
+        highlightId: {
+          id: bucketQuery.data?.bucket?.highlight?.id || "-1",
+          name: bucketQuery.data?.bucket?.highlight?.name || "",
+        },
       }),
       [datasources, suggestionCategories, tabs, languages, bucketQuery],
     ),
@@ -268,6 +279,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
             : undefined,
           autocorrection: data.autocorrectionId.id !== "-1" ? data.autocorrectionId.id : null,
           autocomplete: data.autocompleteId.id !== "-1" ? data.autocompleteId.id : null,
+          highlightId: data.highlightId.id !== "-1" ? data.highlightId.id : null,
         },
       });
     },
@@ -298,6 +310,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
           { key: "ragConfigurationChatId", label: "RAG Configuration Chat" },
           { key: "ragConfigurationChatToolId", label: "RAG Configuration Chat Tool" },
           { key: "ragConfigurationSimpleGenerateId", label: "RAG Configuration Simple Generate" },
+          { key: "highlightId", label: "Highlight" },
         ],
         label: "Recap Bucket",
       },
@@ -310,6 +323,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
       ragConfigurationChatToolId: form.inputProps("ragConfigurationChatToolId").value?.name || "",
       autocorrectionId: form.inputProps("autocorrectionId").value?.name || "",
       ragConfigurationSimpleGenerateId: form.inputProps("ragConfigurationSimpleGenerateId").value?.name || "",
+      highlightId: form.inputProps("highlightId").value?.name || "",
       datasourceIds: form.inputProps("datasourceIds").value?.map((ds, index) => ({ [index + 1]: ds.label })) || [],
       suggestionCategoryIds:
         form.inputProps("suggestionCategoryIds").value?.map((sc, index) => ({ [index + 1]: sc.label })) || [],
@@ -598,6 +612,17 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         value={{
                           id: form.inputProps("autocompleteId").value.id,
                           name: form.inputProps("autocompleteId").value.name || "",
+                        }}
+                        disabled={page === 1}
+                      />
+                      <CustomSelectRelationsOneToOne
+                        options={highlightOption}
+                        label="Highlight"
+                        description="Highlight configuration used to build the highlight section of the search query"
+                        onChange={(val) => form.inputProps("highlightId").onChange({ id: val.id, name: val.name })}
+                        value={{
+                          id: form.inputProps("highlightId").value.id,
+                          name: form.inputProps("highlightId").value.name || "",
                         }}
                         disabled={page === 1}
                       />
