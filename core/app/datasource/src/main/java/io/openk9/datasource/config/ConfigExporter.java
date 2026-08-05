@@ -48,7 +48,6 @@ import io.openk9.datasource.model.util.K9Entity;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -229,7 +228,7 @@ public class ConfigExporter {
 		// Generic pass: every exportable type is loaded from ConfigEntityType, so a
 		// new entity is picked up automatically once it is registered there.
 		for (ConfigEntityType type : ConfigEntityType.values()) {
-			if (isCompositeKeyEntity(type.getEntityType())) {
+			if (ConfigMatcher.isJoinEntity(type.getEntityType())) {
 				continue;
 			}
 			acc = append(acc, s, type, edges);
@@ -432,7 +431,7 @@ public class ConfigExporter {
 		List<EdgeSpec> specs = new ArrayList<>();
 		for (ConfigEntityType ownerType : ConfigEntityType.values()) {
 			Class<?> owner = ownerType.getEntityType();
-			if (isCompositeKeyEntity(owner)) {
+			if (ConfigMatcher.isJoinEntity(owner)) {
 				continue;
 			}
 			for (Field field : associationFields(owner)) {
@@ -484,16 +483,6 @@ public class ConfigExporter {
 	}
 
 	// --- edge collection -------------------------------------------------------
-
-	/**
-	 * True when the entity has a composite key ({@code @EmbeddedId}): a join entity.
-	 */
-	private static boolean isCompositeKeyEntity(Class<?> entity) {
-		for (Field field : associationFields(entity, EmbeddedId.class)) {
-			return true;
-		}
-		return false;
-	}
 
 	/**
 	 * The owning association target of {@code field}, or {@code null} when the
