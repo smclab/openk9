@@ -8,6 +8,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { fileNameFromUrl, isImageUrl } from "./utils/imageUrl";
 
 export type PreviewTarget = {
 	title?: string;
@@ -27,23 +28,9 @@ type DocumentPreviewContextValue = {
 
 const DocumentPreviewContext = React.createContext<DocumentPreviewContextValue | null>(null);
 
-const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|bmp|avif|ico)$/i;
-
-export function fileNameFromUrl(url: string, fallback = "document"): string {
-	try {
-		const parsed = new URL(url, window.location.href);
-		const last = parsed.pathname.split("/").filter(Boolean).pop();
-		return last ? decodeURIComponent(last) : parsed.hostname || fallback;
-	} catch {
-		const clean = (url || "").split(/[?#]/)[0];
-		const last = clean.split("/").filter(Boolean).pop();
-		return last || fallback;
-	}
-}
-
-export function isImageUrl(url?: string): boolean {
-	return !!url && IMAGE_EXT.test(url.split(/[?#]/)[0]);
-}
+// Re-exported so existing imports keep working; the implementation lives in utils/imageUrl.ts,
+// which stays testable without ESM-only react-markdown.
+export { fileNameFromUrl, isImageUrl };
 
 // client-side download of text content
 export function downloadTextFile(filename: string, content: string) {
@@ -177,7 +164,10 @@ function PreviewPanel({
 	const isContent = target.content != null;
 	const isStreaming = !!target.streaming;
 	const name = target.filename || target.title || (target.url ? fileNameFromUrl(target.url) : "document");
-	const showImage = !isContent && isImageUrl(target.url);
+	// A blob: URL has no extension, so the filename is checked too.
+	const showImage = !isContent && (isImageUrl(target.url) || isImageUrl(target.filename));
+	// A blob: URL is not shareable outside the session, so "copy link" is hidden for these.
+	const isEphemeral = !isContent && (target.url ?? "").startsWith("blob:");
 	const bodyRef = React.useRef<HTMLDivElement | null>(null);
 
 	// keep scrolled to bottom while streaming
@@ -212,11 +202,13 @@ function PreviewPanel({
 				<Typography variant="subtitle1" fontWeight={600} noWrap title={name} sx={{ flex: 1, minWidth: 0 }}>
 					{name}
 				</Typography>
-				<Tooltip title={copied ? t("preview-copied") : isContent ? t("preview-copy-content") : t("preview-copy-link")}>
-					<IconButton size="small" onClick={onCopy} aria-label={t("preview-copy") ?? ""}>
-						{copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
-					</IconButton>
-				</Tooltip>
+				{!isEphemeral && (
+					<Tooltip title={copied ? t("preview-copied") : isContent ? t("preview-copy-content") : t("preview-copy-link")}>
+						<IconButton size="small" onClick={onCopy} aria-label={t("preview-copy") ?? ""}>
+							{copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+						</IconButton>
+					</Tooltip>
+				)}
 				<Tooltip title={isStreaming ? t("preview-generating") : t("preview-download")}>
 					<span>
 						{isContent ? (
@@ -233,7 +225,8 @@ function PreviewPanel({
 								size="small"
 								component="a"
 								href={target.url}
-								download
+								// Explicit name: a bare `download` on a blob: URL saves the URL UUID with no extension.
+								download={name}
 								target="_blank"
 								rel="noopener noreferrer"
 								aria-label={t("preview-download") ?? ""}
