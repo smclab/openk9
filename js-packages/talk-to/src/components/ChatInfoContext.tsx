@@ -2,8 +2,16 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useQuery } from "react-query";
 import { OpenK9Client } from "./client";
 
+/** Mirrors the backend `Bucket.RetrieveType` enum returned by `GET /api/datasource/buckets/current`. */
+export type RetrieveType = "KNN" | "HYBRID" | "TEXT";
+
 interface UserInfo {
-	retrieveType: string;
+	retrieveType: RetrieveType;
+}
+
+/** Only KNN: the backend rejects an image query on HYBRID and TEXT with 400. */
+export function supportsImageQuery(retrieveType?: RetrieveType): boolean {
+	return retrieveType === "KNN";
 }
 
 interface UserContextType {
