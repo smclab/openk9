@@ -52,7 +52,11 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.RESOURCE_URI};
+		// resourceUri is @Embedded, not a column: the contains filter built for
+		// every search field turns into a like on it, and the query is not valid
+		// SQL. To search by uri, the fields to declare are the ones inside the
+		// embeddable, and the predicate builder has to walk the nested path.
+		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE};
 	}
 
 	public Uni<FormTemplate> getForm(ResourceUri resourceUri) {

@@ -20,12 +20,14 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.dto.base.EnrichItemDTO;
+import io.openk9.datasource.resource.util.Pageable;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
@@ -34,6 +36,7 @@ public class EnrichItemServiceTest {
 	private static final Logger LOGGER = Logger.getLogger(EnrichItemServiceTest.class);
 
 	private static final String ENRICH_ITEM_NAME = "Enricher for testing";
+	private static final String SEARCHABLE_NAME = "Enricher for searching";
 	private static final String BASE_URI = "http://openk9.io";
 	private static final String PATH = "/test";
 
@@ -53,10 +56,31 @@ public class EnrichItemServiceTest {
 
 	}
 
+	@Test
+	void should_search_enrich_items_by_text() {
+		// 1. un enrich item da trovare, con un nome proprio (il campo e' unique)
+		createEnrichItem(SEARCHABLE_NAME);
+
+		// 2. la ricerca per testo passa dai campi dichiarati cercabili: se fra
+		// quelli c'e' un attributo @Embedded, la like che il filtro costruisce
+		// produce SQL non valido e la query fallisce con SQLGrammarException
+		var page = enrichItemService
+			.findAllPaginated(Pageable.DEFAULT, SEARCHABLE_NAME)
+			.await()
+			.indefinitely();
+
+		assertNotNull(page);
+		assertFalse(page.getContent().isEmpty());
+	}
+
 	private EnrichItem createEnrichItemOne() {
+		return createEnrichItem(ENRICH_ITEM_NAME);
+	}
+
+	private EnrichItem createEnrichItem(String name) {
 		var dto = EnrichItemDTO
 			.builder()
-			.name(ENRICH_ITEM_NAME)
+			.name(name)
 			.type(EnrichItem.EnrichItemType.HTTP_ASYNC)
 			.resourceUri(ResourceUri.builder()
 				.baseUri(BASE_URI)
