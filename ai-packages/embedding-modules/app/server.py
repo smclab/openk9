@@ -337,6 +337,47 @@ def to_chunk_message(piece, number, total, vector_data_type):
     return message
 
 
+def _is_cohere_on_bedrock(configuration):
+    """A cohere model on Bedrock, which the langchain class cannot read.
+
+    `BedrockEmbeddings._embedding_func` returns `response_body["embeddings"][0]`,
+    the shape cohere used before the embedding types: `cohere.embed-v4` answers
+    with `embeddings` keyed by type (`{"float": [...]}`) and the read fails with
+    `KeyError: 0`. Our own client asks for `embedding_types: ["float"]` and
+    reads that key, so it speaks the current protocol for both v3 and v4.
+    """
+    provider = configuration.get("model_type")
+    model = configuration.get("model") or ""
+
+    return provider == ModelType.AWS_BEDROCK.value and model.startswith("cohere.")
+
+
+def build_text_embed_query(configuration):
+    """Builds the text embedding function used by the v1 GetMessages path.
+
+    Where a langchain text class cannot serve the configured model, the direct
+    client of the v2 RPCs takes over. Without this, a tenant on a multimodal
+    model breaks every v1 caller at once: input and output guardrails, domain
+    detection, uploaded documents.
+
+    The switch cannot be the `multimodal` flag alone, even though that is the
+    declared source of truth: `GetEmbeddingModelConfigurationsResponse` in
+    searcher.proto carries no such field, so the RAG callers of this RPC have
+    no way to forward it and it always arrives false. Provider and model decide
+    the protocol on the wire, and they do arrive.
+
+    The input type stays `search_query`, which is what the langchain
+    `embed_query` this replaces already sent for every chunk.
+    """
+    if configuration.get("multimodal") or _is_cohere_on_bedrock(configuration):
+        _apply_credentials(configuration)
+        embedder = build_multimodal_embedder(configuration)
+
+        return lambda text: embedder.embed_texts([text], "search_query")[0]
+
+    return initialize_embedding_model(configuration).embed_query
+
+
 def build_query_capabilities(configuration):
     """Builds the query-time embedding capabilities (query.QueryCapabilities).
 
@@ -407,7 +448,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             embedding_model = request.embeddingModel
 
             configuration = _build_configuration(embedding_model)
-            embeddings = initialize_embedding_model(configuration)
+            embed_query = build_text_embed_query(configuration)
 
             text = clean_text(request.text)
             text_splitted = []
@@ -448,7 +489,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                     "number": index,
                     "total": total_chunks,
                     "text": chunk_text,
-                    "vectors": embeddings.embed_query(chunk_text),
+                    "vectors": embed_query(chunk_text),
                 }
                 chunks.append(chunk_result)
 
