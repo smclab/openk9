@@ -11,8 +11,6 @@
 		"new-chat": "Nouveau chat",
 		"no-chats": "Aucun chat disponible",
 		"write-a-message": "Écrire un message...",
-		"attach-popup-title": "Téléverser une pièce jointe",
-		"document": "Document",
 		"attach-file-aria-label": "Joindre un fichier",
 		"uploading": "Téléversement",
 		"upload-completed": "Téléversement terminé",
@@ -40,6 +38,15 @@
 		"preview-fallback-caption": "Si l'aperçu ne s'affiche pas, utilisez « Ouvrir dans un nouvel onglet » ou « Télécharger ».",
 		"preview-fallback-message": "Aperçu non disponible. Utilisez « Ouvrir dans un nouvel onglet » ou « Télécharger » dans la barre du haut.",
 		"show-all-sources": "Tout afficher",
-		"hide-all-sources": "Tout masquer"
+		"hide-all-sources": "Tout masquer",
+		"search-by-image": "Rechercher par image",
+		"remove-image": "Retirer l'image",
+		"preparing-image": "Préparation de l'image",
+		"attached-image": "Image jointe : {{filename}}",
+		"image-too-large": "Image trop volumineuse (max {{size}} Mo)",
+		"image-not-readable": "Image illisible",
+		"question-with-image": "Question posée avec une image",
+		"send-message": "Envoyer le message",
+		"stop-generating": "Arrêter la génération"
 	}
 }

@@ -11,8 +11,6 @@
 		"new-chat": "Nuova chat",
 		"no-chats": "Nessuna chat disponibile",
 		"write-a-message": "Scrivi un messaggio...",
-		"attach-popup-title": "Carica un allegato",
-		"document": "Documento",
 		"attach-file-aria-label": "Allega un file",
 		"uploading": "Caricamento",
 		"upload-completed": "Upload completato",
@@ -40,6 +38,15 @@
 		"preview-fallback-caption": "Se l'anteprima non viene visualizzata, usa \"Apri in una nuova scheda\" o \"Scarica\".",
 		"preview-fallback-message": "Anteprima non disponibile. Usa \"Apri in una nuova scheda\" o \"Scarica\" nella barra in alto.",
 		"show-all-sources": "Mostra tutte",
-		"hide-all-sources": "Nascondi tutte"
+		"hide-all-sources": "Nascondi tutte",
+		"search-by-image": "Cerca per immagine",
+		"remove-image": "Rimuovi immagine",
+		"preparing-image": "Preparazione dell'immagine",
+		"attached-image": "Immagine allegata: {{filename}}",
+		"image-too-large": "Immagine troppo grande (max {{size}} MB)",
+		"image-not-readable": "Immagine non leggibile",
+		"question-with-image": "Domanda posta con un'immagine",
+		"send-message": "Invia messaggio",
+		"stop-generating": "Interrompi la generazione"
 	}
 }

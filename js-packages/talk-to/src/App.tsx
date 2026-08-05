@@ -15,7 +15,7 @@ import { MessageCard } from "./components/MessageCard";
 import Search from "./components/Search";
 import Sidebar from "./components/Sidebar";
 import { defaultThemeK9 } from "./components/theme";
-import useGenerateResponse, { Message } from "./components/useGenerateResponse";
+import useGenerateResponse, { HandleSearch, Message } from "./components/useGenerateResponse";
 import { Logo } from "./Svg/Logo";
 
 function App() {
@@ -36,6 +36,7 @@ function App() {
 		cancelAllResponses,
 		isChatting,
 		isLoading: isGenerateMessage,
+		isReady,
 	} = useGenerateResponse({
 		initialMessages: (initialMessages.recoveryChat as Message[]) || [],
 	});
@@ -43,9 +44,9 @@ function App() {
 	const isNewChat = messages.length === 0;
 	const client = OpenK9Client();
 	const numberOfSources = getNumberOfSources();
-	const handleSearch = (query: string, retrieveFromUploadedDocumentsParam?: boolean) => {
+	const handleSearch: HandleSearch = (query, retrieveFromUploadedDocumentsParam, image) => {
 		const flag = retrieveFromUploadedDocumentsParam ?? retrieveFromUploadedDocuments;
-		chatId?.id && generateResponse(query, chatId?.id || "", flag, selectedDatasourceIds);
+		chatId?.id && generateResponse(query, chatId?.id || "", flag, selectedDatasourceIds, image);
 	};
 
 	React.useEffect(() => {
@@ -209,10 +210,13 @@ function App() {
 									boxSizing: "border-box",
 								}}
 							>
+								{/* key on chat id remounts the composer, so a pending image cannot leak into the next chat */}
 								<Search
+									key={chatId?.id ?? "new"}
 									handleSearch={handleSearch}
 									cancelAllResponses={cancelAllResponses}
 									isChatting={isChatting}
+									canSend={isReady && !!chatId?.id}
 									onUploadFiles={async (files) => {
 										if (!kc.authenticated || !chatId?.id) throw new Error("Not authenticated or no chat");
 										return client.uploadFiles(chatId.id, files);
@@ -233,14 +237,6 @@ function App() {
 }
 
 export default App;
-
-export interface TypeGenerationResponse {
-	refreshOnSuggestionCategory: boolean;
-	refreshOnTab: boolean;
-	refreshOnDate: boolean;
-	refreshOnQuery: boolean;
-	retrieveType: string;
-}
 
 function useChatData(userId: string, chatId: { id: string | null; isNew: boolean } | null) {
 	const client = OpenK9Client();

@@ -11,8 +11,6 @@
 		"new-chat": "Neuer Chat",
 		"no-chats": "Keine Chats verfügbar",
 		"write-a-message": "Schreiben Sie eine Nachricht...",
-		"attach-popup-title": "Anhang hochladen",
-		"document": "Dokument",
 		"attach-file-aria-label": "Datei anhängen",
 		"uploading": "Wird hochgeladen",
 		"upload-completed": "Upload abgeschlossen",
@@ -40,6 +38,15 @@
 		"preview-fallback-caption": "Wenn die Vorschau nicht angezeigt wird, nutze „In neuem Tab öffnen\" oder „Herunterladen\".",
 		"preview-fallback-message": "Vorschau nicht verfügbar. Nutze „In neuem Tab öffnen\" oder „Herunterladen\" in der oberen Leiste.",
 		"show-all-sources": "Alle anzeigen",
-		"hide-all-sources": "Alle ausblenden"
+		"hide-all-sources": "Alle ausblenden",
+		"search-by-image": "Bildsuche",
+		"remove-image": "Bild entfernen",
+		"preparing-image": "Bild wird vorbereitet",
+		"attached-image": "Angehängtes Bild: {{filename}}",
+		"image-too-large": "Bild zu groß (max. {{size}} MB)",
+		"image-not-readable": "Bild konnte nicht gelesen werden",
+		"question-with-image": "Frage mit einem Bild gestellt",
+		"send-message": "Nachricht senden",
+		"stop-generating": "Generierung stoppen"
 	}
 }

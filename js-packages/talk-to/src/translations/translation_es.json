@@ -11,8 +11,6 @@
 		"new-chat": "Nuevo chat",
 		"no-chats": "No hay chats disponibles",
 		"write-a-message": "Escribe un mensaje...",
-		"attach-popup-title": "Subir un adjunto",
-		"document": "Documento",
 		"attach-file-aria-label": "Adjuntar un archivo",
 		"uploading": "Subiendo",
 		"upload-completed": "Subida completada",
@@ -40,6 +38,15 @@
 		"preview-fallback-caption": "Si la vista previa no se muestra, usa \"Abrir en una pestaña nueva\" o \"Descargar\".",
 		"preview-fallback-message": "Vista previa no disponible. Usa \"Abrir en una pestaña nueva\" o \"Descargar\" en la barra superior.",
 		"show-all-sources": "Mostrar todo",
-		"hide-all-sources": "Ocultar todo"
+		"hide-all-sources": "Ocultar todo",
+		"search-by-image": "Buscar por imagen",
+		"remove-image": "Quitar imagen",
+		"preparing-image": "Preparando la imagen",
+		"attached-image": "Imagen adjunta: {{filename}}",
+		"image-too-large": "Imagen demasiado grande (máx {{size}} MB)",
+		"image-not-readable": "No se pudo leer la imagen",
+		"question-with-image": "Pregunta formulada con una imagen",
+		"send-message": "Enviar mensaje",
+		"stop-generating": "Detener la generación"
 	}
 }

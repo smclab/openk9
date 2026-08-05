@@ -1,9 +1,10 @@
 import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import SuggestedPrompts from "./SuggestedPrompts";
+import { HandleSearch } from "./useGenerateResponse";
 
 interface InitialConversationProps {
-	handleSearch: (message: string, retrieveFromUploadedDocuments?: boolean) => void;
+	handleSearch: HandleSearch;
 }
 
 export const InitialConversation: React.FC<InitialConversationProps> = ({ handleSearch }) => {

@@ -11,8 +11,6 @@
 		"new-chat": "New Chat",
 		"no-chats": "No chats available",
 		"write-a-message": "Write a message...",
-		"attach-popup-title": "Upload an attachment",
-		"document": "Document",
 		"attach-file-aria-label": "Attach a file",
 		"uploading": "Uploading",
 		"upload-completed": "Upload completed",
@@ -40,6 +38,15 @@
 		"preview-fallback-caption": "If the preview does not display, use \"Open in a new tab\" or \"Download\".",
 		"preview-fallback-message": "Preview not available. Use \"Open in a new tab\" or \"Download\" in the top bar.",
 		"show-all-sources": "Show all",
-		"hide-all-sources": "Hide all"
+		"hide-all-sources": "Hide all",
+		"search-by-image": "Search by image",
+		"remove-image": "Remove image",
+		"preparing-image": "Preparing image",
+		"attached-image": "Attached image: {{filename}}",
+		"image-too-large": "Image too large (max {{size}} MB)",
+		"image-not-readable": "Image could not be read",
+		"question-with-image": "Question asked with an image",
+		"send-message": "Send message",
+		"stop-generating": "Stop generating"
 	}
 }
