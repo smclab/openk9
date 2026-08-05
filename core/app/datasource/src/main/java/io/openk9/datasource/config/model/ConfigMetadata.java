@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
  * {@link ConfigEntity} (it has no DTO and its {@code virtualHost} is an
  * environment-specific routing identity): on import these handles drive the
  * rebind of the destination tenant, while {@code virtualHost} is preserved
- * unless explicitly overridden.
+ * (never transferred on import).
  */
 @Data
 @NoArgsConstructor
