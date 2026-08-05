@@ -29,9 +29,9 @@
 		"web-vitals": "^2.1.4"
 	},
 	"scripts": {
-		"start": "react-scripts start",
-		"build": "react-scripts build",
-		"test": "react-scripts test",
+		"start": "craco start",
+		"build": "craco build",
+		"test": "craco test",
 		"eject": "react-scripts eject"
 	},
 	"eslintConfig": {
@@ -54,6 +54,7 @@
 	},
 	"proxy": "https://k9-frontend.openk9.io",
 	"devDependencies": {
+		"@craco/craco": "^7.0.0",
 		"@types/keycloak-js": "^3.4.1",
 		"@types/uuid": "^10.0.0"
 	}
