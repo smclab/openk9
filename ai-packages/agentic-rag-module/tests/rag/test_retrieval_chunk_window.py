@@ -65,14 +65,14 @@ def _retrieve(hits, chunk_window, metadata=None, retrieve_type="HYBRID"):
 
     with (
         patch("app.rag.retrievers.retriever.query_parser") as mock_query_parser,
-        patch("app.rag.retrievers.retriever.OpenSearch") as mock_opensearch,
+        patch("app.rag.retrievers.retriever.get_opensearch_client") as mock_get_client,
     ):
         mock_query_parser.return_value = {
             "query": "{}",
             "index_name": ["an-index"],
             "query_parameters": {},
         }
-        mock_opensearch.return_value.search.return_value = {"hits": {"hits": hits}}
+        mock_get_client.return_value.search.return_value = {"hits": {"hits": hits}}
 
         return retriever.invoke("ciao")
 
