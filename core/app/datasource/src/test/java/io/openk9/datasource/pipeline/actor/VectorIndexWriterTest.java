@@ -108,6 +108,34 @@ class VectorIndexWriterTest {
 	}
 
 	@Test
+	void start_without_payload_only_deletes_and_replies_once() {
+		var transport = new RecordingTransport();
+		var replyProbe = TEST_KIT.<Writer.Response>createTestProbe();
+		var writer = TEST_KIT.spawn(VectorIndexWriter.create(
+			new OpenSearchAsyncClient(transport),
+			INDEX_NAME, DATASOURCE_ID, replyProbe.ref()));
+
+		// a document with no documentTypes: its chunks are only deleted
+		writer.tell(new Writer.Start(null, heldMessage()));
+
+		// one reply for one document: no chunk parsing is attempted on the
+		// missing payload, so no spurious failure precedes the success.
+		replyProbe.expectMessageClass(Writer.Success.class);
+		replyProbe.expectNoMessage();
+
+		Assertions.assertEquals(List.of("delete"), transport.operations);
+
+		// exactly one deletion event, for the content just dropped
+		var captor = ArgumentCaptor.forClass(Object.class);
+		Mockito.verify(eventBus).send(Mockito.anyString(), captor.capture());
+
+		var message = Assertions.assertInstanceOf(
+			DatasourceMessage.Delete.class, captor.getValue());
+		Assertions.assertEquals("content-1", message.getContentId());
+		Assertions.assertEquals(INDEX_NAME, message.getIndexName());
+	}
+
+	@Test
 	void bulk_errors_reply_failure_and_emit_the_error_event() {
 		// spawn a writer whose bulk responses carry an item error
 		var transport = new RecordingTransport(
