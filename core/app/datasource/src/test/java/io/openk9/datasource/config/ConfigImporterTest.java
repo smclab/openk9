@@ -52,6 +52,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -77,6 +78,10 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "existing-ref-field";
 	private static final String RAG_CONFIGURATION_NAME =
 		ENTITY_NAME_PREFIX + "rag-config";
+	private static final String ROLLBACK_CHAR_FILTER_NAME =
+		ENTITY_NAME_PREFIX + "rollback-char-filter";
+	private static final String CONFLICT_CHAR_FILTER_NAME =
+		ENTITY_NAME_PREFIX + "conflict-char-filter";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -358,6 +363,132 @@ public class ConfigImporterTest {
 
 		// Delete the char filter created by this method.
 		EntitiesUtils.removeEntity(id, charFilterService, sessionFactory);
+	}
+
+	@Test
+	void an_error_during_apply_rolls_back_the_whole_import() {
+		// Two new char filters share a name; the name column is unique, so the second
+		// CREATE violates the constraint at flush. The whole apply runs in one
+		// transaction, so the first (already flushed) insert must be rolled back:
+		// afterwards no row carries the shared name.
+		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+
+		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
+		entities.add(charFilterNode("CHAR_FILTER-ROLLBACK-A", ROLLBACK_CHAR_FILTER_NAME));
+		entities.add(charFilterNode("CHAR_FILTER-ROLLBACK-B", ROLLBACK_CHAR_FILTER_NAME));
+		ConfigPackage augmented = new ConfigPackage(
+			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
+
+		assertThrows(Exception.class, () ->
+			configImporter.apply(TENANT_ID, augmented, ImportMode.SKIP)
+				.await().indefinitely());
+
+		assertEquals(
+			0L, countCharFilterByName(ROLLBACK_CHAR_FILTER_NAME),
+			"a failed apply must roll back the flushed insert: no row keeps the name");
+	}
+
+	@Test
+	void the_tenant_binding_is_rebound_and_the_virtual_host_preserved() {
+		// After an import the destination TenantBinding must point at the imported
+		// bucket and models (resolved from the package metadata) and keep its own
+		// virtualHost (routing identity, never transferred).
+		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+		String virtualHostBefore = tenantBindingVirtualHost();
+
+		ImportResult result =
+			configImporter.apply(TENANT_ID, pkg, ImportMode.OVERWRITE)
+				.await().indefinitely();
+
+		Object[] binding = sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.createQuery(
+				"select tb.bucket.id, tb.embeddingModel.id, "
+					+ "tb.largeLanguageModel.id, tb.virtualHost "
+					+ "from TenantBinding tb where tb.id = 1", Object[].class)
+				.getSingleResult()
+		).await().indefinitely();
+
+		var metadata = pkg.getMetadata();
+		assertEquals(
+			result.resolvedIds().get(metadata.getDefaultBucketRef()), binding[0],
+			"the tenant binding must reference the imported default bucket");
+		if (metadata.getEnabledEmbeddingModelRef() != null) {
+			assertEquals(
+				result.resolvedIds().get(metadata.getEnabledEmbeddingModelRef()),
+				binding[1],
+				"the tenant binding must reference the imported embedding model");
+		}
+		if (metadata.getEnabledLargeLanguageModelRef() != null) {
+			assertEquals(
+				result.resolvedIds().get(metadata.getEnabledLargeLanguageModelRef()),
+				binding[2],
+				"the tenant binding must reference the imported LLM");
+		}
+		assertEquals(virtualHostBefore, binding[3],
+			"the import must preserve the destination virtual host");
+	}
+
+	@Test
+	void skip_keeps_the_existing_value_while_overwrite_replaces_it() {
+		// Conflict semantics: an incoming entity that matches an existing one by name
+		// but carries a different value. SKIP must leave the target untouched;
+		// OVERWRITE must apply the incoming value.
+		Long id = seedCharFilter(CONFLICT_CHAR_FILTER_NAME, "{\"mapping\":\"a=>b\"}");
+
+		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+		ConfigEntity original = pkg.getEntities().stream()
+			.filter(entity -> entity.getType() == ConfigEntityType.CHAR_FILTER)
+			.filter(entity -> CONFLICT_CHAR_FILTER_NAME.equals(entity.getKey()))
+			.findFirst()
+			.orElseThrow();
+		ConfigEntity changed = new ConfigEntity(
+			original.getRef(), original.getType(), original.getKey(),
+			CharFilterDTO.builder()
+				.name(CONFLICT_CHAR_FILTER_NAME)
+				.jsonConfig("{\"mapping\":\"x=>y\"}")
+				.build(),
+			original.getReferences(), original.getRedactedFields());
+
+		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
+		entities.replaceAll(entity -> entity == original ? changed : entity);
+		ConfigPackage augmented = new ConfigPackage(
+			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
+
+		configImporter.apply(TENANT_ID, augmented, ImportMode.SKIP)
+			.await().indefinitely();
+		assertTrue(loadCharFilterJsonConfig(id).contains("a=>b"),
+			"SKIP must keep the existing value on a name match");
+
+		configImporter.apply(TENANT_ID, augmented, ImportMode.OVERWRITE)
+			.await().indefinitely();
+		assertTrue(loadCharFilterJsonConfig(id).contains("x=>y"),
+			"OVERWRITE must apply the incoming value on a name match");
+
+		EntitiesUtils.removeEntity(id, charFilterService, sessionFactory);
+	}
+
+	private static ConfigEntity charFilterNode(String ref, String name) {
+		return new ConfigEntity(
+			ref, ConfigEntityType.CHAR_FILTER, name,
+			CharFilterDTO.builder().name(name).type("html_strip").build(),
+			new LinkedHashMap<>(), null);
+	}
+
+	private long countCharFilterByName(String name) {
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.createQuery(
+				"select count(c) from CharFilter c where c.name = :n", Long.class)
+				.setParameter("n", name)
+				.getSingleResult()
+		).await().indefinitely();
+	}
+
+	private String tenantBindingVirtualHost() {
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.createQuery(
+				"select tb.virtualHost from TenantBinding tb where tb.id = 1",
+				String.class).getSingleResult()
+		).await().indefinitely();
 	}
 
 	private Long seedCharFilter(String name, String jsonConfig) {
