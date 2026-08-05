@@ -20,6 +20,7 @@ import {
   CreateDataEntity,
   CustomSelect,
   fromFieldValidators,
+  MultiAssociationCustomQuery,
   NumberInput,
   TextArea,
   TextInput,
@@ -27,7 +28,8 @@ import {
   useForm,
   useToast,
 } from "@components/Form";
-import { Autocomplete, Box, Button, FormControl, TextField, Typography } from "@mui/material";
+import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
+import { Box, Button } from "@mui/material";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -56,44 +58,15 @@ const unifiedBoundaryScannerDict = {
   WORD: BoundaryScannerType.Word,
 };
 
-function DocTypeFieldsMultiSelect({
-  label,
-  value,
-  options,
-  onChange,
-  disabled,
-}: {
-  label: string;
-  value: FieldOption[];
-  options: FieldOption[];
-  onChange(value: FieldOption[]): void;
-  disabled?: boolean;
-}) {
-  return (
-    <FormControl fullWidth sx={{ mb: 2 }}>
-      <Box sx={{ mb: 1 }}>
-        <Typography variant="subtitle1" component="label">
-          {label}
-        </Typography>
-      </Box>
-      <Autocomplete
-        multiple
-        options={options}
-        getOptionLabel={(option) => option.label || ""}
-        value={value}
-        isOptionEqualToValue={(option, selected) => option.value === selected.value}
-        onChange={(_event, newValue) => onChange(newValue)}
-        disabled={disabled}
-        renderInput={(params) => <TextField {...params} />}
-      />
-    </FormControl>
-  );
-}
+const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
+  { label: "fields", id: "fields", tooltip: "Document type fields highlighted by current highlight" },
+];
 
 export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { highlightId = "new", view } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+  const [selectedAssociationTabs, setSelectedAssociationTabs] = React.useState<string>(associationTabs[0].id);
 
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
@@ -164,18 +137,23 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   const highlight = highlightQuery.data?.highlight;
 
   const form = useForm({
-    initialValues: {
-      name: "",
-      description: "",
-      type: HighlightType.Unified,
-      fields: [] as FieldOption[],
-      boundaryScanner: BoundaryScannerType.Sentence,
-      boundaryChars: "",
-      fragmenter: FragmenterType.Span,
-      fragmentSize: DEFAULT_FRAGMENT_SIZE,
-      numberOfFragments: DEFAULT_NUMBER_OF_FRAGMENTS,
-      order: OrderType.None,
-    },
+    // Memoized: the fields association reads its list from here, so a new
+    // identity on every render would re-seed the association lists.
+    initialValues: React.useMemo(
+      () => ({
+        name: "",
+        description: "",
+        type: HighlightType.Unified,
+        fields: [] as FieldOption[],
+        boundaryScanner: BoundaryScannerType.Sentence,
+        boundaryChars: "",
+        fragmenter: FragmenterType.Span,
+        fragmentSize: DEFAULT_FRAGMENT_SIZE,
+        numberOfFragments: DEFAULT_NUMBER_OF_FRAGMENTS,
+        order: OrderType.None,
+      }),
+      [],
+    ),
     originalValues: React.useMemo(
       () =>
         highlight
@@ -219,6 +197,21 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   const showBoundaryChars = isFvh;
   const showFragmenter = isPlain;
   const fieldOptions = isFvh ? termVectorFieldOptions : textFieldOptions;
+  const fieldsLoading = isFvh ? termVectorFieldsQuery.loading : textFieldsQuery.loading;
+  const associatedFields: FieldOption[] = form.inputProps("fields").value ?? [];
+
+  const unassociatedFields = React.useMemo(
+    () => fieldOptions.filter((option) => !associatedFields.some((field) => field.value === option.value)),
+    [fieldOptions, associatedFields],
+  );
+
+  const handleFieldsSelect = ({ items, isAdd }: { items: FieldOption[]; isAdd: boolean }) => {
+    const currentFields = form.inputProps("fields").value;
+    const updatedFields = isAdd
+      ? [...currentFields, ...items.filter((item) => !currentFields.some((field) => field.value === item.value))]
+      : currentFields.filter((field) => !items.some((item) => item.value === field.value));
+    form.inputProps("fields").onChange(updatedFields);
+  };
 
   const recapSections = React.useMemo(
     () =>
@@ -287,13 +280,20 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                     <TextInput label="Name" {...form.inputProps("name")} disabled={disabled} />
                     <TextArea label="Description" {...form.inputProps("description")} disabled={disabled} />
                     <CustomSelect label="Type" dict={HighlightType} {...form.inputProps("type")} disabled={disabled} />
-                    <DocTypeFieldsMultiSelect
-                      label="Fields"
-                      value={form.inputProps("fields").value}
-                      options={fieldOptions}
-                      onChange={(value) => form.inputProps("fields").onChange(value)}
-                      disabled={disabled}
-                    />
+                    <AssociationsLayout tabs={associationTabs} setTabsId={setSelectedAssociationTabs}>
+                      <MultiAssociationCustomQuery
+                        list={{
+                          unassociated: unassociatedFields,
+                          associated: associatedFields,
+                          isLoading: fieldsLoading,
+                        }}
+                        sx={selectedAssociationTabs === "fields" ? {} : { display: "none" }}
+                        isLoading={fieldsLoading}
+                        disabled={disabled}
+                        isRecap={isRecap}
+                        onSelect={handleFieldsSelect}
+                      />
+                    </AssociationsLayout>
                     {showBoundaryScanner && (
                       <CustomSelect
                         label="Boundary Scanner"
