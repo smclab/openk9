@@ -59,7 +59,7 @@ def _run(scores):
     }
 
     with patch.object(
-        retriever_module, "OpenSearch", return_value=client
+        retriever_module, "get_opensearch_client", return_value=client
     ), patch.object(retriever_module, "query_parser", return_value=query_data):
         documents = _build_retriever().invoke("zephyr")
 
