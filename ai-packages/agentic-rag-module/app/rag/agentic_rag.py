@@ -58,7 +58,7 @@ from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
 from app.utils.opensearch_client import get_opensearch_client
-from app.utils.query_rewrite import escape_curly_braces, shares_significant_terms
+from app.utils.query_rewrite import escape_curly_braces
 
 
 class GraphState(BaseModel):
@@ -410,9 +410,6 @@ class RagGraph:
                 "previous_response": previous_response,
             }
         )
-
-        if not shares_significant_terms(response, previous_query):
-            return f"{previous_query} {response}".strip()
 
         return response
 
@@ -880,8 +877,7 @@ class RagGraph:
             return resolved.strip() if resolved and resolved.strip() else "Italian"
         except Exception:
             logger.warning(
-                "[resolve_target_language] resolution failed, "
-                "falling back to Italian",
+                "[resolve_target_language] resolution failed, falling back to Italian",
                 exc_info=True,
             )
             return "Italian"
@@ -1905,9 +1901,7 @@ class RagGraph:
                         return
 
                     for buffered_chunk in prefix_buffer:
-                        yield json.dumps(
-                            {"chunk": buffered_chunk, "type": "CHUNK"}
-                        )
+                        yield json.dumps({"chunk": buffered_chunk, "type": "CHUNK"})
                     prefix_buffer = []
 
             elif (
@@ -2119,9 +2113,7 @@ class RagGraph:
                         else last_state.values.get("response")
                     )
                     yield json.dumps({"chunk": "", "type": "START"})
-                    yield json.dumps(
-                        {"chunk": result_answer, "type": "CHUNK"}
-                    )
+                    yield json.dumps({"chunk": result_answer, "type": "CHUNK"})
 
                 if all(
                     [
@@ -2169,9 +2161,7 @@ class RagGraph:
                 "content management policy",
             )
             if any(marker in str(e).lower() for marker in content_policy_markers):
-                yield json.dumps(
-                    {"chunk": "Guardrail violation", "type": "GUARDRAIL"}
-                )
+                yield json.dumps({"chunk": "Guardrail violation", "type": "GUARDRAIL"})
                 yield json.dumps({"chunk": "", "type": "END"})
                 return
             yield json.dumps({"chunk": str(e), "type": "ERROR"})
