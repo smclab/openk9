@@ -31,6 +31,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigMetadata;
 import io.openk9.datasource.config.model.ConfigPackage;
@@ -60,8 +63,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -170,8 +171,6 @@ public class ConfigImporter {
 				"Unable to rebind attributes to " + attributesType.getSimpleName(), e);
 		}
 	}
-
-	// --- association rewiring --------------------------------------------------
 
 	private Uni<ImportResult> doApply(
 		Mutiny.Session s, ConfigPackage pkg, ImportPlan plan) {
@@ -352,8 +351,6 @@ public class ConfigImporter {
 		});
 	}
 
-	// --- join entities ---------------------------------------------------------
-
 	private Uni<PlannedAction.Action> rebuildEnrichPipelineItem(
 		Mutiny.Session s, ConfigEntity entity, Map<String, Long> resolvedIds) {
 
@@ -445,8 +442,6 @@ public class ConfigImporter {
 		return targets;
 	}
 
-	// --- tenant binding rebind -------------------------------------------------
-
 	/**
 	 * Restores the target's current secret values into the incoming attributes so
 	 * an overwrite keeps existing secrets: top-level fields are copied from the
@@ -489,8 +484,6 @@ public class ConfigImporter {
 		}
 		return bindBack(tree, attributes.getClass());
 	}
-
-	// --- secrets ---------------------------------------------------------------
 
 	/**
 	 * On create the entity is transient, so a fresh collection is set directly; on

@@ -30,6 +30,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Root;
+
 import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigEntityType;
 import io.openk9.datasource.config.model.ConfigMetadata;
@@ -46,16 +57,6 @@ import io.openk9.datasource.model.util.ExportIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Root;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 /**
@@ -77,7 +78,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
  * keys and, unlike navigating a lazy to-one getter, never depends on the
  * association being fetched into the reactive session. Entities marked
  * {@link ExportIgnore} ({@code DataIndex}, {@code Scheduler},
- * {@code FileResource}, {@code Translation}, {@code TenantBinding}) are not
+ * {@code Translation}, {@code TenantBinding}) are not
  * exportable, hence never followed. The {@code TenantBinding} pointers are
  * captured in the {@link ConfigMetadata} and secrets are redacted last.
  */
@@ -160,8 +161,6 @@ public class ConfigExporter {
 				edges.refs(type, entity.getId()));
 		});
 	}
-
-	// --- entity collection (one sequential step per type on the session) -------
 
 	/**
 	 * Loads all instances of the type and turns each into a node via toNode,
@@ -270,8 +269,6 @@ public class ConfigExporter {
 		});
 	}
 
-	// --- join entities: composite handle, endpoints read from the embedded key -
-
 	/**
 	 * Query that collects the edges of one relationship. It is the Criteria
 	 * equivalent of the JPQL:
@@ -323,8 +320,6 @@ public class ConfigExporter {
 			ref, ConfigEntityType.ENRICH_PIPELINE_ITEM, null, attributes, refs, null);
 	}
 
-	// --- node / reference helpers ----------------------------------------------
-
 	/**
 	 * Loads all rows of the given entity type with a Criteria "select all" query.
 	 */
@@ -369,8 +364,6 @@ public class ConfigExporter {
 			handle(type, id), type, attributes.getName(), attributes, references, null);
 	}
 
-	// --- TenantBinding metadata ------------------------------------------------
-
 	/**
 	 * Maps an entity to its export DTO through the {@code dto(<EntityType>)}
 	 * overload of {@link ConfigEntityMapper}, resolved reflectively and cached.
@@ -392,8 +385,6 @@ public class ConfigExporter {
 		return associationFields(
 			entity, ManyToOne.class, OneToOne.class, OneToMany.class, ManyToMany.class);
 	}
-
-	// --- edge derivation from the JPA model ------------------------------------
 
 	/**
 	 * Fields on the entity's class hierarchy carrying any of the given annotations.
@@ -481,8 +472,6 @@ public class ConfigExporter {
 	private static String handleOrNull(ConfigEntityType type, K9Entity target) {
 		return target == null ? null : handle(type, target.getId());
 	}
-
-	// --- edge collection -------------------------------------------------------
 
 	/**
 	 * The owning association target of {@code field}, or {@code null} when the

@@ -56,6 +56,9 @@ public class ImportPlan {
 		return actions.stream().filter(action -> action.action() == kind).count();
 	}
 
+	/**
+	 * The planned actions, in dependency order.
+	 */
 	public List<PlannedAction> getActions() {
 		return actions;
 	}

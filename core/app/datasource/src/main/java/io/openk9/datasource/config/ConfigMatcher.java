@@ -26,14 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.openk9.datasource.config.model.ConfigEntity;
-import io.openk9.datasource.config.model.ConfigEntityType;
-import io.openk9.datasource.config.model.ConfigPackage;
-import io.openk9.datasource.config.model.ImportMode;
-import io.openk9.datasource.config.model.ImportPlan;
-import io.openk9.datasource.config.model.PlannedAction;
-
-import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.Column;
@@ -42,11 +34,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+
+import io.openk9.datasource.config.model.ConfigEntity;
+import io.openk9.datasource.config.model.ConfigPackage;
+import io.openk9.datasource.config.model.ImportMode;
+import io.openk9.datasource.config.model.ImportPlan;
+import io.openk9.datasource.config.model.PlannedAction;
+
+import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 /**

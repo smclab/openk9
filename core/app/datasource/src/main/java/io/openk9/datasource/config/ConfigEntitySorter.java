@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.openk9.datasource.config.model.ConfigEntity;
-
 import jakarta.enterprise.context.ApplicationScoped;
+
+import io.openk9.datasource.config.model.ConfigEntity;
 
 /**
  * Orders the entities of a configuration package so that every referenced
@@ -46,6 +46,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class ConfigEntitySorter {
 
+	/**
+	 * Orders the entities so that every referenced entity precedes those that
+	 * reference it (dependencies first), by a topological sort over the package
+	 * references.
+	 *
+	 * @param entities the package entities to order
+	 * @return a new list in dependency-first order
+	 */
 	public List<ConfigEntity> sort(List<ConfigEntity> entities) {
 
 		Map<String, ConfigEntity> byRef = indexByRef(entities);

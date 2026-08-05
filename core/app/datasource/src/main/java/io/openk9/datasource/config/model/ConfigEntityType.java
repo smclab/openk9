@@ -89,8 +89,8 @@ import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
  * reference graph from these entity classes, and a guard test asserts every
  * persistent entity is either listed here or annotated {@code @ExportIgnore}.
  * <p>
- * Runtime entities ({@code DataIndex}, {@code Scheduler}, {@code FileResource},
- * {@code Translation*}) are intentionally absent: configuration is portable,
+ * Runtime entities ({@code DataIndex}, {@code Scheduler}, {@code Translation})
+ * are intentionally absent: configuration is portable,
  * runtime state is environment-bound.
  */
 public enum ConfigEntityType {

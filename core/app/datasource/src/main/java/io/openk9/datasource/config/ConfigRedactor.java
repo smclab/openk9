@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigPackage;
 
@@ -30,8 +33,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * Removes secrets from a configuration package before it leaves the system.
@@ -69,6 +70,10 @@ public class ConfigRedactor {
 		this.objectMapper = objectMapper;
 	}
 
+	/**
+	 * Redacts secrets from every entity in the package, in place. A {@code null}
+	 * package or entity list is a no-op.
+	 */
 	public void redact(ConfigPackage configPackage) {
 		if (configPackage == null || configPackage.getEntities() == null) {
 			return;
@@ -78,6 +83,12 @@ public class ConfigRedactor {
 		}
 	}
 
+	/**
+	 * Redacts the secrets of a single entity in place: sensitive {@code apiKey}
+	 * and {@code jsonConfig} values become the placeholder and their paths are
+	 * recorded in {@code redactedFields}. An entity with no attributes or no
+	 * secrets is left untouched.
+	 */
 	public void redact(ConfigEntity entity) {
 		Object attributes = entity.getAttributes();
 		if (attributes == null || entity.getType() == null) {
