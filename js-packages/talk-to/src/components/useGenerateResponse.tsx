@@ -1,3 +1,4 @@
+import { prepareQueryImageCached } from "../../../shared/image-query/imageQuery";
 import { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useUser } from "./ChatInfoContext";
@@ -9,6 +10,21 @@ import { keycloak } from "./keycloak";
 
 type Source = { source?: string; title?: string; url?: string; filename?: string; file_extension?: string };
 
+/** Holds the `File`, not the bytes: base64 is built (memoized on `attachmentId`) in the fetch
+ * path, so it never enters React state or react-query keys. */
+export type QueryImageAttachment = {
+	attachmentId: string;
+	file: File;
+	previewUrl: string;
+	filename: string;
+};
+
+export type HandleSearch = (
+	message: string,
+	retrieveFromUploadedDocuments?: boolean,
+	image?: QueryImageAttachment,
+) => void;
+
 export interface Message {
 	id?: string;
 	question: string;
@@ -18,6 +34,8 @@ export interface Message {
 	sources?: Source[];
 	chat_sequence_number: number;
 	timestamp?: string;
+	/** Session-only preview: backend history keeps no binary, so it is absent after a reload. */
+	questionImage?: { url: string; filename: string };
 }
 
 const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }) => {
@@ -36,13 +54,21 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 	}, [initialMessages]);
 
 	const generateResponse = useCallback(
-		async (query: string, chatId: string, retrieveFromUploadedDocuments?: boolean, datasourceIds?: number[]) => {
+		async (
+			query: string,
+			chatId: string,
+			retrieveFromUploadedDocuments?: boolean,
+			datasourceIds?: number[],
+			image?: QueryImageAttachment,
+		) => {
+			// Guard before `setIsLoading`: otherwise `isLoading` sticks on a message id that is never created.
+			if (loading || !userInfo) {
+				return false;
+			}
+
 			const id = uuidv4();
 			setIsLoading({ id, isLoading: true });
 
-			if (loading || !userInfo) {
-				return;
-			}
 			const timestamp = "" + Date.now();
 			const nonLoggedUserId = `anonymous_${uuidv4()}_${timestamp}`;
 
@@ -67,6 +93,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 					sources: [],
 					chat_sequence_number,
 					timestamp,
+					...(image ? { questionImage: { url: image.previewUrl, filename: image.filename } } : {}),
 				};
 
 				return [...prevMessages, newMessage];
@@ -79,26 +106,43 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 
 			const url = "/api/rag/chat";
 
-			const searchQuery = keycloak.authenticated
-				? {
-						searchText: query,
-						chatId,
-						chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
-						timestamp,
-						language,
-						retrieveFromUploadedDocuments: retrieveFromUploadedDocuments,
-						...(datasourceIds?.length ? { datasourceIds } : {}),
-				  }
-				: {
-						searchText: query,
-						chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
-						timestamp,
-						chatHistory,
-						language,
-						...(datasourceIds?.length ? { datasourceIds } : {}),
-				  };
-
 			try {
+				// Memoized on `attachmentId`, so usually a cache read; inside the try because it can throw
+				// (HEIC on Chrome, corrupt file).
+				const media = image
+					? await prepareQueryImageCached(image.attachmentId, image.file).then((prepared) => ({
+							data: prepared.data,
+							contentType: prepared.contentType,
+					  }))
+					: undefined;
+
+				if (controller.signal.aborted) {
+					return false;
+				}
+
+				// The retrieval flag is sticky for the whole conversation, so force it false with an image:
+				// an earlier uploaded document would otherwise hijack the image query.
+				const searchQuery = keycloak.authenticated
+					? {
+							searchText: query,
+							chatId,
+							chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
+							timestamp,
+							language,
+							retrieveFromUploadedDocuments: image ? false : retrieveFromUploadedDocuments,
+							...(datasourceIds?.length ? { datasourceIds } : {}),
+							...(media ? { media } : {}),
+					  }
+					: {
+							searchText: query,
+							chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
+							timestamp,
+							chatHistory,
+							language,
+							...(datasourceIds?.length ? { datasourceIds } : {}),
+							...(media ? { media } : {}),
+					  };
+
 				const response = await client.GenerateResponse({ controller, searchQuery: searchQuery, url });
 				if (response.ok) {
 					const reader = response.body?.getReader();
@@ -227,7 +271,13 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 				}
 			} catch (error) {
 				console.error("Errore durante la richiesta", error);
+				if (!controller.signal.aborted) {
+					setMessages((prev) =>
+						prev.map((msg) => (msg.id === id ? { ...msg, status: "ERROR", answer: t("error") } : msg)),
+					);
+				}
 				setIsChatting(false);
+				setIsLoading(null);
 			}
 
 			setAbortControllers((prev) => {
@@ -235,6 +285,8 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 				updated.delete(id);
 				return updated;
 			});
+
+			return true;
 		},
 		[loading, userInfo, messages, client, language, t],
 	);
@@ -293,6 +345,8 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 		cancelAllResponses,
 		isChatting,
 		isLoading,
+		// `generateResponse` drops the turn until userInfo arrives; the composer uses this to disable send.
+		isReady: !loading && !!userInfo,
 	};
 };
 

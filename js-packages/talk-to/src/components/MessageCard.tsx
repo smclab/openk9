@@ -1,19 +1,74 @@
+import BrokenImageOutlinedIcon from "@mui/icons-material/BrokenImageOutlined";
 import CheckIcon from "@mui/icons-material/Check";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ErrorIcon from "@mui/icons-material/Error";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { Box, Chip, IconButton, Skeleton, Typography } from "@mui/material";
+import { Box, ButtonBase, Chip, IconButton, Skeleton, Typography } from "@mui/material";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Logo } from "../Svg/Logo";
+import { useDocumentPreview } from "./DocumentPreview";
 import { ArtifactCard, extractDocumentFromAnswer, richMarkdownComponents } from "./MarkdownRenderer";
 import { Message } from "./useGenerateResponse";
 import { isSafeExternalUrl } from "./utils/safeExternalUrl";
 
 type Theme = "light" | "dark";
+
+// Pass the filename: DocumentPreview detects images by extension and a blob: URL has none.
+function QuestionThumbnail({ url, filename }: { url: string; filename: string }) {
+	const { openPreview } = useDocumentPreview();
+	const { t } = useTranslation();
+	const [broken, setBroken] = useState(false);
+
+	if (broken) {
+		return (
+			<Box
+				component="span"
+				sx={{
+					display: "inline-flex",
+					alignItems: "center",
+					gap: 0.5,
+					alignSelf: "flex-start",
+					px: 1,
+					py: 0.25,
+					borderRadius: "8px",
+					border: "1px dashed rgba(0, 0, 0, 0.25)",
+					color: "text.secondary",
+					fontSize: "0.85rem",
+				}}
+			>
+				<BrokenImageOutlinedIcon sx={{ fontSize: "1rem" }} />
+				{t("image-not-available")}
+			</Box>
+		);
+	}
+
+	return (
+		<ButtonBase
+			onClick={() => openPreview({ url, filename })}
+			// Accessible name lives on the button, so the inner img stays decorative (alt="") to avoid a double announcement.
+			aria-label={`${t("attached-image", { defaultValue: "Attached image: {{filename}}", filename })}`}
+			sx={{
+				alignSelf: "flex-start",
+				borderRadius: "8px",
+				overflow: "hidden",
+				border: "1px solid rgba(0, 0, 0, 0.12)",
+				"&:focus-visible": { outline: "2px solid #c0272b", outlineOffset: 2 },
+			}}
+		>
+			<Box
+				component="img"
+				src={url}
+				alt=""
+				onError={() => setBroken(true)}
+				sx={{ display: "block", maxWidth: 150, maxHeight: 120, objectFit: "contain" }}
+			/>
+		</ButtonBase>
+	);
+}
 
 export function MessageCard({
 	message,
@@ -264,9 +319,23 @@ export function MessageCard({
 					height={"50px"}
 					width={"50px"}
 				/>
-				<Typography variant="h6" sx={{ color: "#424242" }}>
-					{message.question}
-				</Typography>
+				<Box sx={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 1 }}>
+					{message.questionImage && (
+						<QuestionThumbnail url={message.questionImage.url} filename={message.questionImage.filename} />
+					)}
+					{message.question ? (
+						<Typography variant="h6" sx={{ color: "#424242" }}>
+							{message.question}
+						</Typography>
+					) : (
+						!message.questionImage && (
+							// History-reloaded image-only turns lose the image and come back with an empty question.
+							<Typography variant="h6" sx={{ color: "#6b6b6b", fontStyle: "italic", fontWeight: 400 }}>
+								{t("question-with-image", { defaultValue: "Question asked with an image" })}
+							</Typography>
+						)
+					)}
+				</Box>
 			</Box>
 
 			<Box display="flex" alignItems="flex-start" gap={4}>
