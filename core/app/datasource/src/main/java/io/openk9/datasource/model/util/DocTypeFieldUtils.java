@@ -22,23 +22,58 @@ import io.openk9.datasource.model.DocTypeField;
 
 public class DocTypeFieldUtils {
 
+	/**
+	 * Builds the path of a field, joining the names of its parents with dots.
+	 * The docType name is taken from the field itself.
+	 *
+	 * @param docTypeField the field whose path is built
+	 * @return the path, for example {@code acl.roles.keyword}
+	 * @throws IncompleteDocTypeFieldException if the field or one of its
+	 * 	parents has no fieldName
+	 */
 	public static String fieldPath(DocTypeField docTypeField) {
 		DocType docType = docTypeField.getDocType();
 		return fieldPath(docType != null ? docType.getName() : null, docTypeField);
 	}
 
+	/**
+	 * Builds the path of a field, joining the names of its parents with dots
+	 * and using the given docType name as first segment. The {@code default}
+	 * docType adds no segment.
+	 *
+	 * <p>The docType name is passed along the whole chain, so the path stays
+	 * the same whatever parents have been loaded.
+	 *
+	 * @param docTypeName the name of the docType the field belongs to
+	 * @param docTypeField the field whose path is built
+	 * @return the path, for example {@code acl.roles.keyword}
+	 * @throws IncompleteDocTypeFieldException if the field or one of its
+	 * 	parents has no fieldName
+	 */
 	public static String fieldPath(String docTypeName, DocTypeField docTypeField) {
+
+		String fieldName = docTypeField.getFieldName();
+
+		if (fieldName == null) {
+			throw new IncompleteDocTypeFieldException(String.format(
+				"Cannot build the path: the docTypeField with id \"%s\" has no"
+				+ " fieldName.",
+				docTypeField.getId()
+			));
+		}
+
+		DocTypeField parent = docTypeField.getParentDocTypeField();
+
+		if (parent != null) {
+			return fieldPath(docTypeName, parent) + "." + fieldName;
+		}
 
 		String rootPath =
 			docTypeName != null && !docTypeName.equals(DocType.DEFAULT_NAME)
 				? docTypeName + "."
 				: "";
 
-		DocTypeField parent = docTypeField.getParentDocTypeField();
-
-		String fieldName = docTypeField.getFieldName();
-
-		return parent != null ? fieldPath(parent) + "." + fieldName : rootPath + fieldName;
+		return rootPath + fieldName;
 	}
 
 	public static String generateLabel(DocTypeField field) {
