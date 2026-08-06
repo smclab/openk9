@@ -30,15 +30,17 @@ type ImageAttachment = QueryImageAttachment & {
 	bytes?: number;
 };
 
-// Nasconde visivamente lasciando il testo agli screen reader.
+// Visually hidden. Units must stay explicit: in MUI's sx a width or height <= 1 is a percentage, not a pixel.
 const srOnly = {
 	position: "absolute" as const,
-	width: 1,
-	height: 1,
+	width: "1px",
+	height: "1px",
 	padding: 0,
-	margin: -1,
+	margin: "-1px",
 	overflow: "hidden",
+	// Keep both: some browsers ignore clip-path on untransformed elements.
 	clip: "rect(0 0 0 0)",
+	clipPath: "inset(50%)",
 	whiteSpace: "nowrap" as const,
 	border: 0,
 };

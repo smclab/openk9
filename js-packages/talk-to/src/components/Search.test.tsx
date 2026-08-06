@@ -195,6 +195,18 @@ describe("Search — allegato immagine", () => {
 		expect(screen.getByLabelText("search-by-image")).toHaveFocus();
 	});
 
+	test("la regione live occupa un pixel, non il 100% del contenitore", () => {
+		renderSearch();
+
+		const style = window.getComputedStyle(screen.getByRole("status"));
+		expect(style.width).toBe("1px");
+		expect(style.height).toBe("1px");
+		expect(style.width).not.toBe("100%");
+		expect(style.height).not.toBe("100%");
+		expect(style.position).toBe("absolute");
+		expect(style.margin).toBe("-1px");
+	});
+
 	test("lo stato dell'allegato viene annunciato agli screen reader", async () => {
 		mockPrepareQueryImageCached.mockResolvedValue(prepared);
 		const { container } = renderSearch();
