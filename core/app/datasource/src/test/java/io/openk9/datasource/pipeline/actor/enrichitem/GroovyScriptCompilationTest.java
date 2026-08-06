@@ -28,18 +28,15 @@ import org.junit.jupiter.api.Test;
  * A Groovy enrich item script that resolves a JDK class must compile on the
  * runtime the datasource actually runs on.
  *
- * <p>The bundled ASM has to read the class files of that JDK: with Groovy 4.0.6
- * on Java 21 (major version 65) it does not, and every script fails in semantic
- * analysis with {@code BUG! exception in phase 'semantic analysis' ...
- * Unsupported class file major version 65} — so no Groovy enrich item runs at
- * all. This test fails on a Groovy too old for the current Java.
+ * <p>The bundled ASM has to read the class files of that JDK, so this test
+ * fails on a Groovy too old for the current Java.
  */
 public class GroovyScriptCompilationTest {
 
 	@Test
 	void should_compile_a_script_resolving_a_jdk_class() {
-		// uno script come quelli reali: usa una classe del JDK per comporre
-		// il valore che restituisce
+		// a script shaped like the real ones: it resolves a JDK class to build
+		// the value it returns
 		String script = """
 			def encoded = java.net.URLEncoder.encode("a b", "UTF-8")
 			def out = new java.util.LinkedHashMap()
@@ -51,8 +48,8 @@ public class GroovyScriptCompilationTest {
 
 		var parsed = Assertions.assertDoesNotThrow(() -> shell.parse(script));
 
-		// e deve anche eseguire: la compilazione da sola non basta a dire che
-		// l'item produrra' un risultato
+		// it has to run too: compiling alone does not prove the item will
+		// produce a result
 		parsed.setBinding(new Binding(Map.of()));
 
 		var response = parsed.run();
