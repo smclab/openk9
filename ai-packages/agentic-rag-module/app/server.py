@@ -806,7 +806,9 @@ async def get_chat(
                 - answer (str): System's answer
                 - timestamp (str): Timestamp of the message
                 - chat_sequence_number (int): Sequence number of the message in chat
-                - sources (list): List of source documents used for the answer
+                - sources (list): Source documents behind the answer, each with
+                  its citations. Turns answered with citations keep only the
+                  sources the model cited; the others keep every retrieved one.
 
     Raises:
         HTTPException:
@@ -876,21 +878,38 @@ async def get_chat(
             if step <= 0:
                 continue
 
+            # Same contract as the DOCUMENT events of the live stream: one entry
+            # per source, restricted to the cited ones and carrying their quotes
+            # when the turn was answered with citations. Turns saved before
+            # citations existed have no such key, so they keep every source.
+            citations = channel_values.get("citations")
+
             sources = []
+            document_ids = set()
 
             for context_source in context:
                 kwargs = context_source.get("kwargs")
-                metadata = kwargs.get("metadata")
-                document_id = metadata.get("document_id")
-                score = metadata.get("score")
-                title = metadata.get("title")
-                url = metadata.get("url")
+                document_metadata = kwargs.get("metadata")
+                document_id = document_metadata.get("document_id")
+
+                if citations is not None and str(document_id) not in citations:
+                    continue
+
+                if document_id:
+                    if document_id in document_ids:
+                        continue
+                    document_ids.add(document_id)
 
                 context_document = {
                     "document_id": document_id,
-                    "score": score,
-                    "title": title,
-                    "url": url,
+                    "score": document_metadata.get("score"),
+                    "title": document_metadata.get("title"),
+                    "url": document_metadata.get("url"),
+                    "citations": (
+                        []
+                        if citations is None
+                        else [{"quote": quote} for quote in citations[str(document_id)]]
+                    ),
                 }
 
                 sources.append(context_document)

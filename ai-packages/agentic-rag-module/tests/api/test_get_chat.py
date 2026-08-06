@@ -91,6 +91,42 @@ def _rewritten_checkpoint(seq, original, rewritten, answer):
     }
 
 
+def _document(document_id, title):
+    """A context document as langgraph serializes it into the checkpoint."""
+    return {
+        "kwargs": {
+            "metadata": {
+                "document_id": document_id,
+                "score": 0.5,
+                "title": title,
+                "url": f"http://smc.it/{document_id}",
+            }
+        }
+    }
+
+
+def _checkpoint_with_sources(context, citations=None):
+    """A turn carrying retrieved documents, optionally with its citations."""
+    channel_values = {
+        "current_query": "question",
+        "response": "answer",
+        "chat_sequence_number": 1,
+        "retrieve_from_uploaded_documents": False,
+        "context": context,
+    }
+    if citations is not None:
+        channel_values["citations"] = citations
+
+    return {
+        "_source": {
+            "checkpoint": json.dumps(
+                {"ts": "2026-01-01T00:01:00", "channel_values": channel_values}
+            ),
+            "metadata": {"step": 1},
+        }
+    }
+
+
 def _opensearch_mock(hits):
     client = MagicMock()
     client.indices.exists.return_value = True
@@ -162,6 +198,52 @@ def test_get_chat_falls_back_to_current_query_when_not_rewritten(client, monkeyp
 
     assert response.status_code == 200
     assert response.json()["messages"][0]["question"] == "question 1"
+
+
+def test_get_chat_returns_only_cited_sources_with_their_quotes(client, monkeypatch):
+    """A reloaded conversation must show what the stream showed: the cited
+    sources with their quotes, not every retrieved document."""
+    context = [
+        _document("doc-1", "Citato"),
+        _document("doc-1", "Citato"),
+        _document("doc-2", "Recuperato ma non usato"),
+    ]
+    hits = [_checkpoint_with_sources(context, citations={"doc-1": ["una quota"]})]
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits)
+    )
+
+    response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    assert response.status_code == 200
+    # doc-1 once despite its two chunks, doc-2 dropped because it was not cited.
+    assert response.json()["messages"][0]["sources"] == [
+        {
+            "document_id": "doc-1",
+            "score": 0.5,
+            "title": "Citato",
+            "url": "http://smc.it/doc-1",
+            "citations": [{"quote": "una quota"}],
+        }
+    ]
+
+
+def test_get_chat_keeps_every_source_for_turns_without_citations(client, monkeypatch):
+    """Turns saved before citations existed have no `citations` key: every
+    retrieved source stays, with an empty citations list."""
+    context = [_document("doc-1", "Primo"), _document("doc-2", "Secondo")]
+    hits = [_checkpoint_with_sources(context)]
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits)
+    )
+
+    response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    assert response.status_code == 200
+    sources = response.json()["messages"][0]["sources"]
+
+    assert [source["document_id"] for source in sources] == ["doc-1", "doc-2"]
+    assert all(source["citations"] == [] for source in sources)
 
 
 def test_get_chat_returns_404_when_the_user_has_no_index(client, monkeypatch):
@@ -241,12 +323,14 @@ def test_get_chat_lists_the_sources_of_each_answer(client, monkeypatch):
             "score": 0.91,
             "title": "Guida",
             "url": "https://example.com/guida",
+            "citations": [],
         },
         {
             "document_id": "doc-2",
             "score": None,
             "title": "FAQ",
             "url": "https://example.com/faq",
+            "citations": [],
         },
     ]
 
