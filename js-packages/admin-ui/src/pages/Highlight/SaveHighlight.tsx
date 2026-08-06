@@ -28,8 +28,8 @@ import {
   useForm,
   useToast,
 } from "@components/Form";
-import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
-import { Box, Button } from "@mui/material";
+import { InformationField } from "@components/Form/utils/informationField";
+import { Box, Button, FormControl, Typography } from "@mui/material";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -58,15 +58,10 @@ const unifiedBoundaryScannerDict = {
   WORD: BoundaryScannerType.Word,
 };
 
-const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
-  { label: "fields", id: "fields", tooltip: "Document type fields highlighted by current highlight" },
-];
-
 export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { highlightId = "new", view } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
-  const [selectedAssociationTabs, setSelectedAssociationTabs] = React.useState<string>(associationTabs[0].id);
 
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
@@ -280,20 +275,31 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                     <TextInput label="Name" {...form.inputProps("name")} disabled={disabled} />
                     <TextArea label="Description" {...form.inputProps("description")} disabled={disabled} />
                     <CustomSelect label="Type" dict={HighlightType} {...form.inputProps("type")} disabled={disabled} />
-                    <AssociationsLayout tabs={associationTabs} setTabsId={setSelectedAssociationTabs}>
+                    <FormControl fullWidth sx={{ marginBottom: 2 }}>
+                      <Box
+                        sx={{ marginBottom: 1 }}
+                        display="flex"
+                        flexDirection="row"
+                        alignItems="center"
+                        gap="4px"
+                      >
+                        <Typography variant="subtitle1" component="label">
+                          Fields
+                        </Typography>
+                        <InformationField description="Document type fields highlighted by current highlight" />
+                      </Box>
                       <MultiAssociationCustomQuery
                         list={{
                           unassociated: unassociatedFields,
                           associated: associatedFields,
                           isLoading: fieldsLoading,
                         }}
-                        sx={selectedAssociationTabs === "fields" ? {} : { display: "none" }}
                         isLoading={fieldsLoading}
                         disabled={disabled}
                         isRecap={isRecap}
                         onSelect={handleFieldsSelect}
                       />
-                    </AssociationsLayout>
+                    </FormControl>
                     {showBoundaryScanner && (
                       <CustomSelect
                         label="Boundary Scanner"
