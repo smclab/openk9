@@ -32,7 +32,7 @@ export function CustomSelect<E extends Record<string, any>>({
 }: BaseInputProps<E[string]> & { dict: E }) {
   const [savedDescription, setSavedDescription] = useState<string>("");
   return (
-    <FormControl fullWidth error={validationMessages.length > 0} disabled={disabled}>
+    <FormControl fullWidth error={validationMessages.length > 0} disabled={disabled} sx={{ marginBottom: 2 }}>
       <Box sx={{ marginBottom: 1 }} display={"flex"} flexDirection="row" alignItems="center" gap="4px">
         <Typography
           color={disabled ? "text.disabled" : "text.primary"}
