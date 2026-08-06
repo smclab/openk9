@@ -337,19 +337,12 @@ def to_chunk_message(piece, number, total, vector_data_type):
     return message
 
 
-def _is_cohere_on_bedrock(configuration):
-    """A cohere model on Bedrock, which the langchain class cannot read.
-
-    `BedrockEmbeddings._embedding_func` returns `response_body["embeddings"][0]`,
-    the shape cohere used before the embedding types: `cohere.embed-v4` answers
-    with `embeddings` keyed by type (`{"float": [...]}`) and the read fails with
-    `KeyError: 0`. Our own client asks for `embedding_types: ["float"]` and
-    reads that key, so it speaks the current protocol for both v3 and v4.
-    """
-    provider = configuration.get("model_type")
-    model = configuration.get("model") or ""
-
-    return provider == ModelType.AWS_BEDROCK.value and model.startswith("cohere.")
+# How a langchain text class fails when it cannot read the answer of the model
+# it was given: it indexes or keys something that is not there. Credential,
+# network and throttling failures are deliberately out of this set — changing
+# client does not fix them, and retrying would only hide them behind a second,
+# less informative error.
+UNREADABLE_RESPONSE_ERRORS = (KeyError, IndexError, TypeError)
 
 
 def build_text_embed_query(configuration):
@@ -360,22 +353,79 @@ def build_text_embed_query(configuration):
     model breaks every v1 caller at once: input and output guardrails, domain
     detection, uploaded documents.
 
-    The switch cannot be the `multimodal` flag alone, even though that is the
+    The `multimodal` flag alone cannot decide it, even though it is the
     declared source of truth: `GetEmbeddingModelConfigurationsResponse` in
-    searcher.proto carries no such field, so the RAG callers of this RPC have
-    no way to forward it and it always arrives false. Provider and model decide
-    the protocol on the wire, and they do arrive.
+    searcher.proto does not carry the field, so the RAG callers of this RPC
+    have no way to forward it and it always arrives false. When it does arrive
+    the direct client is used straight away; otherwise langchain is tried and
+    the answer it cannot read is what triggers the fallback. Nothing here has
+    to know which models those are.
+    """
+    if configuration.get("multimodal"):
+        return _direct_embed_query(configuration)
+
+    return _langchain_embed_query_with_fallback(configuration)
+
+
+def _direct_embed_query(configuration):
+    """The embedder of the v2 RPCs, as a single-text function.
 
     The input type stays `search_query`, which is what the langchain
-    `embed_query` this replaces already sent for every chunk.
+    `embed_query` this stands in for already sent for every chunk.
     """
-    if configuration.get("multimodal") or _is_cohere_on_bedrock(configuration):
-        _apply_credentials(configuration)
-        embedder = build_multimodal_embedder(configuration)
+    _apply_credentials(configuration)
+    embedder = build_multimodal_embedder(configuration)
 
-        return lambda text: embedder.embed_texts([text], "search_query")[0]
+    return lambda text: embedder.embed_texts([text], "search_query")[0]
 
-    return initialize_embedding_model(configuration).embed_query
+
+def _langchain_embed_query_with_fallback(configuration):
+    """langchain first, the direct client once its answer cannot be read.
+
+    The choice is remembered for the rest of the request, so a model that needs
+    the direct client pays the failed call once and not once per chunk.
+    """
+    langchain_embed_query = initialize_embedding_model(configuration).embed_query
+    fallback = None
+
+    def embed_text(text):
+        nonlocal fallback
+
+        if fallback is None:
+            try:
+                return langchain_embed_query(text)
+            except UNREADABLE_RESPONSE_ERRORS as error:
+                fallback = _fallback_embed_query(configuration, error)
+
+        return fallback(text)
+
+    return embed_text
+
+
+def _fallback_embed_query(configuration, error):
+    """The direct client for a model langchain could not read.
+
+    Re-raises the original failure when the provider has no direct embedder:
+    that error describes the actual problem, while the missing registration
+    would only describe this function's inability to work around it.
+    """
+    logger.warning(
+        "The langchain class could not read the answer of model %r on %r (%s); "
+        "falling back to the direct client.",
+        configuration.get("model"),
+        configuration.get("model_type"),
+        error,
+    )
+
+    try:
+        return _direct_embed_query(configuration)
+    except ValueError as missing_embedder:
+        logger.error(
+            "No direct client for provider %r either: %s",
+            configuration.get("model_type"),
+            missing_embedder,
+        )
+        raise error from None
 
 
 def build_query_capabilities(configuration):
