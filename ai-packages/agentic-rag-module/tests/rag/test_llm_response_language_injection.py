@@ -38,6 +38,7 @@ def _graph():
     The node reads state.target_lang; it does NOT resolve the language itself
     (resolution happens once in stream()/invoke(), outside the graph)."""
     graph = RagGraph.__new__(RagGraph)
+    graph.retrieve_citations = False
     graph.answer_only_with_context = False
     graph.configuration = {"prompt_template": "SYSTEM", "prompt_no_rag": "SYSTEM"}
     graph.llm = MagicMock()
@@ -205,6 +206,7 @@ def test_stream_resolves_language_before_graph_and_seeds_it():
     graph.user_id = None
     graph.chat_id = None
     graph.rag_type = "SIMPLE_GENERATE"
+    graph.retrieve_citations = False
     graph.output_guardrail = {"enable_output_guardrail": True}
     graph.output_guardrail_type = 3
     graph.scope_gate_prefix_chars = 1000

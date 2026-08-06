@@ -42,6 +42,7 @@ def _graph(stream_exception):
     straight into the outer except. output_guardrail is empty, routing through
     the non-output-guardrail branch."""
     graph = RagGraph.__new__(RagGraph)
+    graph.retrieve_citations = False
     graph.output_guardrail = {}
     graph.output_guardrail_type = 0
     graph.config = {}

@@ -90,6 +90,82 @@ MEDIA_ONLY_QUERY_INSTRUCTION = (
     "text, say so plainly instead of guessing."
 )
 
+CITATIONS_DELIMITER = "<<<CITATIONS>>>"
+MAX_CITATION_QUOTES = 2
+CITATIONS_INSTRUCTION = (
+    "After the answer, on a new line, write the marker "
+    f"{CITATIONS_DELIMITER} followed by a JSON array listing ONLY the sources "
+    "you actually used, in this exact shape: "
+    '[{"document_id": "<id>", "quotes": ["..."]}]. '
+    "Use the document_id values shown in the context. Quote one passage for each "
+    "distinct statement your answer takes from that source, up to 2 quotes per "
+    "source. Every quote must be copied verbatim from that source, word for word "
+    "and no longer than 25 words: never merge two passages into one sentence, "
+    "never rewrite them, and never add a quote for something your answer does "
+    "not say. If the source holds no second passage you can copy word for word, "
+    "give one quote only: one real quote is better than two, and a quote you had "
+    "to compose is worse than none. Write nothing after the JSON array. If you "
+    "used no source, write an empty array."
+)
+
+
+def _normalize_quote(text: str) -> str:
+    """Reduce a quote to what can be compared against its source.
+
+    Only ASCII letters and digits survive. Indexed text can reach the context
+    stripped of its non-ASCII characters ("l'eccellenza" stored as
+    "leccellenza", "SMC e' stata" as "SMC stata"), so a quote the model spelled
+    correctly would never be found in the very source it came from. Dropping
+    the same characters on both sides makes the match independent of accents,
+    apostrophes, punctuation and whitespace."""
+    return "".join(
+        character
+        for character in text
+        if character.isascii() and character.isalnum()
+    ).casefold()
+
+
+class CitationsTailFilter:
+    """Suppress the citations tail from a stream of llm_response tokens.
+
+    The delimiter can be split across tokens, so any trailing text that is
+    still a possible prefix of it is held back until the next token proves it
+    is plain answer text. Disabled, it is a pass-through."""
+
+    def __init__(self, enabled: bool):
+        self.enabled = enabled
+        self.buffer = ""
+        self.tail_reached = False
+
+    def feed(self, text: str) -> str:
+        if not self.enabled or self.tail_reached:
+            return "" if self.tail_reached else text
+
+        self.buffer += text
+
+        if (delimiter_start := self.buffer.find(CITATIONS_DELIMITER)) != -1:
+            self.tail_reached = True
+            logger.debug(
+                "[citations] delimiter reached, suppressing the rest of the stream"
+            )
+            answer_text, self.buffer = self.buffer[:delimiter_start], ""
+            return answer_text
+
+        hold_back = 0
+        for length in range(min(len(CITATIONS_DELIMITER) - 1, len(self.buffer)), 0, -1):
+            if self.buffer.endswith(CITATIONS_DELIMITER[:length]):
+                hold_back = length
+                break
+
+        split_at = len(self.buffer) - hold_back
+        answer_text, self.buffer = self.buffer[:split_at], self.buffer[split_at:]
+        return answer_text
+
+    def flush(self) -> str:
+        """Held-back text that turned out not to be the delimiter."""
+        answer_text, self.buffer = ("" if self.tail_reached else self.buffer), ""
+        return answer_text
+
 
 class GraphState(BaseModel):
     current_query: Annotated[str, "current_query"] = Field(
@@ -145,6 +221,10 @@ class GraphState(BaseModel):
     )
     target_lang: Optional[str] = Field(
         default=None, description="Resolved language the answer must be written in"
+    )
+    citations: Optional[dict] = Field(
+        default=None,
+        description="Quotes the LLM cited from each used source, by document_id",
     )
     # conversation_summary: Annotated[str, "conversation_summary"] = Field(
     #     "", description="Summary of the conversation"
@@ -252,6 +332,11 @@ class TargetLanguage(BaseModel):
 
 
 class RagGraph:
+    # Citations are off unless the tenant configuration turns them on, and
+    # __init__ overrides this from it. Declared on the class so the graph built
+    # without __init__ - as the tests do - still answers the attribute.
+    retrieve_citations = False
+
     def __init__(self, llm, configuration, utility_llm=None):
         self.llm = llm
         self.utility_llm = utility_llm if utility_llm is not None else llm
@@ -269,6 +354,7 @@ class RagGraph:
         self.answer_only_with_context = configuration.get(
             "answer_only_with_context", True
         )
+        self.retrieve_citations = bool(configuration.get("retrieve_citations"))
         self.opensearch_host = configuration.get("opensearch_host")
         self.open_search_client = get_opensearch_client(self.opensearch_host)
         self.guardrails_configuration = self.configuration.get(
@@ -1801,7 +1887,24 @@ class RagGraph:
 
         if state.use_rag and context:
             prompt = escape_curly_braces(self.configuration.get("prompt_template"))
-            context_text = "\n\n".join([doc.page_content for doc in context])
+
+            # With citations on, each chunk is labelled with its document_id so
+            # the LLM can attribute its quotes. The instruction is passed as a
+            # template *value*, not appended to the template, so the JSON shape
+            # it contains is never parsed as template variables.
+            if self.retrieve_citations:
+                context_text = "\n\n".join(
+                    f"[document_id: {doc.metadata.get('document_id')}]\n"
+                    f"{doc.page_content}"
+                    for doc in context
+                )
+                citations_instruction = CITATIONS_INSTRUCTION
+                logger.debug(
+                    f"[citations] enabled, labelling {len(context)} context chunks"
+                )
+            else:
+                context_text = "\n\n".join([doc.page_content for doc in context])
+                citations_instruction = ""
 
             rag_prompt = ChatPromptTemplate.from_template(
                 prompt
@@ -1815,7 +1918,7 @@ class RagGraph:
                 Question: {query}
 
                 IMPORTANT: Write your entire answer in {target_lang}, regardless of the language used in the context or in these instructions.
-
+{citations_instruction}
                 Answer:
                 """
             )
@@ -1827,6 +1930,7 @@ class RagGraph:
                     "context": context_text,
                     "history": conversation_history,
                     "target_lang": target_lang,
+                    "citations_instruction": citations_instruction,
                 }
             )
         else:
@@ -1864,9 +1968,131 @@ class RagGraph:
         else:
             llm_response = response.content
 
+        if self.retrieve_citations and state.use_rag and context:
+            llm_response, _, citations_tail = llm_response.partition(
+                CITATIONS_DELIMITER
+            )
+            llm_response = llm_response.rstrip()
+            state.citations = self._parse_citations(citations_tail, context)
+
+            if state.citations is not None:
+                retrieved_sources = {
+                    doc.metadata.get("document_id") for doc in context
+                }
+                cited_quotes = ", ".join(
+                    f"{document_id}={len(quotes)}"
+                    for document_id, quotes in state.citations.items()
+                )
+                logger.debug(
+                    f"[citations] {len(state.citations)} of "
+                    f"{len(retrieved_sources)} retrieved sources cited "
+                    f"(quotes per source: {cited_quotes})"
+                )
+
         state.response = llm_response
 
         return state
+
+    @staticmethod
+    def _parse_citations(
+        citations_tail: str, documents: List[Document]
+    ) -> Optional[dict]:
+        """Map the cited document_ids to their quotes.
+
+        Returns None whenever the block is missing, malformed or attributes
+        nothing to a retrieved document, so the caller falls back to emitting
+        every retrieved source. Quotes not found in the source they are
+        attributed to are dropped, and each source keeps at most
+        MAX_CITATION_QUOTES of them."""
+        if not citations_tail.strip():
+            logger.warning(
+                "[citations] the answer carries no citations block, "
+                "keeping all sources"
+            )
+            return None
+
+        payload = citations_tail.strip()
+        if payload.startswith("```"):
+            payload = payload.removeprefix("```json").removeprefix("```").strip()
+            payload = payload.removesuffix("```").strip()
+
+        try:
+            entries = json.loads(payload)
+        except ValueError:
+            logger.warning(
+                "[citations] malformed citations block, keeping all sources: "
+                f"{payload[:200]!r}"
+            )
+            return None
+
+        if not isinstance(entries, list):
+            logger.warning(
+                f"[citations] citations block is a {type(entries).__name__}, "
+                "not a JSON array: keeping all sources"
+            )
+            return None
+
+        if not entries:
+            logger.warning(
+                "[citations] the LLM declared it cited no source, "
+                "keeping all sources"
+            )
+            return None
+
+        # Keyed by the string form of the id: the model may return it quoted or
+        # as a bare JSON number, and an int would never match a str key.
+        sources = {}
+        for document in documents:
+            if document_id := document.metadata.get("document_id"):
+                sources.setdefault(str(document_id), []).append(document.page_content)
+
+        citations = {}
+        for entry in entries:
+            if not isinstance(entry, dict):
+                logger.debug(f"[citations] skipping non-object entry: {entry!r}")
+                continue
+
+            document_id = entry.get("document_id")
+            document_id = None if document_id is None else str(document_id)
+            if document_id not in sources:
+                logger.warning(
+                    f"[citations] cited document_id={document_id!r} was never "
+                    "retrieved, ignored"
+                )
+                continue
+
+            source_text = _normalize_quote("\n".join(sources[document_id]))
+            quotes = citations.setdefault(document_id, [])
+
+            for quote in entry.get("quotes") or []:
+                if len(quotes) == MAX_CITATION_QUOTES:
+                    logger.debug(
+                        f"[citations] document_id={document_id} hit the "
+                        f"{MAX_CITATION_QUOTES}-quote cap, extra quotes dropped"
+                    )
+                    break
+                if not isinstance(quote, str) or not (
+                    normalized_quote := _normalize_quote(quote)
+                ):
+                    continue
+                if normalized_quote not in source_text:
+                    # The model paraphrased instead of copying: the quote would
+                    # not be verifiable against the source, so it is dropped.
+                    logger.debug(
+                        f"[citations] quote not found in document_id="
+                        f"{document_id}, dropped: {quote[:120]!r}"
+                    )
+                    continue
+                quotes.append(quote)
+
+        if not citations:
+            logger.warning(
+                "[citations] no cited source matches the retrieved documents, "
+                "keeping all sources"
+            )
+            return None
+
+        return citations
 
     def history_saver_node(self, state: GraphState) -> GraphState:
         """Update messages with the latest query and response"""
@@ -2067,16 +2293,26 @@ class RagGraph:
             }
         )
 
-    def _stream_documents(self, documents: List[Document]):
+    def _stream_documents(self, documents: List[Document], citations: dict = None):
+        """Emit one DOCUMENT event per retrieved source.
+
+        With citations given, only the sources the LLM cited are emitted, each
+        carrying the quotes it used."""
         documents_id = set()
         for document in documents:
             metadata = document.metadata
             if (
                 document_id := metadata.get("document_id")
             ) and document_id not in documents_id:
+                if citations is not None and str(document_id) not in citations:
+                    continue
                 documents_id.add(document_id)
                 chunk = {}
-                chunk["citations"] = []
+                chunk["citations"] = (
+                    []
+                    if citations is None
+                    else [{"quote": quote} for quote in citations[str(document_id)]]
+                )
                 if "score" in metadata:
                     chunk["score"] = metadata.get("score")
                 if "title" in metadata:
@@ -2093,12 +2329,58 @@ class RagGraph:
                     }
                 )
 
+        if citations is not None:
+            if documents_id:
+                logger.debug(
+                    f"[citations] DOCUMENT events emitted: {len(documents_id)} "
+                    f"of {len(citations)} cited sources"
+                )
+            else:
+                # Worst outcome for the user: an answer with no source at all.
+                # Only reachable if the state citations and the documents being
+                # streamed disagree, so it is worth a warning.
+                logger.warning(
+                    f"[citations] none of the {len(citations)} cited sources "
+                    "matches a streamed document: no DOCUMENT event emitted"
+                )
+
+    def _iter_answer_chunks(self, query: str, target_lang: str) -> Iterator[str]:
+        """Yield the llm_response text chunks, without the citations tail.
+
+        Single entry point for every stream() branch: the graph is streamed in
+        messages mode (the node calls invoke(), but LangGraph's streaming
+        callback makes the model stream its tokens anyway) and the citations
+        tail is suppressed before any branch can emit it."""
+        citations_filter = CitationsTailFilter(self.retrieve_citations)
+
+        for chunk, metadata in self.graph.stream(
+            {
+                "current_query": query,
+                "chat_sequence_number": self.chat_sequence_number,
+                "target_lang": target_lang,
+            },
+            config=self.config,
+            stream_mode="messages",
+        ):
+            if metadata["langgraph_node"] == "llm_response" and chunk.content:
+                if isinstance(chunk.content, list):
+                    chunk_response = chunk.content[0].get("text")
+                else:
+                    chunk_response = chunk.content
+
+                if answer_text := citations_filter.feed(chunk_response):
+                    yield answer_text
+
+        if answer_text := citations_filter.flush():
+            yield answer_text
+
     def stream(self, query: str):
         started_at = time.monotonic()
         # Set by whichever branch ends the stream; the end record is emitted
         # once, from the finally, so that every way out of the generator is
         # reported exactly the same way.
         outcome = "COMPLETED"
+        cited_sources = []
         result_answer = ""
 
         logger.info(
@@ -2122,63 +2404,42 @@ class RagGraph:
                 scope_checked = False
 
                 try:
-                    for chunk, metadata in self.graph.stream(
-                        {
-                            "current_query": query,
-                            "chat_sequence_number": self.chat_sequence_number,
-                            "target_lang": target_lang,
-                        },
-                        config=self.config,
-                        stream_mode="messages",
-                    ):
-                        if (
-                            metadata["langgraph_node"] == "llm_response"
-                            and chunk.content
-                        ):
-                            chunk_response = ""
+                    for chunk_response in self._iter_answer_chunks(query, target_lang):
+                        if start_chunk:
+                            yield json.dumps({"chunk": "", "type": "START"})
+                            start_chunk = False
 
-                            if isinstance(chunk.content, list):
-                                chunk_response = chunk.content[0].get("text")
-                            else:
-                                chunk_response = chunk.content
+                        result_answer += chunk_response
 
-                            if start_chunk:
-                                yield json.dumps({"chunk": "", "type": "START"})
-                                start_chunk = False
+                        # Prefix already validated: stream the rest freely.
+                        if scope_checked:
+                            yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
+                            continue
 
-                            result_answer += chunk_response
+                        prefix_buffer.append(chunk_response)
 
-                            # Prefix already validated: stream the rest freely.
-                            if scope_checked:
+                        if len(result_answer) >= self.scope_gate_prefix_chars:
+                            scope_gate = self._llm_scope_gate(
+                                query,
+                                self._get_retrieved_context_text(),
+                                result_answer,
+                            )
+                            if scope_gate == "OFF_SCOPE":
+                                outcome = "OFF_SCOPE"
                                 yield json.dumps(
-                                    {"chunk": chunk_response, "type": "CHUNK"}
+                                    {
+                                        "chunk": self.scope_gate_redirect_message,
+                                        "type": "CANCEL",
+                                    }
                                 )
-                                continue
+                                return
 
-                            prefix_buffer.append(chunk_response)
-
-                            if len(result_answer) >= self.scope_gate_prefix_chars:
-                                scope_gate = self._llm_scope_gate(
-                                    query,
-                                    self._get_retrieved_context_text(),
-                                    result_answer,
+                            for buffered_chunk in prefix_buffer:
+                                yield json.dumps(
+                                    {"chunk": buffered_chunk, "type": "CHUNK"}
                                 )
-                                if scope_gate == "OFF_SCOPE":
-                                    outcome = "OFF_SCOPE"
-                                    yield json.dumps(
-                                        {
-                                            "chunk": self.scope_gate_redirect_message,
-                                            "type": "CANCEL",
-                                        }
-                                    )
-                                    return
-
-                                for buffered_chunk in prefix_buffer:
-                                    yield json.dumps(
-                                        {"chunk": buffered_chunk, "type": "CHUNK"}
-                                    )
-                                prefix_buffer = []
-                                scope_checked = True
+                            prefix_buffer = []
+                            scope_checked = True
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
                         outcome = "ERROR"
@@ -2222,57 +2483,33 @@ class RagGraph:
                 chunk_batch = []
 
                 try:
-                    for chunk, metadata in self.graph.stream(
-                        {
-                            "current_query": query,
-                            "chat_sequence_number": self.chat_sequence_number,
-                            "target_lang": target_lang,
-                        },
-                        config=self.config,
-                        stream_mode="messages",
-                    ):
-                        if (
-                            metadata["langgraph_node"] == "llm_response"
-                            and chunk.content
-                        ):
-                            chunk_response = ""
+                    for chunk_response in self._iter_answer_chunks(query, target_lang):
+                        if start_chunk:
+                            yield json.dumps({"chunk": "", "type": "START"})
+                            start_chunk = False
 
-                            if isinstance(chunk.content, list):
-                                chunk_response = chunk.content[0].get("text")
-                            else:
-                                chunk_response = chunk.content
+                        result_answer += chunk_response
 
-                            if start_chunk:
-                                yield json.dumps({"chunk": "", "type": "START"})
-                                start_chunk = False
+                        chunk_batch.append({"chunk": chunk_response, "type": "CHUNK"})
 
-                            result_answer += chunk_response
-
-                            chunk_batch.append(
-                                {"chunk": chunk_response, "type": "CHUNK"}
+                        if len(chunk_batch) == self.output_guardrail_chunk_interval:
+                            llm_output_guardrail = self._llm_output_guardrail(
+                                result_answer, "chunk_interval"
                             )
-
-                            if len(chunk_batch) == self.output_guardrail_chunk_interval:
-                                llm_output_guardrail = self._llm_output_guardrail(
-                                    result_answer, "chunk_interval"
+                            if llm_output_guardrail and llm_output_guardrail != "NONE":
+                                outcome = "BLOCKED_OUTPUT"
+                                yield json.dumps(
+                                    {
+                                        "chunk": "Inappropriate content",
+                                        "type": "CANCEL",
+                                    }
                                 )
-                                if (
-                                    llm_output_guardrail
-                                    and llm_output_guardrail != "NONE"
-                                ):
-                                    outcome = "BLOCKED_OUTPUT"
-                                    yield json.dumps(
-                                        {
-                                            "chunk": "Inappropriate content",
-                                            "type": "CANCEL",
-                                        }
-                                    )
-                                    return
+                                return
 
-                                else:
-                                    for chunk in chunk_batch:
-                                        yield json.dumps(chunk)
-                                    chunk_batch = []
+                            else:
+                                for chunk in chunk_batch:
+                                    yield json.dumps(chunk)
+                                chunk_batch = []
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
                         outcome = "ERROR"
@@ -2310,51 +2547,32 @@ class RagGraph:
                 chunk_number = 0
 
                 try:
-                    for chunk, metadata in self.graph.stream(
-                        {
-                            "current_query": query,
-                            "chat_sequence_number": self.chat_sequence_number,
-                            "target_lang": target_lang,
-                        },
-                        config=self.config,
-                        stream_mode="messages",
-                    ):
-                        if (
-                            metadata["langgraph_node"] == "llm_response"
-                            and chunk.content
-                        ):
-                            chunk_response = ""
+                    for chunk_response in self._iter_answer_chunks(query, target_lang):
+                        chunk_number += 1
 
-                            if isinstance(chunk.content, list):
-                                chunk_response = chunk.content[0].get("text")
-                            else:
-                                chunk_response = chunk.content
+                        if start_chunk:
+                            yield json.dumps({"chunk": "", "type": "START"})
+                            start_chunk = False
 
-                            chunk_number += 1
+                        result_answer += chunk_response
 
-                            if start_chunk:
-                                yield json.dumps({"chunk": "", "type": "START"})
-                                start_chunk = False
+                        if chunk_number == self.output_guardrail_chunk_interval:
+                            llm_output_guardrail = self._llm_output_guardrail(
+                                result_answer, "chunk_interval"
+                            )
+                            chunk_number = 0
+                            result_answer = ""
 
-                            result_answer += chunk_response
-
-                            if chunk_number == self.output_guardrail_chunk_interval:
-                                llm_output_guardrail = self._llm_output_guardrail(
-                                    result_answer, "chunk_interval"
+                            if llm_output_guardrail != "NONE":
+                                outcome = "BLOCKED_OUTPUT"
+                                yield json.dumps(
+                                    {
+                                        "chunk": "Inappropriate content",
+                                        "type": "CANCEL",
+                                    }
                                 )
-                                chunk_number = 0
-                                result_answer = ""
-
-                                if llm_output_guardrail != "NONE":
-                                    outcome = "BLOCKED_OUTPUT"
-                                    yield json.dumps(
-                                        {
-                                            "chunk": "Inappropriate content",
-                                            "type": "CANCEL",
-                                        }
-                                    )
-                                    return
-                            yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
+                                return
+                        yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
 
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
@@ -2385,33 +2603,14 @@ class RagGraph:
                 result_answer = ""
 
                 try:
-                    for chunk, metadata in self.graph.stream(
-                        {
-                            "current_query": query,
-                            "chat_sequence_number": self.chat_sequence_number,
-                            "target_lang": target_lang,
-                        },
-                        config=self.config,
-                        stream_mode="messages",
-                    ):
-                        if (
-                            metadata["langgraph_node"] == "llm_response"
-                            and chunk.content
-                        ):
-                            chunk_response = ""
+                    for chunk_response in self._iter_answer_chunks(query, target_lang):
+                        if start_chunk:
+                            yield json.dumps({"chunk": "", "type": "START"})
+                            start_chunk = False
 
-                            if isinstance(chunk.content, list):
-                                chunk_response = chunk.content[0].get("text")
-                            else:
-                                chunk_response = chunk.content
+                        result_answer += chunk_response
 
-                            if start_chunk:
-                                yield json.dumps({"chunk": "", "type": "START"})
-                                start_chunk = False
-
-                            result_answer += chunk_response
-
-                            yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
+                        yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
 
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
@@ -2452,7 +2651,11 @@ class RagGraph:
                     and not last_state.values.get("guardrail_check")
                     and (documents := last_state.values.get("context"))
                 ):
-                    yield from self._stream_documents(documents)
+                    yield from self._stream_documents(
+                        documents, last_state.values.get("citations")
+                    )
+
+                cited_sources = list(last_state.values.get("citations") or {})
 
             if last_state.values.get("guardrail_check"):
                 outcome = "BLOCKED_INPUT"
@@ -2491,5 +2694,6 @@ class RagGraph:
                 f"[request] end outcome={outcome} "
                 f"duration_ms={int((time.monotonic() - started_at) * 1000)} "
                 f"chain=agentic_rag {self._log_context()}"
+                + (f" cited_sources={cited_sources}" if self.retrieve_citations else "")
                 + debug_extra(logger, answer=result_answer)
             )

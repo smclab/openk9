@@ -84,6 +84,7 @@ def get_agentic_rag(
         model_type = llm_configuration.get("model_type")
         context_window = llm_configuration.get("context_window")
         retrieve_type = llm_configuration.get("retrieve_type")
+        retrieve_citations = llm_configuration.get("retrieve_citations")
 
         # Carried over whole: a provider key redeclared one by one here is lost
         # in silence when a new one is added upstream and forgotten.
@@ -141,6 +142,7 @@ def get_agentic_rag(
             "enable_real_time_evaluation": enable_real_time_evaluation,
             "guardrails_configuration": guardrails_configuration,
             "domain_threshold": domain_threshold,
+            "retrieve_citations": retrieve_citations,
         }
 
         router = RagGraph(llm, graph_configuration, utility_llm=utility_llm)

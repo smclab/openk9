@@ -36,6 +36,7 @@ def _graph(answer_only_with_context):
     """Build a RagGraph stub exercising llm_response_node in isolation: the
     LLM is a spy so we can assert whether free generation was invoked."""
     graph = RagGraph.__new__(RagGraph)
+    graph.retrieve_citations = False
     graph.answer_only_with_context = answer_only_with_context
     graph.configuration = {"prompt_template": "PROMPT", "prompt_no_rag": "PROMPT"}
     graph.llm = MagicMock()

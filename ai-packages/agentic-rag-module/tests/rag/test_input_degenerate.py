@@ -112,6 +112,7 @@ def test_retriever_returns_empty_when_embedding_is_empty(module, factory):
 def test_llm_response_node_handles_empty_llm_content():
     """An empty ``content`` list from the LLM must not raise IndexError."""
     rag_graph = RagGraph.__new__(RagGraph)
+    rag_graph.retrieve_citations = False
     rag_graph.configuration = {}
     rag_graph.llm = MagicMock()
     rag_graph._format_conversation_history = MagicMock(return_value="")
