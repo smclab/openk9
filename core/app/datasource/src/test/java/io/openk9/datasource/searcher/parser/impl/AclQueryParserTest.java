@@ -25,6 +25,7 @@ import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.PluginDriver;
@@ -180,6 +181,58 @@ class AclQueryParserTest {
 		var queryString = boolQuery.toString();
 		assertNotNull(queryString);
 		assertTrue(queryString.contains("acl.public"));
+	}
+
+	@Test
+	void should_use_the_complete_path_in_the_acl_filter() {
+		// set up the ACL chain acl -> roles -> keyword of the "default" docType,
+		// the hierarchy generated from the index mapping
+		var aclQueryParser = new AclQueryParser();
+		aclQueryParser.extraRolesEnabled = true;
+
+		var defaultDocType = new DocType();
+		defaultDocType.setName(DocType.DEFAULT_NAME);
+
+		var acl = new DocTypeField();
+		acl.setFieldName("acl");
+		acl.setFieldType(FieldType.OBJECT);
+		acl.setDocType(defaultDocType);
+
+		var roles = new DocTypeField();
+		roles.setFieldName("roles");
+		roles.setFieldType(FieldType.TEXT);
+		roles.setParentDocTypeField(acl);
+		roles.setDocType(defaultDocType);
+
+		var keyword = new DocTypeField();
+		keyword.setFieldName("keyword");
+		keyword.setFieldType(FieldType.KEYWORD);
+		keyword.setParentDocTypeField(roles);
+		keyword.setDocType(defaultDocType);
+
+		var aclMapping = AclMapping.of(
+			null, null, keyword, UserField.ROLES);
+		var bucket = new Bucket();
+		bucket.setDatasources(
+			Set.of(createDatasourceWithAcl(aclMapping)));
+
+		var tenantWithBucket = new TenantWithBucket("1", bucket);
+
+		var parserContext = ParserContext.builder()
+			.tenantWithBucket(tenantWithBucket)
+			.extraParams(
+				Map.of("openk9.acl.extra-roles", List.of("role-a")))
+			.build();
+
+		// action
+		var boolQuery = aclQueryParser.getBoolQuery(parserContext);
+
+		// assertion — the terms clause must name the field the index really
+		// has: a wrong path matches nothing and silently hides the documents
+		// protected by a role
+		var queryString = boolQuery.toString();
+		assertTrue(queryString.contains("acl.roles.keyword"));
+		assertFalse(queryString.contains("null.roles.keyword"));
 	}
 
 	@Test
