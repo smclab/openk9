@@ -233,6 +233,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 				replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
 			}
 
+			return this;
 		}
 
 		// Else we try to delete and then to write chunks
