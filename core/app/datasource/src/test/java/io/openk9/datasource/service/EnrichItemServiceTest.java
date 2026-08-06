@@ -58,12 +58,12 @@ public class EnrichItemServiceTest {
 
 	@Test
 	void should_search_enrich_items_by_text() {
-		// 1. un enrich item da trovare, con un nome proprio (il campo e' unique)
+		// 1. an enrich item to find, with a name of its own (the field is unique)
 		createEnrichItem(SEARCHABLE_NAME);
 
-		// 2. la ricerca per testo passa dai campi dichiarati cercabili: se fra
-		// quelli c'e' un attributo @Embedded, la like che il filtro costruisce
-		// produce SQL non valido e la query fallisce con SQLGrammarException
+		// 2. the text search goes through the declared search fields: when one
+		// of them is an @Embedded attribute, the like the filter builds is not
+		// valid SQL and the query fails with SQLGrammarException
 		var page = enrichItemService
 			.findAllPaginated(Pageable.DEFAULT, SEARCHABLE_NAME)
 			.await()
