@@ -27,7 +27,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostUpdate;
 import jakarta.persistence.Table;
@@ -170,7 +169,7 @@ public class DocTypeField extends BaseDocTypeField {
 
 	public String getPath() {
 		if (path == null) {
-			refreshPath();
+			this.path = DocTypeFieldUtils.fieldPath(this);
 		}
 
 		return path;
@@ -194,11 +193,10 @@ public class DocTypeField extends BaseDocTypeField {
 		return getClass().hashCode();
 	}
 
-	@PostLoad
 	@PostPersist
 	@PostUpdate
-	protected void refreshPath() {
-		this.path = DocTypeFieldUtils.fieldPath(this);
+	protected void invalidatePath() {
+		this.path = null;
 	}
 
 }
