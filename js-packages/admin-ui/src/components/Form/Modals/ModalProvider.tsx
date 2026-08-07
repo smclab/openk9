@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,7 @@ export function useModal() {
 
 type ModalProviderProps = { children: React.ReactNode };
 export function ModalProvider({ children }: ModalProviderProps) {
+  const { t } = useTranslation();
   const [modalItems, setModalItems] = React.useState<
     Array<{ key: string } & ModalDefinition>
   >([]);
@@ -161,7 +163,7 @@ export function ModalProvider({ children }: ModalProviderProps) {
                 boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
               }}
             >
-              Close
+              {t("common.close")}
             </Button>
           </DialogActions>
         </Dialog>

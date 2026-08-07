@@ -178,7 +178,7 @@ export function ConfigureConnectors({
 
   return (
     <Box>
-      <h2>Choose only one type of connectors from the list below</h2>
+      <h2>{t("pages.datasources.connectors-section.choose-only-one")}</h2>
       <Box>
         <BoxArea isActive={areaEnabled === "card"}>
           {systemPluginDrivers && systemPluginDrivers.length > 0 && (
@@ -273,7 +273,7 @@ export function ConfigureConnectors({
           )}
           <ButtonAddPluginDrivers pluginDriverRefetch={pluginDrivers} disabled={disabled} setExtraFab={setExtraFab} />
           <Divider sx={{ margin: "17.5px 0px" }} />
-          {!disabled && <p>Test connector</p>}
+          {!disabled && <p>{t("pages.connectors.test-connector")}</p>}
           {!disabled && (
             <Button
               variant="outlined"
@@ -282,7 +282,7 @@ export function ConfigureConnectors({
                 getHealthInfo(Number(pluginDriverId));
               }}
             >
-              Test it!
+              {t("pages.datasources.connectors-section.test-it")}
             </Button>
           )}
         </BoxArea>

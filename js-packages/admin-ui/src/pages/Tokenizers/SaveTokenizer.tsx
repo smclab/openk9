@@ -179,7 +179,7 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           />
           {view === "view" && (
             <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>

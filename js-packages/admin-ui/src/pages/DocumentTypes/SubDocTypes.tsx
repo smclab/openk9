@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -65,6 +66,7 @@ type TreeNode = {
 };
 
 export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { documentTypeId = "new" } = useParams();
   const topRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState<string>("");
@@ -107,8 +109,8 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
     onCompleted: (data) => {
       if (data?.deleteDocTypeField?.id) {
         toast({
-          title: "Field Deleted",
-          content: "Document type field has been deleted successfully",
+          title: t("pages.document-types.field-deleted-title"),
+          content: t("pages.document-types.field-deleted-content"),
           displayType: "success",
         });
         documentTypesQuery.refetch({
@@ -124,8 +126,8 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
       console.error("Error deleting document type field:", error);
       const serverMessage = error.graphQLErrors?.[0]?.message;
       toast({
-        title: "Error Delete",
-        content: serverMessage || "Impossible to delete document type field. The field may be in use by other configurations.",
+        title: t("common.delete-error"),
+        content: serverMessage || t("pages.document-types.field-delete-error-content"),
         displayType: "error",
       });
       setDeleteModal(null);
@@ -229,8 +231,8 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
       console.error("Error updating document type field:", error);
       const serverMessage = error instanceof ApolloError ? error.graphQLErrors?.[0]?.message || error.message : undefined;
       toast({
-        title: "Error Update",
-        content: serverMessage || "Impossible to update document type field.",
+        title: t("pages.document-types.field-update-error-title"),
+        content: serverMessage || t("pages.document-types.field-update-error-content"),
         displayType: "error",
       });
     }
@@ -304,9 +306,9 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
       <>
         {deleteModal && deleteModal.step === 1 && (
           <ModalConfirm
-            title="Delete Document Type Field"
-            body={`You are about to delete the field "${deleteModal.name}". This action is irreversible and will remove all associated data. Do you want to continue?`}
-            labelConfirm="Continue"
+            title={t("pages.document-types.delete-field-title")}
+            body={t("pages.document-types.delete-field-body", { name: deleteModal.name })}
+            labelConfirm={t("common.continue")}
             type="warning"
             actionConfirm={() => {
               setDeleteModal((prev) => (prev ? { ...prev, step: 2 } : null));
@@ -316,9 +318,9 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
         )}
         {deleteModal && deleteModal.step === 2 && (
           <ModalConfirm
-            title="Confirm Deletion"
-            body={`To definitively delete the field "${deleteModal.name}", please type the field name to confirm. If the field is used by other configurations, the operation will be blocked.`}
-            labelConfirm="Delete"
+            title={t("modal.confirm-deletion")}
+            body={t("pages.document-types.delete-field-confirm-body", { name: deleteModal.name })}
+            labelConfirm={t("common.delete")}
             type="error"
             confirmationWord={deleteModal.name}
             actionConfirm={() => {
@@ -332,7 +334,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
         )}
         {idModal && (
           <ModalConfirm
-            title="Create sub doc types"
+            title={t("pages.document-types.create-sub-doc-types")}
             actionConfirm={() => {
               formRef.current && formRef.current.requestSubmit();
             }}
@@ -340,7 +342,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
             close={() => {
               setIdModal(null);
             }}
-            labelConfirm={idModal.action === "edit" ? "Modify entity" : "Create entity"}
+            labelConfirm={idModal.action === "edit" ? t("entity.modify") : t("entity.create-entity")}
           >
             <SaveSubDocType
               documentTypeId={idModal.action === "edit" ? documentTypeId : idModal.id}
@@ -372,7 +374,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
               <TextField
                 id="basicInputTypeText"
                 ref={topRef}
-                placeholder="Search"
+                placeholder={t("common.search")}
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -387,7 +389,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
               />
             </div>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-              <Breadcrumbs aria-label="breadcrumb" separator=">" sx={{ overflow: "auto", width: "100%" }}>
+              <Breadcrumbs aria-label={t("common.breadcrumb")} separator=">" sx={{ overflow: "auto", width: "100%" }}>
                 <LinkRRD
                   to="/document-types"
                   color="inherit"
@@ -399,7 +401,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                     fontWeight: "500",
                   }}
                 >
-                  Document Types
+                  {t("pages.document-types.title")}
                 </LinkRRD>
                 <Link
                   color="inherit"
@@ -409,7 +411,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                   }}
                   sx={{ cursor: "pointer" }}
                 >
-                  Root
+                  {t("pages.document-types.root")}
                 </Link>
                 {currentPath.map((id, index) => {
                   const node = findNodeByPath(currentPath.slice(0, index + 1), data) as TreeNode;
@@ -477,7 +479,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                 >
                   <Logo size={150} color="gray" />
                   <Typography variant="h6" color="textSecondary" sx={{ marginTop: "16px" }}>
-                    No results found
+                    {t("common.no-results-found")}
                   </Typography>
                 </Box>
               )}
@@ -498,16 +500,16 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                       sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                       ref={(el: HTMLElement | null) => {
                         if (el) {
-                          el.title = el.scrollWidth > el.clientWidth ? (child.name || "Unnamed") : "";
+                          el.title = el.scrollWidth > el.clientWidth ? (child.name || t("common.unnamed")) : "";
                         }
                       }}
                     >
-                      {child.name || "Unnamed"}
+                      {child.name || t("common.unnamed")}
                     </Typography>
                   </Box>
                   <Box display="flex" gap="10px">
                     <Chip
-                      label="Sortable"
+                      label={t("fields.sortable")}
                       color={child.chipProperties.sortable ? "success" : "default"}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -518,7 +520,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                       }}
                     />
                     <Chip
-                      label="Exclude"
+                      label={t("fields.exclude")}
                       color={child.chipProperties.exclude ? "warning" : "default"}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -529,7 +531,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                       }}
                     />
                     <Chip
-                      label="Searchable"
+                      label={t("fields.searchable")}
                       color={child.chipProperties.searchable ? "info" : "default"}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -561,7 +563,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                         setIdModal({ id: child.id, action: "edit", isChild: false, parentId: child.id });
                       }}
                     >
-                      Edit
+                      {t("common.edit")}
                     </Button>
                     <Button
                       size="small"
@@ -572,7 +574,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                         handleChildClick(child.id);
                       }}
                     >
-                      Sub Doc Types
+                      {t("pages.document-types.sub-doc-types")}
                     </Button>
                     <Button
                       size="small"
@@ -584,7 +586,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                         setDeleteModal({ id: child.id, name: child.name || "", step: 1 });
                       }}
                     >
-                      Delete
+                      {t("common.delete")}
                     </Button>
                   </Box>
                 </Box>
@@ -592,7 +594,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
               {hasNextPage && !loading && (
                 <Box display="flex" justifyContent="center" marginTop="16px">
                   <Button variant="outlined" onClick={loadMore} disabled={loadingMore}>
-                    {loadingMore ? "Loading..." : "Load more"}
+                    {loadingMore ? t("common.loading") : t("common.load-more")}
                   </Button>
                 </Box>
               )}

@@ -271,7 +271,7 @@ export const Header = ({
   return (
     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
       <TitleEntity
-        nameEntity="Datasource"
+        nameEntity={t("pages.datasources.datasource")}
         description={t("pages.datasources.structure.create-or-edit-a-datasource-to-define")}
         id="new"
       />

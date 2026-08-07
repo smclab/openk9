@@ -306,7 +306,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         />
         {view === "view" && (
           <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-            Edit
+            {t("common.edit")}
           </Button>
         )}
       </Box>
@@ -330,9 +330,9 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                       <TextInput
                         label={t("fields.base-uri")}
                         {...form.inputProps("baseUri")}
-                        description={"Base URL where enrich service listens"}
+                        description={t("pages.enrich-items.base-uri-description")}
                       />
-                      <TextInput label={t("fields.path")} {...form.inputProps("path")} description={"API endpoint path"} />
+                      <TextInput label={t("fields.path")} {...form.inputProps("path")} description={t("pages.enrich-items.path-description")} />
                       <Box sx={{ display: "flex", marginBlock: 2, alignItems: "center", gap: 2 }}>
                         <Button
                           onClick={async () => {
@@ -345,12 +345,12 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                               setTestResult(mapHealthStatus((res as { status?: string } | null)?.status));
                             } catch (err) {
                               setTestResult("error");
-                              setTestError(extractProblemDetails(err));
+                              setTestError(extractProblemDetails(err, t));
                             }
                           }}
                           variant="outlined"
                         >
-                          Test Connection
+                          {t("pages.enrich-items.test-connection")}
                         </Button>
                         <Box sx={{ display: "flex", flexDirection: "column" }}>
                           <Typography
@@ -371,26 +371,24 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                       <NumberInput
                         label={t("fields.request-timeout-milliseconds")}
                         {...form.inputProps("requestTimeout")}
-                        description={"the value is expressed in milliseconds"}
+                        description={t("pages.enrich-items.request-timeout-description")}
                       />
                       <TextInput
                         label={t("fields.json-path")}
                         {...form.inputProps("jsonPath")}
-                        description={"Json Path for merging result. To merge entire Json response set $"}
+                        description={t("pages.enrich-items.json-path-description")}
                       />
                       <CustomSelect
                         label={t("fields.type")}
                         dict={EnrichItemType}
                         {...form.inputProps("type")}
-                        description={
-                          "Enrich Type. Set Sync/Async for external Openk9 compatible service or Groovy Script for simple script enrich."
-                        }
+                        description={t("pages.enrich-items.type-description")}
                       />
                       <CustomSelect
                         label={t("fields.behavior-merge-type")}
                         dict={BehaviorMergeType}
                         {...form.inputProps("behaviorMergeType")}
-                        description={"If merge or replace original message with enrich response"}
+                        description={t("pages.enrich-items.behavior-merge-type-description")}
                       />
                       <CustomSelect
                         label={t("fields.behavior-on-error")}
@@ -415,7 +413,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         ) : (
           <ContainerFluid size="lg">
             <Typography variant="h6" sx={{ mb: 2 }}>
-              Dynamic Configuration
+              {t("pages.enrich-items.dynamic-configuration")}
             </Typography>
             {!loadingForm ? (
               dynamicTemplate ? (
@@ -477,20 +475,20 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
             {step === "configureBase" ? (
               <>
                 <Button variant="outlined" onClick={() => navigate("/enrich-items/")}>
-                  Back
+                  {t("common.back")}
                 </Button>
                 <Button
                   variant="contained"
                   onClick={handleNextStep}
                   disabled={loadingForm || !form.inputProps("name").value}
                 >
-                  Next Step
+                  {t("common.next-step")}
                 </Button>
               </>
             ) : (
               <>
                 <Button variant="outlined" onClick={() => setStep("configureBase")}>
-                  Back
+                  {t("common.back")}
                 </Button>
                 <Button
                   variant="contained"
@@ -498,7 +496,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                     setPage(1);
                   }}
                 >
-                  Save and continue
+                  {t("common.save-and-continue")}
                 </Button>
               </>
             )}

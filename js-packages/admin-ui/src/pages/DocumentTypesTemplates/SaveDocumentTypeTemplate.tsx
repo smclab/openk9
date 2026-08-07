@@ -183,7 +183,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
           />
           {view === "view" && (
             <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>
@@ -212,7 +212,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
                       label={t("fields.template-type")}
                       dict={TemplateType}
                       {...form.inputProps("templateType")}
-                      description={"If template is written in Typescript or Javascript"}
+                      description={t("pages.document-type-templates.template-type-description")}
                     />
                     {(() => {
                       switch (form.inputProps("templateType").value) {
@@ -313,6 +313,7 @@ export function ModalDocumentTypeAssociation({
   callbackClose?(): void;
   title?: string;
 }) {
+  const { t } = useTranslation();
   const pipelinesQuery = useEnrichPipelinesValueOptionsQuery({
     variables: { id: Number(id) },
   });
@@ -368,7 +369,7 @@ export function ModalDocumentTypeAssociation({
               title
             ) : (
               <Typography variant="h6">
-                <span>Item successfully created</span>
+                <span>{t("association.item-successfully-created")}</span>
               </Typography>
             )}
           </DialogTitle>
@@ -385,7 +386,7 @@ export function ModalDocumentTypeAssociation({
           </DialogContent>
           <DialogActions>
             <Button color="error" onClick={handleSubmit} disabled={mutationLoading}>
-              Associate
+              {t("association.associate")}
             </Button>
           </DialogActions>
         </Dialog>

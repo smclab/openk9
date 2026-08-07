@@ -82,8 +82,8 @@ export default function Reindex({ id, data }: { id: string; data: any }) {
       </Box>
       {modalHeaderButton && (
         <ModalConfirmRadio
-          title="change configuration"
-          message="Are you sure to change Configuration?"
+          title={t("pages.datasources.reindex.change-configuration")}
+          message={t("pages.datasources.reindex.are-you-sure-to-change-configuration")}
           callbackClose={() => {
             setModalHeaderButton(null);
           }}

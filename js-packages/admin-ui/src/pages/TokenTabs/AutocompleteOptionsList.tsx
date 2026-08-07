@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Box, TextField, ClickAwayListener } from "@mui/material";
 import { AutocompleteOptionsList } from "@components/Form/Select/AutocompleteOptionsList";
 
@@ -26,11 +27,12 @@ type TokenTypeAutocompleteProps<TokenType> = {
 };
 
 export function TokenTypeAutocomplete<TokenType extends string>({
-  label = "Token Type",
+  label,
   value,
   dict,
   onChange,
 }: TokenTypeAutocompleteProps<TokenType>) {
+  const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const [highlightedIndex, setHighlightedIndex] = React.useState(0);
 
@@ -53,7 +55,7 @@ export function TokenTypeAutocomplete<TokenType extends string>({
     <ClickAwayListener onClickAway={() => setOpen(false)}>
       <Box sx={{ position: "relative" }}>
         <TextField
-          label={label}
+          label={label ?? t("fields.token-type")}
           fullWidth
           value={selectedOption?.label ?? ""}
           onClick={() => setOpen((prev) => !prev)}

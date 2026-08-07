@@ -83,7 +83,12 @@
     "test": "Testa",
     "key": "Chiave",
     "next-step": "Avanti",
-    "reindex": "Reindicizzazione"
+    "reindex": "Reindicizzazione",
+    "continue": "Continua",
+    "load-more": "Carica altri",
+    "loading": "Caricamento...",
+    "no-results-found": "Nessun risultato trovato",
+    "breadcrumb": "Percorso di navigazione"
   },
   "table": {
     "actions": "Azioni",
@@ -104,7 +109,9 @@
     "create": "Crea entità",
     "create-new": "Crea {{name}}",
     "edit": "Modifica {{name}}",
-    "update": "Aggiorna entità"
+    "update": "Aggiorna entità",
+    "create-entity": "Crea entità",
+    "modify": "Modifica entità"
   },
   "form": {
     "association-tabs": "tab delle associazioni",
@@ -117,7 +124,8 @@
     "select-date-and-time": "Seleziona data e ora:",
     "select-items": "Seleziona elementi",
     "select-placeholder": "Seleziona...",
-    "unnamed-option": "Opzione senza nome"
+    "unnamed-option": "Opzione senza nome",
+    "no-options": "Nessuna opzione"
   },
   "association": {
     "associated-items": "Elementi associati",
@@ -128,7 +136,9 @@
     "move-to-available": "sposta i selezionati tra i disponibili",
     "move-to-in-use": "sposta i selezionati tra quelli in uso",
     "title": "Associazione",
-    "unassociated-items": "Elementi non associati"
+    "unassociated-items": "Elementi non associati",
+    "associate": "Associa",
+    "item-successfully-created": "Elemento creato con successo"
   },
   "translation": {
     "add-translation": "Aggiungi traduzione - {{name}}",
@@ -314,7 +324,32 @@
       "delete-body": "Sei sicuro di voler eliminare questo completamento automatico? L'azione è irreversibile e tutti i dati associati andranno persi.",
       "delete-error-content": "Impossibile eliminare il completamento automatico",
       "deleted-content": "Completamento automatico eliminato con successo",
-      "deleted-title": "Completamento automatico eliminato"
+      "deleted-title": "Completamento automatico eliminato",
+      "entity-name": "Autocomplete",
+      "edit-autocomplete": "Modifica Autocomplete",
+      "are-you-sure-you-want-to-edit": "Vuoi davvero modificare questo Autocomplete?",
+      "create-or-edit": "Crea o modifica un Autocomplete e aggiungi i Token Tab per costruire una ricerca personalizzata per tab.",
+      "created-title": "Autocomplete creato",
+      "created-content": "L'Autocomplete è stato creato con successo",
+      "unexpected-error": "Si è verificato un errore imprevisto",
+      "impossible-to-action": "Impossibile {{action}} l'autocomplete",
+      "create-error-title": "Errore in creazione",
+      "update-error-title": "Errore in aggiornamento",
+      "create-error-content": "Impossibile creare l'Autocomplete",
+      "update-error-content": "Impossibile aggiornare l'Autocomplete",
+      "recap-label": "Riepilogo Autocomplete",
+      "name-description": "Identificatore univoco della configurazione di autocomplete.",
+      "fuzziness": "Fuzziness",
+      "fuzziness-description": "Tolleranza di distanza applicata nel confronto fra il termine digitato e i valori indicizzati (AUTO, ZERO, ONE, TWO).",
+      "min-should-match": "Corrispondenze minime",
+      "min-should-match-description": "Numero minimo (es. 2) o percentuale (es. 75%) di termini digitati che devono corrispondere perché un documento venga selezionato.",
+      "result-size": "Numero di risultati",
+      "result-size-description": "Numero massimo di suggerimenti di autocomplete restituiti all'utente.",
+      "operator": "Operatore",
+      "operator-description": "Operatore booleano (AND / OR) usato per combinare i termini digitati nella query sottostante.",
+      "perfect-match-included": "Includi corrispondenze esatte",
+      "perfect-match-included-description": "Se attivo, le corrispondenze esatte vengono incluse fra i suggerimenti di autocomplete.",
+      "fields-description": "Document Type Field analizzati per costruire i suggerimenti di autocomplete."
     },
     "autocorrections": {
       "title": "Correzioni automatiche",
@@ -349,7 +384,8 @@
       "create-error-content": "Impossibile creare la correzione automatica",
       "update-error-content": "Impossibile aggiornare la correzione automatica",
       "unexpected-error": "Si è verificato un errore imprevisto",
-      "impossible-to-action": "Impossibile {{action}} la correzione automatica"
+      "impossible-to-action": "Impossibile {{action}} la correzione automatica",
+      "sort": "Ordinamento"
     },
     "buckets": {
       "title": "Bucket",
@@ -451,7 +487,11 @@
       "update-error-title": "Errore di aggiornamento",
       "create-error-content": "Impossibile creare il connettore",
       "update-error-content": "Impossibile aggiornare il connettore",
-      "duplicate-associations-content": "Le seguenti associazioni non sono state aggiunte perché esistono già"
+      "duplicate-associations-content": "Le seguenti associazioni non sono state aggiunte perché esistono già",
+      "test-connector": "Testa il connettore",
+      "waiting-for-test": "Stato: in attesa del test",
+      "acl-mappings-description": "Associa i campi utente ai document type per gestire il controllo degli accessi.",
+      "regenerate-document-types-body": "vuoi davvero rigenerare i document type?"
     },
     "data-indices": {
       "title": "Indici dati",
@@ -470,7 +510,11 @@
       "impossible-to-create": "Impossibile creare l'indice dati",
       "datasource": "Sorgente dati",
       "document-types": "Tipi di documento",
-      "knn-index": "Indice KNN"
+      "knn-index": "Indice KNN",
+      "settings-fetch-error": "Errore nel recupero delle impostazioni.",
+      "mappings-fetch-error": "Errore nel recupero dei mapping.",
+      "edit-settings": "Modifica impostazioni Data Index",
+      "index-mapping": "Mapping dell'indice"
     },
     "datasources": {
       "title": "Sorgenti dati",
@@ -512,7 +556,9 @@
       "connectors-section": {
         "add-new-connector": "Aggiungi nuovo connettore",
         "preconfigured-connectors": "Connettori preconfigurati",
-        "custom-connectors": "Connettori personalizzati"
+        "custom-connectors": "Connettori personalizzati",
+        "choose-only-one": "Scegli un solo tipo di connettore fra quelli elencati qui sotto",
+        "test-it": "Testa!"
       },
       "data-index-section": {
         "insert-text-here": "Inserisci il testo qui",
@@ -531,7 +577,14 @@
         "text-to-test": "Testo da testare",
         "results": "Risultati:",
         "no-results": "Nessun risultato trovato.",
-        "edit-text": "Modifica testo"
+        "edit-text": "Modifica testo",
+        "duplicate-key": "Chiave duplicata",
+        "insert-here": "Inserisci qui {{mode}}...",
+        "node": "[nodo]",
+        "xml-parse-error": "❌ Errore di parsing XML/HTML",
+        "invalid-xpath": "❌ XPath non valido: {{message}}",
+        "jsonpath-error": "❌ Errore JSONPath: {{message}}",
+        "test-error": "Si è verificato un errore durante il test. Controlla i dati inseriti."
       },
       "configure": {
         "confirm-to-leave-from-this-page": "Confermi di voler lasciare questa pagina?",
@@ -616,12 +669,16 @@
         "generic-suggestions": "Suggerimenti generici:",
         "cron-expression": "Espressione cron:",
         "complete-cron-expression": "Espressione cron completa:",
-        "in-simple-words": "In parole semplici:"
+        "in-simple-words": "In parole semplici:",
+        "minutes": "minuti",
+        "hours": "ore"
       },
       "date-time": {
         "reindex": "Reindicizzazione",
         "scheduling": "Pianificazione",
-        "purge": "Pulizia"
+        "purge": "Pulizia",
+        "title": "Data e ora",
+        "section-selector": "selettore di sezione"
       },
       "pipeline-section": {
         "area-scheduling": "Area pianificazione",
@@ -642,7 +699,9 @@
         "full-reindex": "Reindicizzazione completa",
         "partial-reindex": "Reindicizzazione parziale",
         "cannot-find-data-index": "Non trovi il tuo indice dati? Creane uno nuovo.",
-        "create-new-data-index": "Crea nuovo indice dati"
+        "create-new-data-index": "Crea nuovo indice dati",
+        "change-configuration": "modifica configurazione",
+        "are-you-sure-to-change-configuration": "Vuoi davvero modificare la configurazione?"
       },
       "recovery": {
         "connectors": "CONNETTORI",
@@ -660,7 +719,22 @@
       "monitoring": {
         "activities-title": "Attività della sorgente dati",
         "no-activities": "Nessuna attività",
-        "no-activities-description": "Non ci sono attività non associate corrispondenti"
+        "no-activities-description": "Non ci sono attività non associate corrispondenti",
+        "your-datasource": "La tua sorgente dati",
+        "document-counts": "Documenti indicizzati",
+        "document-deleted": "Documenti eliminati",
+        "store-size": "Spazio occupato (MB)",
+        "activity": "Attività",
+        "modified-date": "Data di modifica",
+        "view-info": "Vedi dettagli",
+        "reprocess-failed-messages": "Rielabora i messaggi falliti",
+        "full-reindex": "Reindicizzazione completa",
+        "incremental": "Incrementale",
+        "schedulation-type": "Tipo di schedulazione: {{type}}",
+        "confirm-action": "Conferma l'azione",
+        "confirm-close": "Vuoi chiudere questa schedulazione?",
+        "confirm-cancel": "Vuoi annullare questa schedulazione?",
+        "confirm-reroute": "Vuoi rielaborare i messaggi falliti di questa schedulazione?"
       }
     },
     "document-types": {
@@ -691,7 +765,18 @@
       "define-how-much-score-is-boosted-in": "Definisce di quanto viene aumentato il punteggio in caso di match su questo campo",
       "if-field-is-searchable-or-not": "Se il campo è ricercabile o meno",
       "if-field-need-to-be-excluded-from": "Se il campo deve essere escluso dalla risposta di ricerca o meno",
-      "if-field-is-sortable-or-not": "Se il campo è ordinabile o meno"
+      "if-field-is-sortable-or-not": "Se il campo è ordinabile o meno",
+      "field-deleted-title": "Campo eliminato",
+      "field-deleted-content": "Il campo del document type è stato eliminato con successo",
+      "field-delete-error-content": "Impossibile eliminare il campo del document type. Il campo potrebbe essere usato da altre configurazioni.",
+      "field-update-error-title": "Errore in aggiornamento",
+      "field-update-error-content": "Impossibile aggiornare il campo del document type.",
+      "delete-field-title": "Elimina campo del Document Type",
+      "delete-field-body": "Stai per eliminare il campo \"{{name}}\". L'operazione è irreversibile e rimuoverà tutti i dati associati. Vuoi continuare?",
+      "delete-field-confirm-body": "Per eliminare definitivamente il campo \"{{name}}\", digita il nome del campo per confermare. Se il campo è usato da altre configurazioni, l'operazione verrà bloccata.",
+      "create-sub-doc-types": "Crea sub doc type",
+      "root": "Root",
+      "sub-doc-types": "Sub Doc Type"
     },
     "document-type-templates": {
       "title": "Template dei tipi di documento",
@@ -713,7 +798,8 @@
       "create-error-title": "Errore di creazione",
       "update-error-title": "Errore di aggiornamento",
       "create-error-content": "Impossibile creare il template del tipo di documento",
-      "update-error-content": "Impossibile aggiornare il template del tipo di documento"
+      "update-error-content": "Impossibile aggiornare il template del tipo di documento",
+      "template-type-description": "Se il template è scritto in TypeScript o JavaScript"
     },
     "embedding-models": {
       "title": "Modelli di embedding",
@@ -788,7 +874,15 @@
       "create-error-title": "Errore di creazione",
       "update-error-title": "Errore di aggiornamento",
       "create-error-content": "Impossibile creare l'elemento di arricchimento",
-      "update-error-content": "Impossibile aggiornare l'elemento di arricchimento"
+      "update-error-content": "Impossibile aggiornare l'elemento di arricchimento",
+      "base-uri-description": "URL base su cui è in ascolto il servizio di enrich",
+      "path-description": "Path dell'endpoint API",
+      "test-connection": "Testa la connessione",
+      "request-timeout-description": "il valore è espresso in millisecondi",
+      "json-path-description": "Json Path per unire il risultato. Per unire l'intera risposta Json imposta $",
+      "type-description": "Tipo di enrich. Imposta Sync/Async per un servizio esterno compatibile con Openk9 oppure Groovy Script per un enrich via script.",
+      "behavior-merge-type-description": "Se unire o sostituire il messaggio originale con la risposta dell'enrich",
+      "dynamic-configuration": "Configurazione dinamica"
     },
     "filters": {
       "title": "Filtri",
@@ -897,7 +991,11 @@
       "create-error-title": "Errore di creazione",
       "update-error-title": "Errore di aggiornamento",
       "create-error-content": "Impossibile creare la pipeline di arricchimento",
-      "update-error-content": "Impossibile aggiornare la pipeline di arricchimento"
+      "update-error-content": "Impossibile aggiornare la pipeline di arricchimento",
+      "link": "Collega",
+      "unlink": "Scollega",
+      "add-enrich-item": "Aggiungi Enrich Item",
+      "create-enrich-item": "Crea Enrich Item"
     },
     "query-analyses": {
       "title": "Analisi query",
@@ -995,7 +1093,11 @@
       "create-error-title": "Errore di creazione",
       "update-error-title": "Errore di aggiornamento",
       "create-error-content": "Impossibile creare la configurazione di ricerca",
-      "update-error-content": "Impossibile aggiornare la configurazione di ricerca"
+      "update-error-content": "Impossibile aggiornare la configurazione di ricerca",
+      "normalization-technique": "NormalizationTechnique",
+      "combination-technique": "CombinationTechnique",
+      "set-changes": "Applica modifiche",
+      "weigths": "Pesi"
     },
     "sortings": {
       "title": "Ordinamenti",
@@ -1135,6 +1237,20 @@
       "show-error": "Mostra errore",
       "reprocess-failed-messages": "Rielabora i messaggi falliti",
       "no-error": "Nessun errore"
+    },
+    "notifications": {
+      "title": "Informazioni sulla notifica",
+      "description": "Pagina di dettaglio",
+      "schedule-id": "ID schedulazione",
+      "create-date": "Data di creazione",
+      "error-description": "Descrizione dell'errore"
+    },
+    "rules": {
+      "deleted-title": "Regola eliminata",
+      "deleted-content": "La regola è stata eliminata con successo",
+      "delete-error-content": "Impossibile eliminare la regola",
+      "terminal": "Terminale",
+      "optional": "Opzionale"
     }
   },
   "datasource-cards": {
@@ -1160,6 +1276,10 @@
     "sync-schedule": "Sincronizzazione: {{schedule}}",
     "view-all-body": "Sei sicuro di voler visualizzare tutte le sorgenti dati?",
     "view-all-title": "Visualizza tutte le sorgenti dati",
-    "view-datasources": "Visualizza sorgenti dati"
+    "view-datasources": "Visualizza sorgenti dati",
+    "type-database": "Database",
+    "type-api": "API REST",
+    "type-filesystem": "File system",
+    "type-web": "Web scraping"
   }
 }

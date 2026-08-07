@@ -343,7 +343,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
             />
             {view === "view" && (
               <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-                Edit
+                {t("common.edit")}
               </Button>
             )}
           </Box>
@@ -625,7 +625,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
             id="customized-dialog-title"
             fontSize={"unset"}
           >
-            Hybrid Search Config
+            {t("pages.search-configs.hybrid-search-config")}
             <IconButton
               aria-label={t("common.close")}
               onClick={handleClose} // Chiudi la modale quando clicchi sull'icona
@@ -641,7 +641,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
           <DialogContent dividers>
             <Box display={"flex"} gap={3} flexDirection={"column"} minWidth={"400px"}>
               <CustomSelect
-                label={"NormalizationTechnique"}
+                label={t("pages.search-configs.normalization-technique")}
                 value={config.normalizationTechnique}
                 disabled={false}
                 validationMessages={[configValidation.normalizationTechnique]}
@@ -650,7 +650,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
                 onChange={(e) => handleSelectChange("normalizationTechnique", e)}
               />
               <CustomSelect
-                label={"CombinationTechnique"}
+                label={t("pages.search-configs.combination-technique")}
                 value={config.combinationTechnique}
                 disabled={false}
                 validationMessages={[configValidation.combinationTechnique]}
@@ -667,7 +667,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
           </DialogContent>
           <DialogActions>
             <Button variant="outlined" autoFocus onClick={() => handleSettings()}>
-              Set Changes
+              {t("pages.search-configs.set-changes")}
             </Button>
           </DialogActions>
         </Dialog>
@@ -685,12 +685,13 @@ const SliderWithTooltip = ({
   onSliderChange: (event: Event, newValue: number | number[]) => void;
   onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   // const color = theme.palette.primary.main;
   return (
     <Box>
       <Typography variant="subtitle1" component="label" htmlFor={"weigth"}>
-        Weigths
+        {t("pages.search-configs.weigths")}
       </Typography>
       <Box display={"flex"} alignItems={"center"} flex={1} gap={2}>
         <Slider

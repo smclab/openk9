@@ -174,7 +174,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
           />
           {view === "view" && (
             <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>
@@ -211,7 +211,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                       description={t("pages.autocorrections.maximum-levenshtein-edit-distance-allowed-between-the")}
                     />
                     <CustomSelect
-                      label={"Sort"}
+                      label={t("pages.autocorrections.sort")}
                       value={form.inputProps("sort").value}
                       disabled={false}
                       validationMessages={[]}
@@ -221,7 +221,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                       description={t("pages.autocorrections.order-in-which-candidate-suggestions-are-returned")}
                     />
                     <CustomSelect
-                      label={"Suggest Mode"}
+                      label={t("pages.autocorrections.suggest-mode")}
                       value={form.inputProps("suggestMode").value}
                       disabled={false}
                       validationMessages={[]}

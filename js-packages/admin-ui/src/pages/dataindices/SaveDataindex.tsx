@@ -270,7 +270,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       });
       setSettings(JSON.stringify(response, null, 2));
     } catch (error) {
-      setSettingsError("Errore nel recupero delle impostazioni.");
+      setSettingsError(t("pages.data-indices.settings-fetch-error"));
     } finally {
       setSettingsLoading(false);
     }
@@ -283,11 +283,11 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       });
       setMappings(JSON.stringify(mappingsResponse, null, 2));
     } catch (error) {
-      setMappingsError("Errore nel recupero dei mapping.");
+      setMappingsError(t("pages.data-indices.mappings-fetch-error"));
     } finally {
       setMappingsLoading(false);
     }
-  }, [form, restClient]);
+  }, [form, restClient, t]);
 
   useEffect(() => {
     const currentDocTypeIds = form.inputProps("docTypeIds").value || [];
@@ -380,7 +380,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   );
 
   if (isLoading) {
-    return <Typography>Caricamento...</Typography>;
+    return <Typography>{t("common.loading")}</Typography>;
   }
 
   const DocumentTypeTable = () => (
@@ -389,8 +389,8 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         <TableHead>
           <TableRow>
             <TableCell />
-            <TableCell>Name</TableCell>
-            <TableCell>Description</TableCell>
+            <TableCell>{t("common.name")}</TableCell>
+            <TableCell>{t("common.description")}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -530,7 +530,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           variant="outlined"
           color="primary"
         >
-          Back
+          {t("common.back")}
         </Button>
         <Button
           variant="contained"
@@ -547,19 +547,19 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           disabled={isNextStepDisabled}
           onClick={() => setStep("configureJson")}
         >
-          Next Step
+          {t("common.next-step")}
         </Button>
       </Box>
     </>
   );
 
   const renderConfigureJson = () => {
-    if (settingsLoading) return <Typography>Caricamento...</Typography>;
+    if (settingsLoading) return <Typography>{t("common.loading")}</Typography>;
     if (settingsError) return <Typography color="error">{settingsError}</Typography>;
 
     return (
       <>
-        {!isReadOnly && <Typography variant="h6">Modifica Impostazioni Data Index</Typography>}
+        {!isReadOnly && <Typography variant="h6">{t("pages.data-indices.edit-settings")}</Typography>}
         <CodeInput
           id="settings-code-input"
           readonly={isReadOnly}
@@ -573,11 +573,11 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         />
         <Box display="flex" justifyContent="space-between" mt={2}>
           <Button variant="contained" color="primary" onClick={() => setStep("configureStandart")}>
-            Back
+            {t("common.back")}
           </Button>
           {isReadOnly ? (
             <Button variant="contained" color="primary" onClick={() => setStep("configureMappings")}>
-              Next Step
+              {t("common.next-step")}
             </Button>
           ) : (
             <Button
@@ -588,7 +588,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                 setPage(1);
               }}
             >
-              Save and continue
+              {t("common.save-and-continue")}
             </Button>
           )}
         </Box>
@@ -597,13 +597,13 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   };
 
   const renderConfigureMappings = () => {
-    if (mappingsLoading) return <Typography>Caricamento...</Typography>;
+    if (mappingsLoading) return <Typography>{t("common.loading")}</Typography>;
     if (mappingsError) return <Typography color="error">{mappingsError}</Typography>;
 
     return (
       <>
         <Typography variant="h6" mb={2}>
-          Index Mapping
+          {t("pages.data-indices.index-mapping")}
         </Typography>
         <CodeInput
           id="mappings-code-input"
@@ -618,7 +618,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         />
         <Box display="flex" justifyContent="space-between" mt={2}>
           <Button variant="contained" color="primary" onClick={() => setStep("configureJson")}>
-            Back
+            {t("common.back")}
           </Button>
           {!isReadOnly && (
             <Button
@@ -629,7 +629,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                 setPage(1);
               }}
             >
-              Save and continue
+              {t("common.save-and-continue")}
             </Button>
           )}
         </Box>

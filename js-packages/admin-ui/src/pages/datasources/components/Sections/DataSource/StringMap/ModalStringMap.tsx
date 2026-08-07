@@ -96,7 +96,7 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
             setValue(e.target.value);
           }}
           sx={{ flex: 1 }}
-          placeholder={`Insert ${testMode} here...`}
+          placeholder={t("pages.datasources.string-map.insert-here", { mode: testMode })}
         />
         <IconButton
           aria-label={t("common.copy")}
@@ -219,7 +219,7 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
       </Box>
     </DialogContent>
     <DialogActions sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <Button onClick={onClose}>Close</Button>
+      <Button onClick={onClose}>{t("common.close")}</Button>
       <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
         <Button
           variant="contained"

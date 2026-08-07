@@ -27,6 +27,7 @@ import {
 } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import React, { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 type Option = { value: string; label: string };
 
@@ -49,6 +50,7 @@ export function AutocompleteOptionsList({
   clearValue = "__CLEAR__",
   viewClear = true,
 }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const clearColor = theme.palette.mode === "light" ? theme.palette.error.light : theme.palette.error.main;
   const clearHoverColor = theme.palette.error.main;
@@ -137,7 +139,7 @@ export function AutocompleteOptionsList({
         {options.length === 0 && !loading && (
           <ListItem role="status" aria-live="polite">
             <Typography variant="body2" color="textSecondary">
-              No Options
+              {t("form.no-options")}
             </Typography>
           </ListItem>
         )}
@@ -165,6 +167,7 @@ export function AutocompleteOptionsListString({
   clearValue = "__CLEAR__",
   viewClear = true,
 }: PropsString) {
+  const { t } = useTranslation();
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const theme = useTheme();
   const clearColor = theme.palette.mode === "light" ? theme.palette.error.light : theme.palette.error.main;
@@ -250,7 +253,7 @@ export function AutocompleteOptionsListString({
         {options.length === 0 && !loading && (
           <ListItem role="status" aria-live="polite">
             <Typography variant="body2" color="textSecondary">
-              No Options
+              {t("form.no-options")}
             </Typography>
           </ListItem>
         )}

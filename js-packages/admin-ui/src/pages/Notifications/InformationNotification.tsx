@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { Box, Button, Container, TextField, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useRestClient } from "@components/queryClient";
 import { useSchedulerQuery } from "../../graphql-generated";
@@ -29,6 +30,7 @@ const allowedActionsByStatus: Record<string, string[]> = {
 };
 
 export const InformationNotification = () => {
+  const { t } = useTranslation();
   const { notificationId = "" } = useParams();
   const navigate = useNavigate();
   const { loading, data } = useSchedulerQuery({
@@ -52,7 +54,7 @@ export const InformationNotification = () => {
         }}
       >
         <Typography component="h1" variant="h1" fontWeight="600">
-          Notification Information
+          {t("pages.notifications.title")}
         </Typography>
         {notificationId && (
           <Box sx={{ display: "flex", gap: 1 }}>
@@ -66,7 +68,7 @@ export const InformationNotification = () => {
                   );
                 }}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
             )}
 
@@ -78,7 +80,7 @@ export const InformationNotification = () => {
                   await restClient.schedulerResource.postApiDatasourceSchedulersCloseScheduling(Number(notificationId));
                 }}
               >
-                Close
+                {t("common.close")}
               </Button>
             )}
 
@@ -92,19 +94,19 @@ export const InformationNotification = () => {
                   );
                 }}
               >
-                Reprocess failed messages
+                {t("pages.datasources.monitoring.reprocess-failed-messages")}
               </Button>
             )}
           </Box>
         )}
       </Box>
       <Typography variant="body1" paragraph>
-        Description page
+        {t("pages.notifications.description")}
       </Typography>
 
       <Box component="form" noValidate autoComplete="off">
         <TextField
-          label="Schedule ID"
+          label={t("pages.notifications.schedule-id")}
           id="scheduleId"
           fullWidth
           margin="normal"
@@ -112,7 +114,7 @@ export const InformationNotification = () => {
           InputProps={{ readOnly: true }}
         />
         <TextField
-          label="Create Date"
+          label={t("pages.notifications.create-date")}
           id="createDate"
           fullWidth
           margin="normal"
@@ -120,7 +122,7 @@ export const InformationNotification = () => {
           InputProps={{ readOnly: true }}
         />
         <TextField
-          label="Modified Date"
+          label={t("pages.datasources.monitoring.modified-date")}
           id="modifiedDate"
           fullWidth
           margin="normal"
@@ -128,7 +130,7 @@ export const InformationNotification = () => {
           InputProps={{ readOnly: true }}
         />
         <TextField
-          label="Last Ingestion Date"
+          label={t("pages.datasources.last-ingestion-date")}
           id="lastIngestionDate"
           fullWidth
           margin="normal"
@@ -136,7 +138,7 @@ export const InformationNotification = () => {
           InputProps={{ readOnly: true }}
         />
         <TextField
-          label="Status"
+          label={t("common.status")}
           id="status"
           fullWidth
           margin="normal"
@@ -145,7 +147,7 @@ export const InformationNotification = () => {
         />
         {(info?.status === "ERROR" || info?.status === "FAILURE") && (
           <TextField
-            label="Error Description"
+            label={t("pages.notifications.error-description")}
             id="errorDescription"
             fullWidth
             margin="normal"
@@ -158,7 +160,7 @@ export const InformationNotification = () => {
       </Box>
 
       <Button variant="outlined" color="inherit" onClick={() => navigate(-1)}>
-        Back
+        {t("common.back")}
       </Button>
     </Container>
   );

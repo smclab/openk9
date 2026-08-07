@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { formatDate } from "@components/common";
+import { useFormatDate } from "@components/common";
 import { ModalAddSingle, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography, useTheme } from "@mui/material";
@@ -30,6 +30,7 @@ import {
 
 export function Datasources() {
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
   const datasourcesQuery = useDataSourcesQuery();
   const theme = useTheme();
   const navigate = useNavigate();

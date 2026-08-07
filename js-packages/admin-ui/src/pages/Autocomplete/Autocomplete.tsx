@@ -17,6 +17,7 @@
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BooleanInput,
@@ -42,6 +43,7 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+  const { t } = useTranslation();
   const { autocompletId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
@@ -58,9 +60,9 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
 
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Edit Autocomplete",
-    body: "Are you sure you want to edit this Autocomplete?",
-    labelConfirm: "Edit",
+    title: t("pages.autocompletes.edit-autocomplete"),
+    body: t("pages.autocompletes.are-you-sure-you-want-to-edit"),
+    labelConfirm: t("common.edit"),
   });
 
   const handleEditClick = async () => {
@@ -92,27 +94,27 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
         }
         if (parentId) {
           toast({
-            content: "Autocomplete has been created successfully",
+            content: t("pages.autocompletes.created-content"),
             displayType: "success",
-            title: "Autocomplete Created",
+            title: t("pages.autocompletes.created-title"),
           });
           navigate(`/autocompletes`);
         }
       } catch (err: any) {
         console.error("Error during onCompleted processing:", err);
         toast({
-          title: `An unexpected error occurred`,
-          content: `Impossible to ${err.message} autocomplete`,
+          title: t("pages.autocompletes.unexpected-error"),
+          content: t("pages.autocompletes.impossible-to-action", { action: err.message }),
           displayType: "error",
         });
       }
     },
     onError(error) {
       console.error("Mutation error:", error);
-      const isNew = autocompletId === "new" ? "create" : "update";
+      const isNew = autocompletId === "new";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} Autocomplete`,
+        title: isNew ? t("pages.autocompletes.create-error-title") : t("pages.autocompletes.update-error-title"),
+        content: isNew ? t("pages.autocompletes.create-error-content") : t("pages.autocompletes.update-error-content"),
         displayType: "error",
       });
     },
@@ -158,13 +160,13 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
         cell: [
           { key: "name" },
           { key: "fuzziness" },
-          { key: "minimumShouldMatch", label: "Min Should Match" },
-          { key: "resultSize", label: "Result Size" },
+          { key: "minimumShouldMatch", label: t("pages.autocompletes.min-should-match") },
+          { key: "resultSize", label: t("pages.autocompletes.result-size") },
           { key: "operator" },
-          { key: "perfectMatchIncluded", label: "Perfect Match Included" },
-          { key: "fieldIds", label: "Fields" },
+          { key: "perfectMatchIncluded", label: t("pages.autocompletes.perfect-match-included") },
+          { key: "fieldIds", label: t("fields.fields") },
         ],
-        label: "Recap Autocomplete",
+        label: t("pages.autocompletes.recap-label"),
       },
     ],
     valueOverride: {
@@ -177,13 +179,13 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
       <>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
           <TitleEntity
-            nameEntity="Autocomplete"
-            description="Create or Edit a Autocomplete and add to it Token Tabs to create yoy personalized search to perform by tab."
+            nameEntity={t("pages.autocompletes.entity-name")}
+            description={t("pages.autocompletes.create-or-edit")}
             id={autocompletId}
           />
           {view === "view" && (
             <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>
@@ -200,48 +202,48 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
                 content: (
                   <div>
                     <TextInput
-                      label="Name"
+                      label={t("common.name")}
                       {...form.inputProps("name")}
-                      description="Unique identifier of the autocomplete configuration."
+                      description={t("pages.autocompletes.name-description")}
                     />
                     <CustomSelect
-                      label="Fuzziness"
+                      label={t("pages.autocompletes.fuzziness")}
                       dict={Fuzziness}
                       {...form.inputProps("fuzziness")}
-                      description="Edit distance tolerance applied when matching the input term against indexed values (AUTO, ZERO, ONE, TWO)."
+                      description={t("pages.autocompletes.fuzziness-description")}
                     />
                     <TextInput
-                      label="Min should Match"
+                      label={t("pages.autocompletes.min-should-match")}
                       {...form.inputProps("minimumShouldMatch")}
-                      description="Minimum number (e.g. 2) or percentage (e.g. 75%) of input terms that must match for a document to be selected."
+                      description={t("pages.autocompletes.min-should-match-description")}
                     />
                     <NumberInput
-                      label="Result Size"
+                      label={t("pages.autocompletes.result-size")}
                       {...form.inputProps("resultSize")}
-                      description="Maximum number of autocomplete suggestions returned to the user."
+                      description={t("pages.autocompletes.result-size-description")}
                     />
                     <CustomSelect
-                      label={"Operator"}
+                      label={t("pages.autocompletes.operator")}
                       value={form.inputProps("operator").value}
                       disabled={false}
                       validationMessages={[]}
                       dict={BooleanOperator}
                       id={"HybridSearch"}
                       onChange={(e: BooleanOperator) => form.inputProps("operator").onChange(e)}
-                      description="Boolean operator (AND / OR) used to combine the input terms in the underlying query."
+                      description={t("pages.autocompletes.operator-description")}
                     />
                     <Box paddingBlock={2}>
                       <BooleanInput
-                        label="Perfect Match Included"
+                        label={t("pages.autocompletes.perfect-match-included")}
                         {...form.inputProps("perfectMatchIncluded")}
-                        description="If enabled, exact matches are also included among the autocomplete suggestions."
+                        description={t("pages.autocompletes.perfect-match-included-description")}
                       />
                     </Box>
                     <Box display="flex" flexDirection="row" alignItems="center" gap="4px">
                       <Box component="label" sx={{ fontWeight: 600 }}>
-                        Fields
+                        {t("fields.fields")}
                       </Box>
-                      <TooltipDescription informationDescription="Document Type Fields scanned to build autocomplete suggestions." />
+                      <TooltipDescription informationDescription={t("pages.autocompletes.fields-description")} />
                     </Box>
                     <MultiAssociationCustomQuery
                       {...form.inputProps("fieldIds")}

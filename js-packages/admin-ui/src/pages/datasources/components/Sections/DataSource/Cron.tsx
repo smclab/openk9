@@ -405,7 +405,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
             <Typography variant="subtitle2" gutterBottom>
               {t("pages.datasources.cron.select-minute")}
             </Typography>
-            <SliderTimeSelector value={fieldValue} onChange={applySuggestion} max={59} label="minutes" />
+            <SliderTimeSelector value={fieldValue} onChange={applySuggestion} max={59} label={t("pages.datasources.cron.minutes")} />
           </Box>
         );
       case "Hour":
@@ -414,7 +414,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
             <Typography variant="subtitle2" gutterBottom>
               {t("pages.datasources.cron.select-hour")}
             </Typography>
-            <SliderTimeSelector value={fieldValue} onChange={applySuggestion} max={23} label="hours" />
+            <SliderTimeSelector value={fieldValue} onChange={applySuggestion} max={23} label={t("pages.datasources.cron.hours")} />
           </Box>
         );
       case "DayOfMonth":

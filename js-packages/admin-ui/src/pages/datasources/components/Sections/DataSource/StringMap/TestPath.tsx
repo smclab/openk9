@@ -14,17 +14,20 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+import type { TFunction } from "i18next";
 import { JSONPath } from "jsonpath-plus";
 
 export function testXPath(
   htmlOrXml: string,
   xpathExpr: string,
+  t: TFunction,
 ): {
   valid: boolean;
   matched: boolean;
   error?: string;
   results?: string[];
 } {
+  const nodeFallback = t("pages.datasources.string-map.node");
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlOrXml, "text/xml");
@@ -33,7 +36,7 @@ export function testXPath(
       return {
         valid: false,
         matched: false,
-        error: "âŒ Errore di parsing XML/HTML",
+        error: t("pages.datasources.string-map.xml-parse-error"),
       };
     }
 
@@ -59,7 +62,7 @@ export function testXPath(
         let node = result.iterateNext();
         while (node) {
           matched = true;
-          results.push((node as Element).outerHTML || node.textContent || "[nodo]");
+          results.push((node as Element).outerHTML || node.textContent || nodeFallback);
           node = result.iterateNext();
         }
         break;
@@ -69,7 +72,7 @@ export function testXPath(
         for (let i = 0; i < result.snapshotLength; i++) {
           const node = result.snapshotItem(i);
           matched = true;
-          results.push((node as Element).outerHTML || node?.textContent || "[nodo]");
+          results.push((node as Element).outerHTML || node?.textContent || nodeFallback);
         }
         break;
       }
@@ -78,7 +81,7 @@ export function testXPath(
         if (result.singleNodeValue) {
           matched = true;
           const node = result.singleNodeValue;
-          results.push((node as Element).outerHTML || node.textContent || "[nodo]");
+          results.push((node as Element).outerHTML || node.textContent || nodeFallback);
         }
         break;
     }
@@ -88,7 +91,7 @@ export function testXPath(
     return {
       valid: false,
       matched: false,
-      error: "âŒ XPath non valido: " + (e as Error).message,
+      error: t("pages.datasources.string-map.invalid-xpath", { message: (e as Error).message }),
     };
   }
 }
@@ -96,6 +99,7 @@ export function testXPath(
 export function testJsonPath(
   jsonText: string,
   jsonPathExpr: string,
+  t: TFunction,
 ): {
   valid: boolean;
   matched: boolean;
@@ -114,8 +118,7 @@ export function testJsonPath(
     return {
       valid: false,
       matched: false,
-      error: "âŒ Errore JSONPath: " + (e as Error).message,
+      error: t("pages.datasources.string-map.jsonpath-error", { message: (e as Error).message }),
     };
   }
 }
-

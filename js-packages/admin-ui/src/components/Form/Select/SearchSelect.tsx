@@ -204,7 +204,7 @@ export function SearchSelect<
           </Box>
           <Box mt={2} textAlign="right">
             <Button variant="contained" onClick={handleClose}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </Box>
         </Box>

@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next";
+
 export type HealthUiState = "success" | "down" | "unknown";
 
 export function mapHealthStatus(status: string | undefined | null): HealthUiState {
@@ -6,7 +8,7 @@ export function mapHealthStatus(status: string | undefined | null): HealthUiStat
   return "unknown";
 }
 
-export function extractProblemDetails(error: unknown): { title: string; detail?: string } {
+export function extractProblemDetails(error: unknown, t: TFunction): { title: string; detail?: string } {
   let parsed: unknown = error;
   if (typeof parsed === "string") {
     try {
@@ -17,7 +19,7 @@ export function extractProblemDetails(error: unknown): { title: string; detail?:
   }
   if (parsed && typeof parsed === "object") {
     const p = parsed as { title?: string; message?: string; detail?: string };
-    return { title: p.title ?? p.message ?? "Error", detail: p.detail };
+    return { title: p.title ?? p.message ?? t("common.error"), detail: p.detail };
   }
-  return { title: "Error" };
+  return { title: t("common.error") };
 }

@@ -17,10 +17,12 @@
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Typography, useTheme } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Handle, Position } from "react-flow-renderer";
 import { useCreateOrUpdateRuleQueryMutation, useDeleteRulesMutation } from "../../../graphql-generated";
 
 export default function NodeGraphRule(props: any) {
+  const { t } = useTranslation();
   const { data } = props;
   const [inputText, setInputText] = React.useState("");
   const [modify, setModify] = React.useState(data.label);
@@ -43,8 +45,8 @@ export default function NodeGraphRule(props: any) {
     onCompleted(data) {
       if (data.deleteRule?.id) {
         toast({
-          title: "Rule Deleted",
-          content: "Rule has been deleted successfully",
+          title: t("pages.rules.deleted-title"),
+          content: t("pages.rules.deleted-content"),
           displayType: "success",
         });
       }
@@ -52,8 +54,8 @@ export default function NodeGraphRule(props: any) {
     onError(error) {
       console.log(error);
       toast({
-        title: "Error Delete",
-        content: "Impossible to delete Rule",
+        title: t("common.delete-error"),
+        content: t("pages.rules.delete-error-content"),
         displayType: "error",
       });
     },
@@ -123,11 +125,11 @@ export default function NodeGraphRule(props: any) {
               />
               <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
                 <input type="checkbox" onChange={() => setIsTerminal(!isTerminal)} checked={isTerminal} />
-                <label>Terminal </label>
+                <label>{t("pages.rules.terminal")} </label>
               </div>
               <div style={{ display: "flex", gap: "5px" }}>
                 <input type="checkbox" onChange={() => setIsOptional(!isOptional)} checked={isOptional} />
-                <label>Optional </label>
+                <label>{t("pages.rules.optional")} </label>
               </div>
               <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
                 <button
@@ -149,9 +151,9 @@ export default function NodeGraphRule(props: any) {
                     setIsOptional(false);
                   }}
                 >
-                  Create
+                  {t("common.create")}
                 </button>
-                {data.isDelete && <button onClick={() => setIsModify(true)}>Edit</button>}
+                {data.isDelete && <button onClick={() => setIsModify(true)}>{t("common.edit")}</button>}
                 {data.isDelete && (
                   <button
                     onClick={() => {
@@ -172,7 +174,7 @@ export default function NodeGraphRule(props: any) {
                       });
                     }}
                   >
-                    Delete
+                    {t("common.delete")}
                   </button>
                 )}
               </div>
@@ -180,7 +182,7 @@ export default function NodeGraphRule(props: any) {
           )}
           {isModify && data.idAssociation && (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <label>Edit</label>
+              <label>{t("common.edit")}</label>
               <input
                 type="text"
                 style={{ border: "1px solid black" }}
@@ -188,7 +190,7 @@ export default function NodeGraphRule(props: any) {
                 onChange={(event) => setModify(event.currentTarget.value)}
               ></input>
               <div style={{ display: "flex", gap: "3px" }}>
-                <button onClick={() => setIsModify(false)}>Back</button>
+                <button onClick={() => setIsModify(false)}>{t("common.back")}</button>
                 <button
                   onClick={() => {
                     const variableSymbol: "$?" | "?" | "$" | "" =
@@ -203,7 +205,7 @@ export default function NodeGraphRule(props: any) {
                     });
                   }}
                 >
-                  Save
+                  {t("common.save")}
                 </button>
               </div>
             </div>

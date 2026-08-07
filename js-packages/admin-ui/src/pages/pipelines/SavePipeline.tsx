@@ -287,9 +287,9 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Description</TableCell>
-                      <TableCell>Actions</TableCell>
+                      <TableCell>{t("common.name")}</TableCell>
+                      <TableCell>{t("common.description")}</TableCell>
+                      <TableCell>{t("table.actions")}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -316,7 +316,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                                 color="primary"
                                 variant="outlined"
                               >
-                                Link
+                                {t("pages.pipelines.link")}
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -331,7 +331,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpen(false)} color="secondary">
-              Close
+              {t("common.close")}
             </Button>
             {modalDataLost && (
               <Link to={"/enrich-item/new"}>
@@ -342,7 +342,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                     changaSideNavigation("enrich-items");
                   }}
                 >
-                  Confirm
+                  {t("common.confirm")}
                 </Button>
               </Link>
             )}
@@ -377,7 +377,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           />
           {verifyData === "view" && (
             <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>
@@ -418,16 +418,16 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         />
 
         <Typography variant="h6" gutterBottom>
-          Associated Enrich items
+          {t("pages.pipelines.associated-enrich-items")}
         </Typography>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Order</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell>{t("fields.order")}</TableCell>
+                <TableCell>{t("common.name")}</TableCell>
+                <TableCell>{t("common.description")}</TableCell>
+                <TableCell>{t("table.actions")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -469,7 +469,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                           }));
                         }}
                       >
-                        Unlink
+                        {t("pages.pipelines.unlink")}
                       </Button>
                     )}
                   </TableCell>
@@ -496,7 +496,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                 setModalDataLost(false);
               }}
             >
-              Add Enrich Item
+              {t("pages.pipelines.add-enrich-item")}
             </Button>
             <Button
               color="primary"
@@ -506,7 +506,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                 setModalDataLost(true);
               }}
             >
-              Create Enrich Item
+              {t("pages.pipelines.create-enrich-item")}
             </Button>
           </div>
         )}
@@ -529,7 +529,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
               navigate("/pipelines");
             }}
           >
-            Back
+            {t("common.back")}
           </Button>
           {!(verifyData === "view" || verifyData === "confirm") && verifyData !== "confirm" && (
             <Button
@@ -538,7 +538,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
               onClick={() => setVerifyData("confirm")}
               disabled={!pipelineData.name}
             >
-              SAVE AND CONTINUE
+              {t("common.save-and-continue")}
             </Button>
           )}
           {verifyData === "confirm" && (

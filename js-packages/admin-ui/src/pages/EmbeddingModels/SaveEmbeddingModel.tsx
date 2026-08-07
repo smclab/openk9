@@ -202,7 +202,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
           />
           {view === "view" && (
             <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>

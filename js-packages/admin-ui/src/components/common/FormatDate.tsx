@@ -14,15 +14,25 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-import i18n from "../../i18n";
+import React from "react";
+import { useTranslation } from "react-i18next";
 
-export function formatDate(value: any) {
-  return value && dateTimeFormatter().format(new Date(value));
+type DateValue = string | number | Date | null | undefined;
+
+/**
+ * Returns a date formatter bound to the language currently selected in the
+ * interface. It is a hook so that components re-render when the language
+ * changes, instead of keeping the dates formatted with the previous locale.
+ */
+export function useFormatDate() {
+  const { i18n } = useTranslation();
+
+  return React.useMemo(() => {
+    const dateTimeFormatter = new Intl.DateTimeFormat(i18n.resolvedLanguage, {
+      dateStyle: "medium",
+      timeStyle: "medium",
+    });
+    return (value: DateValue) => (value ? dateTimeFormatter.format(new Date(value)) : "");
+  }, [i18n.resolvedLanguage]);
 }
-
-const dateTimeFormatter = () =>
-  Intl.DateTimeFormat(i18n.language, {
-    dateStyle: "medium",
-    timeStyle: "medium",
-  });
 

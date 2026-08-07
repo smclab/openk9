@@ -50,9 +50,8 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@components/Form";
 
 export function MonitoringTab({ id }: { id: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [schedulingId, setSchedulingId] = React.useState<number>(-1);
-  const [modalMessage, setModalMessage] = React.useState<string>("");
   const [modalAction, setModalAction] = React.useState<string>("");
   const [open, setOpen] = React.useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = React.useState<boolean>(false);
@@ -76,7 +75,7 @@ export function MonitoringTab({ id }: { id: string }) {
 
   const handleClose = () => {
     setOpen(false);
-    setModalMessage("");
+    setModalAction("");
   };
 
   const loadMoreSchedulers = async () => {
@@ -157,14 +156,16 @@ export function MonitoringTab({ id }: { id: string }) {
   };
 
   const renderSchedulationType = (reindex?: boolean | null) => {
-    const label = reindex ? "Full Reindex" : "Incremental";
+    const label = reindex
+      ? t("pages.datasources.monitoring.full-reindex")
+      : t("pages.datasources.monitoring.incremental");
     return (
       <Chip
         label={label}
         size="small"
         color={reindex ? "warning" : "info"}
         variant="filled"
-        aria-label={`Schedulation type: ${label}`}
+        aria-label={t("pages.datasources.monitoring.schedulation-type", { type: label })}
       />
     );
   };
@@ -177,30 +178,35 @@ export function MonitoringTab({ id }: { id: string }) {
     if (item?.node?.status === SchedulerStatus.Running || item?.node?.status === SchedulerStatus.Stale) {
       return (
         <>
-          <Button onClick={() => handleOpen("closeScheduling", item.node.id)}>Close</Button>
-          <Button onClick={() => handleOpen("cancelScheduling", item.node.id)}>Cancel</Button>
-          <Button onClick={handleViewInfoClick}>View Info</Button>
+          <Button onClick={() => handleOpen("closeScheduling", item.node.id)}>{t("common.close")}</Button>
+          <Button onClick={() => handleOpen("cancelScheduling", item.node.id)}>{t("common.cancel")}</Button>
+          <Button onClick={handleViewInfoClick}>{t("pages.datasources.monitoring.view-info")}</Button>
         </>
       );
     } else if (item?.node?.status === SchedulerStatus.Error) {
       return (
         <>
-          <Button onClick={() => handleOpen("closeScheduling", item.node.id)}>Close</Button>
-          <Button onClick={() => handleOpen("cancelScheduling", item.node.id)}>Cancel</Button>
-          <Button onClick={() => handleOpen("rerouteScheduling", item.node.id)}>Reprocess failed messages</Button>
-          <Button onClick={handleViewInfoClick}>View Info</Button>
+          <Button onClick={() => handleOpen("closeScheduling", item.node.id)}>{t("common.close")}</Button>
+          <Button onClick={() => handleOpen("cancelScheduling", item.node.id)}>{t("common.cancel")}</Button>
+          <Button onClick={() => handleOpen("rerouteScheduling", item.node.id)}>
+            {t("pages.datasources.monitoring.reprocess-failed-messages")}
+          </Button>
+          <Button onClick={handleViewInfoClick}>{t("pages.datasources.monitoring.view-info")}</Button>
         </>
       );
     } else {
-      return <Button onClick={handleViewInfoClick}>View Info</Button>;
+      return <Button onClick={handleViewInfoClick}>{t("pages.datasources.monitoring.view-info")}</Button>;
     }
+  };
+
+  const confirmMessageKeys: Record<string, string> = {
+    closeScheduling: "pages.datasources.monitoring.confirm-close",
+    cancelScheduling: "pages.datasources.monitoring.confirm-cancel",
+    rerouteScheduling: "pages.datasources.monitoring.confirm-reroute",
   };
 
   const handleOpen = (action: string, id: number) => {
     setSchedulingId(id);
-    const actionLabel =
-      action === "rerouteScheduling" ? "reprocess failed messages for" : action.replace("Scheduling", "").toLowerCase();
-    setModalMessage(`Do you want to ${actionLabel} this scheduling?`);
     dataSourceInformationQuery.refetch();
     dataSourceSchedulers.refetch();
     setModalAction(action);
@@ -240,9 +246,9 @@ export function MonitoringTab({ id }: { id: string }) {
   return (
     <>
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Confirm Action</DialogTitle>
+        <DialogTitle>{t("pages.datasources.monitoring.confirm-action")}</DialogTitle>
         <DialogContent>
-          <DialogContentText>{modalMessage}</DialogContentText>
+          <DialogContentText>{modalAction && t(confirmMessageKeys[modalAction])}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="secondary">
@@ -255,7 +261,7 @@ export function MonitoringTab({ id }: { id: string }) {
       </Dialog>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <Typography variant="h2">Your datasource</Typography>
+        <Typography variant="h2">{t("pages.datasources.monitoring.your-datasource")}</Typography>
         <Button onClick={handleRefresh} disabled={isRefreshing}>
           {isRefreshing ? <CircularProgress size={24} /> : <RefreshIcon />}
         </Button>
@@ -264,19 +270,19 @@ export function MonitoringTab({ id }: { id: string }) {
       <div style={{ display: "flex", gap: "16px" }}>
         <Card>
           <CardContent>
-            <Typography variant="h6">Document counts</Typography>
+            <Typography variant="h6">{t("pages.datasources.monitoring.document-counts")}</Typography>
             <Typography variant="h2">{docsCount}</Typography>
           </CardContent>
         </Card>
         <Card>
           <CardContent>
-            <Typography variant="h6">Document deleted</Typography>
+            <Typography variant="h6">{t("pages.datasources.monitoring.document-deleted")}</Typography>
             <Typography variant="h2">{docsDeleted}</Typography>
           </CardContent>
         </Card>
         <Card>
           <CardContent>
-            <Typography variant="h6">Store size (MB)</Typography>
+            <Typography variant="h6">{t("pages.datasources.monitoring.store-size")}</Typography>
             <Typography variant="h2">{storeSize}</Typography>
           </CardContent>
         </Card>
@@ -290,11 +296,11 @@ export function MonitoringTab({ id }: { id: string }) {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Activity</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Modified date</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell>{t("pages.datasources.monitoring.activity")}</TableCell>
+              <TableCell>{t("common.type")}</TableCell>
+              <TableCell>{t("pages.datasources.monitoring.modified-date")}</TableCell>
+              <TableCell>{t("common.status")}</TableCell>
+              <TableCell>{t("table.actions")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -305,12 +311,12 @@ export function MonitoringTab({ id }: { id: string }) {
                 const date = cleanedDate ? new Date(cleanedDate) : null;
 
                 const formattedDateTime = date
-                  ? `${date.toLocaleDateString("it-IT", {
+                  ? `${date.toLocaleDateString(i18n.resolvedLanguage, {
                       day: "2-digit",
                       month: "2-digit",
                       year: "numeric",
                       timeZone: "Europe/Rome",
-                    })} ${date.toLocaleTimeString("it-IT", {
+                    })} ${date.toLocaleTimeString(i18n.resolvedLanguage, {
                       hour: "2-digit",
                       minute: "2-digit",
                       hour12: false,

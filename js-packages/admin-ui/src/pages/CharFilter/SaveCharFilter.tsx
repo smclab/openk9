@@ -148,7 +148,7 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
 
           {view === "view" && (
             <Button variant="contained" onClick={() => navigate(`/char-filter/${charFilterId}`)}>
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>

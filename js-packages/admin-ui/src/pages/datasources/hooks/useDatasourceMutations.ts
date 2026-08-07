@@ -14,6 +14,7 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+import { useTranslation } from "react-i18next";
 import { NavigateFunction } from "react-router-dom";
 import { useModal, useToast } from "@components/Form";
 import {
@@ -23,6 +24,7 @@ import {
 import { DataSourceQuery } from "../gql";
 
 export const useDatasourceMutations = (datasourceId: string, navigate: NavigateFunction) => {
+  const { t } = useTranslation();
   const toast = useToast();
   const modal = useModal();
 
@@ -30,10 +32,10 @@ export const useDatasourceMutations = (datasourceId: string, navigate: NavigateF
     refetchQueries: ["DataSources", "EnrichPipelineOptions", DataSourceQuery],
     onCompleted() {
       navigate("/data-sources");
-      modal({ title: "update datasource", displayType: "success" });
+      modal({ title: t("pages.datasources.updated-title"), displayType: "success" });
     },
     onError() {
-      modal({ title: "errror update datasource", displayType: "error" });
+      modal({ title: t("pages.datasources.error-updating-datasource"), displayType: "error" });
     },
   });
 

@@ -247,7 +247,7 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
         />
         {view === "view" && (
           <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-            Edit
+            {t("common.edit")}
           </Button>
         )}
       </Box>

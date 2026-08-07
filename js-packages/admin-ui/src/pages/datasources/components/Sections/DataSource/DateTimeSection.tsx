@@ -82,10 +82,10 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      <Typography variant="h2">Data Time</Typography>
+      <Typography variant="h2">{t("pages.datasources.date-time.title")}</Typography>
 
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-        <ButtonGroup aria-label="section selector" sx={{ width: "100%" }}>
+        <ButtonGroup aria-label={t("pages.datasources.date-time.section-selector")} sx={{ width: "100%" }}>
           {sections.map((section) => {
             const isCurrentActive = activeSection === section.id;
             const isActive = section.active;

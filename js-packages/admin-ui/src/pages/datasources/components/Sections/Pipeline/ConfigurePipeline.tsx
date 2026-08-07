@@ -58,7 +58,7 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
   return (
     <Box>
       {dataDatasource.pipeline?.id}
-      <Typography variant="h2">Pipeline</Typography>
+      <Typography variant="h2">{t("pages.pipelines.entity-name")}</Typography>
       <RadioGroup
         value={pipelineArea}
         onChange={(e) => {

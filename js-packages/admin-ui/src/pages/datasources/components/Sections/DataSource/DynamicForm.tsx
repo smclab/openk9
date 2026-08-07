@@ -19,6 +19,7 @@ import Autocomplete from "@components/Form/Form/AutoComplete";
 import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import { Box, FormControl, Grid, InputLabel, MenuItem, Select, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { StringMapInput } from "./StringMap/StringMap";
 import { InformationField } from "@components/Form/utils/informationField";
 
@@ -320,6 +321,7 @@ export function GenerateDynamicForm({
   changeValueKey: ChangeValueKey;
   disabled: boolean;
 }) {
+  const { t } = useTranslation();
   const firstStringMapValues = React.useMemo(() => {
     if (!templates || !templates.fields) return {};
     return templates.fields.reduce((acc, field) => {
@@ -418,7 +420,7 @@ export function GenerateDynamicForm({
                   ))
                 ) : (
                   <MenuItem value="">
-                    <em>Nessuna opzione</em>
+                    <em>{t("form.no-options")}</em>
                   </MenuItem>
                 )}
               </Select>

@@ -472,10 +472,10 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
                     },
                   }}
                 >
-                  <MenuItem value="database">Database</MenuItem>
-                  <MenuItem value="api">REST API</MenuItem>
-                  <MenuItem value="filesystem">File System</MenuItem>
-                  <MenuItem value="web">Web Scraping</MenuItem>
+                  <MenuItem value="database">{t("datasource-cards.type-database")}</MenuItem>
+                  <MenuItem value="api">{t("datasource-cards.type-api")}</MenuItem>
+                  <MenuItem value="filesystem">{t("datasource-cards.type-filesystem")}</MenuItem>
+                  <MenuItem value="web">{t("datasource-cards.type-web")}</MenuItem>
                 </Select>
               </FormControl>
 

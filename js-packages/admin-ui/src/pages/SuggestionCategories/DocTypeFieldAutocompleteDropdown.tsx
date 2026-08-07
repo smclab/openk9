@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { SxProps } from "@mui/material";
 import { useDocTypeFieldsOptions } from "./useDocTypeFieldsOptions";
 import { AutocompleteDropdown } from "./AutocompleateOptionList";
@@ -32,7 +33,7 @@ type Props = {
 };
 
 export const DocTypeFieldAutocompleteDropdown: React.FC<Props> = ({
-  label = "Search Config",
+  label,
   disabled,
   value,
   onChange,
@@ -40,9 +41,10 @@ export const DocTypeFieldAutocompleteDropdown: React.FC<Props> = ({
   sx,
   suggestionCategoryId,
 }) => {
+  const { t } = useTranslation();
   return (
     <AutocompleteDropdown
-      label={label}
+      label={label ?? t("fields.search-config")}
       disabled={disabled}
       value={value}
       onChange={onChange}

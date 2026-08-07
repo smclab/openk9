@@ -255,7 +255,7 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
               onClick={() => navigate(`/highlight/${highlightId}`)}
               sx={{ height: "fit-content" }}
             >
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>

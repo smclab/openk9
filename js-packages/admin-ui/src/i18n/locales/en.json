@@ -83,7 +83,12 @@
     "test": "Test",
     "key": "Key",
     "next-step": "Next Step",
-    "reindex": "Reindex"
+    "reindex": "Reindex",
+    "continue": "Continue",
+    "load-more": "Load more",
+    "loading": "Loading...",
+    "no-results-found": "No results found",
+    "breadcrumb": "Breadcrumb"
   },
   "table": {
     "actions": "Actions",
@@ -104,7 +109,9 @@
     "create": "Create entity",
     "create-new": "Create new {{name}}",
     "edit": "Edit {{name}}",
-    "update": "Update entity"
+    "update": "Update entity",
+    "create-entity": "Create entity",
+    "modify": "Modify entity"
   },
   "form": {
     "association-tabs": "association tabs",
@@ -117,7 +124,8 @@
     "select-date-and-time": "Select Date and Time:",
     "select-items": "Select Items",
     "select-placeholder": "Select...",
-    "unnamed-option": "Unnamed option"
+    "unnamed-option": "Unnamed option",
+    "no-options": "No Options"
   },
   "association": {
     "associated-items": "Associated Items",
@@ -128,7 +136,9 @@
     "move-to-available": "move selected to available",
     "move-to-in-use": "move selected to in use",
     "title": "Association",
-    "unassociated-items": "Unassociated Items"
+    "unassociated-items": "Unassociated Items",
+    "associate": "Associate",
+    "item-successfully-created": "Item successfully created"
   },
   "translation": {
     "add-translation": "Add Translate - {{name}}",
@@ -314,7 +324,32 @@
       "delete-body": "Are you sure you want to delete this Autocomplete? This action is irreversible and all associated data will be lost.",
       "delete-error-content": "Impossible to delete Autocomplete",
       "deleted-content": "Autocompletes has been deleted successfully",
-      "deleted-title": "Autocomplete Deleted"
+      "deleted-title": "Autocomplete Deleted",
+      "entity-name": "Autocomplete",
+      "edit-autocomplete": "Edit Autocomplete",
+      "are-you-sure-you-want-to-edit": "Are you sure you want to edit this Autocomplete?",
+      "create-or-edit": "Create or Edit a Autocomplete and add to it Token Tabs to create yoy personalized search to perform by tab.",
+      "created-title": "Autocomplete Created",
+      "created-content": "Autocomplete has been created successfully",
+      "unexpected-error": "An unexpected error occurred",
+      "impossible-to-action": "Impossible to {{action}} autocomplete",
+      "create-error-title": "Error create",
+      "update-error-title": "Error update",
+      "create-error-content": "Impossible to create Autocomplete",
+      "update-error-content": "Impossible to update Autocomplete",
+      "recap-label": "Recap Autocomplete",
+      "name-description": "Unique identifier of the autocomplete configuration.",
+      "fuzziness": "Fuzziness",
+      "fuzziness-description": "Edit distance tolerance applied when matching the input term against indexed values (AUTO, ZERO, ONE, TWO).",
+      "min-should-match": "Min Should Match",
+      "min-should-match-description": "Minimum number (e.g. 2) or percentage (e.g. 75%) of input terms that must match for a document to be selected.",
+      "result-size": "Result Size",
+      "result-size-description": "Maximum number of autocomplete suggestions returned to the user.",
+      "operator": "Operator",
+      "operator-description": "Boolean operator (AND / OR) used to combine the input terms in the underlying query.",
+      "perfect-match-included": "Perfect Match Included",
+      "perfect-match-included-description": "If enabled, exact matches are also included among the autocomplete suggestions.",
+      "fields-description": "Document Type Fields scanned to build autocomplete suggestions."
     },
     "autocorrections": {
       "title": "Autocorrections",
@@ -349,7 +384,8 @@
       "create-error-content": "Impossible to create Autocorrection",
       "update-error-content": "Impossible to update Autocorrection",
       "unexpected-error": "An unexpected error occurred",
-      "impossible-to-action": "Impossible to {{action}} Autocorrection"
+      "impossible-to-action": "Impossible to {{action}} Autocorrection",
+      "sort": "Sort"
     },
     "buckets": {
       "title": "Buckets",
@@ -451,7 +487,11 @@
       "update-error-title": "Error update",
       "create-error-content": "Impossible to create Connector",
       "update-error-content": "Impossible to update Connector",
-      "duplicate-associations-content": "The following associations could not be added because they already exist"
+      "duplicate-associations-content": "The following associations could not be added because they already exist",
+      "test-connector": "Test connector",
+      "waiting-for-test": "Status: Waiting for test",
+      "acl-mappings-description": "Associate user fields with document types to manage access control.",
+      "regenerate-document-types-body": "are you sure you want to regenerate the document types?"
     },
     "data-indices": {
       "title": "Data Indices",
@@ -470,7 +510,11 @@
       "knn-index": "KNN Index",
       "created-successfully": "Data Index created successfully",
       "creation-error": "Creation error",
-      "impossible-to-create": "Impossible to create the Data Index Model"
+      "impossible-to-create": "Impossible to create the Data Index Model",
+      "settings-fetch-error": "Error while fetching the settings.",
+      "mappings-fetch-error": "Error while fetching the mappings.",
+      "edit-settings": "Edit Data Index settings",
+      "index-mapping": "Index Mapping"
     },
     "datasources": {
       "title": "Datasources",
@@ -512,7 +556,9 @@
       "connectors-section": {
         "add-new-connector": "Add new connector",
         "preconfigured-connectors": "Preconfigured Connectors",
-        "custom-connectors": "Custom Connectors"
+        "custom-connectors": "Custom Connectors",
+        "choose-only-one": "Choose only one type of connectors from the list below",
+        "test-it": "Test it!"
       },
       "data-index-section": {
         "insert-text-here": "Insert text here",
@@ -531,7 +577,14 @@
         "text-to-test": "Text to test",
         "results": "Results:",
         "no-results": "No results found.",
-        "edit-text": "Edit text"
+        "edit-text": "Edit text",
+        "duplicate-key": "Duplicate key",
+        "insert-here": "Insert {{mode}} here...",
+        "node": "[node]",
+        "xml-parse-error": "❌ XML/HTML parsing error",
+        "invalid-xpath": "❌ Invalid XPath: {{message}}",
+        "jsonpath-error": "❌ JSONPath error: {{message}}",
+        "test-error": "An error occurred during testing. Please check your input."
       },
       "configure": {
         "confirm-to-leave-from-this-page": "Confirm to leave from this page?",
@@ -616,12 +669,16 @@
         "generic-suggestions": "Generic suggestions:",
         "cron-expression": "Cron Expression:",
         "complete-cron-expression": "Complete Cron Expression:",
-        "in-simple-words": "In simple words:"
+        "in-simple-words": "In simple words:",
+        "minutes": "minutes",
+        "hours": "hours"
       },
       "date-time": {
         "reindex": "Reindex",
         "scheduling": "Scheduling",
-        "purge": "Purge"
+        "purge": "Purge",
+        "title": "Data Time",
+        "section-selector": "section selector"
       },
       "pipeline-section": {
         "area-scheduling": "Area scheduling",
@@ -642,7 +699,9 @@
         "full-reindex": "Full Reindex",
         "partial-reindex": "Partial Reindex",
         "cannot-find-data-index": "Can't find your Data Index? Go and create a new one.",
-        "create-new-data-index": "Create new Data Index"
+        "create-new-data-index": "Create new Data Index",
+        "change-configuration": "change configuration",
+        "are-you-sure-to-change-configuration": "Are you sure to change Configuration?"
       },
       "recovery": {
         "connectors": "CONNECTORS",
@@ -660,7 +719,22 @@
       "monitoring": {
         "activities-title": "Data source's activities",
         "no-activities": "No activities",
-        "no-activities-description": "There are no matching unassociated activities"
+        "no-activities-description": "There are no matching unassociated activities",
+        "your-datasource": "Your datasource",
+        "document-counts": "Document counts",
+        "document-deleted": "Document deleted",
+        "store-size": "Store size (MB)",
+        "activity": "Activity",
+        "modified-date": "Modified date",
+        "view-info": "View Info",
+        "reprocess-failed-messages": "Reprocess failed messages",
+        "full-reindex": "Full Reindex",
+        "incremental": "Incremental",
+        "schedulation-type": "Schedulation type: {{type}}",
+        "confirm-action": "Confirm Action",
+        "confirm-close": "Do you want to close this scheduling?",
+        "confirm-cancel": "Do you want to cancel this scheduling?",
+        "confirm-reroute": "Do you want to reprocess failed messages for this scheduling?"
       }
     },
     "document-types": {
@@ -691,7 +765,18 @@
       "define-how-much-score-is-boosted-in": "Define how much score is boosted in case of match on this field",
       "if-field-is-searchable-or-not": "If field is searchable or not",
       "if-field-need-to-be-excluded-from": "If field need to be excluded from search response or not",
-      "if-field-is-sortable-or-not": "If field is sortable or not"
+      "if-field-is-sortable-or-not": "If field is sortable or not",
+      "field-deleted-title": "Field Deleted",
+      "field-deleted-content": "Document type field has been deleted successfully",
+      "field-delete-error-content": "Impossible to delete document type field. The field may be in use by other configurations.",
+      "field-update-error-title": "Error Update",
+      "field-update-error-content": "Impossible to update document type field.",
+      "delete-field-title": "Delete Document Type Field",
+      "delete-field-body": "You are about to delete the field \"{{name}}\". This action is irreversible and will remove all associated data. Do you want to continue?",
+      "delete-field-confirm-body": "To definitively delete the field \"{{name}}\", please type the field name to confirm. If the field is used by other configurations, the operation will be blocked.",
+      "create-sub-doc-types": "Create sub doc types",
+      "root": "Root",
+      "sub-doc-types": "Sub Doc Types"
     },
     "document-type-templates": {
       "title": "Document Type Templates",
@@ -713,7 +798,8 @@
       "create-error-title": "Error create",
       "update-error-title": "Error update",
       "create-error-content": "Impossible to create Document Type Template",
-      "update-error-content": "Impossible to update Document Type Template"
+      "update-error-content": "Impossible to update Document Type Template",
+      "template-type-description": "If template is written in Typescript or Javascript"
     },
     "embedding-models": {
       "title": "Embedding models",
@@ -788,7 +874,15 @@
       "create-error-title": "Error create",
       "update-error-title": "Error update",
       "create-error-content": "Impossible to create Enrich Item",
-      "update-error-content": "Impossible to update Enrich Item"
+      "update-error-content": "Impossible to update Enrich Item",
+      "base-uri-description": "Base URL where enrich service listens",
+      "path-description": "API endpoint path",
+      "test-connection": "Test Connection",
+      "request-timeout-description": "the value is expressed in milliseconds",
+      "json-path-description": "Json Path for merging result. To merge entire Json response set $",
+      "type-description": "Enrich Type. Set Sync/Async for external Openk9 compatible service or Groovy Script for simple script enrich.",
+      "behavior-merge-type-description": "If merge or replace original message with enrich response",
+      "dynamic-configuration": "Dynamic Configuration"
     },
     "filters": {
       "title": "Filters",
@@ -897,7 +991,11 @@
       "create-error-title": "Error create",
       "update-error-title": "Error update",
       "create-error-content": "Impossible to create Enrich Pipeline",
-      "update-error-content": "Impossible to update Enrich Pipeline"
+      "update-error-content": "Impossible to update Enrich Pipeline",
+      "link": "Link",
+      "unlink": "Unlink",
+      "add-enrich-item": "Add Enrich Item",
+      "create-enrich-item": "Create Enrich Item"
     },
     "query-analyses": {
       "title": "Query Analyses",
@@ -995,7 +1093,11 @@
       "create-error-title": "Error create",
       "update-error-title": "Error update",
       "create-error-content": "Impossible to create Search Config",
-      "update-error-content": "Impossible to update Search Config"
+      "update-error-content": "Impossible to update Search Config",
+      "normalization-technique": "NormalizationTechnique",
+      "combination-technique": "CombinationTechnique",
+      "set-changes": "Set Changes",
+      "weigths": "Weigths"
     },
     "sortings": {
       "title": "Sortings",
@@ -1135,6 +1237,20 @@
       "show-error": "Show Error",
       "reprocess-failed-messages": "Reprocess failed messages",
       "no-error": "No error"
+    },
+    "notifications": {
+      "title": "Notification Information",
+      "description": "Description page",
+      "schedule-id": "Schedule ID",
+      "create-date": "Create Date",
+      "error-description": "Error Description"
+    },
+    "rules": {
+      "deleted-title": "Rule Deleted",
+      "deleted-content": "Rule has been deleted successfully",
+      "delete-error-content": "Impossible to delete Rule",
+      "terminal": "Terminal",
+      "optional": "Optional"
     }
   },
   "datasource-cards": {
@@ -1160,6 +1276,10 @@
     "sync-schedule": "Sync: {{schedule}}",
     "view-all-body": "Are you sure you want to view all datasources?",
     "view-all-title": "View all Datasources",
-    "view-datasources": "View Datasources"
+    "view-datasources": "View Datasources",
+    "type-database": "Database",
+    "type-api": "REST API",
+    "type-filesystem": "File System",
+    "type-web": "Web Scraping"
   }
 }

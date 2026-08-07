@@ -181,7 +181,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
           />
           {view === "view" && (
             <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>

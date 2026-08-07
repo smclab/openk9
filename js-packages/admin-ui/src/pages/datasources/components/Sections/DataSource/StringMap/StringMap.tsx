@@ -106,12 +106,12 @@ export function StringMapInput({ defaultValue, label, description, onChange }: S
         setTestResult(matched.length > 0);
         setTestError(null);
       } else if (testMode === "xpath") {
-        const res = testXPath(testText, value);
+        const res = testXPath(testText, value, t);
         setMatchedLines(res.results || []);
         setTestResult(res.matched);
         setTestError(res.error || null);
       } else if (testMode === "jsonpath") {
-        const res = testJsonPath(testText, value);
+        const res = testJsonPath(testText, value, t);
         setTestResult(res.matched);
         setMatchedLines(res.results || []);
         setTestError(res.error || null);
@@ -120,7 +120,7 @@ export function StringMapInput({ defaultValue, label, description, onChange }: S
       console.error("General Test Error:", err);
       setTestResult(false);
       setMatchedLines([]);
-      setTestError("An error occurred during testing. Please check your input.");
+      setTestError(t("pages.datasources.string-map.test-error"));
     }
   };
 
@@ -157,7 +157,7 @@ export function StringMapInput({ defaultValue, label, description, onChange }: S
               label={t("common.key")}
               value={entry.key}
               error={entry.error}
-              helperText={entry.error ? "Duplicate key" : ""}
+              helperText={entry.error ? t("pages.datasources.string-map.duplicate-key") : ""}
               size="small"
               onChange={(e) => handleChange(idx, "key", e.target.value)}
               sx={{ flex: 1 }}

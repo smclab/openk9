@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { formatDate } from "@components/common";
+import { useFormatDate } from "@components/common";
 import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
@@ -25,6 +25,7 @@ import { useToast } from "@components/Form";
 
 export function Dataindices() {
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
   const dataIndicesQuery = useDataIndicesQuery({ variables: { first: 10 } });
   const navigate = useNavigate();
   const toast = useToast();

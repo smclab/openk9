@@ -178,7 +178,7 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
           />
           {view === "view" && (
             <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>

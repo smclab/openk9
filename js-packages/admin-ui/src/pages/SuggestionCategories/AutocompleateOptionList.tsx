@@ -18,6 +18,7 @@ import useDebounced from "@components/common/useDebounced";
 import { Box, SxProps, TextField, Theme, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { UseOptionsHook } from "utils/RelationOneToOne";
 import { InformationField } from "@components/Form/utils/informationField";
 import { AutocompleteOptionsList } from "@components/Form/Select/AutocompleteOptionsList";
@@ -50,7 +51,7 @@ export function AutocompleteDropdown({
   onChange,
   onClear,
   allowClear = true,
-  clearLabel = "Clear selection",
+  clearLabel,
   label,
   value,
   disabled,
@@ -65,6 +66,8 @@ export function AutocompleteDropdown({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [inputValue, setInputValue] = useState("");
   const justClearedRef = useRef(false);
+  const { t } = useTranslation();
+  const resolvedClearLabel = clearLabel ?? t("form.clear-selection");
 
   const debouncedText = useDebounced(inputValue, 300);
 
@@ -76,7 +79,7 @@ export function AutocompleteDropdown({
     hasNextPageRef.current = hasNextPage;
   }, [hasNextPage]);
 
-  const CLEAR_OPTION: Option = useMemo(() => ({ value: "__CLEAR__", label: clearLabel }), [clearLabel]);
+  const CLEAR_OPTION: Option = useMemo(() => ({ value: "__CLEAR__", label: resolvedClearLabel }), [resolvedClearLabel]);
 
   const showClear = allowClear && !!value;
   const visibleOptions = useMemo<Option[]>(
@@ -262,7 +265,7 @@ export function AutocompleteDropdown({
           onClick={openWithReset}
           onBlur={validateAndClose}
           onKeyDown={handleKeyDown}
-          placeholder="Select..."
+          placeholder={t("form.select-placeholder")}
           inputProps={{
             autoComplete: "off",
             role: "combobox",
@@ -290,7 +293,7 @@ export function AutocompleteDropdown({
               setInputValue("");
               setOpen(false);
             }}
-            aria-label={clearLabel}
+            aria-label={resolvedClearLabel}
           >
             <CloseIcon fontSize="small" />
           </Box>

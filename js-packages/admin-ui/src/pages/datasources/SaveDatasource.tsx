@@ -132,7 +132,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         toast({ displayType: "warning", title: t("pages.datasources.service-status-unknown"), content: t("pages.datasources.unexpected-status", { status: response.status }) });
       }
     } catch (error) {
-      const { title, detail } = extractProblemDetails(error);
+      const { title, detail } = extractProblemDetails(error, t);
       toast({ displayType: "error", title, content: detail ?? "Unable to reach the service" });
     }
   };
@@ -149,7 +149,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         alert(`Service status unknown: ${response.status}`);
       }
     } catch (error) {
-      const { title, detail } = extractProblemDetails(error);
+      const { title, detail } = extractProblemDetails(error, t);
       alert(detail ? `${title}: ${detail}` : title);
     }
   };
@@ -415,12 +415,12 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         cell: [
           { key: "dataIndex.name", label: t("common.name") },
           { key: "dataIndex.description", label: t("common.description") },
-          { key: "vectorIndex.chunkType", label: "chunk Type" },
-          { key: "vectorIndex.chunkWindowSize", label: "chunk Window Size" },
+          { key: "vectorIndex.chunkType", label: t("fields.chunk-type") },
+          { key: "vectorIndex.chunkWindowSize", label: t("fields.chunk-window-size") },
           { key: "vectorIndex.embeddingJsonConfig", label: t("pages.datasources.embedding-json-config") },
           { key: "vectorIndex.knnIndex", label: t("pages.datasources.embedding-knn-index") },
           { key: "vectorIndex.embeddingDocTypeFieldId.name", label: t("fields.doc-type") },
-          { key: "dataIndices", label: "dataIndices" },
+          { key: "dataIndices", label: t("pages.data-indices.title") },
         ],
       },
     ],

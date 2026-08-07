@@ -291,8 +291,8 @@ export function EnrichItemsTable({
             paddingBlock: "30px",
           }}
         >
-          <Typography variant="body1">Enrich items</Typography>
-          <Typography variant="body1">Name</Typography>
+          <Typography variant="body1">{t("pages.enrich-items.title")}</Typography>
+          <Typography variant="body1">{t("common.name")}</Typography>
           <TextField
             type={"text"}
             disabled={!isActive}
@@ -318,9 +318,9 @@ export function EnrichItemsTable({
               <Table>
                 <TableHead sx={{ backgroundColor: "#f1f2f5" }}>
                   <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Actions</TableCell>
+                    <TableCell>{t("common.name")}</TableCell>
+                    <TableCell>{t("common.description")}</TableCell>
+                    <TableCell>{t("table.actions")}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -358,10 +358,10 @@ export function EnrichItemsTable({
           <Table>
             <TableHead sx={{ backgroundColor: "#f1f2f5" }}>
               <TableRow>
-                <TableCell>Order</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell>{t("fields.order")}</TableCell>
+                <TableCell>{t("common.name")}</TableCell>
+                <TableCell>{t("common.description")}</TableCell>
+                <TableCell>{t("table.actions")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

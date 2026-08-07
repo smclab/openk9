@@ -390,10 +390,10 @@ export const SavePluginnDriverModel = React.forwardRef(
                   }}
                   sx={{ height: "fit-content" }}
                 >
-                  Generate document types
+                  {t("pages.connectors.generate-document-types")}
                 </Button>
                 <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-                  Edit
+                  {t("common.edit")}
                 </Button>
               </Box>
             )}
@@ -452,12 +452,12 @@ export const SavePluginnDriverModel = React.forwardRef(
                               setTestResult(mapHealthStatus(res?.status));
                             } catch (err) {
                               setTestResult("error");
-                              setTestError(extractProblemDetails(err));
+                              setTestError(extractProblemDetails(err, t));
                             }
                           }}
                           variant="outlined"
                         >
-                          Test Connector
+                          {t("pages.connectors.test-connector")}
                         </Button>
                       </Box>
                       <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
@@ -468,7 +468,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                             sx={{ display: "flex", alignItems: "center", gap: 1 }}
                           >
                             <FiberManualRecordIcon sx={{ color: "text.secondary", fontSize: 18 }} />
-                            Status: Waiting for test
+                            {t("pages.connectors.waiting-for-test")}
                           </Typography>
                         )}
                         {testResult === "success" && (
@@ -478,7 +478,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                             sx={{ display: "flex", alignItems: "center", gap: 1 }}
                           >
                             <FiberManualRecordIcon sx={{ color: "success.main", fontSize: 18 }} />
-                            Connection successful
+                            {t("pages.datasources.connection-successful")}
                           </Typography>
                         )}
                         {testResult === "down" && (
@@ -488,7 +488,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                             sx={{ display: "flex", alignItems: "center", gap: 1 }}
                           >
                             <FiberManualRecordIcon sx={{ color: "error.main", fontSize: 18 }} />
-                            Service unavailable
+                            {t("pages.datasources.service-unavailable")}
                           </Typography>
                         )}
                         {testResult === "unknown" && (
@@ -498,7 +498,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                             sx={{ display: "flex", alignItems: "center", gap: 1 }}
                           >
                             <FiberManualRecordIcon sx={{ color: "warning.main", fontSize: 18 }} />
-                            Service status unknown
+                            {t("pages.datasources.service-status-unknown")}
                           </Typography>
                         )}
                         {testResult === "error" && (
@@ -524,8 +524,8 @@ export const SavePluginnDriverModel = React.forwardRef(
                         options={userFieldsOptions}
                         config={{
                           title: t("pages.connectors.associate-acl-mappings"),
-                          description: "Associate user fields with document types to manage access control.",
-                          addLabel: "Add",
+                          description: t("pages.connectors.acl-mappings-description"),
+                          addLabel: t("common.add"),
                         }}
                         isCreateButtonVisible={page !== 1 && !view}
                         onAddField={handleAddField}
@@ -613,7 +613,7 @@ export const SavePluginnDriverModel = React.forwardRef(
         {viewDeleteModal.view && (
           <ModalConfirm
             title={t("pages.connectors.generate-document-types")}
-            body="are you sure you want to regenerate the document types?"
+            body={t("pages.connectors.regenerate-document-types-body")}
             labelConfirm={t("pages.connectors.generate")}
             actionConfirm={async () => {
               try {

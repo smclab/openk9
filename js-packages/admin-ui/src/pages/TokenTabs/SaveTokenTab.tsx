@@ -318,7 +318,7 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
 
           {view === "view" && (
             <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-              Edit
+              {t("common.edit")}
             </Button>
           )}
         </Box>
