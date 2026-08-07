@@ -37,10 +37,14 @@ service Searcher {
 }
 
 message AutocompleteConfigurationsRequest {
+  reserved 1;
+  reserved "virtualHost";
   string tenantId = 2;
 }
 
 message AutocorrectionConfigurationsRequest {
+  reserved 1;
+  reserved "virtualHost";
   string tenantId = 2;
 }
 
@@ -121,6 +125,8 @@ enum TokenType {
 }
 
 message QueryParserRequest {
+  reserved 6, 12;
+  reserved "virtualHost", "vectorIndices";
   repeated SearchTokenRequest searchQuery = 1;
   repeated int32 range = 2;
   string afterKey = 3;
@@ -155,6 +161,8 @@ message SearchTokenRequest {
 
 
 message QueryAnalysisRequest {
+  reserved 3, 5;
+  reserved "virtualHost", "mode";
   string searchText = 1;
   repeated QueryAnalysisToken tokens = 2;
   optional string jwt = 4;
@@ -162,15 +170,21 @@ message QueryAnalysisRequest {
 }
 
 message GetLLMConfigurationsRequest {
+  reserved 1;
+  reserved "virtualHost";
   string tenantId = 2;
 }
 
 message GetRAGConfigurationsRequest {
+  reserved 1;
+  reserved "virtualHost";
   RAGType ragType = 2;
   string tenantId = 3;
 }
 
 message GetEmbeddingModelConfigurationsRequest {
+  reserved 1;
+  reserved "virtualHost";
   string tenantId = 2;
 }
 
