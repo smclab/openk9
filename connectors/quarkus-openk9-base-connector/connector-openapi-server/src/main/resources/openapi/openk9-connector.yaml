@@ -220,10 +220,6 @@ components:
           type: string
           format: uuid
           description: Unique string that identifies the scheduling the ingested message belongs to.
-        last:
-          type: boolean
-          deprecated: true
-          description: Specify if it is the last message of scheduling. (Deprecated, see 'type' property)
         type:
           $ref: "#/components/schemas/PayloadType"
           type: string

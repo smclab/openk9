@@ -41,7 +41,6 @@ public class WorkerImpl implements Worker {
         ingestionDTO.setResources(resourcesDTO);
 
         ingestionDTO.setType(PayloadType.DOCUMENT);
-        ingestionDTO.setLast(false);
         producer.write(ingestionDTO);
         promise.complete();
     }
