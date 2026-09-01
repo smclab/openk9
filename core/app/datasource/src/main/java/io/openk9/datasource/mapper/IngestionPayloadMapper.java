@@ -84,12 +84,11 @@ public interface IngestionPayloadMapper {
 	DataPayload map(IngestionPayload ingestionPayload, List<String> documentTypes);
 
 	default PayloadType mapType(IngestionPayload ingestionPayload) {
-		var last = ingestionPayload.isLast();
 		var type = ingestionPayload.getType();
 
 		return type != null
 			? type
-			: last ? PayloadType.LAST : PayloadType.DOCUMENT;
+			: PayloadType.DOCUMENT;
 
 
 	}

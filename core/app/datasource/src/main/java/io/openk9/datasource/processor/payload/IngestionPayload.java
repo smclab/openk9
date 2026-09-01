@@ -44,8 +44,6 @@ public class IngestionPayload {
 	private String[] documentTypes;
 	private ResourcesPayload resources;
 	private Map<String, List<String>> acl;
-	@Deprecated
-	private boolean last;
 	private String scheduleId;
 	private PayloadType type;
 }
