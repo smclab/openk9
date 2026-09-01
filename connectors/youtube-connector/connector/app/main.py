@@ -3,9 +3,9 @@ import logging
 import requests
 import json
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from fastapi import FastAPI
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 from starlette import status
 from logging.config import dictConfig
 
@@ -48,6 +48,12 @@ class YoutubeRequest(BaseModel):
 			logger.warning("maxSleepInterval less than sleepInterval: Setting maxSleepInterval to sleepInterval + 5 seconds")
 			self.maxSleepInterval = self.sleepInterval + 5
 		return self
+
+	@field_validator('maxTotalComments', 'maxRootComments', 'maxTotalReplies', 'maxRootCommentsReplies', mode='before')
+	def coerce_empty_str_to_none(cls, v: Any) -> Optional[int]:
+		if v == "" or v is None:
+			return None
+		return int(v)
 
 
 @app.post('/getData')

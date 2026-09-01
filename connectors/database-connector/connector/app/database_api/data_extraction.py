@@ -90,7 +90,8 @@ class DataExtraction(threading.Thread):
         try:
             engine = create_engine(self.url_extract)
             with Session(engine) as session:
-                metadata_obj = MetaData(schema=self.schema)
+                schema_name = self.schema if self.schema else None
+                metadata_obj = MetaData(schema=schema_name)
                 table = Table(self.table, metadata_obj, autoload_with=engine)
 
                 query = session.query()

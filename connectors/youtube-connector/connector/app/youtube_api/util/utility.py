@@ -81,7 +81,7 @@ class IngestionHandler:
             },
             "scheduleId": self.schedule_id,
             "tenantId": self.tenant_id,
-            "last": True
+			"type": "LAST"
         }
         self.post_message(payload)
 
@@ -138,6 +138,7 @@ def get_as_base64(response):
 class FileData:
     name: str
     data: bytes
+    content_type: str
 
 
 @dataclasses.dataclass

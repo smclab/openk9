@@ -95,7 +95,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
             "binaries": []
         }
         payload["scheduleId"] = self.schedule_id
-        payload["last"] = True
+        payload["type"] = "LAST"
 
         post_message(self.ingestion_url, dict(payload))
         # Empty cache

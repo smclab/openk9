@@ -81,7 +81,7 @@ class IngestionHandler:
             },
             "scheduleId": self.schedule_id,
             "tenantId": self.tenant_id,
-            "last": True
+            "type": "LAST"
         }
         self.post_message(payload)
 

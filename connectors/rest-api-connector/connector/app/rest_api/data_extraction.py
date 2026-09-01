@@ -57,7 +57,7 @@ class DataExtraction(threading.Thread):
 			"contentId": content_id,
 			"parsingDate": int(end_timestamp),
 			"rawContent": raw_content,
-			"datasourcePayload": datasource_payload,
+			"datasourcePayload": {"restApiData": datasource_payload},
 			"resources": {
 				"binaries": [] if not binary else [binary]
 			}
@@ -134,7 +134,7 @@ class DataExtraction(threading.Thread):
 					return None, ExtractedData(url=request_url, count=0, is_clean_finish=False)
 				for item in item_list:
 					datasource_payload = data.datasource_payload.copy()
-					datasource_payload['item'] = item
+					datasource_payload['item'] = {item}
 					extracted_data = self.manage_data_payload(extracted_data=extracted_data, raw_content=data.raw_content, content_id=data.content_id, binary=data.binary, datasource_payload=datasource_payload)
 				return data, extracted_data
 			else:
@@ -146,7 +146,7 @@ class DataExtraction(threading.Thread):
 					return None, ExtractedData(url=request_url, count=0, is_clean_finish=False)
 				for item in data.dict_item:
 					datasource_payload = data.datasource_payload.copy()
-					datasource_payload['item'] = item
+					datasource_payload['item'] = {item}
 					extracted_data = self.manage_data_payload(extracted_data=extracted_data, raw_content=data.raw_content, content_id=data.content_id, binary=data.binary, datasource_payload=datasource_payload)
 				return data, extracted_data
 			else:
@@ -154,7 +154,7 @@ class DataExtraction(threading.Thread):
 
 		datasource_payload = data.datasource_payload.copy()
 		datasource_payload['item'] = data.dict_item
-		extracted_data = self.manage_data_payload(extracted_data=extracted_data, raw_content=data.raw_content, content_id=data.content_id, binary=data.binary, datasource_payload=data.datasource_payload)
+		extracted_data = self.manage_data_payload(extracted_data=extracted_data, raw_content=data.raw_content, content_id=data.content_id, binary=data.binary, datasource_payload=datasource_payload)
 		return data, extracted_data
 
 	def on_extract_request_generator(self, request: str | RequestModel):

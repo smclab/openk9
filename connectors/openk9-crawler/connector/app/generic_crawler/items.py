@@ -42,4 +42,4 @@ class Payload(scrapy.Item):
     resources = scrapy.Field()
     acl = scrapy.Field()
     tenantId = scrapy.Field()
-    last = scrapy.Field()
+    type = scrapy.Field()

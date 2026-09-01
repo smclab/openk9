@@ -4,8 +4,11 @@
    "contentId":3062252989527342,
    "rawContent":"application/json 1000 01/01/2025 server",
    "datasourcePayload":{
-      "requestUrl": "http://request-url/",
-      "contentType": "application/json"
+      "restApiData": {
+         "requestUrl": "http://request-url/",
+         "contentType": "application/json",
+         "item": {}
+      }
    },
    "resources":{
       "binaries":[

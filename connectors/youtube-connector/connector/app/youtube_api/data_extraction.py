@@ -221,7 +221,7 @@ class DataExtraction(threading.Thread):
 				binary = {
 					"id": hash_str_to_int(audio_file_data.name),
 					"name": audio_file_data.name,
-					"contentType": "",
+					"contentType": audio_file_data.content_type,
 					"data": audio_file_data.data,
 				}
 				binaries.append(binary)
@@ -236,7 +236,7 @@ class DataExtraction(threading.Thread):
 					binary = {
 						"id": hash_str_to_int(subtitle_file_data.name),
 						"name": subtitle_file_data.name,
-						"contentType": "",
+						"contentType": subtitle_file_data.content_type,
 						"data": subtitle_file_data.data,
 					}
 					binaries.append(binary)
@@ -249,7 +249,7 @@ class DataExtraction(threading.Thread):
 				binary = {
 					"id": hash_str_to_int(file_name),
 					"name": file_name,
-					"contentType": "",
+					"contentType": "application/json",
 					"data": get_as_base64(data),
 				}
 				binaries.append(binary)
@@ -309,7 +309,8 @@ class DataExtraction(threading.Thread):
 						with open(audio_file_path, 'rb') as f:
 							audio_file_data = FileData(
 								name=os.path.basename(audio_file_path),
-								data=get_as_base64(f.read())
+								data=get_as_base64(f.read()),
+								content_type=f"audio/{self.audio_format}"  # should be changed with better implementation
 							)
 					else:
 						# Exits when no file
@@ -329,7 +330,8 @@ class DataExtraction(threading.Thread):
 						with open(sub_path, 'rb') as f:
 							subtitle_files_data[lang] = FileData(
 								name=os.path.basename(sub_path),
-								data=get_as_base64(f.read())
+								data=get_as_base64(f.read()),
+								content_type="application/xml"  # should be changed with better implementation
 							)
 
 				return FutureResult(

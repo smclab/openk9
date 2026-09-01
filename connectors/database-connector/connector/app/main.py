@@ -3,6 +3,7 @@ import os
 import threading
 from enum import Enum
 
+from pydantic import BaseModel
 import requests
 import json
 from fastapi import FastAPI, status

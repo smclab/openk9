@@ -75,7 +75,7 @@ class DataExtraction(threading.Thread):
             },
             "scheduleId": self.schedule_id,
             "tenantId": self.tenant_id,
-            "last": True
+            "type": "LAST",
         }
 
         post_message(ingestion_url, payload)

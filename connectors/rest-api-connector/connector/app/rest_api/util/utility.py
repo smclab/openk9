@@ -1,6 +1,7 @@
 import base64
 import json
 import hashlib
+import mimetypes
 import xmltodict
 import yaml
 import csv
@@ -90,8 +91,9 @@ class IngestionHandler:
             },
             "scheduleId": self.schedule_id,
             "tenantId": self.tenant_id,
-            "last": True
+			"type": "LAST"
         }
+        self.status_logger.info(payload)
         self.post_message(payload)
 
 
@@ -154,43 +156,54 @@ def handle_response_content(response: requests.Response) -> HandleResponseConten
         @staticmethod
         def handle_response_content(response: requests.Response) -> HandleResponseContentReturnObject:
             content_type = response.headers.get('content-type')
-
+            
+            # Extract just the MIME type (stripping parameters like charset=utf-8)
             if content_type:
-                raw_content_elements = [str(content_type or ''), str(response.headers.get('content-length') or ''), str(response.headers.get('date') or ''), str(response.headers.get('server') or '')]
-                raw_content = format_raw_content(''.join(raw_content_elements))
-                content_id = hash_string(response.url)
+                content_type = content_type.split(';')[0].strip()
 
-                binary = None
-                datasource_payload = {
-                    'requestUrl': response.url,
-                    'contentType': content_type
+            # Fallback: Guess from response.url if header is missing/invalid
+            if not content_type or content_type == 'application/octet-stream':
+                guessed_type, _ = mimetypes.guess_type(response.url)
+                if guessed_type:
+                    content_type = guessed_type
+
+            # Fails if content type is still missing
+            if not content_type:
+                raise NotImplementedError('Missing content-type in response')
+
+            raw_content_elements = [str(content_type or ''), str(response.headers.get('content-length') or ''), str(response.headers.get('date') or ''), str(response.headers.get('server') or '')]
+            raw_content = format_raw_content(''.join(raw_content_elements))
+            content_id = hash_string(response.url)
+
+            binary = None
+            datasource_payload = {
+                'requestUrl': response.url,
+                'contentType': content_type
+            }
+
+            if ResponseContentTypes.JSON in content_type:
+                dict_item = response.json()
+            elif any(ct_xml in content_type for ct_xml in ResponseContentTypes.XML):
+                dict_item = dict(xmltodict.parse(response.content))
+            elif ResponseContentTypes.TEXT_PLAIN in content_type or ResponseContentTypes.TEXT_HTML in content_type:
+                dict_item = {response.text}
+            elif ResponseContentTypes.YAML in content_type:
+                dict_item = yaml.safe_load(response.content)
+            elif ResponseContentTypes.CSV in content_type:
+                csv_reader = csv.reader(response.content.splitlines(), delimiter=',')
+                dict_item = [row for row in csv_reader]
+            elif ResponseContentTypes.BINARY in content_type or ResponseContentTypes.PDF in content_type or ResponseContentTypes.IMAGE in content_type:
+                binary = {
+                    "id": content_id,
+                    "name": response.url,
+                    "contentType": content_type,
+                    "data": base64.b64encode(response.content)
                 }
+                dict_item = {}
+            else:
+                raise NotImplementedError(f'Error parsing content-type: {content_type}')
 
-                if ResponseContentTypes.JSON in content_type:
-                    dict_item = response.json()
-                elif any(ct_xml in content_type for ct_xml in ResponseContentTypes.XML):
-                    dict_item = dict(xmltodict.parse(response.content))
-                elif ResponseContentTypes.TEXT_PLAIN in content_type or ResponseContentTypes.TEXT_HTML in content_type:
-                    dict_item = {response.text}
-                elif ResponseContentTypes.YAML in content_type:
-                    dict_item = yaml.safe_load(response.content)
-                elif ResponseContentTypes.CSV in content_type:
-                    csv_reader = csv.reader(response.content.splitlines(), delimiter=',')
-                    dict_item = [row for row in csv_reader]
-                elif ResponseContentTypes.BINARY in content_type or ResponseContentTypes.PDF in content_type or ResponseContentTypes.IMAGE in content_type:
-                    binary = {
-                        "id": content_id,
-                        "name": response.url,
-                        "contentType": content_type,
-                        "data": base64.b64encode(response.content)
-                    }
-                    dict_item = {}
-                else:
-                    raise NotImplementedError(f'Error parsing content-type: {content_type}')
-
-                return HandleResponseContentReturnObject(raw_content, content_id, binary, datasource_payload, dict_item)
-
-            raise NotImplementedError('Missing content-type in response')
+            return HandleResponseContentReturnObject(raw_content, content_id, binary, datasource_payload, dict_item)
 
     return ResponseContentTypes.handle_response_content(response)
 

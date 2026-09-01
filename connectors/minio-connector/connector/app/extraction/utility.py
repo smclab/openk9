@@ -95,7 +95,7 @@ class IngestionHandler:
             },
             "scheduleId": self.schedule_id,
             "tenantId": self.tenant_id,
-            "last": True
+            "type": "LAST"
         }
         self.post_message(payload)
 
@@ -109,7 +109,7 @@ class FileExtensionMethod:
     parse: Callable[[bytes, Union[str, None]], DataFrame]
 
     def contains(self, extension: str) -> bool:
-        extensions = self.extensions if isinstance(self.extensions, set) else reduce(lambda x, y: x.union(y), self.extensions.values())
+        extensions = self.extensions if isinstance(self.extensions, set) else {item for s in self.extensions.values() for item in s}
         return extension in extensions
 
     def get_engine(self, extension: str):
