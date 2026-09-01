@@ -230,7 +230,13 @@ public class EmbeddingService {
 		try {
 			composed = composeRequest(tenantId, config, payload);
 		}
-		catch (PayloadEmbeddingFailed e) {
+		catch (Exception e) {
+			// Everything the composition can throw is one and the same
+			// outcome: the guard on a document with neither text nor refs, a
+			// failing presign, a malformed payload. None of them reaches the
+			// module, all of them fail the document's stream before the first
+			// chunk, so they are caught together instead of letting the
+			// unchecked ones surface as a synchronous throw.
 			return Multi.createFrom().failure(e);
 		}
 
