@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.actor.VectorIndexWriter;
+import io.openk9.datasource.pipeline.actor.DataIndexWriter;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
 
@@ -55,7 +55,7 @@ class WorkStageTest {
 			SHARDING_KEY,
 			replyToInbox.getRef(),
 			new WorkStage.Configurations(
-				new LinkedList<>(), VectorIndexWriter::create)
+				new LinkedList<>(), DataIndexWriter::create)
 		));
 
 		// send a PARTIAL_DOCUMENT payload without contentId
@@ -82,7 +82,7 @@ class WorkStageTest {
 			SHARDING_KEY,
 			replyToInbox.getRef(),
 			new WorkStage.Configurations(
-				new LinkedList<>(), VectorIndexWriter::create)
+				new LinkedList<>(), DataIndexWriter::create)
 		));
 		workStage.getAllEffects();
 

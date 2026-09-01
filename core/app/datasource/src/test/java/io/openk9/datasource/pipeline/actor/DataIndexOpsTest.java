@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.pipeline.actor;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.openk9.datasource.TestUtils;
@@ -24,15 +26,15 @@ import io.openk9.datasource.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class VectorIndexOpsTest {
+class DataIndexOpsTest {
 
 	static byte[] chunks = TestUtils
-		.getResourceAsJsonArray("vectoridxwriter/chunks.json")
+		.getResourceAsJsonArray("dataidxwriter/chunks.json")
 		.toBuffer()
 		.getBytes();
 
 	static byte[] document = TestUtils
-		.getResourceAsJsonObject("vectoridxwriter/document.json")
+		.getResourceAsJsonObject("dataidxwriter/document.json")
 		.toBuffer()
 		.getBytes();
 
@@ -44,7 +46,7 @@ class VectorIndexOpsTest {
 
 	@Test
 	void should_get_chunks_as_list() {
-		var chunks = VectorIndexOps.parseChunks(VectorIndexOpsTest.chunks);
+		var chunks = DataIndexOps.parseChunks(DataIndexOpsTest.chunks);
 
 		Assertions.assertEquals(3, chunks.size());
 
@@ -62,7 +64,7 @@ class VectorIndexOpsTest {
 
 	@Test
 	void should_get_document_as_list() {
-		var document = VectorIndexOps.parseChunks(VectorIndexOpsTest.document);
+		var document = DataIndexOps.parseChunks(DataIndexOpsTest.document);
 
 		Assertions.assertEquals(1, document.size());
 
@@ -79,8 +81,54 @@ class VectorIndexOpsTest {
 	}
 
 	@Test
+	void should_get_document_as_map() {
+		var document = DataIndexOps.parseDocument(DataIndexOpsTest.document);
+
+		var metadata = (Map<String, Object>) document.get("sample");
+		var sample = new Sample(
+			(String) metadata.get("firstName"),
+			(String) metadata.get("lastName"),
+			(String) metadata.get("email"),
+			(int) metadata.get("age")
+		);
+
+		Assertions.assertEquals(johnDoe, sample);
+	}
+
+	@Test
+	void should_reject_an_array_as_a_document() {
+		// the enrich pipeline always hands over a single object: a payload of
+		// another shape is a failure of that document, not a cast error that
+		// takes the writer down.
+		Assertions.assertThrows(
+			IllegalArgumentException.class,
+			() -> DataIndexOps.parseDocument(DataIndexOpsTest.chunks)
+		);
+	}
+
+	@Test
+	void should_make_a_document_without_acl_public() {
+		Map<String, Object> document = new HashMap<>(Map.of("contentId", "content-1"));
+
+		DataIndexOps.buildIndexRequest("an-index", document);
+
+		Assertions.assertEquals(Map.of("public", true), document.get("acl"));
+	}
+
+	@Test
+	void should_keep_the_acl_a_document_carries() {
+		var acl = Map.of("allow", List.of("group-1"));
+		Map<String, Object> document = new HashMap<>(Map.of(
+			"contentId", "content-1", "acl", acl));
+
+		DataIndexOps.buildIndexRequest("an-index", document);
+
+		Assertions.assertEquals(acl, document.get("acl"));
+	}
+
+	@Test
 	void should_get_emptyArray_as_empty_list() {
-		var emptyArray = VectorIndexOps.parseChunks(VectorIndexOpsTest.emptyArray);
+		var emptyArray = DataIndexOps.parseChunks(DataIndexOpsTest.emptyArray);
 
 		Assertions.assertTrue(emptyArray.isEmpty());
 	}
@@ -90,7 +138,7 @@ class VectorIndexOpsTest {
 
 		Assertions.assertThrows(
 			IllegalArgumentException.class,
-			() -> VectorIndexOps.parseChunks(VectorIndexOpsTest.empty)
+			() -> DataIndexOps.parseChunks(DataIndexOpsTest.empty)
 		);
 
 	}

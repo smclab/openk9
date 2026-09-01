@@ -17,20 +17,26 @@
 
 package io.openk9.datasource.pipeline.actor;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.LockSupport;
+import java.util.function.Consumer;
 
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch._types.ErrorCause;
+import org.opensearch.client.opensearch._types.Result;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
 import org.opensearch.client.opensearch.core.DeleteByQueryRequest;
 import org.opensearch.client.opensearch.core.DeleteByQueryResponse;
+import org.opensearch.client.opensearch.core.IndexRequest;
+import org.opensearch.client.opensearch.core.IndexResponse;
 import org.opensearch.client.opensearch.core.bulk.BulkResponseItem;
 import org.opensearch.client.opensearch.core.bulk.OperationType;
 import org.opensearch.client.transport.Endpoint;
@@ -54,6 +60,7 @@ final class RecordingTransport implements OpenSearchTransport {
 	private final JsonpMapper mapper = new JacksonJsonpMapper();
 	private final BulkResponse bulkResponse;
 	private final boolean gated;
+	private final Map<String, Throwable> failures;
 	private final List<Runnable> pending =
 		Collections.synchronizedList(new ArrayList<>());
 
@@ -62,19 +69,31 @@ final class RecordingTransport implements OpenSearchTransport {
 	}
 
 	RecordingTransport(BulkResponse bulkResponse) {
-		this(bulkResponse, false);
+		this(bulkResponse, false, Map.of());
 	}
 
-	private RecordingTransport(BulkResponse bulkResponse, boolean gated) {
+	private RecordingTransport(
+		BulkResponse bulkResponse, boolean gated, Map<String, Throwable> failures) {
+
 		this.bulkResponse = bulkResponse;
 		this.gated = gated;
+		this.failures = failures;
 	}
 
 	/**
 	 * A transport whose every response stays pending until {@link #release()}.
 	 */
 	static RecordingTransport gated() {
-		return new RecordingTransport(successfulBulk(), true);
+		return new RecordingTransport(successfulBulk(), true, Map.of());
+	}
+
+	/**
+	 * A transport whose responses to the given operation ("delete" or "index")
+	 * fail, the way the client reports a request the engine rejected.
+	 */
+	static RecordingTransport failing(String operation, String reason) {
+		return new RecordingTransport(
+			successfulBulk(), false, Map.of(operation, new IOException(reason)));
 	}
 
 	/**
@@ -120,14 +139,22 @@ final class RecordingTransport implements OpenSearchTransport {
 	}
 
 	private <R> CompletableFuture<R> answer(R response) {
+		return answer(future -> future.complete(response));
+	}
+
+	private <R> CompletableFuture<R> answerFailure(Throwable throwable) {
+		return answer(future -> future.completeExceptionally(throwable));
+	}
+
+	private <R> CompletableFuture<R> answer(Consumer<CompletableFuture<R>> outcome) {
 
 		var future = new CompletableFuture<R>();
 
 		if (gated) {
-			pending.add(() -> future.complete(response));
+			pending.add(() -> outcome.accept(future));
 		}
 		else {
-			future.complete(response);
+			outcome.accept(future);
 		}
 
 		return future;
@@ -177,16 +204,45 @@ final class RecordingTransport implements OpenSearchTransport {
 		TransportOptions options) {
 
 		if (request instanceof DeleteByQueryRequest) {
-			operations.add("delete");
-			return answer((ResponseT) DeleteByQueryResponse.of(b -> b));
+			return record("delete", DeleteByQueryResponse.of(b -> b));
+		}
+
+		if (request instanceof IndexRequest<?>) {
+			return record("index", indexed());
 		}
 
 		if (request instanceof BulkRequest) {
-			operations.add("bulk");
-			return answer((ResponseT) bulkResponse);
+			return record("bulk", bulkResponse);
 		}
 
 		throw new IllegalArgumentException("unexpected request: " + request);
+	}
+
+	/**
+	 * Notes the operation and answers it, unless the transport is set to fail it.
+	 */
+	@SuppressWarnings("unchecked")
+	private <R> CompletableFuture<R> record(String operation, Object response) {
+
+		operations.add(operation);
+
+		var failure = failures.get(operation);
+
+		return failure != null ? answerFailure(failure) : answer((R) response);
+	}
+
+	/**
+	 * The response of a document created by a single-document index request.
+	 */
+	private static IndexResponse indexed() {
+		return IndexResponse.of(b -> b
+			.index("an-index")
+			.id("an-id")
+			.version(1L)
+			.result(Result.Created)
+			.shards(shards -> shards.total(1).successful(1).failed(0))
+			.seqNo(0L)
+			.primaryTerm(1L));
 	}
 
 	@Override

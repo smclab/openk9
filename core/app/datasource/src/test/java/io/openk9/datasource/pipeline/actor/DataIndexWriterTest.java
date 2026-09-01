@@ -37,7 +37,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 
-class VectorIndexWriterTest {
+class DataIndexWriterTest {
 
 	static final String INDEX_NAME = "tenant-data-index";
 
@@ -71,8 +71,9 @@ class VectorIndexWriterTest {
 		EventBusInstanceHolder.setEventBus(null);
 	}
 
+	// the enrich pipeline hands over one JSON object, the whole document
 	static byte[] payload() {
-		return "[{\"chunkText\":\"a\",\"contentId\":\"content-1\"}]".getBytes();
+		return "{\"contentId\":\"content-1\",\"title\":\"a\"}".getBytes();
 	}
 
 	static HeldMessage heldMessage() {
@@ -84,7 +85,7 @@ class VectorIndexWriterTest {
 		// spawn a writer on a transport that records the operations issued
 		var transport = new RecordingTransport();
 		var replyProbe = TEST_KIT.<Writer.Response>createTestProbe();
-		var writer = TEST_KIT.spawn(VectorIndexWriter.create(
+		var writer = TEST_KIT.spawn(DataIndexWriter.create(
 			new OpenSearchAsyncClient(transport),
 			INDEX_NAME, DATASOURCE_ID, replyProbe.ref()));
 
@@ -94,8 +95,8 @@ class VectorIndexWriterTest {
 		replyProbe.expectMessageClass(Writer.Success.class);
 
 		// the delete MUST precede the insert (correctness invariant), so
-		// reprocessing does not duplicate the content's chunks.
-		Assertions.assertEquals(List.of("delete", "bulk"), transport.operations);
+		// reprocessing does not duplicate the document.
+		Assertions.assertEquals(List.of("delete", "index"), transport.operations);
 
 		// exactly one creation event, for the content just indexed
 		var captor = ArgumentCaptor.forClass(Object.class);
@@ -111,15 +112,15 @@ class VectorIndexWriterTest {
 	void start_without_payload_only_deletes_and_replies_once() {
 		var transport = new RecordingTransport();
 		var replyProbe = TEST_KIT.<Writer.Response>createTestProbe();
-		var writer = TEST_KIT.spawn(VectorIndexWriter.create(
+		var writer = TEST_KIT.spawn(DataIndexWriter.create(
 			new OpenSearchAsyncClient(transport),
 			INDEX_NAME, DATASOURCE_ID, replyProbe.ref()));
 
-		// a document with no documentTypes: its chunks are only deleted
+		// a document with no documentTypes: it is only deleted
 		writer.tell(new Writer.Start(null, heldMessage()));
 
-		// one reply for one document: no chunk parsing is attempted on the
-		// missing payload, so no spurious failure precedes the success.
+		// one reply for one document: no parsing is attempted on the missing
+		// payload, so no spurious failure precedes the success.
 		replyProbe.expectMessageClass(Writer.Success.class);
 		replyProbe.expectNoMessage();
 
@@ -136,12 +137,11 @@ class VectorIndexWriterTest {
 	}
 
 	@Test
-	void bulk_errors_reply_failure_and_emit_the_error_event() {
-		// spawn a writer whose bulk responses carry an item error
-		var transport = new RecordingTransport(
-			RecordingTransport.failedBulk("boom"));
+	void a_rejected_document_replies_failure_and_emits_the_error_event() {
+		// spawn a writer whose index requests are rejected
+		var transport = RecordingTransport.failing("index", "boom");
 		var replyProbe = TEST_KIT.<Writer.Response>createTestProbe();
-		var writer = TEST_KIT.spawn(VectorIndexWriter.create(
+		var writer = TEST_KIT.spawn(DataIndexWriter.create(
 			new OpenSearchAsyncClient(transport),
 			INDEX_NAME, DATASOURCE_ID, replyProbe.ref()));
 
@@ -156,6 +156,49 @@ class VectorIndexWriterTest {
 		var message = Assertions.assertInstanceOf(
 			DatasourceMessage.Failure.class, captor.getValue());
 		Assertions.assertEquals("content-1", message.getContentId());
+	}
+
+	@Test
+	void a_failed_delete_replies_failure_and_emits_the_error_event() {
+		// spawn a writer whose delete-by-contentId is rejected
+		var transport = RecordingTransport.failing("delete", "boom");
+		var replyProbe = TEST_KIT.<Writer.Response>createTestProbe();
+		var writer = TEST_KIT.spawn(DataIndexWriter.create(
+			new OpenSearchAsyncClient(transport),
+			INDEX_NAME, DATASOURCE_ID, replyProbe.ref()));
+
+		writer.tell(new Writer.Start(payload(), heldMessage()));
+
+		replyProbe.expectMessageClass(Writer.Failure.class);
+
+		// the document is never written on top of the version that could not be
+		// dropped, and the failure reaches the datasource events like any other.
+		Assertions.assertEquals(List.of("delete"), transport.operations);
+
+		var captor = ArgumentCaptor.forClass(Object.class);
+		Mockito.verify(eventBus).send(Mockito.anyString(), captor.capture());
+
+		Assertions.assertInstanceOf(
+			DatasourceMessage.Failure.class, captor.getValue());
+	}
+
+	@Test
+	void a_payload_that_is_not_a_document_fails_without_touching_the_index() {
+		var transport = new RecordingTransport();
+		var replyProbe = TEST_KIT.<Writer.Response>createTestProbe();
+		var writer = TEST_KIT.spawn(DataIndexWriter.create(
+			new OpenSearchAsyncClient(transport),
+			INDEX_NAME, DATASOURCE_ID, replyProbe.ref()));
+
+		// the writer answers the document instead of crashing on the cast: a
+		// dead writer would leave the work stage waiting for its timeout.
+		writer.tell(new Writer.Start("[]".getBytes(), heldMessage()));
+
+		replyProbe.expectMessageClass(Writer.Failure.class);
+
+		// nothing was deleted: the version already indexed survives a payload
+		// the writer cannot read.
+		Assertions.assertEquals(List.of(), transport.operations);
 	}
 
 }

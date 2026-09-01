@@ -211,18 +211,18 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			switch (schedulingType) {
 				case ENRICH -> new WorkStage.Configurations(
 					linkedList(EnrichPipeline.ENTITY_TYPE_KEY),
-					VectorIndexWriter::create
+					DataIndexWriter::create
 				);
 				case EMBEDDING -> new WorkStage.Configurations(
 					linkedList(EmbeddingProcessor.ENTITY_TYPE_KEY),
-					VectorIndexWriter::create
+					DataIndexWriter::create
 				);
 				case ENRICH_EMBEDDING -> new WorkStage.Configurations(
 					linkedList(
 						EnrichPipeline.ENTITY_TYPE_KEY,
 						EmbeddingProcessor.ENTITY_TYPE_KEY
 					),
-					VectorIndexWriter::create
+					DataIndexWriter::create
 				);
 			};
 

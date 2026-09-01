@@ -45,7 +45,7 @@ import org.opensearch.client.opensearch.core.BulkResponse;
  * bulks. It is spawned as a local child by {@link EmbeddingProcessor}, which is
  * itself per-document: that is what lets it hold plain per-document state
  * ({@code firstBatch}, {@code wroteAny}, the pending batch) the schedule-scoped
- * {@link VectorIndexWriter} could not hold without smearing it across the
+ * {@link DataIndexWriter} could not hold without smearing it across the
  * documents processed concurrently.
  * <p>
  * <b>Batching lives here, and not in the stream, on purpose.</b> A batch is
@@ -194,7 +194,7 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 		List<Map<String, Object>> documents;
 
 		try {
-			documents = VectorIndexOps.parseChunks(writeChunk.payload());
+			documents = DataIndexOps.parseChunks(writeChunk.payload());
 		}
 		catch (IllegalArgumentException e) {
 			log.warnf("%s: Failed to parse chunks from batch payload.", heldMessage);
@@ -259,7 +259,7 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 			// then index. The delete MUST complete before any insert (invariant).
 			try {
 				getContext().pipeToSelf(
-					VectorIndexOps.deleteChunksByContentId(
+					DataIndexOps.deleteByContentId(
 						asyncClient, indexName, heldMessage),
 					(deleteResponse, throwable) ->
 						new DeleteResponse(documents, throwable)
@@ -298,7 +298,7 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 		BulkRequest bulkRequest;
 
 		try {
-			bulkRequest = VectorIndexOps.buildBulkRequest(indexName, documents);
+			bulkRequest = DataIndexOps.buildBulkRequest(indexName, documents);
 		}
 		catch (Exception e) {
 			return completeWrite(new Failure(new WriterException(e)));
@@ -341,13 +341,13 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 
 		if (bulkResponse.errors()) {
 
-			String errors = VectorIndexOps.aggregateErrors(bulkResponse);
+			String errors = DataIndexOps.aggregateErrors(bulkResponse);
 
 			if (log.isDebugEnabled()) {
 				log.debugf("%s: Batch bulk request error: %s", heldMessage, errors);
 			}
 
-			VectorIndexOps.sendDatasourceEventError(
+			DataIndexOps.sendDatasourceEventError(
 				datasourceId, indexName, heldMessage, errors);
 
 			return completeWrite(new Failure(new WriterException(errors)));
@@ -410,7 +410,7 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 		if (wroteAny) {
 			log.infof("%s: Document stored successfully", heldMessage);
 
-			VectorIndexOps.sendDatasourceEventCreate(
+			DataIndexOps.sendDatasourceEventCreate(
 				datasourceId, indexName, heldMessage);
 		}
 		else {

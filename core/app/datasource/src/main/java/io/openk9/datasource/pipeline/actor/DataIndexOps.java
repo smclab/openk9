@@ -37,20 +37,38 @@ import org.opensearch.client.opensearch._types.Conflicts;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
 import org.opensearch.client.opensearch.core.DeleteByQueryResponse;
+import org.opensearch.client.opensearch.core.IndexRequest;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.BulkResponseItem;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
 
 /**
- * Stateless operations on the vector index, shared by the two writers of the
- * chunks of a document: {@link VectorIndexWriter}, which writes a whole
- * document in one bulk, and {@link ChunkStreamWriter}, which writes one bulk
- * per batch of a streamed document. Every method takes the client and the index
- * it works on, so no per-document state can be smeared between the callers.
+ * Stateless operations on the data index, shared by the two writers that create
+ * documents in it: {@link DataIndexWriter}, which writes the single document of
+ * the enrich pipeline, and {@link ChunkStreamWriter}, which writes one bulk per
+ * batch of the chunks of a streamed document. Every method takes the client and
+ * the index it works on, so no per-document state can be smeared between the
+ * callers.
  */
-final class VectorIndexOps {
+final class DataIndexOps {
 
-	private VectorIndexOps() {}
+	private DataIndexOps() {}
+
+	/**
+	 * Reads the single document out of a JSON payload.
+	 *
+	 * @throws IllegalArgumentException when the payload is not valid JSON or is
+	 * not a JSON object
+	 */
+	static Map<String, Object> parseDocument(byte[] json)
+		throws IllegalArgumentException {
+
+		if (parseRoot(json) instanceof Map<?, ?> object) {
+			return (Map<String, Object>) object;
+		}
+
+		throw new IllegalArgumentException("The payload is not a JSON object.");
+	}
 
 	/**
 	 * Reads the chunks out of a JSON payload, which is either a single chunk
@@ -61,11 +79,7 @@ final class VectorIndexOps {
 	static List<Map<String, Object>> parseChunks(byte[] json)
 		throws IllegalArgumentException {
 
-		var documentContext = JsonPath
-			.using(Configuration.defaultConfiguration())
-			.parseUtf8(json);
-
-		Object root = documentContext.read("$");
+		Object root = parseRoot(json);
 
 		if (root instanceof List) {
 			return (List<Map<String, Object>>) root;
@@ -75,10 +89,20 @@ final class VectorIndexOps {
 		}
 	}
 
+	private static Object parseRoot(byte[] json) throws IllegalArgumentException {
+
+		return JsonPath
+			.using(Configuration.defaultConfiguration())
+			.parseUtf8(json)
+			.read("$");
+	}
+
 	/**
-	 * Drops every chunk previously indexed for the content of the held message.
+	 * Drops every document previously indexed for the content of the held
+	 * message: the single document of the enrich pipeline, or every chunk of
+	 * an embedded one.
 	 */
-	static CompletableFuture<DeleteByQueryResponse> deleteChunksByContentId(
+	static CompletableFuture<DeleteByQueryResponse> deleteByContentId(
 		OpenSearchAsyncClient asyncClient, String indexName, HeldMessage heldMessage)
 		throws IOException {
 
@@ -96,6 +120,21 @@ final class VectorIndexOps {
 	}
 
 	/**
+	 * Builds the request that indexes a single document, applying the default
+	 * public ACL when the document carries none.
+	 */
+	static IndexRequest<Map<String, Object>> buildIndexRequest(
+		String indexName, Map<String, Object> document) {
+
+		applyDefaultAcl(document);
+
+		return new IndexRequest.Builder<Map<String, Object>>()
+			.index(indexName)
+			.document(document)
+			.build();
+	}
+
+	/**
 	 * Builds the bulk index request for a set of chunks, applying the default
 	 * public ACL when a chunk carries none.
 	 */
@@ -106,12 +145,7 @@ final class VectorIndexOps {
 
 		for (Map<String, Object> chunk : chunks) {
 
-			// Handle ACL mapping, fallback if not defined.
-			var acl = (Map<String, Object>) chunk.get("acl");
-
-			if (acl == null || acl.isEmpty()) {
-				chunk.put("acl", Map.of("public", true));
-			}
+			applyDefaultAcl(chunk);
 
 			bulkOperations.add(new BulkOperation.Builder()
 				.index(new IndexOperation.Builder<>()
@@ -125,6 +159,19 @@ final class VectorIndexOps {
 			.index(indexName)
 			.operations(bulkOperations)
 			.build();
+	}
+
+	/**
+	 * Makes a document public when it carries no ACL of its own: an absent ACL
+	 * must not hide the document from every user.
+	 */
+	private static void applyDefaultAcl(Map<String, Object> document) {
+
+		var acl = (Map<String, Object>) document.get("acl");
+
+		if (acl == null || acl.isEmpty()) {
+			document.put("acl", Map.of("public", true));
+		}
 	}
 
 	/**
