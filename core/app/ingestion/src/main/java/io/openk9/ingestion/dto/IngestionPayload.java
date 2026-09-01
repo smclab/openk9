@@ -44,6 +44,5 @@ public  class IngestionPayload {
 	private ResourcesPayload resources;
 	private Map<String, List<String>> acl;
 	private String scheduleId;
-	private boolean last;
 	private PayloadType type;
 }

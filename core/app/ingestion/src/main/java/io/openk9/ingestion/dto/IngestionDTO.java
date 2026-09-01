@@ -56,8 +56,6 @@ public class IngestionDTO {
 	@Schema(format = "uuid",
 			description = "Unique string that identifies the scheduling the ingested message belongs to.")
 	private String scheduleId;
-	@Schema(description = "Specify if it is the last message of scheduling.")
-	private boolean last = false;
 	@Schema(description = "String used to specify type associated with message. Default is DOCUMENT for message. HALT is used when a message to stop scheduling arrived.")
 	private PayloadType type;
 }

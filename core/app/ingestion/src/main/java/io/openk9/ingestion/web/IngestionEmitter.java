@@ -139,7 +139,6 @@ public class IngestionEmitter {
 				_dtoToPayload(dto.getResources()),
 				dto.getAcl(),
 				dto.getScheduleId(),
-				dto.isLast(),
 				dto.getType()
 			)
 		);
