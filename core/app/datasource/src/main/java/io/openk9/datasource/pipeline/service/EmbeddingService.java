@@ -104,6 +104,19 @@ public class EmbeddingService {
 	@CacheName("bucket-resource")
 	Cache cache;
 
+	/**
+	 * Embeds a document through the single-response {@code GetMessages} RPC.
+	 * <p>
+	 * <b>No production caller is left</b>: the indexing pipeline embeds through
+	 * {@link #embedContentStream}. What keeps this path in the codebase is the
+	 * test suite, where it is the oracle the streaming path is asserted equal
+	 * to, chunk by chunk and window by window. It goes away with the
+	 * {@code GetMessages} RPC itself.
+	 *
+	 * @deprecated superseded by {@link #embedContentStream}; kept as the
+	 * equivalence oracle of the streaming tests.
+	 */
+	@Deprecated
 	public static CompletionStage<byte[]> getEmbeddedPayload(
 		String tenantId, String scheduleId, byte[] payload) {
 
@@ -116,6 +129,11 @@ public class EmbeddingService {
 			.subscribeAsCompletionStage();
 	}
 
+	/**
+	 * @deprecated the event bus handler of the deprecated
+	 * {@link #getEmbeddedPayload(String, String, byte[])}.
+	 */
+	@Deprecated
 	@ConsumeEvent(GET_EMBEDDED_PAYLOAD)
 	Uni<EmbeddedPayload> getEmbeddedPayload(GetEmbeddedPayloadRequest request) {
 
@@ -514,6 +532,15 @@ public class EmbeddingService {
 		}
 	}
 
+	/**
+	 * The next-window rule: the chunks that follow {@code number}, at most
+	 * {@code windowSize} of them.
+	 * <p>
+	 * It has no production caller left — the streaming path computes the same
+	 * window incrementally in {@link ChunkWindowBuffer} — but it is not dead
+	 * code: it is the specification of that rule, and {@code ChunkWindowBuffer}
+	 * is asserted against it chunk by chunk.
+	 */
 	protected static <T> List<T> getNextWindow(
 		int windowSize, int number, int total, List<T> chunks) {
 
@@ -523,6 +550,12 @@ public class EmbeddingService {
 		return chunks.subList(fromIndex, toIndex);
 	}
 
+	/**
+	 * The previous-window rule: the chunks that precede {@code number}, at most
+	 * {@code windowSize} of them. Same standing as {@link #getNextWindow}: no
+	 * production caller, but the specification {@link ChunkWindowBuffer} is
+	 * asserted against.
+	 */
 	protected static <T> List<T> getPreviousWindow(
 		int windowSize, int number, List<T> chunks) {
 
@@ -537,6 +570,18 @@ public class EmbeddingService {
 		return documentContext.read("$");
 	}
 
+	/**
+	 * Builds the whole array of chunk-docs of a document from a single
+	 * {@code GetMessages} response.
+	 * <p>
+	 * Called only by the deprecated {@link #getEmbeddedPayload}: the streaming
+	 * path builds the same docs one at a time in
+	 * {@link #mapWindowedToDocument}. Kept as the oracle those tests compare
+	 * against.
+	 *
+	 * @deprecated superseded by {@link #mapWindowedToDocument}.
+	 */
+	@Deprecated
 	protected static byte[] mapToPayload(
 		EmbeddingOuterClass.EmbeddingResponse embeddingResponse,
 		Map<String, Object> root,
