@@ -33,6 +33,7 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
@@ -208,6 +209,7 @@ public class HybridQueryParserTest {
 			.tenantWithBucket(new TenantWithBucket(TENANT, bucket))
 			.tokenTypeGroup(List.of(parserSearchToken))
 			.queryParserConfig(new JsonObject())
+			.jwt(JWT.of(null))
 			.language(Language.NONE)
 			.build();
 	}
