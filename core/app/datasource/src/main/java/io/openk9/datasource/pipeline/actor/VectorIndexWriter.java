@@ -115,7 +115,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		if (throwable != null) {
 
-			log.warnf("%s: Documents deletion failed.");
+			log.warnf("%s: Documents deletion failed.", heldMessage);
 
 			VectorIndexOps.sendDatasourceEventError(
 				datasourceId, indexName, heldMessage, throwable.getMessage());
@@ -125,7 +125,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		}
 		else {
 
-			log.infof("%s: Documents deleted.");
+			log.infof("%s: Documents deleted.", heldMessage);
 
 			VectorIndexOps.sendDatasourceEventDelete(
 				datasourceId, indexName, heldMessage);
@@ -181,7 +181,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		}
 		else {
-			log.errorf("%s: Response is null.");
+			log.errorf("%s: Response is null.", heldMessage);
 
 			replyTo.tell(new Writer.Failure(
 				new WriterException("No response"), heldMessage));
