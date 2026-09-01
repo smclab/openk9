@@ -19,11 +19,14 @@ package io.openk9.datasource.pipeline.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.model.DocTypeField;
@@ -294,6 +297,158 @@ public class EmbeddingServiceUtilsTest {
 		assertThrows(
 			PayloadEmbeddingFailed.class,
 			() -> EmbeddingService.composeRequest("tenant", config, payload));
+	}
+
+	@Test
+	void composeRequest_should_send_one_ref_per_binary() {
+
+		// a payload with text and two staged binaries, one of which reached the
+		// datasource without a contentType
+		var payload = """
+			{
+				"contentId": "content-1",
+				"datasourceId": 7,
+				"rawContent": "some text to embed",
+				"resources": {
+					"binaries": [
+						{
+							"id": "file-a",
+							"name": "pikachu.png",
+							"contentType": "image/png"
+						},
+						{
+							"id": "file-b",
+							"name": "unknown.bin"
+						}
+					]
+				}
+			}""".getBytes();
+
+		var resolver = new RecordingUrlResolver();
+
+		var composed = EmbeddingService.composeRequest(
+			"tenant", textOnlyConfig(), payload, resolver);
+
+		var request = composed.request();
+
+		// one ref per binary, in payload order, and the text alongside them
+		assertEquals("some text to embed", request.getText());
+		assertEquals(2, request.getRefsCount());
+
+		var first = request.getRefs(0);
+		assertEquals("file-a", first.getFileId());
+		assertEquals("image/png", first.getContentType());
+
+		var second = request.getRefs(1);
+		assertEquals("file-b", second.getFileId());
+
+		// no contentType on the payload means none on the wire (the proto3
+		// default, an empty string): the module must not read an invented one.
+		assertEquals("", second.getContentType());
+
+		// the URL of every ref comes from the resolver, called once per binary
+		// with the coordinates of that binary
+		assertEquals(
+			List.of(
+				"tenant|7|content-1|file-a",
+				"tenant|7|content-1|file-b"),
+			resolver.calls);
+
+		assertEquals("presigned:tenant|7|content-1|file-a", first.getUrl());
+		assertEquals("presigned:tenant|7|content-1|file-b", second.getUrl());
+
+		// bookkeeping: the contentType is what a chunk-doc's media_type is
+		// resolved from (null falls back to application/octet-stream), the
+		// sent ids are what the end-of-stream diff is computed against
+		var contentTypes = composed.contentTypeByFileId();
+		assertEquals(2, contentTypes.size());
+		assertEquals("image/png", contentTypes.get("file-a"));
+		assertNull(contentTypes.get("file-b"));
+
+		assertEquals(Set.of("file-a", "file-b"), composed.sentFileIds());
+	}
+
+	@Test
+	void composeRequest_should_compose_a_binary_only_request() {
+
+		// an image document: no text field at all, one staged binary
+		var payload = """
+			{
+				"contentId": "content-1",
+				"datasourceId": 7,
+				"title": "pikachu",
+				"resources": {
+					"binaries": [
+						{
+							"id": "file-a",
+							"name": "pikachu.png",
+							"contentType": "image/png"
+						}
+					]
+				}
+			}""".getBytes();
+
+		var composed = EmbeddingService.composeRequest(
+			"tenant", textOnlyConfig(), payload, new RecordingUrlResolver());
+
+		var request = composed.request();
+
+		// the GetMessages guard ("fail if there is no text") is relaxed here:
+		// a document made only of binaries is legitimate and is sent with the
+		// text field unset, not empty.
+		assertFalse(request.hasText());
+		assertEquals(1, request.getRefsCount());
+		assertEquals("file-a", request.getRefs(0).getFileId());
+	}
+
+	@Test
+	void composeRequest_should_fail_the_document_when_the_presign_fails() {
+
+		// a document whose binary cannot be signed (object store unreachable)
+		var payload = """
+			{
+				"contentId": "content-1",
+				"datasourceId": 7,
+				"resources": {
+					"binaries": [{"id": "file-a", "contentType": "image/png"}]
+				}
+			}""".getBytes();
+
+		var config = textOnlyConfig();
+
+		EmbeddingService.BinaryUrlResolver failing =
+			(tenantId, datasourceId, contentId, fileId) -> {
+				throw new IllegalStateException("object store unreachable");
+			};
+
+		// the failure must reach the caller, not produce a ref without a URL
+		assertThrows(
+			IllegalStateException.class,
+			() -> EmbeddingService.composeRequest(
+				"tenant", config, payload, failing));
+	}
+
+	/**
+	 * A presign that signs nothing: it records its arguments and returns a URL
+	 * derived from them, so a test can assert both what was asked and what
+	 * ended up on the wire.
+	 */
+	private static final class RecordingUrlResolver
+		implements EmbeddingService.BinaryUrlResolver {
+
+		final List<String> calls = new ArrayList<>();
+
+		@Override
+		public String presignGet(
+			String tenantId, long datasourceId, String contentId, String fileId) {
+
+			var call = String.join(
+				"|", tenantId, String.valueOf(datasourceId), contentId, fileId);
+
+			calls.add(call);
+
+			return "presigned:" + call;
+		}
 	}
 
 	private static EmbeddingService.EmbeddingChunksRequest textOnlyConfig() {

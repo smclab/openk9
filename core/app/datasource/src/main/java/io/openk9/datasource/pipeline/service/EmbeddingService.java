@@ -272,6 +272,25 @@ public class EmbeddingService {
 	static ComposedRequest composeRequest(
 		String tenantId, EmbeddingChunksRequest config, byte[] payload) {
 
+		return composeRequest(
+			tenantId, config, payload, StagedBinaryService::presignGet);
+	}
+
+	/**
+	 * {@link #composeRequest(String, EmbeddingChunksRequest, byte[])} on an
+	 * explicit URL resolver. Signing a URL needs the object store, which is
+	 * neither reachable nor meaningful in a unit test, so the resolver is a
+	 * parameter: it is the seam that makes the {@code MediaRef} branch — the
+	 * one place of this path that handles credentials — assertable.
+	 *
+	 * @param binaryUrlResolver signs the GET URL of one staged binary
+	 */
+	static ComposedRequest composeRequest(
+		String tenantId,
+		EmbeddingChunksRequest config,
+		byte[] payload,
+		BinaryUrlResolver binaryUrlResolver) {
+
 		var dataPayload = Json.decodeValue(Buffer.buffer(payload), DataPayload.class);
 		var datasourceId = dataPayload.getDatasourceId();
 		var contentId = dataPayload.getContentId();
@@ -312,7 +331,7 @@ public class EmbeddingService {
 			for (BinaryPayload binary : resources.getBinaries()) {
 
 				var refBuilder = EmbeddingOuterClass.MediaRef.newBuilder()
-					.setUrl(StagedBinaryService.presignGet(
+					.setUrl(binaryUrlResolver.presignGet(
 						tenantId, datasourceId, contentId, binary.getId()))
 					.setFileId(binary.getId());
 
@@ -536,6 +555,20 @@ public class EmbeddingService {
 				"contentId %s: reference %s produced no chunk",
 				contentId, fileId);
 		}
+	}
+
+	/**
+	 * Signs the GET URL of one staged binary, so a document's binaries can be
+	 * referenced by the embedding module without shipping their bytes.
+	 *
+	 * @see StagedBinaryService#presignGet(String, long, String, String)
+	 */
+	@FunctionalInterface
+	interface BinaryUrlResolver {
+
+		String presignGet(
+			String tenantId, long datasourceId, String contentId, String fileId);
+
 	}
 
 	/**
