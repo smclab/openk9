@@ -31,6 +31,7 @@ import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
+import org.apache.pekko.actor.typed.javadsl.StashBuffer;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch.core.BulkRequest;
@@ -49,31 +50,47 @@ import org.opensearch.client.opensearch.core.BulkResponse;
  * non-empty batch drops the chunks previously indexed for the content before
  * indexing, so a failure midway through the stream leaves the prior version
  * intact.
+ * <p>
+ * <b>The protocol is strictly sequential</b>: the delete of the prior version
+ * must complete before any insert, and the writer must not be closed while a
+ * bulk is in flight. Callers are not expected to know that ordering, so the
+ * actor enforces it itself: while a write is in flight every incoming
+ * {@link WriteBatch} / {@link EndStream} is stashed and replayed, in arrival
+ * order, as soon as the pending write is answered.
  */
 class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 
 	private static final Logger log = Logger.getLogger(ChunkStreamWriter.class);
 
+	// The caller keeps a single batch in flight (ask-per-batch), so the stash
+	// only ever holds the message that raced with a pending write; the capacity
+	// is a safety margin, not a working size.
+	private static final int STASH_CAPACITY = 32;
+
 	private final OpenSearchAsyncClient asyncClient;
 	private final String indexName;
 	private final long datasourceId;
 	private final HeldMessage heldMessage;
+	private final StashBuffer<Command> stash;
 
 	private boolean firstBatch = true;
 	private boolean wroteAny = false;
+	private boolean writing = false;
 
 	ChunkStreamWriter(
 		ActorContext<Command> context,
 		OpenSearchAsyncClient asyncClient,
 		String indexName,
 		long datasourceId,
-		HeldMessage heldMessage) {
+		HeldMessage heldMessage,
+		StashBuffer<Command> stash) {
 
 		super(context);
 		this.asyncClient = asyncClient;
 		this.indexName = indexName;
 		this.datasourceId = datasourceId;
 		this.heldMessage = heldMessage;
+		this.stash = stash;
 	}
 
 	/**
@@ -83,13 +100,15 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 	static Behavior<Command> create(
 		SchedulerDTO scheduler, HeldMessage heldMessage) {
 
-		return Behaviors.setup(ctx -> new ChunkStreamWriter(
-			ctx,
-			CDI.current().select(OpenSearchAsyncClient.class).get(),
-			scheduler.getIndexName(),
-			scheduler.getDatasourceId(),
-			heldMessage
-		));
+		return Behaviors.withStash(STASH_CAPACITY, stash ->
+			Behaviors.setup(ctx -> new ChunkStreamWriter(
+				ctx,
+				CDI.current().select(OpenSearchAsyncClient.class).get(),
+				scheduler.getIndexName(),
+				scheduler.getDatasourceId(),
+				heldMessage,
+				stash
+			)));
 	}
 
 	/**
@@ -102,8 +121,9 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 		long datasourceId,
 		HeldMessage heldMessage) {
 
-		return Behaviors.setup(ctx -> new ChunkStreamWriter(
-			ctx, asyncClient, indexName, datasourceId, heldMessage));
+		return Behaviors.withStash(STASH_CAPACITY, stash ->
+			Behaviors.setup(ctx -> new ChunkStreamWriter(
+				ctx, asyncClient, indexName, datasourceId, heldMessage, stash)));
 	}
 
 	@Override
@@ -118,6 +138,14 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 
 	private Behavior<Command> onWriteBatch(WriteBatch writeBatch) {
 
+		// A write is already in flight: hold the batch until it is answered,
+		// so the delete-then-index ordering cannot be broken from outside.
+		if (writing) {
+			stash.stash(writeBatch);
+
+			return this;
+		}
+
 		var ackTo = writeBatch.ackTo();
 
 		List<Map<String, Object>> chunks;
@@ -128,18 +156,14 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 		catch (IllegalArgumentException e) {
 			log.warnf("%s: Failed to parse chunks from batch payload.", heldMessage);
 
-			ackTo.tell(new Failure(new WriterException(e)));
-
-			return this;
+			return settle(ackTo, new Failure(new WriterException(e)));
 		}
 
 		// An empty batch carries no work: ack without touching the index and
 		// without consuming the first batch, so a content that produced no chunk
 		// at all keeps its previously indexed version.
 		if (chunks.isEmpty()) {
-			ackTo.tell(new Ack());
-
-			return this;
+			return settle(ackTo, new Ack());
 		}
 
 		if (firstBatch) {
@@ -147,6 +171,8 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 			// First batch of the content: drop the previously indexed version,
 			// then index. The delete MUST complete before any insert (invariant).
 			try {
+				writing = true;
+
 				getContext().pipeToSelf(
 					VectorIndexOps.deleteChunksByContentId(
 						asyncClient, indexName, heldMessage),
@@ -159,16 +185,14 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 			catch (IOException e) {
 				log.errorf("%s: I/O failed to search engine.", heldMessage);
 
-				ackTo.tell(new Failure(new WriterException(e)));
+				return settle(ackTo, new Failure(new WriterException(e)));
 			}
-		}
-		else {
 
-			// Subsequent batches only add documents (distinct docs, no delete).
-			indexBatch(chunks, ackTo);
+			return this;
 		}
 
-		return this;
+		// Subsequent batches only add documents (distinct docs, no delete).
+		return indexBatch(chunks, ackTo);
 	}
 
 	private Behavior<Command> onDeleteResponse(DeleteResponse deleteResponse) {
@@ -179,17 +203,13 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 		if (throwable != null) {
 			log.warnf("%s: Deletion failed.", heldMessage);
 
-			ackTo.tell(new Failure(new WriterException(throwable)));
-
-			return this;
+			return settle(ackTo, new Failure(new WriterException(throwable)));
 		}
 
-		indexBatch(deleteResponse.chunks(), ackTo);
-
-		return this;
+		return indexBatch(deleteResponse.chunks(), ackTo);
 	}
 
-	private void indexBatch(
+	private Behavior<Command> indexBatch(
 		List<Map<String, Object>> chunks, ActorRef<Response> ackTo) {
 
 		BulkRequest bulkRequest;
@@ -198,12 +218,12 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 			bulkRequest = VectorIndexOps.buildBulkRequest(indexName, chunks);
 		}
 		catch (Exception e) {
-			ackTo.tell(new Failure(new WriterException(e)));
-
-			return;
+			return settle(ackTo, new Failure(new WriterException(e)));
 		}
 
 		try {
+			writing = true;
+
 			getContext().pipeToSelf(
 				asyncClient.bulk(bulkRequest),
 				(bulkResponse, throwable) ->
@@ -213,8 +233,24 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 		catch (IOException e) {
 			log.errorf("%s: I/O failed to search engine.", heldMessage);
 
-			ackTo.tell(new Failure(new WriterException(e)));
+			return settle(ackTo, new Failure(new WriterException(e)));
 		}
+
+		return this;
+	}
+
+	/**
+	 * Answers the batch in flight and hands the actor back to whatever was
+	 * stashed while it ran: this is the single point where the write slot is
+	 * released, so the sequential protocol cannot be bypassed by adding a path.
+	 */
+	private Behavior<Command> settle(ActorRef<Response> ackTo, Response response) {
+
+		writing = false;
+
+		ackTo.tell(response);
+
+		return stash.unstashAll(this);
 	}
 
 	private Behavior<Command> onIndexResponse(IndexResponse indexResponse) {
@@ -229,36 +265,32 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 				log.debugf(throwable, "%s: Error on batch bulk request", heldMessage);
 			}
 
-			ackTo.tell(new Failure(new WriterException(throwable)));
+			return settle(ackTo, new Failure(new WriterException(throwable)));
 		}
-		else if (bulkResponse != null) {
 
-			if (bulkResponse.errors()) {
-
-				String errors = VectorIndexOps.aggregateErrors(bulkResponse);
-
-				if (log.isDebugEnabled()) {
-					log.debugf("%s: Batch bulk request error: %s", heldMessage, errors);
-				}
-
-				VectorIndexOps.sendDatasourceEventError(
-					datasourceId, indexName, heldMessage, errors);
-
-				ackTo.tell(new Failure(new WriterException(errors)));
-			}
-			else {
-				wroteAny = true;
-
-				ackTo.tell(new Ack());
-			}
-		}
-		else {
+		if (bulkResponse == null) {
 			log.errorf("%s: Response is null.", heldMessage);
 
-			ackTo.tell(new Failure(new WriterException("No response")));
+			return settle(ackTo, new Failure(new WriterException("No response")));
 		}
 
-		return this;
+		if (bulkResponse.errors()) {
+
+			String errors = VectorIndexOps.aggregateErrors(bulkResponse);
+
+			if (log.isDebugEnabled()) {
+				log.debugf("%s: Batch bulk request error: %s", heldMessage, errors);
+			}
+
+			VectorIndexOps.sendDatasourceEventError(
+				datasourceId, indexName, heldMessage, errors);
+
+			return settle(ackTo, new Failure(new WriterException(errors)));
+		}
+
+		wroteAny = true;
+
+		return settle(ackTo, new Ack());
 	}
 
 	/**
@@ -284,6 +316,14 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 	 * scheduling failure.
 	 */
 	private Behavior<Command> onEndStream(EndStream endStream) {
+
+		// A close racing an in-flight bulk would land in dead letters and hang
+		// the caller: hold it until the pending write is answered.
+		if (writing) {
+			stash.stash(endStream);
+
+			return this;
+		}
 
 		if (wroteAny) {
 			log.infof("%s: Document stored successfully", heldMessage);

@@ -17,10 +17,12 @@
 
 package io.openk9.datasource.pipeline.actor;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.LockSupport;
 
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
@@ -39,6 +41,11 @@ import org.opensearch.client.transport.TransportOptions;
  * Records the OpenSearch operations issued and returns canned responses; the
  * writers under test inspect only the completion and the bulk error flag, not
  * the response body.
+ * <p>
+ * Responses complete immediately unless the transport is {@link #gated()}, in
+ * which case each one waits for a {@link #release()}: that is what lets a test
+ * hold a write in flight and observe what the actor does with the messages
+ * that arrive meanwhile.
  */
 final class RecordingTransport implements OpenSearchTransport {
 
@@ -46,13 +53,84 @@ final class RecordingTransport implements OpenSearchTransport {
 		Collections.synchronizedList(new ArrayList<>());
 	private final JsonpMapper mapper = new JacksonJsonpMapper();
 	private final BulkResponse bulkResponse;
+	private final boolean gated;
+	private final List<Runnable> pending =
+		Collections.synchronizedList(new ArrayList<>());
 
 	RecordingTransport() {
 		this(successfulBulk());
 	}
 
 	RecordingTransport(BulkResponse bulkResponse) {
+		this(bulkResponse, false);
+	}
+
+	private RecordingTransport(BulkResponse bulkResponse, boolean gated) {
 		this.bulkResponse = bulkResponse;
+		this.gated = gated;
+	}
+
+	/**
+	 * A transport whose every response stays pending until {@link #release()}.
+	 */
+	static RecordingTransport gated() {
+		return new RecordingTransport(successfulBulk(), true);
+	}
+
+	/**
+	 * Completes the oldest response still pending.
+	 *
+	 * @throws IllegalStateException when no response is pending
+	 */
+	void release() {
+
+		Runnable next;
+
+		synchronized (pending) {
+			if (pending.isEmpty()) {
+				throw new IllegalStateException("no pending response to release");
+			}
+
+			next = pending.remove(0);
+		}
+
+		next.run();
+	}
+
+	/**
+	 * Blocks until at least {@code count} operations have been issued, so a
+	 * test can release a response only once it exists.
+	 *
+	 * @throws AssertionError when they are not issued within the timeout
+	 */
+	void awaitOperations(int count) {
+
+		var deadline = System.nanoTime() + Duration.ofSeconds(5).toNanos();
+
+		while (operations.size() < count) {
+
+			if (System.nanoTime() > deadline) {
+				throw new AssertionError(
+					"expected at least " + count + " operations, got "
+						+ operations);
+			}
+
+			LockSupport.parkNanos(Duration.ofMillis(10).toNanos());
+		}
+	}
+
+	private <R> CompletableFuture<R> answer(R response) {
+
+		var future = new CompletableFuture<R>();
+
+		if (gated) {
+			pending.add(() -> future.complete(response));
+		}
+		else {
+			future.complete(response);
+		}
+
+		return future;
 	}
 
 	/**
@@ -100,13 +178,12 @@ final class RecordingTransport implements OpenSearchTransport {
 
 		if (request instanceof DeleteByQueryRequest) {
 			operations.add("delete");
-			return CompletableFuture.completedFuture(
-				(ResponseT) DeleteByQueryResponse.of(b -> b));
+			return answer((ResponseT) DeleteByQueryResponse.of(b -> b));
 		}
 
 		if (request instanceof BulkRequest) {
 			operations.add("bulk");
-			return CompletableFuture.completedFuture((ResponseT) bulkResponse);
+			return answer((ResponseT) bulkResponse);
 		}
 
 		throw new IllegalArgumentException("unexpected request: " + request);

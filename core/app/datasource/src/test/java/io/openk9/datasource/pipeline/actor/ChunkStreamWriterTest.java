@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.pipeline.actor;
 
+import java.time.Duration;
 import java.util.List;
 
 import io.openk9.common.util.ingestion.ShardingKey;
@@ -193,6 +194,85 @@ class ChunkStreamWriterTest {
 		// and no creation is announced, since nothing was created
 		Mockito.verify(eventBus, Mockito.never())
 			.send(Mockito.anyString(), Mockito.any());
+	}
+
+	@Test
+	void a_second_batch_waits_for_the_pending_write() {
+		// spawn a writer whose responses the test releases one at a time
+		var transport = RecordingTransport.gated();
+		var writer = TEST_KIT.spawn(ChunkStreamWriter.create(
+			new OpenSearchAsyncClient(transport),
+			INDEX_NAME, DATASOURCE_ID, heldMessage()));
+
+		var ackProbe = TEST_KIT.<ChunkStreamWriter.Response>createTestProbe();
+
+		// the first batch starts the delete of the prior version and hangs there
+		writer.tell(new ChunkStreamWriter.WriteBatch(batch(), ackProbe.ref()));
+		transport.awaitOperations(1);
+
+		// a second batch arrives while the delete is still in flight
+		writer.tell(new ChunkStreamWriter.WriteBatch(batch(), ackProbe.ref()));
+
+		// it must not overtake it: indexing before the delete completes would
+		// have the delete wipe the documents just written.
+		ackProbe.expectNoMessage(Duration.ofMillis(300));
+		Assertions.assertEquals(List.of("delete"), transport.operations);
+
+		// delete completes: the first batch is indexed
+		transport.release();
+		transport.awaitOperations(2);
+
+		// its bulk completes: the first batch is acked and the second one,
+		// held until now, is indexed in turn
+		transport.release();
+		ackProbe.expectMessageClass(ChunkStreamWriter.Ack.class);
+		transport.awaitOperations(3);
+
+		transport.release();
+		ackProbe.expectMessageClass(ChunkStreamWriter.Ack.class);
+
+		// one delete, then one bulk per batch, in arrival order
+		Assertions.assertEquals(
+			List.of("delete", "bulk", "bulk"), transport.operations);
+	}
+
+	@Test
+	void end_stream_waits_for_the_pending_write() {
+		// spawn a writer whose responses the test releases one at a time
+		var transport = RecordingTransport.gated();
+		var writer = TEST_KIT.spawn(ChunkStreamWriter.create(
+			new OpenSearchAsyncClient(transport),
+			INDEX_NAME, DATASOURCE_ID, heldMessage()));
+
+		var ackProbe = TEST_KIT.<ChunkStreamWriter.Response>createTestProbe();
+
+		// a batch is in flight
+		writer.tell(new ChunkStreamWriter.WriteBatch(batch(), ackProbe.ref()));
+		transport.awaitOperations(1);
+
+		// the stream is closed while the write is still running: closing now
+		// would stop the writer, send its own delete/bulk responses to dead
+		// letters and leave the caller waiting for an ack until the timeout.
+		writer.tell(new ChunkStreamWriter.EndStream(ackProbe.ref()));
+		ackProbe.expectNoMessage(Duration.ofMillis(300));
+
+		// delete then bulk complete: the batch is acked, and only then the
+		// close is honoured
+		transport.release();
+		transport.awaitOperations(2);
+		transport.release();
+
+		ackProbe.expectMessageClass(ChunkStreamWriter.Ack.class);
+		ackProbe.expectMessageClass(ChunkStreamWriter.Ack.class);
+
+		// the batch did reach the index, so the creation is announced once
+		Assertions.assertEquals(List.of("delete", "bulk"), transport.operations);
+
+		var captor = ArgumentCaptor.forClass(Object.class);
+		Mockito.verify(eventBus).send(Mockito.anyString(), captor.capture());
+
+		Assertions.assertInstanceOf(
+			DatasourceMessage.New.class, captor.getValue());
 	}
 
 	@Test
