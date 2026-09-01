@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -249,11 +250,13 @@ public class EmbeddingService {
 				}
 			});
 
-		return windowAndBatch(
+		return reportMissingRefs(
+			windowAndBatch(
 				chunks, composed.root(), composed.contentTypeByFileId(),
-				config.chunkWindowSize(), DEFAULT_EMBED_BATCH_SIZE)
-			.onCompletion().invoke(() -> warnMissingRefs(
-				composed.sentFileIds(), receivedFileIds, composed.contentId()));
+				config.chunkWindowSize(), DEFAULT_EMBED_BATCH_SIZE),
+			composed.sentFileIds(),
+			receivedFileIds,
+			missing -> warnMissingRefs(missing, composed.contentId()));
 	}
 
 	/**
@@ -547,10 +550,43 @@ public class EmbeddingService {
 			.toList();
 	}
 
-	private static void warnMissingRefs(
-		Set<String> sent, Set<String> received, String contentId) {
+	/**
+	 * Reports the refs that produced no chunk once the stream is over.
+	 * <p>
+	 * Hooked on termination and not on completion on purpose: an interrupted
+	 * stream is the case where knowing which binaries never came back is worth
+	 * the most, and it is exactly the case a completion hook would miss. A
+	 * cancellation is not reported: the stream was dropped from the outside,
+	 * so the refs still pending are not a symptom of anything.
+	 *
+	 * @param stream   the batch stream to observe, returned unchanged
+	 * @param sent     the fileIds sent as refs
+	 * @param received the fileIds seen on the stream, filled as it flows
+	 * @param reporter fed the non-empty diff, once, at the end of the stream
+	 */
+	static <T> Multi<T> reportMissingRefs(
+		Multi<T> stream,
+		Set<String> sent,
+		Set<String> received,
+		Consumer<List<String>> reporter) {
 
-		for (String fileId : missingRefs(sent, received)) {
+		return stream.onTermination().invoke((failure, cancelled) -> {
+
+			if (Boolean.TRUE.equals(cancelled)) {
+				return;
+			}
+
+			var missing = missingRefs(sent, received);
+
+			if (!missing.isEmpty()) {
+				reporter.accept(missing);
+			}
+		});
+	}
+
+	private static void warnMissingRefs(List<String> missing, String contentId) {
+
+		for (String fileId : missing) {
 			log.warnf(
 				"contentId %s: reference %s produced no chunk",
 				contentId, fileId);

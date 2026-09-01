@@ -354,6 +354,75 @@ class EmbedContentStreamTest {
 		Assertions.assertEquals(List.of("b"), missing);
 	}
 
+	@Test
+	void should_report_the_missing_refs_when_the_stream_completes() {
+
+		var reported = new ArrayList<List<String>>();
+
+		var subscriber = EmbeddingService.reportMissingRefs(
+				Multi.createFrom().items("batch"),
+				Set.of("a", "b"), Set.of("a"),
+				reported::add)
+			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+
+		subscriber.awaitCompletion();
+
+		Assertions.assertEquals(List.of(List.of("b")), reported);
+	}
+
+	@Test
+	void should_report_the_missing_refs_when_the_stream_fails() {
+
+		var reported = new ArrayList<List<String>>();
+
+		// an interrupted stream is the case where knowing which binaries never
+		// came back is worth the most, and the one a completion hook misses.
+		var subscriber = EmbeddingService.reportMissingRefs(
+				Multi.createFrom().<String>failure(
+					new IllegalStateException("stream broke")),
+				Set.of("a", "b"), Set.of("a"),
+				reported::add)
+			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+
+		subscriber.awaitFailure();
+
+		Assertions.assertEquals(List.of(List.of("b")), reported);
+	}
+
+	@Test
+	void should_not_report_when_every_ref_produced_a_chunk() {
+
+		var reported = new ArrayList<List<String>>();
+
+		var subscriber = EmbeddingService.reportMissingRefs(
+				Multi.createFrom().items("batch"),
+				Set.of("a"), Set.of("a"),
+				reported::add)
+			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+
+		subscriber.awaitCompletion();
+
+		Assertions.assertTrue(reported.isEmpty());
+	}
+
+	@Test
+	void should_not_report_when_the_stream_is_cancelled() {
+
+		var reported = new ArrayList<List<String>>();
+
+		// a cancelled stream was dropped from the outside: the refs still
+		// pending are not a symptom of anything and must not be logged.
+		var subscriber = EmbeddingService.reportMissingRefs(
+				Multi.createFrom().<String>nothing(),
+				Set.of("a", "b"), Set.of(),
+				reported::add)
+			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+
+		subscriber.cancel();
+
+		Assertions.assertTrue(reported.isEmpty());
+	}
+
 	// ---- helpers ---------------------------------------------------------
 
 	/**
