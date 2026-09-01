@@ -204,12 +204,14 @@ public class ConfigImporterTest {
 	@Test
 	void a_new_field_referencing_an_unloaded_doc_type_is_wired() {
 		// A new field pointing at an existing (SKIP, hence not loaded) doc type:
-		// its docType is only known by id. The DocTypeField @PostPersist callback
-		// reads docType.getName() to build the path, so the importer must load the
-		// referenced doc type, not set a bare proxy - otherwise the reactive session
-		// throws LazyInitializationException at flush. This exercises the partial /
-		// cross-tenant case the full-package round-trips do not, because there every
-		// referenced entity is itself processed and thus already loaded.
+		// its docType is only known by id, so the importer must load it rather
+		// than set a bare proxy - a reactive session cannot lazily fetch one,
+		// and DocTypeField.getPath reads docType.getName() at the first read.
+		// Asserts the wiring; it does not itself read the path. Exercises the
+		// partial / cross-tenant case the full-package round-trips do not,
+		// because there every referenced entity is itself processed and thus
+		// already loaded.
+
 		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
 
 		String existingDocTypeRef = pkg.getEntities().stream()

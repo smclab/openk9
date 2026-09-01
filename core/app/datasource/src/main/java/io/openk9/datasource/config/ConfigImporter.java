@@ -586,10 +586,10 @@ public class ConfigImporter {
 				Long id = resolvedIds.get(handle);
 				if (id != null) {
 					Class<?> targetType = field.getType();
-					// Load, don't just reference: a to-one may be read by a lifecycle
-					// callback at flush (e.g. DocTypeField.refreshPath reads
-					// docType.getName()), and a reactive session cannot lazily fetch a
-					// bare reference proxy.
+					// Load, don't just reference: the target's scalars may be read
+					// after wiring (e.g. DocTypeField.getPath builds the path from
+					// docType.getName() at the first read), and a reactive session
+					// cannot lazily fetch a bare reference proxy.
 					chain = chain.flatMap(ignore -> s.find(targetType, id)
 						.invoke(target -> setField(entity, field, target))
 						.replaceWithVoid());
