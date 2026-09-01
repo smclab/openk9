@@ -49,7 +49,6 @@ Connector when send data to Openk9 needs to respect [ingestion Api interface](/)
 - **resources**: resources attached to data (Optional)
 - **acl**: acl associated with data (Optional)
 - **type**: used to specify the type of message. (Optional)
-- **last**: boolean to indicates all data are sent to Openk9. (Optional)
 
 #### Datasource Payload
 
@@ -123,14 +122,8 @@ Three different types of types are supported:
 - **HALT**: HALT type identify a message that report to Openk9 to stop running schedulation. This can be used when an error occurs during data extraction and the expected behaviour is to stop extraction and stop also the correspondign schedulation inside Openk9
 - **LAST**: to report that data extraction is finished
 
-
-#### Last
-
-Using this parameter it is possibile to report that data extraction is finished.
-Its behaviour is the same as Type parameter with value LAST.
-
 >**Note**  
-`parsingDate` is mandatory when the **Type** parameter is set to LAST or when using the **Last** parameter.
+`parsingDate` is mandatory when the **Type** parameter is set to LAST.
 
 
 ### Asynchronous implementation of data extraction
@@ -145,11 +138,11 @@ At this point two cases can occur:
 1. The connector correctly extracts all documents from the source and sends them all to Openk9 wconsequentiallyithout errors.
 2. The connector encounters an error during data extraction (for example, it does not correctly extract a document from the source or breaks when it sends it to ingestion)
 
-In case number 1, the connector, after sending all the documents, sends a message with last a true.
+In case number 1, the connector, after sending all the documents, sends a message with type set to LAST.
 
 In case number 2 the connector can:
 
-- ignore the errors that occur and get to the end by sending the last
+- ignore the errors that occur and get to the end by sending type to LAST
 - in case of error, stop data extraction and signal Openk9 to stop scheduling
 
 To signal Openk9 to interrupt a schedule, a message with type HALT must be sent to the ingestion.
