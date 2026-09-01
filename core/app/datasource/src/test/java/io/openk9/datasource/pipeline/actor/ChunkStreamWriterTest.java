@@ -165,6 +165,37 @@ class ChunkStreamWriterTest {
 	}
 
 	@Test
+	void zero_chunk_stream_succeeds_and_keeps_the_prior_indexed_version() {
+		// spawn a writer on a transport that records the operations issued
+		var transport = new RecordingTransport();
+		var writer = TEST_KIT.spawn(ChunkStreamWriter.create(
+			new OpenSearchAsyncClient(transport),
+			INDEX_NAME, DATASOURCE_ID, heldMessage()));
+
+		var ackProbe = TEST_KIT.<ChunkStreamWriter.Response>createTestProbe();
+
+		// the module answered the document with no chunk at all
+		writer.tell(new ChunkStreamWriter.WriteBatch(
+			"[]".getBytes(), ackProbe.ref()));
+		ackProbe.expectMessageClass(ChunkStreamWriter.Ack.class);
+
+		writer.tell(new ChunkStreamWriter.EndStream(ackProbe.ref()));
+
+		// the document is closed successfully. This is a deliberate difference
+		// from the single-response GetMessages path, where an empty response
+		// failed the document ("No chunks created from this payload").
+		ackProbe.expectMessageClass(ChunkStreamWriter.Ack.class);
+
+		// nothing was deleted and nothing was indexed: on a reprocessing the
+		// previously indexed version of the content survives untouched.
+		Assertions.assertTrue(transport.operations.isEmpty());
+
+		// and no creation is announced, since nothing was created
+		Mockito.verify(eventBus, Mockito.never())
+			.send(Mockito.anyString(), Mockito.any());
+	}
+
+	@Test
 	void end_stream_emits_the_creation_event_once_when_a_batch_was_written() {
 		// spawn a writer and let it write a batch
 		var writer = TEST_KIT.spawn(ChunkStreamWriter.create(

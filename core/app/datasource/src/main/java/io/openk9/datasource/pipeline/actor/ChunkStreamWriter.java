@@ -261,17 +261,41 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 		return this;
 	}
 
+	/**
+	 * Closes the document.
+	 * <p>
+	 * The New event (the one the single-bulk write emits) is emitted only when
+	 * at least one batch was actually written: a zero-chunk stream indexed
+	 * nothing, so signalling a creation would be spurious.
+	 * <p>
+	 * <b>A zero-chunk stream is a success, not a failure.</b> This is a
+	 * deliberate difference from the single-response {@code GetMessages} path,
+	 * where an empty response failed the document
+	 * ("No chunks created from this payload"). Here the document is answered
+	 * {@code Done} and the index is left untouched, which means:
+	 * <ul>
+	 *   <li>on a first indexing the content is simply absent from the index;</li>
+	 *   <li>on a reprocessing the <em>previously indexed version survives</em>,
+	 *   because the delete is bound to the first non-empty batch.</li>
+	 * </ul>
+	 * That is what makes an immediate module error harmless (the indexed
+	 * version is not dropped before knowing there is a replacement), and it is
+	 * the reason the outcome is only logged, at WARN, and not turned into a
+	 * scheduling failure.
+	 */
 	private Behavior<Command> onEndStream(EndStream endStream) {
 
-		// Emit the New event (as the single-bulk write does) only when at least
-		// one batch was actually written: a zero-chunk stream indexed nothing and
-		// left the prior version intact, so signalling a creation would be
-		// spurious.
 		if (wroteAny) {
 			log.infof("%s: Document stored successfully", heldMessage);
 
 			VectorIndexOps.sendDatasourceEventCreate(
 				datasourceId, indexName, heldMessage);
+		}
+		else {
+			log.warnf(
+				"%s: The embedding stream produced no chunk, nothing was" +
+					" indexed and any previously indexed version is kept.",
+				heldMessage);
 		}
 
 		endStream.ackTo().tell(new Ack());
