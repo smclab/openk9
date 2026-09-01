@@ -43,13 +43,18 @@ import org.jboss.logging.Logger;
 /**
  * Terminal streaming processor of the embedding path. It drives the
  * server-streaming {@code EmbedContent} through {@link EmbeddingService
- * #embedContentStream} and writes each matured batch through its own
+ * #embedContentStream} and hands each matured chunk-doc to its own
  * {@link ChunkStreamWriter} child, spawned per document as this processor
- * itself is. Backpressure is {@code transformToUniAndConcatenate} + a Pekko ask
- * per batch: exactly one batch is in flight and the next is not pulled until
- * the current bulk completes. When the stream is exhausted it closes the child
- * and, only once the child confirms, emits a single {@link Processor.Complete};
- * on error a {@link Processor.Failure}.
+ * itself is. The child accumulates the docs and writes them in bulks; grouping
+ * them here, in the stream, would take a time-based operator that emits without
+ * demand and kills the stream.
+ * <p>
+ * Backpressure is {@code transformToUniAndConcatenate} + a Pekko ask per chunk:
+ * exactly one chunk is in flight, and a chunk that triggers a bulk is not
+ * answered until that bulk completes, so the stream waits on the write and on
+ * nothing else. When the stream is exhausted it closes the child and, only once
+ * the child confirms, emits a single {@link Processor.Complete}; on error a
+ * {@link Processor.Failure}.
  */
 public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
@@ -116,13 +121,14 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		var pekkoScheduler = getContext().getSystem().scheduler();
 
 		// Collapse the stream to its terminal outcome and pipe it back as a
-		// message: every batch is already written along the way (ask-per-batch),
-		// so completion and failure are the only events left to observe.
+		// message: every chunk is already handed over along the way
+		// (ask-per-chunk), so completion and failure are the only events left
+		// to observe.
 		var streamOutcome = embeddingService
 			.embedContentStream(
 				processKey.tenantId(), processKey.scheduleId(), payload)
-			.onItem().transformToUniAndConcatenate(batch ->
-				askWriter(pekkoScheduler, batch))
+			.onItem().transformToUniAndConcatenate(document ->
+				askWriter(pekkoScheduler, document))
 			.collect().last()
 			.subscribeAsCompletionStage();
 
@@ -136,12 +142,12 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 	}
 
 	private Uni<ChunkStreamWriter.Response> askWriter(
-		Scheduler pekkoScheduler, byte[] batch) {
+		Scheduler pekkoScheduler, byte[] document) {
 
 		CompletionStage<ChunkStreamWriter.Response> ask = AskPattern.ask(
 			writer,
 			(ActorRef<ChunkStreamWriter.Response> ackTo) ->
-				new ChunkStreamWriter.WriteBatch(batch, ackTo),
+				new ChunkStreamWriter.WriteChunk(document, ackTo),
 			writeTimeout,
 			pekkoScheduler
 		);
@@ -157,8 +163,9 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
 	private Behavior<Processor.Command> onStreamCompleted(StreamCompleted ignored) {
 
-		// The stream is exhausted and every matured batch is written: close the
-		// child write. The document is not done until the child confirms.
+		// The stream is exhausted and every matured chunk is handed over: close
+		// the child, which writes the tail still buffered. The document is not
+		// done until the child confirms.
 		CompletionStage<ChunkStreamWriter.Response> ask = AskPattern.ask(
 			writer,
 			(ActorRef<ChunkStreamWriter.Response> ackTo) ->

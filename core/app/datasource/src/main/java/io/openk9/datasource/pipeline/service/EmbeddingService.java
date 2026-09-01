@@ -18,7 +18,6 @@
 package io.openk9.datasource.pipeline.service;
 
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,7 +27,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -72,19 +70,6 @@ public class EmbeddingService {
 
 	private static final String GET_EMBEDDED_PAYLOAD =
 		"EmbeddingService#getEmbeddedPayload";
-
-	// Finalized chunk-docs flushed to the writer per batch. Small on purpose so
-	// the per-batch bulk stays bounded and the write is incremental; the exact
-	// value is not load-bearing (the batching policy is deliberately free).
-	private static final int DEFAULT_EMBED_BATCH_SIZE = 32;
-
-	// A partial batch is also flushed after this delay measured from its first
-	// buffered doc, so a slow stream (e.g. one embedding per image) stays
-	// visible within a bounded delay instead of waiting for the batch to fill.
-	// The flush is demand-driven, so memory stays O(windowSize + batchSize).
-	// Not load-bearing (the batching policy is deliberately free).
-	private static final Duration DEFAULT_EMBED_BATCH_MAX_DELAY =
-		Duration.ofSeconds(1);
 
 	// media_type fallback for a binary chunk whose ref carried no contentType
 	// (refs are sent unfiltered, so the connector may omit it): keep the field a
@@ -196,10 +181,19 @@ public class EmbeddingService {
 	 * Streaming counterpart of {@link #getEmbeddedPayload}: composes an
 	 * {@code EmbedContentRequest} (text and/or binary refs), drives the
 	 * server-streaming {@code EmbedContent} through the incremental windowing of
-	 * {@link ChunkWindowBuffer}, and emits the finalized chunk-docs in small
-	 * batches (one {@code byte[]} JSON array per batch, same encoding as
-	 * {@link #mapToPayload}). The returned {@link Multi} is fully backpressured:
-	 * the gRPC demand bounds the buffer to {@code O(windowSize)} memory.
+	 * {@link ChunkWindowBuffer}, and emits the finalized chunk-docs <b>one at a
+	 * time</b>, each a {@code byte[]} JSON object.
+	 *
+	 * <p>One doc per item is a deliberate constraint, not a detail: grouping
+	 * them here would need an operator that emits on a timer, and such an
+	 * operator has to emit even when the consumer holds no demand — which the
+	 * Reactive Streams contract forbids, so it fails the stream instead
+	 * ({@code BackPressureFailure}). Emitting one doc per item keeps every
+	 * emission demand-driven; batching the writes is the writer's business,
+	 * where a timer answers to no demand contract.
+	 *
+	 * <p>The returned {@link Multi} is fully backpressured: the gRPC demand
+	 * bounds the buffer to {@code O(windowSize)} memory.
 	 *
 	 * <p>Unlike {@link #getEmbeddedPayload} this path bypasses the request/reply
 	 * event bus for the stream itself (single-response, cannot stream); it is
@@ -209,7 +203,7 @@ public class EmbeddingService {
 	 * @param tenantId   the tenant owning the content
 	 * @param scheduleId the running schedule
 	 * @param payload    the {@code DataPayload} JSON of a single document
-	 * @return a stream of batches, each a JSON array of finalized chunk-docs
+	 * @return a stream of finalized chunk-docs, one JSON object per item
 	 */
 	public Multi<byte[]> embedContentStream(
 		String tenantId, String scheduleId, byte[] payload) {
@@ -251,9 +245,9 @@ public class EmbeddingService {
 			});
 
 		return reportMissingRefs(
-			windowAndBatch(
+			windowAndEncode(
 				chunks, composed.root(), composed.contentTypeByFileId(),
-				config.chunkWindowSize(), DEFAULT_EMBED_BATCH_SIZE),
+				config.chunkWindowSize()),
 			composed.sentFileIds(),
 			receivedFileIds,
 			missing -> warnMissingRefs(missing, composed.contentId()));
@@ -382,35 +376,31 @@ public class EmbeddingService {
 
 	/**
 	 * The pure stream transform: window each {@code EmbeddedChunk} exactly as
-	 * {@link #mapToPayload} does (via {@link ChunkWindowBuffer}), map every
-	 * finalized chunk to a
-	 * chunk-doc, and group the docs into batches of at most {@code batchSize}
-	 * (also flushing a partial batch every {@link #DEFAULT_EMBED_BATCH_MAX_DELAY}
-	 * so a slow stream stays progressively visible), one {@code byte[]} JSON
-	 * array per batch. Free of gRPC / OpenSearch / CDI, so it is unit-testable
-	 * in isolation.
+	 * {@link #mapToPayload} does (via {@link ChunkWindowBuffer}) and encode
+	 * every finalized chunk as one chunk-doc. Free of gRPC / OpenSearch / CDI,
+	 * so it is unit-testable in isolation.
 	 *
-	 * <p>On stream failure the grouping drops its in-flight partial batch, but
-	 * the docs it holds are already matured (their lookahead completed) and must
-	 * still be written (an interrupted stream leaves the matured chunks
-	 * indexed). So the failure is turned into a completion — which flushes that
-	 * partial as the last batch — and then re-raised, keeping the write
-	 * fail-fast. The lookahead tail still held by {@link ChunkWindowBuffer} is
-	 * intentionally NOT flushed on failure: those windows never completed.
+	 * <p>Every emission is driven by downstream demand: there is no timer and
+	 * no grouping, so no operator here can ever be forced to emit without
+	 * demand. Docs are accumulated into bulks by {@code ChunkStreamWriter},
+	 * which batches on its own count and its own Pekko timer.
+	 *
+	 * <p>On stream failure the docs already emitted are already written (the
+	 * writer acknowledged them); the ones the writer is still holding in its
+	 * batch are dropped, like the lookahead tail still held by
+	 * {@link ChunkWindowBuffer}: neither is worth writing for a document that
+	 * failed and will be reprocessed whole.
 	 */
-	static Multi<byte[]> windowAndBatch(
+	static Multi<byte[]> windowAndEncode(
 		Multi<EmbeddingOuterClass.EmbeddedChunk> chunks,
 		Map<String, Object> root,
 		Map<String, String> contentTypeByFileId,
-		int windowSize,
-		int batchSize) {
+		int windowSize) {
 
 		var buffer = ChunkWindowBuffer.<EmbeddingOuterClass.EmbeddedChunk>of(
 			windowSize,
 			chunk -> new ChunkWindowBuffer.WindowEntry(
 				chunk.getNumber(), chunk.getText()));
-
-		var streamFailure = new AtomicReference<Throwable>();
 
 		return chunks
 			.onItem().transformToMultiAndConcatenate(chunk ->
@@ -419,17 +409,7 @@ public class EmbeddingService {
 				Multi.createFrom().iterable(buffer.flush()))
 			.onItem().transform(windowed ->
 				mapWindowedToDocument(windowed, root, contentTypeByFileId))
-			.onFailure().invoke(streamFailure::set)
-			.onFailure().recoverWithCompletion()
-			.group().intoLists().of(batchSize, DEFAULT_EMBED_BATCH_MAX_DELAY)
-			.onItem().transform(EmbeddingService::mapDocumentsToPayload)
-			.onCompletion().switchTo(() -> {
-				var throwable = streamFailure.get();
-
-				return throwable == null
-					? Multi.createFrom().empty()
-					: Multi.createFrom().failure(throwable);
-			});
+			.onItem().transform(document -> document.toBuffer().getBytes());
 	}
 
 	/**
@@ -527,17 +507,6 @@ public class EmbeddingService {
 			default:
 				return List.of();
 		}
-	}
-
-	static byte[] mapDocumentsToPayload(List<JsonObject> documents) {
-
-		var jsonArray = new JsonArray();
-
-		for (JsonObject document : documents) {
-			jsonArray.add(document);
-		}
-
-		return jsonArray.toBuffer().getBytes();
 	}
 
 	/**

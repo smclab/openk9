@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.pipeline.service;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import io.openk9.ml.grpc.EmbeddingOuterClass.VectorDataType;
 
 import com.google.protobuf.ByteString;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
@@ -45,15 +47,13 @@ import org.junit.jupiter.api.Test;
  */
 class EmbedContentStreamTest {
 
-	private static final int BIG_BATCH = 10_000;
-
 	@Test
 	void should_map_n_chunks_to_n_docs_with_v1_windows() {
 
 		int windowSize = 2;
 		var chunks = textChunks(6);
 
-		var docs = runToDocs(chunks, windowSize, BIG_BATCH);
+		var docs = runToDocs(chunks, windowSize);
 
 		// one doc per chunk, in order.
 		Assertions.assertEquals(chunks.size(), docs.size());
@@ -83,26 +83,16 @@ class EmbedContentStreamTest {
 	@Test
 	void should_emit_incrementally_when_windowSize_is_zero() {
 
-		// windowSize 0 + batchSize 1: every chunk finalized on arrival, one
-		// batch each, with empty windows (pure incremental).
+		// windowSize 0: every chunk finalized on arrival, one emitted doc each,
+		// with empty windows (pure incremental).
 		var chunks = textChunks(4);
 
-		var subscriber = EmbeddingService.windowAndBatch(
-				Multi.createFrom().iterable(chunks),
-				Map.of(), Map.of(), 0, 1)
-			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+		var docs = runToDocs(chunks, 0);
 
-		subscriber.awaitCompletion();
-
-		var batches = subscriber.getItems();
-		Assertions.assertEquals(chunks.size(), batches.size());
+		Assertions.assertEquals(chunks.size(), docs.size());
 
 		for (int index = 0; index < chunks.size(); index++) {
-			var batch = new JsonArray(Buffer.buffer(batches.get(index)));
-
-			Assertions.assertEquals(1, batch.size());
-
-			var doc = batch.getJsonObject(0);
+			var doc = docs.get(index);
 			Assertions.assertEquals(index + 1, doc.getInteger("number"));
 			Assertions.assertTrue(doc.getJsonArray("previous").isEmpty());
 			Assertions.assertTrue(doc.getJsonArray("next").isEmpty());
@@ -117,7 +107,7 @@ class EmbedContentStreamTest {
 		var root = Map.<String, Object>of("title", "a title", "acl",
 			Map.of("public", true));
 
-		var docs = runToDocs(chunks, windowSize, BIG_BATCH, root);
+		var docs = runToDocs(chunks, windowSize, root);
 
 		Assertions.assertEquals(chunks.size(), docs.size());
 
@@ -148,12 +138,11 @@ class EmbedContentStreamTest {
 	}
 
 	@Test
-	void should_leave_matured_batches_on_interrupted_stream() {
+	void should_emit_matured_docs_before_an_interrupted_stream_fails() {
 
-		// windowSize 0: every offered chunk matures immediately. At batchSize 1
-		// each matured doc is its own batch, so all the batches of the chunks
-		// received before the error are emitted, then the failure propagates
-		// (fail-fast, no partial tail to flush at this batch size).
+		// windowSize 0: every offered chunk matures immediately, so all the
+		// docs of the chunks received before the error are emitted (and thus
+		// handed to the writer), then the failure propagates. Fail-fast.
 		var received = textChunks(3);
 
 		Multi<EmbeddedChunk> interrupted = Multi.createBy().concatenating()
@@ -161,56 +150,26 @@ class EmbedContentStreamTest {
 				Multi.createFrom().iterable(received),
 				Multi.createFrom().failure(new RuntimeException("module error")));
 
-		var subscriber = EmbeddingService.windowAndBatch(
-				interrupted, Map.of(), Map.of(), 0, 1)
+		var subscriber = EmbeddingService.windowAndEncode(
+				interrupted, Map.of(), Map.of(), 0)
 			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
 
 		subscriber.awaitFailure();
 
-		// the matured batches were emitted before the failure.
 		Assertions.assertEquals(received.size(), subscriber.getItems().size());
 	}
 
 	@Test
-	void should_flush_matured_docs_on_interrupt_at_real_batch_size() {
+	void should_emit_no_document_before_an_immediate_error() {
 
-		// an interrupted stream at the production batch size: 3 chunks mature
-		// (windowSize 0) then the stream errors before the batch of 32 fills.
-		// The grouping drops its partial batch on failure, but the matured docs
-		// must still be written, so they are flushed as a last batch before the
-		// failure propagates.
-		var received = textChunks(3);
-
-		Multi<EmbeddedChunk> interrupted = Multi.createBy().concatenating()
-			.streams(
-				Multi.createFrom().iterable(received),
-				Multi.createFrom().failure(new RuntimeException("module error")));
-
-		var subscriber = EmbeddingService.windowAndBatch(
-				interrupted, Map.of(), Map.of(), 0, 32)
-			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
-
-		subscriber.awaitFailure();
-
-		// all 3 matured docs were flushed (in a partial batch) before failing.
-		int docs = 0;
-		for (byte[] batch : subscriber.getItems()) {
-			docs += new JsonArray(Buffer.buffer(batch)).size();
-		}
-		Assertions.assertEquals(received.size(), docs);
-	}
-
-	@Test
-	void should_emit_no_batch_before_an_immediate_error() {
-
-		// a stream that fails before any chunk: no batch is emitted, so the
+		// a stream that fails before any chunk: nothing is emitted, so the
 		// writer's first-batch delete is never issued and the prior indexed
 		// version is preserved.
 		Multi<EmbeddedChunk> failing =
 			Multi.createFrom().failure(new RuntimeException("precondition failed"));
 
-		var subscriber = EmbeddingService.windowAndBatch(
-				failing, Map.of(), Map.of(), 2, BIG_BATCH)
+		var subscriber = EmbeddingService.windowAndEncode(
+				failing, Map.of(), Map.of(), 2)
 			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
 
 		subscriber.awaitFailure();
@@ -225,8 +184,7 @@ class EmbedContentStreamTest {
 		var binary = binaryChunk(2, "file-1", 3.0f, 4.0f);
 
 		var docs = runToDocs(
-			List.of(text, binary), 0, BIG_BATCH,
-			Map.of(), Map.of("file-1", "image/png"));
+			List.of(text, binary), 0, Map.of(), Map.of("file-1", "image/png"));
 
 		var textDoc = docs.get(0);
 		Assertions.assertEquals("text", textDoc.getString("media_type"));
@@ -244,8 +202,7 @@ class EmbedContentStreamTest {
 		// media_type falls back to the generic octet-stream, never null.
 		var binary = binaryChunk(1, "file-x", 1.0f);
 
-		var docs = runToDocs(
-			List.of(binary), 0, BIG_BATCH, Map.of(), Map.of());
+		var docs = runToDocs(List.of(binary), 0, Map.of(), Map.of());
 
 		var doc = docs.get(0);
 		Assertions.assertEquals("file-x", doc.getString("fileId"));
@@ -254,43 +211,21 @@ class EmbedContentStreamTest {
 	}
 
 	@Test
-	void should_split_documents_into_batches_of_batch_size() {
-
-		var docs = new ArrayList<Integer>();
-
-		var subscriber = EmbeddingService.windowAndBatch(
-				Multi.createFrom().iterable(textChunks(5)),
-				Map.of(), Map.of(), 0, 2)
-			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
-
-		subscriber.awaitCompletion();
-
-		for (byte[] batch : subscriber.getItems()) {
-			docs.add(new JsonArray(Buffer.buffer(batch)).size());
-		}
-
-		// 5 docs, batchSize 2 -> [2, 2, 1].
-		Assertions.assertEquals(List.of(2, 2, 1), docs);
-	}
-
-	@Test
 	void should_keep_outstanding_bounded_when_the_writer_is_slow() {
 
-		// The pipeline claims O(windowSize + batchSize) memory because it is
-		// demand-driven: with a fast source and a consumer that pulls one batch
-		// at a time (as EmbeddingProcessor does via transformToUniAndConcatenate),
-		// the chunks pulled-from-source-but-not-yet-written must stay bounded and
-		// must NOT grow with the stream length.
+		// The pipeline claims O(windowSize) memory because it is demand-driven:
+		// with a fast source and a consumer that pulls one doc at a time (as
+		// EmbeddingProcessor does via transformToUniAndConcatenate), the chunks
+		// pulled-from-source-but-not-yet-written must stay bounded and must NOT
+		// grow with the stream length.
 		int windowSize = 2;
-		int batchSize = 32;
 
-		// the observed peak is windowSize + batchSize; the extra batchSize is
-		// headroom for the grouping's n * batchSize upstream request rounding.
-		int bound = windowSize + 2 * batchSize;
+		// the lookahead plus the doc in flight; small and independent of N.
+		int bound = 2 * windowSize + 2;
 
 		// measure the peak outstanding at two very different stream lengths.
-		int peakShort = maxOutstanding(1_000, windowSize, batchSize);
-		int peakLong = maxOutstanding(4_000, windowSize, batchSize);
+		int peakShort = maxOutstanding(1_000, windowSize);
+		int peakLong = maxOutstanding(4_000, windowSize);
 
 		// bounded by a small constant, far below the 1_000 / 4_000 chunks streamed.
 		Assertions.assertTrue(
@@ -303,6 +238,37 @@ class EmbedContentStreamTest {
 			peakShort, peakLong,
 			"peak outstanding grew with stream length: "
 			+ peakShort + " -> " + peakLong);
+	}
+
+	@Test
+	void should_survive_a_consumer_that_writes_slower_than_the_stream() {
+
+		// A consumer that holds no demand while it writes must never break the
+		// stream. It used to: the docs were grouped here by
+		// group().intoLists().of(size, delay), and a time-based grouping has to
+		// emit when its delay expires even if nobody is asking — which Reactive
+		// Streams forbids, so it cancelled the source and raised
+		// BackPressureFailure("Cannot emit item due to lack of requests").
+		//
+		// This exact shape — 5 chunks 300 ms apart, 400 ms per write — died at
+		// ~1500 ms. Batching now lives in ChunkStreamWriter, where a timer is
+		// just a message and answers to no demand contract.
+		var chunks = textChunks(5);
+
+		Multi<EmbeddedChunk> trickle = Multi.createFrom().iterable(chunks)
+			.onItem().transformToUniAndConcatenate(chunk ->
+				Uni.createFrom().item(chunk)
+					.onItem().delayIt().by(Duration.ofMillis(300)));
+
+		var written = EmbeddingService.windowAndEncode(
+				trickle, Map.of(), Map.of(), 0)
+			.onItem().transformToUniAndConcatenate(document ->
+				Uni.createFrom().item(document)
+					.onItem().delayIt().by(Duration.ofMillis(400)))
+			.collect().asList()
+			.await().atMost(Duration.ofSeconds(30));
+
+		Assertions.assertEquals(chunks.size(), written.size());
 	}
 
 	@Test
@@ -426,12 +392,12 @@ class EmbedContentStreamTest {
 	// ---- helpers ---------------------------------------------------------
 
 	/**
-	 * Streams {@code n} chunks through {@link EmbeddingService#windowAndBatch}
-	 * with a fast source and a consumer that pulls exactly one batch at a time,
+	 * Streams {@code n} chunks through {@link EmbeddingService#windowAndEncode}
+	 * with a fast source and a consumer that pulls exactly one doc at a time,
 	 * writing it before pulling the next. Returns the peak number of chunks
 	 * emitted by the source but not yet written by the consumer.
 	 */
-	private static int maxOutstanding(int n, int windowSize, int batchSize) {
+	private static int maxOutstanding(int n, int windowSize) {
 
 		var emitted = new AtomicInteger();
 		var written = new AtomicInteger();
@@ -444,22 +410,17 @@ class EmbedContentStreamTest {
 				emitted.incrementAndGet() - written.get(), Math::max));
 
 		// a slow consumer with zero initial demand.
-		var subscriber = EmbeddingService.windowAndBatch(
-				source, Map.of(), Map.of(), windowSize, batchSize)
+		var subscriber = EmbeddingService.windowAndEncode(
+				source, Map.of(), Map.of(), windowSize)
 			.subscribe().withSubscriber(AssertSubscriber.create());
 
-		// pull one batch, "write" it, then pull the next, until the stream ends.
-		// the request count is guarded (a batch is at least one doc) so a broken
-		// pipeline that never completes cannot hang the suite.
+		// pull one doc, "write" it, then pull the next, until the stream ends.
+		// the request count is guarded so a broken pipeline that never completes
+		// cannot hang the suite.
 		int requests = 0;
-		while (!subscriber.hasCompleted() && requests++ < n) {
+		while (!subscriber.hasCompleted() && requests++ <= n) {
 			subscriber.request(1);
-
-			int docs = 0;
-			for (byte[] batch : subscriber.getItems()) {
-				docs += new JsonArray(Buffer.buffer(batch)).size();
-			}
-			written.set(docs);
+			written.set(subscriber.getItems().size());
 		}
 
 		// the bounded-demand consumer must have drained the whole stream.
@@ -472,35 +433,37 @@ class EmbedContentStreamTest {
 	}
 
 	private static List<JsonObject> runToDocs(
-		List<EmbeddedChunk> chunks, int windowSize, int batchSize) {
+		List<EmbeddedChunk> chunks, int windowSize) {
 
-		return runToDocs(chunks, windowSize, batchSize, Map.of(), Map.of());
+		return runToDocs(chunks, windowSize, Map.of(), Map.of());
 	}
 
 	private static List<JsonObject> runToDocs(
-		List<EmbeddedChunk> chunks, int windowSize, int batchSize,
-		Map<String, Object> root) {
+		List<EmbeddedChunk> chunks, int windowSize, Map<String, Object> root) {
 
-		return runToDocs(chunks, windowSize, batchSize, root, Map.of());
+		return runToDocs(chunks, windowSize, root, Map.of());
 	}
 
 	private static List<JsonObject> runToDocs(
-		List<EmbeddedChunk> chunks, int windowSize, int batchSize,
+		List<EmbeddedChunk> chunks, int windowSize,
 		Map<String, Object> root, Map<String, String> contentTypeByFileId) {
 
-		var subscriber = EmbeddingService.windowAndBatch(
+		var subscriber = EmbeddingService.windowAndEncode(
 				Multi.createFrom().iterable(chunks),
-				root, contentTypeByFileId, windowSize, batchSize)
+				root, contentTypeByFileId, windowSize)
 			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
 
 		subscriber.awaitCompletion();
 
+		return decode(subscriber.getItems());
+	}
+
+	/** One emitted item is one chunk-doc. */
+	private static List<JsonObject> decode(List<byte[]> items) {
+
 		List<JsonObject> docs = new ArrayList<>();
-		for (byte[] batch : subscriber.getItems()) {
-			var array = new JsonArray(Buffer.buffer(batch));
-			for (int i = 0; i < array.size(); i++) {
-				docs.add(array.getJsonObject(i));
-			}
+		for (byte[] item : items) {
+			docs.add(new JsonObject(Buffer.buffer(item)));
 		}
 
 		return docs;
