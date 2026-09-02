@@ -9,7 +9,7 @@ import { getUserProfile } from "./components/authentication";
 import { OpenK9Client } from "./components/client";
 import { getNumberOfSources } from "./config/sources";
 import { InitialConversation } from "./components/InitialConversation";
-import { kc } from "./auth/kc";
+import { isAuthenticated } from "./auth/oauth2";
 import { DocumentPreviewProvider } from "./components/DocumentPreview";
 import { MessageCard } from "./components/MessageCard";
 import Search from "./components/Search";
@@ -69,8 +69,8 @@ function App() {
 	React.useEffect(() => {
 		async function fetchUserProfile() {
 			try {
-				const profile: { sub: string } = await getUserProfile();
-				if (profile.sub) {
+				const profile = await getUserProfile();
+				if (profile?.sub) {
 					const userId = profile.sub + "_" + String(Date.now());
 					setUserId(profile.sub);
 					setChatId({ id: userId, isNew: true });
@@ -156,7 +156,7 @@ function App() {
 											sx={{ margin: "10px", borderRadius: "10px" }}
 											onClick={() => {
 												const timestamp = String(Date.now());
-												const newId = kc.authenticated
+												const newId = isAuthenticated()
 													? `${userId}_${timestamp}`
 													: `anonymous_${uuidv4()}_${timestamp}`;
 												setChatId({ id: newId, isNew: true });
@@ -218,10 +218,10 @@ function App() {
 									isChatting={isChatting}
 									canSend={isReady && !!chatId?.id}
 									onUploadFiles={async (files) => {
-										if (!kc.authenticated || !chatId?.id) throw new Error("Not authenticated or no chat");
+										if (!isAuthenticated() || !chatId?.id) throw new Error("Not authenticated or no chat");
 										return client.uploadFiles(chatId.id, files);
 									}}
-									isAuthenticated={!!kc.authenticated}
+									isAuthenticated={isAuthenticated()}
 									retrieveFromUploadedDocuments={retrieveFromUploadedDocuments}
 									onSetRetrieveFromUploadedDocuments={(v) => setRetrieveFromUploadedDocuments(v)}
 									selectedDatasourceIds={selectedDatasourceIds}

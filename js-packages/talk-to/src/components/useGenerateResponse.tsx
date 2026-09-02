@@ -6,7 +6,7 @@ import { OpenK9Client } from "./client";
 import React from "react";
 import { useChatContext } from "../context/HistoryChatContext";
 import { useTranslation } from "react-i18next";
-import { keycloak } from "./keycloak";
+import { isAuthenticated } from "../auth/oauth2";
 
 type Source = { source?: string; title?: string; url?: string; filename?: string; file_extension?: string };
 
@@ -77,7 +77,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 				answer: msg.answer,
 				title: "",
 				sources: msg.sources || [],
-				chat_id: keycloak.authenticated ? chatId : nonLoggedUserId,
+				chat_id: isAuthenticated() ? chatId : nonLoggedUserId,
 				timestamp: msg.timestamp || "",
 				chat_sequence_number: msg.chat_sequence_number,
 			}));
@@ -122,7 +122,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 
 				// The retrieval flag is sticky for the whole conversation, so force it false with an image:
 				// an earlier uploaded document would otherwise hijack the image query.
-				const searchQuery = keycloak.authenticated
+				const searchQuery = isAuthenticated()
 					? {
 							searchText: query,
 							chatId,

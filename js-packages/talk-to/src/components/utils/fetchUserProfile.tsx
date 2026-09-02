@@ -13,8 +13,8 @@ export default async function fetchUserProfile({
 	setUserId: React.Dispatch<React.SetStateAction<string | undefined | null>>;
 }) {
 	try {
-		const profile: { sub: string } = await getUserProfile();
-		if (profile.sub) {
+		const profile = await getUserProfile();
+		if (profile?.sub) {
 			const userId = profile.sub + "_" + String(Date.now());
 			setUserId(profile.sub);
 			setChatId({ id: userId, isNew: true });

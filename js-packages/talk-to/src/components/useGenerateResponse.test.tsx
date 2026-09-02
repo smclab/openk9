@@ -22,13 +22,9 @@ jest.mock("../context/HistoryChatContext", () => ({
 	useChatContext: () => ({ dispatch: jest.fn() }),
 }));
 
-// A getter, not a fixed value: the authenticated body has a different shape.
-jest.mock("./keycloak", () => ({
-	keycloak: {
-		get authenticated() {
-			return mockAuthenticated;
-		},
-	},
+// Reads the variable on every call, not a fixed value: the authenticated body has a different shape.
+jest.mock("../auth/oauth2", () => ({
+	isAuthenticated: () => mockAuthenticated,
 }));
 let mockAuthenticated = false;
 

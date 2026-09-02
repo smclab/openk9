@@ -1,6 +1,6 @@
 import React from "react";
-import { keycloakInit } from "./authentication";
-import { kc } from "../auth/kc";
+import { authInit } from "./authentication";
+import { getAccessToken, isAuthenticated, loadUserProfile, login, logout } from "../auth/oauth2";
 import { jsonObjPost } from "./utils";
 import { ChatHistory } from "../context/HistoryChatContext";
 import { resolveTenantUrl } from "../config/tenant";
@@ -9,36 +9,34 @@ export const OpenK9ClientContext = React.createContext<ReturnType<typeof OpenK9C
 
 export function OpenK9Client() {
 	async function authFetch(route: string, init: RequestInit = {}) {
-		await keycloakInit;
+		await authInit;
 
-		if (kc.authenticated) {
-			await kc.updateToken(30);
-		}
+		const token = await getAccessToken();
 
 		const headers = {
 			...init.headers,
-			...(kc.token ? { Authorization: `Bearer ${kc.token}` } : {}),
+			...(token ? { Authorization: `Bearer ${token}` } : {}),
 		};
 
 		return fetch(resolveTenantUrl(route), { ...init, headers });
 	}
 	return {
-		authInit: keycloakInit,
+		authInit,
 
 		async authenticate() {
-			await keycloakInit;
-			return kc.login();
+			await authInit;
+			return login();
 		},
 
 		async deauthenticate() {
-			await keycloakInit;
-			return kc.logout();
+			await authInit;
+			return logout();
 		},
 
 		async getUserProfile() {
-			await keycloakInit;
-			if (!kc.authenticated) throw new Error("User is not authenticated");
-			return kc.loadUserInfo();
+			await authInit;
+			if (!isAuthenticated()) throw new Error("User is not authenticated");
+			return loadUserProfile();
 		},
 
 		async getInitialMessages(chatId: string) {

@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
 import { QueryClient, QueryClientProvider } from "react-query";
 import App from "./App";
-import { keycloakInit } from "./components/authentication";
+import { authInit } from "./components/authentication";
 import { ChatInfoContext } from "./components/ChatInfoContext";
 import "./i18n";
 import i18n from "./i18n";
@@ -14,9 +14,6 @@ const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement)
 export const Id = "";
 declare global {
 	interface Window {
-		KEYCLOAK_URL: string;
-		KEYCLOAK_REALM: string;
-		KEYCLOAK_CLIENT_ID: string;
 		tenant: string;
 		OPENK9_NUMBER_OF_SOURCES?: number;
 	}
@@ -24,7 +21,7 @@ declare global {
 
 const queryClient = new QueryClient();
 
-keycloakInit.then(() => {
+authInit.then(() => {
 	root.render(
 		<React.StrictMode>
 			<I18nextProvider i18n={i18n}>

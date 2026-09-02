@@ -16,7 +16,7 @@
 		"@types/react": "^18.3.3",
 		"@types/react-dom": "^18.3.0",
 		"i18next": "^22.5.1",
-		"keycloak-js": "^25.0.1",
+		"oidc-client-ts": "^3.1.0",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
 		"react-i18next": "^12.3.1",
@@ -55,7 +55,6 @@
 	"proxy": "https://k9-frontend.openk9.io",
 	"devDependencies": {
 		"@craco/craco": "^7.0.0",
-		"@types/keycloak-js": "^3.4.1",
 		"@types/uuid": "^10.0.0"
 	}
 }
