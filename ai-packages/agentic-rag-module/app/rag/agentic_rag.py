@@ -117,7 +117,21 @@ def _normalize_quote(text: str) -> str:
     "leccellenza", "SMC e' stata" as "SMC stata"), so a quote the model spelled
     correctly would never be found in the very source it came from. Dropping
     the same characters on both sides makes the match independent of accents,
-    apostrophes, punctuation and whitespace."""
+    apostrophes, punctuation and whitespace.
+
+    Dropping this much is a workaround for the ingestion, and it can be narrowed
+    once the indices hold their non-ASCII characters again - which takes a
+    re-index, not just a fix upstream. Narrowed, not removed: web text carries
+    typographic apostrophes and non-breaking spaces, and a model writing a quote
+    uses the ASCII ones, so whitespace, case and apostrophe variants always need
+    folding. What can go is dropping accents and punctuation, which buys back
+    the strict guarantee that a quote is an exact substring of its source:
+    today a quote may match across word boundaries, or claim a currency the
+    source does not carry ("5.000€" against "5.000").
+
+    Note that it also hides the ingestion defect it compensates: a mangled and a
+    clean source normalize to the very same string, so a regression upstream
+    would leave every grounding check passing."""
     return "".join(
         character
         for character in text
