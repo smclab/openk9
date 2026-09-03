@@ -24,7 +24,7 @@ import { useInfiniteQuery } from "react-query";
 import { useDebounce } from "./useDebounce";
 import { SearchToken, SuggestionResult, useOpenK9Client } from "./client";
 import { useTranslation } from "react-i18next";
-import { capitalize } from "lodash";
+import capitalize from "lodash/capitalize";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 import { IconsCustom } from "../embeddable/entry";
 import { Logo } from "./Logo";

@@ -17,7 +17,7 @@
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { capitalize } from "lodash";
+import capitalize from "lodash/capitalize";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import React from "react";
 import { useTranslation } from "react-i18next";

@@ -19,7 +19,7 @@ import { useQuery } from "react-query";
 import { css } from "styled-components";
 import { SearchToken } from "./client";
 import { useOpenK9Client } from "./client";
-import _ from "lodash";
+import cloneDeep from "lodash/cloneDeep";
 import { resetFilterCalendar } from "./DateRangePicker";
 import { SelectionsAction } from "./useSelections";
 import { Options } from "./SortResults";
@@ -456,7 +456,7 @@ export function translationTabValue({
   const desiredKey = "label." + language;
   let tabClick: SearchToken[] | null = null;
   if (tabLanguages && tabLanguages.hasOwnProperty(desiredKey)) {
-    tabClick = _.cloneDeep(defaultValue);
+    tabClick = cloneDeep(defaultValue);
     tabClick[0] = {
       ...tabClick[0],
       values: [tabLanguages[desiredKey]],

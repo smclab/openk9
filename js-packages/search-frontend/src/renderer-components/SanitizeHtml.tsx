@@ -1,4 +1,4 @@
-import { get } from "lodash";
+import get from "lodash/get";
 import { HighlightableTextProps } from "./HighlightableText";
 import sanitizeHtml from "sanitize-html";
 import { css } from "styled-components";

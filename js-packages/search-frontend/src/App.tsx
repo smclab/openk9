@@ -22,7 +22,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Chatbot } from "@openk9ui/openk9-chatbot";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 import moment from "moment";
 import React from "react";
 import { useTranslation } from "react-i18next";

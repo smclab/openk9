@@ -16,7 +16,7 @@
 */
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { isEqualWith } from "lodash";
+import isEqualWith from "lodash/isEqualWith";
 import React, { Dispatch, SetStateAction } from "react";
 import { remappingLanguage, SearchDateRange } from "../embeddable/Main";
 import { ChangeLanguage, LanguageItem } from "./ChangeLanguage";
