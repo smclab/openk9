@@ -35,7 +35,8 @@ import {
 } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
 import { mapSuggestionToSearchToken } from "./FilterCategory";
-import { capitalize, result } from "lodash";
+import capitalize from "lodash/capitalize";
+import result from "lodash/result";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";

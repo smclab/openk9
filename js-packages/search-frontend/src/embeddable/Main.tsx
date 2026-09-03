@@ -1,5 +1,6 @@
 import i18next from "i18next";
-import _, { isEqual } from "lodash";
+import cloneDeep from "lodash/cloneDeep";
+import isEqual from "lodash/isEqual";
 import React from "react";
 import ReactDOM from "react-dom";
 import { I18nextProvider, useTranslation } from "react-i18next";
@@ -2229,7 +2230,7 @@ function createFilter(filterTokens: SearchToken[]): SearchToken[] {
       const suggestionCategoryId = item.suggestionCategoryId;
 
       if (!groupedTokens[suggestionCategoryId]) {
-        groupedTokens[suggestionCategoryId] = _.cloneDeep(item);
+        groupedTokens[suggestionCategoryId] = cloneDeep(item);
       } else {
         groupedTokens[suggestionCategoryId].values!.push(item.values[0]);
       }

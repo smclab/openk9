@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
