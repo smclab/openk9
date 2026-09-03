@@ -15,9 +15,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import os
+
 from opensearchpy import OpenSearch
 
 HOSTS_SEPARATOR = ","
+TLS_SCHEME = "https://"
 
 
 def parse_hosts(hosts):
@@ -52,6 +55,53 @@ def parse_hosts(hosts):
     return [host.strip() for host in candidates if host and str(host).strip()]
 
 
+def _connection_options(hosts):
+    """
+    Derive the TLS and authentication options from the environment.
+
+    The environment is read at every call rather than at import time: clients
+    are already built per request, and this keeps the factory testable.
+
+    The scheme is left to ``opensearch-py``, which resolves it per host: an
+    entry without ``://`` is plain HTTP, while an ``https://`` entry enables TLS
+    for that host alone. Passing ``use_ssl`` globally would force TLS on the
+    plain nodes of a mixed list, so only the options the library cannot infer
+    are returned, and only when at least one host speaks TLS.
+
+    :param hosts: Parsed list of hosts
+    :type hosts: list
+
+    :returns: Keyword arguments for the OpenSearch client
+    :rtype: dict
+
+    Example:
+        .. code-block:: python
+
+            _connection_options(["https://node-1:9200"])
+            # {"verify_certs": True}
+    """
+    options = {}
+
+    if any(host.lower().startswith(TLS_SCHEME) for host in hosts):
+        verify_certs = os.getenv("OPENSEARCH_VERIFY_CERTS", "true").lower() != "false"
+        options["verify_certs"] = verify_certs
+
+        ca_certs = os.getenv("OPENSEARCH_CA_CERTS")
+        if ca_certs:
+            options["ca_certs"] = ca_certs
+
+        if not verify_certs:
+            options["ssl_show_warn"] = False
+
+    username = os.getenv("OPENSEARCH_USERNAME")
+    password = os.getenv("OPENSEARCH_PASSWORD")
+
+    if username and password:
+        options["http_auth"] = (username, password)
+
+    return options
+
+
 def get_opensearch_client(hosts, **kwargs):
     """
     Build an OpenSearch client for one or more hosts.
@@ -59,6 +109,10 @@ def get_opensearch_client(hosts, **kwargs):
     Centralizes the ``OpenSearch(hosts=[...])`` construction so that multi-node
     clusters are supported everywhere: ``opensearch-py`` round-robins over the
     connection pool and skips nodes that are unreachable.
+
+    TLS and basic authentication are configured from the environment, through
+    ``OPENSEARCH_VERIFY_CERTS``, ``OPENSEARCH_CA_CERTS``, ``OPENSEARCH_USERNAME``
+    and ``OPENSEARCH_PASSWORD``. Explicit keyword arguments take precedence.
 
     :param hosts: Comma-separated hosts string, or a list of hosts
     :type hosts: str | list | tuple | None
@@ -72,4 +126,8 @@ def get_opensearch_client(hosts, **kwargs):
 
             client = get_opensearch_client("node-1:9200,node-2:9200")
     """
-    return OpenSearch(hosts=parse_hosts(hosts), **kwargs)
+    parsed_hosts = parse_hosts(hosts)
+    options = _connection_options(parsed_hosts)
+    options.update(kwargs)
+
+    return OpenSearch(hosts=parsed_hosts, **options)

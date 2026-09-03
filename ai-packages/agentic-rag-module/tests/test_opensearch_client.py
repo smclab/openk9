@@ -18,7 +18,24 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from app.utils.opensearch_client import get_opensearch_client, parse_hosts
+
+OPENSEARCH_ENVIRONMENT_VARIABLES = (
+    "OPENSEARCH_VERIFY_CERTS",
+    "OPENSEARCH_CA_CERTS",
+    "OPENSEARCH_USERNAME",
+    "OPENSEARCH_PASSWORD",
+)
+
+
+@pytest.fixture(autouse=True)
+def clean_opensearch_environment(monkeypatch):
+    """The factory reads these at every call and app.server loads the developer's
+    .env at import time, so clear them to keep the assertions machine independent."""
+    for variable in OPENSEARCH_ENVIRONMENT_VARIABLES:
+        monkeypatch.delenv(variable, raising=False)
 
 
 def test_parse_hosts_single_host():
@@ -91,4 +108,114 @@ def test_get_opensearch_client_forwards_extra_kwargs(mock_opensearch):
 
     mock_opensearch.assert_called_once_with(
         hosts=["node-1:9200"], http_compress=True
+    )
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_https_verifies_certificates(mock_opensearch):
+    get_opensearch_client("https://node-1:9200")
+
+    mock_opensearch.assert_called_once_with(
+        hosts=["https://node-1:9200"], verify_certs=True
+    )
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_https_without_certificate_verification(
+    mock_opensearch, monkeypatch
+):
+    monkeypatch.setenv("OPENSEARCH_VERIFY_CERTS", "false")
+
+    get_opensearch_client("https://node-1:9200")
+
+    mock_opensearch.assert_called_once_with(
+        hosts=["https://node-1:9200"], verify_certs=False, ssl_show_warn=False
+    )
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_https_with_ca_bundle(mock_opensearch, monkeypatch):
+    monkeypatch.setenv("OPENSEARCH_CA_CERTS", "/etc/opensearch-certs/ca.pem")
+
+    get_opensearch_client("https://node-1:9200")
+
+    mock_opensearch.assert_called_once_with(
+        hosts=["https://node-1:9200"],
+        verify_certs=True,
+        ca_certs="/etc/opensearch-certs/ca.pem",
+    )
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_http_ignores_tls_settings(mock_opensearch, monkeypatch):
+    """Without an https host the TLS options are left out of the call entirely."""
+    monkeypatch.setenv("OPENSEARCH_VERIFY_CERTS", "false")
+    monkeypatch.setenv("OPENSEARCH_CA_CERTS", "/etc/opensearch-certs/ca.pem")
+
+    get_opensearch_client("node-1:9200")
+
+    mock_opensearch.assert_called_once_with(hosts=["node-1:9200"])
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_basic_auth(mock_opensearch, monkeypatch):
+    monkeypatch.setenv("OPENSEARCH_USERNAME", "opensearch")
+    monkeypatch.setenv("OPENSEARCH_PASSWORD", "s3cret")
+
+    get_opensearch_client("node-1:9200")
+
+    mock_opensearch.assert_called_once_with(
+        hosts=["node-1:9200"], http_auth=("opensearch", "s3cret")
+    )
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_without_password_skips_auth(
+    mock_opensearch, monkeypatch
+):
+    monkeypatch.setenv("OPENSEARCH_USERNAME", "opensearch")
+
+    get_opensearch_client("node-1:9200")
+
+    mock_opensearch.assert_called_once_with(hosts=["node-1:9200"])
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_mixed_schemes_apply_tls_once(mock_opensearch):
+    """A single https node is enough to configure TLS, and the plain node keeps
+    its scheme so opensearch-py does not upgrade it."""
+    get_opensearch_client("node-1:9200,https://node-2:9200")
+
+    mock_opensearch.assert_called_once_with(
+        hosts=["node-1:9200", "https://node-2:9200"], verify_certs=True
+    )
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_multi_host_shares_credentials(
+    mock_opensearch, monkeypatch
+):
+    monkeypatch.setenv("OPENSEARCH_USERNAME", "opensearch")
+    monkeypatch.setenv("OPENSEARCH_PASSWORD", "s3cret")
+
+    get_opensearch_client("https://node-1:9200,https://node-2:9200")
+
+    mock_opensearch.assert_called_once_with(
+        hosts=["https://node-1:9200", "https://node-2:9200"],
+        verify_certs=True,
+        http_auth=("opensearch", "s3cret"),
+    )
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_explicit_kwargs_win_over_environment(
+    mock_opensearch, monkeypatch
+):
+    monkeypatch.setenv("OPENSEARCH_USERNAME", "opensearch")
+    monkeypatch.setenv("OPENSEARCH_PASSWORD", "s3cret")
+
+    get_opensearch_client("node-1:9200", http_auth=("admin", "admin"))
+
+    mock_opensearch.assert_called_once_with(
+        hosts=["node-1:9200"], http_auth=("admin", "admin")
     )

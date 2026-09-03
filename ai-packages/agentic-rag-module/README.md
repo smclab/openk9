@@ -99,9 +99,18 @@ ORIGINS=*
 # Service Endpoints
 # Single host, or a comma-separated list for a multi-node cluster
 # (e.g. opensearch-node-1:9200,opensearch-node-2:9200)
+# Each entry accepts an http:// or https:// scheme; without one, http is assumed
 OPENSEARCH_HOST=opensearch_host:port
 GRPC_DATASOURCE_HOST=grpc_datasource_host:port
 GRPC_EMBEDDING_MODULE_HOST=grpc_embedding_module_host:port
+
+# OpenSearch basic authentication, applied only when both are set
+OPENSEARCH_USERNAME=opensearch
+OPENSEARCH_PASSWORD=opensearch_password
+
+# OpenSearch TLS, honoured only when at least one host uses https://
+OPENSEARCH_VERIFY_CERTS=true
+OPENSEARCH_CA_CERTS=/etc/opensearch-certs/ca.pem
 
 # Observability
 ARIZE_PHOENIX_ENABLED=true
