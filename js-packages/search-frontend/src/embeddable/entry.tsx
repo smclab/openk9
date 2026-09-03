@@ -63,6 +63,7 @@ export class OpenK9 {
       },
       tenant: this.configuration.tenant ?? "",
       useOAuth2: this.configuration.useOAuth2,
+      requireLogin: this.configuration.requireLogin,
       waitForToken: this.configuration.waitForToken,
       callback: this.configuration.callbackClient,
     });
@@ -567,6 +568,8 @@ export type Configuration = {
   token: string | null;
   useQueryAnalysis: boolean;
   useOAuth2: boolean;
+  /** start the OIDC login on load instead of waiting for the Login button */
+  requireLogin: boolean;
   useGenerativeApi: boolean | null | undefined;
   useQueryString: boolean;
   useQueryStringFilters: boolean;
@@ -713,6 +716,7 @@ const defaultConfiguration: Configuration = {
   useGenerativeApi: null,
   useQueryAnalysis: true,
   useOAuth2: true,
+  requireLogin: false,
   useQueryString: true,
   useQueryStringFilters: true,
   useFilterConfiguration: true,
