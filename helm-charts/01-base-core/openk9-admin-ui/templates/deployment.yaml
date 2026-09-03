@@ -30,6 +30,11 @@ spec:
           {{- if .Values.containerSecurityContext }}
           securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
           {{- end }}
+          {{- if .Values.authOrigin }}
+          env:
+            - name: AUTH_ORIGIN
+              value: {{ .Values.authOrigin | quote }}
+          {{- end }}
           ports:
             - containerPort: {{ .Values.service.port }}
               name: http
