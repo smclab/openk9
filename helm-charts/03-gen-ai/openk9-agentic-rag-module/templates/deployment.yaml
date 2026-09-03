@@ -33,6 +33,11 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            {{- if and .Values.opensearch.caCerts.secretName .Values.opensearch.caCerts.key }}
+            - name: opensearch-certs
+              mountPath: /etc/opensearch-certs
+              readOnly: true
+            {{- end }}
           ports:
             - containerPort: {{ .Values.service.port }}
               name: http
@@ -46,6 +51,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.security.adminPasswordSecretName }}
                   key: {{ .Values.security.adminPasswordSecretKey }}
+            - name: {{ .Values.opensearch.keyPasswordEnvName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.opensearch.passwordSecretName }}
+                  key: {{ .Values.opensearch.keyPasswordSecret }}
           ######################  Probes  ######################
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
@@ -93,3 +103,11 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
+        {{- if and .Values.opensearch.caCerts.secretName .Values.opensearch.caCerts.key }}
+        - name: opensearch-certs
+          secret:
+            secretName: {{ .Values.opensearch.caCerts.secretName }}
+            items:
+              - key: {{ .Values.opensearch.caCerts.key }}
+                path: {{ .Values.opensearch.caCerts.key }}
+        {{- end }}

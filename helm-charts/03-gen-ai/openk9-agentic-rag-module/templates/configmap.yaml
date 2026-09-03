@@ -10,12 +10,21 @@ data:
   LOGGING_LEVEL:  {{ .Values.log.level | quote }}
 
   # Opensearch env variables
+  {{- $protocol := .Values.opensearch.protocol | default "http" }}
   {{- if .Values.opensearch.hosts }}
-  OPENSEARCH_HOST: {{ join "," .Values.opensearch.hosts | quote }}
+  {{- $hosts := list }}
+  {{- range .Values.opensearch.hosts }}
+  {{- $hosts = append $hosts (ternary . (printf "%s://%s" $protocol .) (contains "://" .)) }}
+  {{- end }}
+  OPENSEARCH_HOST: {{ join "," $hosts | quote }}
   {{- else }}
-  OPENSEARCH_HOST: "{{ .Values.opensearch.host }}:{{ .Values.opensearch.port }}"
+  OPENSEARCH_HOST: "{{ $protocol }}://{{ .Values.opensearch.host }}:{{ .Values.opensearch.port }}"
   {{- end }}
   OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
+  OPENSEARCH_VERIFY_CERTS: {{ .Values.opensearch.verifyCerts | quote }}
+  {{- if and .Values.opensearch.caCerts.secretName .Values.opensearch.caCerts.key }}
+  OPENSEARCH_CA_CERTS: "/etc/opensearch-certs/{{ .Values.opensearch.caCerts.key }}"
+  {{- end }}
 
   # Grpc env variables
   GRPC_DATASOURCE_HOST: {{ .Values.openk9.datasource.host | quote }}
