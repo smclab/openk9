@@ -25,7 +25,17 @@ export function useOpenK9Client() {
   return React.useContext(OpenK9ClientContext);
 }
 
-const OAUTH2_SETTINGS_ENDPOINT = "/api/datasource/oauth2/settings";
+const OAUTH2_SETTINGS_PATH = "/api/datasource/oauth2/settings";
+
+/**
+ * Prefixes the settings path with the configured tenant, as the other calls of
+ * this client do. An empty tenant keeps the URL relative to the current origin.
+ * Unlike `authFetch`, this strips a trailing slash from the tenant, so it never
+ * produces a double slash.
+ */
+function oauth2SettingsUrl(tenant: string): string {
+  return tenant.replace(/\/+$/, "") + OAUTH2_SETTINGS_PATH;
+}
 
 type OauthConfig = {
   issuerUri: string;
@@ -41,6 +51,7 @@ type OauthSettingsResponse = {
 let userManager: UserManager | null = null;
 let oauth2Enabled = false;
 let oauth2InitPromise: Promise<boolean> | null = null;
+let oauth2InitTenant: string | null = null;
 let cachedAccessToken: string | null = null;
 
 function setCachedAccessToken(token: string | null | undefined) {
@@ -54,18 +65,35 @@ function bindUserManagerEvents(um: UserManager) {
   um.events.addAccessTokenExpired(() => setCachedAccessToken(null));
 }
 
-async function loadOauthConfig(): Promise<OauthConfig | null> {
+async function loadOauthConfig(tenant: string): Promise<OauthConfig | null> {
+  const url = oauth2SettingsUrl(tenant);
   try {
-    const res = await fetch(OAUTH2_SETTINGS_ENDPOINT, {
+    const res = await fetch(url, {
       credentials: "same-origin",
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // unreachable settings are not the same as "OAuth2 disabled": log them so
+      // the integrator can tell a misconfigured tenant from anonymous mode
+      console.error(
+        `[auth] OAuth2 settings request failed: ${res.status} ${res.statusText} on ${url}`,
+      );
+      return null;
+    }
     const data = (await res.json()) as OauthSettingsResponse;
-    if (!data.issuerUri || data.issuerUri === "DISABLED" || !data.clientId) {
+    if (data.issuerUri === "DISABLED") return null;
+    if (!data.issuerUri || !data.clientId) {
+      // a 200 with an unusable body is a misconfiguration, not "OAuth2 off".
+      // the payload itself is never logged: it can carry the client secret
+      console.error(
+        `[auth] OAuth2 settings incomplete from ${url}: missing ${
+          !data.issuerUri ? "issuerUri" : "clientId"
+        }`,
+      );
       return null;
     }
     return { issuerUri: data.issuerUri, clientId: data.clientId };
-  } catch {
+  } catch (err) {
+    console.error(`[auth] OAuth2 settings not loaded from ${url}`, err);
     return null;
   }
 }
@@ -95,42 +123,71 @@ function isRedirectCallback(): boolean {
 
 /**
  * Loads OAuth2 settings and initializes the global UserManager.
- * Resolves to true when authentication is ready (either OAuth2 user available
- * or OAuth2 disabled). Triggers a redirect when an OIDC login is needed and in
- * that case never resolves — the page is leaving.
+ * Resolves to true when authentication is ready — a valid OAuth2 user is
+ * available, or OAuth2 is not in use (disabled on the backend, settings not
+ * reachable, or the host blocks the storage the OIDC flow needs) — and to false
+ * when OAuth2 is enabled but nobody is logged in: the login is then started
+ * explicitly by `authenticate()`, i.e. by the Login button.
+ * With `requireLogin` a missing login starts the OIDC redirect right away, and
+ * the promise never resolves — the page is leaving.
+ * The result is memoized per tenant: a call with a different tenant re-runs the
+ * initialization instead of reusing a configuration loaded from another origin.
  */
-export function initOAuth2(): Promise<boolean> {
-  if (oauth2InitPromise) return oauth2InitPromise;
+export function initOAuth2(
+  tenant: string,
+  requireLogin: boolean,
+): Promise<boolean> {
+  if (oauth2InitPromise && oauth2InitTenant === tenant)
+    return oauth2InitPromise;
+  oauth2InitTenant = tenant;
   oauth2InitPromise = (async () => {
-    const config = await loadOauthConfig();
+    const config = await loadOauthConfig(tenant);
     if (!config) {
       oauth2Enabled = false;
       userManager = null;
       return true;
     }
+
+    let manager: UserManager;
+    try {
+      manager = buildUserManager(config);
+    } catch (err) {
+      // the OIDC stores need sessionStorage, which a host can block (private
+      // mode, third-party iframe): degrade to anonymous instead of rejecting
+      console.error("[auth] OAuth2 UserManager not available", err);
+      oauth2Enabled = false;
+      userManager = null;
+      return true;
+    }
     oauth2Enabled = true;
-    userManager = buildUserManager(config);
-    bindUserManagerEvents(userManager);
+    userManager = manager;
+    bindUserManagerEvents(manager);
 
     try {
       if (isRedirectCallback()) {
-        await userManager.signinRedirectCallback();
+        await manager.signinRedirectCallback();
         window.history.replaceState(
           {},
           document.title,
           window.location.pathname,
         );
       }
-      const user = await userManager.getUser();
+      const user = await manager.getUser();
       if (!user || user.expired) {
         setCachedAccessToken(null);
+        if (requireLogin) {
+          await manager.signinRedirect();
+          // the page is navigating to the identity provider: leave every
+          // caller pending rather than let it run unauthenticated
+          return new Promise<boolean>(() => {});
+        }
         return false;
       }
       setCachedAccessToken(user.access_token);
       return true;
     } catch (err) {
       console.error("[auth] OAuth2 init failed", err);
-      await userManager.removeUser();
+      await manager.removeUser().catch(() => undefined);
       setCachedAccessToken(null);
       return false;
     }
@@ -154,12 +211,14 @@ export function OpenK9Client({
   onAuthenticated,
   tenant,
   useOAuth2 = true,
+  requireLogin = false,
   waitForToken = false,
   callback,
 }: {
   onAuthenticated(): void;
   tenant: string;
   useOAuth2?: boolean;
+  requireLogin?: boolean;
   waitForToken?: boolean;
   callback(): void | null | undefined;
 }) {
@@ -194,7 +253,9 @@ export function OpenK9Client({
       externalTokenWaiters.push(onSet);
     });
 
-  const authInit: Promise<boolean> | null = useOAuth2 ? initOAuth2() : null;
+  const authInit: Promise<boolean> | null = useOAuth2
+    ? initOAuth2(tenant, requireLogin)
+    : null;
   if (authInit) {
     authInit.then((ready) => {
       if (ready) onAuthenticated();
@@ -212,15 +273,21 @@ export function OpenK9Client({
     if (callback) callback();
 
     let headers = init.headers;
-    if (useOAuth2 && oauth2Enabled) {
-      const token = await getAccessToken();
-      if (token) {
-        headers = {
-          Authorization: `Bearer ${token}`,
-          ...init.headers,
-        };
+    if (useOAuth2) {
+      // hold the request until the init settled, otherwise the first wave
+      // fired by the widget render goes out anonymous and onAuthenticated
+      // has to refetch it — the mirror of the waitForToken gate below
+      if (authInit) await authInit;
+      if (oauth2Enabled) {
+        const token = await getAccessToken();
+        if (token) {
+          headers = {
+            Authorization: `Bearer ${token}`,
+            ...init.headers,
+          };
+        }
       }
-    } else if (!useOAuth2) {
+    } else {
       if (waitForToken && !externalToken) {
         await waitForExternalToken();
       }
@@ -241,7 +308,7 @@ export function OpenK9Client({
     authInit,
     async authenticate({ token = "" }: { token?: string }) {
       if (useOAuth2) {
-        if (!userManager) await initOAuth2();
+        if (!userManager) await initOAuth2(tenant, requireLogin);
         await userManager?.signinRedirect();
       } else {
         setExternalToken(token || "");

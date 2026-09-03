@@ -16,13 +16,13 @@
  */
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./App";
-import { initOAuth2 } from "./components/client";
-
-const isOAuth2Enabled = import.meta.env.VITE_OAUTH2_ENABLED !== "false";
+import { App, openk9 } from "./App";
 
 async function bootstrap() {
-  if (isOAuth2Enabled) await initOAuth2();
+  // the widget instance built by App already starts the OAuth2 initialization
+  // with its own tenant: awaiting that promise avoids a second, tenant-less
+  // init here. It is null when the demo runs with OAuth2 disabled.
+  await openk9.client.authInit;
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <App />
