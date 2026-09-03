@@ -177,6 +177,11 @@ resources:
     cpu: 500m
     memory: 256Mi
 
+## @param authOrigin Optional identity provider origin allowed by the Content-Security-Policy (e.g. https://keycloak.example.com).
+## If empty, connect-src and frame-src stay on 'self'.
+##
+authOrigin: ""
+
 autoscaling:
   enabled: false
   minReplicas: 1
