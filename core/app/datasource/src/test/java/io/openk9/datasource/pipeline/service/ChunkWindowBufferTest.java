@@ -189,7 +189,7 @@ class ChunkWindowBufferTest {
 			// self chunk preserved and in order.
 			Assertions.assertEquals(chunks.get(index), windowed.chunk());
 
-			// windows identical to the v1 EmbeddingService computation.
+			// windows identical to the getPreviousWindow / getNextWindow ones.
 			List<WindowEntry> expectedPrevious =
 				EmbeddingService.getPreviousWindow(windowSize, number, chunks);
 			List<WindowEntry> expectedNext =

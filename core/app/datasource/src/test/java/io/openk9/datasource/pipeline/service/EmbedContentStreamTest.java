@@ -39,11 +39,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for the v2 streaming windowing / mapping / batching, driven with
- * synthetic {@code EmbeddedChunk}s (no gRPC / OpenSearch / CDI). The windows are
- * asserted equal to the batch v1 {@link EmbeddingService#getPreviousWindow} /
- * {@link EmbeddingService#getNextWindow}, closing the loop with the pure
- * {@link ChunkWindowBuffer} equivalence already checked by its own test.
+ * Unit tests for the windowing and mapping of {@code embedContentStream},
+ * driven with synthetic {@code EmbeddedChunk}s (no gRPC, OpenSearch or CDI).
+ * The windows are asserted equal to the batch
+ * {@link EmbeddingService#getPreviousWindow} /
+ * {@link EmbeddingService#getNextWindow}, closing the loop with the
+ * {@link ChunkWindowBuffer} equivalence its own test already checks.
  */
 class EmbedContentStreamTest {
 
@@ -67,7 +68,7 @@ class EmbedContentStreamTest {
 			Assertions.assertEquals(number, doc.getInteger("number"));
 			Assertions.assertEquals(chunk.getText(), doc.getString("chunkText"));
 
-			// windows equal to the v1 EmbeddingService computation.
+			// windows equal to the getPreviousWindow / getNextWindow ones.
 			Assertions.assertEquals(
 				windowEntries(EmbeddingService.getPreviousWindow(
 					windowSize, number, chunks)),
@@ -116,7 +117,7 @@ class EmbedContentStreamTest {
 			var chunk = chunks.get(index);
 			var doc = docs.get(index);
 
-			// same fields v1 writes.
+			// same fields mapToPayload writes.
 			Assertions.assertEquals(chunk.getNumber(), doc.getInteger("number"));
 			Assertions.assertEquals(chunk.getTotal(), doc.getInteger("total"));
 			Assertions.assertEquals(chunk.getText(), doc.getString("chunkText"));
@@ -131,7 +132,7 @@ class EmbedContentStreamTest {
 			// the source document is merged.
 			Assertions.assertEquals("a title", doc.getString("title"));
 
-			// v2 additions: text modality, no binary discriminator.
+			// EmbedContent additions: text modality, no binary discriminator.
 			Assertions.assertEquals("text", doc.getString("media_type"));
 			Assertions.assertFalse(doc.containsKey("fileId"));
 		}

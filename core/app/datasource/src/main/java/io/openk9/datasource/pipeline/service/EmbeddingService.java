@@ -182,23 +182,13 @@ public class EmbeddingService {
 	 * {@code EmbedContentRequest} (text and/or binary refs), drives the
 	 * server-streaming {@code EmbedContent} through the incremental windowing of
 	 * {@link ChunkWindowBuffer}, and emits the finalized chunk-docs <b>one at a
-	 * time</b>, each a {@code byte[]} JSON object.
+	 * time</b>. One doc per item keeps every emission demand-driven; batching
+	 * the writes is the writer's business. The stream is backpressured by the
+	 * gRPC demand, so memory stays {@code O(windowSize)}.
 	 *
-	 * <p>One doc per item is a deliberate constraint, not a detail: grouping
-	 * them here would need an operator that emits on a timer, and such an
-	 * operator has to emit even when the consumer holds no demand — which the
-	 * Reactive Streams contract forbids, so it fails the stream instead
-	 * ({@code BackPressureFailure}). Emitting one doc per item keeps every
-	 * emission demand-driven; batching the writes is the writer's business,
-	 * where a timer answers to no demand contract.
-	 *
-	 * <p>The returned {@link Multi} is fully backpressured: the gRPC demand
-	 * bounds the buffer to {@code O(windowSize)} memory.
-	 *
-	 * <p>Unlike {@link #getEmbeddedPayload} this path bypasses the request/reply
-	 * event bus for the stream itself (single-response, cannot stream); it is
-	 * called directly on the CDI bean by {@code EmbeddingProcessor}. The
-	 * configuration lookup still goes through the event bus.
+	 * <p>Unlike {@link #getEmbeddedPayload} the stream bypasses the
+	 * request/reply event bus, which cannot carry one: it is called directly on
+	 * the CDI bean. The configuration lookup still goes through the bus.
 	 *
 	 * @param tenantId   the tenant owning the content
 	 * @param scheduleId the running schedule
@@ -377,19 +367,14 @@ public class EmbeddingService {
 	/**
 	 * The pure stream transform: window each {@code EmbeddedChunk} exactly as
 	 * {@link #mapToPayload} does (via {@link ChunkWindowBuffer}) and encode
-	 * every finalized chunk as one chunk-doc. Free of gRPC / OpenSearch / CDI,
-	 * so it is unit-testable in isolation.
+	 * every finalized chunk as one chunk-doc. Free of gRPC, OpenSearch and CDI,
+	 * so it is testable in isolation. There is no timer and no grouping here:
+	 * every emission is driven by downstream demand.
 	 *
-	 * <p>Every emission is driven by downstream demand: there is no timer and
-	 * no grouping, so no operator here can ever be forced to emit without
-	 * demand. Docs are accumulated into bulks by {@code ChunkStreamWriter},
-	 * which batches on its own count and its own Pekko timer.
-	 *
-	 * <p>On stream failure the docs already emitted are already written (the
-	 * writer acknowledged them); the ones the writer is still holding in its
-	 * batch are dropped, like the lookahead tail still held by
-	 * {@link ChunkWindowBuffer}: neither is worth writing for a document that
-	 * failed and will be reprocessed whole.
+	 * <p>On failure the docs already emitted are already written, while the
+	 * ones still in the writer's batch are dropped, like the lookahead tail
+	 * held by {@link ChunkWindowBuffer}: neither is worth writing for a
+	 * document that will be reprocessed whole.
 	 */
 	static Multi<byte[]> windowAndEncode(
 		Multi<EmbeddingOuterClass.EmbeddedChunk> chunks,

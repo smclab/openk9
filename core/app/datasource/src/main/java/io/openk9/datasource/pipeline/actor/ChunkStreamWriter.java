@@ -42,41 +42,32 @@ import org.opensearch.client.opensearch.core.BulkResponse;
 
 /**
  * Writes the chunks of ONE document to the vector index, accumulating them into
- * bulks. It is spawned as a local child by {@link EmbeddingProcessor}, which is
+ * bulks. Spawned as a local child by {@link EmbeddingProcessor}, which is
  * itself per-document: that is what lets it hold plain per-document state
  * ({@code firstBatch}, {@code wroteAny}, the pending batch) the schedule-scoped
- * {@link DataIndexWriter} could not hold without smearing it across the
- * documents processed concurrently.
+ * {@link DataIndexWriter} could not hold.
  * <p>
- * <b>Batching lives here, and not in the stream, on purpose.</b> A batch is
- * written when it reaches {@link #BATCH_SIZE} docs <em>or</em> when
- * {@link #BATCH_MAX_DELAY} has passed since its first doc, so a slow stream
- * (one embedding per image) stays progressively visible. Expressing that in the
- * reactive chain would take an operator that emits on a timer, and such an
- * operator must emit even when the consumer holds no demand — which Reactive
- * Streams forbids, so it kills the stream instead. An actor answers to no
- * demand contract: here the timer is just another message.
+ * A batch is written at {@link #BATCH_SIZE} docs <em>or</em>
+ * {@link #BATCH_MAX_DELAY} after its first doc, so a slow stream stays
+ * progressively visible. The delay is why batching lives in an actor and not in
+ * the stream: an operator that emits on a timer must emit without demand, which
+ * Reactive Streams forbids, while here the timer is just another message.
  * <p>
- * Each incoming chunk is answered with an {@link Ack} or a {@link Failure}, and
- * the answer is what gates the caller's next chunk. A chunk that is only
- * buffered is acknowledged at once; the chunk that fills a batch is
- * acknowledged when its bulk completes, which is where backpressure bites. The
- * first non-empty batch drops the chunks previously indexed for the content
- * before indexing, so a failure midway through the stream leaves the prior
- * version intact.
+ * Each chunk is answered with an {@link Ack} or a {@link Failure}, and that
+ * answer gates the caller's next chunk: a buffered chunk is acknowledged at
+ * once, the one that fills a batch when its bulk completes. The first non-empty
+ * batch drops what was indexed for the content before inserting, so a failure
+ * midway leaves the prior version intact.
  * <p>
- * <b>The protocol is strictly sequential</b>: the delete of the prior version
- * must complete before any insert, and the writer must not be closed while a
- * bulk is in flight. Callers are not expected to know that ordering, so the
- * actor enforces it itself: while a write is in flight every incoming
- * {@link WriteChunk} / {@link EndStream} is stashed and replayed, in arrival
- * order, as soon as the pending write is answered.
+ * <b>The protocol is sequential</b>: the delete must complete before any
+ * insert, and the writer must not be closed during a bulk. Callers do not need
+ * to know that — while a write is in flight every {@link WriteChunk} /
+ * {@link EndStream} is stashed and replayed in arrival order.
  */
 class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 
-	// Docs per bulk. Small on purpose so the bulk stays bounded and the write
-	// is incremental; the exact value is not load-bearing (the batching policy
-	// is deliberately free).
+	// Docs per bulk: small on purpose, so the bulk stays bounded and the write
+	// is incremental. The exact value is not load-bearing.
 	static final int BATCH_SIZE = 32;
 
 	// A partial batch is written anyway this long after its first doc, so a
@@ -85,9 +76,8 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 
 	private static final Object FLUSH_TIMER_KEY = "flush";
 
-	// The caller keeps a single chunk in flight (ask-per-chunk), so the stash
-	// only ever holds the message that raced with a pending write; the capacity
-	// is a safety margin, not a working size.
+	// One chunk in flight means the stash only holds the message that raced
+	// with a pending write: this capacity is a margin, not a working size.
 	private static final int STASH_CAPACITY = 32;
 
 	private static final Logger log = Logger.getLogger(ChunkStreamWriter.class);
@@ -359,26 +349,17 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 	}
 
 	/**
-	 * Closes the document.
+	 * Closes the document. The New event is emitted only when at least one
+	 * batch was written: a zero-chunk stream indexed nothing, so signalling a
+	 * creation would be spurious.
 	 * <p>
-	 * The New event (the one the single-bulk write emits) is emitted only when
-	 * at least one batch was actually written: a zero-chunk stream indexed
-	 * nothing, so signalling a creation would be spurious.
-	 * <p>
-	 * <b>A zero-chunk stream is a success, not a failure.</b> This is a
-	 * deliberate difference from the single-response {@code GetMessages} path,
-	 * where an empty response failed the document
-	 * ("No chunks created from this payload"). Here the document is answered
-	 * {@code Done} and the index is left untouched, which means:
-	 * <ul>
-	 *   <li>on a first indexing the content is simply absent from the index;</li>
-	 *   <li>on a reprocessing the <em>previously indexed version survives</em>,
-	 *   because the delete is bound to the first non-empty batch.</li>
-	 * </ul>
-	 * That is what makes an immediate module error harmless (the indexed
-	 * version is not dropped before knowing there is a replacement), and it is
-	 * the reason the outcome is only logged, at WARN, and not turned into a
-	 * scheduling failure.
+	 * <b>A zero-chunk stream is a success, not a failure</b>, unlike the
+	 * single-response {@code GetMessages} path where an empty response failed
+	 * the document. The document is answered {@code Done} and the index left
+	 * untouched: on a first indexing the content is absent, on a reprocessing
+	 * the previously indexed version survives, because the delete is bound to
+	 * the first non-empty batch. That is what makes an immediate module error
+	 * harmless, and the reason the outcome is only logged at WARN.
 	 */
 	private Behavior<Command> onEndStream(EndStream endStream) {
 
@@ -426,12 +407,11 @@ class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 	}
 
 	/**
-	 * Ends the write in flight and hands the actor back to whatever was stashed
-	 * while it ran: this is the single point where the write slot is released,
-	 * so the sequential protocol cannot be bypassed by adding a path.
-	 * <p>
-	 * A timer flush has no caller waiting on it, so a failure there is kept and
-	 * given to the next one: the stream still fails, one chunk later.
+	 * Ends the write in flight and replays what was stashed while it ran: the
+	 * single point where the write slot is released, so no added path can
+	 * bypass the sequential protocol. A timer flush has nobody waiting, so a
+	 * failure there is kept for the next caller: the stream still fails, one
+	 * chunk later.
 	 */
 	private Behavior<Command> completeWrite(Response response) {
 

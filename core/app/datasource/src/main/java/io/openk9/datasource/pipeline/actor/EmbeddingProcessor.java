@@ -41,19 +41,15 @@ import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 import org.jboss.logging.Logger;
 
 /**
- * Terminal streaming processor of the embedding path. It drives the
- * server-streaming {@code EmbedContent} through {@link EmbeddingService
- * #embedContentStream} and hands each matured chunk-doc to its own
- * {@link ChunkStreamWriter} child, spawned per document as this processor
- * itself is. The child accumulates the docs and writes them in bulks; grouping
- * them here, in the stream, would take a time-based operator that emits without
- * demand and kills the stream.
+ * Terminal streaming processor of the embedding path: drives
+ * {@link EmbeddingService#embedContentStream} and hands each chunk-doc to its
+ * own {@link ChunkStreamWriter} child, spawned per document as this processor
+ * itself is.
  * <p>
- * Backpressure is {@code transformToUniAndConcatenate} + a Pekko ask per chunk:
- * exactly one chunk is in flight, and a chunk that triggers a bulk is not
- * answered until that bulk completes, so the stream waits on the write and on
- * nothing else. When the stream is exhausted it closes the child and, only once
- * the child confirms, emits a single {@link Processor.Complete}; on error a
+ * One ask per chunk keeps exactly one chunk in flight, and the chunk that
+ * triggers a bulk is answered only when that bulk completes: the stream waits
+ * on the write. Once exhausted, it closes the child and emits a single
+ * {@link Processor.Complete} when the child confirms, or a
  * {@link Processor.Failure}.
  */
 public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {

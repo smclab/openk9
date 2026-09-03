@@ -36,22 +36,18 @@ import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 
 /**
  * Writes into the data index the one document a work stage hands over, or drops
- * it when the source no longer has it.
+ * it when the source no longer has it: the enrich pipeline, whose documents
+ * carry no vector, and the delete path of every scheduling type. An embedded
+ * document is written by {@link ChunkStreamWriter}, but its deletion still
+ * lands here, because a deleted document skips the processor chain.
  * <p>
- * It is the writer of the enrich pipeline, whose documents carry no vector, and
- * the delete path of every scheduling type: an embedded document is written by
- * {@link ChunkStreamWriter}, one bulk per batch of chunks, but its deletion
- * still lands here, because a deleted document skips the processor chain
- * altogether.
- * <p>
- * Both paths start by dropping whatever was indexed for the content id. The
+ * Both paths start by dropping whatever was indexed for the content id:
  * documents carry no {@code _id} of their own, so without that delete a second
- * run of the same content would add a copy instead of replacing it.
+ * run would add a copy instead of replacing.
  * <p>
- * One instance serves the whole scheduling and can have the writes of several
- * documents in flight at once. It holds no per-document field: every step
- * carries its own held message, so two documents cannot smear their state onto
- * each other.
+ * One instance serves the whole scheduling, with several writes in flight. It
+ * holds no per-document field — every step carries its own held message — so
+ * two documents cannot smear their state onto each other.
  */
 public class DataIndexWriter extends AbstractBehavior<Writer.Command> {
 

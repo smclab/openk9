@@ -22,30 +22,22 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * Incremental "previous/next" chunk windowing with a fixed lookahead.
+ * Incremental "previous/next" chunk windowing with a fixed lookahead: the
+ * streaming counterpart of the batch windows of
+ * {@code EmbeddingService.mapToPayload}.
  *
- * <p>This is the streaming counterpart of the batch windows built today by
- * {@code EmbeddingService.mapToPayload} (via {@code getPreviousWindow} and
- * {@code getNextWindow}). Chunks are offered one at a time, in stream order,
- * and each chunk is emitted (finalized) as soon as its full next-window is
- * known: chunk {@code N} is finalized when chunk {@code N + windowSize} has
- * arrived, or when the stream is closed via {@link #flush()}.
+ * <p>Chunks are offered one at a time, in stream order, and each is finalized
+ * as soon as its full next-window is known: chunk {@code N} when chunk
+ * {@code N + windowSize} arrives, or on {@link #flush()}. The windows are
+ * identical to the batch ones for the same sequence, but memory stays
+ * {@code O(windowSize)}: the buffer holds at most {@code 2 * windowSize + 1}
+ * chunks. A {@code windowSize} of {@code 0} finalizes every chunk on arrival,
+ * with empty windows.
  *
- * <p>The windows produced are identical to the batch version for the same
- * chunk sequence, but memory stays {@code O(windowSize)} instead of
- * {@code O(content)}: at any time the buffer holds at most
- * {@code 2 * windowSize + 1} chunks. A {@code windowSize} of {@code 0}
- * degenerates to pure incremental emission (each chunk finalized on arrival,
- * with empty windows).
- *
- * <p>Neighbours are counted on what has actually been received; the total
- * number of chunks is never assumed (it is optional in the {@code EmbedContent}
- * contract).
- *
- * <p>The class is generic over the caller's chunk type {@code T} (which may
- * carry the vector, {@code fileId}, etc.). Window entries expose only the
- * fields relevant to a window, {@code number} and {@code text}, derived from
- * {@code T} through the mapper passed at construction.
+ * <p>Neighbours are counted on what has been received: the total number of
+ * chunks is never assumed, being optional in the {@code EmbedContent} contract.
+ * Window entries expose only {@code number} and {@code text}, derived from the
+ * caller's chunk type through the mapper passed at construction.
  *
  * <p>Not thread-safe: a single stream must be driven from one thread at a time.
  *
@@ -194,8 +186,8 @@ public final class ChunkWindowBuffer<T> {
 	}
 
 	/**
-	 * Window-relevant view of a chunk: the same pair written today by
-	 * {@code EmbeddingService.mapToChunkWindowObject}.
+	 * Window-relevant view of a chunk: the same pair
+	 * {@code EmbeddingService.mapToChunkWindowObject} writes.
 	 *
 	 * @param number the progressive chunk number (1..N over the stream)
 	 * @param text   the chunk text
