@@ -26,6 +26,24 @@ from typing import Annotated
 from urllib.parse import urlparse, urlunparse
 
 import uvicorn
+from dotenv import load_dotenv
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Header,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from opensearchpy.exceptions import NotFoundError
+from phoenix.otel import register
+from sse_starlette.sse import EventSourceResponse
+
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
 )
@@ -47,22 +65,6 @@ from app.utils.query_validation import (
     sanitize_input,
 )
 from app.utils.scheduler import start_document_deletion_scheduler
-from dotenv import load_dotenv
-from fastapi import (
-    Depends,
-    FastAPI,
-    File,
-    Header,
-    HTTPException,
-    Request,
-    UploadFile,
-    status,
-)
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from phoenix.otel import register
-from sse_starlette.sse import EventSourceResponse
 
 load_dotenv()
 
@@ -870,9 +872,7 @@ async def get_chat(
             "chat_id": chat_id,
             "messages": messages,
             "retrieve_from_uploaded_documents": (
-                messages[-1]["retrieve_from_uploaded_documents"]
-                if messages
-                else None
+                messages[-1]["retrieve_from_uploaded_documents"] if messages else None
             ),
         }
 
@@ -962,7 +962,7 @@ async def delete_chat(
         response = open_search_client.delete_by_query(
             index=index_name, body=delete_messages_query
         )
-    except OpenSearch.exceptions.NotFoundError:
+    except NotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found.",
