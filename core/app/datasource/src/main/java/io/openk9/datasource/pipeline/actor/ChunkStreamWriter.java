@@ -53,16 +53,51 @@ import org.opensearch.client.opensearch.core.BulkResponse;
  * the stream: an operator that emits on a timer must emit without demand, which
  * Reactive Streams forbids, while here the timer is just another message.
  * <p>
- * Each chunk is answered with an {@link Ack} or a {@link Failure}, and that
- * answer gates the caller's next chunk: a buffered chunk is acknowledged at
- * once, the one that fills a batch when its bulk completes. The first non-empty
- * batch drops what was indexed for the content before inserting, so a failure
- * midway leaves the prior version intact.
+ * How the three inbound messages move the state:
+ *
+ * <pre>{@code
+ * WriteChunk --> a write in flight? --yes--> stash
+ *                  |no
+ *                  v
+ *            pending += docs of this chunk
+ *                  |
+ *                  +-- still below BATCH_SIZE --> arm the timer if the batch
+ *                  |                              was empty, then Ack at once:
+ *                  |                              the stream pulls the next one
+ *                  |
+ *                  +-- BATCH_SIZE reached ------> flush(caller waits for it)
+ *
+ * FlushTick  --> a write in flight, or nothing pending? --> dropped
+ *                  |otherwise
+ *                  v
+ *            flush(nobody waits for it)
+ *
+ * EndStream  --> a write in flight? --yes--> stash
+ *                  |no
+ *                  +-- pending left --> stash, then flush(nobody): the tail,
+ *                  |                    and the replayed close finds it empty
+ *                  |
+ *                  +-- nothing left --> New event if wroteAny, WARN if not,
+ *                                       then stopped
+ *
+ * flush(ackTo) --> cancel the timer, drain pending
+ *                  |
+ *                  +-- first batch ----> deleteByContentId --> bulk
+ *                  +-- later batches ------------------------> bulk
+ *                                                               |
+ *                                                               v
+ *                                          Ack or Failure to ackTo, if any,
+ *                                          then replay whatever was stashed
+ * }</pre>
+ *
+ * Two invariants the diagram encodes. The answer to a chunk is what gates the
+ * caller's next one, so a buffered chunk is acknowledged at once and the one
+ * that fills a batch only when its bulk completes: that is where backpressure
+ * bites. And the delete of the previous version rides on the first non-empty
+ * batch, so a failure midway leaves the prior version intact.
  * <p>
- * <b>The protocol is sequential</b>: the delete must complete before any
- * insert, and the writer must not be closed during a bulk. Callers do not need
- * to know that — while a write is in flight every {@link WriteChunk} /
- * {@link EndStream} is stashed and replayed in arrival order.
+ * A flush the timer started has nobody waiting on it: a failure there is kept
+ * and handed to the next caller, so the stream still fails, one chunk later.
  */
 class ChunkStreamWriter extends AbstractBehavior<ChunkStreamWriter.Command> {
 
