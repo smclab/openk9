@@ -60,6 +60,11 @@ service:
 
 ## Opensearch configuration
 opensearch:
+  ## Scheme used to reach Opensearch. It is applied to `host`/`port` and to every
+  ## `hosts` entry that does not already carry a scheme of its own.
+  ## @param opensearch.protocol Scheme used to reach Opensearch, `http` or `https`
+  ##
+  protocol: "http"
   host: "opensearch-cluster-master-headless"
   port: "9200"
   ## List of "host:port" entries for a multi-node Opensearch cluster.
@@ -72,8 +77,20 @@ opensearch:
   hosts: []
   username: "opensearch"
   passwordSecretName: "opensearch-password"
-  keyPasswordSecret: "password"
-  keyPasswordEnvName: "QUARKUS_OPENSEARCH_PASSWORD"
+  keyPasswordSecret: "OPENSEARCH_INITIAL_ADMIN_PASSWORD"
+  keyPasswordEnvName: "OPENSEARCH_PASSWORD"
+  ## @param opensearch.verifyCerts Verify the Opensearch TLS certificate. Only honoured when the scheme is `https`
+  ##
+  verifyCerts: true
+  ## CA bundle used to verify the Opensearch certificate, for internal or
+  ## self-signed authorities. Leave both fields empty to verify against the
+  ## system authorities and mount nothing.
+  ## @param opensearch.caCerts.secretName Name of the secret holding the CA bundle
+  ## @param opensearch.caCerts.key Name of the key inside the secret holding the CA bundle
+  ##
+  caCerts:
+    secretName: ""
+    key: ""
 
 ## Security configuration
 security:

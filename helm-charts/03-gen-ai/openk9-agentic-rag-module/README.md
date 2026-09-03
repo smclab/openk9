@@ -78,13 +78,17 @@ To configure connection to Opensearch following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `opensearch.protocol`    | Scheme used to reach Opensearch, `http` or `https`. Applied to `opensearch.host` and to every `opensearch.hosts` entry that does not already carry a scheme                             | `http`            |
 | `opensearch.host`    | Opensearch host. Ignored when `opensearch.hosts` is set                             | `opensearch-cluster-master-headless`            |
 | `opensearch.port`  | Port where Opensearch is exposed. Ignored when `opensearch.hosts` is set                                    | `9200` |
 | `opensearch.hosts`  | List of `host:port` entries for a multi-node Opensearch cluster. When set, it takes precedence over `opensearch.host`/`opensearch.port`                                    | `[]` |
 | `opensearch.username`  | Opensearch user                                                                               | `opensearch`             |
 | `opensearch.passwordSecretName` | Name of the secret where password is stored                            | `opensearch-password`                       |
 | `opensearch.keyPasswordSecret`       | Name of the key inside the secret where password is stored               | `OPENSEARCH_INITIAL_ADMIN_PASSWORD`                    |
-| `opensearch.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_OPENSEARCH_PASSWORD`   |
+| `opensearch.keyPasswordEnvName`       | Name of environment variable where password is set       | `OPENSEARCH_PASSWORD`   |
+| `opensearch.verifyCerts`       | Verify the Opensearch TLS certificate. Only honoured when the scheme is `https`       | `true`   |
+| `opensearch.caCerts.secretName`       | Name of the secret holding the CA bundle used to verify the Opensearch certificate. Empty verifies against the system authorities and mounts nothing       | `""`   |
+| `opensearch.caCerts.key`       | Name of the key inside the secret holding the CA bundle. The file is mounted read-only under `/etc/opensearch-certs`       | `""`   |
 
 To connect to a multi-node Opensearch cluster, list every node under `opensearch.hosts`:
 
@@ -98,6 +102,21 @@ opensearch:
 
 The module distributes requests across the configured nodes and keeps working
 through the remaining ones when a node is unreachable.
+
+To reach a cluster exposed in HTTPS, set the scheme and, when the certificate is
+signed by an internal authority, the secret holding the CA bundle:
+
+```yaml
+opensearch:
+  protocol: "https"
+  caCerts:
+    secretName: "opensearch-ca"
+    key: "ca.pem"
+```
+
+Basic authentication is applied only when `opensearch.username` and the password
+taken from `opensearch.passwordSecretName` are both set. For a self-signed
+certificate that no bundle can validate, set `opensearch.verifyCerts: false`.
 
 
 ### Configure connections to other Openk9 services
