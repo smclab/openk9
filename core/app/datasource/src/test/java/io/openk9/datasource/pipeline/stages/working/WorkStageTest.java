@@ -30,6 +30,7 @@ import io.vertx.core.json.Json;
 import org.apache.pekko.actor.testkit.typed.Effect;
 import org.apache.pekko.actor.testkit.typed.javadsl.BehaviorTestKit;
 import org.apache.pekko.actor.testkit.typed.javadsl.TestInbox;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -101,6 +102,43 @@ class WorkStageTest {
 		Assertions.assertEquals("content-1", working.heldMessage().contentId());
 
 		// only the partial writer is spawned: no ProcessorChain
+		var spawned = workStage.getAllEffects()
+			.stream()
+			.filter(effect -> effect instanceof Effect.SpawnedAnonymous<?>)
+			.toList();
+
+		Assertions.assertEquals(1, spawned.size());
+	}
+
+	@Test
+	void should_hold_the_message_as_working_when_document_has_to_be_deleted() {
+		// setup a WorkStage with test inboxes
+		var replyToInbox = TestInbox.<WorkStage.Response>create();
+		var requesterInbox = TestInbox.<Scheduling.Response>create();
+		var workStage = BehaviorTestKit.create(WorkStage.create(
+			SHARDING_KEY,
+			replyToInbox.getRef(),
+			new WorkStage.Configurations(
+				new LinkedList<>(), (dto, writerAdapter) -> Behaviors.ignore())
+		));
+		workStage.getAllEffects();
+
+		// send a DOCUMENT payload without documentTypes: the document has to be deleted
+		var payload = Json.encodeToBuffer(DataPayload.builder()
+				.type(PayloadType.DOCUMENT)
+				.contentId("content-1")
+				.build())
+			.getBytes();
+
+		workStage.run(new WorkStage.StartWorker(
+			scheduler(), payload, requesterInbox.getRef()));
+
+		// the deletion is held as Working too, so Scheduling can track it
+		var response = replyToInbox.receiveMessage();
+		var working = Assertions.assertInstanceOf(WorkStage.Working.class, response);
+		Assertions.assertEquals("content-1", working.heldMessage().contentId());
+
+		// only the writer is spawned: no ProcessorChain
 		var spawned = workStage.getAllEffects()
 			.stream()
 			.filter(effect -> effect instanceof Effect.SpawnedAnonymous<?>)
