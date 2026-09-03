@@ -1,6 +1,6 @@
 import { css } from "styled-components/macro";
 import { GenericResultItem } from "../components/client";
-import { get } from "lodash";
+import get from "lodash/get";
 import React from "react";
 
 type DateCardProps<E> = {

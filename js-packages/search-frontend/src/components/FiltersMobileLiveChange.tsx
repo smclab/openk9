@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { Tab, translationTab } from "./Tabs";
-import { capitalize } from "lodash";
+import capitalize from "lodash/capitalize";
 import { WhoIsDynamic } from "./FilterCategoryDynamic";
 import { SelectionsAction } from "./useSelections";
 import { useFocusTrap } from "./useFocusTrap";

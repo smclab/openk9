@@ -50,7 +50,8 @@ import {
   ResultsPaginationMemo,
   SkeletonResult,
 } from "../components/ResultListPagination";
-import _, { isEqual } from "lodash";
+import cloneDeep from "lodash/cloneDeep";
+import isEqual from "lodash/isEqual";
 import { RemoveFilters } from "../components/RemoveFilters";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 import SelectComponent from "../components/Select";
@@ -1848,7 +1849,7 @@ function createFilter(filterTokens: SearchToken[]): SearchToken[] {
       const suggestionCategoryId = item.suggestionCategoryId;
 
       if (!groupedTokens[suggestionCategoryId]) {
-        groupedTokens[suggestionCategoryId] = _.cloneDeep(item);
+        groupedTokens[suggestionCategoryId] = cloneDeep(item);
       } else {
         groupedTokens[suggestionCategoryId].values!.push(item.values[0]);
       }

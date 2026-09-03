@@ -11,7 +11,7 @@ import { useDebounce } from "./useDebounce";
 import { useOpenK9Client } from "./client";
 import { useTranslation } from "react-i18next";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
-import { capitalize } from "lodash";
+import capitalize from "lodash/capitalize";
 import { IconsCustom } from "../embeddable/entry";
 
 type FilterCategoryProps = {

@@ -5,7 +5,7 @@ import { DeleteLogo } from "./DeleteLogo";
 import { css } from "styled-components/macro";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
-import { capitalize } from "lodash";
+import capitalize from "lodash/capitalize";
 import { useTranslation } from "react-i18next";
 import { height } from "@fortawesome/free-solid-svg-icons/faFileAlt";
 

@@ -10,7 +10,7 @@ import { useDebounce } from "./useDebounce";
 import { useOpenK9Client } from "./client";
 import { NoFilter, mapSuggestionToSearchToken } from "./FilterCategory";
 import { useTranslation } from "react-i18next";
-import { capitalize } from "lodash";
+import capitalize from "lodash/capitalize";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 import { IconsCustom } from "../embeddable/entry";
 import { Logo } from "./Logo";

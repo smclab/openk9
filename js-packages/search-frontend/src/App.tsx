@@ -1,4 +1,4 @@
-﻿import { debounce } from "lodash";
+﻿import debounce from "lodash/debounce";
 import moment from "moment";
 import React from "react";
 import { useTranslation } from "react-i18next";

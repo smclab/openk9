@@ -1,6 +1,7 @@
 import { useQuery } from "react-query";
 import { useOpenK9Client } from "./client";
-import { groupBy, mapValues } from "lodash";
+import groupBy from "lodash/groupBy";
+import mapValues from "lodash/mapValues";
 import { DetailRendererProps, ResultRendererProps, Template } from "./client";
 
 export type Renderers = {

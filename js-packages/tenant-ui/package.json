@@ -78,6 +78,7 @@
     ]
   },
   "resolutions": {
+    "lodash": "4.18.1",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.0"
   },
