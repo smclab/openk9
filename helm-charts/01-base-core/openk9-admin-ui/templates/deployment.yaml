@@ -26,10 +26,16 @@ spec:
         - name: {{ .Release.Name }}
           image: {{ template "common.images.fullname" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
-          {{- if .Values.backendHost }}
+          {{- if or .Values.backendHost .Values.authOrigin }}
           env:
+            {{- if .Values.backendHost }}
             - name: ENV_HOST
               value: {{ .Values.backendHost | quote }}
+            {{- end }}
+            {{- if .Values.authOrigin }}
+            - name: AUTH_ORIGIN
+              value: {{ .Values.authOrigin | quote }}
+            {{- end }}
           {{- end }}
           ports:
             - containerPort: {{ .Values.service.port }}
