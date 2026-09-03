@@ -55,7 +55,6 @@ public final class RouteAuthorizationMap {
 			var enforcer = switch (r) {
 				case ANY,
 				     DATASOURCE_OAUTH2_SETTINGS,
-				     DATASOURCE_OAUTH2_SETTINGS_JS,
 				     DATASOURCE_CURRENT_BUCKET,
 				     DATASOURCE_TEMPLATES,
 				     SEARCHER,

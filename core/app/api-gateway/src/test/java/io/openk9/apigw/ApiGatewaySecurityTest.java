@@ -142,7 +142,6 @@ class ApiGatewaySecurityTest {
 
 	// virtual hosts
 	private static final String ALABASTA_HOST = "alabasta.localhost";
-	private static final String DRUM_HOST = "drum.localhost";
 	private static final String SABAODY_HOST = "sabaody.localhost";
 	private static final String LOGUETOWN_HOST = "loguetown.localhost";
 	private static final String WATERSEVEN_HOST = "waterseven.localhost";
@@ -170,23 +169,6 @@ class ApiGatewaySecurityTest {
 	@Nested
 	@DisplayName("Oauth2 Tenant Settings Endpoints Tests")
 	class Oauth2SettingsTests {
-
-		@Test
-		@DisplayName("Should return Keycloak JS configuration when requested by 'drum' host")
-		void testDrumTenantSettingsJs() {
-			webTestClient.get()
-				.uri("/oauth2/settings.js")
-				.header(HttpHeaders.HOST, DRUM_HOST)
-				.exchange()
-				.expectStatus().isOk()
-				.expectHeader().contentTypeCompatibleWith("text/javascript")
-				.expectBody(String.class)
-				.value(content -> {
-					assertThat(content).contains("window.KEYCLOAK_URL ='http://drum.localhost:9090';");
-					assertThat(content).contains("window.KEYCLOAK_REALM ='drum';");
-					assertThat(content).contains("window.KEYCLOAK_CLIENT_ID ='openk9';");
-				});
-		}
 
 		@Test
 		@DisplayName("Should return JSON settings with Issuer URI for 'alabasta' tenant")
@@ -234,10 +216,22 @@ class ApiGatewaySecurityTest {
 		@DisplayName("OAuth2 settings route is public")
 		void testOauth2SettingsIsPublic() {
 			webTestClient.get()
-				.uri("/api/datasource/oauth2/settings.js")
+				.uri("/api/datasource/oauth2/settings")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.exchange()
 				.expectStatus().isOk();
+		}
+
+		@Test
+		@DisplayName("Removed OAuth2 settings.js route is no longer public")
+		void testOauth2SettingsJsIsNotPublic() {
+			// the removed path now falls back on the DATASOURCE route,
+			// which requires OAuth2, so an anonymous request is rejected
+			webTestClient.get()
+				.uri("/api/datasource/oauth2/settings.js")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.exchange()
+				.expectStatus().isUnauthorized();
 		}
 
 		@Test

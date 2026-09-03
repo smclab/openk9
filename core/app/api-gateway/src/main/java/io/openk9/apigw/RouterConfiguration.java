@@ -77,11 +77,6 @@ public class RouterConfiguration {
 						.path(ApiRoute.DATASOURCE_OAUTH2_SETTINGS.getAntPattern())
 						.uri("forward:/oauth2/settings")
 				);
-				case DATASOURCE_OAUTH2_SETTINGS_JS -> routes.route(
-					ApiRoute.DATASOURCE_OAUTH2_SETTINGS_JS.name(), r -> r
-						.path(ApiRoute.DATASOURCE_OAUTH2_SETTINGS_JS.getAntPattern())
-						.uri("forward:/oauth2/settings.js")
-				);
 				case DATASOURCE_CURRENT_BUCKET -> routes.route(
 					ApiRoute.DATASOURCE_CURRENT_BUCKET.name(), r -> r
 						.path(ApiRoute.DATASOURCE_CURRENT_BUCKET.getAntPattern())

@@ -61,15 +61,6 @@ public enum ApiRoute {
 	DATASOURCE_OAUTH2_SETTINGS("/api/datasource/oauth2/settings"),
 
 	/**
-	 * Route for the legacy OAuth2 settings JavaScript endpoint.
-	 * Matches requests under {@code /api/datasource/oauth2/settings.js}.
-	 * Does not require authentication.
-	 *
-	 * @deprecated use {@link #DATASOURCE_OAUTH2_SETTINGS} instead
-	 */
-	DATASOURCE_OAUTH2_SETTINGS_JS("/api/datasource/oauth2/settings.js"),
-
-	/**
 	 * Route for the current bucket configuration.
 	 * Matches requests under {@code /api/datasource/buckets/current/**}
 	 */
@@ -179,9 +170,7 @@ public enum ApiRoute {
 				DATASOURCE_CURRENT_BUCKET,
 				DATASOURCE_TEMPLATES);
 			case INGESTION -> List.of(INGESTION, DATASOURCE_PIPELINE_CALLBACK);
-			case PUBLIC -> List.of(
-				DATASOURCE_OAUTH2_SETTINGS,
-				DATASOURCE_OAUTH2_SETTINGS_JS);
+			case PUBLIC -> List.of(DATASOURCE_OAUTH2_SETTINGS);
 		};
 	}
 

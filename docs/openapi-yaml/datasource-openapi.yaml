@@ -3563,22 +3563,6 @@ paths:
         "400":
           description: invalid
       summary: Keycloak Settings
-  /api/datasource/oauth2/settings.js:
-    get:
-      operationId: settings.js
-      tags:
-      - Keycloak Settings JS API
-      responses:
-        "200":
-          description: Keycloak Settings returned
-          content:
-            application/json:
-              schema: {}
-        "404":
-          description: not found
-        "400":
-          description: invalid
-      summary: Settings Js
   /api/datasource/pipeline/callback/{token-id}:
     post:
       parameters:
