@@ -115,8 +115,21 @@ opensearch:
 ```
 
 Basic authentication is applied only when `opensearch.username` and the password
-taken from `opensearch.passwordSecretName` are both set. For a self-signed
-certificate that no bundle can validate, set `opensearch.verifyCerts: false`.
+taken from `opensearch.passwordSecretName` are both set.
+
+If the connection fails on a hostname mismatch, the certificate is trusted but was
+issued for a name other than the one in `opensearch.host`. Reissue it with a SAN
+covering that name, or point `opensearch.host` at a name the certificate already
+covers. Inspect what the cluster presents with:
+
+```bash
+openssl s_client -connect <host>:9200 -showcerts </dev/null 2>/dev/null \
+  | openssl x509 -noout -subject -ext subjectAltName
+```
+
+Turning `opensearch.verifyCerts` off is not the fix for that case: it also drops the
+trust chain, so any certificate is accepted. Keep it for development and for a
+self-signed certificate that no bundle can validate.
 
 
 ### Configure connections to other Openk9 services
