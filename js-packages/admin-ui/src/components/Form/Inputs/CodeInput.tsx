@@ -28,12 +28,7 @@ monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
   esModuleInterop: true,
 });
 
-(async () => {
-  const response = await fetch("https://unpkg.com/@types/react@18.0.24/index.d.ts");
-  const data = await response.text();
-  monaco.languages.typescript.typescriptDefaults.addExtraLib(data, `file:///node_modules/@react/types/index.d.ts`);
-  monaco.languages.typescript.typescriptDefaults.addExtraLib(templateTypeDefinition(), "./template.d.ts");
-})();
+monaco.languages.typescript.typescriptDefaults.addExtraLib(templateTypeDefinition(), "./template.d.ts");
 
 for (const language of ["javascript", "typescript", "json"]) {
   monaco.languages.registerDocumentFormattingEditProvider(language, {

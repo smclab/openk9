@@ -33,5 +33,6 @@ EXPOSE 8080
 USER 1001
 
 # Se ENV_HOST è fornito, compila il template col proxy. Altrimenti usa il config standard.
-# Usiamo envsubst '${ENV_HOST}' per evitare che sovrascriva le variabili interne di nginx come $host
-CMD ["sh", "-c", "if [ -z \"$ENV_HOST\" ]; then cp /etc/nginx/nginx.conf.default /etc/nginx/conf.d/default.conf; else envsubst '${ENV_HOST}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf; fi && nginx -g 'daemon off;'"]
+# Entrambi i rami passano da envsubst: la CSP contiene ${AUTH_ORIGIN}, l'origin
+# dell'identity provider. La lista esplicita evita che envsubst tocchi $host.
+CMD ["sh", "-c", "if [ -z \"$ENV_HOST\" ]; then envsubst '${AUTH_ORIGIN}' < /etc/nginx/nginx.conf.default > /etc/nginx/conf.d/default.conf; else envsubst '${ENV_HOST} ${AUTH_ORIGIN}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf; fi && nginx -g 'daemon off;'"]
