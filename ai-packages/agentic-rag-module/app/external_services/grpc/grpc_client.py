@@ -29,6 +29,10 @@ from app.utils.logger import logger
 
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 
+# The indices this module creates map `vector` as a plain knn_vector, so both
+# the indexed chunks and the queries stay float32.
+VECTOR_DATA_TYPE = embedding_pb2.VECTOR_DATA_TYPE_FLOAT32
+
 
 def query_parser(
     search_query,
@@ -368,12 +372,14 @@ def get_embedding_model_configuration(grpc_host, tenant_id):
         json_config = json_format.MessageToDict(response.jsonConfig)
 
         configuration = {
+            "tenant_id": tenant_id,
             "api_url": api_url,
             "api_key": api_key,
             "model_type": model_type,
             "model": model,
             "vector_size": vector_size,
             "json_config": json_config,
+            "multimodal": response.multimodal,
         }
 
         return configuration
@@ -391,7 +397,9 @@ def get_embedding_model_configuration(grpc_host, tenant_id):
     )
 
 
-def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
+def generate_documents_embeddings(
+    grpc_host, tenant_id, chunk, embedding_model, document
+):
     """
     Generate embeddings for uploaded documents using gRPC embedding service.
 
@@ -401,6 +409,8 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
 
     :param grpc_host: gRPC server host address for the embedding service
     :type grpc_host: str
+    :param tenant_id: Tenant the content belongs to
+    :type tenant_id: str
     :param chunk: Chunking configuration parameters for text segmentation
     :type chunk: dict
     :param embedding_model: Embedding model configuration to use for vector generation
@@ -419,11 +429,13 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
 
         embedded_docs = generate_documents_embeddings(
             grpc_host="localhost:50053",
+            tenant_id="tenant_1",
             chunk={"type": 1, "jsonConfig": json_config},
             embedding_model={
                 "apiKey": api_key,
                 "providerModel": provider_model,
                 "jsonConfig": json_config,
+                "multimodal": False,
             },
             document={
                 "filename": "report.pdf",
@@ -463,7 +475,7 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
         - Vector dimensions must match the expected size in the target vector database
 
     .. seealso::
-        - :class:`embedding_pb2.EmbeddingRequest` gRPC request message
+        - :class:`embedding_pb2.EmbedContentRequest` gRPC request message
         - :class:`embedding_pb2_grpc.EmbeddingStub` gRPC service stub
         - :func:`get_embedding_model_configuration` For retrieving embedding model settings
         - :func:`save_uploaded_documents` For storing embedded documents in OpenSearch
@@ -484,9 +496,13 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
     try:
         with grpc.insecure_channel(grpc_host) as channel:
             stub = embedding_pb2_grpc.EmbeddingStub(channel)
-            response = stub.GetMessages(
-                embedding_pb2.EmbeddingRequest(
-                    chunk=chunk, embeddingModel=embedding_model, text=document["text"]
+            embedded_chunks = stub.EmbedContent(
+                embedding_pb2.EmbedContentRequest(
+                    tenantId=tenant_id,
+                    chunk=chunk,
+                    embeddingModel=embedding_model,
+                    vectorDataType=VECTOR_DATA_TYPE,
+                    text=document["text"],
                 )
             )
 
@@ -497,8 +513,10 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
             file_extension = document.get("file_extension")
 
             documents = []
-            chunks = response.chunks
-            for chunk in chunks:
+            # the stream is consumed inside the channel context: one message
+            # per chunk, in order, and no message at all for a text that
+            # produces no chunk
+            for embedded_chunk in embedded_chunks:
                 timestamp = int(time.time() * 1000)
                 documents.append(
                     {
@@ -508,17 +526,78 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
                         "chat_id": chat_id,
                         "filename": filename,
                         "file_extension": file_extension,
-                        "chunk_number": chunk.number,
-                        "total_chunks": chunk.total,
-                        "chunkText": chunk.text,
-                        "vector": list(chunk.vectors),
+                        "chunk_number": embedded_chunk.number,
+                        "total_chunks": embedded_chunk.total,
+                        "chunkText": embedded_chunk.text,
+                        "vector": list(embedded_chunk.f32.values),
                     }
                 )
 
             return documents
 
     except grpc.RpcError as e:
-        error_message = f"EmbeddingRequest gRPC communication failed: {e.details()}"
+        error_message = f"EmbedContent gRPC communication failed: {e.details()}"
+        logger.error(error_message)
+    except Exception as e:
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=UNEXPECTED_ERROR_MESSAGE,
+    )
+
+
+def generate_query_embedding(grpc_host, tenant_id, embedding_model, text):
+    """
+    Embed a query text into a single vector using the gRPC embedding service.
+
+    Unlike :func:`generate_documents_embeddings`, a query is not chunked: the
+    service answers with exactly one vector, comparable with the vectors in
+    the index.
+
+    :param grpc_host: gRPC server host address for the embedding service
+    :type grpc_host: str
+    :param tenant_id: Tenant the query belongs to
+    :type tenant_id: str
+    :param embedding_model: Embedding model configuration to use for vector generation
+    :type embedding_model: dict
+    :param text: Query text to embed
+    :type text: str
+
+    :return: The query vector, or None when the query has nothing to embed
+    :rtype: list[float] | None
+
+    :raises HTTPException 500: If gRPC communication fails or unexpected error occurs
+
+    .. note::
+        - A text that is empty once cleaned (whitespace, emoji, non-latin
+          scripts) carries nothing to embed: the service answers
+          INVALID_ARGUMENT and this returns None, so the caller can skip the
+          retrieval instead of searching with a meaningless vector.
+
+    .. seealso::
+        - :class:`embedding_pb2.EmbedQueryRequest` gRPC request message
+        - :func:`get_embedding_model_configuration` For retrieving embedding model settings
+    """
+    try:
+        with grpc.insecure_channel(grpc_host) as channel:
+            stub = embedding_pb2_grpc.EmbeddingStub(channel)
+            response = stub.EmbedQuery(
+                embedding_pb2.EmbedQueryRequest(
+                    tenantId=tenant_id,
+                    embeddingModel=embedding_model,
+                    vectorDataType=VECTOR_DATA_TYPE,
+                    text=text,
+                )
+            )
+
+        return list(response.f32.values)
+
+    except grpc.RpcError as e:
+        if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
+            logger.debug(f"EmbedQuery has nothing to embed: {e.details()}")
+            return None
+
+        error_message = f"EmbedQuery gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")

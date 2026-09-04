@@ -85,8 +85,8 @@ def test_uploaded_document_metadata_includes_title_built_from_filename():
         uploaded_documents_retriever, "get_opensearch_client", return_value=client
     ), patch.object(
         uploaded_documents_retriever,
-        "documents_embedding",
-        return_value=[{"vector": [0.1, 0.2]}],
+        "query_embedding",
+        return_value=[0.1, 0.2],
     ):
         documents = retriever._get_relevant_documents(
             "zephyr", run_manager=MagicMock()

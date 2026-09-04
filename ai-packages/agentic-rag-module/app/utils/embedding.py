@@ -18,7 +18,29 @@ from google.protobuf.struct_pb2 import Struct
 
 from app.external_services.grpc.grpc_client import (
     generate_documents_embeddings,
+    generate_query_embedding,
 )
+
+
+def _embedding_model_message(embedding_model_configuration):
+    """Map the embedding model configuration onto the gRPC EmbeddingModel.
+
+    The multimodal flag comes from the searcher configuration and selects the
+    embedder in the embedding module: without it a multimodal model would be
+    served by the text-only path.
+    """
+    provider_model = {
+        "provider": embedding_model_configuration.get("model_type"),
+        "model": embedding_model_configuration.get("model"),
+    }
+
+    return {
+        "apiKey": embedding_model_configuration.get("api_key"),
+        "providerModel": provider_model,
+        "jsonConfig": embedding_model_configuration.get("json_config"),
+        "apiUrl": embedding_model_configuration.get("api_url"),
+        "multimodal": bool(embedding_model_configuration.get("multimodal")),
+    }
 
 
 def documents_embedding(
@@ -95,13 +117,6 @@ def documents_embedding(
         * **embedding_model**: Contains API key, provider model details, and JSON config
         * **provider_model**: Nested structure with provider type and model name
     """
-    api_url = embedding_model_configuration.get("api_url")
-    api_key = embedding_model_configuration.get("api_key")
-    model_type = embedding_model_configuration.get("model_type")
-    model = embedding_model_configuration.get("model")
-    vector_size = embedding_model_configuration.get("vector_size")
-    json_config = embedding_model_configuration.get("json_config")
-
     chunk_json_config = Struct()
     chunk_json_config.update(
         {
@@ -110,16 +125,44 @@ def documents_embedding(
     )
 
     chunk = {"type": 1, "jsonConfig": chunk_json_config}
-    provider_model = {"provider": model_type, "model": model}
-    embedding_model = {
-        "apiKey": api_key,
-        "providerModel": provider_model,
-        "jsonConfig": json_config,
-        "apiUrl": api_url,
-    }
 
     embedded_documents = generate_documents_embeddings(
-        grpc_host_embedding, chunk, embedding_model, document
+        grpc_host_embedding,
+        embedding_model_configuration.get("tenant_id"),
+        chunk,
+        _embedding_model_message(embedding_model_configuration),
+        document,
     )
 
     return embedded_documents
+
+
+def query_embedding(grpc_host_embedding, embedding_model_configuration, text):
+    """
+    Embed a query text into the single vector used for the vector search.
+
+    A query is not chunked: it maps onto one vector, so there is no chunk list
+    to index into.
+
+    :param grpc_host_embedding: gRPC server host address for the embedding service
+    :type grpc_host_embedding: str
+    :param embedding_model_configuration: Dictionary containing embedding model settings
+    :type embedding_model_configuration: dict
+    :param text: Query text to embed
+    :type text: str
+
+    :return: The query vector, or None when the query has nothing to embed
+    :rtype: list[float] | None
+
+    :raises HTTPException 500: If gRPC communication fails or unexpected error occurs
+
+    .. seealso::
+        - :func:`generate_query_embedding` The underlying gRPC embedding function
+        - :func:`documents_embedding` For embedding a document into its chunks
+    """
+    return generate_query_embedding(
+        grpc_host_embedding,
+        embedding_model_configuration.get("tenant_id"),
+        _embedding_model_message(embedding_model_configuration),
+        text,
+    )

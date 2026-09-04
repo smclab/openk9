@@ -1,6 +1,6 @@
 from typing import List
 
-from app.utils.embedding import documents_embedding
+from app.utils.embedding import query_embedding
 from app.utils.opensearch_client import get_opensearch_client
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
@@ -71,7 +71,7 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
     .. seealso::
         - :class:`BaseRetriever` Base LangChain retriever class
         - :class:`OpenSearchRetriever` For general document retrieval
-        - :func:`documents_embedding` For generating query embeddings
+        - :func:`query_embedding` For generating query embeddings
     """
 
     opensearch_host: str
@@ -112,22 +112,16 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
         """
         open_search_client = get_opensearch_client(self.opensearch_host)
 
-        document = {
-            "text": self.search_text,
-        }
-
-        embedded_query = documents_embedding(
+        vector_query = query_embedding(
             grpc_host_embedding=self.grpc_host_embedding,
             embedding_model_configuration=self.embedding_model_configuration,
-            document=document,
+            text=self.search_text,
         )
 
-        # Degenerate input (empty/whitespace/emoji-only) produces no chunks and
-        # therefore an empty embedding; with no vector there is nothing to retrieve.
-        if not embedded_query:
+        # Degenerate input (empty/whitespace/emoji-only) has nothing to embed;
+        # with no vector there is nothing to retrieve.
+        if vector_query is None:
             return []
-
-        vector_query = embedded_query[0].get("vector")
 
         documents = []
 

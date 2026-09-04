@@ -18,12 +18,12 @@
 """Robustness tests for degenerate chat input.
 
 Degenerate input (empty, whitespace-only, emoji-only, zero-width, full-width,
-mixed-script, ...) is chunked by the embedding service into *zero* chunks, so
-``documents_embedding`` returns an empty list. Indexing that empty list
-(``embedded_query[0]`` in the retrievers, ``response.content[0]`` in the LLM
-response node) used to raise ``IndexError: list index out of range`` and surface
-as an ``ERROR`` event on the ``/api/rag/chat`` SSE stream. These tests pin the
-guards that let the pipeline proceed instead of crashing.
+mixed-script, ...) carries nothing to embed: the embedding service answers
+INVALID_ARGUMENT and ``query_embedding`` returns no vector. Indexing the empty
+embedding (``embedded_query[0]`` in the retrievers, ``response.content[0]`` in
+the LLM response node) used to raise ``IndexError: list index out of range`` and
+surface as an ``ERROR`` event on the ``/api/rag/chat`` SSE stream. These tests
+pin the guards that let the pipeline proceed instead of crashing.
 """
 
 from unittest.mock import MagicMock, patch
@@ -47,7 +47,7 @@ from app.rag.retrievers.uploaded_documents_retriever import (
 )
 
 # The 12 inputs reported as crashing in issue #2238: after normalization they
-# carry no textual token, so the embedding service returns zero chunks.
+# carry no textual token, so the embedding service has nothing to embed.
 DEGENERATE_INPUTS = [
     ("empty", ""),
     ("spaces", "     "),
@@ -112,12 +112,12 @@ RETRIEVERS = [
     ids=[module.__name__.rsplit(".", 1)[-1] for module, _ in RETRIEVERS],
 )
 def test_retriever_returns_empty_when_embedding_is_empty(module, factory):
-    """An empty embedding must short-circuit to no documents, never IndexError."""
+    """A missing vector must short-circuit to no documents, never IndexError."""
     retriever = factory("")
     client = MagicMock()
 
     with patch.object(module, "get_opensearch_client", return_value=client), patch.object(
-        module, "documents_embedding", return_value=[]
+        module, "query_embedding", return_value=None
     ):
         documents = retriever._get_relevant_documents("", run_manager=MagicMock())
 
@@ -136,7 +136,7 @@ def test_guardrail_retriever_survives_degenerate_input(label, search_text):
     with patch.object(
         guardrail_documents_retriever, "get_opensearch_client", return_value=MagicMock()
     ), patch.object(
-        guardrail_documents_retriever, "documents_embedding", return_value=[]
+        guardrail_documents_retriever, "query_embedding", return_value=None
     ):
         documents = retriever._get_relevant_documents(
             search_text, run_manager=MagicMock()
