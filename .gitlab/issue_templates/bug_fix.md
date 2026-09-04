@@ -1,35 +1,53 @@
-## Summary
+## Sommario
 
-(Summarize the bug encountered concisely)
+(Riassunto conciso del difetto incontrato)
 
-## Steps to reproduce
+## Passi per riprodurlo
 
-(How one can reproduce the issue - this is very important)
+(Come si riproduce il problema?)
 
-## Target Environment
+## Ambiente di riferimento
 
-(Describe the environment where the bug was observed: OpenK9 version, deployment type (Docker Compose / Kubernetes), OS, browser if applicable, and any relevant configuration details)
+(Descrivi l'ambiente in cui il difetto è stato osservato: 
+versione di OpenK9, tipo di deploy (Docker Compose / Kubernetes), 
+sistema operativo, browser se pertinente, 
+e ogni dettaglio di configurazione rilevante)
 
-## What is the current bug behavior?
+## Qual è il comportamento attuale?
 
-(What actually happens)
+(Cosa accade a causa di questo difetto?)
 
-## What is the expected correct behavior?
+## Qual è il comportamento corretto atteso?
 
-(What you should see instead)
+(Cosa dovrebbe accadere invece)
 
-## Test cases
+## Criteri di accettazione
 
-In this section, we can list the test cases (precise test cases
-) to validate the correct functioning of the bug fix.
+(La **Definition of Done** della correzione. Servono anche a guidare 
+l'implementazione in BDD/TDD e a diventare la checklist di UAT della merge 
+request che chiude la issue.
 
-## Relevant logs and/or screenshots
+Il **primo scenario è la riproduzione del difetto**, scritto in modo che 
+fallisca prima della correzione e passi dopo: è la sola prova che la causa è 
+stata toccata e non mascherata. In **Gherkin**, con le keyword in inglese e non 
+tradotte.
 
-(Paste any relevant logs - use code blocks (```) to format console output, logs, and code, as
-it's very hard to read otherwise.)
+    Scenario: la cancellazione di un documento produce un solo esito
+      Given un documento che la sorgente non ha più
+      When la scheduling lo lavora
+      Then il work stage riceve un solo esito, e non un fallimento seguito da un successo
 
-## Possible fixes
+Gli altri criteri seguono la stessa forma. I vincoli che non hanno un innesco — 
+un valore di default, un limite, un formato — restano un elenco in linguaggio 
+naturale.)
 
-(If you can, link to the line of code that might be responsible for the problem)
+## Log e screenshot rilevanti
 
-/label ~bug-fix 
+(Incolla i log che servono — usa i blocchi di codice (```) per formattare output
+di console, log e codice, altrimenti sono illeggibili.)
+
+## Possibili correzioni
+
+(Se puoi, collega la riga di codice che potrebbe essere responsabile del problema)
+
+/label ~"Bug fix"

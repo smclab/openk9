@@ -1,35 +1,35 @@
-## Summary
+## Sommario
 
-Brief description of the test to be executed.
+Breve descrizione del test da eseguire.
 
-- **Objective:**  
-- **Motivation:** (feature, bugfix, regression, upgrade, etc.)  
-- **References:** (issue/MR/release)  
-
----
-
-## Components
-
-Components involved:
-
-- **Modules/Services:**  
-- **APIs/Database:**  
-- **Environment:** (DEV / TEST / UAT / PROD-like)  
+- **Obiettivo:**  
+- **Motivazione:** (feature, correzione, regressione, aggiornamento, ecc.)  
+- **Riferimenti:** (issue/MR/release)  
 
 ---
 
-## Preconditions
+## Componenti
 
-- **Deployed version:**  
-- **Required configurations:**  
-- **Test data:**  
-- **Users/Roles:**  
+Componenti coinvolti:
+
+- **Moduli/Servizi:**  
+- **API/Database:**  
+- **Ambiente:** (DEV / TEST / UAT / simile a PROD)  
 
 ---
 
-## Actions
+## Precondizioni
 
-Steps to execute the test:
+- **Versione deployata:**  
+- **Configurazioni richieste:**  
+- **Dati di prova:**  
+- **Utenti/Ruoli:**  
+
+---
+
+## Azioni
+
+Passi per eseguire il test:
 
 1.  
 2.  
@@ -37,27 +37,27 @@ Steps to execute the test:
 
 ---
 
-## Expected Result
+## Risultato atteso
 
-- **Expected behavior:**  
-- **Expected final outcome:**  
-
----
-
-## Test Cases
-
-### TC01 – Title
-- **Steps:**  
-- **Expected:**  
-- **Outcome:** ☐ PASS ☐ FAIL  
-
-*(Add additional test cases if needed)*
+- **Comportamento atteso:**  
+- **Esito finale atteso:**  
 
 ---
 
-## Risks / Notes
+## Casi di test
 
-- Potential risks or impacts:  
+### TC01 – Titolo
+- **Passi:**  
+- **Atteso:**  
+- **Esito:** ☐ PASS ☐ FAIL  
+
+*(Aggiungi altri casi di test se servono)*
+
+---
+
+## Rischi / Note
+
+- Rischi o impatti possibili:  
 
 ---
 

@@ -1,33 +1,44 @@
-## Summary and Goals
+## Sommario e obiettivi
 
-(This section provides an overview of the long-term objective or vision this roadmap item supports. Explain how this aligns with company or product goals and the strategic value it delivers.)
+(Questa sezione dà una visione d'insieme dell'obiettivo di lungo periodo che questa voce di roadmap sostiene. 
+Spiega come si allinea agli obiettivi aziendali o di prodotto e 
+quale valore strategico porta.)
 
-## Scope and Milestones
+## Perimetro e milestone
 
-(Define the boundaries of this roadmap item. Break the work into high-level milestones or phases, with brief descriptions and rough timelines if available.)
+(Definisci i confini di questa voce di roadmap. 
+Spezza il lavoro in milestone o fasi di alto livello, 
+con una breve descrizione e, se disponibili, tempi indicativi.)
 
-## Success Criteria
+## Criteri di successo
 
-(List the measurable outcomes that will define success. This could include adoption targets, performance improvements, team enablement, or customer impact.)
+(Elenca gli esiti misurabili che definiscono il successo. 
+Possono essere obiettivi di adozione, miglioramenti di performance, 
+abilitazione del team, o impatto sul cliente.)
 
-## Dependencies and Risks
+## Dipendenze e rischi
 
-(List any teams, initiatives, or technical components this roadmap item depends on. Identify potential risks and proposed mitigations.)
+(Elenca i team, le iniziative o i componenti tecnici da cui questa voce di 
+roadmap dipende. Individua i rischi possibili e le mitigazioni proposte.)
 
-## Stakeholders
+## Stakeholder
 
-(Include the key stakeholders involved — teams, individuals, or roles — along with their responsibilities or interest in this roadmap item.)
+(Indica gli stakeholder principali coinvolti — team, persone o ruoli — 
+con le loro responsabilità o il loro interesse in questa voce di roadmap.)
 
-## Communication Plan
+## Piano di comunicazione
 
-(Describe how progress and updates will be communicated — regular check-ins, status dashboards, demo days, etc.)
+(Descrivi come verranno comunicati avanzamento e aggiornamenti: 
+incontri periodici, dashboard di stato, giornate di demo, e così via.)
 
-## Links / References
+## Link / Riferimenti
 
-(Include any analysis, strategy docs, previous discussions, or related roadmap items.)
+(Includi analisi, documenti di strategia, discussioni precedenti o voci di 
+roadmap correlate.)
 
-## Future Considerations
+## Considerazioni future
 
-(Highlight ideas or areas of exploration that could follow from this work, even if they are out of current scope.)
+(Metti in evidenza idee o aree di esplorazione che potrebbero seguire da 
+questo lavoro, anche se fuori dal perimetro attuale.)
 
 /label ~roadmap
