@@ -82,11 +82,13 @@ export const openApiRestClient = {
     // The spec does not describe the import request body, so the generated
     // `postV1ConfigImport` types it as `never`. Go through the client directly
     // and keep the package typed here instead.
+    // `dryRun` defaults to `true` on the backend (preview the plan, write
+    // nothing): this call applies the package, so it always sends `false`.
     importConfig: (body: ConfigPackage, mode: ImportMode) =>
       client
         .post<PostV1ConfigImportResponses, unknown, true>({
           url: "/v1/config/import",
-          query: { mode },
+          query: { mode, dryRun: false },
           body,
           ...t,
         })
