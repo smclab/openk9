@@ -51,6 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -87,9 +88,9 @@ public class HybridQueryParserTest {
 
 		searchSourceBuilder = new SearchSourceBuilder();
 
-		when(embeddingService.getEmbeddedText(anyString(), anyString()))
+		when(embeddingService.embedQuery(anyString(), any(), any()))
 			.thenReturn(Uni.createFrom().item(
-				new EmbeddingService.EmbeddedText(VECTOR)));
+				new EmbeddingService.QueryVector(VECTOR)));
 	}
 
 	@Test
