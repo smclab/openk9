@@ -28,8 +28,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+// `key` is the by-name identity, and the join types (ENRICH_PIPELINE_ITEM,
+// ACL_MAPPING) have none: the backend exports them keyless and matches them on
+// their endpoints, so only `type` can be required here.
 function isConfigEntity(value: unknown): value is ConfigEntity {
-  return isRecord(value) && typeof value.type === "string" && typeof value.key === "string";
+  return isRecord(value) && typeof value.type === "string";
 }
 
 export type ParsedPackage = {
@@ -69,7 +72,7 @@ export function parseConfigPackage(text: string): ParseResult {
   }
 
   if (!entities.every(isConfigEntity)) {
-    return { ok: false, error: "The package contains entities without a type or a key." };
+    return { ok: false, error: "The package contains entities without a type." };
   }
 
   return { ok: true, parsed: { value: content, entities, schemaVersion } };
@@ -89,7 +92,7 @@ export type RedactedEntity = {
 export function redactedEntities(entities: ConfigEntity[]): RedactedEntity[] {
   return entities.flatMap((entity) => {
     const fields = entity.redactedFields ?? [];
-    if (fields.length === 0 || entity.type === undefined || entity.key === undefined) {
+    if (fields.length === 0 || entity.type === undefined || entity.key == null) {
       return [];
     }
     return [{ type: entity.type, key: entity.key, fields }];
