@@ -397,7 +397,29 @@ public class SearcherGrpcTest {
 				assertEquals(PROVIDER, response.getProviderModel().getProvider());
 				assertEquals(MODEL, response.getProviderModel().getModel());
 				assertEquals(EM_VECTOR_SIZE, response.getVectorSize());
+				assertFalse(response.getMultimodal());
 			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_propagate_multimodal(UniAsserter asserter) {
+		// mark the active embedding model as multimodal
+		asserter.execute(() -> sessionFactory.withTransaction(session ->
+			embeddingModelService.findByName(session, EMBEDDING_MODEL_ONE)
+				.invoke(embeddingModel -> embeddingModel.setMultimodal(true))
+		));
+
+		// the flag reaches the RAG callers, that forward it to the embedding
+		// module to select the multimodal embedder
+		asserter.assertThat(
+			() -> searcher.getEmbeddingModelConfigurations(
+				GetEmbeddingModelConfigurationsRequest.newBuilder()
+					.setTenantId(SCHEMA_NAME)
+					.build()
+			),
+			response -> assertTrue(response.getMultimodal())
 		);
 	}
 

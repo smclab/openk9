@@ -60,6 +60,9 @@ message EmbeddingModel {
     ProviderModel providerModel = 2;
     .google.protobuf.Struct jsonConfig = 3;
     optional string apiUrl = 4;
+    // True when the model embeds images too (routed to the multimodal
+    // embedder); absent/false keeps the text-only path.
+    bool multimodal = 5;
 }
 
 message ResponseChunk {

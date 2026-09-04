@@ -263,4 +263,5 @@ message GetEmbeddingModelConfigurationsResponse {
   .google.protobuf.Struct jsonConfig = 3;
   ProviderModel providerModel = 4;
   int32 vectorSize = 5;
+  bool multimodal = 6;
 }
