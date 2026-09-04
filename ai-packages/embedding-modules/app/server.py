@@ -688,7 +688,12 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         configuration = _build_configuration(embedding_model)
 
         # query text is cleaned like the v1 GetMessages path; inline stays raw
-        text = clean_text(request.text) if request.HasField("text") else None
+        cleaned = clean_text(request.text) if request.HasField("text") else ""
+        # A text that is empty once cleaned (whitespace, emoji, non-latin
+        # script) carries nothing to embed: absent, not empty, so a query with
+        # no inline either is INVALID_ARGUMENT instead of the vector of the
+        # empty string.
+        text = cleaned or None
         inline = None
         if request.HasField("inline"):
             inline = (request.inline.data, request.inline.contentType)
