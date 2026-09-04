@@ -391,15 +391,6 @@ export function useReindexMutation() {
   );
 }
 
-export function useTriggerSchedulerMutation() {
-  const restClient = useRestClient();
-  return useMutation(async (datasourceId: string) => {
-    await restClient.triggerResource.postApiDatasourceV1Trigger({
-      datasourceIds: [Number(datasourceId)],
-    });
-  });
-}
-
 export function useGenerateDocumentTypesMutation() {
   const restClient = useRestClient();
   return useMutation(async (datasourceId: string) => {

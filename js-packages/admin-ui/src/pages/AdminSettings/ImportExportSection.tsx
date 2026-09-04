@@ -36,7 +36,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import type { ImportMode, ImportResult } from "openapi-generated";
+import type { ImportMode, ImportReport } from "openapi-generated";
 import React from "react";
 import { useConfirmModal } from "utils/useConfirmModal";
 import {
@@ -65,7 +65,7 @@ type SelectedFile = {
 };
 
 type ImportOutcome = {
-  summary: ImportResult;
+  summary: ImportReport;
   secrets: RedactedEntity[];
 };
 

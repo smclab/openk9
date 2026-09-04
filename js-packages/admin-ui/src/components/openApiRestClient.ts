@@ -40,7 +40,6 @@ import {
   postV1DataIndexGetMappingsFromDocTypes,
   postV1DataIndexGetSettingsFromDocTypes,
   postV1SearchConfigByIdConfigureHybridSearch,
-  postV1Trigger,
   postV2Trigger,
 } from "../openapi-generated/sdk.gen";
 import type {
@@ -53,7 +52,6 @@ import type {
   PostV1DataIndexGetMappingsFromDocTypesData,
   PostV1DataIndexGetSettingsFromDocTypesData,
   ResourceUri,
-  TriggerResourceDto,
   TriggerV2ResourceDto,
 } from "../openapi-generated/types.gen";
 import { getAuthHeaders } from "./authentication";
@@ -131,9 +129,6 @@ export const openApiRestClient = {
   searchConfigResource: {
     postApiDatasourceV1SearchConfigConfigureHybridSearch: (id: number, body: HybridSearchPipelineDto) =>
       postV1SearchConfigByIdConfigureHybridSearch({ path: { id }, body, ...t }).then((r) => r.data),
-  },
-  triggerResource: {
-    postApiDatasourceV1Trigger: (body: TriggerResourceDto) => postV1Trigger({ body, ...t }).then((r) => r.data),
   },
   triggerWithDateResource: {
     postApiDatasourceV2Trigger: (body: TriggerV2ResourceDto) => postV2Trigger({ body, ...t }).then((r) => r.data),
