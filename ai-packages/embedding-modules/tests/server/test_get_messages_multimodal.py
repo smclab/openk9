@@ -23,9 +23,9 @@ uploaded documents. The `multimodal` flag says so when it arrives, but the RAG
 callers cannot forward it, so the fallback keys on the failure itself: whatever
 the model, an answer langchain cannot read moves the request to the direct
 client. `cohere.embed-v4` on Bedrock is the case that motivated this — it
-answers with `embeddings` keyed by embedding type, and
-`BedrockEmbeddings.embed_query` raises `KeyError: 0` — but nothing here names
-it.
+answers with `embeddings` keyed by embedding type, which
+`BedrockEmbeddings.embed_documents` returns the keys of instead of raising —
+but nothing here names it.
 """
 
 import pytest
@@ -50,17 +50,30 @@ class _FakeMultimodalEmbedder:
 
 
 class _FakeLangchainEmbeddings:
-    """A langchain class that fails on the first `calls_before_failing` calls."""
+    """A langchain class that either answers the batch or fails on it."""
 
     def __init__(self, error=None, calls=None):
         self.error = error
         self.calls = calls if calls is not None else []
 
-    def embed_query(self, text):
-        self.calls.append(text)
+    def embed_documents(self, texts):
+        self.calls.append(list(texts))
         if self.error is not None:
             raise self.error
-        return TEXT_ONLY_VECTOR
+        return [TEXT_ONLY_VECTOR for _ in texts]
+
+
+class _FakeUnreadableBatch:
+    """A langchain class that answers with the keys of the answer instead of
+    the vectors, as `BedrockEmbeddings.embed_documents` does on
+    `cohere.embed-v4`."""
+
+    def __init__(self, calls):
+        self.calls = calls
+
+    def embed_documents(self, texts):
+        self.calls.append(list(texts))
+        return ["float"]
 
 
 def _request(multimodal=None, text="pikachu", chunk_size=None):
@@ -103,9 +116,9 @@ def test_multimodal_flag_uses_the_direct_embedder(stub, monkeypatch):
 
     response = stub.GetMessages(_request(multimodal=True))
 
-    # the vector comes from the direct embedder, with the query input type
+    # the vector comes from the direct embedder, with the document input type
     assert list(response.chunks[0].vectors) == MULTIMODAL_VECTOR
-    assert seen["input_type"] == "search_query"
+    assert seen["input_type"] == "search_document"
 
 
 def test_unreadable_answer_falls_back_to_the_direct_embedder(stub, monkeypatch):
@@ -122,11 +135,11 @@ def test_unreadable_answer_falls_back_to_the_direct_embedder(stub, monkeypatch):
     response = stub.GetMessages(_request())
 
     assert list(response.chunks[0].vectors) == MULTIMODAL_VECTOR
-    assert seen["input_type"] == "search_query"
+    assert seen["input_type"] == "search_document"
 
 
-def test_the_fallback_is_remembered_for_the_remaining_chunks(stub, monkeypatch):
-    # the failed call is paid once per request, not once per chunk
+def test_the_failed_langchain_call_is_paid_once_per_request(stub, monkeypatch):
+    # the whole document goes in one call, so there is one failure to pay
     seen = {}
     calls = []
     _use_direct(monkeypatch, seen)
@@ -143,6 +156,37 @@ def test_the_fallback_is_remembered_for_the_remaining_chunks(stub, monkeypatch):
     )
 
     assert len(response.chunks) > 1, "the text must split, or this proves nothing"
+    assert all(
+        list(chunk.vectors) == MULTIMODAL_VECTOR for chunk in response.chunks
+    )
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        pytest.param({}, id="one chunk"),
+        pytest.param(
+            {"text": "pikachu bulbasaur charmander squirtle", "chunk_size": 10},
+            id="many chunks",
+        ),
+    ],
+)
+def test_an_answer_that_is_not_vectors_falls_back_too(stub, monkeypatch, document):
+    # the batch call fails to read the answer without raising: what comes
+    # back is the keys of the answer, not the vectors. A single-chunk
+    # document makes the count match, so the count alone cannot decide it.
+    seen = {}
+    calls = []
+    _use_direct(monkeypatch, seen)
+    monkeypatch.setattr(
+        server_module,
+        "initialize_embedding_model",
+        lambda configuration: _FakeUnreadableBatch(calls),
+    )
+
+    response = stub.GetMessages(_request(**document))
+
     assert all(
         list(chunk.vectors) == MULTIMODAL_VECTOR for chunk in response.chunks
     )
@@ -183,10 +227,10 @@ def test_a_failure_that_is_not_about_the_answer_is_not_worked_around(monkeypatch
         lambda configuration: _unexpected("build_multimodal_embedder"),
     )
 
-    embed_query = server_module.build_text_embed_query({"model_type": "aws_bedrock"})
+    embed_texts = server_module.build_text_embed_texts({"model_type": "aws_bedrock"})
 
     with pytest.raises(RuntimeError, match="no credentials"):
-        embed_query("pikachu")
+        embed_texts(["pikachu"])
 
 
 def test_provider_without_a_direct_client_reports_the_original_failure(monkeypatch):
@@ -204,10 +248,10 @@ def test_provider_without_a_direct_client_reports_the_original_failure(monkeypat
     monkeypatch.setattr(server_module, "build_multimodal_embedder", no_embedder)
     monkeypatch.setattr(server_module, "_apply_credentials", lambda configuration: None)
 
-    embed_query = server_module.build_text_embed_query({"model_type": "openai"})
+    embed_texts = server_module.build_text_embed_texts({"model_type": "openai"})
 
     with pytest.raises(KeyError):
-        embed_query("pikachu")
+        embed_texts(["pikachu"])
 
 
 def _unexpected(name):

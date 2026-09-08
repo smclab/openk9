@@ -188,7 +188,8 @@ with grpc.insecure_channel("localhost:5000") as channel:
 
 - Text is split using the selected chunking strategy (See Configuration)
 
-- Each chunk is embedded using the configured embedding model
+- All the chunks are embedded with a single request to the configured
+  embedding model
 
 - Embeddings are returned in order with metadata
 
@@ -230,7 +231,8 @@ a fallback when absent).
 
 **Behavior**
 - Text is chunked and embedded first, then each ref in list order; `number` is
-  progressive over the whole stream.
+  progressive over the whole stream. The chunks of a text (inline or from a
+  textual ref) are embedded with a single request to the model.
 
 - Vectors are L2-normalized, then quantized according to `vectorDataType`.
 

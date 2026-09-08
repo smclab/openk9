@@ -312,7 +312,9 @@ def build_pipelines(configuration, chunker):
     embeddings = initialize_embedding_model(configuration)
 
     return Pipelines(
-        embed_texts=lambda texts: [embeddings.embed_query(text) for text in texts],
+        # the whole chunk list in one request: embed_documents is part of the
+        # langchain Embeddings interface, so every provider serves it
+        embed_texts=embeddings.embed_documents,
         chunk=lambda text: chunking.chunk_text(chunker, text),
         fetch=fetch_url,
         embed_image=None,
@@ -365,8 +367,13 @@ def to_chunk_message(piece, number, total, vector_data_type):
 UNREADABLE_RESPONSE_ERRORS = (KeyError, IndexError, TypeError)
 
 
-def build_text_embed_query(configuration):
+def build_text_embed_texts(configuration):
     """Builds the text embedding function used by the v1 GetMessages path.
+
+    The function takes the whole chunk list of a document and returns one
+    vector per chunk, so the document costs one request to the provider
+    instead of one per chunk: against a remote model the round-trip
+    dominates, and it has nothing to do with the text being vectorized.
 
     Where a langchain text class cannot serve the configured model, the direct
     client of the v2 RPCs takes over. Without this, a tenant on a multimodal
@@ -382,47 +389,77 @@ def build_text_embed_query(configuration):
     to know which models those are.
     """
     if configuration.get("multimodal"):
-        return _direct_embed_query(configuration)
+        return _direct_embed_texts(configuration)
 
-    return _langchain_embed_query_with_fallback(configuration)
+    return _langchain_embed_texts_with_fallback(configuration)
 
 
-def _direct_embed_query(configuration):
-    """The embedder of the v2 RPCs, as a single-text function.
+def _direct_embed_texts(configuration):
+    """The embedder of the v2 RPCs, as a batch function.
 
-    The input type stays `search_query`, which is what the langchain
-    `embed_query` this stands in for already sent for every chunk.
+    The input type is `search_document`, the one the v2 indexing path
+    sends: what this RPC embeds are the chunks of a document.
     """
     _apply_credentials(configuration)
     embedder = build_multimodal_embedder(configuration)
 
-    return lambda text: embedder.embed_texts([text], "search_query")[0]
+    return lambda texts: embedder.embed_texts(texts, "search_document")
 
 
-def _langchain_embed_query_with_fallback(configuration):
+def _langchain_embed_texts_with_fallback(configuration):
     """langchain first, the direct client once its answer cannot be read.
 
-    The choice is remembered for the rest of the request, so a model that needs
-    the direct client pays the failed call once and not once per chunk.
+    The whole document goes in one call, so the failed call is paid once
+    per request by construction.
     """
-    langchain_embed_query = initialize_embedding_model(configuration).embed_query
-    fallback = None
+    langchain_embed_documents = initialize_embedding_model(
+        configuration
+    ).embed_documents
 
-    def embed_text(text):
-        nonlocal fallback
+    def embed_texts(texts):
+        try:
+            vectors = langchain_embed_documents(texts)
+        except UNREADABLE_RESPONSE_ERRORS as error:
+            return _fallback_embed_texts(configuration, error)(texts)
 
-        if fallback is None:
-            try:
-                return langchain_embed_query(text)
-            except UNREADABLE_RESPONSE_ERRORS as error:
-                fallback = _fallback_embed_query(configuration, error)
+        if _is_one_vector_per_text(vectors, texts):
+            return vectors
 
-        return fallback(text)
+        return _fallback_embed_texts(configuration, _not_vectors(vectors, texts))(
+            texts
+        )
 
-    return embed_text
+    return embed_texts
 
 
-def _fallback_embed_query(configuration, error):
+def _is_one_vector_per_text(vectors, texts):
+    """Whether the langchain class answered one vector per text.
+
+    The batch call has a way of not reading the answer without raising:
+    `BedrockEmbeddings.embed_documents` walks the `embeddings` of a
+    `cohere.embed-v4` answer, which is keyed by embedding type and not a
+    list, and returns its keys as if they were the vectors. Its
+    single-text sibling indexes the same dict instead, and raises. Only
+    what cannot be a vector is rejected, so a provider answering with
+    something list-like other than a list stays on langchain.
+    """
+    return len(vectors) == len(texts) and not any(
+        isinstance(vector, str) for vector in vectors
+    )
+
+
+def _not_vectors(vectors, texts):
+    """The error for an answer that was not one vector per text. Only the
+    shape goes in the message: the answer itself may be a full document
+    worth of vectors."""
+    types = sorted({type(vector).__name__ for vector in vectors})
+
+    return TypeError(
+        f"{len(texts)} texts embedded as {len(vectors)} {', '.join(types)}"
+    )
+
+
+def _fallback_embed_texts(configuration, error):
     """The direct client for a model langchain could not read.
 
     Re-raises the original failure when the provider has no direct embedder:
@@ -438,7 +475,7 @@ def _fallback_embed_query(configuration, error):
     )
 
     try:
-        return _direct_embed_query(configuration)
+        return _direct_embed_texts(configuration)
     except ValueError as missing_embedder:
         logger.error(
             "No direct client for provider %r either: %s",
@@ -518,7 +555,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             embedding_model = request.embeddingModel
 
             configuration = _build_configuration(embedding_model)
-            embed_query = build_text_embed_query(configuration)
+            embed_texts = build_text_embed_texts(configuration)
 
             text = clean_text(request.text)
             text_splitted = []
@@ -554,12 +591,18 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
             total_chunks = len(text_splitted)
 
-            for index, chunk_text in enumerate(text_splitted, start=1):
+            # one request for the whole document, the vectors then matched to
+            # their chunk by position
+            vectors = embed_texts(text_splitted) if text_splitted else []
+
+            for index, (chunk_text, chunk_vectors) in enumerate(
+                zip(text_splitted, vectors), start=1
+            ):
                 chunk_result = {
                     "number": index,
                     "total": total_chunks,
                     "text": chunk_text,
-                    "vectors": embed_query(chunk_text),
+                    "vectors": chunk_vectors,
                 }
                 chunks.append(chunk_result)
 
