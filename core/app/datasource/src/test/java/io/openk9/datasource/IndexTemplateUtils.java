@@ -26,6 +26,7 @@ import org.opensearch.OpenSearchStatusException;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.indices.GetComposableIndexTemplateRequest;
+import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
 import org.opensearch.cluster.metadata.ComposableIndexTemplate;
 import org.opensearch.core.rest.RestStatus;
 
@@ -63,6 +64,33 @@ public class IndexTemplateUtils {
 			}
 
 			throw new IllegalStateException(exception);
+		}
+		catch (IOException exception) {
+			throw new IllegalStateException(exception);
+		}
+	}
+
+	/**
+	 * Overwrites the index template associated with the given dataIndex name.
+	 *
+	 * @param client        the OpenSearch client
+	 * @param tenantId      the tenant the dataIndex belongs to
+	 * @param dataIndexName the name of the dataIndex
+	 * @param indexTemplate the index template to store
+	 */
+	public static void putIndexTemplate(
+		RestHighLevelClient client, String tenantId, String dataIndexName,
+		ComposableIndexTemplate indexTemplate) {
+
+		var templateName =
+			IndexName.from(tenantId, dataIndexName) + IndexService.TEMPLATE_SUFFIX;
+
+		var request = new PutComposableIndexTemplateRequest()
+			.name(templateName)
+			.indexTemplate(indexTemplate);
+
+		try {
+			client.indices().putIndexTemplate(request, RequestOptions.DEFAULT);
 		}
 		catch (IOException exception) {
 			throw new IllegalStateException(exception);

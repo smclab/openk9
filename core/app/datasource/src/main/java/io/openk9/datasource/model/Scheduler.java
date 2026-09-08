@@ -19,7 +19,6 @@ package io.openk9.datasource.model;
 
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -182,7 +181,7 @@ public class Scheduler extends K9Entity {
 	@JsonIgnore
 	@ToString.Exclude
 	private DataIndex oldDataIndex;
-	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "new_data_index_id", referencedColumnName = "id")
 	@JsonIgnore
 	@ToString.Exclude

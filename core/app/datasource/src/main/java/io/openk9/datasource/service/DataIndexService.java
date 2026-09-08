@@ -74,6 +74,8 @@ public class DataIndexService
 	private static final Logger log = Logger.getLogger(DataIndexService.class);
 
 	@Inject
+	DocTypeFieldService docTypeFieldService;
+	@Inject
 	DocTypeService docTypeService;
 	@Inject
 	EmbeddingModelService embeddingModelService;
@@ -220,23 +222,26 @@ public class DataIndexService
 
 	}
 
+	/**
+	 * Creates a dataIndex, whoever the caller is: an operator through the
+	 * creation request, or the scheduler when a reindex starts.
+	 * <p>
+	 * This is the single gate every dataIndex goes through, so it is where the
+	 * rules about what a valid dataIndex is live, and where its index template
+	 * is generated from the embedding model in force.
+	 *
+	 * @param session   the session the dataIndex is created in
+	 * @param dataIndex the dataIndex to create
+	 * @return the created dataIndex, or a failure carrying the reason it
+	 * cannot be created
+	 */
 	@Override
 	public Uni<DataIndex> create(Mutiny.Session session, DataIndex dataIndex) {
 
 		return resolveEmbeddingModel(session, dataIndex)
 			.flatMap(embeddingModel -> merge(session, dataIndex)
-				.call(merged -> getCurrentTenant(session)
-					.flatMap(tenantId ->
-						indexMappingService.createDataIndexTemplate(
-							new DataIndexTemplate(
-								tenantId,
-								getSettingsMap(merged.getSettings()),
-								merged,
-								embeddingModel
-							)
-						)
-					)
-				)
+				.call(merged -> createDataIndexTemplate(
+					session, merged, embeddingModel))
 			);
 	}
 
@@ -536,6 +541,37 @@ public class DataIndexService
 
 	}
 
+	/**
+	 * Generates the index template of a dataIndex from the docTypes it is
+	 * composed of, the settings it recorded and the embedding model in force.
+	 *
+	 * @param session        the session the docTypes are expanded in
+	 * @param dataIndex      the dataIndex the index template belongs to
+	 * @param embeddingModel the model the vector field comes from,
+	 *                       {@code null} for a plain dataIndex
+	 * @return an empty {@link Uni}, failing when the index template cannot be
+	 * created
+	 */
+	private Uni<Void> createDataIndexTemplate(
+		Mutiny.Session session, DataIndex dataIndex, EmbeddingModel embeddingModel) {
+
+		return getCurrentTenant(session)
+			.flatMap(tenantId -> session.fetch(dataIndex.getDocTypes())
+				// the mappings are built from the docTypeFields, so the
+				// docTypes have to be expanded whoever handed them over
+				.flatMap(docTypes -> docTypeFieldService
+					.expandDocTypes(session, docTypes))
+				.flatMap(unused -> indexMappingService.createDataIndexTemplate(
+					new DataIndexTemplate(
+						tenantId,
+						getSettingsMap(dataIndex.getSettings()),
+						dataIndex,
+						embeddingModel
+					)
+				))
+			);
+	}
+
 	private Uni<DataIndex> createDataIndexTransient(
 		Mutiny.Session session, long datasourceId, DataIndexDTO dto) {
 
@@ -570,11 +606,13 @@ public class DataIndexService
 	}
 
 	/**
-	 * Resolves the embedding model the index template must be generated from.
+	 * Resolves the embedding model the index template must be generated from,
+	 * refusing a knn dataIndex that would hold no vector.
 	 * <p>
-	 * A knn dataIndex needs the tenant active embedding model to receive its
-	 * {@code knn_vector} mapping, so its creation is refused when no model is
-	 * active. A plain dataIndex never consults the model.
+	 * A knn dataIndex needs a field to embed and the tenant active embedding
+	 * model to receive its {@code knn_vector} mapping, so its creation is
+	 * refused when either is missing. A plain dataIndex never consults the
+	 * model.
 	 *
 	 * @param session   the session the active embedding model is looked up in
 	 * @param dataIndex the dataIndex being created
@@ -588,6 +626,15 @@ public class DataIndexService
 
 		if (knnIndex == null || !knnIndex) {
 			return Uni.createFrom().nullItem();
+		}
+
+		if (dataIndex.getEmbeddingDocTypeField() == null) {
+			return Uni.createFrom().failure(new ValidationException(String.format(
+				"Cannot create the dataIndex %s: knnIndex is set to true but" +
+				" embeddingDocTypeField is not defined." +
+				" Define an embeddingDocTypeField or disable knnIndex.",
+				dataIndex.getName()
+			)));
 		}
 
 		return embeddingModelService.fetchCurrent(session)
