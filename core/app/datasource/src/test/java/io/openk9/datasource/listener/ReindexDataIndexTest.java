@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.listener;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -33,6 +34,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
+import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.pipeline.service.dto.SchedulingType;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
 import io.openk9.datasource.service.DataIndexService;
@@ -48,6 +50,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.Request;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.cluster.metadata.ComposableIndexTemplate;
 
@@ -76,6 +79,8 @@ class ReindexDataIndexTest {
 		"Test embedding model disabled";
 	private static final String SETTINGS = "{\"index\": {\"number_of_replicas\": 2}}";
 	private static final String TENANT_ID = "public";
+	private static final String TEST_EMBEDDING_MODEL = "rdit.embedding-model";
+	private static final int TEST_VECTOR_SIZE = 1024;
 
 	@Inject
 	DataIndexService dataIndexService;
@@ -105,14 +110,18 @@ class ReindexDataIndexTest {
 	void tearDown() {
 		enableEmbeddingModel(Initializer.EMBEDDING_MODEL_DEFAULT_PRIMARY);
 
-		try {
+		deleteQuietly(() -> {
 			var datasource = EntitiesUtils.getEntity(
 				DATASOURCE, datasourceService, sessionFactory);
 
 			datasourceService.deleteById(datasource.getId()).await().indefinitely();
-		}
-		catch (Exception ignored) {
-		}
+		});
+
+		deleteQuietly(() -> embeddingModelService
+			.deleteById(getEmbeddingModel(TEST_EMBEDDING_MODEL).getId())
+			.await()
+			.indefinitely()
+		);
 	}
 
 	@Test
@@ -193,6 +202,46 @@ class ReindexDataIndexTest {
 		assertFalse(
 			composedOf.contains(componentTemplateName(previousModel)),
 			"the new index template still composes the previous model"
+		);
+	}
+
+	@Test
+	@DisplayName("Should follow a property change on the same active model")
+	void should_follow_a_property_change_on_the_same_active_model() {
+		// a knn dataIndex created against an active model
+		var embeddingModel = createAndEnableEmbeddingModel();
+		var datasourceId = createDatasource(knnDataIndex());
+
+		// the vector type of the same model changes, which rewrites its
+		// component template
+		embeddingModelService.update(
+				embeddingModel.getId(),
+				EmbeddingModelDTO.builder()
+					.name(TEST_EMBEDDING_MODEL)
+					.vectorSize(TEST_VECTOR_SIZE)
+					.vectorDataType(EmbeddingModel.VectorDataType.BYTE)
+					.build()
+			)
+			.await()
+			.indefinitely();
+
+		// the reindex keeps composing the same component template, referred to
+		// by name, so the new index follows the change on its own
+		var scheduler = reindex(datasourceId);
+
+		var componentTemplate = componentTemplateName(embeddingModel);
+
+		assertTrue(
+			indexTemplate(reload(scheduler.getNewDataIndex().getName()))
+				.composedOf()
+				.contains(componentTemplate),
+			"the new index template does not compose the active model"
+		);
+		var componentTemplateJson = componentTemplate(componentTemplate);
+
+		assertTrue(
+			componentTemplateJson.contains("\"data_type\":\"byte\""),
+			componentTemplateJson
 		);
 	}
 
@@ -405,6 +454,20 @@ class ReindexDataIndexTest {
 			.indefinitely();
 	}
 
+	private String componentTemplate(String componentTemplateName) {
+		try {
+			var response = restHighLevelClient
+				.getLowLevelClient()
+				.performRequest(new Request(
+					"GET", "/_component_template/" + componentTemplateName));
+
+			return new String(response.getEntity().getContent().readAllBytes());
+		}
+		catch (IOException exception) {
+			throw new IllegalStateException(exception);
+		}
+	}
+
 	private String componentTemplateName(EmbeddingModel embeddingModel) {
 		return new EmbeddingComponentTemplate(
 			TENANT_ID,
@@ -428,6 +491,24 @@ class ReindexDataIndexTest {
 			.indefinitely();
 	}
 
+	private EmbeddingModel createAndEnableEmbeddingModel() {
+		var embeddingModel = embeddingModelService.create(EmbeddingModelDTO.builder()
+				.name(TEST_EMBEDDING_MODEL)
+				.apiUrl("https://api.acmeai.com/v1/embeddings")
+				.apiKey("secret-key")
+				.vectorSize(TEST_VECTOR_SIZE)
+				.build()
+			)
+			.await()
+			.indefinitely();
+
+		disableEmbeddingModel();
+
+		embeddingModelService.enable(embeddingModel.getId()).await().indefinitely();
+
+		return embeddingModel;
+	}
+
 	private long createDatasource(DataIndexDTO.DataIndexDTOBuilder<?, ?> dataIndex) {
 		var pluginDriver = pluginDriverService
 			.findByName(TENANT_ID, Initializer.INIT_DATASOURCE_PLUGIN)
@@ -448,6 +529,14 @@ class ReindexDataIndexTest {
 			response.getEntity(), String.valueOf(response.getFieldValidators()));
 
 		return response.getEntity().getId();
+	}
+
+	private void deleteQuietly(Runnable deletion) {
+		try {
+			deletion.run();
+		}
+		catch (Exception ignored) {
+		}
 	}
 
 	private void disableEmbeddingModel() {
