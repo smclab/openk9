@@ -942,6 +942,22 @@ class RagGraph:
             retrieve_type="HYBRID",
             search_text=query,
         )
+
+        configured_domains = retriever.get_domains()
+
+        # Domain filtering is opt-in: with no labelled document in the domain
+        # index there is nothing to detect, so neither the query embedding nor
+        # the LLM fallback is worth paying for. The field must be cleared:
+        # analyze_and_rewrite_query_node parks the NEW_QUESTION intent marker in
+        # it and opensearch_retriever_node reads it back as a domain filter.
+        if not configured_domains:
+            state.domain = None
+            logger.debug(
+                "[input_domain] no domain configured in domain-documents-index, "
+                "skipping domain detection"
+            )
+            return state
+
         retrieved_docs = retriever.invoke(query)
 
         if logger.isEnabledFor(logging.DEBUG):
@@ -969,7 +985,7 @@ class RagGraph:
             state.domain = list(found_domains)
             logger.debug(f"[input_domain] domains above threshold: {state.domain}")
         else:
-            found_domains = set(retriever.get_domains())
+            found_domains = set(configured_domains)
 
             logger.debug(
                 f"[input_domain] no domain above threshold, falling back to "
