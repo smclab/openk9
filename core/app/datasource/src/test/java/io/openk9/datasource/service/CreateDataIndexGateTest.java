@@ -157,8 +157,7 @@ class CreateDataIndexGateTest {
 		return new EmbeddingComponentTemplate(
 			TENANT_ID,
 			embeddingModel.getName(),
-			embeddingModel.getVectorSize(),
-			embeddingModel.getVectorDataType()
+			embeddingModel.getVectorSize()
 		).getName();
 	}
 

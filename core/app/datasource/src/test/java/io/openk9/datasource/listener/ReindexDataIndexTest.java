@@ -29,6 +29,7 @@ import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.IndexTemplateUtils;
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EmbeddingModel;
@@ -70,6 +71,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @QuarkusTest
 class ReindexDataIndexTest {
 
+	private static final String API_KEY = "secret-key";
+	private static final String API_URL =
+		"https://api.acmeai.com/v1/embeddings";
+	private static final String CHANGED_DIMENSION = "\"dimension\":512";
+	private static final int CHANGED_VECTOR_SIZE = 512;
 	private static final int CHUNK_WINDOW_SIZE = 3;
 	private static final String DATA_INDEX = "rdit.data-index";
 	private static final String DATASOURCE = "rdit.datasource";
@@ -212,14 +218,15 @@ class ReindexDataIndexTest {
 		var embeddingModel = createAndEnableEmbeddingModel();
 		var datasourceId = createDatasource(knnDataIndex());
 
-		// the vector type of the same model changes, which rewrites its
+		// the vector size of the same model changes, which rewrites its
 		// component template
 		embeddingModelService.update(
 				embeddingModel.getId(),
 				EmbeddingModelDTO.builder()
 					.name(TEST_EMBEDDING_MODEL)
-					.vectorSize(TEST_VECTOR_SIZE)
-					.vectorDataType(EmbeddingModel.VectorDataType.BYTE)
+					.apiUrl(API_URL)
+					.apiKey(API_KEY)
+					.vectorSize(CHANGED_VECTOR_SIZE)
 					.build()
 			)
 			.await()
@@ -229,19 +236,29 @@ class ReindexDataIndexTest {
 		// by name, so the new index follows the change on its own
 		var scheduler = reindex(datasourceId);
 
+		var newDataIndexName = scheduler.getNewDataIndex().getName();
 		var componentTemplate = componentTemplateName(embeddingModel);
 
 		assertTrue(
-			indexTemplate(reload(scheduler.getNewDataIndex().getName()))
-				.composedOf()
+			indexTemplate(reload(newDataIndexName)).composedOf()
 				.contains(componentTemplate),
 			"the new index template does not compose the active model"
 		);
+
+		// the component template carries the new dimension
 		var componentTemplateJson = componentTemplate(componentTemplate);
 
 		assertTrue(
-			componentTemplateJson.contains("\"data_type\":\"byte\""),
+			componentTemplateJson.contains(CHANGED_DIMENSION),
 			componentTemplateJson
+		);
+
+		// and so does the mapping the new index is going to get
+		var indexMappingJson = simulatedIndexMapping(newDataIndexName);
+
+		assertTrue(
+			indexMappingJson.contains(CHANGED_DIMENSION),
+			indexMappingJson
 		);
 	}
 
@@ -490,8 +507,7 @@ class ReindexDataIndexTest {
 		return new EmbeddingComponentTemplate(
 			TENANT_ID,
 			embeddingModel.getName(),
-			embeddingModel.getVectorSize(),
-			embeddingModel.getVectorDataType()
+			embeddingModel.getVectorSize()
 		).getName();
 	}
 
@@ -512,8 +528,8 @@ class ReindexDataIndexTest {
 	private EmbeddingModel createAndEnableEmbeddingModel() {
 		var embeddingModel = embeddingModelService.create(EmbeddingModelDTO.builder()
 				.name(TEST_EMBEDDING_MODEL)
-				.apiUrl("https://api.acmeai.com/v1/embeddings")
-				.apiKey("secret-key")
+				.apiUrl(API_URL)
+				.apiKey(API_KEY)
 				.vectorSize(TEST_VECTOR_SIZE)
 				.build()
 			)
@@ -643,6 +659,28 @@ class ReindexDataIndexTest {
 			)
 			.await()
 			.indefinitely();
+	}
+
+	/**
+	 * Asks OpenSearch which mapping an index would get from the index
+	 * templates in place, so that the mapping can be read before anything is
+	 * written to the index.
+	 */
+	private String simulatedIndexMapping(String dataIndexName) {
+		try {
+			var response = restHighLevelClient
+				.getLowLevelClient()
+				.performRequest(new Request(
+					"POST",
+					"/_index_template/_simulate_index/"
+					+ IndexName.from(TENANT_ID, dataIndexName)
+				));
+
+			return new String(response.getEntity().getContent().readAllBytes());
+		}
+		catch (IOException exception) {
+			throw new IllegalStateException(exception);
+		}
 	}
 
 }
