@@ -51,6 +51,33 @@ class ModelType(Enum):
     AWS_BEDROCK = "aws_bedrock"
 
 
+DEFAULT_STRUCTURED_OUTPUT_METHOD = "function_calling"
+
+# Structured output is a provider capability, not a constant: Ollama simulates a
+# tool call instead of emitting one and returns prose, so every chain that
+# decides something silently gets no object back. Its native `format` field,
+# reached through `json_schema`, does answer. The other providers stay on
+# function calling: it is what runs in production, and strict `json_schema`
+# drops constraints the schemas rely on (`ge`/`le` on `vote`).
+STRUCTURED_OUTPUT_METHODS = {
+    ModelType.OLLAMA.value: "json_schema",
+}
+
+
+def get_structured_output_method(model_type):
+    """
+    Return the structured output method to use with the given LLM provider.
+
+    :param str model_type: Provider of the tenant LLM configuration, one of the
+        :class:`ModelType` values. Unknown or missing providers fall back to
+        ``function_calling``.
+
+    :return: The ``method`` to pass to ``with_structured_output``.
+    :rtype: str
+    """
+    return STRUCTURED_OUTPUT_METHODS.get(model_type, DEFAULT_STRUCTURED_OUTPUT_METHOD)
+
+
 def save_google_application_credentials(credentials):
     """
     Save Google Application credentials to a JSON file and configure environment variables.
