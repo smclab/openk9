@@ -18,6 +18,8 @@
 import json
 from enum import Enum
 
+from app.utils.llm import initialize_language_model
+from app.utils.logger import logger
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from phoenix.client import Client
@@ -26,9 +28,6 @@ from phoenix.evals import (
 )
 from phoenix.trace import suppress_tracing
 from pydantic import BaseModel, Field
-
-from app.utils.llm import initialize_language_model
-from app.utils.logger import logger
 
 
 class ClassificationEnum(str, Enum):
@@ -291,33 +290,16 @@ def evaluations(
     metadata = rag_configuration.get("metadata")
     rag_tool_description = rag_configuration.get("rag_tool_description")
 
-    api_url = llm_configuration.get("api_url")
-    api_key = llm_configuration.get("api_key")
-    model_type = llm_configuration.get("model_type")
-    model = llm_configuration.get("model")
-    context_window = llm_configuration.get("context_window")
-    retrieve_citations = llm_configuration.get("retrieve_citations")
-    retrieve_type = llm_configuration.get("retrieve_type")
-    watsonx_project_id = llm_configuration.get("watsonx_project_id")
-    chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
-    chat_vertex_ai_model_garden = llm_configuration.get("chat_vertex_ai_model_garden")
-
+    # Carried over whole, so the evaluation runs against the same model the
+    # chat it is judging used: redeclared key by key, this dropped aws_bedrock
+    # and would drop every provider key added upstream.
     llm_configuration = {
-        "api_url": api_url,
-        "api_key": api_key,
-        "model_type": model_type,
-        "model": model,
+        **llm_configuration,
         "prompt_template": prompt_template,
         "rephrase_prompt_template": rephrase_prompt_template,
-        "context_window": context_window,
-        "retrieve_citations": retrieve_citations,
         "rerank": rerank,
         "chunk_window": chunk_window,
         "metadata": metadata,
-        "retrieve_type": retrieve_type,
-        "watsonx_project_id": watsonx_project_id,
-        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
-        "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
     }
 
     llm = initialize_language_model(llm_configuration)

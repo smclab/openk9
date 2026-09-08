@@ -75,37 +75,18 @@ def get_agentic_rag(
         answer_only_with_context = rag_configuration.get("answer_only_with_context")
         domain_threshold = rag_configuration.get("domain_threshold")
 
-        api_url = llm_configuration.get("api_url")
-        api_key = llm_configuration.get("api_key")
-        model_type = llm_configuration.get("model_type")
-        model = llm_configuration.get("model")
         context_window = llm_configuration.get("context_window")
-        retrieve_citations = llm_configuration.get("retrieve_citations")
         retrieve_type = llm_configuration.get("retrieve_type")
-        watsonx_project_id = llm_configuration.get("watsonx_project_id")
-        chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
-        chat_vertex_ai_model_garden = llm_configuration.get(
-            "chat_vertex_ai_model_garden"
-        )
-        aws_bedrock = llm_configuration.get("aws_bedrock")
 
+        # Carried over whole: a provider key redeclared one by one here is lost
+        # in silence when a new one is added upstream and forgotten.
         llm_configuration = {
-            "api_url": api_url,
-            "api_key": api_key,
-            "model_type": model_type,
-            "model": model,
+            **llm_configuration,
             "prompt_template": prompt_template,
             "rephrase_prompt_template": rephrase_prompt_template,
-            "context_window": context_window,
-            "retrieve_citations": retrieve_citations,
             "rerank": rerank,
             "chunk_window": chunk_window,
             "metadata": metadata,
-            "retrieve_type": retrieve_type,
-            "watsonx_project_id": watsonx_project_id,
-            "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
-            "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
-            "aws_bedrock": aws_bedrock,
         }
 
         llm = initialize_language_model(llm_configuration)
