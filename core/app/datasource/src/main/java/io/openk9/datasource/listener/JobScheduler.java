@@ -22,6 +22,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
@@ -111,6 +112,30 @@ public class JobScheduler {
 		.build();
 	}
 
+	/**
+	 * Builds the {@link Scheduler} to record when a scheduling cannot start.
+	 * <p>
+	 * A fresh instance is built instead of reusing the one that failed: it
+	 * carries no new dataIndex, so whatever refused its creation cannot refuse
+	 * the recording of the failure too.
+	 *
+	 * @param scheduler the scheduling that could not start
+	 * @param throwable the reason it could not start
+	 * @return a scheduler in {@code FAILURE} state, not yet persisted
+	 */
+	static Scheduler failedScheduler(Scheduler scheduler, Throwable throwable) {
+
+		Scheduler failed = new Scheduler();
+		failed.setScheduleId(scheduler.getScheduleId());
+		failed.setDatasource(scheduler.getDatasource());
+		failed.setOldDataIndex(scheduler.getOldDataIndex());
+		failed.setReindex(scheduler.isReindex());
+		failed.setStatus(Scheduler.SchedulerStatus.FAILURE);
+		failed.setErrorDescription(SchedulerUtil.getErrorDescription(throwable));
+
+		return failed;
+	}
+
 	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
 		return actorRef.path().address().port().isEmpty();
 	}
@@ -190,20 +215,6 @@ public class JobScheduler {
 				)
 			)
 			.onMessage(
-				CopyIndexTemplate.class,
-				cit -> onCopyIndexTemplate(ctx, cit))
-			.onMessage(
-				PersistSchedulerInternal.class,
-				pndi -> onPersistSchedulerInternal(
-					pndi,
-					ctx,
-					messageBuffer,
-					quartzSchedulerTypedExtension,
-					messageGateway,
-					jobNames
-				)
-			)
-			.onMessage(
 				PersistSchedulerResponse.class,
 				res -> onPersistSchedulerResponse(
 					res,
@@ -261,18 +272,44 @@ public class JobScheduler {
 
 	}
 
-	private static Behavior<Command> onCopyIndexTemplate(
-		ActorContext<Command> ctx, CopyIndexTemplate cit) {
+	/**
+	 * Builds the {@link DataIndex} a reindex replaces the current one with.
+	 * <p>
+	 * Everything that describes how documents are indexed is inherited from
+	 * the dataIndex being replaced, so that a reindex changes the index and
+	 * not its configuration. The dataIndex is only built here: creating it,
+	 * validating it and generating its index template belong to
+	 * {@code DataIndexService}.
+	 *
+	 * @param name          the name of the new dataIndex
+	 * @param datasource    the datasource the new dataIndex belongs to
+	 * @param oldDataIndex  the dataIndex being replaced, {@code null} when the
+	 *                      datasource has never been indexed
+	 * @return the new dataIndex, not yet persisted
+	 */
+	static DataIndex newDataIndex(
+		String name, Datasource datasource, DataIndex oldDataIndex) {
 
-		var scheduler = cit.scheduler();
-		var tenantId = cit.tenantName();
+		DataIndex newDataIndex = new DataIndex();
+		newDataIndex.setName(name);
+		newDataIndex.setDatasource(datasource);
 
-		ctx.pipeToSelf(
-			JobSchedulerService.copyIndexTemplate(tenantId, scheduler),
-			(ignore, throwable) -> new PersistSchedulerInternal(tenantId, scheduler, throwable)
-		);
+		if (oldDataIndex != null) {
+			newDataIndex.setKnnIndex(oldDataIndex.getKnnIndex());
+			newDataIndex.setChunkType(oldDataIndex.getChunkType());
+			newDataIndex.setChunkWindowSize(oldDataIndex.getChunkWindowSize());
+			newDataIndex.setEmbeddingJsonConfig(oldDataIndex.getEmbeddingJsonConfig());
+			newDataIndex.setEmbeddingDocTypeField(oldDataIndex.getEmbeddingDocTypeField());
+			newDataIndex.setSettings(oldDataIndex.getSettings());
 
-		return Behaviors.same();
+			Set<DocType> docTypes = oldDataIndex.getDocTypes();
+
+			if (docTypes != null) {
+				newDataIndex.setDocTypes(new LinkedHashSet<>(docTypes));
+			}
+		}
+
+		return newDataIndex;
 	}
 
 	private static Behavior<Command> onCreateNewScheduler(
@@ -324,23 +361,9 @@ public class JobScheduler {
 
 			String newDataIndexName = datasource.getId() + "-data-" + scheduler.getScheduleId();
 
-			DataIndex newDataIndex = new DataIndex();
-			newDataIndex.setName(newDataIndexName);
-			newDataIndex.setDatasource(datasource);
-			scheduler.setNewDataIndex(newDataIndex);
+			scheduler.setNewDataIndex(
+				newDataIndex(newDataIndexName, datasource, oldDataIndex));
 			scheduler.setReindex(true);
-
-			if (oldDataIndex != null) {
-				Set<DocType> docTypes = oldDataIndex.getDocTypes();
-				newDataIndex.setEmbeddingDocTypeField(oldDataIndex.getEmbeddingDocTypeField());
-
-				if (docTypes != null && !docTypes.isEmpty()) {
-					ctx.getSelf().tell(
-						new CopyIndexTemplate(tenantName, scheduler));
-
-					return Behaviors.same();
-				}
-			}
 		}
 
 		ctx.pipeToSelf(
@@ -474,46 +497,6 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onPersistSchedulerInternal(
-		PersistSchedulerInternal pndi,
-		ActorContext<Command> ctx,
-		StashBuffer<Command> messageBuffer,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		ActorRef<MessageGateway.Command> messageGateway,
-		List<String> jobNames) {
-
-		Scheduler scheduler = pndi.scheduler;
-		var datasource = scheduler.getDatasource();
-		var tenantName = pndi.tenantName();
-
-		Throwable exception = pndi.throwable();
-
-		if (exception != null) {
-			log.errorf(
-				exception,
-				"Cannot persist the Scheduler for tenant: %s and datasource: %s",
-				tenantName,
-				datasource
-			);
-
-			return unstashAndRelease(
-				ctx,
-				messageBuffer,
-				quartzSchedulerTypedExtension,
-				messageGateway,
-				jobNames
-			);
-		}
-
-		ctx.pipeToSelf(
-			JobSchedulerService.persistScheduler(tenantName, scheduler),
-			(s, throwable) ->
-				new PersistSchedulerResponse(tenantName, s, null, throwable)
-		);
-
-		return Behaviors.same();
-	}
-
 	private static Behavior<Command> onPersistSchedulerResponse(
 		PersistSchedulerResponse rq,
 		ActorContext<Command> ctx,
@@ -530,7 +513,15 @@ public class JobScheduler {
 
 		if (throwable != null) {
 
-			log.error("Scheduler cannot be persisted.", throwable);
+			log.errorf(
+				throwable,
+				"The Scheduler with schedule-id %s cannot be persisted, so a" +
+					" Scheduler in FAILURE state is created.",
+				scheduler.getScheduleId()
+			);
+
+			JobSchedulerService.persistScheduler(
+				tenantId, failedScheduler(scheduler, throwable));
 
 			return unstashAndRelease(
 				ctx,
@@ -1063,8 +1054,6 @@ public class JobScheduler {
 
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 
-	private record CopyIndexTemplate(String tenantName, Scheduler scheduler) implements Command {}
-
 	private record CreateNewScheduler(
 		ActorContext<Command> ctx, TriggerType triggerType, Datasource datasource,
 		String tenantName, OffsetDateTime startIngestionDate, Throwable throwable
@@ -1085,10 +1074,6 @@ public class JobScheduler {
 	) implements Command {}
 
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
-
-	private record PersistSchedulerInternal(
-		String tenantName, Scheduler scheduler, Throwable throwable
-	) implements Command {}
 
 	private record PersistSchedulerResponse(
 		String tenantName, Scheduler scheduler, OffsetDateTime startIngestionDate,

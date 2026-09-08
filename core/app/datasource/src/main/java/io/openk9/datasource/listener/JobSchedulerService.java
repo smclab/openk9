@@ -18,23 +18,16 @@
 package io.openk9.datasource.listener;
 
 import java.time.OffsetDateTime;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.quarkus.common.EventBusInstanceHolder;
-import io.openk9.datasource.index.model.IndexName;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.client.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
+import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.SchedulerService;
 
 import io.quarkus.vertx.ConsumeEvent;
@@ -43,17 +36,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.Message;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-import org.opensearch.OpenSearchStatusException;
-import org.opensearch.action.support.master.AcknowledgedResponse;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.client.indices.GetComposableIndexTemplateRequest;
-import org.opensearch.client.indices.GetComposableIndexTemplatesResponse;
-import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
-import org.opensearch.cluster.metadata.ComposableIndexTemplate;
-import org.opensearch.cluster.metadata.Template;
-import org.opensearch.core.action.ActionListener;
-import org.opensearch.core.rest.RestStatus;
 
 @ApplicationScoped
 public class JobSchedulerService {
@@ -62,12 +44,8 @@ public class JobSchedulerService {
 		"JobSchedulerService#callPluginDriver";
 	private static final String CANCEL_SCHEDULER =
 		"JobSchedulerService#cancelScheduler";
-	private static final String COPY_INDEX_TEMPLATE =
-		"JobSchedulerService#copyIndexTemplate";
 	private static final String FETCH_DATASOURCE_CONNECTION =
 		"JobSchedulerService#fetchDatasourceConnection";
-	private static final String FETCH_EMBEDDING_MODEL =
-		"JobScheduler#fetchEmbeddingModel";
 	private static final String PERSIST_SCHEDULER =
 		"JobSchedulerService#persistScheduler";
 	private static final String TRIGGER_DATASOURCE =
@@ -75,9 +53,9 @@ public class JobSchedulerService {
 	private static final Logger log =
 		Logger.getLogger(JobSchedulerService.class);
 	@Inject
-	HttpPluginDriverClient httpPluginDriverClient;
+	DataIndexService dataIndexService;
 	@Inject
-	RestHighLevelClient restHighLevelClient;
+	HttpPluginDriverClient httpPluginDriverClient;
 	@Inject
 	SchedulerService schedulerService;
 	@Inject
@@ -110,17 +88,6 @@ public class JobSchedulerService {
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletableFuture<Void> copyIndexTemplate(String tenantId, Scheduler scheduler) {
-
-		CopyIndexTemplateRequest request =
-			new CopyIndexTemplateRequest(tenantId, scheduler);
-
-		return EventBusInstanceHolder
-			.<Void>request(COPY_INDEX_TEMPLATE, request)
-			.map(Message::body)
-			.subscribeAsCompletionStage();
-	}
-
 	public static CompletableFuture<Datasource> fetchDatasourceConnection(
 		String tenantId, long datasourceId) {
 
@@ -131,17 +98,6 @@ public class JobSchedulerService {
 
 		return EventBusInstanceHolder
 			.<Datasource>request(FETCH_DATASOURCE_CONNECTION, request)
-			.map(Message::body)
-			.subscribeAsCompletionStage();
-	}
-
-	public static CompletableFuture<EmbeddingModel> fetchEmbeddingModel(
-		String tenantId) {
-
-		var request = new FetchEmbeddingModelRequest(tenantId);
-
-		return EventBusInstanceHolder
-			.<EmbeddingModel>request(FETCH_EMBEDDING_MODEL, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
 	}
@@ -167,23 +123,6 @@ public class JobSchedulerService {
 			.<Scheduler>request(PERSIST_SCHEDULER, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
-	}
-
-	private static void copyDocTypes(Mutiny.Session s, Scheduler scheduler) {
-		DataIndex oldDataIndex = scheduler.getOldDataIndex();
-		DataIndex newDataIndex = scheduler.getNewDataIndex();
-
-		if (oldDataIndex != null && newDataIndex != null) {
-			Set<DocType> docTypes = oldDataIndex.getDocTypes();
-			if (docTypes != null && !docTypes.isEmpty()) {
-				Set<DocType> refreshed = new LinkedHashSet<>();
-
-				for (DocType docType : docTypes) {
-					refreshed.add(s.getReference(docType));
-				}
-				newDataIndex.setDocTypes(refreshed);
-			}
-		}
 	}
 
 	@ConsumeEvent(CALL_PLUGIN_DRIVER)
@@ -224,93 +163,6 @@ public class JobSchedulerService {
 		return schedulerService.cancelScheduling(tenantId, schedulerId);
 	}
 
-	@ConsumeEvent(COPY_INDEX_TEMPLATE)
-	Uni<Void> copyIndexTemplate(CopyIndexTemplateRequest request) {
-
-		var scheduler = request.scheduler();
-
-		var oldDataIndex = scheduler.getOldDataIndex();
-		var newDataIndex = scheduler.getNewDataIndex();
-
-		var oldIndexName = IndexName.from(request.tenantId(), oldDataIndex).toString();
-		var newIndexName = IndexName.from(request.tenantId(), newDataIndex).toString();
-
-		var indices = restHighLevelClient.indices();
-
-		var getIndexTemplateRequest = new GetComposableIndexTemplateRequest(
-			oldIndexName + "-template");
-
-		return Uni.createFrom()
-			.emitter(emitter -> indices.getIndexTemplateAsync(
-					getIndexTemplateRequest,
-					RequestOptions.DEFAULT,
-					new ActionListener<>() {
-
-						@Override
-						public void onFailure(Exception e) {
-							if (e instanceof OpenSearchStatusException
-								&& ((OpenSearchStatusException) e).status() == RestStatus.NOT_FOUND) {
-
-								log.warn("Cannot Copy Index Template", e);
-
-								emitter.complete(null);
-							}
-							else {
-								emitter.fail(e);
-							}
-						}
-
-						@Override
-						public void onResponse(GetComposableIndexTemplatesResponse indexTemplate) {
-							var iterator = indexTemplate.getIndexTemplates().values().iterator();
-
-							if (iterator.hasNext()) {
-								ComposableIndexTemplate composableIndexTemplate = iterator.next();
-
-								PutComposableIndexTemplateRequest templateRequest =
-									new PutComposableIndexTemplateRequest();
-
-								Template template = composableIndexTemplate.template();
-
-								Objects.requireNonNull(template, "template attribute is null");
-
-								templateRequest
-									.name(newIndexName + "-template")
-									.indexTemplate(new ComposableIndexTemplate(
-										List.of(newIndexName),
-										new Template(
-											template.settings(),
-											template.mappings(),
-											template.aliases()
-										),
-										composableIndexTemplate.composedOf(),
-										composableIndexTemplate.priority(),
-										composableIndexTemplate.version(),
-										composableIndexTemplate.metadata()
-									));
-
-								indices.putIndexTemplateAsync(
-									templateRequest,
-									RequestOptions.DEFAULT,
-									new ActionListener<>() {
-										@Override
-										public void onFailure(Exception e) {
-											emitter.fail(e);
-										}
-
-										@Override
-										public void onResponse(AcknowledgedResponse acknowledgedResponse) {
-											emitter.complete(null);
-										}
-									}
-								);
-							}
-						}
-					}
-				)
-			);
-	}
-
 	@ConsumeEvent(FETCH_DATASOURCE_CONNECTION)
 	Uni<Datasource> fetchDatasourceConnection(
 		FetchDatasourceConnectionRequest request) {
@@ -330,27 +182,24 @@ public class JobSchedulerService {
 		);
 	}
 
-	@ConsumeEvent(FETCH_EMBEDDING_MODEL)
-	Uni<EmbeddingModel> fetchEmbeddingModel(FetchEmbeddingModelRequest request) {
-
-		var tenantId = request.tenantId();
-
-		return sessionFactory.withTransaction(tenantId, (s, t) -> s
-			.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
-			.getSingleResult()
-		);
-	}
-
 	@ConsumeEvent(PERSIST_SCHEDULER)
 	Uni<Scheduler> persistScheduler(PersistSchedulerRequest request) {
 
 		return sessionFactory.withTransaction(request.tenantId(), (s, t) -> {
 
 			var scheduler = request.scheduler();
+			var newDataIndex = scheduler.getNewDataIndex();
 
-			copyDocTypes(s, scheduler);
+			if (newDataIndex == null) {
+				return s.persist(scheduler).map(unused -> scheduler);
+			}
 
-			return s.persist(scheduler).map(unused -> scheduler);
+			// the dataIndex service owns the creation of every dataIndex, and
+			// it must happen in the session the Scheduler is persisted in
+			return dataIndexService.create(s, newDataIndex)
+				.invoke(scheduler::setNewDataIndex)
+				.call(() -> s.persist(scheduler))
+				.map(unused -> scheduler);
 		});
 	}
 
@@ -415,13 +264,9 @@ public class JobSchedulerService {
 
 	private record CancelSchedulerRequest(String tenantId, long schedulerId) {}
 
-	private record CopyIndexTemplateRequest(String tenantId, Scheduler scheduler) {}
-
 	private record FetchDatasourceConnectionRequest(
 		String tenantId, long datasourceId
 	) {}
-
-	private record FetchEmbeddingModelRequest(String tenantId) {}
 
 	private record PersistSchedulerRequest(
 		String tenantId, Scheduler scheduler
