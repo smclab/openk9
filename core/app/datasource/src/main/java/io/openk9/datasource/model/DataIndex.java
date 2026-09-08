@@ -18,7 +18,6 @@
 package io.openk9.datasource.model;
 
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import jakarta.persistence.Column;
@@ -32,7 +31,6 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 
 import io.openk9.datasource.model.util.ExportIgnore;
 import io.openk9.datasource.model.util.K9Entity;
@@ -104,10 +102,18 @@ public class DataIndex extends K9Entity {
 	@JoinColumn(name = "datasource_id", referencedColumnName = "id")
 	private Datasource datasource;
 
-	@Transient
-	@JsonIgnore
+	/**
+	 * The index settings requested at creation time, as a JSON object.
+	 * <p>
+	 * They are applied to the index template of this dataIndex, and are
+	 * inherited by the dataIndex a reindex creates. They are not exposed on
+	 * the GraphQL surface: the {@code settings} field answers what the index
+	 * template declares, which is not necessarily what was requested here.
+	 */
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "settings")
 	@Ignore
-	private Map<String, Object> settingsMap;
+	private String settings;
 
 	@Column(name = "knn_index", updatable = false)
 	@Immutable
