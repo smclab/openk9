@@ -116,6 +116,7 @@ def get_agentic_rag(
             "sort_after_key": sort_after_key,
             "language": language,
             "context_window": context_window,
+            "model_type": model_type,
             "metadata": metadata,
             "retrieve_type": retrieve_type,
             "opensearch_host": opensearch_host,

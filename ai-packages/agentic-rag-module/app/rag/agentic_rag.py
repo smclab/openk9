@@ -55,7 +55,10 @@ from app.utils.conversation_history import (
     load_messages_from_snapshot,
 )
 from app.utils.guardrails import GuardrailType, initialize_guardrail
-from app.utils.llm import generate_conversation_title
+from app.utils.llm import (
+    generate_conversation_title,
+    get_structured_output_method,
+)
 from app.utils.logger import logger
 from app.utils.opensearch_client import get_opensearch_client
 from app.utils.query_rewrite import escape_curly_braces
@@ -1055,16 +1058,32 @@ class RagGraph:
                 analyze_query_prompt
             )
 
+            structured_output_method = get_structured_output_method(
+                self.configuration.get("model_type")
+            )
+
             analyze_query_chain = (
                 analyze_query_prompt_template
                 | self.utility_llm.with_structured_output(
-                    schema=AnalyzeQuestion, include_raw=False, method="function_calling"
+                    schema=AnalyzeQuestion,
+                    include_raw=False,
+                    method=structured_output_method,
                 )
             )
 
             decision = analyze_query_chain.invoke(
                 {"query": query, "context": conversation_context}
             )
+
+            if decision is None:
+                logger.error(
+                    "[analyze_query] structured output returned no object "
+                    "(schema=AnalyzeQuestion, "
+                    f"method={structured_output_method}) -> NEW_QUESTION"
+                )
+                state.domain = ["NEW_QUESTION"]
+                return state
+
             logger.debug(
                 f"[analyze_query] decision={decision.response.value} "
                 f"prompt={prompt_source}"
@@ -1141,16 +1160,34 @@ class RagGraph:
 
             rag_router_prompt_template = PromptTemplate.from_template(rag_router_prompt)
 
+            structured_output_method = get_structured_output_method(
+                self.configuration.get("model_type")
+            )
+
             rag_router_chain = (
                 rag_router_prompt_template
                 | self.llm.with_structured_output(
-                    schema=RouterResponse, include_raw=False, method="function_calling"
+                    schema=RouterResponse,
+                    include_raw=False,
+                    method=structured_output_method,
                 )
             )
 
             decision = rag_router_chain.invoke(
                 {"query": query, "context": conversation_context}
             )
+
+            if decision is None:
+                # No routing decision came back: retrieve anyway, the same way a
+                # media-only query does. Answering without context is the worse
+                # failure for a tenant that has a corpus.
+                logger.error(
+                    "[rag_router] structured output returned no object "
+                    "(schema=RouterResponse, "
+                    f"method={structured_output_method}) -> use_rag=True (RAG)"
+                )
+                state.use_rag = True
+                return state
 
             state.use_rag = "RAG" in decision.response.value
             logger.debug(
@@ -1332,18 +1369,30 @@ class RagGraph:
                 retriever_evaluation_prompt
             )
 
+            structured_output_method = get_structured_output_method(
+                self.configuration.get("model_type")
+            )
+
             retriever_evaluation_chain = (
                 retriever_evaluation_prompt_template
                 | self.llm.with_structured_output(
                     schema=RetrieverEvaluationResponse,
                     include_raw=False,
-                    method="function_calling",
+                    method=structured_output_method,
                 )
             )
 
             classification_response = retriever_evaluation_chain.invoke(
                 {"query": query, "context": context_text}
             )
+
+            if classification_response is None:
+                logger.error(
+                    "[opensearch_retriever_evaluation] structured output "
+                    "returned no object (schema=RetrieverEvaluationResponse, "
+                    f"method={structured_output_method})"
+                )
+                return state
 
             state.retriever_evaluation = classification_response.judgment.value
 
@@ -1406,12 +1455,16 @@ class RagGraph:
                 retriever_evaluation_prompt
             )
 
+            structured_output_method = get_structured_output_method(
+                self.configuration.get("model_type")
+            )
+
             retriever_evaluation_chain = (
                 retriever_evaluation_prompt_template
                 | self.llm.with_structured_output(
                     schema=RetrieverEvaluationResponseList,
                     include_raw=False,
-                    method="function_calling",
+                    method=structured_output_method,
                 )
             )
 
@@ -1421,6 +1474,15 @@ class RagGraph:
                     "chunks": chunks,
                 }
             )
+
+            if classification_response is None:
+                logger.error(
+                    "[opensearch_retriever_chunks_evaluation] structured output "
+                    "returned no object "
+                    "(schema=RetrieverEvaluationResponseList, "
+                    f"method={structured_output_method})"
+                )
+                return state
 
             for response in classification_response.evaluations:
                 evaluation = {
@@ -1445,6 +1507,10 @@ class RagGraph:
 
             chunks = []
             total_chunks = len(chunks)
+
+            structured_output_method = get_structured_output_method(
+                self.configuration.get("model_type")
+            )
 
             evaluations = []
             for chunk_number, document in enumerate(context, start=1):
@@ -1475,7 +1541,7 @@ class RagGraph:
                     | self.llm.with_structured_output(
                         schema=RetrieverEvaluationResponse,
                         include_raw=False,
-                        method="function_calling",
+                        method=structured_output_method,
                     )
                 )
 
@@ -1488,6 +1554,16 @@ class RagGraph:
                         "chunk_id": document.metadata["document_id"],
                     }
                 )
+
+                if classification_response is None:
+                    logger.error(
+                        "[opensearch_retriever_chunks_evaluation_for] structured "
+                        "output returned no object for chunk "
+                        f"{document.metadata['document_id']} "
+                        "(schema=RetrieverEvaluationResponse, "
+                        f"method={structured_output_method})"
+                    )
+                    continue
 
                 evaluation = {
                     "chunk_id": classification_response.chunk_id,
@@ -1649,18 +1725,29 @@ class RagGraph:
             clarity_llm_judge_prompt
         )
 
+        structured_output_method = get_structured_output_method(
+            self.configuration.get("model_type")
+        )
+
         classification_chain = (
             classification_prompt_template
             | self.llm.with_structured_output(
                 schema=ClassificationResponse,
                 include_raw=False,
-                method="function_calling",
+                method=structured_output_method,
             )
         )
 
         classification_response = classification_chain.invoke(
             {"query": query, "response": response}
         )
+
+        if classification_response is None:
+            logger.error(
+                "[response_evaluation] structured output returned no object "
+                f"(schema=ClassificationResponse, method={structured_output_method})"
+            )
+            return state
 
         state.response_evaluation = classification_response.judgment.value
 

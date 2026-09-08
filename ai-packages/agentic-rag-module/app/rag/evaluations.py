@@ -18,8 +18,6 @@
 import json
 from enum import Enum
 
-from app.utils.llm import initialize_language_model
-from app.utils.logger import logger
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from phoenix.client import Client
@@ -28,6 +26,12 @@ from phoenix.evals import (
 )
 from phoenix.trace import suppress_tracing
 from pydantic import BaseModel, Field
+
+from app.utils.llm import (
+    get_structured_output_method,
+    initialize_language_model,
+)
+from app.utils.logger import logger
 
 
 class ClassificationEnum(str, Enum):
@@ -91,6 +95,7 @@ def response_evaluation(
     span_id,
     query,
     response,
+    model_type,
 ):
     try:
         clarity_llm_judge_prompt = """
@@ -114,19 +119,29 @@ def response_evaluation(
             clarity_llm_judge_prompt
         )
 
+        structured_output_method = get_structured_output_method(model_type)
+
         with suppress_tracing():
             classification_chain = (
                 classification_prompt_template
                 | llm.with_structured_output(
                     schema=ClassificationResponse,
                     include_raw=False,
-                    method="function_calling",
+                    method=structured_output_method,
                 )
             )
 
             classification_response = classification_chain.invoke(
                 {"query": query, "response": response}
             )
+
+            if classification_response is None:
+                logger.error(
+                    "[response_evaluation] structured output returned no object "
+                    "(schema=ClassificationResponse, "
+                    f"method={structured_output_method})"
+                )
+                return
 
             judgment = classification_response.judgment.value
             explanation = classification_response.explanation
@@ -190,6 +205,7 @@ def retriever_evaluation(
     span_id,
     query,
     context,
+    model_type,
 ):
     try:
         chunks = []
@@ -241,13 +257,15 @@ def retriever_evaluation(
             retriever_evaluation_prompt
         )
 
+        structured_output_method = get_structured_output_method(model_type)
+
         with suppress_tracing():
             retriever_evaluation_chain = (
                 retriever_evaluation_prompt_template
                 | llm.with_structured_output(
                     schema=RetrieverEvaluationResponseList,
                     include_raw=False,
-                    method="function_calling",
+                    method=structured_output_method,
                 )
             )
 
@@ -257,6 +275,14 @@ def retriever_evaluation(
                     "chunks": chunks,
                 }
             )
+
+            if classification_response is None:
+                logger.error(
+                    "[retriever_evaluation] structured output returned no object "
+                    "(schema=RetrieverEvaluationResponseList, "
+                    f"method={structured_output_method})"
+                )
+                return
 
             for response in classification_response.evaluations:
                 annotation = client.annotations.add_span_annotation(
@@ -289,6 +315,7 @@ def evaluations(
     chunk_window = rag_configuration.get("chunk_window")
     metadata = rag_configuration.get("metadata")
     rag_tool_description = rag_configuration.get("rag_tool_description")
+    model_type = llm_configuration.get("model_type")
 
     # Carried over whole, so the evaluation runs against the same model the
     # chat it is judging used: redeclared key by key, this dropped aws_bedrock
@@ -330,7 +357,7 @@ def evaluations(
             use_rag = output_value_dict.get("use_rag", False)
 
             if evaluate_response and query and response:
-                response_evaluation(llm, client, span_id, query, response)
+                response_evaluation(llm, client, span_id, query, response, model_type)
                 evaluated_spans.add(span_id)
 
             if evaluate_rag_router:
@@ -340,7 +367,7 @@ def evaluations(
                 evaluated_spans.add(span_id)
 
             if evaluate_retriever and context:
-                retriever_evaluation(llm, client, span_id, query, context)
+                retriever_evaluation(llm, client, span_id, query, context, model_type)
                 evaluated_spans.add(span_id)
 
     return evaluated_spans
