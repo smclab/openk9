@@ -176,7 +176,8 @@ with grpc.insecure_channel("localhost:5000") as channel:
 
 - Text is split using the selected chunking strategy (See Configuration)
 
-- Each chunk is embedded using the configured embedding model
+- All the chunks are embedded with a single request to the configured
+  embedding model
 
 - Embeddings are returned in order with metadata
 

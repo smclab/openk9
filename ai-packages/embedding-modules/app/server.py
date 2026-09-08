@@ -333,12 +333,20 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
             total_chunks = len(text_splitted)
 
-            for index, chunk_text in enumerate(text_splitted, start=1):
+            # one request for the whole document, through embed_documents:
+            # the vectors are then matched to their chunk by position
+            vectors = (
+                embeddings.embed_documents(text_splitted) if text_splitted else []
+            )
+
+            for index, (chunk_text, chunk_vectors) in enumerate(
+                zip(text_splitted, vectors), start=1
+            ):
                 chunk_result = {
                     "number": index,
                     "total": total_chunks,
                     "text": chunk_text,
-                    "vectors": embeddings.embed_query(chunk_text),
+                    "vectors": chunk_vectors,
                 }
                 chunks.append(chunk_result)
 
