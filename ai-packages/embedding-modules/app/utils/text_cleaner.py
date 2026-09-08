@@ -30,11 +30,15 @@ warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 # Characters to keep, by Unicode property, mirroring the Java counterpart in
 # core/app/tika/.../TextCleaner.java: letters of every script, digits, math
 # symbols (+ = | < >), currency (€ $ £ …), every form of dash, and the
-# punctuation that carries meaning. `\p{Pc}` (the underscore) is the one
-# deviation: it holds snake_case identifiers together, and dropping it would
-# glue words exactly like the missing apostrophe did.
+# punctuation that carries meaning. Three deviations from the Java list:
+# `\p{Pc}`, the underscore, because dropping it would glue snake_case
+# identifiers exactly like the missing apostrophe glued words, and
+# `\p{Pi}\p{Pf}`, the typographic quotes “ ” « », which the ASCII pair does
+# not cover and which the Java list loses as well. The degree sign is listed
+# by hand rather than by its category: "360°" and "20°C" change meaning
+# without it, while the rest of `\p{So}` is decoration.
 UNWANTED_CHARACTERS = regex.compile(
-    r"[^\p{L}\p{Nd}\p{Sm}\p{Sc}\p{Pd}\p{Pc}\s.,;:?!\"'’()/%@&]"
+    r"[^\p{L}\p{Nd}\p{Sm}\p{Sc}\p{Pd}\p{Pc}\p{Pi}\p{Pf}\s.,;:?!\"'()/%@&°]"
 )
 
 # Summary and figure-list entries docling emits as markdown links with an empty

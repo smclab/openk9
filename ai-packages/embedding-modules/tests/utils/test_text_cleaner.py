@@ -80,6 +80,20 @@ def test_keeps_currency_symbols_and_signs():
     assert clean_text("Costo: 1.500 € (+20%)") == "Costo: 1.500 € (+20%)"
 
 
+def test_keeps_typographic_quotes():
+    """Once the accents were restored, the curly quotes were still a third of
+    the non-ASCII characters the cleaner threw away on a real corpus."""
+    assert clean_text("il «Contratto» e le “Condizioni”") == (
+        "il «Contratto» e le “Condizioni”"
+    )
+
+
+def test_keeps_the_degree_sign():
+    """"360°" carries a meaning "360" does not, and the same holds for a
+    temperature."""
+    assert clean_text("visione a 360° a 20°C") == "visione a 360° a 20°C"
+
+
 def test_keeps_email_addresses_intact():
     """Without "@" in the keep-list every contact became unreachable:
     "info@axa-mpsdanni.it" was indexed as "infoaxa-mpsdanni.it"."""
