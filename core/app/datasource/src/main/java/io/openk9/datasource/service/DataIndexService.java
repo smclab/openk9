@@ -91,6 +91,11 @@ public class DataIndexService
 
 	private static Map<String, Object> getSettingsMap(String settingsJson) {
 
+		// no settings were requested, which is not a decoding failure
+		if (settingsJson == null) {
+			return Map.of();
+		}
+
 		Map<String, Object> settingsMap = null;
 		try {
 			var settingsJsonObj = (JsonObject) Json.decodeValue(settingsJson);

@@ -274,9 +274,9 @@ public class IndexService {
 	 * not necessarily the settings the index is running with.
 	 *
 	 * @param indexName the name of the index whose index template is read
-	 * @return the settings the index template declares
-	 * @throws org.opensearch.index.IndexNotFoundException when the index
-	 * template does not exist
+	 * @return a {@link Uni} emitting the settings the index template declares,
+	 * failing with an {@link IndexNotFoundException} when the index template
+	 * does not exist
 	 */
 	public Uni<String> getIndexTemplateSettings(IndexName indexName) {
 		var indexTemplateName = indexName + TEMPLATE_SUFFIX;
