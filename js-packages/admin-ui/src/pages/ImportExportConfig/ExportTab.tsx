@@ -1,0 +1,232 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+import { useToast } from "@components/Form/Form/ToastProvider";
+import { useRestClient } from "@components/queryClient";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
+import CropFreeOutlinedIcon from "@mui/icons-material/CropFreeOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import {
+  Box,
+  Button,
+  Card,
+  Checkbox,
+  CircularProgress,
+  Divider,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import { useMutation } from "@tanstack/react-query";
+import React from "react";
+import { extractProblemDetails } from "utils/health";
+import { downloadConfigPackage, redactedEntities } from "./configPackage";
+import { ExportGroupId, exportGroups, typesOfGroups } from "./exportTypeGroups";
+import { useTranslation } from "react-i18next";
+
+const SECRETS_NOTE =
+  'Secrets (e.g. API keys) and the keys in the denylist are automatically removed or replaced with "__REDACTED__".';
+
+type Depth = "deep" | "shallow";
+
+const DEPTHS: { value: Depth; label: string; description: string; Icon: typeof AccountTreeOutlinedIcon }[] = [
+  {
+    value: "deep",
+    label: "Deep (with dependencies)",
+    description: "Automatically includes every dependent entity, for a self-contained package.",
+    Icon: AccountTreeOutlinedIcon,
+  },
+  {
+    value: "shallow",
+    label: "Shallow (selection only)",
+    description:
+      "Exports only the selected types, adding no dependencies. The missing references are reported on import.",
+    Icon: CropFreeOutlinedIcon,
+  },
+];
+
+/** Exports the tenant configuration: which types to take, and how deep. */
+export function ExportTab() {
+  const { t } = useTranslation();
+  const restClient = useRestClient();
+  const showToast = useToast();
+
+  const [selected, setSelected] = React.useState<ReadonlySet<ExportGroupId>>(new Set());
+  const [depth, setDepth] = React.useState<Depth>("deep");
+
+  const toggle = (id: ExportGroupId) =>
+    setSelected((current) => {
+      const next = new Set(current);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+
+  const exportMutation = useMutation({
+    mutationFn: () => restClient.configResource.exportConfig(typesOfGroups(selected), depth === "deep"),
+    onSuccess: (configPackage) => {
+      downloadConfigPackage(configPackage);
+      const entities = configPackage.entities ?? [];
+      const redacted = redactedEntities(entities).reduce((total, entity) => total + entity.fields.length, 0);
+      showToast({
+        displayType: "success",
+        title: "Configuration exported",
+        content: `${entities.length} entities downloaded, ${redacted} secret fields redacted.`,
+      });
+    },
+    onError: (error: unknown) => {
+      showToast({
+        displayType: "error",
+        title: "Export failed",
+        // The backend answers with a Problem body, whose detail is the message
+        // to show; the fallback covers a request that never reached it.
+        content: extractProblemDetails(error, t).detail ?? "The tenant configuration could not be exported.",
+      });
+    },
+  });
+
+  return (
+    <Card sx={{ p: 2.5 }}>
+      <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 2.5 }}>
+        <Box sx={{ flex: 2, minWidth: 0 }}>
+          <Typography component="h2" variant="h3" fontWeight="600">
+            Export configuration
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Select the configuration types to include in the package.
+          </Typography>
+
+          <Typography variant="body2" fontWeight="600" sx={{ mb: 1 }}>
+            Configuration types
+          </Typography>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 1 }}>
+            {exportGroups.map(({ id, label, Icon, types }) => (
+              <Tooltip key={id} title={types.join(", ")}>
+                <FormControlLabel
+                  control={<Checkbox checked={selected.has(id)} onChange={() => toggle(id)} />}
+                  label={
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}>
+                      <Icon fontSize="small" color="action" />
+                      <Typography variant="body2" noWrap>
+                        {label}
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{ m: 0, px: 1, borderRadius: 2, border: "1px solid", borderColor: "divider", minWidth: 0 }}
+                />
+              </Tooltip>
+            ))}
+          </Box>
+
+          <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setSelected(new Set(exportGroups.map((group) => group.id)))}
+            >
+              Select all
+            </Button>
+            <Button variant="outlined" size="small" onClick={() => setSelected(new Set())}>
+              Deselect all
+            </Button>
+          </Box>
+
+          <Box sx={{ mt: 2.5, display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+            <Button
+              variant="contained"
+              startIcon={
+                exportMutation.isLoading ? <CircularProgress size={16} color="inherit" /> : <DownloadOutlinedIcon />
+              }
+              disabled={exportMutation.isLoading}
+              onClick={() => exportMutation.mutate()}
+            >
+              Export configuration
+            </Button>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <InfoOutlinedIcon fontSize="small" color="action" />
+              <Typography variant="body2" color="text.secondary">
+                {selected.size === 0
+                  ? "No selection: the whole tenant will be downloaded as JSON."
+                  : "The package will be downloaded as JSON."}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        <Divider flexItem orientation="vertical" sx={{ display: { xs: "none", md: "block" } }} />
+
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography component="h2" variant="h3" fontWeight="600">
+            Export depth
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            Choose whether to also include the dependencies of the selected entities.
+          </Typography>
+
+          <RadioGroup
+            value={depth}
+            onChange={(event) => setDepth(event.target.value === "shallow" ? "shallow" : "deep")}
+          >
+            {DEPTHS.map(({ value, label, description, Icon }) => (
+              <FormControlLabel
+                key={value}
+                value={value}
+                control={<Radio />}
+                sx={{
+                  m: 0,
+                  mb: 1,
+                  p: 1.5,
+                  alignItems: "flex-start",
+                  borderRadius: 2.5,
+                  border: "1px solid",
+                  borderColor: depth === value ? "primary.main" : "divider",
+                }}
+                label={
+                  <Box sx={{ display: "flex", gap: 1.5 }}>
+                    <Icon fontSize="small" color={depth === value ? "primary" : "action"} sx={{ mt: 0.25 }} />
+                    <Box>
+                      <Typography variant="body2" fontWeight="600">
+                        {label}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {description}
+                      </Typography>
+                    </Box>
+                  </Box>
+                }
+              />
+            ))}
+          </RadioGroup>
+
+          <Box sx={{ mt: 1, p: 1.5, borderRadius: 2.5, border: "1px solid", borderColor: "divider" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+              <LockOutlinedIcon fontSize="small" color="action" />
+              <Typography variant="body2" fontWeight="600">
+                Secret redaction
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {SECRETS_NOTE}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </Card>
+  );
+}

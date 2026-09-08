@@ -43,6 +43,7 @@ import {
   postV2Trigger,
 } from "../openapi-generated/sdk.gen";
 import type {
+  ConfigEntityType,
   ConfigPackage,
   HybridSearchPipelineDto,
   ImportMode,
@@ -76,17 +77,24 @@ export const openApiRestClient = {
     form: (body: ResourceUri) => form({ body, ...t }).then((r) => r.data),
   },
   configResource: {
-    exportConfig: () => getV1ConfigExport({ ...t }).then((r) => r.data),
+    // An empty `types` exports the whole tenant, so it is left out rather than
+    // sent as an empty parameter.
+    exportConfig: (types: ConfigEntityType[], includeDependencies: boolean) =>
+      getV1ConfigExport({
+        query: { ...(types.length > 0 && { types }), includeDependencies },
+        ...t,
+      }).then((r) => r.data),
     // The spec does not describe the import request body, so the generated
     // `postV1ConfigImport` types it as `never`. Go through the client directly
     // and keep the package typed here instead.
     // `dryRun` defaults to `true` on the backend (preview the plan, write
-    // nothing): this call applies the package, so it always sends `false`.
-    importConfig: (body: ConfigPackage, mode: ImportMode) =>
+    // nothing). The caller decides: the import screen previews first and only
+    // then applies, so the flag travels as an argument.
+    importConfig: (body: ConfigPackage, mode: ImportMode, dryRun: boolean) =>
       client
         .post<PostV1ConfigImportResponses, unknown, true>({
           url: "/v1/config/import",
-          query: { mode, dryRun: false },
+          query: { mode, dryRun },
           body,
           ...t,
         })

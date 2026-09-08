@@ -39,7 +39,10 @@
     "query-analysis": "Query Analysis",
     "rules": "Rules",
     "annotators": "Annotators",
-    "admin-settings": "Admin Settings"
+    "admin-settings": "Admin Settings",
+    "admin-settings-group": "Admin Settings",
+    "admin-settings-general": "General settings",
+    "import-export": "Import / Export configurations"
   },
   "common": {
     "active": "Active",
@@ -313,9 +316,11 @@
           "not-a-package": "The file does not contain a configuration package.",
           "missing-schema-version": "The package has no schemaVersion: it is not an OpenK9 configuration export.",
           "no-entities": "The package contains no entities to import.",
-          "entity-without-type": "The package contains entities without a type."
+          "entity-without-type": "The package contains entities without a type.",
+          "too-large": "The file is larger than 50 MB."
         }
-      }
+      },
+      "general-title": "General settings"
     },
     "analyzers": {
       "title": "Analyzers",

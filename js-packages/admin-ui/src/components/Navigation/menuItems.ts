@@ -116,7 +116,18 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
-  { labelKey: "nav.admin-settings", path: "/admin-settings", IsChildren: false, value: "admin-settings" },
+  {
+    labelKey: "nav.admin-settings-group",
+    isGroup: true,
+    IsChildren: false,
+    value: "admin-settings-group",
+    children: [
+      { labelKey: "nav.admin-settings-general", path: "/admin-settings", IsChildren: true, value: "admin-settings" },
+      // Deliberately not nested under /admin-settings: the active item is resolved
+      // by `startsWith` over `namePath`, so a child path would also match its parent.
+      { labelKey: "nav.import-export", path: "/import-export", IsChildren: true, value: "import-export" },
+    ],
+  },
 ];
 
 export const useFilteredMenuItems = (searchTerm: string) => {

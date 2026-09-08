@@ -49,6 +49,7 @@ import {
   EmbeddingModels,
   EnrichItems,
   Highlights,
+  ImportExportConfig,
   InformationNotification,
   LargeLanguageModels,
   Pipelines,
@@ -516,6 +517,7 @@ const AppRoutes = ({ setExtraFab }: AppRoutesProps) => (
     <Route path="/rag-configuration/:ragConfigId/:view" element={<SaveRagConfiguration setExtraFab={setExtraFab} />} />
 
     <Route path="/admin-settings" element={<AdminSettings />} />
+    <Route path="/import-export" element={<ImportExportConfig />} />
   </Routes>
 );
 

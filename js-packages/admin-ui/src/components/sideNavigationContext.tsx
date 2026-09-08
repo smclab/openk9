@@ -79,9 +79,12 @@ export type NamePath =
   | "rag-configuration"
   | "rag-configurations"
   | "connectors"
-  | "admin-settings";
+  | "admin-settings"
+  | "admin-settings-group"
+  | "import-export";
 
 export const namePath: { label: NamePath; value: NamePath }[] = [
+  { label: "import-export", value: "import-export" },
   { label: "admin-settings", value: "admin-settings" },
   { label: "admin", value: "admin" },
   { label: "dashboard", value: "dashboard" },

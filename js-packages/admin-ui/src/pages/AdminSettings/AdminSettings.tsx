@@ -19,14 +19,12 @@ import { Box, Typography } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { AppearanceSection } from "./AppearanceSection";
-import { ImportExportSection } from "./ImportExportSection";
 
 /**
  * The tenant-wide preferences of the administrator.
  *
  * Every control here acts on its own: the appearance preference is stored as
- * soon as it is picked, and import and export run immediately. There is no
- * page-level save step.
+ * soon as it is picked. There is no page-level save step.
  */
 export function AdminSettings() {
   const { t } = useTranslation();
@@ -35,7 +33,7 @@ export function AdminSettings() {
     <ContainerFluid size="lg" flexColumn>
       <Box>
         <Typography component="h1" variant="h1" fontWeight="600">
-          {t("pages.admin-settings.title")}
+          {t("pages.admin-settings.general-title")}
         </Typography>
         <Typography variant="body1" color="text.secondary">
           {t("pages.admin-settings.description")}
@@ -43,7 +41,6 @@ export function AdminSettings() {
       </Box>
 
       <AppearanceSection />
-      <ImportExportSection />
     </ContainerFluid>
   );
 }

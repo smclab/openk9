@@ -49,6 +49,20 @@ export type ParsedPackage = {
  */
 export type ParseResult = { ok: true; parsed: ParsedPackage } | { ok: false; errorKey: string };
 
+/** Anything larger is refused before it is read, let alone uploaded. */
+const MAX_PACKAGE_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Reads a picked file into a package. The size is checked first, so an oversized
+ * file is never loaded into memory as a string nor sent to the backend.
+ */
+export async function readConfigPackage(file: File): Promise<ParseResult> {
+  if (file.size > MAX_PACKAGE_BYTES) {
+    return { ok: false, errorKey: "pages.admin-settings.import-export.parse-error.too-large" };
+  }
+  return parseConfigPackage(await file.text());
+}
+
 /**
  * Validates the shape the import endpoint requires: a schema version and a
  * non-empty entity list. The version itself is not matched against a constant —

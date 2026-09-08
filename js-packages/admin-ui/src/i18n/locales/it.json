@@ -39,7 +39,10 @@
     "query-analysis": "Analisi query",
     "rules": "Regole",
     "annotators": "Annotatori",
-    "admin-settings": "Impostazioni di amministrazione"
+    "admin-settings": "Impostazioni di amministrazione",
+    "admin-settings-group": "Impostazioni di amministrazione",
+    "admin-settings-general": "Impostazioni generali",
+    "import-export": "Import / Export configurazioni"
   },
   "common": {
     "active": "Attivo",
@@ -313,9 +316,11 @@
           "not-a-package": "Il file non contiene un pacchetto di configurazione.",
           "missing-schema-version": "Il pacchetto non contiene schemaVersion: non è un'esportazione di configurazione OpenK9.",
           "no-entities": "Il pacchetto non contiene entità da importare.",
-          "entity-without-type": "Il pacchetto contiene entità senza tipo."
+          "entity-without-type": "Il pacchetto contiene entità senza tipo.",
+          "too-large": "Il file supera i 50 MB."
         }
-      }
+      },
+      "general-title": "Impostazioni generali"
     },
     "analyzers": {
       "title": "Analizzatori",
