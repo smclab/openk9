@@ -28,6 +28,7 @@ import java.util.Set;
 import io.openk9.datasource.index.exception.DeleteDataIndexException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -645,7 +646,7 @@ public class DataIndexService
 		}
 
 		return embeddingModelService.fetchCurrent(session)
-			.onFailure()
+			.onFailure(NoResultException.class)
 			.transform(throwable -> new ValidationException(String.format(
 				"Cannot create the dataIndex %s: knnIndex is set to true but" +
 				" there is no active embedding model on this tenant." +
