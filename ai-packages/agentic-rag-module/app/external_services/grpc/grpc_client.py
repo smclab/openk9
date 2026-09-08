@@ -318,6 +318,9 @@ def get_llm_configuration(grpc_host, tenant_id):
         chat_vertex_ai_credentials = json_config.get("credentials")
         chat_vertex_ai_model_garden = json_config.get("chat_vertex_ai_model_garden")
         aws_bedrock = json_config.get("aws_bedrock")
+        reasoning = json_config.get("reasoning")
+        keep_alive = json_config.get("keep_alive")
+        num_gpu = json_config.get("num_gpu")
 
         configuration = {
             "api_url": api_url,
@@ -332,6 +335,9 @@ def get_llm_configuration(grpc_host, tenant_id):
             "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
             "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
             "aws_bedrock": aws_bedrock,
+            "reasoning": reasoning,
+            "keep_alive": keep_alive,
+            "num_gpu": num_gpu,
         }
 
         return configuration

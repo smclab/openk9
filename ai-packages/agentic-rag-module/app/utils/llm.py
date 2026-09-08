@@ -36,6 +36,10 @@ from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
+# Ollama unloads a model after five minutes of inactivity and the first
+# question after a pause pays the reload; keep_alive in the jsonConfig of the
+# LLM overrides this, in seconds (0 unloads at once, -1 keeps it resident).
+DEFAULT_KEEP_ALIVE = 1800
 
 
 class ModelType(Enum):
@@ -151,6 +155,14 @@ def initialize_language_model(configuration, temperature=None):
                 Configurations for Google Vertex AI Model Garden (required if using CHAT_VERTEX_AI_MODEL_GARDEN).
             - "aws_bedrock": dict
                 Configurations for AWS Bedrock (required if using AWS_BEDROCK).
+            - "reasoning": bool
+                Whether the model thinks before answering (OLLAMA only, default False).
+            - "keep_alive": int
+                Seconds the model stays resident in Ollama after a call (OLLAMA only,
+                defaults to DEFAULT_KEEP_ALIVE).
+            - "num_gpu": int
+                Maximum number of model layers Ollama keeps in VRAM (OLLAMA only,
+                left to Ollama when absent).
 
     Returns:
     -------
@@ -180,11 +192,18 @@ def initialize_language_model(configuration, temperature=None):
             )
         case ModelType.OLLAMA.value:
             context_window = configuration["context_window"]
+            keep_alive = configuration.get("keep_alive")
+            # Ollama turns thinking on by itself on the models that support it,
+            # which costs a multiple of every call the graph spends on
+            # classifying; num_gpu left to None leaves the split to Ollama.
             llm = ChatOllama(
                 model=model,
                 base_url=api_url,
                 num_ctx=context_window,
                 temperature=temperature,
+                reasoning=bool(configuration.get("reasoning")),
+                keep_alive=DEFAULT_KEEP_ALIVE if keep_alive is None else keep_alive,
+                num_gpu=configuration.get("num_gpu"),
             )
         case ModelType.HUGGING_FACE_CUSTOM.value:
             llm = CustomChatHuggingFaceModel(base_url=api_url)
