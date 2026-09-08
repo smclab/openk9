@@ -18,14 +18,13 @@
 import time
 
 import grpc
-from fastapi import HTTPException, status
-from google.protobuf import json_format
-from google.protobuf.json_format import ParseDict
-
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
 from app.external_services.grpc.searcher import searcher_pb2, searcher_pb2_grpc
 from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
 from app.utils.logger import logger
+from fastapi import HTTPException, status
+from google.protobuf import json_format
+from google.protobuf.json_format import ParseDict
 
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 
@@ -333,6 +332,9 @@ def get_llm_configuration(grpc_host, tenant_id):
         chat_vertex_ai_credentials = json_config.get("credentials")
         chat_vertex_ai_model_garden = json_config.get("chat_vertex_ai_model_garden")
         aws_bedrock = json_config.get("aws_bedrock")
+        reasoning = json_config.get("reasoning")
+        keep_alive = json_config.get("keep_alive")
+        num_gpu = json_config.get("num_gpu")
 
         configuration = {
             "api_url": api_url,
@@ -347,6 +349,9 @@ def get_llm_configuration(grpc_host, tenant_id):
             "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
             "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
             "aws_bedrock": aws_bedrock,
+            "reasoning": reasoning,
+            "keep_alive": keep_alive,
+            "num_gpu": num_gpu,
         }
 
         return configuration
