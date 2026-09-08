@@ -49,6 +49,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
@@ -223,13 +224,10 @@ public class DataIndexService
 	public Uni<DataIndex> create(Mutiny.Session session, DataIndex dataIndex) {
 		var settingsMap = dataIndex.getSettingsMap();
 
-		return merge(session, dataIndex)
-			.call(merged -> getCurrentTenant(session)
-				.call(tenantId -> embeddingModelService
-					.fetchCurrent(session)
-					.onFailure()
-					.recoverWithNull()
-					.flatMap(embeddingModel ->
+		return resolveEmbeddingModel(session, dataIndex)
+			.flatMap(embeddingModel -> merge(session, dataIndex)
+				.call(merged -> getCurrentTenant(session)
+					.flatMap(tenantId ->
 						indexMappingService.createDataIndexTemplate(
 							new DataIndexTemplate(
 								tenantId,
@@ -574,6 +572,37 @@ public class DataIndexService
 
 				return dataIndex;
 			});
+	}
+
+	/**
+	 * Resolves the embedding model the index template must be generated from.
+	 * <p>
+	 * A knn dataIndex needs the tenant active embedding model to receive its
+	 * {@code knn_vector} mapping, so its creation is refused when no model is
+	 * active. A plain dataIndex never consults the model.
+	 *
+	 * @param session   the session the active embedding model is looked up in
+	 * @param dataIndex the dataIndex being created
+	 * @return the tenant active embedding model, or {@code null} when the
+	 * dataIndex is not a knn index
+	 */
+	private Uni<EmbeddingModel> resolveEmbeddingModel(
+		Mutiny.Session session, DataIndex dataIndex) {
+
+		var knnIndex = dataIndex.getKnnIndex();
+
+		if (knnIndex == null || !knnIndex) {
+			return Uni.createFrom().nullItem();
+		}
+
+		return embeddingModelService.fetchCurrent(session)
+			.onFailure()
+			.transform(throwable -> new ValidationException(String.format(
+				"Cannot create the dataIndex %s: knnIndex is set to true but" +
+				" there is no active embedding model on this tenant." +
+				" Enable an embedding model or disable knnIndex.",
+				dataIndex.getName()
+			)));
 	}
 
 	@Override
