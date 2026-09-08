@@ -71,6 +71,11 @@ logger.addHandler(console_handler)
 # default text embedding parameters
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "text-embedding-3-small"
+# Ollama unloads a model after five minutes of inactivity, so a run of the
+# indexing that follows a pause pays the reload; keep_alive in the jsonConfig
+# of the embedding model overrides this, in seconds (0 unloads at once, -1
+# keeps it resident).
+DEFAULT_KEEP_ALIVE = 1800
 
 chunk_types = {
     0: RecursiveChunker,
@@ -167,6 +172,12 @@ def initialize_embedding_model(configuration):
                 Credentials for Google Vertex AI (required if using Vertexai).
             - "aws_bedrock": dict
                 Configurations for AWS Bedrock (required if using AWS_BEDROCK).
+            - "keep_alive": int
+                Seconds the model stays resident in Ollama after a call (OLLAMA only,
+                defaults to DEFAULT_KEEP_ALIVE).
+            - "num_gpu": int
+                Maximum number of model layers Ollama keeps in VRAM (OLLAMA only,
+                left to Ollama when absent).
 
     Returns:
     -------
@@ -187,7 +198,16 @@ def initialize_embedding_model(configuration):
             else:
                 embeddings = OpenAIEmbeddings(model=model)
         case ModelType.OLLAMA.value:
-            embeddings = OllamaEmbeddings(model=model, base_url=api_url)
+            keep_alive = configuration.get("keep_alive")
+            # num_gpu=0 runs the embedder on CPU and leaves the VRAM to the
+            # generator, so a single Ollama serving both stops evicting one
+            # model on every call to the other; None leaves the split to Ollama.
+            embeddings = OllamaEmbeddings(
+                model=model,
+                base_url=api_url,
+                keep_alive=DEFAULT_KEEP_ALIVE if keep_alive is None else keep_alive,
+                num_gpu=configuration.get("num_gpu"),
+            )
         case ModelType.IBM_WATSONX.value:
             os.environ["WATSONX_APIKEY"] = api_key
             watsonx_project_id = configuration.get("watsonx_project_id")
@@ -264,6 +284,8 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                     "chat_vertex_ai_model_garden"
                 ),
                 "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
+                "keep_alive": embedding_model_json_config.get("keep_alive"),
+                "num_gpu": embedding_model_json_config.get("num_gpu"),
             }
             embeddings = initialize_embedding_model(configuration)
 
