@@ -159,7 +159,7 @@ public class DataIndexGraphqlResource {
 
 	public Uni<String> settings(@Source DataIndex dataIndex) {
 		return dataIndexService
-			.getSettings(dataIndex.getId());
+			.getIndexTemplateSettings(dataIndex.getId());
 	}
 
 }

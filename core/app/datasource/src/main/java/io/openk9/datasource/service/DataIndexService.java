@@ -490,11 +490,18 @@ public class DataIndexService
 		return new String[]{DataIndex_.NAME, DataIndex_.DESCRIPTION};
 	}
 
-	public Uni<String> getSettings(long dataIndexId) {
+	/**
+	 * Reads the settings declared in the index template of a dataIndex, which
+	 * are not necessarily the settings it was created with.
+	 *
+	 * @param dataIndexId the id of the dataIndex
+	 * @return the settings the index template declares
+	 */
+	public Uni<String> getIndexTemplateSettings(long dataIndexId) {
 		return sessionFactory.withTransaction(s -> getCurrentTenant(s)
 			.flatMap(tenantId -> findById(s, dataIndexId)
 				.flatMap(dataIndex -> indexService
-					.getSettings(IndexName.from(tenantId, dataIndex)))
+					.getIndexTemplateSettings(IndexName.from(tenantId, dataIndex)))
 			)
 		);
 	}
