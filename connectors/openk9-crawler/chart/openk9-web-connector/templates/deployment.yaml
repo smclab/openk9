@@ -11,8 +11,6 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-  strategy:
-    type: Recreate
   template:
     metadata:
       {{- if .Values.commonAnnotations }}
