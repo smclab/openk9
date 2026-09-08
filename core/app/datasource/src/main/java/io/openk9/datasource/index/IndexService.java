@@ -269,7 +269,16 @@ public class IndexService {
 		return get_catIndices(indexNames.toArray(String[]::new));
 	}
 
-	public Uni<String> getSettings(IndexName indexName) {
+	/**
+	 * Reads the settings declared in the index template of an index, which are
+	 * not necessarily the settings the index is running with.
+	 *
+	 * @param indexName the name of the index whose index template is read
+	 * @return the settings the index template declares
+	 * @throws org.opensearch.index.IndexNotFoundException when the index
+	 * template does not exist
+	 */
+	public Uni<String> getIndexTemplateSettings(IndexName indexName) {
 		var indexTemplateName = indexName + TEMPLATE_SUFFIX;
 
 		return Uni
