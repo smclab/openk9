@@ -312,17 +312,26 @@ class ReindexDataIndexTest {
 
 		disableEmbeddingModel();
 
+		var scheduler = newReindexScheduler(datasourceId);
+
 		// the reindex fails instead of degrading to an index without vectors
 		var exception = assertThrows(
-			CompletionException.class, () -> reindex(datasourceId));
+			CompletionException.class,
+			() -> JobSchedulerService.persistScheduler(TENANT_ID, scheduler).join()
+		);
 
 		assertTrue(
 			exception.getCause().getMessage().contains("no active embedding model"),
 			exception.getCause().getMessage()
 		);
 
-		// and no dataIndex was created
+		// and neither a dataIndex nor an orphan index template is left behind
 		assertEquals(1, countDataIndexes(datasourceId));
+		assertNull(IndexTemplateUtils.getIndexTemplate(
+			restHighLevelClient,
+			TENANT_ID,
+			scheduler.getNewDataIndex().getName()
+		));
 	}
 
 	@Test
@@ -333,18 +342,27 @@ class ReindexDataIndexTest {
 
 		clearEmbeddingDocTypeField(DATA_INDEX);
 
+		var scheduler = newReindexScheduler(datasourceId);
+
 		// the reindex fails instead of scheduling an embedding that produces
 		// no vector at all
 		var exception = assertThrows(
-			CompletionException.class, () -> reindex(datasourceId));
+			CompletionException.class,
+			() -> JobSchedulerService.persistScheduler(TENANT_ID, scheduler).join()
+		);
 
 		assertTrue(
 			exception.getCause().getMessage().contains("embeddingDocTypeField"),
 			exception.getCause().getMessage()
 		);
 
-		// and no dataIndex was created
+		// and neither a dataIndex nor an orphan index template is left behind
 		assertEquals(1, countDataIndexes(datasourceId));
+		assertNull(IndexTemplateUtils.getIndexTemplate(
+			restHighLevelClient,
+			TENANT_ID,
+			scheduler.getNewDataIndex().getName()
+		));
 	}
 
 	@Test

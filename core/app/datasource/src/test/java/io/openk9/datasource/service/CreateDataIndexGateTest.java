@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.opensearch.client.RestHighLevelClient;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -92,6 +93,10 @@ class CreateDataIndexGateTest {
 			exception.getMessage().contains("no active embedding model"),
 			exception.getMessage()
 		);
+
+		// and no orphan index template is left behind
+		assertNull(IndexTemplateUtils.getIndexTemplate(
+			restHighLevelClient, TENANT_ID, KNN_DATA_INDEX));
 	}
 
 	@Test
