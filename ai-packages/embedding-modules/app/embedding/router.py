@@ -90,8 +90,8 @@ def text_pieces(text, pipelines, file_id=None) -> list[Piece]:
 
 def _text_ref_pieces(data, content_type, pipelines, file_id):
     # Textual refs are embedded as-is: unlike the inline text, they are NOT run
-    # through clean_text (which strips accents and markup), to preserve the
-    # connector-extracted, possibly multilingual, content. Deliberate choice.
+    # through clean_text (which strips markup), to preserve the
+    # connector-extracted content verbatim. Deliberate choice.
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError as error:
