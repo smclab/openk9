@@ -222,7 +222,6 @@ public class DataIndexService
 
 	@Override
 	public Uni<DataIndex> create(Mutiny.Session session, DataIndex dataIndex) {
-		var settingsMap = dataIndex.getSettingsMap();
 
 		return resolveEmbeddingModel(session, dataIndex)
 			.flatMap(embeddingModel -> merge(session, dataIndex)
@@ -231,7 +230,7 @@ public class DataIndexService
 						indexMappingService.createDataIndexTemplate(
 							new DataIndexTemplate(
 								tenant.schemaName(),
-								settingsMap,
+								getSettingsMap(merged.getSettings()),
 								merged,
 								embeddingModel
 							)
@@ -538,10 +537,6 @@ public class DataIndexService
 						)
 					);
 				}
-
-				// setting for opensearch indexTemplate
-				var settingsMap = getSettingsMap(dto.getSettings());
-				dataIndex.setSettingsMap(settingsMap);
 
 				return dataIndex;
 			});
