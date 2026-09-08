@@ -100,3 +100,43 @@ A view of the RAG configuration area from the admin panel is shown.
 In this area, prompting configurations for RAG and question reformulation can be managed.
 
 Prompting allows you to constrain the conversational assistant to respond according to specific rules, helping avoid hallucinations, for example.
+
+## Ollama Tuning
+
+When the Large Language Model or the Embedding Model uses Ollama as its provider, three keys of the `jsonConfig` of the entity tune the Ollama client. They apply to the `ollama` provider only and are ignored by every other one.
+
+| Key | Type | Default | Entity |
+|---|---|---|---|
+| `reasoning` | bool | `false` | LLM |
+| `keep_alive` | int (seconds) | `1800` (`0` unloads at once, `-1` keeps the model resident) | LLM, Embedding Model |
+| `num_gpu` | int | not sent: Ollama decides | LLM, Embedding Model |
+
+`reasoning` turns thinking on. Ollama enables it by itself on the models that support it, where it costs a multiple of every call the RAG graph spends on classifying (routing, query analysis, retriever evaluation), which asks for a label and not for a line of reasoning.
+
+`keep_alive` is how long Ollama keeps the model in memory after a call. Ollama unloads it after five minutes of inactivity, so the first question after a pause pays the reload; the modules ask for thirty minutes instead.
+
+`num_gpu` caps the number of model layers Ollama keeps in VRAM. It matters when one Ollama serves both generation and embedding: without a cap the generator takes the whole GPU and Ollama evicts the embedder on every embedding call, and the other way around, so each reload blocks indexing and chat together. A cap on the generator and `num_gpu: 0` on the embedding model, which runs it on CPU, keep both models resident.
+
+Example, a generator and an embedder on the same Ollama. On the Large Language Model:
+
+```json
+{
+  "reasoning": false,
+  "keep_alive": 1800,
+  "num_gpu": 34
+}
+```
+
+On the Embedding Model:
+
+```json
+{
+  "keep_alive": 1800,
+  "num_gpu": 0
+}
+```
+
+Two defaults differ from those of Ollama, and change the behaviour of an existing installation:
+
+- `keep_alive` is thirty minutes instead of the five of Ollama. The model stays resident longer and holds VRAM or RAM with the chat idle: on an Ollama shared with other workloads this is worth a thought, and the previous behaviour is `"keep_alive": 300`.
+- `reasoning` is off instead of following the model. On the models that turn thinking on by themselves both the answer and the latency change; `"reasoning": true` brings it back.
