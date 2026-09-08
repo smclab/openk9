@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.opensearch.client.opensearch.OpenSearchClient;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static io.smallrye.graphql.client.core.Argument.arg;
@@ -54,6 +55,7 @@ public class DataIndexGraphqlTest {
 	private static final String NAME = "name";
 	private static final String NODE = "node";
 	private static final String RESPONSE = "response: %s";
+	private static final String SETTINGS = "settings";
 	private static final String STATUS = "status";
 	private static final String TENANT_ID = "public";
 
@@ -206,6 +208,77 @@ public class DataIndexGraphqlTest {
 
 		assertEquals(Initializer.INIT_DATASOURCE_CONNECTION, datasourceR.getString(NAME));
 
+	}
+
+	@Test
+	void should_return_the_index_template_settings()
+		throws ExecutionException, InterruptedException {
+
+		var dataIndex = datasourceService.findByName(
+				TENANT_ID, Initializer.INIT_DATASOURCE_CONNECTION)
+			.flatMap(datasource -> datasourceService.getDataIndex(datasource))
+			.await().indefinitely();
+
+		var query = document(
+			operation(
+				OperationType.QUERY,
+				field(
+					DATA_INDEX,
+					args(
+						arg(ID, dataIndex.getId())
+					),
+					field(ID),
+					field(SETTINGS)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		log.info(String.format(RESPONSE, response));
+
+		// the settings field keeps answering the settings the index template
+		// declares
+		assertFalse(response.hasError());
+
+		var settings =
+			response.getData().getJsonObject(DATA_INDEX).getString(SETTINGS);
+
+		assertNotNull(settings);
+		assertFalse(settings.isBlank());
+	}
+
+	@Test
+	void should_expose_no_other_settings_field()
+		throws ExecutionException, InterruptedException {
+
+		var query = document(
+			operation(
+				OperationType.QUERY,
+				field(
+					"__type",
+					args(
+						arg("name", "DataIndex")
+					),
+					field("fields", field(NAME))
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		assertFalse(response.hasError());
+
+		var fieldNames = response.getData()
+			.getJsonObject("__type")
+			.getJsonArray("fields")
+			.stream()
+			.map(field -> field.asJsonObject().getString(NAME))
+			.filter(fieldName -> fieldName.toLowerCase().contains(SETTINGS))
+			.toList();
+
+		// the persisted settings are not a second field on the surface
+		assertEquals(List.of(SETTINGS), fieldNames);
 	}
 
 	@Test
