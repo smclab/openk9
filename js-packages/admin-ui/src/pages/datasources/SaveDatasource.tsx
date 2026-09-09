@@ -44,6 +44,10 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   const datasourceQuery = useDataSourceQuery({
     variables: { id: datasourceId, searchText: "" },
     skip: datasourceId === "new",
+    // Revalidate on every mount: with the default cache-first policy the
+    // dataIndexes list stays stale and Data Indices created in the same
+    // navigation session never show up in the Data Index dropdown.
+    fetchPolicy: "cache-and-network",
   });
   const { formValues, setFormValues } = useDatasourceForm(datasourceId, datasourceQuery);
   const generateDocumentTypes = useGenerateDocumentTypesMutation();
