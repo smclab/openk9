@@ -121,18 +121,18 @@ def operation(payload, configs, token):
                 error = handle_exception(e)
                 logger.error(error)
                 if error_strategy == "fail-soft":
-                    # fail-soft: isola l’errore
+                    # fail-soft: isolate the error
                     bin["error"] = str(error)
                     continue
 
                 elif error_strategy == "fail-fast":
-                    # invalida tutto e interrompe
+                    # invalidate everything and stop
                     response = {"error": "conversion failed"}
                     failed = True
                     break
 
                 else:
-                    # invalida tutto e interrompe
+                    # invalidate everything and stop
                     response = {"error": "conversion failed"}
                     failed = True
                     break

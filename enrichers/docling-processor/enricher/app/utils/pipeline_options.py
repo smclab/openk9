@@ -88,7 +88,7 @@ def normalize_dict(d):
 def flatten(
     data: Dict[str, Any], parent_key: str = "", sep: str = "."
 ) -> Dict[str, Any]:
-    """Flatten dict annidato."""
+    """Flatten a nested dict."""
     items = {}
     for k, v in data.items():
         new_key = f"{parent_key}{sep}{k}" if parent_key else k
@@ -100,7 +100,7 @@ def flatten(
 
 
 def unflatten_dict(data: Dict[str, Any], sep: str = ".") -> Dict[str, Any]:
-    """Ricostruisce dict annidato da chiavi flat."""
+    """Rebuild a nested dict from flat keys."""
     result: Dict[str, Any] = {}
 
     for key, value in data.items():
@@ -126,7 +126,7 @@ def unflatten_dict(data: Dict[str, Any], sep: str = ".") -> Dict[str, Any]:
 
 def add_configs(opts: Any, arguments: Dict[str, Any]) -> Any:
     """
-    Applica ricorsivamente configurazioni a un oggetto.
+    Apply configurations to an object, recursively.
     """
     if opts is None:
         return None
@@ -138,7 +138,7 @@ def add_configs(opts: Any, arguments: Dict[str, Any]) -> Any:
 
         current_attr = getattr(opts, key)
 
-        # Caso nested dict → ricorsione
+        # Nested dict → recurse
         if isinstance(value, dict) and current_attr is not None:
             updated = add_configs(current_attr, value)
             setattr(opts, key, updated)
@@ -158,10 +158,10 @@ def get_format_options(
     format: InputFormat | str,
 ) -> Dict[InputFormat, FormatOption]:
     """
-    Crea FormatOption configurato a partire da config flat.
+    Build a configured FormatOption from flat configs.
     """
 
-    # Validazione formato
+    # Format validation
     try:
         in_format = InputFormat(format)
     except Exception as e:
@@ -180,7 +180,7 @@ def get_format_options(
     if isinstance(opts.pipeline_options, PdfPipelineOptions):
         opts.pipeline_options.ocr_options = EasyOcrOptions()
 
-    # Se non ci sono config → ritorna subito
+    # No configs → return right away
     if not configs:
         return {in_format: opts}
 
@@ -189,18 +189,18 @@ def get_format_options(
     # 1. Unflatten
     arguments = unflatten_dict(configs)
 
-    # 2. Normalize (🔥 fondamentale)
+    # 2. Normalize (essential)
     arguments = normalize_dict(arguments)
 
-    # 3. Estrai sezioni corrette
+    # 3. Extract the right sections
     pipeline_args = arguments.get("pipeline_options", {})
     backend_args = arguments.get("backend_options", {})
 
-    # 4. Applica config pipeline
+    # 4. Apply the pipeline configs
     if opts.pipeline_options:
         opts.pipeline_options = add_configs(opts.pipeline_options, pipeline_args)
 
-    # 5. (opzionale) backend config
+    # 5. (optional) backend config
     if hasattr(opts, "backend_options") and backend_args:
         opts.backend_options = add_configs(opts.backend_options, backend_args)
 
@@ -216,7 +216,7 @@ def collect_format_options_schemas(
     format_options: Dict[InputFormat, FormatOption],
 ) -> Dict[str, Any]:
     """
-    Estrae schema delle pipeline options.
+    Extract the schema of the pipeline options.
     """
     result = {}
 
