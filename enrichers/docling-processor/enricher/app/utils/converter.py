@@ -22,7 +22,7 @@ import requests
 from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
 
-from app.utils.format_detect import extract_extension
+from app.utils.format_detect import detect_format, stream_name
 from app.utils.logger import logger
 from app.utils.pipeline_options import get_format_options
 
@@ -41,7 +41,8 @@ def conversion(bin, tenant, configs):
     Args:
         bin (dict): A dictionary representing a binary resource. It must contain
             the key `"url"`, a pre-signed GET URL from which the resource is
-            fetched.
+            fetched, and may carry `"name"`, the binary's file name, used as a
+            hint to tell text-based formats apart.
         tenant (str): The tenant identifier used to resolve the resource context.
 
     Returns:
@@ -55,9 +56,10 @@ def conversion(bin, tenant, configs):
     response.raise_for_status()
     content = response.content
     bites = BytesIO(content)
-    extension = extract_extension(content)
-    source = DocumentStream(name=f"doc.{extension}", stream=bites)
-    format_options = get_format_options(configs, extension)
+    name = bin.get("name", "")
+    format = detect_format(content, name)
+    source = DocumentStream(name=stream_name(name, format), stream=bites)
+    format_options = get_format_options(configs, format)
     converter = DocumentConverter(format_options=format_options)
     result = converter.convert(source)
     return result

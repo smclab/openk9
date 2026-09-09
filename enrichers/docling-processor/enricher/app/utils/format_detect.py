@@ -16,32 +16,59 @@
 #
 
 from io import BytesIO
+from urllib.parse import unquote, urlparse
 
-from docling.datamodel.base_models import FormatToExtensions
+from docling.datamodel.base_models import FormatToExtensions, InputFormat
 from docling.datamodel.document import DocumentStream, _DocumentConversionInput
 
 from app.utils.exceptions import FormatError
 
 
-def extract_extension(content: bytes) -> str:
+def _name_hint(name: str) -> str:
     """
-    Extract the file's extension from the raw binary content using Docling
+    Reduce a binary's `name` to the bare file name Docling can read an
+    extension from. The payload carries whatever the connector put there,
+    which may be a full URL with a query string (openk9-crawler sets the
+    document URL), so keep only the last path segment.
+    """
+    return unquote(urlparse(name).path).rsplit("/", 1)[-1] or "unknown"
+
+
+def detect_format(content: bytes, name: str = "") -> InputFormat:
+    """
+    Detect the document's format from the raw binary content using Docling
     internal functions.
+
+    Text-based formats (md, eml, tex, vtt) are indistinguishable as bytes:
+    Docling tells them apart by the file extension, so the binary's name is
+    passed through as a hint when the payload carries one.
 
     Args:
         content: the raw file bytes
+        name: the binary's name from the payload, used only as a hint
 
     Returns:
-        File's extension (e.g. 'pdf', 'docx'), or raises FormatError if the
-        format could not be detected.
+        The detected `InputFormat`, or raises FormatError if the format could
+        not be detected.
     """
     try:
-        stream = DocumentStream(name="unknown", stream=BytesIO(content))
+        stream = DocumentStream(name=_name_hint(name), stream=BytesIO(content))
         dci = _DocumentConversionInput(path_or_stream_iterator=[])
         detected_format = dci._guess_format(stream)
         if detected_format and detected_format in FormatToExtensions:
-            return FormatToExtensions[detected_format][0]
+            return detected_format
         raise FormatError("File format could not be detected or file is corrupted")
 
     except Exception:
         raise FormatError("File format could not be detected or file is corrupted")
+
+
+def stream_name(name: str, format: InputFormat) -> str:
+    """
+    Name for the stream handed to Docling. Reuse the binary's own file name
+    when it carries an extension, so Docling's internal format detection sees
+    the same input ours did and cannot disagree with it; otherwise fall back
+    to the format's canonical extension.
+    """
+    hint = _name_hint(name)
+    return hint if "." in hint else f"doc.{FormatToExtensions[format][0]}"
