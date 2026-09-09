@@ -20,8 +20,10 @@ package io.openk9.datasource.service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import io.openk9.datasource.mapper.BucketResourceMapper;
 import io.openk9.datasource.model.Sorting_;
@@ -39,6 +41,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.validation.ValidationException;
 import jakarta.ws.rs.NotFoundException;
 
 import io.openk9.common.graphql.SortBy;
@@ -79,6 +82,11 @@ import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
+
+	private static final String DEFAULT_LANGUAGE_NOT_AVAILABLE =
+		"the default language must be one of the languages associated to the bucket: " +
+		"associate it to the bucket first";
+
 	@Inject
 	AutocompleteService autocompleteService;
 	@Inject
@@ -111,6 +119,26 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	 BucketService(BucketMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	private static boolean containsLanguage(
+		Collection<Language> languages, long languageId) {
+
+		return languages.stream()
+			.anyMatch(language -> Objects.equals(language.getId(), languageId));
+	}
+
+	/**
+	 * Tells whether a default language can be applied to a bucket whose final set of
+	 * associated languages is {@code availableLanguageIds}. A bucket without a default
+	 * language is always coherent.
+	 */
+	private static boolean isDefaultLanguageAvailable(
+		Long defaultLanguageId, Collection<Long> availableLanguageIds) {
+
+		return defaultLanguageId == null
+			|| (availableLanguageIds != null
+				&& availableLanguageIds.contains(defaultLanguageId));
 	}
 
 	private static <T> Uni<T> consumeExistedIndexNames(
@@ -299,10 +327,19 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.transformToUni(bucket -> languageService.findById(s, languageId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(language -> {
-					bucket.setDefaultLanguage(language);
-					return persist(s, bucket).map(t -> Tuple2.of(t, language));
-				})));
+				.transformToUni(language -> s.fetch(bucket.getAvailableLanguages())
+					.onItem()
+					.ifNotNull()
+					.transformToUni(availableLanguages -> {
+
+						if (!containsLanguage(availableLanguages, languageId)) {
+							return Uni.createFrom().<Tuple2<Bucket, Language>>failure(
+								new ValidationException(DEFAULT_LANGUAGE_NOT_AVAILABLE));
+						}
+
+						bucket.setDefaultLanguage(language);
+						return persist(s, bucket).map(t -> Tuple2.of(t, language));
+					}))));
 	}
 
 	public Uni<Tuple2<Bucket, QueryAnalysis>> bindQueryAnalysis(long bucketId, long queryAnalysisId) {
@@ -377,6 +414,15 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<Bucket> create(BucketDTO bucketDTO) {
 		if ( bucketDTO instanceof BucketWithListsDTO bucketWithListsDTO) {
+
+			if (!isDefaultLanguageAvailable(
+				bucketWithListsDTO.getDefaultLanguageId(),
+				bucketWithListsDTO.getLanguageIds())) {
+
+				return Uni.createFrom().failure(
+					new ValidationException(DEFAULT_LANGUAGE_NOT_AVAILABLE));
+			}
+
 			var transientBucket = mapper.create(bucketWithListsDTO);
 
 			return sessionFactory.withTransaction(
@@ -1076,10 +1122,14 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							var oldLanguages = bucket.getAvailableLanguages();
 
 							for (Language oldLanguage : oldLanguages) {
-								builder.add(removeLanguage(
-									bucketId, oldLanguage.getId())
-									.replaceWithVoid()
-								);
+
+								//Removing a language that stays would clear it as default language
+								if (!languageIds.contains(oldLanguage.getId())) {
+									builder.add(removeLanguage(
+										bucketId, oldLanguage.getId())
+										.replaceWithVoid()
+									);
+								}
 							}
 
 							for (long languageId : languageIds) {
@@ -1112,12 +1162,32 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						//DefaultLanguage
-						if (bucketWithListsDTO.getDefaultLanguageId() != null) {
-							var defaultLanguage =
-								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
+						var defaultLanguageId = bucketWithListsDTO.getDefaultLanguageId();
 
-							bucket.setDefaultLanguage(defaultLanguage);
-							builder.add(s.persist(bucket));
+						if (defaultLanguageId != null) {
+
+							//A patch keeps the languages already associated when languageIds is unset
+							var availableLanguageIds = languageIds != null
+								? languageIds
+								: bucket.getAvailableLanguages().stream()
+									.map(Language::getId)
+									.collect(Collectors.toSet());
+
+							if (!isDefaultLanguageAvailable(
+								defaultLanguageId, availableLanguageIds)) {
+
+								return Uni.createFrom().<Bucket>failure(
+									new ValidationException(DEFAULT_LANGUAGE_NOT_AVAILABLE));
+							}
+
+							//Applied once the language associations have been reconciled, so that
+							//removeLanguage cannot clear the default language set here
+							builder.add(Uni.createFrom().<Void>deferred(() -> {
+								bucket.setDefaultLanguage(
+									s.getReference(Language.class, defaultLanguageId));
+
+								return s.persist(bucket);
+							}));
 						}
 
 						//RAGConfigurations
@@ -1219,6 +1289,15 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 					if (bucket.removeLanguage(
 						languages, languageId)) {
+
+						//A language that is no longer available cannot stay the default one
+						var defaultLanguage = bucket.getDefaultLanguage();
+
+						if (defaultLanguage != null
+							&& Objects.equals(defaultLanguage.getId(), languageId)) {
+
+							bucket.setDefaultLanguage(null);
+						}
 
 						return persist(s, bucket)
 							.map(newSC -> Tuple2.of(newSC, null));
@@ -1511,14 +1590,22 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						bucket.setSearchConfig(searchConfig);
 
 						//DefaultLanguage
-						Language defaultLanguage = null;
+						var defaultLanguageId = bucketWithListsDTO.getDefaultLanguageId();
 
-						if (bucketWithListsDTO.getDefaultLanguageId() != null) {
-							defaultLanguage =
-								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
+						if (!isDefaultLanguageAvailable(defaultLanguageId, languageIds)) {
+							return Uni.createFrom().<Bucket>failure(
+								new ValidationException(DEFAULT_LANGUAGE_NOT_AVAILABLE));
 						}
 
-						bucket.setDefaultLanguage(defaultLanguage);
+						//Applied once the language associations have been reconciled, so that
+						//removeLanguage cannot clear the default language set here
+						builder.add(Uni.createFrom().<Void>deferred(() -> {
+							bucket.setDefaultLanguage(defaultLanguageId != null
+								? s.getReference(Language.class, defaultLanguageId)
+								: null);
+
+							return s.persist(bucket);
+						}));
 
 						//RAGConfigurations
 						//RAGConfigurationChat
