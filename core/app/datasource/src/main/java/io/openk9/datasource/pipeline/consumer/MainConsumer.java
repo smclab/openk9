@@ -60,13 +60,27 @@ public class MainConsumer extends BaseConsumer {
 			context.getSelf()
 		);
 
-		IngestionIndexWriterPayload ingestionIndexWriterPayload =
-			Json.decodeValue(
-				Buffer.buffer(body),
-				IngestionIndexWriterPayload.class
-			);
+		DataPayload payload;
 
-		DataPayload payload = payloadMapper.map(ingestionIndexWriterPayload);
+		try {
+			IngestionIndexWriterPayload ingestionIndexWriterPayload =
+				Json.decodeValue(
+					Buffer.buffer(body),
+					IngestionIndexWriterPayload.class
+				);
+
+			payload = payloadMapper.map(ingestionIndexWriterPayload);
+		}
+		catch (Exception e) {
+			log.errorf(
+				e,
+				"cannot decode message with deliveryTag %s of scheduling %s",
+				envelope.getDeliveryTag(),
+				queueBind.schedulingKey()
+			);
+			getChannel().basicNack(envelope.getDeliveryTag(), false, false);
+			return;
+		}
 
 		AskPattern.ask(
 			getScheduling(),
