@@ -20,6 +20,29 @@ Main features:
 
 - Configuration schema endpoint for Openk9 UI
 
+## OCR and pipeline options
+
+Docling defaults the PDF pipeline's OCR to `OcrAutoOptions`, which picks an
+engine by probing the environment and forwards only `mode` to it, dropping the
+configured language. The processor therefore pins EasyOCR, so the enrich item's
+`pipeline_options.ocr_options.lang` stays effective.
+
+Two OCR fields changed with Docling 2.126:
+
+| before | now |
+| --- | --- |
+| `ocr_options.force_full_page_ocr` | `ocr_options.mode` (`default`, `full_page`, `layout_regions`, `pdf_aware_layout_regions`) |
+| `ocr_options.bitmap_area_threshold` | `ocr_options.scale` (default 3.0) |
+
+Docling still accepts `force_full_page_ocr` as a deprecated alias of
+`mode=full_page`, so existing enrich items keep working.
+
+Formats whose backend needs an install extra this image does not ship
+(OpenDocument, XBRL, audio, video) and the two Docling can only read from a
+file rather than a stream (USPTO patents, METS-GBS archives) are rejected up
+front by `SUPPORTED_FORMATS` in `app/utils/pipeline_options.py`, rather than
+failing deep inside the backend.
+
 ## Quickstart
 
 ### OpenK9 Setup

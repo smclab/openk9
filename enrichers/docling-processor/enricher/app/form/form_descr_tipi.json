@@ -697,17 +697,17 @@
             }
         },
         {
-            "label": "Force Full Page Ocr",
-            "name": "pipeline_options.ocr_options.force_full_page_ocr",
-            "field": "pipeline_options.ocr_options.force_full_page_ocr",
-            "type": "checkbox",
+            "label": "Ocr Mode",
+            "name": "pipeline_options.ocr_options.mode",
+            "field": "pipeline_options.ocr_options.mode",
+            "type": "text",
             "size": 4,
             "required": false,
-            "info": "If enabled, a full-page OCR is always applied.",
+            "info": "Which document regions are fed as input to the OCR engine. Options: `default` (currently wired to `pdf_aware_layout_regions`), `full_page` (OCR the whole page), `layout_regions` (layout detections only, no PDF text information is used), `pdf_aware_layout_regions` (drop the clusters made exclusively of text PDF cells). Supersedes the deprecated `force_full_page_ocr`, which is still accepted as an alias of `full_page`.",
             "placeholder": "",
             "values": [
                 {
-                    "value": false,
+                    "value": "default",
                     "isDefault": true
                 }
             ],
@@ -718,17 +718,17 @@
             }
         },
         {
-            "label": "Bitmap Area Threshold",
-            "name": "pipeline_options.ocr_options.bitmap_area_threshold",
-            "field": "pipeline_options.ocr_options.bitmap_area_threshold",
+            "label": "Ocr Scale",
+            "name": "pipeline_options.ocr_options.scale",
+            "field": "pipeline_options.ocr_options.scale",
             "type": "number",
             "size": 4,
             "required": false,
-            "info": "Percentage of the page area for a bitmap to be processed with OCR.",
+            "info": "Image scale multiplier applied before running OCR. The page is rendered at 72 DPI times this factor, so the default 3 yields 216 DPI. Lower it when the source image is already high resolution and upscaling degrades recognition.",
             "placeholder": "",
             "values": [
                 {
-                    "value": 0.05,
+                    "value": 3.0,
                     "isDefault": true
                 }
             ],
