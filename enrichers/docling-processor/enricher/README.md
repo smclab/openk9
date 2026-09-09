@@ -12,13 +12,44 @@ Main features:
 
 - Fetches binary files from the pre-signed URL carried in the payload
 
-- Converts documents using Docling (`.docx`, `.pdf`, and other supported formats)
+- Converts documents using Docling (see [Supported formats](#supported-formats))
 
 - Sends results to an Openk9 callback endpoint
 
 - Health check endpoint
 
 - Configuration schema endpoint for Openk9 UI
+
+## Supported formats
+
+The format of each binary is detected from its bytes, falling back to the
+extension of the binary's `name` for the text-based formats that are
+indistinguishable as bytes (Markdown, e-mail, LaTeX, WebVTT, AsciiDoc).
+
+Converted formats:
+
+| Family | Formats |
+| --- | --- |
+| Office | `docx`, `doc`, `pptx`, `ppt`, `xlsx`, `xls` |
+| PDF and images | `pdf`, `image` (jpg, png, tiff, bmp, webp), `mets_gbs` |
+| Text and markup | `md`, `asciidoc`, `html`, `latex`, `csv`, `email`, `epub`, `boxnote`, `ebcdic` |
+| XML | `xml_uspto`, `xml_jats`, `xml_doclang`, `dclx` |
+| Docling and subtitles | `json_docling`, `vtt` |
+| Apple | `iwork_pages` |
+
+Docling also knows OpenDocument (`odt`, `ods`, `odp`), XBRL (`xml_xbrl`),
+audio and video, but their backends need install extras this image does not
+ship (`odfdo`, `arelle-release`, `whisper`/`librosa`). They are rejected up
+front rather than failing deep inside the backend; adding one means adding the
+matching extra to the three `requirements*.in` and to `SUPPORTED_FORMATS` in
+`app/utils/pipeline_options.py`.
+
+**OCR engine.** Docling defaults the PDF pipeline to `OcrAutoOptions`, which
+picks an engine by probing the environment and does not forward the configured
+language to it. The processor therefore pins EasyOCR, so the enrich item's
+`pipeline_options.ocr_options.lang` stays effective. `force_full_page_ocr` was
+superseded by `pipeline_options.ocr_options.mode`; Docling still accepts the
+old name as an alias for `mode=full_page`.
 
 ## Quickstart
 
