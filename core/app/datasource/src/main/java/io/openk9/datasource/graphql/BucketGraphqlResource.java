@@ -23,6 +23,7 @@ import java.util.Set;
 import io.openk9.datasource.model.Highlight;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.ValidationException;
 import jakarta.ws.rs.core.Context;
 
 import io.openk9.common.graphql.SortBy;
@@ -45,6 +46,7 @@ import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.LanguageService;
+import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 
@@ -170,7 +172,9 @@ public class BucketGraphqlResource {
 	@Mutation
 	public Uni<Tuple2<Bucket, Language>> bindLanguageToBucket(
 		@Id long bucketId, @Id long languageId) {
-		return bucketService.bindLanguage(bucketId, languageId);
+		return bucketService.bindLanguage(bucketId, languageId)
+			.onFailure(ValidationException.class)
+			.transform(failure -> new K9Error(failure.getMessage(), failure));
 	}
 
 	@Mutation

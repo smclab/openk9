@@ -57,7 +57,7 @@ import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../
 
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
-import { useLanguages, useOptionSearchConfig, useQueryAnaylyses } from "../../../src/utils/RelationOneToOne";
+import { useOptionSearchConfig, useQueryAnaylyses } from "../../../src/utils/RelationOneToOne";
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { sxCheckbox, sxControl } from "../../utils/styleConfig";
@@ -516,6 +516,12 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                           } else {
                             const updatedData = data.filter((dat) => !items.some((item) => item.value === dat.value));
                             form.inputProps("languageIds").onChange(updatedData);
+
+                            const defaultLanguage = form.inputProps("defaultLanguageId").value;
+
+                            if (defaultLanguage?.id && !updatedData.some((dat) => dat.value === defaultLanguage.id)) {
+                              form.inputProps("defaultLanguageId").onChange(undefined);
+                            }
                           }
                         }}
                       />
@@ -536,7 +542,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         disabled={page === 1}
                         useOptions={useOptionSearchConfig}
                       />
-                      <AutocompleteDropdown
+                      <AutocompleteDropdownWithOptions
                         label={t("fields.language")}
                         onChange={(val) =>
                           form.inputProps("defaultLanguageId").onChange({ id: val.id, name: val.name })
@@ -551,7 +557,10 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         }
                         onClear={() => form.inputProps("defaultLanguageId").onChange(undefined)}
                         disabled={page === 1}
-                        useOptions={useLanguages}
+                        description={t("pages.buckets.only-the-languages-associated-to-this")}
+                        optionsDefault={(form.inputProps("languageIds").value || []).flatMap((language) =>
+                          language.value ? [{ value: language.value, label: language.label || "" }] : [],
+                        )}
                       />
                       <AutocompleteDropdown
                         label={t("fields.query-analysis")}

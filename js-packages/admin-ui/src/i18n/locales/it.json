@@ -549,6 +549,7 @@
       "refresh-filters-when-tab-is-applied": "Aggiorna i filtri quando viene applicato un tab",
       "retriever-type-used-to-search-data-if": "Tipo di retriever usato per cercare i dati. Con match esegue una ricerca testuale, altrimenti esegue una ricerca vettoriale/ibrida",
       "highlight-configuration-used-to-build-the": "Configurazione di evidenziazione usata per costruire la sezione di evidenziazione della query di ricerca",
+      "only-the-languages-associated-to-this": "Solo le lingue associate a questo bucket possono esserne la lingua predefinita",
       "tab-datasource": "sorgente dati",
       "tab-suggestion-category": "categoria di suggerimento",
       "tab-tabs": "tab",

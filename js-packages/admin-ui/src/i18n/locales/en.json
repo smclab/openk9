@@ -549,6 +549,7 @@
       "refresh-filters-when-tab-is-applied": "Refresh filters when Tab is applied",
       "retriever-type-used-to-search-data-if": "Retriever Type used to search data. If match performs text search \n                    otherwise performs vector/hybrid search",
       "highlight-configuration-used-to-build-the": "Highlight configuration used to build the highlight section of the search query",
+      "only-the-languages-associated-to-this": "Only the languages associated to this bucket can be its default language",
       "tab-datasource": "datasource",
       "tab-suggestion-category": "suggestion category",
       "tab-tabs": "tabs",
