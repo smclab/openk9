@@ -63,7 +63,7 @@ def detect_format(content: bytes, name: str = "") -> InputFormat:
         raise FormatError("File format could not be detected or file is corrupted")
 
 
-def stream_name(name: str, format: InputFormat) -> str:
+def stream_name(name: str, file_format: InputFormat) -> str:
     """
     Name for the stream handed to Docling. Reuse the binary's own file name
     when it carries an extension, so Docling's internal format detection sees
@@ -71,4 +71,4 @@ def stream_name(name: str, format: InputFormat) -> str:
     to the format's canonical extension.
     """
     hint = _name_hint(name)
-    return hint if "." in hint else f"doc.{FormatToExtensions[format][0]}"
+    return hint if "." in hint else f"doc.{FormatToExtensions[file_format][0]}"

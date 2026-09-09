@@ -57,9 +57,9 @@ def conversion(bin, tenant, configs):
     content = response.content
     bites = BytesIO(content)
     name = bin.get("name", "")
-    format = detect_format(content, name)
-    source = DocumentStream(name=stream_name(name, format), stream=bites)
-    format_options = get_format_options(configs, format)
+    file_format = detect_format(content, name)
+    source = DocumentStream(name=stream_name(name, file_format), stream=bites)
+    format_options = get_format_options(configs, file_format)
     converter = DocumentConverter(format_options=format_options)
     result = converter.convert(source)
     return result
