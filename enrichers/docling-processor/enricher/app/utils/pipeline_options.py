@@ -1,59 +1,48 @@
 import logging
-from typing import Any, Callable, Dict, Type
+from typing import Any, Dict, FrozenSet
 
-from docling.backend.json.docling_json_backend import DoclingJSONBackend
-from docling.backend.mets_gbs_backend import MetsGbsDocumentBackend
-from docling.backend.webvtt_backend import WebVTTDocumentBackend
 from docling.datamodel.base_models import InputFormat
-from docling.document_converter import (
-    AsciiDocFormatOption,
-    AudioFormatOption,
-    CsvFormatOption,
-    ExcelFormatOption,
-    FormatOption,
-    HTMLFormatOption,
-    ImageFormatOption,
-    MarkdownFormatOption,
-    PatentUsptoFormatOption,
-    PdfFormatOption,
-    PowerpointFormatOption,
-    WordFormatOption,
-    XMLJatsFormatOption,
+from docling.datamodel.pipeline_options import EasyOcrOptions, PdfPipelineOptions
+from docling.document_converter import FormatOption, _get_default_option
+
+# =========================
+# SUPPORTED FORMATS
+# =========================
+
+# docling knows more formats than this image can convert: some backends need
+# an install extra we do not ship (odfdo for OpenDocument, arelle-release for
+# XBRL, whisper/librosa for audio and video) and would only fail deep inside
+# the backend. This set is the gate; the FormatOption itself comes from
+# docling.
+SUPPORTED_FORMATS: FrozenSet[InputFormat] = frozenset(
+    {
+        InputFormat.CSV,
+        InputFormat.XLSX,
+        InputFormat.XLS,
+        InputFormat.DOCX,
+        InputFormat.DOC,
+        InputFormat.PPTX,
+        InputFormat.PPT,
+        InputFormat.MD,
+        InputFormat.ASCIIDOC,
+        InputFormat.HTML,
+        InputFormat.XML_USPTO,
+        InputFormat.XML_JATS,
+        InputFormat.XML_DOCLANG,
+        InputFormat.DCLX,
+        InputFormat.IMAGE,
+        InputFormat.PDF,
+        InputFormat.METS_GBS,
+        InputFormat.JSON_DOCLING,
+        InputFormat.VTT,
+        InputFormat.LATEX,
+        InputFormat.EMAIL,
+        InputFormat.EPUB,
+        InputFormat.BOXNOTE,
+        InputFormat.IWORK_PAGES,
+        InputFormat.EBCDIC,
+    }
 )
-from docling.pipeline.simple_pipeline import SimplePipeline
-from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
-
-# =========================
-# FORMAT FACTORIES (UNIFICATO)
-# =========================
-
-FORMAT_FACTORIES: Dict[InputFormat, Callable[[], FormatOption]] = {
-    InputFormat.CSV: CsvFormatOption,
-    InputFormat.XLSX: ExcelFormatOption,
-    InputFormat.DOCX: WordFormatOption,
-    InputFormat.PPTX: PowerpointFormatOption,
-    InputFormat.MD: MarkdownFormatOption,
-    InputFormat.ASCIIDOC: AsciiDocFormatOption,
-    InputFormat.HTML: HTMLFormatOption,
-    InputFormat.XML_USPTO: PatentUsptoFormatOption,
-    InputFormat.XML_JATS: XMLJatsFormatOption,
-    InputFormat.IMAGE: ImageFormatOption,
-    InputFormat.PDF: PdfFormatOption,
-    InputFormat.AUDIO: AudioFormatOption,
-    # Formati speciali (richiedono backend/pipeline)
-    InputFormat.METS_GBS: lambda: FormatOption(
-        pipeline_cls=StandardPdfPipeline,
-        backend=MetsGbsDocumentBackend,
-    ),
-    InputFormat.JSON_DOCLING: lambda: FormatOption(
-        pipeline_cls=SimplePipeline,
-        backend=DoclingJSONBackend,
-    ),
-    InputFormat.VTT: lambda: FormatOption(
-        pipeline_cls=SimplePipeline,
-        backend=WebVTTDocumentBackend,
-    ),
-}
 
 
 # =========================
@@ -178,13 +167,18 @@ def get_format_options(
     except Exception as e:
         raise ValueError(f"Invalid format: {format}") from e
 
-    # Factory
-    factory = FORMAT_FACTORIES.get(in_format)
-    if factory is None:
+    if in_format not in SUPPORTED_FORMATS:
         raise ValueError(f"Unsupported format: {in_format}")
 
-    # Istanza opzioni
-    opts = factory()
+    # Options instance: backend and pipeline are docling's own defaults
+    opts = _get_default_option(in_format)
+
+    # docling defaults the PDF pipeline's OCR to OcrAutoOptions, which picks an
+    # engine by probing the environment and forwards only `mode` to it,
+    # dropping `lang`. Pin EasyOCR so the enrich item's ocr_options keep having
+    # an effect.
+    if isinstance(opts.pipeline_options, PdfPipelineOptions):
+        opts.pipeline_options.ocr_options = EasyOcrOptions()
 
     # Se non ci sono config → ritorna subito
     if not configs:
