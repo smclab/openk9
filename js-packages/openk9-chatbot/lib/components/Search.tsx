@@ -24,12 +24,15 @@ export default function Search({
   isChatting,
   icon,
   chatbotSearchRef,
+  describedById,
 }: {
   handleSearch: (message: string) => void;
   cancelAllResponses(): void;
   isChatting: boolean;
   icon: IconProps;
   chatbotSearchRef: React.MutableRefObject<HTMLHeadingElement | null>;
+  /** id of the AI disclosure, announced when the input takes focus */
+  describedById?: string;
 }) {
   const [search, setSearch] = React.useState("");
   const theme = useTheme();
@@ -64,6 +67,7 @@ export default function Search({
           placeholder={Translate({ label: "customPlaceholder" })}
           sx={{ width: "100%", background: "white" }}
           inputProps={{
+            "aria-describedby": describedById,
             style: {
               padding: 0,
               paddingInline: "6px",

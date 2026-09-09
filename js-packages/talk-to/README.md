@@ -44,3 +44,18 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+## AI interaction disclosure
+
+Talk-to always shows a notice telling the user the conversation is held with an AI
+system, as required by Regulation (EU) 2024/1689 (AI Act) art. 50 §1. It appears in two
+places: on the initial screen, under the welcome message, and permanently under the
+input once the conversation has started.
+
+The wording lives in the `ai-disclosure` key of
+`src/translations/translation_{it,en,fr,es,de}.json` and follows the language selector
+like the rest of the interface. Customize it by editing that key in every language you
+ship; keep it aligned with the `aiDisclosure` key of `@openk9ui/openk9-chatbot`, so the
+two packages do not carry two different wordings of the same notice.
+
+The notice is not something the interface can turn off.

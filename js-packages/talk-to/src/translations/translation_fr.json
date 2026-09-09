@@ -2,6 +2,7 @@
 	"translation": {
 		"error": "Veuillez réessayer, une erreur s'est produite......",
 		"guardrail-violation": "Votre demande ne peut pas être traitée car elle enfreint les règles relatives au contenu.",
+		"ai-disclosure": "Vous interagissez avec un système d'intelligence artificielle. Les réponses sont générées automatiquement et peuvent contenir des erreurs : vérifiez les informations importantes.",
 		"version": "Version",
 		"welcome-to": "Bienvenue sur",
 		"where-knowledge-has-no-limits": "là où la connaissance n'a pas de limites!",

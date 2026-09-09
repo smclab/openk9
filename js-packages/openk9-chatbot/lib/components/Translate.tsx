@@ -93,6 +93,18 @@ const translations: {
     es_ES: "Tu solicitud no puede ser procesada porque infringe las directrices de contenido.",
     de_DE: "Ihre Anfrage kann nicht bearbeitet werden, da sie gegen die Inhaltsrichtlinien verstößt.",
   },
+  aiDisclosure: {
+    it_IT:
+      "Stai interagendo con un sistema di intelligenza artificiale. Le risposte sono generate automaticamente e possono contenere errori: verifica le informazioni importanti.",
+    en_US:
+      "You are interacting with an artificial intelligence system. Answers are generated automatically and may contain errors: check important information.",
+    fr_FR:
+      "Vous interagissez avec un système d'intelligence artificielle. Les réponses sont générées automatiquement et peuvent contenir des erreurs : vérifiez les informations importantes.",
+    es_ES:
+      "Estás interactuando con un sistema de inteligencia artificial. Las respuestas se generan automáticamente y pueden contener errores: verifica la información importante.",
+    de_DE:
+      "Sie interagieren mit einem System der künstlichen Intelligenz. Die Antworten werden automatisch generiert und können Fehler enthalten: Überprüfen Sie wichtige Informationen.",
+  },
 };
 
 type Language = "it_IT" | "en_US" | "fr_FR" | "es_ES" | "de_DE";
@@ -106,5 +118,6 @@ type TranslationKey =
   | "sendMessage"
   | "customPlaceholder"
   | "searchLabel"
-  | "guardrailViolation";
+  | "guardrailViolation"
+  | "aiDisclosure";
 

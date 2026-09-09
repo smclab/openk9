@@ -48,3 +48,34 @@ export default tseslint.config({
   },
 })
 ```
+
+## AI interaction disclosure
+
+The chatbot always renders a notice under the input telling the user the conversation
+is held with an AI system, as required by Regulation (EU) 2024/1689 (AI Act) art. 50 §1
+for systems that interact directly with people. Embedding the widget on a third-party
+site does not make that obvious from the context, so the notice is not optional.
+
+By default the text comes from the translation for the active language (`it_IT`,
+`en_US`, `fr_FR`, `es_ES`, `de_DE`), resolved by `LanguageProvider` from the `language`
+prop or from `document.documentElement.lang`.
+
+Pass `aiDisclosureText` to replace the wording — for a client's own legal copy or
+branding:
+
+```tsx
+<Chatbot
+  icon={icon}
+  aiDisclosureText="Assistente virtuale del Comune — risposte generate da IA"
+/>
+```
+
+`aiDisclosureText` customizes the text, it does not switch the notice off: there is no
+prop, prop combination or value (`""`, `null`, `undefined`) that removes it from the DOM
+— a missing or blank value falls back to the translated default.
+
+To restyle it, target the `openk9-ai-disclosure` class, alongside the other stable
+classes the widget exposes (`openk9-toggle-chatbot-button`,
+`openk9-toggle-icon-wrapper`). Note that the panel is one text line taller than before:
+check the layout if you constrain the container height or position elements over the
+panel with custom CSS.

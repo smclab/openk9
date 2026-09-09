@@ -23,6 +23,7 @@ import {
   useTheme,
 } from "@mui/material";
 import React from "react";
+import AiDisclosure from "./AiDisclosure";
 import Search from "./Search";
 import useGenerateResponse, { Message } from "./useGenerateResponse";
 import { SingleMessage } from "./SingleMessage";
@@ -54,7 +55,31 @@ type ChatbotProps = {
   tenant?: string;
   callbackAuthorization?: () => string | undefined | null;
   useSource?: boolean;
+  /**
+   * text of the AI interaction disclosure shown under the input. When omitted,
+   * falls back to the translated default for the active language. The
+   * disclosure cannot be disabled.
+   */
+  aiDisclosureText?: React.ReactNode;
 };
+
+/**
+ * resolves the disclosure text against the translated default. A missing, null or
+ * blank prop falls back to the default rather than blanking the notice out: the
+ * text is customizable, the disclosure itself is not optional.
+ */
+function resolveAiDisclosureText(
+  aiDisclosureText: React.ReactNode | undefined,
+  defaultText: string,
+): React.ReactNode {
+  if (aiDisclosureText === undefined || aiDisclosureText === null) {
+    return defaultText;
+  }
+  if (typeof aiDisclosureText === "string" && aiDisclosureText.trim() === "") {
+    return defaultText;
+  }
+  return aiDisclosureText;
+}
 
 const Chatbot: React.FC<ChatbotProps> = ({
   icon,
@@ -66,6 +91,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
   tenant,
   callbackAuthorization,
   useSource = true,
+  aiDisclosureText,
 }) => {
   return (
     <React.Fragment>
@@ -79,6 +105,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
             tenant={tenant}
             callbackAuthorization={callbackAuthorization}
             useSource={useSource}
+            aiDisclosureText={aiDisclosureText}
           />
         </LanguageProvider>
       </ThemeProvider>
@@ -94,11 +121,17 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   tenant = "",
   callbackAuthorization,
   useSource,
+  aiDisclosureText,
 }) => {
   const [isView, setIsView] = React.useState(false);
   const [welcomeMessageTime, setWelcomeMessageTime] = React.useState("");
   const chatbotSearchRef = React.useRef<HTMLInputElement | null>(null);
   const theme = useTheme();
+  const aiDisclosureId = React.useId();
+  const resolvedAiDisclosureText = resolveAiDisclosureText(
+    aiDisclosureText,
+    Translate({ label: "aiDisclosure" }),
+  );
 
   const {
     messages,
@@ -194,6 +227,11 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             isChatting={isChatting}
             icon={icon}
             chatbotSearchRef={chatbotSearchRef}
+            describedById={aiDisclosureId}
+          />
+          <AiDisclosure
+            id={aiDisclosureId}
+            text={resolvedAiDisclosureText}
           />
         </Box>
       )}
