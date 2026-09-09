@@ -23,6 +23,7 @@ import {
   useTheme,
 } from "@mui/material";
 import React from "react";
+import AiDisclosure from "./AiDisclosure";
 import Search from "./Search";
 import useGenerateResponse, { Message } from "./useGenerateResponse";
 import { SingleMessage } from "./SingleMessage";
@@ -63,6 +64,12 @@ type ChatbotProps = {
    * entirely. When omitted, falls back to `useSource` (deprecated) or `8`.
    */
   numberOfSources?: number;
+  /**
+   * text of the AI interaction disclosure shown under the input. When omitted,
+   * falls back to the translated default for the active language. The
+   * disclosure cannot be disabled.
+   */
+  aiDisclosureText?: React.ReactNode;
 };
 
 const DEFAULT_NUMBER_OF_SOURCES = 8;
@@ -77,6 +84,24 @@ function resolveNumberOfSources(
   return DEFAULT_NUMBER_OF_SOURCES;
 }
 
+/**
+ * resolves the disclosure text against the translated default. A missing, null or
+ * blank prop falls back to the default rather than blanking the notice out: the
+ * text is customizable, the disclosure itself is not optional.
+ */
+function resolveAiDisclosureText(
+  aiDisclosureText: React.ReactNode | undefined,
+  defaultText: string,
+): React.ReactNode {
+  if (aiDisclosureText === undefined || aiDisclosureText === null) {
+    return defaultText;
+  }
+  if (typeof aiDisclosureText === "string" && aiDisclosureText.trim() === "") {
+    return defaultText;
+  }
+  return aiDisclosureText;
+}
+
 const Chatbot: React.FC<ChatbotProps> = ({
   icon,
   title,
@@ -88,6 +113,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
   callbackAuthorization,
   useSource,
   numberOfSources,
+  aiDisclosureText,
 }) => {
   const resolvedNumberOfSources = resolveNumberOfSources(
     numberOfSources,
@@ -105,6 +131,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
             tenant={tenant}
             callbackAuthorization={callbackAuthorization}
             numberOfSources={resolvedNumberOfSources}
+            aiDisclosureText={aiDisclosureText}
           />
         </LanguageProvider>
       </ThemeProvider>
@@ -120,11 +147,17 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   tenant = "",
   callbackAuthorization,
   numberOfSources = DEFAULT_NUMBER_OF_SOURCES,
+  aiDisclosureText,
 }) => {
   const [isView, setIsView] = React.useState(false);
   const [welcomeMessageTime, setWelcomeMessageTime] = React.useState("");
   const chatbotSearchRef = React.useRef<HTMLInputElement | null>(null);
   const theme = useTheme();
+  const aiDisclosureId = React.useId();
+  const resolvedAiDisclosureText = resolveAiDisclosureText(
+    aiDisclosureText,
+    Translate({ label: "aiDisclosure" }),
+  );
 
   const {
     messages,
@@ -220,6 +253,11 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             isChatting={isChatting}
             icon={icon}
             chatbotSearchRef={chatbotSearchRef}
+            describedById={aiDisclosureId}
+          />
+          <AiDisclosure
+            id={aiDisclosureId}
+            text={resolvedAiDisclosureText}
           />
         </Box>
       )}

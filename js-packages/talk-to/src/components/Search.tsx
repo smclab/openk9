@@ -18,6 +18,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { v4 as uuidv4 } from "uuid";
 import UnicodeSpinner from "./utils/UnicodeSpinner";
+import AiDisclosure, { AI_DISCLOSURE_ID } from "./AiDisclosure";
 import { DatasourceSelectMemo } from "./DatasourceSelect";
 import { supportsImageQuery, useUser } from "./ChatInfoContext";
 import { HandleSearch, QueryImageAttachment } from "./useGenerateResponse";
@@ -280,6 +281,7 @@ export default function Search({
 					value={search}
 					onChange={(event) => setSearch(event.currentTarget.value)}
 					placeholder={t("write-a-message", { defaultValue: "Write a message" })!}
+					inputProps={{ "aria-describedby": AI_DISCLOSURE_ID }}
 					sx={{
 						"& .MuiOutlinedInput-notchedOutline": {
 							borderRadius: "10px",
@@ -452,6 +454,10 @@ export default function Search({
 					</Tooltip>
 				</Box>
 			)}
+
+			<Box sx={{ mt: 1 }}>
+				<AiDisclosure id={AI_DISCLOSURE_ID} />
+			</Box>
 		</Box>
 	);
 }

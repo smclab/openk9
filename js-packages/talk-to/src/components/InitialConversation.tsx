@@ -1,5 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import AiDisclosure from "./AiDisclosure";
 import SuggestedPrompts from "./SuggestedPrompts";
 import { HandleSearch } from "./useGenerateResponse";
 
@@ -39,6 +40,10 @@ export const InitialConversation: React.FC<InitialConversationProps> = ({ handle
 			<Typography variant="h5" gutterBottom align="center">
 				{t("where-knowledge-has-no-limits", { defaultValue: "Where Knowledge has no limits" })}
 			</Typography>
+			{/* No id here: the copy under the input owns AI_DISCLOSURE_ID, and both can be on screen at once. */}
+			<Box maxWidth="520px" textAlign="center">
+				<AiDisclosure />
+			</Box>
 			<Box mt={3}>
 				<SuggestedPrompts
 					suggestedPrompts={suggestedPrompts}
