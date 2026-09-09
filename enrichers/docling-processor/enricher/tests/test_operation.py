@@ -15,31 +15,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys
-import types
 from unittest.mock import MagicMock, patch
 
-# app.server loads dotenv/fastapi/pydantic 
-# and docling through app.utils.converter. 
-# Stub those heavy modules before importing it. 
-_STUBS = ["dotenv", "fastapi", "app.utils.converter"]
-for name in _STUBS:
-    sys.modules.setdefault(name, MagicMock())
-
-# pydantic.BaseModel must stay subclassable (server.py: class Input(BaseModel)).
-_pydantic = types.ModuleType("pydantic")
-_pydantic.BaseModel = type("BaseModel", (), {})
-sys.modules.setdefault("pydantic", _pydantic)
-
-import app.server as server  # noqa: E402
+import app.server as server
 
 
 def _payload():
     return {
         "resources": {
             "binaries": [
-                {"id": 0, "resourceId": "r0"},
-                {"id": 1, "resourceId": "r1"},
+                {"id": 0, "resourceId": "r0", "url": "http://binaries/r0"},
+                {"id": 1, "resourceId": "r1", "url": "http://binaries/r1"},
             ]
         },
         "tenantId": "t",
