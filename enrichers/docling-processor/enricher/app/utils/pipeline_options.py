@@ -9,11 +9,13 @@ from docling.document_converter import FormatOption, _get_default_option
 # SUPPORTED FORMATS
 # =========================
 
-# docling knows more formats than this image can convert: some backends need
-# an install extra we do not ship (odfdo for OpenDocument, arelle-release for
-# XBRL, whisper/librosa for audio and video) and would only fail deep inside
-# the backend. This set is the gate; the FormatOption itself comes from
-# docling.
+# docling knows more formats than this image can convert, and they would only
+# fail deep inside the backend. This set is the gate; the FormatOption itself
+# comes from docling. Left out are the formats whose backend needs an install
+# extra we do not ship (odfdo for OpenDocument, arelle-release for XBRL,
+# whisper/librosa for audio and video) plus XML_USPTO and METS_GBS, which
+# docling can only convert from a file: their detection and backend read the
+# stream without rewinding it, and this enricher only ever has a stream.
 SUPPORTED_FORMATS: FrozenSet[InputFormat] = frozenset(
     {
         InputFormat.CSV,
@@ -26,13 +28,11 @@ SUPPORTED_FORMATS: FrozenSet[InputFormat] = frozenset(
         InputFormat.MD,
         InputFormat.ASCIIDOC,
         InputFormat.HTML,
-        InputFormat.XML_USPTO,
         InputFormat.XML_JATS,
         InputFormat.XML_DOCLANG,
         InputFormat.DCLX,
         InputFormat.IMAGE,
         InputFormat.PDF,
-        InputFormat.METS_GBS,
         InputFormat.JSON_DOCLING,
         InputFormat.VTT,
         InputFormat.LATEX,

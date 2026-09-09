@@ -31,18 +31,25 @@ Converted formats:
 | Family | Formats |
 | --- | --- |
 | Office | `docx`, `doc`, `pptx`, `ppt`, `xlsx`, `xls` |
-| PDF and images | `pdf`, `image` (jpg, png, tiff, bmp, webp), `mets_gbs` |
+| PDF and images | `pdf`, `image` (jpg, png, tiff, bmp, webp) |
 | Text and markup | `md`, `asciidoc`, `html`, `latex`, `csv`, `email`, `epub`, `boxnote`, `ebcdic` |
-| XML | `xml_uspto`, `xml_jats`, `xml_doclang`, `dclx` |
+| XML | `xml_jats`, `xml_doclang`, `dclx` |
 | Docling and subtitles | `json_docling`, `vtt` |
 | Apple | `iwork_pages` |
 
 Docling also knows OpenDocument (`odt`, `ods`, `odp`), XBRL (`xml_xbrl`),
 audio and video, but their backends need install extras this image does not
-ship (`odfdo`, `arelle-release`, `whisper`/`librosa`). They are rejected up
-front rather than failing deep inside the backend; adding one means adding the
-matching extra to the three `requirements*.in` and to `SUPPORTED_FORMATS` in
-`app/utils/pipeline_options.py`.
+ship (`odfdo`, `arelle-release`, `whisper`/`librosa`). Adding one means adding
+the matching extra to the three `requirements*.in` and to `SUPPORTED_FORMATS`
+in `app/utils/pipeline_options.py`.
+
+USPTO patents (`xml_uspto`) and METS-GBS archives (`mets_gbs`) are left out for
+a different reason: Docling converts them from a file but not from a stream,
+because its format detection and those two backends read the stream without
+rewinding it, and this enricher only ever holds a stream.
+
+All of these are rejected up front rather than failing deep inside the
+backend.
 
 **OCR engine.** Docling defaults the PDF pipeline to `OcrAutoOptions`, which
 picks an engine by probing the environment and does not forward the configured

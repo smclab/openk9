@@ -25,9 +25,10 @@ from docling.datamodel.pipeline_options import (
 
 from app.utils.pipeline_options import SUPPORTED_FORMATS, get_format_options
 
-# Formats docling knows but whose backend needs an install extra the image does
-# not ship: odfdo (OpenDocument), arelle-release (XBRL), whisper/librosa
-# (audio, video).
+# Formats docling knows but this image cannot convert: their backend needs an
+# install extra we do not ship -- odfdo (OpenDocument), arelle-release (XBRL),
+# whisper/librosa (audio, video) -- or docling can only read them from a file,
+# never from the stream this enricher has (XML_USPTO, METS_GBS).
 UNSUPPORTED = [
     InputFormat.ODT,
     InputFormat.ODS,
@@ -35,6 +36,8 @@ UNSUPPORTED = [
     InputFormat.XML_XBRL,
     InputFormat.AUDIO,
     InputFormat.VIDEO,
+    InputFormat.XML_USPTO,
+    InputFormat.METS_GBS,
 ]
 
 
@@ -55,7 +58,7 @@ def test_format_without_its_extra_is_rejected(format):
 
 # A file extension is not an InputFormat value: 'jpg' is the extension of
 # InputFormat.IMAGE, whose value is 'image'.
-@pytest.mark.parametrize("format", ["jpg", "adoc", "tar.gz", "nonsense"])
+@pytest.mark.parametrize("format", ["jpg", "adoc", "eml", "nonsense"])
 def test_non_format_string_is_rejected(format):
     with pytest.raises(ValueError, match="Invalid format"):
         get_format_options({}, format)
@@ -64,9 +67,7 @@ def test_non_format_string_is_rejected(format):
 # docling defaults the PDF pipeline's OCR to OcrAutoOptions, which picks an
 # engine by probing the environment and drops `lang` on the way, so the enrich
 # item's language would go nowhere.
-@pytest.mark.parametrize(
-    "format", [InputFormat.PDF, InputFormat.IMAGE, InputFormat.METS_GBS]
-)
+@pytest.mark.parametrize("format", [InputFormat.PDF, InputFormat.IMAGE])
 def test_pdf_pipeline_ocr_is_pinned_to_easyocr(format):
     options = get_format_options({}, format)[format]
 
