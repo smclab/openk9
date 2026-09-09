@@ -6,6 +6,15 @@ ARG MODE=cpu
 
 WORKDIR /docling-processor/
 
+# `cv2` ends up being the non-headless opencv-python that rapidocr pulls in,
+# and it needs these libraries, which python:*-slim does not carry.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libxcb1 \
+        libgl1 \
+        libglib2.0-0t64 && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY ./requirements.txt ./
 COPY ./requirements_cpu.txt ./
 

@@ -1,3 +1,3 @@
-docling
+docling[easyocr]
 fastapi
 uvicorn
