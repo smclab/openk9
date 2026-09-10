@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.web;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -40,6 +41,7 @@ import io.openk9.datasource.config.model.ConfigEntityType;
 import io.openk9.datasource.config.model.ConfigPackage;
 import io.openk9.datasource.config.model.ImportMode;
 import io.openk9.datasource.config.model.ImportReport;
+import io.openk9.datasource.web.dto.ConfigEntityTypeResponseDTO;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
@@ -49,6 +51,9 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 @Path("/v1/config")
 @RolesAllowed("k9-admin")
 public class ConfigResource {
+
+	private static final List<ConfigEntityTypeResponseDTO> ENTITY_TYPES =
+		buildEntityTypes();
 
 	@Inject
 	RoutingContext routingContext;
@@ -81,6 +86,20 @@ public class ConfigResource {
 	}
 
 	/**
+	 * Lists the configuration entity types an export can carry, in the order the
+	 * registry declares them. The list does not depend on the tenant, so no tenant
+	 * header is required and the response can be cached by the caller.
+	 *
+	 * @return every exportable type, each flagged as a valid export seed or not
+	 */
+	@GET
+	@Path("/entity-types")
+	@Operation(summary = "List the exportable configuration entity types")
+	public List<ConfigEntityTypeResponseDTO> entityTypes() {
+		return ENTITY_TYPES;
+	}
+
+	/**
 	 * Imports a configuration package into the calling tenant, either previewing
 	 * the plan (dry-run) or applying it in a single transaction, creating or
 	 * overwriting entities according to {@code mode}.
@@ -103,6 +122,15 @@ public class ConfigResource {
 		String tenantId = requireTenantId();
 		requireValidPackage(pkg);
 		return configImporter.importConfig(tenantId, pkg, mode, dryRun);
+	}
+
+	private static List<ConfigEntityTypeResponseDTO> buildEntityTypes() {
+		List<ConfigEntityTypeResponseDTO> types = new ArrayList<>();
+		for (ConfigEntityType type : ConfigEntityType.values()) {
+			types.add(new ConfigEntityTypeResponseDTO(
+				type.name(), type.isSelectable()));
+		}
+		return List.copyOf(types);
 	}
 
 	private String requireTenantId() {

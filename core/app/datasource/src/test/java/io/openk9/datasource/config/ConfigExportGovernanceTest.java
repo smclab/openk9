@@ -111,6 +111,25 @@ public class ConfigExportGovernanceTest {
 			"ConfigEntityMapper is missing a dto(...) overload for: " + missing);
 	}
 
+	@Test
+	void selectable_is_every_type_but_the_join_entities() {
+		// The exporter adds the composite-key join entities on its own, once both
+		// endpoints they connect are selected, so they are never a valid export
+		// seed. Pin the flag published by the API to that structural fact.
+		List<String> inconsistent = new ArrayList<>();
+		for (ConfigEntityType type : ConfigEntityType.values()) {
+			boolean joinEntity = ConfigMatcher.isJoinEntity(type.getEntityType());
+			if (type.isSelectable() == joinEntity) {
+				inconsistent.add(type.name());
+			}
+		}
+
+		assertTrue(
+			inconsistent.isEmpty(),
+			"a type is selectable if and only if it is not a composite-key join "
+				+ "entity; inconsistent: " + inconsistent);
+	}
+
 	/**
 	 * Reads this module's Jandex index, pinned to the datasource output directory via
 	 * a datasource class' code source so a {@code jandex.idx} shipped by a dependency

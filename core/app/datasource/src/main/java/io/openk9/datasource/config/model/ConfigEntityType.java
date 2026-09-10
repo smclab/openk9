@@ -100,7 +100,7 @@ public enum ConfigEntityType {
 	PLUGIN_DRIVER(PluginDriver.class, PluginDriverDTO.class),
 	ENRICH_PIPELINE(EnrichPipeline.class, EnrichPipelineDTO.class),
 	ENRICH_PIPELINE_ITEM(
-		EnrichPipelineItem.class, EnrichPipelineItemRepresentation.class),
+		EnrichPipelineItem.class, EnrichPipelineItemRepresentation.class, false),
 	ENRICH_ITEM(EnrichItem.class, EnrichItemDTO.class),
 	DOC_TYPE(DocType.class, DocTypeDTO.class),
 	DOC_TYPE_FIELD(DocTypeField.class, DocTypeFieldDTO.class),
@@ -109,7 +109,7 @@ public enum ConfigEntityType {
 	CHAR_FILTER(CharFilter.class, CharFilterDTO.class),
 	TOKEN_FILTER(TokenFilter.class, TokenFilterDTO.class),
 	TOKENIZER(Tokenizer.class, TokenizerDTO.class),
-	ACL_MAPPING(AclMapping.class, AclMappingRepresentation.class),
+	ACL_MAPPING(AclMapping.class, AclMappingRepresentation.class, false),
 	QUERY_ANALYSIS(QueryAnalysis.class, QueryAnalysisDTO.class),
 	ANNOTATOR(Annotator.class, AnnotatorDTO.class),
 	RULE(Rule.class, RuleDTO.class),
@@ -129,10 +129,18 @@ public enum ConfigEntityType {
 
 	private final Class<?> entityType;
 	private final Class<?> attributesType;
+	private final boolean selectable;
 
 	ConfigEntityType(Class<?> entityType, Class<?> attributesType) {
+		this(entityType, attributesType, true);
+	}
+
+	ConfigEntityType(
+		Class<?> entityType, Class<?> attributesType, boolean selectable) {
+
 		this.entityType = entityType;
 		this.attributesType = attributesType;
+		this.selectable = selectable;
 	}
 
 	public Class<?> getEntityType() {
@@ -141,6 +149,17 @@ public enum ConfigEntityType {
 
 	public Class<?> getAttributesType() {
 		return attributesType;
+	}
+
+	/**
+	 * Whether the type can seed an export selection. The composite-key join
+	 * entities cannot: the exporter adds them on its own, once both endpoints they
+	 * connect are already selected.
+	 *
+	 * @return {@code true} when the type is a valid export seed
+	 */
+	public boolean isSelectable() {
+		return selectable;
 	}
 
 }

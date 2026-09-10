@@ -18,6 +18,7 @@
 package io.openk9.datasource.web;
 
 import io.openk9.common.util.web.InternalHeaders;
+import io.openk9.datasource.config.model.ConfigEntityType;
 
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -105,6 +106,26 @@ public class ConfigResourceTest {
 			.body("dryRun", equalTo(true))
 			.body("applied", equalTo(false))
 			.body("created", equalTo(0));
+	}
+
+	@Test
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void entity_types_lists_every_type_and_flags_the_join_entities() {
+		// The list drives the export selection in the admin UI: it must publish
+		// every registered type, and mark as not selectable the two composite-key
+		// join entities the exporter adds on its own.
+		given()
+			.accept(ContentType.JSON)
+			.when()
+			.get("/entity-types")
+			.then()
+			.statusCode(200)
+			.body("size()", equalTo(ConfigEntityType.values().length))
+			.body("find { it.name == 'BUCKET' }.selectable", equalTo(true))
+			.body("find { it.name == 'ACL_MAPPING' }.selectable", equalTo(false))
+			.body(
+				"find { it.name == 'ENRICH_PIPELINE_ITEM' }.selectable",
+				equalTo(false));
 	}
 
 	@Test
