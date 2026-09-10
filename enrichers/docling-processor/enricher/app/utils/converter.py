@@ -16,7 +16,9 @@
 #
 
 import base64
+import json
 import os
+import threading
 from io import BytesIO
 
 from docling.document_converter import DocumentConverter
@@ -30,6 +32,28 @@ from app.utils.pipeline_options import get_format_options
 FILE_MANAGER_HOST = os.getenv("FILE_MANAGER_HOST", default="http://localhost:8000")
 DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
 FMHelper = FileManagerHelper(FILE_MANAGER_HOST)
+
+# One converter per worker thread, per format and configuration. Building a
+# DocumentConverter loads the docling models (OCR, layout, table structure),
+# so a converter per request means reloading them every time; sharing a single
+# converter across threads is not an option either, since docling does not
+# support concurrent conversions on the same pipeline.
+_converters = threading.local()
+
+
+def _get_converter(extension, configs):
+    cache = getattr(_converters, "cache", None)
+    if cache is None:
+        cache = _converters.cache = {}
+
+    key = (extension, json.dumps(configs, sort_keys=True, default=str))
+    converter = cache.get(key)
+    if converter is None:
+        logger.info(f"Building a converter for {extension}")
+        format_options = get_format_options(configs, extension)
+        converter = cache[key] = DocumentConverter(format_options=format_options)
+
+    return converter
 
 
 def conversion(bin, tenant, configs):
@@ -57,7 +81,6 @@ def conversion(bin, tenant, configs):
     bites = BytesIO(base64.b64decode(resource))
     extension = extract_extension_base64(resource)
     source = DocumentStream(name=f"doc.{extension}", stream=bites)
-    format_options = get_format_options(configs, extension)
-    converter = DocumentConverter(format_options=format_options)
+    converter = _get_converter(extension, configs)
     result = converter.convert(source)
     return result
