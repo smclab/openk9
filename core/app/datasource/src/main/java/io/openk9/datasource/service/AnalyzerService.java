@@ -271,23 +271,32 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				.flatMap(analyzer -> s.fetch(analyzer.getTokenizer())));
 	}
 
-	public Uni<Void> load(Analyzer analyzer) {
-		return sessionFactory.withTransaction(s -> {
+	/**
+	 * Loads the associations of an analyzer in the session that manages it.
+	 * <p>
+	 * The analyzer belongs to the caller's session, so its lazy associations
+	 * have to be fetched there: a session of its own would also resolve the
+	 * tenant on its own, which fails off an HTTP request.
+	 *
+	 * @param s        the session the analyzer is managed by
+	 * @param analyzer the analyzer to load
+	 * @return an empty {@link Uni} once tokenizer, char filters and token
+	 * filters are loaded
+	 */
+	public Uni<Void> load(Mutiny.Session s, Analyzer analyzer) {
 
-			List<Uni<?>> unis = new ArrayList<>();
+		List<Uni<?>> unis = new ArrayList<>();
 
-			unis.add(s.fetch(analyzer.getTokenizer()));
-			unis.add(s.fetch(analyzer.getCharFilters()));
-			unis.add(s.fetch(analyzer.getTokenFilters()));
+		unis.add(s.fetch(analyzer.getTokenizer()));
+		unis.add(s.fetch(analyzer.getCharFilters()));
+		unis.add(s.fetch(analyzer.getTokenFilters()));
 
-			return Uni.combine()
-				.all()
-				.unis(unis)
-				.usingConcurrencyOf(1)
-				.collectFailures()
-				.discardItems();
-
-		});
+		return Uni.combine()
+			.all()
+			.unis(unis)
+			.usingConcurrencyOf(1)
+			.collectFailures()
+			.discardItems();
 	}
 
 	public Uni<Analyzer> patch(long analyzerId, AnalyzerDTO analyzerDTO) {
