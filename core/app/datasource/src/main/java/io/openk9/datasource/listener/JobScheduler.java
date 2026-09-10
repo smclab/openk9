@@ -136,6 +136,28 @@ public class JobScheduler {
 		return failed;
 	}
 
+	/**
+	 * Records a scheduling in {@code FAILURE} without waiting for it: nothing
+	 * depends on the outcome, but the outcome is logged, because the record
+	 * is all that remains of a scheduling that could not start.
+	 *
+	 * @param tenantId the tenant the scheduling belongs to
+	 * @param failed   the scheduler in {@code FAILURE} state to persist
+	 */
+	private static void persistFailedScheduler(String tenantId, Scheduler failed) {
+		JobSchedulerService.persistScheduler(tenantId, failed)
+			.whenComplete((persisted, throwable) -> {
+				if (throwable != null) {
+					log.errorf(
+						throwable,
+						"The Scheduler with schedule-id %s in FAILURE state cannot" +
+							" be persisted, so the failure leaves no record.",
+						failed.getScheduleId()
+					);
+				}
+			});
+	}
+
 	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
 		return actorRef.path().address().port().isEmpty();
 	}
@@ -346,7 +368,7 @@ public class JobScheduler {
 			scheduler.setStatus(Scheduler.SchedulerStatus.FAILURE);
 			scheduler.setErrorDescription(errorDescription);
 
-			JobSchedulerService.persistScheduler(tenantName, scheduler);
+			persistFailedScheduler(tenantName, scheduler);
 
 			return Behaviors.same();
 		}
@@ -520,8 +542,7 @@ public class JobScheduler {
 				scheduler.getScheduleId()
 			);
 
-			JobSchedulerService.persistScheduler(
-				tenantId, failedScheduler(scheduler, throwable));
+			persistFailedScheduler(tenantId, failedScheduler(scheduler, throwable));
 
 			return unstashAndRelease(
 				ctx,
