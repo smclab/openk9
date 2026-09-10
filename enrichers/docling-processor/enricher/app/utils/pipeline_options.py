@@ -205,25 +205,3 @@ def get_format_options(
         opts.backend_options = add_configs(opts.backend_options, backend_args)
 
     return {in_format: opts}
-
-
-# =========================
-# EXPORT SCHEMAS
-# =========================
-
-
-def collect_format_options_schemas(
-    format_options: Dict[InputFormat, FormatOption],
-) -> Dict[str, Any]:
-    """
-    Extract the schema of the pipeline options.
-    """
-    result = {}
-
-    for fmt, opt in format_options.items():
-        if hasattr(opt, "pipeline_options") and opt.pipeline_options:
-            result[fmt.value] = opt.pipeline_options.model_dump()
-        else:
-            result[fmt.value] = None
-
-    return result
