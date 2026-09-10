@@ -159,18 +159,6 @@ Returns:
 
 ---
 
-### **GET /form :**
-
-Returns the configuration form schema required by Openk9 connectors.
-
-Current implementation:
-
-```json
-{"fields": []}
-```
-
----
-
 ## Configuration
 
 Environment variables expected:

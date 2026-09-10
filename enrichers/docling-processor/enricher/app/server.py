@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import json
 import os
 import threading
 
@@ -72,27 +71,6 @@ async def start_task(input: Input):
 )
 def health_check():
     return {"status": "UP"}
-
-
-@app.get(
-    "/form",
-    summary="Return configuration form definition for the connector",
-    description=(
-        "Returns a JSON schema describing the configuration fields required "
-        "to set up the connector in the Openk9 UI."
-    ),
-    tags=["Connector Configuration"],
-    response_description="Form structure with field definitions",
-)
-def form():
-
-    with open("app/form/form_descr_tipi.json") as f:
-        data = json.load(f)
-
-    fields = data.get("fields", [])
-
-    response = {"fields": fields}
-    return response
 
 
 def operation(payload, configs, token):
