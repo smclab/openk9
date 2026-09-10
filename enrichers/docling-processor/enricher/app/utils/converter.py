@@ -15,7 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import json
 import os
+import threading
 from io import BytesIO
 
 import requests
@@ -27,6 +29,29 @@ from app.utils.logger import logger
 from app.utils.pipeline_options import get_format_options
 
 FETCH_TIMEOUT_SECONDS = float(os.getenv("FETCH_TIMEOUT_SECONDS", "30"))
+
+# One converter per worker thread, per format and configuration. Building a
+# DocumentConverter loads the docling models (OCR, layout, table structure),
+# so a converter per request means reloading them every time; sharing a single
+# converter across threads is not an option either, since docling does not
+# support concurrent conversions on the same pipeline.
+_converters = threading.local()
+
+
+def _get_converter(file_format, configs):
+    cache = getattr(_converters, "cache", None)
+    if cache is None:
+        cache = _converters.cache = {}
+
+    key = (file_format.value, json.dumps(configs, sort_keys=True, default=str))
+    converter = cache.get(key)
+    if converter is None:
+        logger.info(f"Building a converter for {file_format.value}")
+        format_options = get_format_options(configs, file_format)
+        converter = cache[key] = DocumentConverter(format_options=format_options)
+
+    return converter
+
 
 def conversion(bin, configs):
     """
@@ -59,7 +84,6 @@ def conversion(bin, configs):
     name = bin.get("name", "")
     file_format = detect_format(content, name)
     source = DocumentStream(name=stream_name(name, file_format), stream=bites)
-    format_options = get_format_options(configs, file_format)
-    converter = DocumentConverter(format_options=format_options)
+    converter = _get_converter(file_format, configs)
     result = converter.convert(source)
     return result

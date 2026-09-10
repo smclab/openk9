@@ -16,7 +16,7 @@
 #
 
 import os
-import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from dotenv import load_dotenv
@@ -30,7 +30,16 @@ from app.utils.logger import logger
 load_dotenv()
 
 DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
+# Conversions are CPU-bound and a single one peaks around 3 GiB (docling loads
+# the OCR, layout and table models, and each worker keeps its own), so the pool
+# is deliberately serial by default: raising it multiplies the resident memory
+# and makes every single conversion slower.
+MAX_CONCURRENT_CONVERSIONS = int(os.getenv("MAX_CONCURRENT_CONVERSIONS", "1"))
 CALLBACK_TIMEOUT_SECONDS = float(os.getenv("CALLBACK_TIMEOUT_SECONDS", "30"))
+
+EXECUTOR = ThreadPoolExecutor(
+    max_workers=MAX_CONCURRENT_CONVERSIONS, thread_name_prefix="conversion"
+)
 
 
 class Input(BaseModel):
@@ -56,11 +65,9 @@ async def start_task(input: Input):
     payload = input.payload
     enrich_item_config = input.enrichItemConfig
     token = input.replyTo
-    thread = threading.Thread(
-        target=operation,
-        kwargs={"payload": payload, "configs": enrich_item_config, "token": token},
+    EXECUTOR.submit(
+        operation, payload=payload, configs=enrich_item_config, token=token
     )
-    thread.start()
     return {"status": "ok", "message": "Proces started"}
 
 
