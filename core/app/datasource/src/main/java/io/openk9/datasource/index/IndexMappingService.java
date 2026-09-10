@@ -414,19 +414,43 @@ public class IndexMappingService {
 		}
 	}
 
-	private static Settings getSettings(Map<String, Object> settingsMap, DataIndex dataIndex) {
+	/**
+	 * Lays the settings recorded on the dataIndex over the ones its docTypes
+	 * derive, so that a key the operator set wins over a derived default.
+	 * <p>
+	 * The {@code analysis} block is the exception: the mappings refer to the
+	 * analyzers by name, so the analyzers, tokenizers and filters the docTypes
+	 * hold now replace, name by name, the definitions recorded when the
+	 * dataIndex was created. Both halves of the index template come from the
+	 * same docTypes and cannot drift apart, whatever the recorded settings
+	 * say; a definition recorded under a name the docTypes do not know is
+	 * kept.
+	 *
+	 * @param settingsMap the settings recorded on the dataIndex, may be
+	 *                    {@code null} or empty
+	 * @param dataIndex   the dataIndex, with its docTypes expanded
+	 * @return the settings of the index template
+	 */
+	protected static Settings getSettings(Map<String, Object> settingsMap, DataIndex dataIndex) {
 
-		var settingsBuilder = Settings.builder();
+		var settings = new JsonObject(Json.encode(
+			IndexMappingUtils.docTypesToSettings(dataIndex.getDocTypes())));
 
-		settingsMap = settingsMap != null && !settingsMap.isEmpty()
-			? settingsMap
-			: IndexMappingUtils.docTypesToSettings(dataIndex.getDocTypes());
+		if (settingsMap != null && !settingsMap.isEmpty()) {
+			var analysis = settings.getJsonObject("analysis").copy();
 
-		if (!settingsMap.isEmpty()) {
-			settingsBuilder.loadFromMap(settingsMap);
+			settings
+				.mergeIn(new JsonObject(Json.encode(settingsMap)), true)
+				// three levels down is the single definition, replaced whole:
+				// analysis, then analyzer or tokenizer or filter, then the name
+				.mergeIn(new JsonObject().put("analysis", analysis), 3);
 		}
 
-		return settingsBuilder.build();
+		// decoding again leaves plain maps behind, which is what the builder
+		// walks, instead of the JsonObjects a deep merge produces
+		return Settings.builder()
+			.loadFromMap(new JsonObject(settings.encode()).getMap())
+			.build();
 	}
 
 	protected static Set<DocType> mergeDocTypes(

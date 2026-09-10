@@ -29,17 +29,24 @@ import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.IndexTemplateUtils;
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
+import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.model.dto.base.AnalyzerDTO;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
+import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.request.DocTypeFieldWithAnalyzerDTO;
 import io.openk9.datasource.pipeline.service.dto.SchedulingType;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
+import io.openk9.datasource.service.AnalyzerService;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.SchedulerService;
@@ -70,6 +77,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @QuarkusTest
 class ReindexDataIndexTest {
 
+	private static final String ANALYZED_DOC_TYPE = "rdit_analyzed";
+	private static final String ANALYZER = "rdit_analyzer";
+	private static final String ANALYZER_TYPE_SETTING =
+		"index.analysis.analyzer." + ANALYZER + ".type";
 	private static final int CHUNK_WINDOW_SIZE = 3;
 	private static final String DATA_INDEX = "rdit.data-index";
 	private static final String DATASOURCE = "rdit.datasource";
@@ -83,10 +94,16 @@ class ReindexDataIndexTest {
 	private static final int TEST_VECTOR_SIZE = 1024;
 
 	@Inject
+	AnalyzerService analyzerService;
+
+	@Inject
 	DataIndexService dataIndexService;
 
 	@Inject
 	DatasourceService datasourceService;
+
+	@Inject
+	DocTypeService docTypeService;
 
 	@Inject
 	EmbeddingModelService embeddingModelService;
@@ -119,6 +136,22 @@ class ReindexDataIndexTest {
 
 		deleteQuietly(() -> embeddingModelService
 			.deleteById(getEmbeddingModel(TEST_EMBEDDING_MODEL).getId())
+			.await()
+			.indefinitely()
+		);
+
+		deleteQuietly(() -> docTypeService
+			.deleteById(EntitiesUtils
+				.getEntity(ANALYZED_DOC_TYPE, docTypeService, sessionFactory)
+				.getId())
+			.await()
+			.indefinitely()
+		);
+
+		deleteQuietly(() -> analyzerService
+			.deleteById(EntitiesUtils
+				.getEntity(ANALYZER, analyzerService, sessionFactory)
+				.getId())
 			.await()
 			.indefinitely()
 		);
@@ -266,6 +299,46 @@ class ReindexDataIndexTest {
 				.contains(componentTemplateName(embeddingModel)),
 			"the new index template does not compose the active model"
 		);
+	}
+
+	@Test
+	@DisplayName("Should keep the analyzers of the docTypes across a reindex")
+	void should_keep_the_analyzers_of_the_doc_types_across_a_reindex() {
+		// a docType whose field carries an analyzer, and a knn dataIndex on it
+		// whose settings know nothing of the analysis
+		var analyzer = createAnalyzer("standard");
+
+		createAnalyzedDocType(analyzer.getId());
+
+		var datasourceId = createDatasource(knnDataIndex());
+
+		// the analyzer reaches the index template next to the settings requested
+		var created = indexTemplate(reload(DATA_INDEX)).template().settings();
+
+		assertEquals("standard", created.get(ANALYZER_TYPE_SETTING));
+		assertEquals("2", created.get(REPLICAS_SETTING));
+
+		// the analyzer changes, and the reindex follows the docTypes as they
+		// are now, not the settings recorded at creation
+		analyzerService.update(
+				analyzer.getId(),
+				AnalyzerDTO.builder()
+					.name(ANALYZER)
+					.type("whitespace")
+					.jsonConfig("{\"type\": \"whitespace\"}")
+					.build()
+			)
+			.await()
+			.indefinitely();
+
+		var scheduler = reindex(datasourceId);
+
+		var reindexed = indexTemplate(reload(scheduler.getNewDataIndex().getName()))
+			.template()
+			.settings();
+
+		assertEquals("whitespace", reindexed.get(ANALYZER_TYPE_SETTING));
+		assertEquals("2", reindexed.get(REPLICAS_SETTING));
 	}
 
 	@Test
@@ -504,6 +577,38 @@ class ReindexDataIndexTest {
 				)
 				.setParameter("datasourceId", datasourceId)
 				.getSingleResult()
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private Analyzer createAnalyzer(String type) {
+		return analyzerService.create(AnalyzerDTO.builder()
+				.name(ANALYZER)
+				.type(type)
+				.jsonConfig(String.format("{\"type\": \"%s\"}", type))
+				.build()
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void createAnalyzedDocType(long analyzerId) {
+		var docType = docTypeService.create(DocTypeDTO.builder()
+				.name(ANALYZED_DOC_TYPE)
+				.build()
+			)
+			.await()
+			.indefinitely();
+
+		docTypeService.addDocTypeField(
+				docType.getId(),
+				DocTypeFieldWithAnalyzerDTO.builder()
+					.name("content")
+					.fieldName("content")
+					.fieldType(FieldType.TEXT)
+					.analyzerId(analyzerId)
+					.build()
 			)
 			.await()
 			.indefinitely();

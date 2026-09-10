@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.index;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
@@ -27,6 +29,7 @@ import java.util.Set;
 
 import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
@@ -147,6 +150,75 @@ public class IndexMappingServiceTest {
 			.noneMatch(f -> IndexMappingService.isIgnoredFieldPath(f.getPath()))
 		);
 
+	}
+
+	@Test
+	void shouldLayRecordedSettingsOverDerivedOnesExceptTheAnalysis() {
+		// a docType whose field carries an analyzer, as the docTypes hold it now
+		var analyzer = new Analyzer();
+		analyzer.setId(6L);
+		analyzer.setName("current_analyzer");
+		analyzer.setType("standard");
+		analyzer.setJsonConfig("{\"type\": \"standard\"}");
+
+		var content = new DocTypeField();
+		content.setId(7L);
+		content.setFieldName("content");
+		content.setName("analyzed.content");
+		content.setFieldType(FieldType.TEXT);
+		content.setAnalyzer(analyzer);
+
+		var analyzed = new DocType();
+		analyzed.setId(8L);
+		analyzed.setName("analyzed");
+		analyzed.setDocTypeFields(new LinkedHashSet<>(List.of(content)));
+		content.setDocType(analyzed);
+
+		var dataIndex = new DataIndex();
+		dataIndex.setDocTypes(Set.of(analyzed));
+
+		// the settings recorded at creation: a key of the operator's own, a
+		// derived default overridden, a stale definition of the same analyzer
+		// and a filter the docTypes know nothing about
+		var recorded = new JsonObject()
+			.put("index", new JsonObject()
+				.put("number_of_replicas", 2)
+				.put("highlight", new JsonObject().put("max_analyzed_offset", "5")))
+			.put("analysis", new JsonObject()
+				.put("analyzer", new JsonObject()
+					.put("current_analyzer", new JsonObject()
+						.put("type", "whitespace")
+						.put("stopwords", "_english_")))
+				.put("filter", new JsonObject()
+					.put("operator_filter", new JsonObject().put("type", "lowercase"))))
+			.getMap();
+
+		var settings = IndexMappingService.getSettings(recorded, dataIndex);
+
+		// what was recorded wins over what the docTypes derive
+		assertEquals("2", settings.get("index.number_of_replicas"));
+		assertEquals("5", settings.get("index.highlight.max_analyzed_offset"));
+
+		// but the analyzer is the one the docTypes hold now, whole (the
+		// analysis block is not under index yet: OpenSearch normalizes it when
+		// the template is applied)
+		assertEquals(
+			"standard", settings.get("analysis.analyzer.current_analyzer.type"));
+		assertNull(settings.get("analysis.analyzer.current_analyzer.stopwords"));
+
+		// and a definition the docTypes do not know is kept
+		assertEquals(
+			"lowercase", settings.get("analysis.filter.operator_filter.type"));
+	}
+
+	@Test
+	void shouldDeriveTheSettingsWhenNoneWereRecorded() {
+		var dataIndex = new DataIndex();
+		dataIndex.setDocTypes(Set.of(docType));
+
+		var settings = IndexMappingService.getSettings(null, dataIndex);
+
+		assertEquals("10000000", settings.get("index.highlight.max_analyzed_offset"));
 	}
 
 	private static void printTree(DocTypeField docTypeField, String depth) {
