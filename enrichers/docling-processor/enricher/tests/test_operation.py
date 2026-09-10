@@ -24,8 +24,8 @@ def _payload():
     return {
         "resources": {
             "binaries": [
-                {"id": 0, "resourceId": "r0"},
-                {"id": 1, "resourceId": "r1"},
+                {"id": 0, "resourceId": "r0", "url": "http://binary/r0"},
+                {"id": 1, "resourceId": "r1", "url": "http://binary/r1"},
             ]
         },
         "tenantId": "t",
