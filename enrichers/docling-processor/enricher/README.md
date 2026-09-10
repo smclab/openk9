@@ -141,6 +141,36 @@ To run the enricher in local you have to:
    where the mock prints it. Any HTTP source works, so the static server can be
    swapped for any host reachable from the processor.
 
+## Build and test with Docker
+
+### Using makefile commands
+
+The module ships a makefile that wraps the Docker build, and reads the base
+image and the version from `python_modules_config.txt` in the repository root:
+
+```bash
+# Verify required tools (git, docker) and environment
+make check_commands
+
+# Load and validate the configuration
+make load_config
+
+# Run the unit tests in the Docker test stage, without producing an image
+make test
+
+# Build the Docker image with the configured base image and version
+make build
+
+# Build the CUDA variant instead of the CPU one
+make build MODE=gpu
+```
+
+`make test` builds the `test` stage alone, so pytest and the tests never reach
+the runtime image; `make build` fails when a test fails, because the runtime
+stage depends on the output of the test stage. The suite also runs from the
+enricher folder with `python -m pytest tests`, provided the pinned
+requirements are installed in the active environment.
+
 ## API Reference
 
 ### **POST /start-task/ :**
