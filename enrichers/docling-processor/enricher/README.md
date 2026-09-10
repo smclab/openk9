@@ -348,7 +348,22 @@ Environment variables expected:
 
 ```
 DATASOURCE_HOST=http://localhost:8001   # Openk9 datasource/callback host
+MAX_CONCURRENT_CONVERSIONS=1            # conversions running at the same time
+FETCH_TIMEOUT_SECONDS=30                # timeout when fetching a binary
+CALLBACK_TIMEOUT_SECONDS=30             # timeout when answering the callback
 ```
+
+A single OCR conversion peaks around 3 GiB, and each concurrent conversion
+keeps its own copy of the docling models while competing for the same CPU, so
+raising `MAX_CONCURRENT_CONVERSIONS` needs roughly that much extra memory per
+worker and makes every single conversion slower: scale out with replicas
+instead. A container that runs out of memory is killed with every conversion it
+was carrying, which is the failure this default avoids.
+
+Note that the pre-signed URL of a binary is minted when the datasource
+dispatches the enrich item and is short-lived, so a request left waiting for a
+free worker long enough may find it expired.
+
 ## License
 
 Copyright (c) the respective contributors, as shown by the AUTHORS file.
