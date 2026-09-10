@@ -20,6 +20,11 @@ import os
 from io import BytesIO
 
 import requests
+from dotenv import load_dotenv
+
+# This module is imported before app.server loads the .env, so it has to load
+# it too, or the timeout below would only honour real environment variables.
+load_dotenv()
 
 # The enrich callback is answered only once the binary has been fetched, so a
 # file manager that accepts the connection and never answers would hang the

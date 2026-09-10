@@ -23,11 +23,16 @@ from io import BytesIO
 
 from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
+from dotenv import load_dotenv
 
 from app.utils.fm_helper import FileManagerHelper
 from app.utils.format_detect import extract_extension_base64
 from app.utils.logger import logger
 from app.utils.pipeline_options import get_format_options
+
+# app.server is imported before it loads the .env itself, so this module has to
+# load it too, or the hosts below would only honour real environment variables.
+load_dotenv()
 
 FILE_MANAGER_HOST = os.getenv("FILE_MANAGER_HOST", default="http://localhost:8000")
 DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
