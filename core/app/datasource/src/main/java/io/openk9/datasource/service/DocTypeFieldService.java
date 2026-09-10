@@ -573,13 +573,13 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			if (analyzer != null) {
 				unis.add(s
 					.fetch(typeField.getAnalyzer())
-					.flatMap(_analyzerService::load));
+					.flatMap(loaded -> _analyzerService.load(s, loaded)));
 			}
 			Analyzer searchAnalyzer = typeField.getSearchAnalyzer();
 			if (searchAnalyzer != null) {
 				unis.add(s
 					.fetch(typeField.getSearchAnalyzer())
-					.flatMap(_analyzerService::load));
+					.flatMap(loaded -> _analyzerService.load(s, loaded)));
 			}
 			if (typeField.getAclMappings() != null) {
 				unis.add(s.fetch(typeField.getAclMappings()));
