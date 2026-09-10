@@ -38,8 +38,8 @@ def _result(markdown):
     return result
 
 
-# Run operation() over two binaries with the given error strategy; 
-# the binary whose id == failing_id raises during conversion. 
+# Run operation() over two binaries with the given error strategy;
+# the binary whose id == failing_id raises during conversion.
 # Return the JSON payload posted to the enrich callback.
 def _run(strategy, failing_id):
 
@@ -48,9 +48,10 @@ def _run(strategy, failing_id):
             raise ValueError("conversion boom")
         return _result(f"md-{binary['id']}")
 
-    with patch.object(
-        server, "conversion", side_effect=conversion
-    ), patch.object(server, "requests") as requests_mock:
+    with (
+        patch.object(server, "conversion", side_effect=conversion),
+        patch.object(server, "requests") as requests_mock,
+    ):
         server.operation(_payload(), {"error_strategy": strategy}, token="tok")
     return requests_mock.post.call_args.kwargs["json"]
 
