@@ -79,6 +79,7 @@ def get_agentic_rag(
         score_threshold = rag_configuration.get("score_threshold")
         domain_threshold = rag_configuration.get("domain_threshold")
 
+        model_type = llm_configuration.get("model_type")
         context_window = llm_configuration.get("context_window")
         retrieve_type = llm_configuration.get("retrieve_type")
 
