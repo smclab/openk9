@@ -16,9 +16,15 @@
 #
 
 import base64
+import os
 from io import BytesIO
 
 import requests
+
+# The enrich callback is answered only once the binary has been fetched, so a
+# file manager that accepts the connection and never answers would hang the
+# conversion worker for good.
+FETCH_TIMEOUT_SECONDS = float(os.getenv("FETCH_TIMEOUT_SECONDS", "30"))
 
 
 class FileManagerHelper:
@@ -33,7 +39,8 @@ class FileManagerHelper:
 
     def get_base64(self, tenant, resource):
         response = requests.get(
-            f"{self.host}/api/file-manager/v1/download/base64/{resource}/{tenant}"
+            f"{self.host}/api/file-manager/v1/download/base64/{resource}/{tenant}",
+            timeout=FETCH_TIMEOUT_SECONDS,
         )
         return response.text
 

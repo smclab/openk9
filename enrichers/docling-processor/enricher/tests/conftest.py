@@ -28,6 +28,7 @@ if str(MODULE_ROOT) not in sys.path:
 # for the whole session so any test module can import them without repeating
 # the setup, and so the suite never depends on the developer's own .env.
 os.environ.setdefault("DATASOURCE_HOST", "http://localhost:8001")
+os.environ.setdefault("FILE_MANAGER_HOST", "http://localhost:8000")
 os.environ.setdefault("MAX_CONCURRENT_CONVERSIONS", "2")
 os.environ.setdefault("CALLBACK_TIMEOUT_SECONDS", "30")
 os.environ.setdefault("FETCH_TIMEOUT_SECONDS", "30")
