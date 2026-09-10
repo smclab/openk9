@@ -75,6 +75,7 @@ def get_agentic_rag(
         answer_only_with_context = rag_configuration.get("answer_only_with_context")
         domain_threshold = rag_configuration.get("domain_threshold")
 
+        model_type = llm_configuration.get("model_type")
         context_window = llm_configuration.get("context_window")
         retrieve_type = llm_configuration.get("retrieve_type")
 
