@@ -159,6 +159,115 @@ Returns:
 
 ---
 
+## Enrich Item Configuration
+
+The processor does not expose a configuration form endpoint: the `jsonConfig`
+of the enrich item is written as raw JSON in the Openk9 admin UI and reaches
+the processor unchanged in the `enrichItemConfig` field of `POST /start-task/`.
+
+**Top-level keys**
+
+| Key | Applied to |
+|---|---|
+| `pipeline_options` | the pipeline options of the Docling format option selected for the detected extension |
+| `backend_options` | reserved, currently inert: no Docling format option exposes it (they expose `pipeline_options`, `backend`, `pipeline_cls`), so the key is silently ignored |
+| `error_strategy` | read by the processor itself, not forwarded to Docling |
+
+Keys that the target options object does not expose are skipped with a debug
+log, so an unknown or misspelled option never fails the conversion.
+
+**Notations**
+
+Both a nested object and flat dot-separated keys are accepted; the flat form is
+expanded before being applied. These two configurations are equivalent:
+
+```json
+{
+  "pipeline_options": {
+    "do_ocr": true,
+    "ocr_options": { "lang": ["it", "en"] }
+  }
+}
+```
+
+```json
+{
+  "pipeline_options.do_ocr": true,
+  "pipeline_options.ocr_options.lang": ["it", "en"]
+}
+```
+
+Do not mix the two notations on the same path: writing both
+`"pipeline_options"` as an object and `"pipeline_options.do_ocr"` raises
+`Conflict at key` and the conversion fails.
+
+**Error strategy**
+
+`error_strategy` only affects payloads carrying more than one binary:
+
+| Value | Behavior |
+|---|---|
+| `fail-soft` | a failing binary is marked with an `error` field, the others are still processed |
+| `fail-fast` | the first failure invalidates the whole payload (default) |
+
+**Examples**
+
+PDF, with OCR and table structure:
+
+```json
+{
+  "error_strategy": "fail-soft",
+  "pipeline_options": {
+    "do_ocr": true,
+    "do_table_structure": true,
+    "document_timeout": 120,
+    "accelerator_options": { "num_threads": 4, "device": "cpu" },
+    "ocr_options": { "lang": ["it", "en"], "force_full_page_ocr": false }
+  }
+}
+```
+
+Images, with picture description (images use the PDF pipeline):
+
+```json
+{
+  "pipeline_options": {
+    "do_ocr": true,
+    "do_picture_description": true,
+    "generate_page_images": true,
+    "images_scale": 2,
+    "picture_description_options": { "picture_area_threshold": 0.001 }
+  }
+}
+```
+
+Audio, transcribed through the ASR pipeline:
+
+```json
+{
+  "pipeline_options": {
+    "asr_options": {
+      "repo_id": "openai/whisper-small",
+      "timestamps": true,
+      "temperature": 0
+    }
+  }
+}
+```
+
+HTML and PPTX go through the simple pipeline, which accepts only the generic
+options:
+
+```json
+{
+  "pipeline_options": { "document_timeout": 60 }
+}
+```
+
+The option names are those of the Docling pipeline options; see the upstream
+documentation for the full set and for the `DocumentConverter` behavior:
+<https://docling-project.github.io/docling/>
+
 ## Configuration
 
 Environment variables expected:
