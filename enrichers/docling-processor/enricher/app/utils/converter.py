@@ -26,10 +26,9 @@ from app.utils.format_detect import detect_format, stream_name
 from app.utils.logger import logger
 from app.utils.pipeline_options import get_format_options
 
-DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
+FETCH_TIMEOUT_SECONDS = float(os.getenv("FETCH_TIMEOUT_SECONDS", "30"))
 
-
-def conversion(bin, tenant, configs):
+def conversion(bin, configs):
     """
     Converts a binary resource into a document object.
 
@@ -43,7 +42,8 @@ def conversion(bin, tenant, configs):
             the key `"url"`, a pre-signed GET URL from which the resource is
             fetched, and may carry `"name"`, the binary's file name, used as a
             hint to tell text-based formats apart.
-        tenant (str): The tenant identifier used to resolve the resource context.
+        configs (dict): The enrich item configuration, applied to the docling
+            format options.
 
     Returns:
         Any: The result of the document conversion process. The returned object
@@ -52,7 +52,7 @@ def conversion(bin, tenant, configs):
 
     """
     url = bin.get("url")
-    response = requests.get(url)
+    response = requests.get(url, timeout=FETCH_TIMEOUT_SECONDS)
     response.raise_for_status()
     content = response.content
     bites = BytesIO(content)

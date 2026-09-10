@@ -30,6 +30,7 @@ from app.utils.logger import logger
 load_dotenv()
 
 DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
+CALLBACK_TIMEOUT_SECONDS = float(os.getenv("CALLBACK_TIMEOUT_SECONDS", "30"))
 
 
 class Input(BaseModel):
@@ -74,25 +75,38 @@ def health_check():
 
 
 def operation(payload, configs, token):
+    """
+    Converts the payload binaries and always answers the enrich callback.
+
+    The callback is sent from a `finally` block: the enrich item that started
+    the task waits for it, so a task that dies without answering leaves the
+    ingestion pipeline hanging until its request timeout expires.
+    """
     response = {}
     try:
-        binaries = [
-            b for b in payload["resources"].get("binaries", []) if "url" in b
-        ]
-        tenant = payload["tenantId"]
+        response = _convert_binaries(payload, configs)
     except Exception as e:
-        handle_exception(e)
+        error = handle_exception(e)
+        logger.error(error)
+        response = {"error": error}
+    finally:
+        _send_callback(token, response)
 
-    error_strategy = configs.get("error_strategy", "fail_fast")
+
+def _convert_binaries(payload, configs):
+    binaries = [
+        b for b in payload["resources"].get("binaries", []) if "url" in b
+    ]
+
+    error_strategy = configs.get("error_strategy", "fail-fast")
     logger.info(f"Error strategy: {error_strategy}")
 
     logger.info("Starting process")
     if len(binaries) > 1:
         logger.info("Multiple binary")
-        failed = False
         for bin in binaries:
             try:
-                result = conversion(bin, tenant, configs)
+                result = conversion(bin, configs)
                 markdown = result.document.export_to_markdown()
                 bin["markdown"] = markdown
             except Exception as e:
@@ -103,34 +117,39 @@ def operation(payload, configs, token):
                     bin["error"] = str(error)
                     continue
 
-                elif error_strategy == "fail-fast":
-                    # invalidate everything and stop
-                    response = {"error": "conversion failed"}
-                    failed = True
-                    break
+                # fail-fast, and any unknown strategy: invalidate and stop
+                logger.info("Process ended")
+                return {"error": "conversion failed"}
 
-                else:
-                    # invalidate everything and stop
-                    response = {"error": "conversion failed"}
-                    failed = True
-                    break
-        if not failed:
-            response = {"binaries": binaries}
         logger.info("Process ended")
+        return {"binaries": binaries}
 
-    elif len(binaries) == 1:
+    if len(binaries) == 1:
         logger.info("Single binary")
         try:
-            result = conversion(binaries[0], tenant, configs)
+            result = conversion(binaries[0], configs)
             markdown = result.document.export_to_markdown()
             response = {"document": {"markdown": markdown}}
         except Exception as e:
             error = handle_exception(e)
             logger.error(error)
+            response = {"error": "conversion failed"}
 
         logger.info("Process ended")
+        return response
 
-    request_response = requests.post(
-        f"{DATASOURCE_HOST}/api/datasource/pipeline/callback/{token}", json=response
-    )
-    logger.info(f"Status: {request_response.status_code}")
+    # A document with no binaries is not an error: there is nothing to merge
+    # back into it.
+    return {}
+
+
+def _send_callback(token, response):
+    try:
+        request_response = requests.post(
+            f"{DATASOURCE_HOST}/api/datasource/pipeline/callback/{token}",
+            json=response,
+            timeout=CALLBACK_TIMEOUT_SECONDS,
+        )
+        logger.info(f"Status: {request_response.status_code}")
+    except Exception as e:
+        logger.error(f"Callback failed: {handle_exception(e)}")

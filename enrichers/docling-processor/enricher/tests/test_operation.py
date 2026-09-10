@@ -43,7 +43,7 @@ def _result(markdown):
 # Return the JSON payload posted to the enrich callback.
 def _run(strategy, failing_id):
 
-    def conversion(binary, tenant, configs):
+    def conversion(binary, configs):
         if binary["id"] == failing_id:
             raise ValueError("conversion boom")
         return _result(f"md-{binary['id']}")
