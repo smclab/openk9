@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.mock;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import io.quarkus.hibernate.orm.PersistenceUnitExtension;
 import io.quarkus.hibernate.orm.runtime.tenant.TenantResolver;
 import io.quarkus.test.Mock;
@@ -27,6 +29,14 @@ import jakarta.enterprise.context.RequestScoped;
 @PersistenceUnitExtension
 public class TestTenantResolver implements TenantResolver {
 
+	/**
+	 * When set, resolves the tenant as the production resolver does off an
+	 * HTTP request: to the default, unknown, tenant. Lets a test exercise a
+	 * path that runs on a Pekko dispatcher or an event loop, where no
+	 * {@code RoutingContext} exists and every session opened without an
+	 * explicit tenant fails.
+	 */
+	public static final AtomicBoolean OFF_REQUEST = new AtomicBoolean(false);
 
 	@Override
 	public String getDefaultTenantId() {
@@ -35,7 +45,7 @@ public class TestTenantResolver implements TenantResolver {
 
 	@Override
 	public String resolveTenantId() {
-		return "public";
+		return OFF_REQUEST.get() ? "<unknown>" : "public";
 	}
 
 	@Override

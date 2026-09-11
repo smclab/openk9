@@ -28,6 +28,7 @@ import jakarta.inject.Inject;
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.IndexTemplateUtils;
 import io.openk9.datasource.Initializer;
+import io.openk9.datasource.mock.TestTenantResolver;
 import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DataIndex;
@@ -53,6 +54,7 @@ import io.openk9.datasource.service.SchedulerService;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -81,6 +83,9 @@ class ReindexDataIndexTest {
 	private static final String ANALYZER = "rdit_analyzer";
 	private static final String ANALYZER_TYPE_SETTING =
 		"index.analysis.analyzer." + ANALYZER + ".type";
+	private static final String SEARCH_ANALYZER = "rdit_search_analyzer";
+	private static final String SEARCH_ANALYZER_TYPE_SETTING =
+		"index.analysis.analyzer." + SEARCH_ANALYZER + ".type";
 	private static final int CHUNK_WINDOW_SIZE = 3;
 	private static final String DATA_INDEX = "rdit.data-index";
 	private static final String DATASOURCE = "rdit.datasource";
@@ -148,13 +153,15 @@ class ReindexDataIndexTest {
 			.indefinitely()
 		);
 
-		deleteQuietly(() -> analyzerService
-			.deleteById(EntitiesUtils
-				.getEntity(ANALYZER, analyzerService, sessionFactory)
-				.getId())
-			.await()
-			.indefinitely()
-		);
+		for (String analyzer : List.of(ANALYZER, SEARCH_ANALYZER)) {
+			deleteQuietly(() -> analyzerService
+				.deleteById(EntitiesUtils
+					.getEntity(analyzer, analyzerService, sessionFactory)
+					.getId())
+				.await()
+				.indefinitely()
+			);
+		}
 	}
 
 	@Test
@@ -302,21 +309,22 @@ class ReindexDataIndexTest {
 	}
 
 	@Test
-	@DisplayName("Should keep the analyzers of the docTypes across a reindex")
+	@DisplayName("Should keep what the index template declares across a reindex")
 	void should_keep_the_analyzers_of_the_doc_types_across_a_reindex() {
-		// a docType whose field carries an analyzer, and a knn dataIndex on it
-		// whose settings know nothing of the analysis
-		var analyzer = createAnalyzer("standard");
+		// a docType whose field carries an analyzer and a search analyzer, and
+		// a knn dataIndex on it whose settings know nothing of the analysis
+		var analyzer = createAnalyzer(ANALYZER, "standard");
+		var searchAnalyzer = createAnalyzer(SEARCH_ANALYZER, "simple");
 
-		createAnalyzedDocType(analyzer.getId());
+		createAnalyzedDocType(analyzer.getId(), searchAnalyzer.getId());
 
 		var datasourceId = createDatasource(knnDataIndex());
 
-		// the analyzer reaches the index template next to the settings requested
-		var created = indexTemplate(reload(DATA_INDEX)).template().settings();
+		// the analyzers reach the index template next to the settings requested
+		var created = indexTemplate(reload(DATA_INDEX));
 
-		assertEquals("standard", created.get(ANALYZER_TYPE_SETTING));
-		assertEquals("2", created.get(REPLICAS_SETTING));
+		assertEquals("standard", created.template().settings().get(ANALYZER_TYPE_SETTING));
+		assertEquals("2", created.template().settings().get(REPLICAS_SETTING));
 
 		// the analyzer changes, and the reindex follows the docTypes as they
 		// are now, not the settings recorded at creation
@@ -333,12 +341,33 @@ class ReindexDataIndexTest {
 
 		var scheduler = reindex(datasourceId);
 
-		var reindexed = indexTemplate(reload(scheduler.getNewDataIndex().getName()))
-			.template()
-			.settings();
+		var newDataIndex = reload(scheduler.getNewDataIndex().getName());
+		var reindexed = indexTemplate(newDataIndex);
+		var settings = reindexed.template().settings();
 
-		assertEquals("whitespace", reindexed.get(ANALYZER_TYPE_SETTING));
-		assertEquals("2", reindexed.get(REPLICAS_SETTING));
+		// the analysis is the current one, the requested settings are kept
+		assertEquals("whitespace", settings.get(ANALYZER_TYPE_SETTING));
+		assertEquals("simple", settings.get(SEARCH_ANALYZER_TYPE_SETTING));
+		assertEquals("2", settings.get(REPLICAS_SETTING));
+
+		// the mappings still bind the field to both analyzers by name
+		var content = fieldMapping(reindexed, ANALYZED_DOC_TYPE, "content");
+
+		assertEquals("text", content.getString("type"));
+		assertEquals(ANALYZER, content.getString("analyzer"));
+		assertEquals(SEARCH_ANALYZER, content.getString("search_analyzer"));
+
+		// and the vector field of the active model is still composed in
+		assertTrue(
+			reindexed.composedOf().contains(componentTemplateName(
+				getEmbeddingModel(Initializer.EMBEDDING_MODEL_DEFAULT_PRIMARY))),
+			"the new index template does not compose the active model"
+		);
+
+		// the docTypes are the same set, the analyzed one included
+		assertEquals(allDocTypeIds().size(), newDataIndex.getDocTypes().size());
+		assertTrue(newDataIndex.getDocTypes().stream()
+			.anyMatch(docType -> ANALYZED_DOC_TYPE.equals(docType.getName())));
 	}
 
 	@Test
@@ -390,7 +419,7 @@ class ReindexDataIndexTest {
 		// the reindex fails instead of degrading to an index without vectors
 		var exception = assertThrows(
 			CompletionException.class,
-			() -> JobSchedulerService.persistScheduler(TENANT_ID, scheduler).join()
+			() -> persistOffRequest(scheduler)
 		);
 
 		assertTrue(
@@ -421,7 +450,7 @@ class ReindexDataIndexTest {
 		// no vector at all
 		var exception = assertThrows(
 			CompletionException.class,
-			() -> JobSchedulerService.persistScheduler(TENANT_ID, scheduler).join()
+			() -> persistOffRequest(scheduler)
 		);
 
 		assertTrue(
@@ -451,15 +480,12 @@ class ReindexDataIndexTest {
 		// the reindex is refused
 		var exception = assertThrows(
 			CompletionException.class,
-			() -> JobSchedulerService.persistScheduler(TENANT_ID, scheduler).join()
+			() -> persistOffRequest(scheduler)
 		);
 
 		// so the scheduling is recorded in FAILURE, with the reason
-		var failed = JobSchedulerService.persistScheduler(
-				TENANT_ID,
-				JobScheduler.failedScheduler(scheduler, exception.getCause())
-			)
-			.join();
+		var failed = persistOffRequest(
+			JobScheduler.failedScheduler(scheduler, exception.getCause()));
 
 		var recorded =
 			schedulerService.findById(failed.getId()).await().indefinitely();
@@ -489,8 +515,7 @@ class ReindexDataIndexTest {
 		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
 		scheduler.setReindex(false);
 
-		var persisted =
-			JobSchedulerService.persistScheduler(TENANT_ID, scheduler).join();
+		var persisted = persistOffRequest(scheduler);
 
 		assertNotNull(persisted.getId());
 		assertNull(persisted.getNewDataIndex());
@@ -582,9 +607,9 @@ class ReindexDataIndexTest {
 			.indefinitely();
 	}
 
-	private Analyzer createAnalyzer(String type) {
+	private Analyzer createAnalyzer(String name, String type) {
 		return analyzerService.create(AnalyzerDTO.builder()
-				.name(ANALYZER)
+				.name(name)
 				.type(type)
 				.jsonConfig(String.format("{\"type\": \"%s\"}", type))
 				.build()
@@ -593,7 +618,7 @@ class ReindexDataIndexTest {
 			.indefinitely();
 	}
 
-	private void createAnalyzedDocType(long analyzerId) {
+	private void createAnalyzedDocType(long analyzerId, long searchAnalyzerId) {
 		var docType = docTypeService.create(DocTypeDTO.builder()
 				.name(ANALYZED_DOC_TYPE)
 				.build()
@@ -608,6 +633,7 @@ class ReindexDataIndexTest {
 					.fieldName("content")
 					.fieldType(FieldType.TEXT)
 					.analyzerId(analyzerId)
+					.searchAnalyzerId(searchAnalyzerId)
 					.build()
 			)
 			.await()
@@ -679,6 +705,23 @@ class ReindexDataIndexTest {
 			.indefinitely();
 	}
 
+	private JsonObject fieldMapping(
+		ComposableIndexTemplate indexTemplate, String docType, String field) {
+
+		var mappings = new JsonObject(indexTemplate.template().mappings().string());
+
+		// the mappings may come back wrapped in the type
+		if (mappings.containsKey("_doc")) {
+			mappings = mappings.getJsonObject("_doc");
+		}
+
+		return mappings
+			.getJsonObject("properties")
+			.getJsonObject(docType)
+			.getJsonObject("properties")
+			.getJsonObject(field);
+	}
+
 	private Datasource fetchDatasourceConnection(long datasourceId) {
 		return JobSchedulerService
 			.fetchDatasourceConnection(TENANT_ID, datasourceId)
@@ -734,10 +777,24 @@ class ReindexDataIndexTest {
 		return scheduler;
 	}
 
+	/**
+	 * Persists a scheduler the way the job scheduler does: off an HTTP
+	 * request, where no {@code RoutingContext} exists and every session
+	 * opened without an explicit tenant resolves to the unknown tenant.
+	 */
+	private Scheduler persistOffRequest(Scheduler scheduler) {
+		TestTenantResolver.OFF_REQUEST.set(true);
+
+		try {
+			return JobSchedulerService.persistScheduler(TENANT_ID, scheduler).join();
+		}
+		finally {
+			TestTenantResolver.OFF_REQUEST.set(false);
+		}
+	}
+
 	private Scheduler reindex(long datasourceId) {
-		return JobSchedulerService
-			.persistScheduler(TENANT_ID, newReindexScheduler(datasourceId))
-			.join();
+		return persistOffRequest(newReindexScheduler(datasourceId));
 	}
 
 	private DataIndex reload(String name) {
