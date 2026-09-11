@@ -71,3 +71,24 @@ def test_the_binary_is_fetched_with_a_timeout():
         requests_mock.get.call_args.kwargs["timeout"]
         == converter.FETCH_TIMEOUT_SECONDS
     )
+
+
+def test_a_new_configuration_replaces_the_model_backed_converter():
+    _run({"ocr_options": {"lang": ["it"]}}, file_format=InputFormat.PDF)
+    converter_class, _ = _run({"ocr_options": {"lang": ["en"]}}, file_format=InputFormat.PDF)
+
+    # Each model-backed converter keeps its own copy of the docling models, so
+    # a second configuration must replace the first instead of stacking on it.
+    assert converter_class.call_count == 1
+    assert len(converter._converters.cache) == 1
+
+
+def test_a_plain_format_does_not_evict_the_model_backed_converter():
+    _run({}, file_format=InputFormat.PDF)
+    _run({}, file_format=InputFormat.DOCX)
+    converter_class, _ = _run({}, file_format=InputFormat.PDF)
+
+    # Plain backends cost nothing to keep, and keeping them must not cost the
+    # PDF converter a reload.
+    assert converter_class.call_count == 0
+    assert len(converter._converters.cache) == 2
