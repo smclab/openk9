@@ -21,6 +21,7 @@ import os
 import threading
 from io import BytesIO
 
+from docling.datamodel.base_models import FormatToExtensions, InputFormat
 from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
 from dotenv import load_dotenv
@@ -45,6 +46,19 @@ FMHelper = FileManagerHelper(FILE_MANAGER_HOST)
 # support concurrent conversions on the same pipeline.
 _converters = threading.local()
 
+# Formats whose pipeline loads the docling models. Their converters are the
+# expensive ones (~1.3 GiB resident each, held until the converter is dropped),
+# and two enrich items configured differently would otherwise stack one copy
+# per configuration until the container is out of memory. Only the last one is
+# kept, so a worker holds a single set of models whatever the configuration.
+# The other formats parse with plain backends and cost nothing to keep.
+# The cache is keyed on the extension extract_extension_base64 reports, so the
+# set is spelled with the same extensions rather than with the format names.
+_MODEL_BACKED_FORMATS = frozenset(
+    FormatToExtensions[file_format][0]
+    for file_format in (InputFormat.PDF, InputFormat.IMAGE)
+)
+
 
 def _get_converter(extension, configs):
     cache = getattr(_converters, "cache", None)
@@ -55,6 +69,10 @@ def _get_converter(extension, configs):
     converter = cache.get(key)
     if converter is None:
         logger.info(f"Building a converter for {extension}")
+        if extension in _MODEL_BACKED_FORMATS:
+            for cached in [k for k in cache if k[0] in _MODEL_BACKED_FORMATS]:
+                logger.info(f"Dropping the cached converter for {cached[0]}")
+                del cache[cached]
         format_options = get_format_options(configs, extension)
         converter = cache[key] = DocumentConverter(format_options=format_options)
 

@@ -71,3 +71,24 @@ def test_the_binary_is_fetched_from_the_file_manager():
     _, get_base64 = _run({})
 
     assert get_base64.call_args.args == ("tenant", "r0")
+
+
+def test_a_new_configuration_replaces_the_model_backed_converter():
+    _run({"ocr_options": {"lang": ["it"]}}, extension="pdf")
+    converter_class, _ = _run({"ocr_options": {"lang": ["en"]}}, extension="pdf")
+
+    # Each model-backed converter keeps its own copy of the docling models, so
+    # a second configuration must replace the first instead of stacking on it.
+    assert converter_class.call_count == 1
+    assert len(converter._converters.cache) == 1
+
+
+def test_a_plain_format_does_not_evict_the_model_backed_converter():
+    _run({}, extension="pdf")
+    _run({}, extension="docx")
+    converter_class, _ = _run({}, extension="pdf")
+
+    # Plain backends cost nothing to keep, and keeping them must not cost the
+    # PDF converter a reload.
+    assert converter_class.call_count == 0
+    assert len(converter._converters.cache) == 2
