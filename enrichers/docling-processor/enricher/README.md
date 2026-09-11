@@ -416,8 +416,9 @@ the moment the datasource dispatches the enrich item:
 At about 20 s per page a document of some fifteen pages exhausts a 300 s budget
 on its own. A queued document spends its budget waiting, too: the datasource
 keeps `io.openk9.scheduling.workers-per-node` enrich items in flight (2 by
-default) per node, so with a single conversion worker a document may wait one
-full conversion before its own begins.
+default) per node, so with a single conversion worker a document waits one full
+conversion before its own begins: the budget left to each document is half the
+timeout, some seven pages.
 
 ## License
 
