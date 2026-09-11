@@ -275,6 +275,8 @@ services:
   admin-ui:
     image: ${IMAGE_GROUP:-openk9}/openk9-admin-ui:${IMAGE_TAG:-3.0.x-SNAPSHOT}
     container_name: openk9-admin-ui
+    environment:
+      AUTH_ORIGIN: ${AUTH_ORIGIN:-http://keycloak.openk9.localhost:8081}
   tenant-ui:
     image: ${IMAGE_GROUP:-openk9}/openk9-tenant-ui:${IMAGE_TAG:-3.0.x-SNAPSHOT}
     container_name: openk9-tenant-ui
