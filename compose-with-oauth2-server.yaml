@@ -30,6 +30,9 @@ services:
   postgresql:
     environment:
       - POSTGRES_MULTIPLE_DATABASES=tenantmanager,apigateway,openk9,keycloak
+  admin-ui:
+    environment:
+      AUTH_ORIGIN: ${AUTH_ORIGIN:-http://keycloak.openk9.localhost:8081}
   tenant-manager:
     environment:
       KEYCLOAK_URL: 'http://keycloak.openk9.localhost:8081'
