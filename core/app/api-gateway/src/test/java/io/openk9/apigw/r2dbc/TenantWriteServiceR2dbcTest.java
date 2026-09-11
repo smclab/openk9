@@ -128,6 +128,42 @@ public class TenantWriteServiceR2dbcTest {
 	}
 
 	@Test
+	@DisplayName("PUBLIC group expands to DATASOURCE_OAUTH2_SETTINGS only")
+	void insertRouteSecurity_publicExpandsToOneRoute() {
+		// setup tenant
+		StepVerifier.create(
+			service.insertTenant(
+				"tenant3c", "t3c.com", null, null, null)
+		).verifyComplete();
+
+		// insert route security for PUBLIC group
+		StepVerifier.create(
+			service.insertRouteSecurity(
+				"tenant3c",
+				ApiGroup.PUBLIC,
+				AuthorizationScheme.NO_AUTH
+			)
+		).verifyComplete();
+
+		// route names are persisted as ApiRoute.name(), so changing
+		// routesFor(PUBLIC) rewrites the content of route_security:
+		// the expansion is pinned here to make that visible.
+		StepVerifier.create(
+			dbClient.sql(
+					"SELECT route FROM route_security "
+					+ "WHERE tenant_id = 'tenant3c' "
+					+ "ORDER BY route")
+				.map((r, m) -> r.get("route", String.class))
+				.all()
+				.collectList()
+		).expectNextMatches(routes ->
+			routes.size() == 1
+				&& routes.contains(
+					"DATASOURCE_OAUTH2_SETTINGS")
+		).verifyComplete();
+	}
+
+	@Test
 	@DisplayName("Update Tenant")
 	void updateTenant_ok() {
 		// first insert a tenant
