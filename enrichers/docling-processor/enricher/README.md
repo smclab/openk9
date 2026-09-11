@@ -383,16 +383,41 @@ FETCH_TIMEOUT_SECONDS=30                # timeout when fetching a binary
 CALLBACK_TIMEOUT_SECONDS=30             # timeout when answering the callback
 ```
 
-A single OCR conversion peaks around 3 GiB, and each concurrent conversion
-keeps its own copy of the docling models while competing for the same CPU, so
-raising `MAX_CONCURRENT_CONVERSIONS` needs roughly that much extra memory per
-worker and makes every single conversion slower: scale out with replicas
-instead. A container that runs out of memory is killed with every conversion it
-was carrying, which is the failure this default avoids.
+### Sizing a worker
 
-Note that the pre-signed URL of a binary is minted when the datasource
-dispatches the enrich item and is short-lived, so a request left waiting for a
-free worker long enough may find it expired.
+An OCR conversion costs, per worker, a floor of about 3.3 GiB for the docling
+models plus roughly 100 MiB per page of the document being converted. Measured
+on scanned A4 pages at 200 dpi, docling 2.126 on CPU:
+
+| pages | peak resident | conversion |
+| --- | --- | --- |
+| 3 | 3.6 GiB | 90 s |
+| 12 | 4.6 GiB | 240 s |
+
+Size the container for the largest document it may receive, not for the average
+one: a container that runs out of memory is killed along with every conversion
+it was carrying, and those enrich items get no callback at all. The `finally`
+block in `operation()` cannot help there — the process is gone — so memory is
+the one failure this module can only avoid by being sized correctly.
+
+Every concurrent conversion pays that cost again and competes for the same CPU,
+so raising `MAX_CONCURRENT_CONVERSIONS` needs the memory multiplied by it and
+makes every single conversion slower: scale out with replicas instead.
+
+Two deadlines bound how long a conversion may take, both of them counted from
+the moment the datasource dispatches the enrich item:
+
+- the enrich item's own `requestTimeout`, after which the enrich pipeline stops
+  waiting for the callback;
+- the lifetime of the binary's pre-signed URL
+  (`openk9.binaries.presign-expiry-seconds`, 300 s by default), after which the
+  binary can no longer be fetched.
+
+At about 20 s per page a document of some fifteen pages exhausts a 300 s budget
+on its own. A queued document spends its budget waiting, too: the datasource
+keeps `io.openk9.scheduling.workers-per-node` enrich items in flight (2 by
+default) per node, so with a single conversion worker a document may wait one
+full conversion before its own begins.
 
 ## License
 
