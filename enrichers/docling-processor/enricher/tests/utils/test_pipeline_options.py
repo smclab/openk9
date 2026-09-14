@@ -156,6 +156,37 @@ def test_config_key_of_another_pipeline_names_the_options_that_refused_it(caplog
     assert "ocr_options" in caplog.text
 
 
+# The likeliest mistake is a key that belongs to a variant the configuration
+# never asked for: the default options are local and know nothing of an
+# endpoint, so the message names the kind that would take the key.
+def test_a_key_of_another_kind_names_the_kind_that_takes_it(caplog):
+    configs = {
+        "pipeline_options.do_picture_description": True,
+        "pipeline_options.picture_description_options.url": (
+            "http://endpoint-esterno/v1/chat/completions"
+        ),
+    }
+
+    with caplog.at_level(logging.WARNING):
+        get_format_options(configs, InputFormat.PDF)
+
+    assert "'url'" in caplog.text
+    assert "kind 'api'" in caplog.text
+
+
+def test_a_key_of_another_kind_is_named_inside_the_built_options(caplog):
+    configs = {
+        "pipeline_options.picture_description_options.kind": "api",
+        "pipeline_options.picture_description_options.repo_id": "un/modello",
+    }
+
+    with caplog.at_level(logging.WARNING):
+        get_format_options(configs, InputFormat.PDF)
+
+    assert "repo_id" in caplog.text
+    assert "kind 'vlm'" in caplog.text
+
+
 def test_picture_description_api_options_are_built_from_the_configuration():
     configs = {
         "pipeline_options": {
