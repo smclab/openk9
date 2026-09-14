@@ -5,35 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useCopilotChat } from "./useCopilotChat";
 import { ChatSource, useOpenK9Client } from "./client";
 import { Message } from "./useGenerateResponse";
-
-/** a cited document as the list renders it: a readable label and an openable url */
-type Citation = { url: string; label: string; source: ChatSource };
-
-/**
- * The document's real title, resolved over the fields the `DOCUMENT` event
- * actually carries: the title mapped by the tenant's RAG configuration first,
- * then the file name of an uploaded document. The raw url is only a last
- * resort; the technical source name is not a title, so it is not in the chain.
- */
-function resolveSourceTitle(source: ChatSource): string | undefined {
-  if (source.title !== undefined) return source.title;
-  if (source.filename !== undefined) {
-    return source.filename + (source.file_extension ?? "");
-  }
-  return source.url;
-}
-
-/**
- * A source with no reachable destination is left out of the list rather than
- * rendered as an entry the user cannot open.
- */
-function toCitations(sources: ChatSource[] | undefined): Citation[] {
-  return (sources ?? []).flatMap((source) => {
-    const url = source.url;
-    if (url === undefined) return [];
-    return [{ url, label: resolveSourceTitle(source) ?? url, source }];
-  });
-}
+import { toCitations } from "./chatSources";
 
 type CopilotProps = {
   endpoint?: string | null;
