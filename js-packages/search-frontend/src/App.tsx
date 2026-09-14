@@ -26,8 +26,9 @@ import "./ScrollBar.css";
 import { Logo } from "./components/Logo";
 // il demo consuma la stessa superficie pubblica di un embedder reale: hook e tipi
 // arrivano dall'entry del package, non da percorsi interni `./components/*`
-import { type ChatSource } from "./components/client";
+import { type Citation, toCitations } from "./components/chatSources";
 import { fadingSeparator } from "./components/fadingSeparator";
+import { type Turn } from "./components/useCopilotChat";
 import { OpenK9 } from "./embeddable/entry";
 
 const isOAuth2Enabled = import.meta.env.VITE_OAUTH2_ENABLED !== "false";
@@ -413,7 +414,41 @@ function RealFiltersPanel({
 
 // ---- colonna Fonti utilizzate (dati reali: eventi DOCUMENT della risposta) --
 
-function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
+function SourcesColumn({
+  turns,
+  readingTurnId,
+}: {
+  turns: Array<Turn>;
+  /** il turno la cui risposta si sta leggendo nel thread, se individuato */
+  readingTurnId: string | null;
+}) {
+  // una sezione per domanda, la piu' recente in cima: le fonti di un turno
+  // restano consultabili anche dopo che il follow-up ha generato le sue.
+  // Dentro la sezione la stessa lista del pannello copilot: titoli reali,
+  // niente duplicati, solo voci che si possono davvero aprire
+  const groups = turns
+    .map((turn) => ({
+      id: turn.id,
+      question: turn.question,
+      citations: toCitations(turn.sources).filter(
+        (citation, index, all) =>
+          all.findIndex((other) => other.url === citation.url) === index,
+      ),
+    }))
+    .filter((group) => group.citations.length > 0)
+    .reverse();
+
+  // accordion stretto: aperta solo la sezione del turno a schermo. Chiuso e'
+  // il default - un turno fuori vista, o non ancora visto, non apre nulla -
+  // e il click apre un'altra sezione chiudendo la precedente, finche' non si
+  // scorre su un'altra risposta
+  const [openId, setOpenId] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    setOpenId(readingTurnId);
+  }, [readingTurnId]);
+  const isOpen = (id: string) => id === openId;
+  const toggle = (id: string) =>
+    setOpenId((previous) => (previous === id ? null : id));
   return (
     <div
       css={css`
@@ -477,7 +512,7 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
           gap: var(--openk9-embeddable-search--spacing-md, 12px);
         `}
       >
-        {sources.length === 0 && (
+        {groups.length === 0 && (
           <div
             css={css`
               flex: 1;
@@ -656,76 +691,77 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
             </div>
           </div>
         )}
-        {sources.map((source, index) => {
-          const title = source.title || source.source || source.url || "Fonte";
+        {groups.map((group) => {
+          const open = isOpen(group.id);
           return (
-            <div
-              key={(source.url ?? "") + index}
+            <section
+              key={group.id}
               css={css`
-                border: 1px solid ${BORDER};
-                border-radius: var(--openk9-embeddable-search--radius-md, 12px);
-                padding: var(--openk9-embeddable-search--spacing-lg, 16px);
+                display: flex;
+                flex-direction: column;
+                gap: var(--openk9-embeddable-search--spacing-md, 12px);
               `}
             >
-              <div
+              <button
+                type="button"
+                onClick={() => toggle(group.id)}
+                aria-expanded={open}
+                title={group.question}
                 css={css`
                   display: flex;
-                  justify-content: space-between;
-                  gap: var(--openk9-embeddable-search--spacing-md, 12px);
-                  align-items: flex-start;
+                  align-items: center;
+                  gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+                  width: 100%;
+                  padding: 0 0 var(--openk9-embeddable-search--spacing-sm, 8px);
+                  border: none;
+                  border-bottom: 1px solid ${BORDER};
+                  background: none;
+                  text-align: left;
+                  cursor: pointer;
+                  color: var(
+                    --openk9-embeddable-search--strong-text-color,
+                    #1e1c21
+                  );
                 `}
               >
-                <div
+                <span
+                  aria-hidden="true"
                   css={css`
-                    display: flex;
-                    gap: var(--openk9-embeddable-search--spacing-md, 12px);
-                    align-items: flex-start;
+                    flex-shrink: 0;
+                    display: inline-flex;
+                    color: ${RED};
+                    transition: transform 0.15s ease;
+                    transform: rotate(${open ? 90 : 0}deg);
                   `}
                 >
-                  <span
-                    aria-hidden="true"
-                    css={css`
-                      flex-shrink: 0;
-                      width: 34px;
-                      height: 34px;
-                      background: ${RED};
-                      color: #fff;
-                      border-radius: var(
-                        --openk9-embeddable-search--radius-sm,
-                        8px
-                      );
-                      display: inline-flex;
-                      align-items: center;
-                      justify-content: center;
-                      font-size: var(
-                        --openk9-embeddable-search--font-size-md,
-                        16px
-                      );
-                      font-weight: 800;
-                    `}
-                  >
-                    {title.charAt(0).toUpperCase()}
-                  </span>
-                  <span
-                    css={css`
-                      font-size: var(
-                        --openk9-embeddable-search--font-size-sm,
-                        14px
-                      );
-                      font-weight: var(
-                        --openk9-embeddable-search--font-weight-bold,
-                        700
-                      );
-                      color: var(
-                        --openk9-embeddable-search--strong-text-color,
-                        #1e1c21
-                      );
-                      line-height: 1.3;
-                    `}
-                  >
-                    {title}
-                  </span>
-                </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M9 6l6 6-6 6"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span
+                  css={css`
+                    flex: 1;
+                    font-size: 13px;
+                    font-weight: var(
+                      --openk9-embeddable-search--font-weight-bold,
+                      700
+                    );
+                    line-height: 1.35;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    overflow-wrap: anywhere;
+                  `}
+                >
+                  {group.question}
+                </span>
                 <span
                   css={css`
                     flex-shrink: 0;
@@ -737,48 +773,117 @@ function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
                       --openk9-embeddable-search--font-weight-semibold,
                       600
                     );
-                    color: var(
-                      --openk9-embeddable-search--success-color,
-                      #16a34a
-                    );
-                    background: var(
-                      --openk9-embeddable-search--success-background-color,
-                      #dcfce7
-                    );
-                    border-radius: var(
-                      --openk9-embeddable-search--radius-pill,
-                      999px
-                    );
-                    padding: var(--openk9-embeddable-search--spacing-xs, 4px)
-                      var(--openk9-embeddable-search--spacing-sm, 8px);
-                    white-space: nowrap;
+                    color: ${MUTED};
                   `}
                 >
-                  Usata nella risposta
+                  {group.citations.length}
                 </span>
-              </div>
-              {source.url && (
-                <a
-                  href={source.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  css={css`
-                    display: block;
-                    margin: var(--openk9-embeddable-search--spacing-sm, 8px) 0 0;
-                    font-size: var(
-                      --openk9-embeddable-search--font-size-xs,
-                      12px
-                    );
-                    color: #2563eb;
-                    word-break: break-all;
-                  `}
-                >
-                  {source.url}
-                </a>
-              )}
-            </div>
+              </button>
+              {open &&
+                group.citations.map((citation) => (
+                  <SourceCard key={citation.url} citation={citation} />
+                ))}
+            </section>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function SourceCard({ citation }: { citation: Citation }) {
+  const title = citation.label;
+  return (
+    <div
+      css={css`
+        border: 1px solid ${BORDER};
+        border-radius: var(--openk9-embeddable-search--radius-md, 12px);
+        padding: var(--openk9-embeddable-search--spacing-lg, 16px);
+      `}
+    >
+      <div
+        css={css`
+          display: flex;
+          justify-content: space-between;
+          gap: var(--openk9-embeddable-search--spacing-md, 12px);
+          align-items: flex-start;
+        `}
+      >
+        <div
+          css={css`
+            display: flex;
+            gap: var(--openk9-embeddable-search--spacing-md, 12px);
+            align-items: flex-start;
+          `}
+        >
+          <span
+            aria-hidden="true"
+            css={css`
+              flex-shrink: 0;
+              width: 34px;
+              height: 34px;
+              background: ${RED};
+              color: #fff;
+              border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              font-size: var(--openk9-embeddable-search--font-size-md, 16px);
+              font-weight: 800;
+            `}
+          >
+            {title.charAt(0).toUpperCase()}
+          </span>
+          <a
+            href={citation.url}
+            target="_blank"
+            rel="noreferrer"
+            // l'url non occupa piu' una riga fissa: si legge passandoci sopra,
+            // oltre a comparire nella status bar come per ogni link
+            title={citation.url}
+            css={css`
+              font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+              font-weight: var(
+                --openk9-embeddable-search--font-weight-bold,
+                700
+              );
+              color: var(
+                --openk9-embeddable-search--strong-text-color,
+                #1e1c21
+              );
+              line-height: 1.3;
+              text-decoration: none;
+              overflow-wrap: anywhere;
+              &:hover,
+              &:focus-visible {
+                text-decoration: underline;
+              }
+            `}
+          >
+            {title}
+          </a>
+        </div>
+        <span
+          css={css`
+            flex-shrink: 0;
+            font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
+            font-weight: var(
+              --openk9-embeddable-search--font-weight-semibold,
+              600
+            );
+            color: var(--openk9-embeddable-search--success-color, #16a34a);
+            background: var(
+              --openk9-embeddable-search--success-background-color,
+              #dcfce7
+            );
+            border-radius: var(--openk9-embeddable-search--radius-pill, 999px);
+            padding: var(--openk9-embeddable-search--spacing-xs, 4px)
+              var(--openk9-embeddable-search--spacing-sm, 8px);
+            white-space: nowrap;
+          `}
+        >
+          Usata nella risposta
+        </span>
       </div>
     </div>
   );
@@ -1080,7 +1185,6 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
   // client (niente provider, niente import interni — è la superficie di embedding)
   const { messages, isChatting, send, reset } = openk9.useCopilotChat();
   const preview = messages[0];
-  const currentSources = messages[messages.length - 1]?.sources ?? [];
   // la risposta è "vuota" quando il backend non ha trovato nulla in KB
   const previewHasNoAnswer =
     preview?.status === "END" && NO_ANSWER_PATTERN.test(preview.answer ?? "");
@@ -1172,6 +1276,50 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
       threadRef.current.scrollTop = threadRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // qual e' il turno a schermo: la colonna fonti apre solo la sua sezione.
+  // Il confronto e' sull'altezza visibile, non sulla frazione dell'elemento:
+  // una risposta lunga puo' occupare tutto lo schermo restando al 30% di se
+  // stessa, e a parita' di frazione perderebbe contro un turno corto ma intero.
+  // Quando nessun turno e' visibile il valore torna a null e tutto si chiude
+  const [readingTurnId, setReadingTurnId] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    const thread = threadRef.current;
+    if (!thread) return;
+    const turnNodes = thread.querySelectorAll<HTMLElement>("[data-turn-id]");
+    if (turnNodes.length === 0) {
+      setReadingTurnId(null);
+      return;
+    }
+    const visibleHeights = new Map<string, number>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const id = (entry.target as HTMLElement).dataset.turnId;
+          if (id) visibleHeights.set(id, entry.intersectionRect.height);
+        }
+        let mostVisible: string | null = null;
+        let bestHeight = 0;
+        for (const [id, height] of Array.from(visibleHeights.entries())) {
+          if (height > bestHeight) {
+            mostVisible = id;
+            bestHeight = height;
+          }
+        }
+        setReadingTurnId(mostVisible);
+      },
+      {
+        root: thread,
+        // soglie fitte: su un messaggio piu' alto del thread le soglie larghe
+        // non verrebbero quasi mai attraversate e il callback non scatterebbe
+        threshold: Array.from({ length: 11 }, (_, index) => index / 10),
+      },
+    );
+    turnNodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+    // `view` conta: il thread esiste solo nella vista IA, e una domanda posta
+    // dalla barra di ricerca cambia `messages` mentre e' ancora smontato
+  }, [messages.length, view]);
 
   // sposta il focus sul campo domanda quando si passa alla vista K9 IA
   React.useEffect(() => {
@@ -1938,6 +2086,7 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
               {messages.map((message, index) => (
                 <div
                   key={index}
+                  data-turn-id={message.id}
                   css={css`
                     display: flex;
                     flex-direction: column;
@@ -2260,7 +2409,7 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
 
       {/* ---- Colonna destra: anteprima (risultati) o fonti (K9 IA) ---- */}
       {view === "ai" ? (
-        <SourcesColumn sources={currentSources} />
+        <SourcesColumn turns={messages} readingTurnId={readingTurnId} />
       ) : (
         <div
           className="openk9-preview-container openk9-box"
