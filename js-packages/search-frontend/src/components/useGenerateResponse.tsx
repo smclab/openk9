@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { GenerateRequest, useOpenK9Client } from "./client";
-
-type Source = { source?: string; title?: string; url?: string };
+import { ChatSource, GenerateRequest, useOpenK9Client } from "./client";
 
 export interface Message {
   question: string;
   answer: string;
   sendTime?: string | null;
   status?: "END" | "CHUNK" | "ERROR";
-  sources?: Source[];
+  sources?: ChatSource[];
 }
 
 type UseArgs = {

@@ -11,6 +11,7 @@
     "copilot-send": "Invia",
     "copilot-reset": "Nuova conversazione",
     "copilot-stop": "Interrompi",
+    "copilot-sources": "Fonti",
     "filter-searching": "Ricerca in corso…",
     "filter-search-in": "Cerca in",
     "filter-result-count": "{{n}} risultati con questo filtro",

@@ -6,6 +6,35 @@ import { useCopilotChat } from "./useCopilotChat";
 import { ChatSource, useOpenK9Client } from "./client";
 import { Message } from "./useGenerateResponse";
 
+/** a cited document as the list renders it: a readable label and an openable url */
+type Citation = { url: string; label: string; source: ChatSource };
+
+/**
+ * The document's real title, resolved over the fields the `DOCUMENT` event
+ * actually carries: the title mapped by the tenant's RAG configuration first,
+ * then the file name of an uploaded document. The raw url is only a last
+ * resort; the technical source name is not a title, so it is not in the chain.
+ */
+function resolveSourceTitle(source: ChatSource): string | undefined {
+  if (source.title !== undefined) return source.title;
+  if (source.filename !== undefined) {
+    return source.filename + (source.file_extension ?? "");
+  }
+  return source.url;
+}
+
+/**
+ * A source with no reachable destination is left out of the list rather than
+ * rendered as an entry the user cannot open.
+ */
+function toCitations(sources: ChatSource[] | undefined): Citation[] {
+  return (sources ?? []).flatMap((source) => {
+    const url = source.url;
+    if (url === undefined) return [];
+    return [{ url, label: resolveSourceTitle(source) ?? url, source }];
+  });
+}
+
 type CopilotProps = {
   endpoint?: string | null;
   /** separate base URL/tenant for the generative calls */
@@ -188,7 +217,7 @@ export function Copilot({
   React.useEffect(() => {
     const last = messages[messages.length - 1];
     if (!last) return;
-    const id = last.sendTime ?? String(messages.length);
+    const id = last.id;
     if (last.status === "END" && !firedRef.current.has("res:" + id)) {
       firedRef.current.add("res:" + id);
       onResponse?.(last);
@@ -484,13 +513,14 @@ export function Copilot({
             {emptyState ?? t("copilot-empty-hint")}
           </div>
         )}
-        {messages.map((message, index) => {
+        {messages.map((message) => {
           const isStreaming =
             message.status === "CHUNK" && message.answer === "";
           const isError = message.status === "ERROR";
+          const citations = toCitations(message.sources);
           return (
             <div
-              key={message.sendTime ?? index}
+              key={message.id}
               className="openk9-embeddable-search--copilot-message"
               css={css`
                 display: flex;
@@ -560,16 +590,12 @@ export function Copilot({
                 ) : (
                   <Markdown>{message.answer}</Markdown>
                 )}
-                {message.sources && message.sources.length > 0 && (
-                  <ul
+                {citations.length > 0 && (
+                  <div
                     className="openk9-embeddable-search--copilot-sources"
                     css={css`
                       margin: var(--openk9-embeddable-search--spacing-md, 12px)
                         0 0;
-                      padding-left: var(
-                        --openk9-embeddable-search--spacing-xl,
-                        20px
-                      );
                       font-size: var(
                         --openk9-embeddable-search--font-size-xs,
                         12px
@@ -577,28 +603,37 @@ export function Copilot({
                       color: ${MUTED};
                     `}
                   >
-                    {message.sources.map((source, sourceIndex) => (
-                      <li
-                        key={(source.url ?? source.title ?? "") + sourceIndex}
-                      >
-                        {source.url ? (
+                    <div
+                      className="openk9-embeddable-search--copilot-sources-header"
+                      css={css`
+                        font-weight: 600;
+                      `}
+                    >
+                      {t("copilot-sources")}
+                    </div>
+                    <ul
+                      css={css`
+                        margin: 4px 0 0;
+                        padding-left: 18px;
+                      `}
+                    >
+                      {citations.map((citation) => (
+                        <li key={citation.url}>
                           <a
-                            href={source.url}
+                            href={citation.url}
                             target="_blank"
                             rel="noreferrer"
-                            onClick={() => onSourceClick?.(source)}
+                            onClick={() => onSourceClick?.(citation.source)}
                             css={css`
                               overflow-wrap: anywhere;
                             `}
                           >
-                            {source.title || source.url}
+                            {citation.label}
                           </a>
-                        ) : (
-                          source.title || source.source
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             </div>

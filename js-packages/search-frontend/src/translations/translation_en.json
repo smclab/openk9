@@ -11,6 +11,7 @@
     "copilot-send": "Send",
     "copilot-reset": "New conversation",
     "copilot-stop": "Stop",
+    "copilot-sources": "Sources",
     "filter-searching": "Searching…",
     "filter-search-in": "Search in",
     "filter-result-count": "{{n}} results with this filter",

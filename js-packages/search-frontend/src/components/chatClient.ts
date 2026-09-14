@@ -19,7 +19,20 @@ import i18n from "../i18n";
 /** RAG chat-tool endpoint shared by the chat response and refined-search calls */
 export const CHAT_TOOL_ENDPOINT = "/api/rag/chat-tool";
 
-export type ChatSource = { source?: string; title?: string; url?: string };
+/**
+ * A document cited by the RAG answer, as the `DOCUMENT` stream event describes
+ * it. The event nests these fields under `chunk` (see `toChatSource` in
+ * `useCopilotChat`); which of them are populated depends on the metadata
+ * mapping configured on the tenant's RAG configuration, so all are optional.
+ * `filename`/`file_extension` identify an uploaded document, which has no url.
+ */
+export type ChatSource = {
+  source?: string;
+  title?: string;
+  url?: string;
+  filename?: string;
+  file_extension?: string;
+};
 
 export type ChatHistoryEntry = {
   question: string;
