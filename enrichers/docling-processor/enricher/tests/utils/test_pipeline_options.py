@@ -15,12 +15,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import logging
+
 import pytest
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import (
     EasyOcrOptions,
     OcrMode,
     PdfPipelineOptions,
+    PictureDescriptionApiOptions,
+    PictureDescriptionVlmOptions,
 )
 
 from app.utils.pipeline_options import SUPPORTED_FORMATS, get_format_options
@@ -124,12 +128,151 @@ def test_nested_pipeline_options_are_normalized_and_applied():
     assert pipeline_options.document_timeout is None
 
 
-def test_unknown_config_key_is_ignored():
+# An option nobody applied is worse than a failed conversion: the enrich item
+# looks configured and is not, so the key and the options that rejected it have
+# to be in the logs.
+def test_unknown_config_key_is_skipped_with_a_warning(caplog):
     configs = {"pipeline_options.non_esiste": "1", "pipeline_options.do_ocr": "false"}
+
+    with caplog.at_level(logging.WARNING):
+        pipeline_options = get_format_options(configs, InputFormat.PDF)[
+            InputFormat.PDF
+        ].pipeline_options
+
+    assert not hasattr(pipeline_options, "non_esiste")
+    assert pipeline_options.do_ocr is False
+    assert "non_esiste" in caplog.text
+    assert "PdfPipelineOptions" in caplog.text
+
+
+# The same key is unknown to the pipelines that have no OCR at all, and there
+# the log is what tells a typo apart from an option the format cannot take.
+def test_config_key_of_another_pipeline_names_the_options_that_refused_it(caplog):
+    configs = {"pipeline_options.ocr_options.lang": ["it"]}
+
+    with caplog.at_level(logging.WARNING):
+        get_format_options(configs, InputFormat.HTML)
+
+    assert "ocr_options" in caplog.text
+
+
+def test_picture_description_api_options_are_built_from_the_configuration():
+    configs = {
+        "pipeline_options": {
+            "do_picture_description": True,
+            "enable_remote_services": True,
+            "picture_description_options": {
+                "kind": "api",
+                "url": "http://endpoint-esterno/v1/chat/completions",
+                "headers": {"Authorization": "Bearer TOKEN"},
+                "params": {"model": "qualche-modello"},
+                "prompt": "Descrivi l'immagine",
+                "timeout": 45,
+            },
+        }
+    }
+
+    options = get_format_options(configs, InputFormat.PDF)[
+        InputFormat.PDF
+    ].pipeline_options.picture_description_options
+
+    assert isinstance(options, PictureDescriptionApiOptions)
+    assert str(options.url) == "http://endpoint-esterno/v1/chat/completions"
+    assert options.headers == {"Authorization": "Bearer TOKEN"}
+    assert options.params == {"model": "qualche-modello"}
+    assert options.prompt == "Descrivi l'immagine"
+    assert options.timeout == 45
+
+
+def test_picture_description_vlm_options_are_built_from_the_configuration():
+    configs = {
+        "pipeline_options.picture_description_options.kind": "vlm",
+        "pipeline_options.picture_description_options.repo_id": (
+            "ibm-granite/granite-vision-3.3-2b"
+        ),
+    }
+
+    options = get_format_options(configs, InputFormat.PDF)[
+        InputFormat.PDF
+    ].pipeline_options.picture_description_options
+
+    assert isinstance(options, PictureDescriptionVlmOptions)
+    assert options.repo_id == "ibm-granite/granite-vision-3.3-2b"
+
+
+# Without a `kind` the configuration still updates whatever docling defaults to,
+# which is a local vision model. Only the keys that model does have are applied.
+def test_picture_description_without_a_kind_updates_the_default():
+    configs = {
+        "pipeline_options.picture_description_options.picture_area_threshold": 0.001
+    }
+
+    default = get_format_options({}, InputFormat.PDF)[
+        InputFormat.PDF
+    ].pipeline_options.picture_description_options
+    options = get_format_options(configs, InputFormat.PDF)[
+        InputFormat.PDF
+    ].pipeline_options.picture_description_options
+
+    assert type(options) is type(default)
+    assert options.picture_area_threshold == 0.001
+
+
+def test_unknown_picture_description_kind_keeps_the_default(caplog):
+    configs = {"pipeline_options.picture_description_options.kind": "telepatia"}
+
+    with caplog.at_level(logging.WARNING):
+        options = get_format_options(configs, InputFormat.PDF)[
+            InputFormat.PDF
+        ].pipeline_options.picture_description_options
+
+    assert not isinstance(
+        options, (PictureDescriptionApiOptions, PictureDescriptionVlmOptions)
+    )
+    assert "telepatia" in caplog.text
+
+
+# The docling options do not forbid extra fields, so a key that is not theirs
+# would be dropped on construction as silently as it was before the merge.
+def test_unknown_key_in_the_picture_description_options_is_skipped_with_a_warning(
+    caplog,
+):
+    configs = {
+        "pipeline_options.picture_description_options.kind": "api",
+        "pipeline_options.picture_description_options.prompt": "Descrivi l'immagine",
+        "pipeline_options.picture_description_options.non_esiste": "1",
+    }
+
+    with caplog.at_level(logging.WARNING):
+        options = get_format_options(configs, InputFormat.PDF)[
+            InputFormat.PDF
+        ].pipeline_options.picture_description_options
+
+    assert isinstance(options, PictureDescriptionApiOptions)
+    assert options.prompt == "Descrivi l'immagine"
+    assert "non_esiste" in caplog.text
+    assert "PictureDescriptionApiOptions" in caplog.text
+
+
+# `repo_id` has no default, so the options cannot be built at all: the enrich
+# item keeps converting with the model docling defaults to.
+def test_picture_description_options_that_do_not_validate_keep_the_default(caplog):
+    configs = {"pipeline_options.picture_description_options.kind": "vlm"}
+
+    with caplog.at_level(logging.WARNING):
+        options = get_format_options(configs, InputFormat.PDF)[
+            InputFormat.PDF
+        ].pipeline_options.picture_description_options
+
+    assert not isinstance(options, PictureDescriptionVlmOptions)
+    assert "repo_id" in caplog.text
+
+
+def test_enable_remote_services_reaches_docling():
+    configs = {"pipeline_options.enable_remote_services": "true"}
 
     pipeline_options = get_format_options(configs, InputFormat.PDF)[
         InputFormat.PDF
     ].pipeline_options
 
-    assert not hasattr(pipeline_options, "non_esiste")
-    assert pipeline_options.do_ocr is False
+    assert pipeline_options.enable_remote_services is True
