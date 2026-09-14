@@ -1,9 +1,16 @@
-import logging
 from typing import Any, Dict, FrozenSet
 
 from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import EasyOcrOptions, PdfPipelineOptions
+from docling.datamodel.pipeline_options import (
+    EasyOcrOptions,
+    PdfPipelineOptions,
+    PictureDescriptionApiOptions,
+    PictureDescriptionVlmOptions,
+)
 from docling.document_converter import FormatOption, _get_default_option
+from pydantic import ValidationError
+
+from app.utils.logger import logger
 
 # =========================
 # SUPPORTED FORMATS
@@ -123,6 +130,58 @@ def unflatten_dict(data: Dict[str, Any], sep: str = ".") -> Dict[str, Any]:
 # CONFIG MERGE
 # =========================
 
+# Options whose class docling picks with a `kind` discriminator instead of
+# leaving the one already in place. Updating the object docling defaults to is
+# not enough for them: the default picture description is a local vision model
+# and knows nothing of `url`, `headers` or `timeout`, so an enrich item asking
+# for a remote endpoint needs the object built from scratch. `ocr_options`
+# works the same way, but its engine is pinned in get_format_options.
+OPTIONS_BY_KIND: Dict[str, Dict[str, type]] = {
+    "picture_description_options": {
+        "api": PictureDescriptionApiOptions,
+        "vlm": PictureDescriptionVlmOptions,
+    }
+}
+
+
+def build_options(key: str, kinds: Dict[str, type], arguments: Dict[str, Any]) -> Any:
+    """
+    Build the option class the configuration selects with its `kind`.
+
+    Returns None when the configuration cannot produce an object, so that the
+    caller keeps the options docling defaults to.
+    """
+    kind = arguments.get("kind")
+    options_cls = kinds.get(kind)
+
+    if options_cls is None:
+        logger.warning(
+            f"Skipping config key '{key}': unknown kind {kind!r}, "
+            f"expected one of {sorted(kinds)}"
+        )
+        return None
+
+    # `kind` is a ClassVar on the docling options, not a field.
+    fields = {k: v for k, v in arguments.items() if k != "kind"}
+
+    # The docling options do not forbid extra fields, so a key that is not
+    # theirs would be dropped on construction as silently as before.
+    for unknown in [k for k in fields if k not in options_cls.model_fields]:
+        logger.warning(
+            f"Skipping config key '{key}.{unknown}': "
+            f"{options_cls.__name__} has no such option"
+        )
+        del fields[unknown]
+
+    try:
+        return options_cls(**fields)
+    except ValidationError as e:
+        logger.warning(
+            f"Skipping config key '{key}': "
+            f"{options_cls.__name__} rejected the configuration: {e}"
+        )
+        return None
+
 
 def add_configs(opts: Any, arguments: Dict[str, Any]) -> Any:
     """
@@ -133,13 +192,30 @@ def add_configs(opts: Any, arguments: Dict[str, Any]) -> Any:
 
     for key, value in arguments.items():
         if not hasattr(opts, key):
-            logging.debug(f"Skipping unknown config key: {key}")
+            logger.warning(
+                f"Skipping config key '{key}': "
+                f"{type(opts).__name__} has no such option"
+            )
+            continue
+
+        # Class selected by the configuration → build it
+        kinds = OPTIONS_BY_KIND.get(key)
+        if isinstance(value, dict) and kinds is not None and "kind" in value:
+            built = build_options(key, kinds, value)
+            if built is not None:
+                setattr(opts, key, built)
             continue
 
         current_attr = getattr(opts, key)
 
         # Nested dict → recurse
-        if isinstance(value, dict) and current_attr is not None:
+        if isinstance(value, dict):
+            if current_attr is None:
+                logger.warning(
+                    f"Skipping config key '{key}': {type(opts).__name__} leaves "
+                    f"it unset, there is nothing to apply the configuration to"
+                )
+                continue
             updated = add_configs(current_attr, value)
             setattr(opts, key, updated)
         else:
@@ -184,7 +260,7 @@ def get_format_options(
     if not configs:
         return {in_format: opts}
 
-    logging.debug(f"Raw configs: {configs}")
+    logger.debug(f"Raw configs: {configs}")
 
     # 1. Unflatten
     arguments = unflatten_dict(configs)

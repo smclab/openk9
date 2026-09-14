@@ -173,8 +173,9 @@ the processor unchanged in the `enrichItemConfig` field of `POST /start-task/`.
 | `backend_options` | reserved, currently inert: no Docling format option exposes it (they expose `pipeline_options`, `backend`, `pipeline_cls`), so the key is silently ignored |
 | `error_strategy` | read by the processor itself, not forwarded to Docling |
 
-Keys that the target options object does not expose are skipped with a debug
-log, so an unknown or misspelled option never fails the conversion.
+Keys that the target options object does not expose are skipped with a warning
+naming the key and the options that refused it, so an unknown or misspelled
+option never fails the conversion but never passes unnoticed either.
 
 **Notations**
 
@@ -240,6 +241,41 @@ Images, with picture description (images use the PDF pipeline):
   }
 }
 ```
+
+Images, described by a remote vision model instead of the local one:
+
+```json
+{
+  "pipeline_options": {
+    "enable_remote_services": true,
+    "do_picture_description": true,
+    "picture_description_options": {
+      "kind": "api",
+      "url": "http://vision-model/v1/chat/completions",
+      "headers": { "Authorization": "Bearer TOKEN" },
+      "params": { "model": "the-model-name" },
+      "prompt": "Describe this image",
+      "timeout": 60
+    }
+  }
+}
+```
+
+`picture_description_options` is the one option whose class is chosen by the
+configuration rather than updated in place: `kind` selects it. Without a `kind`
+the keys are applied to the model Docling defaults to, a local one, and the keys
+that model does not expose are skipped with a warning.
+
+| `kind` | Model |
+|---|---|
+| `api` | any **OpenAI-compatible** endpoint (`/v1/chat/completions`), with static headers |
+| `vlm` | a local model loaded from HuggingFace, which needs a `repo_id` |
+
+`api` needs `enable_remote_services: true`: without it Docling raises
+`OperationNotAllowed` and the conversion fails.
+
+The endpoint must be **OpenAI-compatible** (`/v1/chat/completions`). Bedrock and
+Vertex use a different request format and need an adapter in front of them.
 
 Audio, transcribed through the ASR pipeline:
 
