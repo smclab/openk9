@@ -57,6 +57,34 @@ To configure connection to Datasource following parameters are available:
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `openk9.datasource.host`    | Datasource host                         | `openk9-datasource`            |
 
+### Configure the conversion behaviour
+
+To tune how many documents are converted at the same time and how long the
+processor waits on the network following parameters are available:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `processing.maxConcurrentConversions`    | Conversions running at the same time in a single pod                         | `1`            |
+| `processing.fetchTimeoutSeconds`    | Timeout, in seconds, when fetching a binary from its pre-signed URL                         | `30`            |
+| `processing.callbackTimeoutSeconds`    | Timeout, in seconds, when answering the enrich callback                         | `30`            |
+
+An OCR conversion costs a floor of about 3.3 GiB for the docling models plus
+roughly 100 MiB per page of the document being converted: 3.6 GiB for 3 pages,
+4.6 GiB for 12. Set `resources` for the largest document the pod may receive,
+because a pod killed for running out of memory takes down every conversion it
+was carrying, and those enrich items never get their callback. Every concurrent
+conversion pays that cost again, so prefer more replicas over a higher
+`maxConcurrentConversions`.
+
+Conversions also run against two deadlines, both counted from the moment the
+datasource dispatches the enrich item: the enrich item's `requestTimeout`, and
+the lifetime of the binary's pre-signed URL
+(`openk9.binaries.presign-expiry-seconds`, 300s by default). At about 20s per
+page a document of some fifteen pages exhausts a 300s budget on its own. A
+document queued behind another spends part of its budget waiting: the datasource
+keeps `io.openk9.scheduling.workers-per-node` enrich items in flight (2 by
+default), so with a single conversion worker the budget left to each document is
+half the timeout, some seven pages.
 
 ### Service account and rbac
 

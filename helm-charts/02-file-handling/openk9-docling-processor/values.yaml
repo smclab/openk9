@@ -59,6 +59,29 @@ openk9:
   datasource:
     host: "openk9-datasource"
     port: 8080
+## Docling Processor conversion settings
+## An OCR conversion costs a floor of about 3.3 GiB for the docling models plus
+## roughly 100 MiB per page of the document: 3.6 GiB for 3 pages, 4.6 GiB for
+## 12. Size `resources` for the largest document the pod may receive, since a
+## pod killed for running out of memory takes down every conversion it was
+## carrying and those enrich items never get a callback. Every concurrent
+## conversion pays that cost again and competes for the same CPU, so raising
+## the concurrency needs the memory multiplied by it and slows every single
+## conversion down: prefer more replicas.
+## Conversions also run against two deadlines counted from the dispatch of the
+## enrich item: its `requestTimeout`, and the lifetime of the binary's
+## pre-signed URL (`openk9.binaries.presign-expiry-seconds`, 300s by default).
+## At about 20s per page a document of some fifteen pages exhausts a 300s budget
+## on its own, and a queued one spends part of its budget waiting for a free
+## worker.
+## @param processing.maxConcurrentConversions Conversions running at the same time in a single pod
+## @param processing.fetchTimeoutSeconds Timeout, in seconds, when fetching a binary from its pre-signed URL
+## @param processing.callbackTimeoutSeconds Timeout, in seconds, when answering the enrich callback
+##
+processing:
+  maxConcurrentConversions: 1
+  fetchTimeoutSeconds: 30
+  callbackTimeoutSeconds: 30
 ## Docling Processor pods ServiceAccount
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 ##
@@ -101,14 +124,17 @@ securityContext: {}
 ##
 hostAliases: []
 ## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
+## The example below fits documents of up to about twenty pages with the
+## default concurrency of one conversion; see the sizing notes on `processing`
+## before lowering the memory limit or raising the concurrency.
 ## Example:
 ## resources:
 ##   requests:
 ##     cpu: 2
-##     memory: 512Mi
+##     memory: 4Gi
 ##   limits:
-##     cpu: 3
-##     memory: 1024Mi
+##     cpu: 4
+##     memory: 6Gi
 ##
 resources: {}
 autoscaling:

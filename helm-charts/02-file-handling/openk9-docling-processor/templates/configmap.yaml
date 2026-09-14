@@ -6,3 +6,6 @@ metadata:
   labels: {{- include "common.labels.standard" . | nindent 4 }}
 data:
   DATASOURCE_HOST: {{ include "helper.datasourceURL" . | quote }}
+  MAX_CONCURRENT_CONVERSIONS: {{ .Values.processing.maxConcurrentConversions | quote }}
+  FETCH_TIMEOUT_SECONDS: {{ .Values.processing.fetchTimeoutSeconds | quote }}
+  CALLBACK_TIMEOUT_SECONDS: {{ .Values.processing.callbackTimeoutSeconds | quote }}
