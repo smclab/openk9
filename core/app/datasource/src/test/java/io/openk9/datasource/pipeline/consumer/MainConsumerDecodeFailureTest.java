@@ -60,7 +60,7 @@ public class MainConsumerDecodeFailureTest {
 	private static final byte[] VALID_JSON_BUT_NOT_A_PAYLOAD =
 		"[1, 2, 3]".getBytes();
 
-	private static final Logger log =
+	private static final Logger LOGGER =
 		Logger.getLogger(MainConsumerDecodeFailureTest.class);
 
 	@Inject
@@ -160,7 +160,7 @@ public class MainConsumerDecodeFailureTest {
 				reroutedToMain.add(message.getBody());
 				channel.basicAck(message.getEnvelope().getDeliveryTag(), false);
 			},
-			(consumerTag, sig) -> log.info("main queue consumer closed")
+			(consumerTag, sig) -> LOGGER.info("main queue consumer closed")
 		);
 
 		// 3. publish straight to the error queue
@@ -188,20 +188,20 @@ public class MainConsumerDecodeFailureTest {
 
 		try {
 			deleteQueues();
+		}
+		catch (Exception e) {
+			LOGGER.warn("cannot delete the test queues", e);
+		}
 
-			if (channel.isOpen()) {
-				channel.close();
-			}
-
+		try {
 			connection.close();
 		}
 		catch (Exception e) {
-			log.warn("cannot tear down the test channel", e);
+			LOGGER.warn("cannot close the test connection", e);
 		}
-		finally {
-			channel = null;
-			connection = null;
-		}
+
+		channel = null;
+		connection = null;
 	}
 
 	/**
@@ -275,7 +275,7 @@ public class MainConsumerDecodeFailureTest {
 				deadLettered.add(message.getBody());
 				channel.basicAck(message.getEnvelope().getDeliveryTag(), false);
 			},
-			(consumerTag, sig) -> log.info("retry queue consumer closed")
+			(consumerTag, sig) -> LOGGER.info("retry queue consumer closed")
 		);
 	}
 
@@ -317,7 +317,9 @@ public class MainConsumerDecodeFailureTest {
 			Props.empty()
 		);
 
-		return contextFuture.join();
+		return contextFuture
+			.orTimeout(10, TimeUnit.SECONDS)
+			.join();
 	}
 
 }
