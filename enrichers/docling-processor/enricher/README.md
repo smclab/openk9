@@ -175,7 +175,9 @@ the processor unchanged in the `enrichItemConfig` field of `POST /start-task/`.
 
 Keys that the target options object does not expose are skipped with a warning
 naming the key and the options that refused it, so an unknown or misspelled
-option never fails the conversion but never passes unnoticed either.
+option never fails the conversion but never passes unnoticed either. When the
+key belongs to a variant the configuration did not ask for, the warning says
+which `kind` takes it.
 
 **Notations**
 

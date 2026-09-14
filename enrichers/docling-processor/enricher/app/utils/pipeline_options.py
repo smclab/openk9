@@ -144,6 +144,26 @@ OPTIONS_BY_KIND: Dict[str, Dict[str, type]] = {
 }
 
 
+def kind_hint(key: str, kinds: Dict[str, type]) -> str:
+    """
+    Name the kinds that do expose the key, when some other one does.
+
+    A key dropped because it belongs to another variant is the likeliest
+    mistake here: the options in place are the default ones, and every remote
+    endpoint setting lives on a class the configuration has to ask for.
+    """
+    if not kinds:
+        return ""
+
+    taken_by = sorted(
+        kind for kind, options_cls in kinds.items() if key in options_cls.model_fields
+    )
+    if not taken_by:
+        return ""
+
+    return f"; {key!r} belongs to kind {' or '.join(repr(k) for k in taken_by)}"
+
+
 def build_options(key: str, kinds: Dict[str, type], arguments: Dict[str, Any]) -> Any:
     """
     Build the option class the configuration selects with its `kind`.
@@ -170,6 +190,7 @@ def build_options(key: str, kinds: Dict[str, type], arguments: Dict[str, Any]) -
         logger.warning(
             f"Skipping config key '{key}.{unknown}': "
             f"{options_cls.__name__} has no such option"
+            f"{kind_hint(unknown, kinds)}"
         )
         del fields[unknown]
 
@@ -183,9 +204,14 @@ def build_options(key: str, kinds: Dict[str, type], arguments: Dict[str, Any]) -
         return None
 
 
-def add_configs(opts: Any, arguments: Dict[str, Any]) -> Any:
+def add_configs(
+    opts: Any, arguments: Dict[str, Any], kinds: Dict[str, type] = None
+) -> Any:
     """
     Apply configurations to an object, recursively.
+
+    `kinds` are the classes the configuration could have selected for `opts`,
+    used to tell which one takes a key these options do not have.
     """
     if opts is None:
         return None
@@ -195,13 +221,14 @@ def add_configs(opts: Any, arguments: Dict[str, Any]) -> Any:
             logger.warning(
                 f"Skipping config key '{key}': "
                 f"{type(opts).__name__} has no such option"
+                f"{kind_hint(key, kinds)}"
             )
             continue
 
         # Class selected by the configuration → build it
-        kinds = OPTIONS_BY_KIND.get(key)
-        if isinstance(value, dict) and kinds is not None and "kind" in value:
-            built = build_options(key, kinds, value)
+        nested_kinds = OPTIONS_BY_KIND.get(key)
+        if isinstance(value, dict) and nested_kinds is not None and "kind" in value:
+            built = build_options(key, nested_kinds, value)
             if built is not None:
                 setattr(opts, key, built)
             continue
@@ -216,7 +243,7 @@ def add_configs(opts: Any, arguments: Dict[str, Any]) -> Any:
                     f"it unset, there is nothing to apply the configuration to"
                 )
                 continue
-            updated = add_configs(current_attr, value)
+            updated = add_configs(current_attr, value, nested_kinds)
             setattr(opts, key, updated)
         else:
             setattr(opts, key, value)
