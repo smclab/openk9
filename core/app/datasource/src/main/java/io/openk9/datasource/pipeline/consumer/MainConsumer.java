@@ -60,7 +60,7 @@ public class MainConsumer extends BaseConsumer {
 			context.getSelf()
 		);
 
-		DataPayload payload;
+		byte[] encodedPayload;
 
 		try {
 			IngestionIndexWriterPayload ingestionIndexWriterPayload =
@@ -69,7 +69,8 @@ public class MainConsumer extends BaseConsumer {
 					IngestionIndexWriterPayload.class
 				);
 
-			payload = payloadMapper.map(ingestionIndexWriterPayload);
+			var payload = payloadMapper.map(ingestionIndexWriterPayload);
+			encodedPayload = Json.encodeToBuffer(payload).getBytes();
 		}
 		catch (Exception e) {
 			log.errorf(
@@ -86,7 +87,7 @@ public class MainConsumer extends BaseConsumer {
 			getScheduling(),
 			(ActorRef<Scheduling.Response> replyTo) ->
 				new Scheduling.Ingest(
-					Json.encodeToBuffer(payload).getBytes(),
+					encodedPayload,
 					replyTo
 				),
 			timeout,
