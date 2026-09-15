@@ -19,6 +19,7 @@ package io.openk9.datasource.index.util;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +38,17 @@ import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.searcher.util.Utils;
 
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
 public final class IndexMappingUtils {
+
+	public static final String ANALYSIS = "analysis";
+
+	private static final String ANALYSIS_PREFIX = ANALYSIS + ".";
+	private static final String INDEX_PREFIX = "index.";
 
 	private IndexMappingUtils() {
 	}
@@ -105,7 +113,7 @@ public final class IndexMappingUtils {
 
 		Map<String, Object> settingsMap = new LinkedHashMap<>();
 
-		settingsMap.put("analysis", analysis);
+		settingsMap.put(ANALYSIS, analysis);
 
 		settingsMap.put("index", index);
 
@@ -323,6 +331,179 @@ public final class IndexMappingUtils {
 	private static Map<MappingsKey, Object> visit(MappingsKey nextKey, Map<MappingsKey, Object> current) {
 		return (Map<MappingsKey, Object>) current.computeIfAbsent(
 			nextKey, k -> new LinkedHashMap<>());
+	}
+
+	/**
+	 * Tells whether a live index already carries every analysis definition the
+	 * docTypes derive, which is what decides if it has to be closed: the
+	 * analysis block is a static setting and cannot be updated while the index
+	 * is open.
+	 * <p>
+	 * The comparison is directional on purpose. A definition the index has and
+	 * the docTypes do not know is left alone, because it harms nothing and
+	 * could only be removed by closing the index; what the docTypes declare,
+	 * instead, has to be there, since the mappings refer to it by name. Both
+	 * sides are flattened to dotted keys and compared as text, because
+	 * OpenSearch answers every setting as a string while the derived document
+	 * keeps the types it was built with.
+	 *
+	 * @param derivedSettings the settings derived from the docTypes, as
+	 *                        {@link #docTypesToSettings} builds them
+	 * @param liveSettings the settings the index is running with
+	 * @return {@code true} when the index needs no settings update
+	 */
+	public static boolean isAnalysisApplied(
+		Map<String, Object> derivedSettings, JsonObject liveSettings) {
+
+		var derived = flatten(
+			new JsonObject(Json.encode(derivedSettings)).getJsonObject(ANALYSIS));
+
+		var live = flatten(liveSettings
+			.getJsonObject("index", new JsonObject())
+			.getJsonObject(ANALYSIS));
+
+		return live.entrySet().containsAll(derived.entrySet());
+	}
+
+	/**
+	 * Finds the analysis definitions a settings document touches that the
+	 * docTypes already derive.
+	 * <p>
+	 * The mappings name analyzers, tokenizers and filters by name, and both
+	 * halves of an index template are built from the same docTypes: a
+	 * definition the docTypes own cannot be set by hand without the two halves
+	 * drifting apart. A definition under a name the docTypes do not know is
+	 * nobody else's, and is not reported here.
+	 * <p>
+	 * A definition is matched whatever shape the document uses to name it,
+	 * nested or dotted, under {@code analysis} or under {@code index.analysis}.
+	 *
+	 * @param derivedSettings the settings derived from the docTypes
+	 * @param requestedSettings the settings a caller wants to apply
+	 * @return the definitions of the docTypes the document touches, as
+	 * {@code <category>.<name>}, empty when it touches none
+	 */
+	public static Set<String> derivedAnalysisNamesIn(
+		Map<String, Object> derivedSettings, JsonObject requestedSettings) {
+
+		var derived = flatten(
+			new JsonObject(Json.encode(derivedSettings)).getJsonObject(ANALYSIS))
+			.keySet()
+			.stream()
+			.map(IndexMappingUtils::definitionOf)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+
+		return flatten(requestedSettings)
+			.keySet()
+			.stream()
+			.map(key -> key.startsWith(INDEX_PREFIX)
+				? key.substring(INDEX_PREFIX.length())
+				: key)
+			.filter(key -> key.startsWith(ANALYSIS_PREFIX))
+			.map(key -> definitionOf(key.substring(ANALYSIS_PREFIX.length())))
+			.filter(Objects::nonNull)
+			.filter(derived::contains)
+			.collect(Collectors.toCollection(LinkedHashSet::new));
+	}
+
+	/**
+	 * Names the definition a flattened analysis key belongs to, which is its
+	 * first two segments: the category and the name, as in
+	 * {@code analyzer.my_analyzer}.
+	 */
+	private static String definitionOf(String analysisKey) {
+
+		var segments = analysisKey.split("\\.");
+
+		return segments.length >= 2 ? segments[0] + "." + segments[1] : null;
+	}
+
+	/**
+	 * Merges the requested settings into the recorded ones the way OpenSearch
+	 * merges them into an index, so that what is recorded keeps telling what
+	 * the index has: a key the document does not name is left alone, and a key
+	 * set to {@code null} is dropped, because that is how OpenSearch is told to
+	 * put a setting back to its default.
+	 *
+	 * @param recorded the settings recorded so far
+	 * @param requested the settings a caller wants to apply
+	 * @return the settings to record
+	 */
+	public static JsonObject mergeSettings(
+		JsonObject recorded, JsonObject requested) {
+
+		var merged = recorded.copy().mergeIn(requested, true);
+
+		removeNulls(merged);
+
+		return merged;
+	}
+
+	private static void removeNulls(JsonObject object) {
+
+		var removed = new LinkedList<String>();
+
+		for (var entry : object) {
+			if (entry.getValue() == null) {
+				removed.add(entry.getKey());
+			}
+			else if (entry.getValue() instanceof JsonObject nested) {
+				removeNulls(nested);
+			}
+		}
+
+		removed.forEach(object::remove);
+	}
+
+	/**
+	 * Strips the analysis block off a settings document, leaving what OpenSearch
+	 * accepts while the index is open: a static setting is refused on an open
+	 * index even when its value does not change.
+	 *
+	 * @param settings the settings derived from the docTypes
+	 * @return the same settings without their analysis block
+	 */
+	public static Map<String, Object> withoutAnalysis(Map<String, Object> settings) {
+
+		var remainder = new LinkedHashMap<>(settings);
+
+		remainder.remove(ANALYSIS);
+
+		return remainder;
+	}
+
+	private static Map<String, String> flatten(JsonObject object) {
+
+		var flat = new LinkedHashMap<String, String>();
+
+		if (object != null) {
+			flatten("", object, flat);
+		}
+
+		return flat;
+	}
+
+	private static void flatten(
+		String prefix, Object value, Map<String, String> flat) {
+
+		if (value instanceof JsonObject object) {
+			object.forEach(entry -> flatten(
+				prefix.isEmpty()
+					? entry.getKey()
+					: prefix + "." + entry.getKey(),
+				entry.getValue(),
+				flat
+			));
+		}
+		else if (value instanceof JsonArray array) {
+			for (int i = 0; i < array.size(); i++) {
+				flatten(prefix + "." + i, array.getValue(i), flat);
+			}
+		}
+		else {
+			flat.put(prefix, String.valueOf(value));
+		}
 	}
 
 }

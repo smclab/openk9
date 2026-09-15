@@ -63,11 +63,25 @@ import org.hibernate.type.SqlTypes;
 		where d.id = :datasourceId
 		"""
 )
+@NamedQuery(
+	// only the dataIndex a datasource currently points at is searched and
+	// written: the ones a reindex left behind stay until the purge takes them
+	name = DataIndex.CURRENT_DATA_INDICES_BY_DOC_TYPE,
+	query = """
+		select di from DataIndex di
+		join di.docTypes dt
+		join di.datasource d
+		where dt.id = :docTypeId and d.dataIndex = di
+		"""
+)
 @ExportIgnore
 public class DataIndex extends K9Entity {
 
 	public static final String DATA_INDICES_WITH_DOC_TYPES_BY_DATASOURCE =
 		"dataIndicesWithDocTypes";
+
+	public static final String CURRENT_DATA_INDICES_BY_DOC_TYPE =
+		"currentDataIndicesByDocType";
 
 	private static final boolean DEFAULT_KNN_INDEX = false;
 	private static final int DEFAULT_CHUNK_WINDOW_SIZE = 0;
@@ -103,12 +117,14 @@ public class DataIndex extends K9Entity {
 	private Datasource datasource;
 
 	/**
-	 * The index settings requested at creation time, as a JSON object.
+	 * The custom index settings in force, as a JSON object: the ones that were
+	 * asked for, at creation or later, and that the docTypes do not derive.
 	 * <p>
 	 * They are applied to the index template of this dataIndex, and are
-	 * inherited by the dataIndex a reindex creates. They are not exposed on
-	 * the GraphQL surface: the {@code settings} field answers what the index
-	 * template declares, which is not necessarily what was requested here.
+	 * inherited by the dataIndex a reindex creates. The GraphQL surface answers
+	 * them from the {@code customSettings} field, and not from {@code settings},
+	 * which tells what the index template declares: that is these ones and the
+	 * derived ones merged together.
 	 */
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "settings")

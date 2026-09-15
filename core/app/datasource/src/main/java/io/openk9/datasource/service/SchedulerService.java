@@ -48,6 +48,7 @@ import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
 import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.client.RequestOptions;
@@ -297,7 +298,21 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	 */
 	public Uni<JobStatus> getJobStatus(Long datasourceId) {
 
-		return sessionFactory.withTransaction((session, transaction) -> session
+		return sessionFactory.withTransaction(
+			(session, transaction) -> getJobStatus(session, datasourceId));
+	}
+
+	/**
+	 * Reads the job status in the session of the caller, for a caller that is
+	 * already in one.
+	 *
+	 * @param session the session the query runs in
+	 * @param datasourceId the datasource ID to check
+	 * @return a {@code Uni<JobStatus>}
+	 */
+	public Uni<JobStatus> getJobStatus(Mutiny.Session session, Long datasourceId) {
+
+		return session
 			.createQuery(
 				"""
 					SELECT d.id, d.name, s.status, s.reindex
@@ -310,8 +325,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.setParameter("datasourceId", datasourceId)
 			.setParameter("runningStates", Scheduler.RUNNING_STATES_SET)
 			.getSingleResult()
-			.map(this::mapToJobStatus)
-		);
+			.map(this::mapToJobStatus);
 	}
 
 	public Uni<DataIndex> getNewDataIndex(Scheduler scheduler) {

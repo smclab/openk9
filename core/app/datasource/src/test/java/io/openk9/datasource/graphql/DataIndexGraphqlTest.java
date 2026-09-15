@@ -55,6 +55,7 @@ public class DataIndexGraphqlTest {
 	private static final String NAME = "name";
 	private static final String NODE = "node";
 	private static final String RESPONSE = "response: %s";
+	private static final String CUSTOM_SETTINGS = "customSettings";
 	private static final String SETTINGS = "settings";
 	private static final String STATUS = "status";
 	private static final String TENANT_ID = "public";
@@ -249,7 +250,7 @@ public class DataIndexGraphqlTest {
 	}
 
 	@Test
-	void should_expose_no_other_settings_field()
+	void should_expose_only_the_two_settings_fields()
 		throws ExecutionException, InterruptedException {
 
 		var query = document(
@@ -275,10 +276,14 @@ public class DataIndexGraphqlTest {
 			.stream()
 			.map(field -> field.asJsonObject().getString(NAME))
 			.filter(fieldName -> fieldName.toLowerCase().contains(SETTINGS))
+			.sorted()
 			.toList();
 
-		// the persisted settings are not a second field on the surface
-		assertEquals(List.of(SETTINGS), fieldNames);
+		// the two answer different questions and both are needed: settings tells
+		// what the index template declares, which is the derived and the custom
+		// merged, while customSettings tells what was recorded on the dataIndex,
+		// which is the only document an operator can edit and send back
+		assertEquals(List.of(CUSTOM_SETTINGS, SETTINGS), fieldNames);
 	}
 
 	@Test

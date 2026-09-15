@@ -356,6 +356,17 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		return new String[]{Datasource_.NAME, Datasource_.DESCRIPTION};
 	}
 
+	/**
+	 * Points a datasource at a dataIndex, aligning that index to the model
+	 * first.
+	 * <p>
+	 * A dataIndex a reindex left behind is not aligned while it is orphaned,
+	 * because an orphan is neither searched nor written: this is the moment it
+	 * goes back to being the index that answers the queries, and therefore the
+	 * moment its being out of date starts to matter. The alignment does not
+	 * gate the binding, which is often a rollback and must not be blocked by
+	 * the state of the index it goes back to: what it could not do is logged.
+	 */
 	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(
 		Mutiny.Session session, long datasourceId, long dataIndexId) {
 
@@ -366,11 +377,48 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				.findById(session, dataIndexId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(dataIndex -> {
-					datasource.setDataIndex(dataIndex);
-					return persist(session, datasource)
-						.map(d -> Tuple2.of(d, dataIndex));
-				}));
+				.transformToUni(dataIndex -> alignBeforeBinding(session, dataIndex)
+					.flatMap(unused -> {
+						datasource.setDataIndex(dataIndex);
+						return persist(session, datasource)
+							.map(d -> Tuple2.of(d, dataIndex));
+					})
+				));
+	}
+
+	private Uni<Void> alignBeforeBinding(
+		Mutiny.Session session, DataIndex dataIndex) {
+
+		return dataIndexService.alignDataIndex(session, dataIndex)
+			.invoke(alignment -> {
+
+				var status = alignment.status();
+
+				if (status != DataIndexService.IndexAlignment.Status.APPLIED
+					&& status != DataIndexService.IndexAlignment.Status.TEMPLATE_ONLY) {
+
+					log.warnf(
+						"Index %s becomes the current one without being aligned "
+							+ "to the model (%s): %s",
+						alignment.indexName(),
+						status,
+						alignment.reason()
+					);
+				}
+			})
+			.onFailure()
+			.recoverWithItem(throwable -> {
+
+				log.warnf(
+					throwable,
+					"DataIndex %s cannot be aligned to the model and becomes the "
+						+ "current one anyway",
+					dataIndex.getId()
+				);
+
+				return null;
+			})
+			.replaceWithVoid();
 	}
 
 	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(long datasourceId, long dataIndexId) {

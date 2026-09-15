@@ -473,4 +473,148 @@ public class IndexMappingUtilsTest {
 		)));
 	}
 
+	@Test
+	void analysisIsAppliedWhenTheLiveIndexCarriesEveryDefinition() {
+		var derived = Map.<String, Object>of(
+			"analysis", Map.of("analyzer", Map.of(
+				"imutest_search_analyzer", Map.of("type", "standard"))),
+			"index", Map.of("highlight", Map.of("max_analyzed_offset", "10000000"))
+		);
+
+		// OpenSearch answers every setting as a string, and knows definitions
+		// the docTypes do not: neither must make the comparison fail
+		var live = new JsonObject()
+			.put("index", new JsonObject()
+				.put("number_of_replicas", "1")
+				.put("analysis", new JsonObject()
+					.put("analyzer", new JsonObject()
+						.put("imutest_search_analyzer", new JsonObject()
+							.put("type", "standard"))
+						.put("somebody_elses", new JsonObject()
+							.put("type", "whitespace"))
+					)
+				)
+			);
+
+		Assertions.assertTrue(IndexMappingUtils.isAnalysisApplied(derived, live));
+	}
+
+	@Test
+	void analysisIsNotAppliedWhenADefinitionDiffers() {
+		var derived = Map.<String, Object>of(
+			"analysis", Map.of("analyzer", Map.of(
+				"imutest_search_analyzer", Map.of("type", "standard")))
+		);
+
+		var live = new JsonObject()
+			.put("index", new JsonObject()
+				.put("analysis", new JsonObject()
+					.put("analyzer", new JsonObject()
+						.put("imutest_search_analyzer", new JsonObject()
+							.put("type", "whitespace"))
+					)
+				)
+			);
+
+		Assertions.assertFalse(IndexMappingUtils.isAnalysisApplied(derived, live));
+
+		Assertions.assertFalse(
+			IndexMappingUtils.isAnalysisApplied(derived, new JsonObject()),
+			"an index that carries no analysis at all is not aligned either");
+	}
+
+	@Test
+	void derivedAnalysisNamesAreFoundWhateverShapeNamesThem() {
+		var derived = Map.<String, Object>of(
+			"analysis", Map.of(
+				"analyzer", Map.of("imutest_search_analyzer", Map.of("type", "standard")),
+				"filter", Map.of("imutest_synonym", Map.of("type", "synonym"))
+			)
+		);
+
+		Assertions.assertEquals(
+			Set.of("analyzer.imutest_search_analyzer"),
+			IndexMappingUtils.derivedAnalysisNamesIn(derived, new JsonObject()
+				.put("analysis", new JsonObject()
+					.put("analyzer", new JsonObject()
+						.put("imutest_search_analyzer", new JsonObject()
+							.put("type", "whitespace")))))
+		);
+
+		Assertions.assertEquals(
+			Set.of("filter.imutest_synonym"),
+			IndexMappingUtils.derivedAnalysisNamesIn(derived, new JsonObject()
+				.put("index.analysis.filter.imutest_synonym.type", "stop")),
+			"the dotted form names the same definition"
+		);
+
+		Assertions.assertTrue(
+			IndexMappingUtils.derivedAnalysisNamesIn(derived, new JsonObject()
+				.put("analysis", new JsonObject()
+					.put("filter", new JsonObject()
+						.put("somebody_elses", new JsonObject()
+							.put("type", "lowercase"))))
+			).isEmpty(),
+			"a definition the docTypes do not know is nobody else's"
+		);
+
+		Assertions.assertTrue(
+			IndexMappingUtils.derivedAnalysisNamesIn(derived, new JsonObject()
+				.put("index", new JsonObject().put("number_of_replicas", 2))
+			).isEmpty()
+		);
+	}
+
+	@Test
+	void mergingSettingsKeepsWhatIsNotNamedAndDropsWhatIsNull() {
+		var recorded = new JsonObject()
+			.put("index", new JsonObject()
+				.put("number_of_replicas", 2)
+				.put("max_result_window", 12345)
+			);
+
+		var merged = IndexMappingUtils.mergeSettings(
+			recorded,
+			new JsonObject().put("index", new JsonObject()
+				.put("max_result_window", 999)
+				.putNull("number_of_replicas")
+			)
+		);
+
+		var index = merged.getJsonObject("index");
+
+		Assertions.assertEquals(999, index.getInteger("max_result_window"));
+		Assertions.assertFalse(
+			index.containsKey("number_of_replicas"),
+			"null puts a setting back to its default, so it stops being recorded");
+		Assertions.assertFalse(
+			merged.encode().contains("null"),
+			"a recorded null would end up in the generated index template");
+
+		Assertions.assertEquals(
+			2,
+			IndexMappingUtils
+				.mergeSettings(recorded, new JsonObject().put("index", new JsonObject()
+					.put("max_result_window", 999)))
+				.getJsonObject("index")
+				.getInteger("number_of_replicas"),
+			"a key the document does not name is left alone"
+		);
+	}
+
+	@Test
+	void withoutAnalysisLeavesWhatAnOpenIndexAccepts() {
+		var settings = Map.<String, Object>of(
+			"analysis", Map.of("analyzer", Map.of("x", Map.of("type", "standard"))),
+			"index", Map.of("highlight", Map.of("max_analyzed_offset", "10000000"))
+		);
+
+		var remainder = IndexMappingUtils.withoutAnalysis(settings);
+
+		Assertions.assertFalse(remainder.containsKey("analysis"));
+		Assertions.assertTrue(remainder.containsKey("index"));
+		Assertions.assertTrue(
+			settings.containsKey("analysis"), "the original is not modified");
+	}
+
 }

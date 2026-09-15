@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.ValidationException;
 
 import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
@@ -31,6 +32,7 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.service.DataIndexService;
+import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 
@@ -57,6 +59,39 @@ public class DataIndexGraphqlResource {
 	@Mutation
 	public Uni<Tuple2<DataIndex, DocType>> addDocTypeToDataIndex(@Id long dataIndexId, @Id long docTypeId) {
 		return dataIndexService.addDocType(dataIndexId, docTypeId);
+	}
+
+	@Mutation
+	@Description("""
+		Aligns one index to the model of its dataIndex, writing the settings and
+		the mappings its docTypes derive and regenerating its index template.
+		Use it to retry an index that a previous alignment skipped or could not
+		apply.
+		The index may be closed for the duration of the operation, during which
+		it is neither searchable nor writable, and this happens only when it
+		does not already carry the analyzers the model declares.
+		An APPLIED outcome means OpenSearch accepted what was sent to it, not
+		that the index matches the model: a mapping is additive, so what the
+		model no longer declares stays in the index.
+		The Boost, Searchable, Exclude and Sortable properties of a docTypeField
+		need no alignment: they never reach the index and take effect as soon as
+		they are saved.
+		""")
+	public Uni<DataIndexService.IndexAlignment> alignIndex(@Id long dataIndexId) {
+
+		return dataIndexService.alignDataIndex(dataIndexId)
+			.onFailure(ValidationException.class)
+			.transform(K9Error::new);
+	}
+
+	@Description("""
+		The custom settings recorded on this dataIndex, which are the ones an
+		operator asked for: what the docTypes derive is not part of them.
+		Unlike the settings field, which answers what the index template
+		declares, this is the document updateIndexSettings accepts back.
+		""")
+	public Uni<String> customSettings(@Source DataIndex dataIndex) {
+		return dataIndexService.getCustomSettings(dataIndex.getId());
 	}
 
 	@Mutation
@@ -154,6 +189,30 @@ public class DataIndexGraphqlResource {
 	public Uni<String> settings(@Source DataIndex dataIndex) {
 		return dataIndexService
 			.getIndexTemplateSettings(dataIndex.getId());
+	}
+
+	@Mutation
+	@Description("""
+		Applies the custom settings of a dataIndex to its index, records them
+		and regenerates its index template.
+		The document is sent whole, but a key it does not name is left alone,
+		the way OpenSearch merges a settings update: deleting a line changes
+		nothing, and a key has to be set to null to go back to its default and
+		disappear from the recorded settings.
+		The analyzers, tokenizers and filters the docTypes of the dataIndex
+		derive cannot be set here, because the mappings name them: naming one
+		makes the whole request fail.
+		Static settings, analysis included, require the index to be closed, and
+		it is then neither searchable nor writable for the duration of the
+		operation; it is not closed while a scheduling is running on its
+		datasource, and the outcome says so.
+		""")
+	public Uni<DataIndexService.IndexAlignment> updateIndexSettings(
+		@Id long dataIndexId, String settings) {
+
+		return dataIndexService.updateIndexSettings(dataIndexId, settings)
+			.onFailure(ValidationException.class)
+			.transform(K9Error::new);
 	}
 
 }

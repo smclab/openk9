@@ -19,6 +19,7 @@ package io.openk9.datasource.index;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,13 +32,18 @@ import jakarta.inject.Inject;
 import io.openk9.datasource.index.exception.CannotCreateComponentTemplateException;
 import io.openk9.datasource.index.exception.CannotCreateIndexTemplateException;
 import io.openk9.datasource.index.exception.DeleteIndexException;
+import io.openk9.datasource.index.exception.IndexMappingException;
+import io.openk9.datasource.index.exception.PutMappingException;
+import io.openk9.datasource.index.exception.PutSettingsException;
 import io.openk9.datasource.index.model.IndexName;
+import io.openk9.datasource.index.model.MappingsKey;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
 
 import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
@@ -58,6 +64,7 @@ import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
+import org.opensearch.client.opensearch.generic.Requests;
 import org.opensearch.core.xcontent.MediaType;
 import org.opensearch.core.xcontent.MediaTypeRegistry;
 import org.opensearch.index.IndexNotFoundException;
@@ -500,6 +507,325 @@ public class IndexService {
 				throw new CannotCreateComponentTemplateException(e);
 			}
 		});
+	}
+
+	/**
+	 * Applies the given mappings to a live index.
+	 * <p>
+	 * OpenSearch accepts additive changes and the few updatable parameters:
+	 * {@code search_analyzer} can be changed on an existing field, while
+	 * changing {@code type}, the index-time {@code analyzer}, {@code
+	 * term_vector} or {@code index_options} is rejected. A rejection is
+	 * reported as is, without being interpreted, and rejects the whole
+	 * document: a single field that cannot be applied leaves the index
+	 * untouched.
+	 * <p>
+	 * An index is materialized from its template at the first write, so before
+	 * that there is no index to update: the operation then completes without
+	 * doing anything, and the caller is expected to update the template, which
+	 * in that state is the only thing that exists.
+	 *
+	 * @param indexName the live index to update
+	 * @param mappings the mappings to apply
+	 * @return a {@link Uni} that completes with {@code true} when the cluster
+	 * acknowledges the operation and with {@code false} when the index does not
+	 * exist yet, and fails with {@link PutMappingException} otherwise
+	 */
+	public Uni<Boolean> putMapping(
+		IndexName indexName, Map<MappingsKey, Object> mappings) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				var response = sendRequest(
+					"PUT",
+					String.format("/%s/_mapping", indexName),
+					Json.encode(mappings)
+				);
+
+				warnIfNotAcknowledged(response, "mapping", indexName);
+
+				return Boolean.TRUE;
+			}
+			catch (Exception e) {
+				if (isIndexNotFound(e)) {
+					logIndexNotFound(indexName);
+
+					return Boolean.FALSE;
+				}
+
+				log.errorf(e, "Cannot update the mapping of index %s", indexName);
+
+				throw new PutMappingException(e);
+			}
+		});
+	}
+
+	/**
+	 * Applies the given settings to a live index.
+	 * <p>
+	 * Static settings, {@code analysis.*} above all, are refused by OpenSearch
+	 * while the index is open, and the refusal rejects the whole document, the
+	 * dynamic keys included: {@code closeIndex} closes the index around the
+	 * update and reopens it afterwards, even when the update fails. Closing an
+	 * index makes it neither searchable nor writable for the duration of the
+	 * operation.
+	 * <p>
+	 * An index is materialized from its template at the first write, so before
+	 * that there is no index to update: the operation then completes without
+	 * doing anything, and the caller is expected to update the template, which
+	 * in that state is the only thing that exists.
+	 *
+	 * @param indexName the live index to update
+	 * @param settings the settings to apply
+	 * @param closeIndex whether to close and reopen the index around the update
+	 * @return a {@link Uni} that completes with {@code true} when the cluster
+	 * acknowledges the operation and with {@code false} when the index does not
+	 * exist yet, and fails with {@link PutSettingsException} otherwise, the
+	 * index being left closed included
+	 */
+	public Uni<Boolean> putSettings(
+		IndexName indexName, Map<String, Object> settings, boolean closeIndex) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+
+			var indices = openSearchClient.indices();
+			var index = indexName.toString();
+
+			boolean closed = false;
+			boolean leftClosed = false;
+			Exception failure = null;
+
+			try {
+				if (closeIndex) {
+					indices.close(request -> request.index(index));
+
+					closed = true;
+				}
+
+				var response = sendRequest(
+					"PUT",
+					String.format("/%s/_settings", index),
+					Json.encode(settings)
+				);
+
+				warnIfNotAcknowledged(response, "settings", indexName);
+			}
+			catch (Exception e) {
+				failure = e;
+			}
+
+			if (closed) {
+				try {
+					var reopened = indices.open(request -> request.index(index));
+
+					// with the default parameters shardsAcknowledged follows the
+					// primary shard being active, which is the condition for the
+					// index to be searchable again
+					if (!reopened.acknowledged() || !reopened.shardsAcknowledged()) {
+						leftClosed = true;
+
+						log.errorf(
+							"Reopening index %s is not acknowledged", indexName);
+					}
+				}
+				catch (Exception e) {
+					leftClosed = true;
+
+					log.errorf(e, "Index %s is left closed", indexName);
+
+					if (failure == null) {
+						failure = e;
+					}
+					else {
+						failure.addSuppressed(e);
+					}
+				}
+			}
+
+			if (failure == null && !leftClosed) {
+				return Boolean.TRUE;
+			}
+
+			if (failure != null && isIndexNotFound(failure)) {
+				logIndexNotFound(indexName);
+
+				return Boolean.FALSE;
+			}
+
+			if (leftClosed) {
+				// the caller asked for a bounded downtime and has to be told
+				// that it is not over, which is the urgent half of the failure
+				var message = String.format(
+					"the settings of index %s were %s and the index could not be "
+						+ "reopened: it stays closed, and unsearchable, until it "
+						+ "is opened again",
+					indexName,
+					failure == null ? "updated" : "not updated"
+				);
+
+				log.error(message, failure);
+
+				throw new PutSettingsException(message, failure);
+			}
+
+			log.errorf(failure, "Cannot update the settings of index %s", indexName);
+
+			throw new PutSettingsException(failure);
+		});
+	}
+
+	/**
+	 * Reads the settings a live index is running with, which are not
+	 * necessarily the ones its index template declares.
+	 *
+	 * @param indexName the live index to read
+	 * @return a {@link Uni} emitting the settings of the index, or {@code null}
+	 * when the index does not exist yet, and failing with an
+	 * {@link IndexMappingException} otherwise
+	 */
+	public Uni<JsonObject> getIndexSettings(IndexName indexName) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				var response = sendRequest(
+					"GET",
+					String.format("/%s/_settings", indexName),
+					null
+				);
+
+				return new JsonObject(response)
+					.getJsonObject(indexName.toString(), new JsonObject())
+					.getJsonObject("settings", new JsonObject());
+			}
+			catch (Exception e) {
+				if (isIndexNotFound(e)) {
+					logIndexNotFound(indexName);
+
+					return null;
+				}
+
+				log.errorf(e, "Cannot read the settings of index %s", indexName);
+
+				throw new IndexMappingException(e);
+			}
+		});
+	}
+
+	/**
+	 * Tells the one refusal a close can fix from every other one.
+	 * <p>
+	 * Unlike {@link #isIndexNotFound}, this reads the wording of the message,
+	 * because OpenSearch answers 400 to every rejected settings update and
+	 * which settings are static is knowledge only the engine has. It is the
+	 * single place where a message is interpreted instead of being reported as
+	 * is, and a change of wording costs a useless close, not a wrong result.
+	 *
+	 * @param failure the failure of a settings update
+	 * @return {@code true} when the update was refused because the index is
+	 * open
+	 */
+	public static boolean requiresClosedIndex(Throwable failure) {
+
+		var message = failure.getMessage();
+
+		return message != null && message.contains("non dynamic settings");
+	}
+
+	/**
+	 * Tells the failure of a missing index from every other one, on the status
+	 * OpenSearch answered with and not on the wording of the message.
+	 * <p>
+	 * The close of {@code putSettings} goes through the typed client, which
+	 * reports it as an {@link OpenSearchException}, while everything that
+	 * carries a document goes through {@link #sendRequest}.
+	 */
+	private static boolean isIndexNotFound(Exception e) {
+
+		if (e instanceof IndexMappingException mappingException) {
+			return mappingException.getStatus() == HttpURLConnection.HTTP_NOT_FOUND;
+		}
+
+		return e instanceof OpenSearchException openSearchException
+			&& openSearchException.status() == HttpURLConnection.HTTP_NOT_FOUND;
+	}
+
+	private static boolean isAcknowledged(String responseBody) {
+		return responseBody != null
+			&& !responseBody.isBlank()
+			&& new JsonObject(responseBody).getBoolean("acknowledged", Boolean.FALSE);
+	}
+
+	private static void logIndexNotFound(IndexName indexName) {
+		log.infof(
+			"Index %s does not exist yet, only its template is updated",
+			indexName
+		);
+	}
+
+	/**
+	 * Warns that an update of the live index was not acknowledged, which means
+	 * it was applied but not confirmed by every node within the timeout of the
+	 * master: imprecise, not false, so it does not fail the operation.
+	 */
+	private static void warnIfNotAcknowledged(
+		String responseBody, String what, IndexName indexName) {
+
+		if (!isAcknowledged(responseBody)) {
+			log.warnf(
+				"Updating the %s of index %s is not acknowledged", what, indexName);
+		}
+	}
+
+	/**
+	 * Sends a request through the generic client, which carries the body as it
+	 * is.
+	 * <p>
+	 * A typed request parses the document into its own model and serializes it
+	 * back, so whatever the model does not cover is dropped without an error.
+	 * Measured on opensearch-java 2.26.0: {@code IndexSettings} only reads
+	 * {@code index.highlight.max_analyzed_offset} in its dotted form, and
+	 * silently loses the nested one that {@code docTypesToSettings} produces.
+	 * Settings also come from the caller as arbitrary JSON, so the model cannot
+	 * be expected to cover them. Everything that carries a mappings or a
+	 * settings document therefore goes through here, where the body is passed
+	 * as it is.
+	 *
+	 * @param method the HTTP method
+	 * @param endpoint the OpenSearch endpoint, leading slash included
+	 * @param body the JSON body, or {@code null} when the request has none
+	 * @return the response body
+	 * @throws IndexMappingException if OpenSearch does not answer with a 2xx,
+	 * reporting its own explanation as is
+	 */
+	private String sendRequest(String method, String endpoint, String body)
+		throws IOException {
+
+		var builder = Requests.builder()
+			.endpoint(endpoint)
+			.method(method);
+
+		if (body != null) {
+			builder.json(body);
+		}
+
+		try (var response = openSearchClient.generic().execute(builder.build())) {
+
+			var status = response.getStatus();
+
+			var responseBody = response.getBody()
+				.map(content -> content.bodyAsString())
+				.orElse("");
+
+			if (status < 200 || status > 299) {
+				throw new IndexMappingException(
+					String.format(
+						"%s %s returned %d: %s", method, endpoint, status, responseBody),
+					status
+				);
+			}
+
+			return responseBody;
+		}
 	}
 
 }

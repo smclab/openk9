@@ -18,20 +18,47 @@
 package io.openk9.datasource.index.exception;
 
 public class IndexMappingException extends RuntimeException {
+
+	/**
+	 * The failure carries no HTTP status, because OpenSearch did not answer it.
+	 */
+	public static final int NO_STATUS = 0;
+
+	private final int status;
+
 	public IndexMappingException() {
 		super();
+
+		this.status = NO_STATUS;
 	}
 
 	public IndexMappingException(String message) {
 		super(message);
+
+		this.status = NO_STATUS;
+	}
+
+	/**
+	 * @param message the explanation of OpenSearch, reported as is
+	 * @param status the HTTP status OpenSearch answered with, so a caller can
+	 * tell the cases apart without parsing the message
+	 */
+	public IndexMappingException(String message, int status) {
+		super(message);
+
+		this.status = status;
 	}
 
 	public IndexMappingException(String message, Throwable cause) {
 		super(message, cause);
+
+		this.status = NO_STATUS;
 	}
 
 	public IndexMappingException(Throwable cause) {
 		super(cause);
+
+		this.status = NO_STATUS;
 	}
 
 	protected IndexMappingException(
@@ -40,5 +67,11 @@ public class IndexMappingException extends RuntimeException {
 		boolean enableSuppression,
 		boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
+
+		this.status = NO_STATUS;
+	}
+
+	public int getStatus() {
+		return status;
 	}
 }
