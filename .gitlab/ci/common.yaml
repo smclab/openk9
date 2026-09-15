@@ -6,7 +6,7 @@
 Trigger Connectors Build:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && $CI_COMMIT_TAG == null'
       when: never
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
@@ -39,7 +39,7 @@ Trigger Connectors Build:
 Trigger Helm Base Core:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && $CI_COMMIT_TAG == null'
       when: never
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
@@ -58,7 +58,7 @@ Trigger Helm Base Core:
 Trigger Helm File Handling:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && $CI_COMMIT_TAG == null'
       when: never
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
@@ -77,7 +77,7 @@ Trigger Helm File Handling:
 Trigger Helm Gen AI:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && $CI_COMMIT_TAG == null'
       when: never
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
@@ -96,7 +96,7 @@ Trigger Helm Gen AI:
 Trigger Helm Connectors:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && $CI_COMMIT_TAG == null'
       when: never
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
@@ -115,7 +115,7 @@ Trigger Helm Connectors:
 Trigger Helm Utilities:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && $CI_COMMIT_TAG == null'
       when: never
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
