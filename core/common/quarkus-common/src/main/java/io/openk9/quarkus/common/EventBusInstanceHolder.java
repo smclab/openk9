@@ -17,7 +17,10 @@
 
 package io.openk9.quarkus.common;
 
+import java.time.Duration;
+
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import io.vertx.mutiny.core.eventbus.Message;
 
@@ -46,6 +49,33 @@ public class EventBusInstanceHolder {
 
 	public static <T> Uni<Message<T>> request(String address, Object message) {
 		return eventBus.request(address, message);
+	}
+
+	/**
+	 * Sends a request on the event bus, waiting for the reply no longer than
+	 * the given timeout.
+	 * <p>
+	 * The two-arguments overload leaves the reply timeout to the Vert.x
+	 * default of 30 seconds, which is too short for a handler doing long
+	 * running work, such as splitting and embedding the text of a document:
+	 * the caller would fail with {@code ReplyFailure.TIMEOUT} while the
+	 * handler is still working.
+	 *
+	 * @param address the event bus address of the request
+	 * @param message the request body
+	 * @param timeout how long to wait for the reply before failing
+	 * @return a {@link Uni} with the reply, failing with a
+	 * {@code ReplyException} of type {@code ReplyFailure.TIMEOUT} when the
+	 * handler does not reply in time
+	 */
+	public static <T> Uni<Message<T>> request(
+		String address, Object message, Duration timeout) {
+
+		return eventBus.request(
+			address,
+			message,
+			new DeliveryOptions().setSendTimeout(timeout.toMillis())
+		);
 	}
 
 	private EventBusInstanceHolder() {}
