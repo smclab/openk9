@@ -121,13 +121,21 @@ def _normalize_quote(text: str) -> str:
 
     Dropping this much is a workaround for the ingestion, and it can be narrowed
     once the indices hold their non-ASCII characters again - which takes a
-    re-index, not just a fix upstream. Narrowed, not removed: web text carries
-    typographic apostrophes and non-breaking spaces, and a model writing a quote
-    uses the ASCII ones, so whitespace, case and apostrophe variants always need
-    folding. What can go is dropping accents and punctuation, which buys back
-    the strict guarantee that a quote is an exact substring of its source:
-    today a quote may match across word boundaries, or claim a currency the
-    source does not carry ("5.000€" against "5.000").
+    re-index, not just a fix upstream.
+
+    Narrowed, not removed, and the reason inverts: a source that keeps its
+    characters carries typographic apostrophes and quotes and non-breaking
+    spaces, while a model writing a quote types the ASCII ones. Measured against
+    text the fixed cleaner produces, folding whitespace and case is not enough -
+    "l'eccellenza" misses "l’eccellenza" - and folding apostrophes alone is not
+    either, since '"grazie"' still misses '“grazie”'. Whitespace, case,
+    apostrophes and quotes all need folding, whatever the corpus. What can go is
+    dropping accents and punctuation, which buys back the strict guarantee that
+    a quote is an exact substring of its source: today a quote may match across
+    word boundaries, or claim a currency the source does not carry ("5.000€"
+    against "5.000"). Folding accents too would additionally let a model that
+    omits one still match ("Perche" against "Perché"), which dropping them
+    outright does not.
 
     Note that it also hides the ingestion defect it compensates: a mangled and a
     clean source normalize to the very same string, so a regression upstream
