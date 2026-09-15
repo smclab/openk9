@@ -18,6 +18,7 @@
 package io.openk9.datasource.pipeline.service;
 
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,13 +77,25 @@ public class EmbeddingService {
 	@CacheName("bucket-resource")
 	Cache cache;
 
+	/**
+	 * Requests the embedded version of the given payload.
+	 *
+	 * @param tenantId the tenant owning the payload
+	 * @param scheduleId the scheduling this payload belongs to
+	 * @param payload the raw document payload to embed
+	 * @param timeout how long to wait for the embedding to complete; it must
+	 * account for both the text splitting and the embedding model call, which
+	 * on large documents take far longer than the Vert.x default
+	 * @return a {@link CompletionStage} with the embedded payload
+	 */
 	public static CompletionStage<byte[]> getEmbeddedPayload(
-		String tenantId, String scheduleId, byte[] payload) {
+		String tenantId, String scheduleId, byte[] payload, Duration timeout) {
 
 		return EventBusInstanceHolder
 			.request(
 				GET_EMBEDDED_PAYLOAD,
-				new GetEmbeddedPayloadRequest(tenantId, scheduleId, payload)
+				new GetEmbeddedPayloadRequest(tenantId, scheduleId, payload),
+				timeout
 			)
 			.map(message -> ((EmbeddedPayload) message.body()).payload())
 			.subscribeAsCompletionStage();

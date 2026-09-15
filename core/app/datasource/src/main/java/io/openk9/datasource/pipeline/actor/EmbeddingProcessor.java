@@ -17,7 +17,10 @@
 
 package io.openk9.datasource.pipeline.actor;
 
+import java.time.Duration;
+
 import io.openk9.common.util.ingestion.ShardingKey;
+import io.openk9.datasource.actor.PekkoUtils;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
@@ -37,9 +40,13 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 	public static final EntityTypeKey<Processor.Command> ENTITY_TYPE_KEY =
 		EntityTypeKey.create(Processor.Command.class, "embedding-processor");
 
+	public static final String EMBEDDING_TIMEOUT =
+		"io.openk9.pipeline.embedding.timeout";
+
 	private static final Logger log = Logger.getLogger(EmbeddingProcessor.class);
 
 	private final ShardingKey processKey;
+	private final Duration embeddingTimeout;
 	private ActorRef<Processor.Response> replyTo;
 	private HeldMessage heldMessage;
 	private SchedulerDTO scheduler;
@@ -50,6 +57,11 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
 		super(context);
 		this.processKey = processKey;
+		this.embeddingTimeout = PekkoUtils.getDuration(
+			context.getSystem().settings().config(),
+			EMBEDDING_TIMEOUT,
+			Duration.ofMinutes(5)
+		);
 
 	}
 
@@ -100,7 +112,8 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
 		this.getContext().pipeToSelf(
 			EmbeddingService.getEmbeddedPayload(
-				processKey.tenantId(), processKey.scheduleId(), payload),
+				processKey.tenantId(), processKey.scheduleId(), payload,
+				embeddingTimeout),
 			EmbeddingResponse::new
 		);
 
