@@ -273,11 +273,12 @@ function templateTypeDefinition() {
   return `
     export {} 
     declare global {
+      // Not React.FC: its @types/react came from a unpkg.com fetch that connect-src 'self' now blocks.
       type Template<E> = {
         resultType: string;
         priority: number;
-        result: React.FC<ResultRendererProps<E>>;
-        detail: React.FC<DetailRendererProps<E>>;
+        result: (props: ResultRendererProps<E>) => any;
+        detail: (props: DetailRendererProps<E>) => any;
       };
       var rendererComponents: any;
     }
