@@ -34,14 +34,28 @@ export interface Message {
   timestamp?: string;
 }
 
+/**
+ * Which RAG endpoint answers the conversation. The two values are the path
+ * segments themselves: `/api/rag/chat` and `/api/rag/chat-tool`.
+ *
+ * `chat-tool` lets the agent decide whether to consult the knowledge base
+ * before answering, `chat` always goes through retrieval. Both take the same
+ * request body and emit the same stream events, so only the url changes.
+ */
+export type RagMode = "chat" | "chat-tool";
+
+export const DEFAULT_RAG_MODE: RagMode = "chat-tool";
+
 const useGenerateResponse = ({
   initialMessages,
   tenant,
   callbackAuthorization,
+  ragMode = DEFAULT_RAG_MODE,
 }: {
   initialMessages: Message[];
   tenant: string;
   callbackAuthorization?: () => string | null | undefined;
+  ragMode?: RagMode;
 }) => {
   const { language } = useLanguage();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -94,8 +108,7 @@ const useGenerateResponse = ({
 
       const controller = new AbortController();
       setAbortControllers((prev) => new Map(prev).set(id, controller));
-      const url = `${tenant}/api/rag/chat-tool`;
-      // const url = "/api/rag/chat-tool";
+      const url = `${tenant}/api/rag/${ragMode}`;
 
       const chatSequenceNumber =
         messages[messages.length - 1]?.chat_sequence_number + 1 || 1;
@@ -275,7 +288,7 @@ const useGenerateResponse = ({
         return updated;
       });
     },
-    [messages, client, tenant, language, callbackAuthorization],
+    [messages, client, tenant, language, callbackAuthorization, ragMode],
   );
 
   const cancelResponse = (id: string) => {

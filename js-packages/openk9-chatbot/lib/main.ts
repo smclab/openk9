@@ -16,4 +16,5 @@
 */
 import Chatbot from "./components/Chatbot";
 export { Chatbot };
+export type { RagMode } from "./components/useGenerateResponse";
 

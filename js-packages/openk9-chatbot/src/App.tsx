@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { Box, IconButton, Link } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import CloseRoundedIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import React from "react";
@@ -47,7 +48,7 @@ function AiDisclosureBanner() {
         size="small"
         aria-label="Mostra l'informativa sull'uso dell'intelligenza artificiale"
         onClick={() => setIsOpen(true)}
-        sx={{ padding: "2px", color: "#1a56db" }}
+        sx={{ padding: "2px", color: "primary.main" }}
       >
         <InfoOutlinedIcon sx={{ fontSize: 18 }} />
       </IconButton>
@@ -57,21 +58,29 @@ function AiDisclosureBanner() {
   return (
     <Box
       component="span"
-      sx={{
+      sx={(theme) => ({
         display: "flex",
         alignItems: "flex-start",
         gap: "8px",
         padding: "10px",
         borderRadius: "8px",
-        backgroundColor: "#eaf1fd",
-        // #1f2937 su questo azzurro supera abbondantemente il 4.5:1 di WCAG AA
-        color: "#1f2937",
+        // velo del primario invece di un colore fisso: resta armonioso anche
+        // se l'integratore passa un `themeCustom` con un'altra tinta
+        backgroundColor: alpha(theme.palette.primary.main, 0.07),
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+        // #666 su questo velo resta sopra il 4.5:1 richiesto da WCAG AA
+        color: theme.palette.text.secondary,
         fontSize: "11px",
         lineHeight: 1.45,
-      }}
+      })}
     >
       <InfoOutlinedIcon
-        sx={{ fontSize: 18, color: "#1a56db", flexShrink: 0, marginTop: "1px" }}
+        sx={{
+          fontSize: 18,
+          color: "primary.main",
+          flexShrink: 0,
+          marginTop: "1px",
+        }}
       />
       <Box component="span" sx={{ flex: 1 }}>
         Questo assistente virtuale utilizza tecnologie di Intelligenza
@@ -82,9 +91,7 @@ function AiDisclosureBanner() {
           href={PRIVACY_POLICY_URL}
           target="_blank"
           rel="noreferrer"
-          // stesso azzurro dell'icona: senza questo il link eredita il primario
-          // del tema (rosso su questa integrazione) e stona dentro il riquadro
-          sx={{ fontWeight: 700, color: "#1a56db" }}
+          sx={{ fontWeight: 700, color: "primary.main" }}
         >
           Informativa Privacy
         </Link>{" "}
@@ -94,7 +101,7 @@ function AiDisclosureBanner() {
         size="small"
         aria-label="Chiudi l'informativa"
         onClick={() => setIsOpen(false)}
-        sx={{ padding: "2px", flexShrink: 0 }}
+        sx={{ padding: "2px", flexShrink: 0, color: "text.secondary" }}
       >
         <CloseRoundedIcon sx={{ fontSize: 16 }} />
       </IconButton>
@@ -112,10 +119,13 @@ function App() {
         initialMessage="Chiedimi pure qualcosa"
         nameChatbot="Openk9"
         tenant="https://k9-frontend.openk9.io"
+        // endpoint del RAG: "chat-tool" (default) lascia decidere all'agente se
+        // consultare la knowledge base, "chat" passa sempre dal retrieval
+        ragMode="chat-tool"
         // lo slot accetta un nodo qualsiasi, quindi l'informativa puo' avere uno
-        // stato suo: qui e' un banner richiudibile. Sta in `top`, sopra la lista
-        // dei messaggi; spostarlo in `bottom` lo riporta sotto l'input
-        aiDisclosure={{ top: <AiDisclosureBanner /> }}
+        // stato suo: qui e' un banner richiudibile. Sta in `bottom`, sotto
+        // l'input; spostarlo in `top` lo porta sopra la lista dei messaggi
+        aiDisclosure={{ bottom: <AiDisclosureBanner /> }}
         icon={{
           buttonIcon: <Logo size={35} color="white" />,
           userIcon: <User />,

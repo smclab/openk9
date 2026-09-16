@@ -25,7 +25,11 @@ import {
 import React from "react";
 import AiDisclosure from "./AiDisclosure";
 import Search from "./Search";
-import useGenerateResponse, { Message } from "./useGenerateResponse";
+import useGenerateResponse, {
+  DEFAULT_RAG_MODE,
+  Message,
+  RagMode,
+} from "./useGenerateResponse";
 import { SingleMessage } from "./SingleMessage";
 import { useFocusTrap } from "./useFocusTrap";
 import { Translate } from "./Translate";
@@ -73,6 +77,13 @@ type ChatbotProps = {
    * never disabled.
    */
   aiDisclosure?: AiDisclosureSlots;
+  /**
+   * which RAG endpoint answers the conversation: `chat-tool` (default) lets the
+   * agent decide whether to consult the knowledge base, `chat` always goes
+   * through retrieval. Both take the same request body and emit the same
+   * stream events.
+   */
+  ragMode?: RagMode;
 };
 
 /** the two positions the disclosure can occupy inside the panel */
@@ -132,6 +143,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
   useSource,
   numberOfSources,
   aiDisclosure,
+  ragMode,
 }) => {
   const resolvedNumberOfSources = resolveNumberOfSources(
     numberOfSources,
@@ -150,6 +162,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
             callbackAuthorization={callbackAuthorization}
             numberOfSources={resolvedNumberOfSources}
             aiDisclosure={aiDisclosure}
+            ragMode={ragMode}
           />
         </LanguageProvider>
       </ThemeProvider>
@@ -166,6 +179,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   callbackAuthorization,
   numberOfSources = DEFAULT_NUMBER_OF_SOURCES,
   aiDisclosure,
+  ragMode = DEFAULT_RAG_MODE,
 }) => {
   const [isView, setIsView] = React.useState(false);
   const [welcomeMessageTime, setWelcomeMessageTime] = React.useState("");
@@ -192,6 +206,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     initialMessages: [],
     tenant,
     callbackAuthorization,
+    ragMode,
   });
   const [trapRef] = useFocusTrap(isView);
   const messagesEndRef = React.useRef<HTMLDivElement | null>(null);

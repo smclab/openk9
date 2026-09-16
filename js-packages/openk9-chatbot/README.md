@@ -49,6 +49,29 @@ export default tseslint.config({
 })
 ```
 
+## RAG endpoint
+
+`ragMode` picks which endpoint answers the conversation, and is chosen when the
+chatbot is instantiated:
+
+```tsx
+import { Chatbot, type RagMode } from "@openk9ui/openk9-chatbot";
+
+<Chatbot icon={icon} ragMode="chat" />
+```
+
+| value | endpoint | behaviour |
+|---|---|---|
+| `chat-tool` (default) | `/api/rag/chat-tool` | the agent decides whether to consult the knowledge base before answering |
+| `chat` | `/api/rag/chat` | always goes through retrieval |
+
+Both take the same request body and emit the same stream events, so switching
+changes only the url. Omitting the prop keeps the previous behaviour.
+
+Which one suits an integration depends on the tenant's RAG configuration: the
+two endpoints read different configurations (`CHAT_RAG_TOOL` and `CHAT_RAG`),
+each with its own prompt and its own routing instruction.
+
 ## AI interaction disclosure
 
 The chatbot always renders a notice telling the user the conversation is held with an
