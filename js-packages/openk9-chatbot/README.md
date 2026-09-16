@@ -51,28 +51,52 @@ export default tseslint.config({
 
 ## AI interaction disclosure
 
-The chatbot always renders a notice under the input telling the user the conversation
-is held with an AI system, as required by Regulation (EU) 2024/1689 (AI Act) art. 50 §1
-for systems that interact directly with people. Embedding the widget on a third-party
+The chatbot always renders a notice telling the user the conversation is held with an
+AI system — under the input by default — as required by Regulation (EU) 2024/1689
+(AI Act) art. 50 §1 for systems that interact directly with people. Embedding the widget on a third-party
 site does not make that obvious from the context, so the notice is not optional.
 
 By default the text comes from the translation for the active language (`it_IT`,
 `en_US`, `fr_FR`, `es_ES`, `de_DE`), resolved by `LanguageProvider` from the `language`
 prop or from `document.documentElement.lang`.
 
-Pass `aiDisclosureText` to replace the wording — for a client's own legal copy or
-branding:
+Pass `aiDisclosure` to replace the wording — for a client's own legal copy or
+branding — and to choose where it goes. It takes two optional slots, each a node:
+`bottom` renders under the input, `top` above the message list.
 
 ```tsx
 <Chatbot
   icon={icon}
-  aiDisclosureText="Assistente virtuale del Comune — risposte generate da IA"
+  aiDisclosure={{
+    bottom: "Assistente virtuale del Comune — risposte generate da IA",
+  }}
 />
 ```
 
-`aiDisclosureText` customizes the text, it does not switch the notice off: there is no
-prop, prop combination or value (`""`, `null`, `undefined`) that removes it from the DOM
-— a missing or blank value falls back to the translated default.
+Filling one slot only moves the notice there, so `{ top: … }` puts it above the
+conversation and leaves nothing under the input. Filling both shows it twice — the
+pattern `talk-to` uses, with the copy on the opening screen and again by the field.
+
+```tsx
+<Chatbot
+  icon={icon}
+  aiDisclosure={{
+    top: (
+      <>
+        Stai parlando con un <strong>assistente virtuale</strong>.
+      </>
+    ),
+  }}
+/>
+```
+
+`aiDisclosure` customizes the wording and the position, it does not switch the notice
+off: there is no prop, prop combination or value (`{}`, `""`, `null`, `undefined`) that
+removes it from the DOM — when neither slot carries anything the translated default
+lands under the input.
+
+Only the instance the input points at through `aria-describedby` carries an id, so
+showing the notice in both slots never puts two nodes with the same id in the document.
 
 To restyle it, target the `openk9-ai-disclosure` class, alongside the other stable
 classes the widget exposes (`openk9-toggle-chatbot-button`,

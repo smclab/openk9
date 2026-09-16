@@ -65,11 +65,22 @@ type ChatbotProps = {
    */
   numberOfSources?: number;
   /**
-   * text of the AI interaction disclosure shown under the input. When omitted,
-   * falls back to the translated default for the active language. The
-   * disclosure cannot be disabled.
+   * where the AI interaction disclosure goes and what it says. Both slots are
+   * optional and each takes a node: `top` renders above the message list,
+   * `bottom` under the input. Filling one slot only moves the notice there.
+   * When neither carries anything the translated default for the active
+   * language lands under the input: the notice can be moved and reworded,
+   * never disabled.
    */
-  aiDisclosureText?: React.ReactNode;
+  aiDisclosure?: AiDisclosureSlots;
+};
+
+/** the two positions the disclosure can occupy inside the panel */
+type AiDisclosureSlots = {
+  /** above the message list, right under the header */
+  top?: React.ReactNode;
+  /** under the input, where the notice sits by default */
+  bottom?: React.ReactNode;
 };
 
 const DEFAULT_NUMBER_OF_SOURCES = 8;
@@ -84,22 +95,29 @@ function resolveNumberOfSources(
   return DEFAULT_NUMBER_OF_SOURCES;
 }
 
+/** a slot carries nothing when it is missing, null, or a blank string */
+function aiDisclosureSlotContent(
+  slot: React.ReactNode | undefined,
+): React.ReactNode | undefined {
+  if (slot === undefined || slot === null) return undefined;
+  if (typeof slot === "string" && slot.trim() === "") return undefined;
+  return slot;
+}
+
 /**
- * resolves the disclosure text against the translated default. A missing, null or
- * blank prop falls back to the default rather than blanking the notice out: the
- * text is customizable, the disclosure itself is not optional.
+ * resolves which slots render and with what. Filling one slot only moves the
+ * notice there; when neither carries anything the translated default lands under
+ * the input, so no prop value or combination can take the disclosure out of the
+ * DOM — position and wording are customizable, presence is not.
  */
-function resolveAiDisclosureText(
-  aiDisclosureText: React.ReactNode | undefined,
+function resolveAiDisclosure(
+  aiDisclosure: AiDisclosureSlots | undefined,
   defaultText: string,
-): React.ReactNode {
-  if (aiDisclosureText === undefined || aiDisclosureText === null) {
-    return defaultText;
-  }
-  if (typeof aiDisclosureText === "string" && aiDisclosureText.trim() === "") {
-    return defaultText;
-  }
-  return aiDisclosureText;
+): AiDisclosureSlots {
+  const top = aiDisclosureSlotContent(aiDisclosure?.top);
+  const bottom = aiDisclosureSlotContent(aiDisclosure?.bottom);
+  if (top === undefined && bottom === undefined) return { bottom: defaultText };
+  return { top, bottom };
 }
 
 const Chatbot: React.FC<ChatbotProps> = ({
@@ -113,7 +131,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
   callbackAuthorization,
   useSource,
   numberOfSources,
-  aiDisclosureText,
+  aiDisclosure,
 }) => {
   const resolvedNumberOfSources = resolveNumberOfSources(
     numberOfSources,
@@ -131,7 +149,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
             tenant={tenant}
             callbackAuthorization={callbackAuthorization}
             numberOfSources={resolvedNumberOfSources}
-            aiDisclosureText={aiDisclosureText}
+            aiDisclosure={aiDisclosure}
           />
         </LanguageProvider>
       </ThemeProvider>
@@ -147,17 +165,21 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   tenant = "",
   callbackAuthorization,
   numberOfSources = DEFAULT_NUMBER_OF_SOURCES,
-  aiDisclosureText,
+  aiDisclosure,
 }) => {
   const [isView, setIsView] = React.useState(false);
   const [welcomeMessageTime, setWelcomeMessageTime] = React.useState("");
   const chatbotSearchRef = React.useRef<HTMLInputElement | null>(null);
   const theme = useTheme();
   const aiDisclosureId = React.useId();
-  const resolvedAiDisclosureText = resolveAiDisclosureText(
-    aiDisclosureText,
+  const resolvedAiDisclosure = resolveAiDisclosure(
+    aiDisclosure,
     Translate({ label: "aiDisclosure" }),
   );
+  // l'id sta su una sola istanza: `aria-describedby` ne referenza una soltanto e
+  // due nodi con lo stesso id non sono validi. Lo porta quella sotto l'input,
+  // la piu' vicina al campo; il top solo quando e' l'unica presente
+  const describedSlotIsBottom = resolvedAiDisclosure.bottom !== undefined;
 
   const {
     messages,
@@ -237,6 +259,12 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             resetMessage={resetMessage}
             setIsView={setIsView}
           />
+          {resolvedAiDisclosure.top !== undefined && (
+            <AiDisclosure
+              id={describedSlotIsBottom ? undefined : aiDisclosureId}
+              text={resolvedAiDisclosure.top}
+            />
+          )}
           <MessageList
             messages={messages}
             icon={icon}
@@ -255,10 +283,12 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             chatbotSearchRef={chatbotSearchRef}
             describedById={aiDisclosureId}
           />
-          <AiDisclosure
-            id={aiDisclosureId}
-            text={resolvedAiDisclosureText}
-          />
+          {resolvedAiDisclosure.bottom !== undefined && (
+            <AiDisclosure
+              id={aiDisclosureId}
+              text={resolvedAiDisclosure.bottom}
+            />
+          )}
         </Box>
       )}
       <Button

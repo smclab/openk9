@@ -14,6 +14,10 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+import { Box, IconButton, Link } from "@mui/material";
+import CloseRoundedIcon from "@mui/icons-material/Close";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import React from "react";
 import Chatbot from "../lib/components/Chatbot";
 import { Logo } from "./svg/Logo";
 import { User } from "./svg/User";
@@ -21,6 +25,82 @@ import { TrashIcon } from "./svg/Trash";
 import { SearchIcon } from "./svg/SearchSvg";
 import { CloseIcon } from "./svg/CloseIcon";
 import { defaultThemeK9 } from "./theme";
+
+// da sostituire con l'informativa privacy reale dell'integrazione
+const PRIVACY_POLICY_URL = "https://www.example.com/privacy";
+
+/**
+ * Informativa AI richiudibile. Chiusa non sparisce: si riduce a una ⓘ che la
+ * riapre, così resta sempre raggiungibile dall'utente.
+ *
+ * Tutto qui dentro è contenuto di frase (`span`, `a`, `button`, `svg`) perché il
+ * pannello monta il nodo dentro un `<p>`: un `<div>` — per esempio un `Alert` di
+ * MUI — verrebbe estratto dal paragrafo dal parser HTML, rompendo il layout e
+ * l'associazione con `aria-describedby`.
+ */
+function AiDisclosureBanner() {
+  const [isOpen, setIsOpen] = React.useState(true);
+
+  if (!isOpen) {
+    return (
+      <IconButton
+        size="small"
+        aria-label="Mostra l'informativa sull'uso dell'intelligenza artificiale"
+        onClick={() => setIsOpen(true)}
+        sx={{ padding: "2px", color: "#1a56db" }}
+      >
+        <InfoOutlinedIcon sx={{ fontSize: 18 }} />
+      </IconButton>
+    );
+  }
+
+  return (
+    <Box
+      component="span"
+      sx={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "8px",
+        padding: "10px",
+        borderRadius: "8px",
+        backgroundColor: "#eaf1fd",
+        // #1f2937 su questo azzurro supera abbondantemente il 4.5:1 di WCAG AA
+        color: "#1f2937",
+        fontSize: "11px",
+        lineHeight: 1.45,
+      }}
+    >
+      <InfoOutlinedIcon
+        sx={{ fontSize: 18, color: "#1a56db", flexShrink: 0, marginTop: "1px" }}
+      />
+      <Box component="span" sx={{ flex: 1 }}>
+        Questo assistente virtuale utilizza tecnologie di Intelligenza
+        Artificiale. Le risposte sono generate automaticamente e hanno finalità
+        esclusivamente informative. È opportuno non inserire dati personali o
+        informazioni riservate. Consulta l’
+        <Link
+          href={PRIVACY_POLICY_URL}
+          target="_blank"
+          rel="noreferrer"
+          // stesso azzurro dell'icona: senza questo il link eredita il primario
+          // del tema (rosso su questa integrazione) e stona dentro il riquadro
+          sx={{ fontWeight: 700, color: "#1a56db" }}
+        >
+          Informativa Privacy
+        </Link>{" "}
+        per maggiori dettagli.
+      </Box>
+      <IconButton
+        size="small"
+        aria-label="Chiudi l'informativa"
+        onClick={() => setIsOpen(false)}
+        sx={{ padding: "2px", flexShrink: 0 }}
+      >
+        <CloseRoundedIcon sx={{ fontSize: 16 }} />
+      </IconButton>
+    </Box>
+  );
+}
 
 function App() {
   return (
@@ -32,6 +112,10 @@ function App() {
         initialMessage="Chiedimi pure qualcosa"
         nameChatbot="Openk9"
         tenant="https://k9-frontend.openk9.io"
+        // lo slot accetta un nodo qualsiasi, quindi l'informativa puo' avere uno
+        // stato suo: qui e' un banner richiudibile. Sta in `top`, sopra la lista
+        // dei messaggi; spostarlo in `bottom` lo riporta sotto l'input
+        aiDisclosure={{ top: <AiDisclosureBanner /> }}
         icon={{
           buttonIcon: <Logo size={35} color="white" />,
           userIcon: <User />,
