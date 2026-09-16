@@ -536,37 +536,35 @@ public class DataIndexService
 	}
 
 	/**
-	 * Aligns to the model every index that uses a docTypeField.
+	 * Aligns to the model every index that uses a docType.
 	 * <p>
-	 * Modifying a docTypeField changes what the model derives, and nothing
-	 * carries that to OpenSearch: this does, on the index each datasource is
-	 * currently pointing at. The indices a reindex left behind are not touched,
-	 * because they are neither searched nor written.
+	 * Modifying one of its docTypeFields changes what the model derives, and
+	 * nothing carries that to OpenSearch: this does, on the index each
+	 * datasource is currently pointing at. The indices a reindex left behind
+	 * are not touched, because they are neither searched nor written.
 	 * <p>
 	 * One index failing does not stop the others: each gets its own outcome.
 	 *
-	 * @param docTypeFieldId the docTypeField that was modified
+	 * @param docTypeId the docType whose model changed
+	 * @param closeIfNeeded whether an index may be closed to take the
+	 *                      definitions the model declares
 	 * @return an outcome for each index that uses it
 	 */
-	public Uni<List<IndexAlignment>> alignDataIndexes(long docTypeFieldId) {
+	public Uni<List<IndexAlignment>> alignDataIndexes(
+		long docTypeId, boolean closeIfNeeded) {
 
-		return sessionFactory.withTransaction(session -> docTypeFieldService
-			.findById(session, docTypeFieldId)
-			.flatMap(docTypeField -> docTypeField == null
-				? Uni.createFrom().<DocType>failure(new ValidationException(
-					String.format("DocTypeField %s does not exist", docTypeFieldId)))
-				: session.fetch(docTypeField.getDocType())
-			)
+		return sessionFactory.withTransaction(session -> docTypeService
+			.findById(session, docTypeId)
 			.flatMap(docType -> docType == null
-				// a docTypeField detached from its docType is part of no index
-				? Uni.createFrom().item(List.<DataIndex>of())
+				? Uni.createFrom().<List<DataIndex>>failure(new ValidationException(
+					String.format("DocType %s does not exist", docTypeId)))
 				: session
 					.createNamedQuery(
 						DataIndex.CURRENT_DATA_INDICES_BY_DOC_TYPE, DataIndex.class)
 					.setParameter("docTypeId", docType.getId())
 					.getResultList()
 			)
-			.flatMap(dataIndexes -> alignEach(session, dataIndexes))
+			.flatMap(dataIndexes -> alignEach(session, dataIndexes, closeIfNeeded))
 		);
 	}
 
@@ -575,15 +573,18 @@ public class DataIndexService
 	 * index that was skipped or failed.
 	 *
 	 * @param dataIndexId the dataIndex to align
+	 * @param closeIfNeeded whether the index may be closed to take the
+	 *                      definitions the model declares
 	 * @return the outcome of that index
 	 */
-	public Uni<IndexAlignment> alignDataIndex(long dataIndexId) {
+	public Uni<IndexAlignment> alignDataIndex(
+		long dataIndexId, boolean closeIfNeeded) {
 
 		return sessionFactory.withTransaction(session -> findById(session, dataIndexId)
 			.flatMap(dataIndex -> dataIndex == null
 				? Uni.createFrom().<IndexAlignment>failure(new ValidationException(
 					String.format("DataIndex %s does not exist", dataIndexId)))
-				: alignDataIndex(session, dataIndex)
+				: alignDataIndex(session, dataIndex, closeIfNeeded)
 			)
 		);
 	}
@@ -594,18 +595,20 @@ public class DataIndexService
 	 * The settings derived from the docTypes go first and the mappings after,
 	 * because the mappings name the analyzers the settings define; the index is
 	 * closed only when it does not already carry those definitions, since the
-	 * analysis block is static. The index template is regenerated whatever
-	 * happens on the live index: it is the only thing that exists when the
-	 * index has not been written to yet, and it is what a new index is born
-	 * from.
+	 * analysis block is static, and only when the caller allows it. The index
+	 * template is regenerated whatever happens on the live index: it is the
+	 * only thing that exists when the index has not been written to yet, and
+	 * it is what a new index is born from.
 	 *
 	 * @param session the session the entities are read in
 	 * @param dataIndex the dataIndex to align
+	 * @param closeIfNeeded whether the index may be closed to take the
+	 *                      definitions the model declares
 	 * @return the outcome of that index, never a failure for a refusal of
 	 * OpenSearch
 	 */
 	public Uni<IndexAlignment> alignDataIndex(
-		Mutiny.Session session, DataIndex dataIndex) {
+		Mutiny.Session session, DataIndex dataIndex, boolean closeIfNeeded) {
 
 		return getCurrentTenant(session).flatMap(tenantId -> {
 
@@ -622,7 +625,8 @@ public class DataIndexService
 					dataIndex,
 					indexName,
 					IndexMappingUtils.docTypesToSettings(docTypes),
-					IndexMappingUtils.docTypesToMappings(docTypes)
+					IndexMappingUtils.docTypesToMappings(docTypes),
+					closeIfNeeded
 				))
 				.flatMap(alignment -> resolveEmbeddingModel(session, dataIndex)
 					.flatMap(embeddingModel -> createDataIndexTemplate(
@@ -653,10 +657,12 @@ public class DataIndexService
 	 *
 	 * @param dataIndexId the dataIndex whose settings are updated
 	 * @param settings the settings to apply, a JSON object
+	 * @param closeIfNeeded whether the index may be closed to take a setting
+	 *                      OpenSearch refuses on an open index
 	 * @return the outcome of that index
 	 */
 	public Uni<IndexAlignment> updateIndexSettings(
-		long dataIndexId, String settings) {
+		long dataIndexId, String settings, boolean closeIfNeeded) {
 
 		JsonObject requested;
 
@@ -678,13 +684,17 @@ public class DataIndexService
 			.flatMap(dataIndex -> dataIndex == null
 				? Uni.createFrom().<IndexAlignment>failure(new ValidationException(
 					String.format("DataIndex %s does not exist", dataIndexId)))
-				: updateIndexSettings(session, dataIndex, requestedSettings)
+				: updateIndexSettings(
+					session, dataIndex, requestedSettings, closeIfNeeded)
 			)
 		);
 	}
 
 	private Uni<IndexAlignment> updateIndexSettings(
-		Mutiny.Session session, DataIndex dataIndex, JsonObject requested) {
+		Mutiny.Session session,
+		DataIndex dataIndex,
+		JsonObject requested,
+		boolean closeIfNeeded) {
 
 		return getCurrentTenant(session).flatMap(tenantId -> {
 
@@ -707,7 +717,8 @@ public class DataIndexService
 							)));
 					}
 
-					return applyCustomSettings(session, dataIndex, indexName, requested)
+					return applyCustomSettings(
+						session, dataIndex, indexName, requested, closeIfNeeded)
 						.flatMap(alignment -> recordSettings(
 							session, dataIndex, requested, alignment));
 				});
@@ -718,7 +729,8 @@ public class DataIndexService
 		Mutiny.Session session,
 		DataIndex dataIndex,
 		IndexName indexName,
-		JsonObject requested) {
+		JsonObject requested,
+		boolean closeIfNeeded) {
 
 		var settings = requested.getMap();
 
@@ -730,6 +742,16 @@ public class DataIndexService
 				if (!IndexService.requiresClosedIndex(throwable)) {
 					return Uni.createFrom().item(
 						failed(dataIndex, indexName, throwable));
+				}
+
+				// the refusal applied nothing, so asking now costs nothing
+				if (!closeIfNeeded) {
+					return Uni.createFrom().item(closeRequired(
+						dataIndex,
+						indexName,
+						"the settings are static and the index has to be "
+							+ "closed to take them"
+					));
 				}
 
 				return closingIsAllowed(session, dataIndex).flatMap(jobStatus -> {
@@ -781,7 +803,9 @@ public class DataIndexService
 	}
 
 	private Uni<List<IndexAlignment>> alignEach(
-		Mutiny.Session session, List<DataIndex> dataIndexes) {
+		Mutiny.Session session,
+		List<DataIndex> dataIndexes,
+		boolean closeIfNeeded) {
 
 		// one index at a time: closing an index is not something to do to
 		// several datasources at once
@@ -790,7 +814,7 @@ public class DataIndexService
 
 		for (DataIndex dataIndex : dataIndexes) {
 			alignments = alignments.flatMap(collected -> alignDataIndex(
-					session, dataIndex)
+					session, dataIndex, closeIfNeeded)
 				.map(alignment -> {
 					collected.add(alignment);
 
@@ -807,7 +831,8 @@ public class DataIndexService
 		DataIndex dataIndex,
 		IndexName indexName,
 		Map<String, Object> settings,
-		Map<MappingsKey, Object> mappings) {
+		Map<MappingsKey, Object> mappings,
+		boolean closeIfNeeded) {
 
 		return indexService.getIndexSettings(indexName).flatMap(liveSettings -> {
 
@@ -824,6 +849,16 @@ public class DataIndexService
 						indexName, IndexMappingUtils.withoutAnalysis(settings), false)
 					.flatMap(exists -> putMapping(
 						dataIndex, indexName, mappings, exists));
+			}
+
+			// nothing has been sent yet, so the question comes before any cost
+			if (!closeIfNeeded) {
+				return Uni.createFrom().item(closeRequired(
+					dataIndex,
+					indexName,
+					"the index has to be closed to take the analyzers the "
+						+ "model declares"
+				));
 			}
 
 			return closingIsAllowed(session, dataIndex)
@@ -891,6 +926,21 @@ public class DataIndexService
 			indexName.toString(),
 			IndexAlignment.Status.TEMPLATE_ONLY,
 			null
+		);
+	}
+
+	private static IndexAlignment closeRequired(
+		DataIndex dataIndex, IndexName indexName, String what) {
+
+		return new IndexAlignment(
+			dataIndex.getId(),
+			indexName.toString(),
+			IndexAlignment.Status.CLOSE_REQUIRED,
+			String.format(
+				"%s, and closing it was not allowed: while it is closed the "
+					+ "index is neither searchable nor writable",
+				what
+			)
 		);
 	}
 
@@ -1130,6 +1180,16 @@ public class DataIndexService
 				"The index had to be closed and a scheduling is running on its "
 					+ "datasource, so the live index was left alone")
 			SKIPPED,
+
+			/**
+			 * The index has to be closed to take what the model declares, and
+			 * the caller did not allow it: nothing was written to the live
+			 * index. Calling again with {@code closeIfNeeded} applies it.
+			 */
+			@Description(
+				"The index has to be closed and the caller did not allow it, "
+					+ "so nothing was written to the live index")
+			CLOSE_REQUIRED,
 
 			/**
 			 * OpenSearch refused. A field whose type, index-time analyzer or

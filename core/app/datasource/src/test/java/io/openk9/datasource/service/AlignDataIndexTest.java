@@ -58,7 +58,7 @@ import org.opensearch.client.opensearch.generic.Requests;
  * Proves that a searchAnalyzer bound to a docTypeField after the index was born
  * becomes effective without reindexing, and covers what the alignment does when
  * it cannot get there: an index that does not exist yet, one that is being
- * written to, and one OpenSearch refuses.
+ * written to, one that may not be closed, and one OpenSearch refuses.
  */
 @QuarkusTest
 public class AlignDataIndexTest {
@@ -198,7 +198,7 @@ public class AlignDataIndexTest {
 		// 3. one call does both halves in the order OpenSearch imposes: the
 		// analyzer into the settings, closing the index, then the mapping
 		var alignments = dataIndexService
-			.alignDataIndexes(docTypeField.getId())
+			.alignDataIndexes(docType.getId(), true)
 			.await().indefinitely();
 
 		Assertions.assertEquals(1, alignments.size());
@@ -229,6 +229,60 @@ public class AlignDataIndexTest {
 		Assertions.assertEquals(IndexAlignment.Status.APPLIED, align().status());
 
 		Assertions.assertEquals(1L, countMatches(indexName, "notebook"));
+	}
+
+	@Test
+	void should_ask_before_closing_an_index() throws IOException {
+		var indexName = IndexName.from(SCHEMA_NAME, dataIndex);
+
+		indexDocument(indexName, "laptop computer");
+
+		docTypeFieldService
+			.bindSearchAnalyzer(docTypeField.getId(), analyzer.getId())
+			.await().indefinitely();
+
+		// 1. the index does not carry the analyzer yet, so taking it means
+		// closing the index, and nobody has allowed that
+		var refused = align(false);
+
+		Assertions.assertEquals(
+			IndexAlignment.Status.CLOSE_REQUIRED, refused.status());
+		Assertions.assertTrue(
+			refused.reason().contains("closed"),
+			"the caller must read why he is being asked: " + refused.reason());
+		Assertions.assertEquals(
+			0L, countMatches(indexName, "notebook"),
+			"nothing must have reached the live index");
+
+		// 2. the same call, allowed, closes the index and applies everything
+		Assertions.assertEquals(IndexAlignment.Status.APPLIED, align(true).status());
+
+		Assertions.assertEquals(1L, countMatches(indexName, "notebook"));
+	}
+
+	@Test
+	void should_ask_before_closing_for_static_settings() {
+		indexDocument(IndexName.from(SCHEMA_NAME, dataIndex), "laptop computer");
+
+		var custom = JsonObject.of(
+			"analysis", JsonObject.of(
+				"filter", JsonObject.of(
+					ENTITY_NAME_PREFIX + "custom_filter",
+					JsonObject.of("type", "lowercase"))));
+
+		// an analysis definition is static, and OpenSearch refuses it on an
+		// open index: the refusal applies nothing, so asking now costs nothing
+		var refused = updateSettings(custom, false);
+
+		Assertions.assertEquals(
+			IndexAlignment.Status.CLOSE_REQUIRED, refused.status());
+		Assertions.assertFalse(
+			getCustomSettings().contains("custom_filter"),
+			"nothing must be recorded when nothing reached the index");
+
+		Assertions.assertEquals(
+			IndexAlignment.Status.APPLIED, updateSettings(custom, true).status());
+		Assertions.assertTrue(getCustomSettings().contains("custom_filter"));
 	}
 
 	@Test
@@ -310,7 +364,7 @@ public class AlignDataIndexTest {
 
 		try {
 			var alignments = dataIndexService
-				.alignDataIndexes(docTypeField.getId())
+				.alignDataIndexes(docType.getId(), true)
 				.await().indefinitely();
 
 			Assertions.assertEquals(
@@ -446,7 +500,11 @@ public class AlignDataIndexTest {
 	}
 
 	private IndexAlignment align() {
-		return dataIndexService.alignDataIndex(dataIndex.getId())
+		return align(true);
+	}
+
+	private IndexAlignment align(boolean closeIfNeeded) {
+		return dataIndexService.alignDataIndex(dataIndex.getId(), closeIfNeeded)
 			.await().indefinitely();
 	}
 
@@ -559,8 +617,15 @@ public class AlignDataIndexTest {
 	}
 
 	private IndexAlignment updateSettings(JsonObject settings) {
+		return updateSettings(settings, true);
+	}
+
+	private IndexAlignment updateSettings(
+		JsonObject settings, boolean closeIfNeeded) {
+
 		return dataIndexService
-			.updateIndexSettings(dataIndex.getId(), settings.encode())
+			.updateIndexSettings(
+				dataIndex.getId(), settings.encode(), closeIfNeeded)
 			.await().indefinitely();
 	}
 

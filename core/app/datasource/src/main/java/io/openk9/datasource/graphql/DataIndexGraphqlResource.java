@@ -67,9 +67,10 @@ public class DataIndexGraphqlResource {
 		the mappings its docTypes derive and regenerating its index template.
 		Use it to retry an index that a previous alignment skipped or could not
 		apply.
-		The index may be closed for the duration of the operation, during which
-		it is neither searchable nor writable, and this happens only when it
-		does not already carry the analyzers the model declares.
+		The index is not closed unless closeIfNeeded says so: when it has to be,
+		the outcome is CLOSE_REQUIRED and nothing was written to the live index,
+		so the caller can ask and call again. While an index is closed it is
+		neither searchable nor writable.
 		An APPLIED outcome means OpenSearch accepted what was sent to it, not
 		that the index matches the model: a mapping is additive, so what the
 		model no longer declares stays in the index.
@@ -77,9 +78,13 @@ public class DataIndexGraphqlResource {
 		need no alignment: they never reach the index and take effect as soon as
 		they are saved.
 		""")
-	public Uni<DataIndexService.IndexAlignment> alignIndex(@Id long dataIndexId) {
+	public Uni<DataIndexService.IndexAlignment> alignIndex(
+		@Id long dataIndexId,
+		@Description("whether the index may be closed to take the definitions "
+			+ "the model declares")
+		@DefaultValue("false") boolean closeIfNeeded) {
 
-		return dataIndexService.alignDataIndex(dataIndexId)
+		return dataIndexService.alignDataIndex(dataIndexId, closeIfNeeded)
 			.onFailure(ValidationException.class)
 			.transform(K9Error::new);
 	}
@@ -204,13 +209,21 @@ public class DataIndexGraphqlResource {
 		makes the whole request fail.
 		Static settings, analysis included, require the index to be closed, and
 		it is then neither searchable nor writable for the duration of the
-		operation; it is not closed while a scheduling is running on its
-		datasource, and the outcome says so.
+		operation. It is tried on the open index first, and a refusal applies
+		nothing: when closing is the only way and closeIfNeeded does not say so,
+		the outcome is CLOSE_REQUIRED and the live index is untouched. The index
+		is not closed while a scheduling is running on its datasource either,
+		and the outcome says so.
 		""")
 	public Uni<DataIndexService.IndexAlignment> updateIndexSettings(
-		@Id long dataIndexId, String settings) {
+		@Id long dataIndexId,
+		String settings,
+		@Description("whether the index may be closed to take a setting "
+			+ "OpenSearch refuses on an open index")
+		@DefaultValue("false") boolean closeIfNeeded) {
 
-		return dataIndexService.updateIndexSettings(dataIndexId, settings)
+		return dataIndexService
+			.updateIndexSettings(dataIndexId, settings, closeIfNeeded)
 			.onFailure(ValidationException.class)
 			.transform(K9Error::new);
 	}

@@ -389,7 +389,9 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	private Uni<Void> alignBeforeBinding(
 		Mutiny.Session session, DataIndex dataIndex) {
 
-		return dataIndexService.alignDataIndex(session, dataIndex)
+		// closing is allowed here without asking: there is nobody to ask, and
+		// this index is not the one serving searches yet
+		return dataIndexService.alignDataIndex(session, dataIndex, true)
 			.invoke(alignment -> {
 
 				var status = alignment.status();

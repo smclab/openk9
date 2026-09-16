@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.validation.ValidationException;
 
 import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
@@ -33,10 +32,8 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.TranslationDTO;
-import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.TranslationService;
-import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.smallrye.mutiny.Uni;
@@ -56,8 +53,6 @@ import org.eclipse.microprofile.graphql.Source;
 public class DocTypeFieldGraphqlResource {
 
 	@Inject
-	DataIndexService dataIndexService;
-	@Inject
 	DocTypeFieldService docTypeFieldService;
 	@Inject
 	TranslationService translationService;
@@ -70,36 +65,6 @@ public class DocTypeFieldGraphqlResource {
 		return translationService
 			.addTranslation(DocTypeField.class, docTypeFieldId, language, key, value)
 			.map((__) -> Tuple2.of("ok", null));
-	}
-
-	/**
-	 * @see DataIndexService#alignDataIndexes(long)
-	 */
-	@Mutation
-	@Description("""
-		Aligns to the model every index that uses this docTypeField, writing the
-		settings and the mappings its docTypes derive and regenerating its index
-		template. Only the index each datasource is currently pointing at is
-		touched: the ones a reindex left behind are neither searched nor
-		written.
-		One index failing does not stop the others, so an outcome is returned
-		for each of them.
-		An index may be closed for the duration of the operation, during which
-		it is neither searchable nor writable, and this happens only when it
-		does not already carry the analyzers the model declares.
-		An APPLIED outcome means OpenSearch accepted what was sent to it, not
-		that the index matches the model: a mapping is additive, so what the
-		model no longer declares stays in the index.
-		The Boost, Searchable, Exclude and Sortable properties need no
-		alignment: they never reach the index and take effect as soon as they
-		are saved.
-		""")
-	public Uni<List<DataIndexService.IndexAlignment>> alignIndexes(
-		@Id long docTypeFieldId) {
-
-		return dataIndexService.alignDataIndexes(docTypeFieldId)
-			.onFailure(ValidationException.class)
-			.transform(K9Error::new);
 	}
 
 	public Uni<Analyzer> analyzer(@Source DocTypeField docTypeField) {
