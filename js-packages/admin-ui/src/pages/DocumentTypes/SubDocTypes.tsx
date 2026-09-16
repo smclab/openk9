@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
+  CircularProgress,
   Container,
   Typography,
   Breadcrumbs,
@@ -29,15 +30,19 @@ import {
   keyframes,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import PublishedWithChangesIcon from "@mui/icons-material/PublishedWithChanges";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
 import { ApolloError, useMutation } from "@apollo/client";
 import {
   FieldType,
+  useAlignIndexesMutation,
   useCreateOrUpdateDocumentTypeFieldMutation,
   useDocTypeFieldsByParentQuery,
 } from "../../graphql-generated";
+import { AlignmentOutcomes } from "@components/IndexAlignment/AlignmentOutcomes";
+import { useAlignmentRun } from "@components/IndexAlignment/useAlignmentRun";
 import { useParams } from "react-router-dom";
 import { Logo } from "@components/common";
 import { ModalConfirm, useToast } from "@components/Form";
@@ -98,6 +103,16 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
     parentId: string;
   } | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ id: string; name: string; step: 1 | 2 } | null>(null);
+  const [alignIndexes] = useAlignIndexesMutation();
+  const alignment = useAlignmentRun({
+    run: React.useCallback(
+      async (closeIfNeeded: boolean) => {
+        const result = await alignIndexes({ variables: { docTypeId: documentTypeId, closeIfNeeded } });
+        return result.data?.alignIndexes?.filter((outcome): outcome is NonNullable<typeof outcome> => !!outcome) ?? [];
+      },
+      [alignIndexes, documentTypeId],
+    ),
+  });
   const formRef = useRef<HTMLFormElement>(null);
   const theme = useTheme();
   const toast = useToast();
@@ -428,16 +443,37 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                   );
                 })}
               </Breadcrumbs>
-              <Button
-                variant="outlined"
-                sx={{ display: "flex", flex: "none" }}
-                onClick={() =>
-                  setIdModal({ id: documentTypeId, action: "add", isChild: parentId > 0, parentId: "" + parentId })
-                }
-              >
-                create new field +
-              </Button>
+              <Box sx={{ display: "flex", flex: "none", gap: "10px" }}>
+                <Button
+                  variant="outlined"
+                  aria-busy={alignment.isRunning}
+                  startIcon={
+                    alignment.isRunning ? (
+                      <CircularProgress size={16} color="inherit" aria-label="Alignment in progress" />
+                    ) : (
+                      <PublishedWithChangesIcon />
+                    )
+                  }
+                  onClick={alignment.start}
+                >
+                  Align indexes
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    setIdModal({ id: documentTypeId, action: "add", isChild: parentId > 0, parentId: "" + parentId })
+                  }
+                >
+                  create new field +
+                </Button>
+              </Box>
             </Box>
+            {/* always rendered, so the change of content is announced */}
+            <Typography variant="body2" color="text.secondary" role="status" aria-live="polite" sx={{ minHeight: 20 }}>
+              {alignment.isRunning ? "Writing the model to the indexes that use this document type…" : ""}
+            </Typography>
+            <AlignmentOutcomes outcomes={alignment.outcomes} error={alignment.error} />
+            {alignment.ConfirmClosing}
             <Box sx={{ position: "relative", minHeight: "800px" }}>
               {loading && (
                 <Box

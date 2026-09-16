@@ -777,6 +777,13 @@ export type DataIndex = {
   chunkWindowSize?: Maybe<Scalars['Int']>;
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
+  /**
+   * The custom settings recorded on this dataIndex, which are the ones an
+   * operator asked for: what the docTypes derive is not part of them.
+   * Unlike the settings field, which answers what the index template
+   * declares, this is the document updateIndexSettings accepts back.
+   */
+  customSettings?: Maybe<Scalars['String']>;
   datasource?: Maybe<Datasource>;
   description?: Maybe<Scalars['String']>;
   docCount?: Maybe<Scalars['BigInteger']>;
@@ -1967,6 +1974,18 @@ export enum HighlightType {
   Unified = 'UNIFIED'
 }
 
+export type IndexAlignment = {
+  __typename?: 'IndexAlignment';
+  /** The dataIndex the outcome belongs to */
+  dataIndexId?: Maybe<Scalars['BigInteger']>;
+  /** The name of the index on OpenSearch */
+  indexName?: Maybe<Scalars['String']>;
+  /** The explanation OpenSearch gave, or why the index was skipped, and null when there is nothing to tell */
+  reason?: Maybe<Scalars['String']>;
+  /** What happened to the index */
+  status?: Maybe<Status>;
+};
+
 export type ItemDtoInput = {
   enrichItemId: Scalars['BigInteger'];
   weight: Scalars['Float'];
@@ -2053,6 +2072,43 @@ export type Mutation = {
   addTabTranslation?: Maybe<Tuple2_String_String>;
   addTokenFilterToAnalyzer?: Maybe<Tuple2_Analyzer_TokenFilter>;
   addTokenTabToTab?: Maybe<Tuple2_Tab_TokenTab>;
+  /**
+   * Aligns one index to the model of its dataIndex, writing the settings and
+   * the mappings its docTypes derive and regenerating its index template.
+   * Use it to retry an index that a previous alignment skipped or could not
+   * apply.
+   * The index is not closed unless closeIfNeeded says so: when it has to be,
+   * the outcome is CLOSE_REQUIRED and nothing was written to the live index,
+   * so the caller can ask and call again. While an index is closed it is
+   * neither searchable nor writable.
+   * An APPLIED outcome means OpenSearch accepted what was sent to it, not
+   * that the index matches the model: a mapping is additive, so what the
+   * model no longer declares stays in the index.
+   * The Boost, Searchable, Exclude and Sortable properties of a docTypeField
+   * need no alignment: they never reach the index and take effect as soon as
+   * they are saved.
+   */
+  alignIndex?: Maybe<IndexAlignment>;
+  /**
+   * Aligns to the model every index that uses this docType, writing the
+   * settings and the mappings its docTypes derive and regenerating its index
+   * template. Only the index each datasource is currently pointing at is
+   * touched: the ones a reindex left behind are neither searched nor
+   * written.
+   * One index failing does not stop the others, so an outcome is returned
+   * for each of them.
+   * An index is not closed unless closeIfNeeded says so: when one has to be,
+   * the outcome is CLOSE_REQUIRED and nothing was written to the live index,
+   * so the caller can ask and call again. While an index is closed it is
+   * neither searchable nor writable.
+   * An APPLIED outcome means OpenSearch accepted what was sent to it, not
+   * that the index matches the model: a mapping is additive, so what the
+   * model no longer declares stays in the index.
+   * The Boost, Searchable, Exclude and Sortable properties of a docTypeField
+   * need no alignment: they never reach the index and take effect as soon as
+   * they are saved.
+   */
+  alignIndexes?: Maybe<Array<Maybe<IndexAlignment>>>;
   analyzer?: Maybe<Response_Analyzer>;
   analyzerWithLists?: Maybe<Response_Analyzer>;
   annotator?: Maybe<Response_Annotator>;
@@ -2400,6 +2456,25 @@ export type Mutation = {
   unbindTokenizerFromAnalyzer?: Maybe<Tuple2_Analyzer_Tokenizer>;
   updateDatasourceConnection?: Maybe<Response_Datasource>;
   /**
+   * Applies the custom settings of a dataIndex to its index, records them
+   * and regenerates its index template.
+   * The document is sent whole, but a key it does not name is left alone,
+   * the way OpenSearch merges a settings update: deleting a line changes
+   * nothing, and a key has to be set to null to go back to its default and
+   * disappear from the recorded settings.
+   * The analyzers, tokenizers and filters the docTypes of the dataIndex
+   * derive cannot be set here, because the mappings name them: naming one
+   * makes the whole request fail.
+   * Static settings, analysis included, require the index to be closed, and
+   * it is then neither searchable nor writable for the duration of the
+   * operation. It is tried on the open index first, and a refusal applies
+   * nothing: when closing is the only way and closeIfNeeded does not say so,
+   * the outcome is CLOSE_REQUIRED and the live index is untouched. The index
+   * is not closed while a scheduling is running on its datasource either,
+   * and the outcome says so.
+   */
+  updateIndexSettings?: Maybe<IndexAlignment>;
+  /**
    * Update or patch a RAGConfiguration entity based on the provided input.
    *
    * Arguments:
@@ -2555,6 +2630,20 @@ export type MutationAddTokenFilterToAnalyzerArgs = {
 export type MutationAddTokenTabToTabArgs = {
   id: Scalars['ID'];
   tokenTabId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationAlignIndexArgs = {
+  closeIfNeeded?: InputMaybe<Scalars['Boolean']>;
+  dataIndexId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationAlignIndexesArgs = {
+  closeIfNeeded?: InputMaybe<Scalars['Boolean']>;
+  docTypeId: Scalars['ID'];
 };
 
 
@@ -3503,6 +3592,14 @@ export type MutationUnbindTokenizerFromAnalyzerArgs = {
 /** Mutation root */
 export type MutationUpdateDatasourceConnectionArgs = {
   datasourceConnection?: InputMaybe<UpdateDatasourceDtoInput>;
+};
+
+
+/** Mutation root */
+export type MutationUpdateIndexSettingsArgs = {
+  closeIfNeeded?: InputMaybe<Scalars['Boolean']>;
+  dataIndexId: Scalars['ID'];
+  settings?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -5144,6 +5241,19 @@ export type SortingWithDocTypeFieldDtoInput = {
   type: SortingType;
 };
 
+export enum Status {
+  /** OpenSearch accepted the settings and the mappings */
+  Applied = 'APPLIED',
+  /** The index has to be closed and the caller did not allow it, so nothing was written to the live index */
+  CloseRequired = 'CLOSE_REQUIRED',
+  /** OpenSearch refused, and rejects the whole document when it does: that index needs a reindex */
+  Failed = 'FAILED',
+  /** The index had to be closed and a scheduling is running on its datasource, so the live index was left alone */
+  Skipped = 'SKIPPED',
+  /** The index does not exist yet, so only its template was written */
+  TemplateOnly = 'TEMPLATE_ONLY'
+}
+
 /** Subscription root */
 export type Subscription = {
   __typename?: 'Subscription';
@@ -6098,6 +6208,14 @@ export type UnboundAnalyzersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type UnboundAnalyzersQuery = { __typename?: 'Query', analyzers?: { __typename?: 'DefaultConnection_Analyzer', edges?: Array<{ __typename?: 'DefaultEdge_Analyzer', node?: { __typename?: 'Analyzer', id?: string | null, name?: string | null } | null } | null> | null } | null };
+
+export type AlignIndexesMutationVariables = Exact<{
+  docTypeId: Scalars['ID'];
+  closeIfNeeded: Scalars['Boolean'];
+}>;
+
+
+export type AlignIndexesMutation = { __typename?: 'Mutation', alignIndexes?: Array<{ __typename?: 'IndexAlignment', dataIndexId?: any | null, indexName?: string | null, status?: Status | null, reason?: string | null } | null> | null };
 
 export type EmbeddingModelsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -7293,7 +7411,7 @@ export type DataIndexQueryVariables = Exact<{
 }>;
 
 
-export type DataIndexQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', name?: string | null, description?: string | null, settings?: string | null, chunkType?: ChunkType | null, chunkWindowSize?: number | null, embeddingJsonConfig?: string | null, knnIndex?: boolean | null, datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null, embeddingDocTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null, docTypes?: { __typename?: 'DefaultConnection_DocType', edges?: Array<{ __typename?: 'DefaultEdge_DocType', node?: { __typename?: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null, cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, storeSize: any } | null } | null };
+export type DataIndexQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', name?: string | null, description?: string | null, settings?: string | null, customSettings?: string | null, chunkType?: ChunkType | null, chunkWindowSize?: number | null, embeddingJsonConfig?: string | null, knnIndex?: boolean | null, datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null, embeddingDocTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null, docTypes?: { __typename?: 'DefaultConnection_DocType', edges?: Array<{ __typename?: 'DefaultEdge_DocType', node?: { __typename?: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null, cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, storeSize: any } | null } | null };
 
 export type DeleteDataIndexMutationVariables = Exact<{
   dataIndexId: Scalars['ID'];
@@ -7309,6 +7427,23 @@ export type DataIndexMappingQueryVariables = Exact<{
 
 
 export type DataIndexMappingQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', mappings?: string | null } | null };
+
+export type UpdateIndexSettingsMutationVariables = Exact<{
+  dataIndexId: Scalars['ID'];
+  settings?: InputMaybe<Scalars['String']>;
+  closeIfNeeded: Scalars['Boolean'];
+}>;
+
+
+export type UpdateIndexSettingsMutation = { __typename?: 'Mutation', updateIndexSettings?: { __typename?: 'IndexAlignment', dataIndexId?: any | null, indexName?: string | null, status?: Status | null, reason?: string | null } | null };
+
+export type AlignIndexMutationVariables = Exact<{
+  dataIndexId: Scalars['ID'];
+  closeIfNeeded: Scalars['Boolean'];
+}>;
+
+
+export type AlignIndexMutation = { __typename?: 'Mutation', alignIndex?: { __typename?: 'IndexAlignment', dataIndexId?: any | null, indexName?: string | null, status?: Status | null, reason?: string | null } | null };
 
 export type DataSourcesQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -9727,6 +9862,43 @@ export function useUnboundAnalyzersLazyQuery(baseOptions?: Apollo.LazyQueryHookO
 export type UnboundAnalyzersQueryHookResult = ReturnType<typeof useUnboundAnalyzersQuery>;
 export type UnboundAnalyzersLazyQueryHookResult = ReturnType<typeof useUnboundAnalyzersLazyQuery>;
 export type UnboundAnalyzersQueryResult = Apollo.QueryResult<UnboundAnalyzersQuery, UnboundAnalyzersQueryVariables>;
+export const AlignIndexesDocument = gql`
+    mutation AlignIndexes($docTypeId: ID!, $closeIfNeeded: Boolean!) {
+  alignIndexes(docTypeId: $docTypeId, closeIfNeeded: $closeIfNeeded) {
+    dataIndexId
+    indexName
+    status
+    reason
+  }
+}
+    `;
+export type AlignIndexesMutationFn = Apollo.MutationFunction<AlignIndexesMutation, AlignIndexesMutationVariables>;
+
+/**
+ * __useAlignIndexesMutation__
+ *
+ * To run a mutation, you first call `useAlignIndexesMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAlignIndexesMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [alignIndexesMutation, { data, loading, error }] = useAlignIndexesMutation({
+ *   variables: {
+ *      docTypeId: // value for 'docTypeId'
+ *      closeIfNeeded: // value for 'closeIfNeeded'
+ *   },
+ * });
+ */
+export function useAlignIndexesMutation(baseOptions?: Apollo.MutationHookOptions<AlignIndexesMutation, AlignIndexesMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AlignIndexesMutation, AlignIndexesMutationVariables>(AlignIndexesDocument, options);
+      }
+export type AlignIndexesMutationHookResult = ReturnType<typeof useAlignIndexesMutation>;
+export type AlignIndexesMutationResult = Apollo.MutationResult<AlignIndexesMutation>;
+export type AlignIndexesMutationOptions = Apollo.BaseMutationOptions<AlignIndexesMutation, AlignIndexesMutationVariables>;
 export const EmbeddingModelsDocument = gql`
     query EmbeddingModels($searchText: String, $after: String) {
   embeddingModels(searchText: $searchText, first: 20, after: $after) {
@@ -15774,11 +15946,11 @@ export const DataIndexDocument = gql`
     name
     description
     settings
+    customSettings
     chunkType
     chunkWindowSize
     embeddingJsonConfig
     knnIndex
-    settings
     datasource {
       id
       name
@@ -15901,6 +16073,85 @@ export function useDataIndexMappingLazyQuery(baseOptions?: Apollo.LazyQueryHookO
 export type DataIndexMappingQueryHookResult = ReturnType<typeof useDataIndexMappingQuery>;
 export type DataIndexMappingLazyQueryHookResult = ReturnType<typeof useDataIndexMappingLazyQuery>;
 export type DataIndexMappingQueryResult = Apollo.QueryResult<DataIndexMappingQuery, DataIndexMappingQueryVariables>;
+export const UpdateIndexSettingsDocument = gql`
+    mutation UpdateIndexSettings($dataIndexId: ID!, $settings: String, $closeIfNeeded: Boolean!) {
+  updateIndexSettings(
+    dataIndexId: $dataIndexId
+    settings: $settings
+    closeIfNeeded: $closeIfNeeded
+  ) {
+    dataIndexId
+    indexName
+    status
+    reason
+  }
+}
+    `;
+export type UpdateIndexSettingsMutationFn = Apollo.MutationFunction<UpdateIndexSettingsMutation, UpdateIndexSettingsMutationVariables>;
+
+/**
+ * __useUpdateIndexSettingsMutation__
+ *
+ * To run a mutation, you first call `useUpdateIndexSettingsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateIndexSettingsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateIndexSettingsMutation, { data, loading, error }] = useUpdateIndexSettingsMutation({
+ *   variables: {
+ *      dataIndexId: // value for 'dataIndexId'
+ *      settings: // value for 'settings'
+ *      closeIfNeeded: // value for 'closeIfNeeded'
+ *   },
+ * });
+ */
+export function useUpdateIndexSettingsMutation(baseOptions?: Apollo.MutationHookOptions<UpdateIndexSettingsMutation, UpdateIndexSettingsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateIndexSettingsMutation, UpdateIndexSettingsMutationVariables>(UpdateIndexSettingsDocument, options);
+      }
+export type UpdateIndexSettingsMutationHookResult = ReturnType<typeof useUpdateIndexSettingsMutation>;
+export type UpdateIndexSettingsMutationResult = Apollo.MutationResult<UpdateIndexSettingsMutation>;
+export type UpdateIndexSettingsMutationOptions = Apollo.BaseMutationOptions<UpdateIndexSettingsMutation, UpdateIndexSettingsMutationVariables>;
+export const AlignIndexDocument = gql`
+    mutation AlignIndex($dataIndexId: ID!, $closeIfNeeded: Boolean!) {
+  alignIndex(dataIndexId: $dataIndexId, closeIfNeeded: $closeIfNeeded) {
+    dataIndexId
+    indexName
+    status
+    reason
+  }
+}
+    `;
+export type AlignIndexMutationFn = Apollo.MutationFunction<AlignIndexMutation, AlignIndexMutationVariables>;
+
+/**
+ * __useAlignIndexMutation__
+ *
+ * To run a mutation, you first call `useAlignIndexMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAlignIndexMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [alignIndexMutation, { data, loading, error }] = useAlignIndexMutation({
+ *   variables: {
+ *      dataIndexId: // value for 'dataIndexId'
+ *      closeIfNeeded: // value for 'closeIfNeeded'
+ *   },
+ * });
+ */
+export function useAlignIndexMutation(baseOptions?: Apollo.MutationHookOptions<AlignIndexMutation, AlignIndexMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AlignIndexMutation, AlignIndexMutationVariables>(AlignIndexDocument, options);
+      }
+export type AlignIndexMutationHookResult = ReturnType<typeof useAlignIndexMutation>;
+export type AlignIndexMutationResult = Apollo.MutationResult<AlignIndexMutation>;
+export type AlignIndexMutationOptions = Apollo.BaseMutationOptions<AlignIndexMutation, AlignIndexMutationVariables>;
 export const DataSourcesDocument = gql`
     query DataSources($searchText: String, $after: String, $first: Int = 10, $sortByList: [SortByInput!]) {
   datasources(

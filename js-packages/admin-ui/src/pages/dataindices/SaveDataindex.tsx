@@ -32,6 +32,7 @@ import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   FormControlLabel,
   Paper,
   Table,
@@ -48,11 +49,15 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ChunkType,
+  useAlignIndexMutation,
   useCreateDataIndexMutation,
   useDataIndexQuery,
   useDataSourcesQuery,
   useDocumentTypesQuery,
+  useUpdateIndexSettingsMutation,
 } from "../../graphql-generated";
+import { AlignmentOutcomes } from "@components/IndexAlignment/AlignmentOutcomes";
+import { useAlignmentRun } from "@components/IndexAlignment/useAlignmentRun";
 import { useDataSources, useDocTypeOptions } from "../../utils/RelationOneToOne";
 
 export type DataindexData = {
@@ -67,6 +72,7 @@ export type DataindexData = {
   chunkWindowSize: number | null;
   embeddingDocTypeFieldId: { id: string; name: string } | null;
   settings: string | null;
+  customSettings: string | null;
   embeddingJsonConfig: string | null;
 };
 
@@ -100,6 +106,7 @@ const DEFAULT_DATAINDEX_VALUES: DataindexData = {
   chunkWindowSize: 0,
   embeddingDocTypeFieldId: null,
   settings: "{}",
+  customSettings: "{}",
   embeddingJsonConfig: "{}",
 };
 
@@ -115,6 +122,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   const [page, setPage] = useState(0);
   const [step, setStep] = useState<"configureStandart" | "configureJson" | "configureMappings">("configureStandart");
   const [settings, setSettings] = useState<string>("{}");
+  const [customSettings, setCustomSettings] = useState<string>("{}");
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [mappings, setMappings] = useState<string>("{}");
@@ -163,6 +171,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         ? { id: data.embeddingDocTypeField.id || "", name: data.embeddingDocTypeField.name || "" }
         : null,
       settings: data.settings || "{}",
+      customSettings: data.customSettings || "{}",
       embeddingJsonConfig: data.embeddingJsonConfig || "{}",
     };
   }, [isNew, dataindexId, dataindexQuery.data]);
@@ -170,6 +179,10 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   useEffect(() => {
     setSettings(dataindexData.settings || "{}");
   }, [dataindexData.settings]);
+
+  useEffect(() => {
+    setCustomSettings(dataindexData.customSettings || "{}");
+  }, [dataindexData.customSettings]);
 
   const [createOrUpdateDataIndexModelMutate, createOrUpdateDataIndexModel] = useCreateDataIndexMutation({
     onCompleted(data) {
@@ -212,7 +225,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         chunkWindowSize: dataindexData.chunkWindowSize,
         embeddingJsonConfig: dataindexData.embeddingJsonConfig,
         embeddingDocTypeFieldId: dataindexData.embeddingDocTypeFieldId,
-        settings: dataindexData.settings,
+        settings: dataindexData.customSettings,
       }),
       [dataindexData],
     ),
@@ -273,7 +286,11 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       const response = await restClient.dataIndexResource.postApiDatasourceV1DataIndexGetSettingsFromDocTypes({
         docTypeIds,
       });
-      setSettings(JSON.stringify(response, null, 2));
+      // an existing dataIndex answers its own index template, which is what it
+      // has; the document derived from the docTypes is all there is before one
+      if (isNew) {
+        setSettings(JSON.stringify(response, null, 2));
+      }
     } catch (error) {
       setSettingsError(t("pages.data-indices.settings-fetch-error"));
     } finally {
@@ -292,7 +309,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     } finally {
       setMappingsLoading(false);
     }
-  }, [form, restClient, t]);
+  }, [form, isNew, restClient, t]);
 
   useEffect(() => {
     const currentDocTypeIds = form.inputProps("docTypeIds").value || [];
@@ -306,8 +323,41 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   }, [form.inputProps("docTypeIds").value, getInfo]);
 
   useEffect(() => {
-    form.inputProps("settings").onChange(settings);
-  }, [settings]);
+    form.inputProps("settings").onChange(customSettings);
+  }, [customSettings]);
+
+  const [updateIndexSettings] = useUpdateIndexSettingsMutation();
+  const settingsRun = useAlignmentRun({
+    run: useCallback(
+      async (closeIfNeeded: boolean) => {
+        const result = await updateIndexSettings({
+          variables: { dataIndexId: dataindexId, settings: customSettings, closeIfNeeded },
+        });
+        const outcome = result.data?.updateIndexSettings;
+        return outcome ? [outcome] : [];
+      },
+      [updateIndexSettings, dataindexId, customSettings],
+    ),
+    onApplied: useCallback(() => {
+      // the read-only document is the index template, which has just been rewritten
+      dataindexQuery.refetch();
+    }, [dataindexQuery]),
+  });
+
+  const [alignIndex] = useAlignIndexMutation();
+  const alignRun = useAlignmentRun({
+    run: useCallback(
+      async (closeIfNeeded: boolean) => {
+        const result = await alignIndex({ variables: { dataIndexId: dataindexId, closeIfNeeded } });
+        const outcome = result.data?.alignIndex;
+        return outcome ? [outcome] : [];
+      },
+      [alignIndex, dataindexId],
+    ),
+    onApplied: useCallback(() => {
+      dataindexQuery.refetch();
+    }, [dataindexQuery]),
+  });
 
   const recapSections = useMemo(
     () =>
@@ -567,15 +617,72 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         {!isReadOnly && <Typography variant="h6">{t("pages.data-indices.edit-settings")}</Typography>}
         <CodeInput
           id="settings-code-input"
-          readonly={isReadOnly}
-          label={t("fields.settings")}
-          value={settings}
-          onChange={setSettings}
+          readonly={false}
+          label={t("pages.data-indices.custom-settings")}
+          value={customSettings}
+          onChange={setCustomSettings}
           language="json"
           validationMessages={[]}
           disabled={false}
-          height="400px"
+          height="300px"
+          description="The settings asked for on top of the ones the document types derive, which cannot be set here. The document is additive, the way OpenSearch merges one: a key it does not name is left alone, so deleting a line removes nothing. To put a setting back to its default set it to null."
         />
+        {!isNew && (
+          <Box display="flex" alignItems="center" gap="10px" mt={1}>
+            <Button
+              variant="contained"
+              color="primary"
+              aria-busy={settingsRun.isRunning}
+              startIcon={
+                settingsRun.isRunning ? (
+                  <CircularProgress size={16} color="inherit" aria-label="Apply in progress" />
+                ) : undefined
+              }
+              onClick={settingsRun.start}
+            >
+              Apply settings
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              aria-busy={alignRun.isRunning}
+              startIcon={
+                alignRun.isRunning ? (
+                  <CircularProgress size={16} color="inherit" aria-label="Alignment in progress" />
+                ) : undefined
+              }
+              onClick={alignRun.start}
+            >
+              Align index
+            </Button>
+            {/* always rendered, so the change of content is announced */}
+            <Typography variant="body2" color="text.secondary" role="status" aria-live="polite" sx={{ minHeight: 20 }}>
+              {settingsRun.isRunning || alignRun.isRunning ? "Writing to the index on OpenSearch…" : ""}
+            </Typography>
+          </Box>
+        )}
+        <AlignmentOutcomes outcomes={settingsRun.outcomes} error={settingsRun.error} />
+        <AlignmentOutcomes outcomes={alignRun.outcomes} error={alignRun.error} />
+        {settingsRun.ConfirmClosing}
+        {alignRun.ConfirmClosing}
+        <Box mt={2}>
+          <CodeInput
+            id="settings-derived-code-input"
+            readonly
+            label={isNew ? "Settings derived from the document types" : "Settings of the index template"}
+            value={settings}
+            onChange={() => {}}
+            language="json"
+            validationMessages={[]}
+            disabled={false}
+            height="300px"
+            description={
+              isNew
+                ? "What the selected document types derive. It is shown for reference and is not sent: the index template is built from it."
+                : "What the index template declares: the derived settings with the custom ones laid over them. It is not the live index, which also carries what OpenSearch adds by default."
+            }
+          />
+        </Box>
         <Box display="flex" justifyContent="space-between" mt={2}>
           <Button variant="contained" color="primary" onClick={() => setStep("configureStandart")}>
             {t("common.back")}

@@ -343,3 +343,14 @@ export const UnboundAnalyzersQuery = gql`
   }
 `;
 
+
+export const AlignIndexesMutation = gql`
+  mutation AlignIndexes($docTypeId: ID!, $closeIfNeeded: Boolean!) {
+    alignIndexes(docTypeId: $docTypeId, closeIfNeeded: $closeIfNeeded) {
+      dataIndexId
+      indexName
+      status
+      reason
+    }
+  }
+`;

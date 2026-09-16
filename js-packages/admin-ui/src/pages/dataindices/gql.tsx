@@ -84,11 +84,11 @@ export const DataIndexQuery = gql`
       name
       description
       settings
+      customSettings
       chunkType
       chunkWindowSize
       embeddingJsonConfig
       knnIndex
-      settings
       datasource {
         id
         name
@@ -127,6 +127,28 @@ gql`
   query DataIndexMapping($id: ID!) {
     dataIndex(id: $id) {
       mappings
+    }
+  }
+`;
+
+export const UpdateIndexSettingsMutation = gql`
+  mutation UpdateIndexSettings($dataIndexId: ID!, $settings: String, $closeIfNeeded: Boolean!) {
+    updateIndexSettings(dataIndexId: $dataIndexId, settings: $settings, closeIfNeeded: $closeIfNeeded) {
+      dataIndexId
+      indexName
+      status
+      reason
+    }
+  }
+`;
+
+export const AlignIndexMutation = gql`
+  mutation AlignIndex($dataIndexId: ID!, $closeIfNeeded: Boolean!) {
+    alignIndex(dataIndexId: $dataIndexId, closeIfNeeded: $closeIfNeeded) {
+      dataIndexId
+      indexName
+      status
+      reason
     }
   }
 `;
