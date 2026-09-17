@@ -21,7 +21,9 @@ from app.rag.agentic_rag import RagGraph
 from app.utils.llm import (
     initialize_language_model,
 )
-from app.utils.logger import logger
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 

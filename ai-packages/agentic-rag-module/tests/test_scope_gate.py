@@ -44,6 +44,7 @@ def _graph(chunk_texts, prefix_chars, verdict=None, state_values=None):
     graph.scope_gate_redirect_message = REDIRECT
     graph.config = {}
     graph.chat_sequence_number = 1
+    graph.tenant_id = None
     graph.user_id = None
     graph.chat_id = None
     graph.rag_type = "SIMPLE_GENERATE"

@@ -24,8 +24,10 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from app.external_services.grpc.grpc_client import query_parser
 from app.rag.chunk_window import get_context_window_merged
-from app.utils.logger import logger
+from app.utils.logger import get_logger
 from app.utils.opensearch_client import get_opensearch_client
+
+logger = get_logger(__name__)
 
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85

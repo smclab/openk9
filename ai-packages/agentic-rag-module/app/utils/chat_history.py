@@ -19,8 +19,10 @@ from datetime import datetime, timezone
 
 from opensearchpy import helpers
 
-from app.utils.logger import logger
+from app.utils.logger import get_logger
 from app.utils.opensearch_client import get_opensearch_client
+
+logger = get_logger(__name__)
 
 SEARCH_PIPELINE = "nlp-uploaded-documents-search-pipeline"
 
@@ -346,4 +348,4 @@ def save_uploaded_documents(
                 logger.info(f"Successfully indexed {len(documents)} documents")
 
         except Exception as e:
-            print(f"Bulk indexing failed: {e}")
+            logger.error(f"Bulk indexing failed: {e}")

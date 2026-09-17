@@ -18,7 +18,9 @@
 import logging
 from collections import defaultdict
 
-from app.utils.logger import logger
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def neighbors(chunk, key: str):

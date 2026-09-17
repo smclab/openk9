@@ -131,18 +131,25 @@ def _looks_hex(token) -> bool:
     return any(c in "abcdefABCDEF" for c in token)
 
 
-def contains_encoded_blob(search_text) -> bool:
-    """Return True when the input carries a significant base64 or hex blob.
+def encoded_blob_type(search_text):
+    """Return which kind of encoded blob the input carries, or None.
 
     Detection is purely structural: no decoding is attempted, so there is no
     "decode & execute" surface. ROT13 is out of scope as it is
     indistinguishable from plain text without decoding.
     """
     if not isinstance(search_text, str):
-        return False
+        return None
     if any(_looks_base64(token) for token in _BASE64_CANDIDATE.findall(search_text)):
-        return True
-    return any(_looks_hex(token) for token in _HEX_CANDIDATE.findall(search_text))
+        return "base64"
+    if any(_looks_hex(token) for token in _HEX_CANDIDATE.findall(search_text)):
+        return "hex"
+    return None
+
+
+def contains_encoded_blob(search_text) -> bool:
+    """Return True when the input carries a significant base64 or hex blob."""
+    return encoded_blob_type(search_text) is not None
 
 
 def guardrail_violation_stream():

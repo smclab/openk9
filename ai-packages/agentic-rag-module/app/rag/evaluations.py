@@ -31,7 +31,9 @@ from app.utils.llm import (
     get_structured_output_method,
     initialize_language_model,
 )
-from app.utils.logger import logger
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ClassificationEnum(str, Enum):

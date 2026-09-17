@@ -55,16 +55,18 @@ from app.utils.authentication import decode_token, unauthorized_response
 from app.utils.embedding import documents_embedding
 from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
-from app.utils.logger import logger
+from app.utils.logger import debug_extra, get_logger
 from app.utils.opensearch_client import get_opensearch_client
 from app.utils.query_validation import (
     blank_query_stream,
-    contains_encoded_blob,
+    encoded_blob_type,
     guardrail_violation_stream,
     is_blank_query,
     sanitize_input,
 )
 from app.utils.scheduler import start_document_deletion_scheduler
+
+logger = get_logger(__name__)
 
 load_dotenv()
 
@@ -226,9 +228,17 @@ async def rag_generate(
 
     search_text = sanitize_input(search_text)
     if is_blank_query(search_text):
+        logger.info(
+            f"[blank_query] endpoint=/api/rag/generate tenant_id={headers.x_tenant_id}"
+        )
         return EventSourceResponse(blank_query_stream())
 
-    if contains_encoded_blob(search_text):
+    if blob_type := encoded_blob_type(search_text):
+        logger.warning(
+            f"[encoded_blob] BLOCKED endpoint=/api/rag/generate "
+            f"tenant_id={headers.x_tenant_id} blob_type={blob_type}"
+            + debug_extra(logger, query=search_text)
+        )
         return EventSourceResponse(guardrail_violation_stream())
 
     if headers.x_tenant_id:
@@ -373,9 +383,17 @@ async def rag_chat(
 
     search_text = sanitize_input(search_text)
     if is_blank_query(search_text):
+        logger.info(
+            f"[blank_query] endpoint=/api/rag/chat tenant_id={headers.x_tenant_id}"
+        )
         return EventSourceResponse(blank_query_stream())
 
-    if contains_encoded_blob(search_text):
+    if blob_type := encoded_blob_type(search_text):
+        logger.warning(
+            f"[encoded_blob] BLOCKED endpoint=/api/rag/chat "
+            f"tenant_id={headers.x_tenant_id} blob_type={blob_type}"
+            + debug_extra(logger, query=search_text)
+        )
         return EventSourceResponse(guardrail_violation_stream())
 
     if headers.x_tenant_id:
@@ -521,9 +539,17 @@ async def rag_chat_tool(
 
     search_text = sanitize_input(search_text)
     if is_blank_query(search_text):
+        logger.info(
+            f"[blank_query] endpoint=/api/rag/chat-tool tenant_id={headers.x_tenant_id}"
+        )
         return EventSourceResponse(blank_query_stream())
 
-    if contains_encoded_blob(search_text):
+    if blob_type := encoded_blob_type(search_text):
+        logger.warning(
+            f"[encoded_blob] BLOCKED endpoint=/api/rag/chat-tool "
+            f"tenant_id={headers.x_tenant_id} blob_type={blob_type}"
+            + debug_extra(logger, query=search_text)
+        )
         return EventSourceResponse(guardrail_violation_stream())
 
     if headers.x_tenant_id:
@@ -1346,7 +1372,7 @@ def save_guardrails_documents(opensearch_host: str, documents: list, vector_size
                 return f"Successfully indexed {len(documents)} documents"
 
         except Exception as e:
-            print(f"Bulk indexing failed: {e}")
+            logger.error(f"Bulk indexing failed: {e}")
             return f"Bulk indexing failed: {e}"
 
 
@@ -1666,7 +1692,7 @@ def save_domains_documents(opensearch_host: str, documents: list, vector_size: i
                 return f"Successfully indexed {len(documents)} documents"
 
         except Exception as e:
-            print(f"Bulk indexing failed: {e}")
+            logger.error(f"Bulk indexing failed: {e}")
             return f"Bulk indexing failed: {e}"
 
 

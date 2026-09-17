@@ -27,6 +27,9 @@ from langchain_google_community.model_armor import (
 )
 
 from app.utils.llm import save_google_application_credentials
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class GuardrailType(Enum):
@@ -164,6 +167,10 @@ def initialize_guardrail(configuration, guardrail_type=None):
     )
 
     if not guardrail_type:
+        logger.error(
+            "[guardrails] guardrail_type is missing: provide it as a parameter "
+            "or as the 'guardrail_type' key of the configuration dictionary"
+        )
         raise ValueError(
             "guardrail_type is missing: provide it as a parameter or as the "
             "'guardrail_type' key of the configuration dictionary"
@@ -219,9 +226,15 @@ def initialize_guardrail(configuration, guardrail_type=None):
             guardrail = OpenAIModerationChain()
         case _:
             valid_types = [valid_type.value for valid_type in GuardrailType]
+            logger.error(
+                f"[guardrails] invalid guardrail_type '{guardrail_type}': "
+                f"expected one of {valid_types}"
+            )
             raise ValueError(
                 f"invalid guardrail_type '{guardrail_type}': "
                 f"expected one of {valid_types}"
             )
+
+    logger.debug(f"[guardrails] initialized provider={guardrail_type}")
 
     return guardrail

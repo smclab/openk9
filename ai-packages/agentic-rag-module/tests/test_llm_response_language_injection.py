@@ -127,6 +127,10 @@ def test_stream_resolves_language_before_graph_and_seeds_it():
     graph = RagGraph.__new__(RagGraph)
     graph.config = {}
     graph.chat_sequence_number = 1
+    graph.tenant_id = None
+    graph.user_id = None
+    graph.chat_id = None
+    graph.rag_type = "SIMPLE_GENERATE"
     graph.output_guardrail = {"enable_output_guardrail": True}
     graph.output_guardrail_type = 3
     graph.scope_gate_prefix_chars = 1000
