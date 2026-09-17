@@ -2,6 +2,7 @@ FROM python:3.13-slim
 
 # Install utils
 RUN  apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y wget \
     && apt-get install -y unzip \
     && apt-get install -y dos2unix \
