@@ -14,7 +14,8 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY ./requirements.txt /requirements.txt
-RUN pip install --no-cache-dir -r /requirements.txt
+RUN pip install --no-cache-dir --upgrade pip==26.1.1 && \
+    pip install --no-cache-dir -r /requirements.txt
 
 # Setup entrypoint
 COPY ./docker-entrypoint.sh /etc/docker-entrypoint.sh
