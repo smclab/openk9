@@ -47,7 +47,7 @@ def test_debug_extra_is_empty_above_debug(caplog):
 def test_debug_extra_renders_the_fields_at_debug(caplog):
     logger = get_logger("app.test.debug_extra")
 
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger="app"):
         rendered = debug_extra(logger, query=QUERY, score=0.82)
 
     assert rendered == f" query={QUERY!r} score=0.82"

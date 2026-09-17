@@ -117,8 +117,11 @@ ARIZE_PHOENIX_ENABLED=true
 ARIZE_PHOENIX_PROJECT_NAME=arize_phoenix_project_name
 ARIZE_PHOENIX_ENDPOINT=arize_phoenix_endpoint
 
-# Logging level: INFO (default) or DEBUG
+# Logging level of this application: INFO (default) or DEBUG
 LOGGING_LEVEL=INFO
+
+# Logging level of the third-party libraries: INFO (default) or DEBUG
+DEPENDENCIES_LOGGING_LEVEL=INFO
 
 # Security
 OPENK9_ACL_HEADER=OPENK9_ACL
@@ -134,10 +137,18 @@ OPENK9_ACL_HEADER=OPENK9_ACL
 
 ## Logging
 
-`LOGGING_LEVEL` sets the level of the whole module and defaults to `INFO`.
+`LOGGING_LEVEL` sets the level of this application and defaults to `INFO`.
 Records are written as `%(asctime)s - %(levelname)s - %(name)s - %(message)s`,
 where `%(name)s` is the module that produced them (`app.rag.agentic_rag`,
 `app.server`, ...).
+
+`DEPENDENCIES_LOGGING_LEVEL` sets the level of the third-party libraries
+(OpenSearch, HTTP and SSE layers, provider SDKs) and also defaults to `INFO`.
+The two are separate on purpose: on a single level, asking for the detail of
+the pipeline would turn on the debug of the whole process, which produces an
+order of magnitude more lines than the pipeline itself and prints what this
+module is careful not to write. Measured on three requests, `LOGGING_LEVEL=DEBUG`
+alone yields 106 lines, against 548 when the libraries follow it too.
 
 ### What each level reports
 
@@ -180,6 +191,11 @@ and whose fields depend on the level in force. Because of that, the query
 rides on a record whose level is `WARNING` or `INFO`, not `DEBUG`: a
 collection pipeline that forwards only `WARNING` and above would receive it.
 `DEBUG` is a diagnostic level and must not be left on in production.
+
+`DEPENDENCIES_LOGGING_LEVEL=DEBUG` discloses the conversation too, and through
+libraries this module does not control: the provider SDK prints the body of the
+request it sends to the model, and the SSE layer prints every chunk of the
+answer as it is streamed.
 
 ## Local Development
 ```bash

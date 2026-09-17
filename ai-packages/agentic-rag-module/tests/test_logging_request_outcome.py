@@ -184,7 +184,7 @@ def test_the_answer_never_appears_at_info(caplog):
 def test_the_answer_rides_on_the_end_record_at_debug(caplog):
     graph = _graph()
 
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger="app"):
         _events(graph)
 
     end = [m for m in _messages(caplog, logging.INFO) if "[request] end" in m]

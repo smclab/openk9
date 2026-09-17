@@ -163,7 +163,7 @@ def test_the_query_rides_on_the_same_record_at_debug(caplog):
     # of a second line being emitted for it.
     graph = _guardrail_graph()
 
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger="app"):
         _run_node(graph, [_document(42, 0.82)], classifier_outcome="JAILBREAK")
 
     blocked = [

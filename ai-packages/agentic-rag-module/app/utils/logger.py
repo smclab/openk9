@@ -24,11 +24,24 @@ from dotenv import load_dotenv
 load_dotenv()
 
 LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+DEPENDENCIES_LOGGING_LEVEL = os.getenv("DEPENDENCIES_LOGGING_LEVEL", "INFO")
 
+# The root level governs the third-party libraries, and LOGGING_LEVEL only the
+# modules of this application. Left on the root, LOGGING_LEVEL=DEBUG would turn
+# on the debug of the whole process: the records of the pipeline would drown in
+# an order of magnitude more lines from the HTTP and SSE layers, and those lines
+# carry what this module is careful not to write, from the body of the request
+# sent to the model to every chunk of the answer.
+#
+# A record that passes the level of its own logger reaches the handlers of its
+# ancestors without their levels being checked again, so the handler installed
+# here on the root emits the records of "app" whatever the root level is.
 logging.basicConfig(
-    level=LOGGING_LEVEL,
+    level=DEPENDENCIES_LOGGING_LEVEL,
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
 )
+
+logging.getLogger("app").setLevel(LOGGING_LEVEL)
 
 
 def get_logger(name):
