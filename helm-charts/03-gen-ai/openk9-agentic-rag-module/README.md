@@ -333,14 +333,47 @@ Is possible also to set autoscaling using following parameters:
 
 ## Advanced logging
 
-In case you want to configure Openk9 Datasource logging you can set up following parameters:
+In case you want to configure Openk9 Agentic Rag Module logging you can set up following parameters:
+
+| Name                   | Description                                                                                                 | Value    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- | -------- |
+| `log.level`            | Logging level of the module, set as the `LOGGING_LEVEL` environment variable                                  | `INFO`   |
+| `log.dependenciesLevel` | Logging level of the third-party libraries, set as the `DEPENDENCIES_LOGGING_LEVEL` environment variable      | `INFO`   |
 
 An example:
 
 ```yaml
 log:
   level: "INFO" ## change log level
+  dependenciesLevel: "INFO" ## change the level of the third-party libraries
 ```
+
+### Level semantics
+
+| Level     | What it reports                                                                                                                    |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `INFO`    | Start and end of each request with its outcome (`COMPLETED`, `BLOCKED_INPUT`, `BLOCKED_OUTPUT`, `OFF_SCOPE`, `ERROR`) and duration, routing decisions, number of retrieved documents, and every non-blocking guardrail decision |
+| `WARNING` | Every block: input guardrail, output guardrail, scope gate, and the two pre-pipeline rejections (blank query is `INFO`, encoded blob is `WARNING`) |
+| `ERROR`   | Failures of the pipeline and of the guardrail providers                                                                            |
+| `DEBUG`   | Everything above, plus the per-document scores and the user query and the answer in clear                                          |
+
+At `INFO` no user query and no answer is ever written: the query is identified
+by its length and by a truncated hash (`query_chars`, `query_hash`), which is
+enough to recognise the same query across requests. Lowering the level to
+`DEBUG` adds the content to those same records, so it discloses the
+conversations and must not be left on in production.
+
+Records are formatted as `%(asctime)s - %(levelname)s - %(name)s - %(message)s`:
+any automated parsing of the previous format, which carried no logger name,
+has to be adapted.
+
+`log.level` governs the loggers of the module (`app.*`) and
+`log.dependenciesLevel` those of the libraries it uses. Raising the second one
+to `DEBUG` is rarely what is wanted: measured on three requests, it takes the
+output from 106 to 548 lines, and it discloses the conversation through
+libraries the module does not control, as the provider SDK prints the body of
+the request it sends to the model and the SSE layer prints every chunk of the
+answer.
 
 
 ## Known issues

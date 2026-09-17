@@ -98,8 +98,21 @@ security:
   adminPasswordSecretKey: "password"
 
 ## Logging configuration
+## @param log.level Logging level of the module, mapped to the LOGGING_LEVEL
+## environment variable. "INFO" (the default) reports the lifecycle of each
+## request and every guardrail decision, never the user query or the answer.
+## "DEBUG" adds the per-document detail and the query and answer in clear on
+## the same records, so it must not be left on in production.
+## @param log.dependenciesLevel Logging level of the third-party libraries
+## (OpenSearch client, HTTP and SSE layers, provider SDKs), mapped to the
+## DEPENDENCIES_LOGGING_LEVEL environment variable. Kept separate from
+## log.level because on a single level asking for the detail of the pipeline
+## turns on the debug of the whole process: an order of magnitude more lines,
+## which also carry the body of the request sent to the model and every chunk
+## of the answer.
 log:
   level: "INFO"
+  dependenciesLevel: "INFO"
 
 ## Cors configuration
 cors:
