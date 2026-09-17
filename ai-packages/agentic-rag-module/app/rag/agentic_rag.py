@@ -17,6 +17,7 @@
 
 import json
 import logging
+import time
 from enum import Enum
 from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
 
@@ -60,10 +61,12 @@ from app.utils.llm import (
     generate_conversation_title,
     get_structured_output_method,
 )
-from app.utils.logger import logger
+from app.utils.logger import content_fingerprint, debug_extra, get_logger
 from app.utils.opensearch_client import get_opensearch_client
 from app.utils.query_rewrite import escape_curly_braces
 from app.utils.query_validation import is_blank_query
+
+logger = get_logger(__name__)
 
 # Stands in for the written question when the turn carries an image and no
 # text. Every text-driven stage is skipped in that case, but the response node
@@ -311,6 +314,20 @@ class RagGraph:
 
         # Image(self.graph.get_graph().draw_mermaid_png(output_file_path="./graph.png"))
 
+    def _log_context(self) -> str:
+        """Render the identifiers every record of this request carries.
+
+        Only the ones actually set are rendered, so an unauthenticated turn
+        does not pad each line with empty fields.
+        """
+        fields = {
+            "tenant_id": self.tenant_id,
+            "user_id": self.user_id,
+            "chat_id": self.chat_id,
+        }
+
+        return " ".join(f"{key}={value}" for key, value in fields.items() if value)
+
     def _load_domain_from_checkpoints(self) -> List[Any]:
         """Load messages from OpenSearch checkpoints"""
         domain: Domain = None
@@ -511,6 +528,11 @@ class RagGraph:
                 if "flagged as unsafe" in str(e):
                     return "UNSAFE"
                 else:
+                    logger.error(
+                        f"[input_guardrail] provider invocation failed "
+                        f"provider={self.input_guardrail_provider} "
+                        f"{self._log_context()}: {e}"
+                    )
                     raise e
         elif self.input_guardrail_provider == GuardrailType.OPENAI_MODERATION.value:
             llm_guardrail = initialize_guardrail(
@@ -534,7 +556,10 @@ class RagGraph:
 
             return input_guardrail_response
 
-    def _llm_output_guardrail(self, result_answer):
+    def _llm_output_guardrail(self, result_answer, stage):
+        """Classify the answer produced so far. ``stage`` says where in the
+        stream the check happened (``chunk_interval`` or ``final_tail``) and is
+        only carried into the record of a block."""
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=self.configuration.get("grpc_host_datasource"),
             tenant_id=self.configuration.get("tenant_id"),
@@ -615,7 +640,7 @@ class RagGraph:
                         {"result_answer": result_answer}
                     )
 
-                    return guardrail_response.content
+                    verdict = guardrail_response.content
                 elif (
                     self.output_guardrail_provider
                     == GuardrailType.GOOGLE_MODEL_ARMOR_RESPONSE.value
@@ -630,11 +655,16 @@ class RagGraph:
                         guardrail_response = llm_guardrail.invoke(
                             {"query": result_answer}
                         )
-                        return "NONE"
+                        verdict = "NONE"
                     except Exception as e:
                         if "flagged as unsafe" in str(e):
-                            return "UNSAFE"
+                            verdict = "UNSAFE"
                         else:
+                            logger.error(
+                                f"[output_guardrail] provider invocation failed "
+                                f"provider={self.output_guardrail_provider} "
+                                f"{self._log_context()}: {e}"
+                            )
                             raise e
                 elif (
                     self.output_guardrail_provider
@@ -648,24 +678,29 @@ class RagGraph:
                     if guardrail_response.get("input") == guardrail_response.get(
                         "output"
                     ):
-                        return "NONE"
+                        verdict = "NONE"
                     else:
-                        return "UNSAFE"
+                        verdict = "UNSAFE"
                 else:
-                    output_guardrail_response = ""
                     guardrail_chain = guardrail_prompt_template | self.llm
                     guardrail_response = guardrail_chain.invoke(
                         {"result_answer": result_answer}
                     )
 
                     if isinstance(guardrail_response.content, list):
-                        output_guardrail_response = guardrail_response.content[0].get(
-                            "text"
-                        )
+                        verdict = guardrail_response.content[0].get("text")
                     else:
-                        output_guardrail_response = guardrail_response.content
+                        verdict = guardrail_response.content
 
-                    return output_guardrail_response
+                if verdict and verdict != "NONE":
+                    logger.warning(
+                        f"[output_guardrail] BLOCKED category={verdict} "
+                        f"score={score} provider={self.output_guardrail_provider} "
+                        f"stage={stage} {self._log_context()}"
+                        + debug_extra(logger, answer=result_answer)
+                    )
+
+                return verdict
 
             return "NONE"
 
@@ -723,7 +758,19 @@ class RagGraph:
         else:
             verdict = scope_gate_response.content
 
-        return "OFF_SCOPE" if "OFF_SCOPE" in (verdict or "").upper() else "VALID"
+        verdict = "OFF_SCOPE" if "OFF_SCOPE" in (verdict or "").upper() else "VALID"
+
+        if verdict == "OFF_SCOPE":
+            logger.warning(
+                f"[scope_gate] OFF_SCOPE prefix_chars={len(answer_prefix or '')} "
+                f"scope_gate_prefix_chars={self.scope_gate_prefix_chars} "
+                f"{self._log_context()}"
+                + debug_extra(logger, query=query, answer_prefix=answer_prefix)
+            )
+        else:
+            logger.info(f"[scope_gate] {verdict} {self._log_context()}")
+
+        return verdict
 
     def _get_retrieved_context_text(self):
         """Join the page content of the documents retrieved for the current
@@ -760,11 +807,12 @@ class RagGraph:
 
         if self.input_guardrail.get("enable_input_guardrail"):
             query = state.current_query
-            logger.debug(
-                f"[input_guardrail] enabled with "
-                f"provider={self.input_guardrail_provider}, "
-                f"threshold={self.input_guardrail.get('input_guardrail_threshold')}, "
-                f"query={query!r}"
+            logger.info(
+                f"[input_guardrail] enabled "
+                f"provider={self.input_guardrail_provider} "
+                f"threshold={self.input_guardrail.get('input_guardrail_threshold')} "
+                f"{content_fingerprint('query', query)} {self._log_context()}"
+                + debug_extra(logger, query=query)
             )
             embedding_model_configuration = get_embedding_model_configuration(
                 grpc_host=self.configuration.get("grpc_host_datasource"),
@@ -794,25 +842,40 @@ class RagGraph:
                         f"score={doc.metadata['score']}"
                     )
 
+            # The classifier only runs on a document above the threshold,
+            # so a query that retrieves nothing close to a guardrail document
+            # is reported as evaluated with no classification at all.
+            classifier_outcome = "NONE"
+
             for doc in retrieved_docs:
                 document_id = doc.metadata["document_id"]
                 score = doc.metadata["score"]
                 if score >= self.input_guardrail.get("input_guardrail_threshold"):
-                    llm_guardrail = self._llm_input_guardrail(query)
-                    logger.debug(
-                        f"[input_guardrail] score {score} above threshold, "
-                        f"llm classifier outcome={llm_guardrail}"
-                    )
-                    if llm_guardrail != "NONE":
+                    classifier_outcome = self._llm_input_guardrail(query)
+
+                    if classifier_outcome != "NONE":
                         state.guardrail_check = True
-                        state.guardrail_category = llm_guardrail
-                        logger.debug(
-                            f"[input_guardrail] BLOCKED with "
-                            f"category={state.guardrail_category}"
+                        state.guardrail_category = classifier_outcome
+                        logger.warning(
+                            f"[input_guardrail] BLOCKED "
+                            f"category={state.guardrail_category} "
+                            f"score={score} document_id={document_id} "
+                            f"provider={self.input_guardrail_provider} "
+                            f"{self._log_context()}" + debug_extra(logger, query=query)
                         )
                     break
+
+            if not state.guardrail_check:
+                # Hits come back ordered by score, so the first one is the
+                # closest the query ever got to a guardrail document.
+                top_document = retrieved_docs[0].metadata if retrieved_docs else {}
+                logger.info(
+                    f"[input_guardrail] PASSED outcome={classifier_outcome} "
+                    f"document_id={top_document.get('document_id')} "
+                    f"score={top_document.get('score')} {self._log_context()}"
+                )
         else:
-            logger.debug("[input_guardrail] disabled, skipping")
+            logger.info(f"[input_guardrail] disabled {self._log_context()}")
 
         return state
 
@@ -1004,22 +1067,22 @@ class RagGraph:
         self, state: GraphState
     ) -> Literal["input_domain", "rag_router"]:
         if self._is_media_only_query(state.current_query):
-            logger.debug(
+            logger.info(
                 "[intent_detection] media-only query -> rag_router "
                 "(domain detection skipped)"
             )
             return "rag_router"
         if self.rag_type == "SIMPLE_GENERATE":
-            logger.debug(
+            logger.info(
                 "[intent_detection] rag_type=SIMPLE_GENERATE -> rag_router "
                 "(intent detection skipped)"
             )
             return "rag_router"
         if not state.domain or "NEW_QUESTION" in state.domain:
-            logger.debug(f"[intent_detection] domain={state.domain} -> input_domain")
+            logger.info(f"[intent_detection] domain={state.domain} -> input_domain")
             return "input_domain"
         else:
-            logger.debug(f"[intent_detection] domain={state.domain} -> rag_router")
+            logger.info(f"[intent_detection] domain={state.domain} -> rag_router")
             return "rag_router"
 
     def input_guardrail_route_decision(
@@ -1293,12 +1356,16 @@ class RagGraph:
     ) -> Literal["opensearch_retriever", "llm_response"]:
         """Separate function for conditional routing decision"""
         if state.use_rag:
-            logger.debug(
-                f"[route_decision] use_rag={state.use_rag} -> opensearch_retriever"
+            logger.info(
+                f"[route_decision] use_rag={state.use_rag} -> opensearch_retriever "
+                f"{self._log_context()}"
             )
             return "opensearch_retriever"
         else:
-            logger.debug(f"[route_decision] use_rag={state.use_rag} -> llm_response")
+            logger.info(
+                f"[route_decision] use_rag={state.use_rag} -> llm_response "
+                f"{self._log_context()}"
+            )
             return "llm_response"
 
     def opensearch_retriever_node(self, state: GraphState) -> GraphState:
@@ -1409,8 +1476,11 @@ class RagGraph:
         retrieved_docs = retriever.invoke(query)
         state.context = retrieved_docs
 
+        logger.info(
+            f"[retriever] retrieved {len(retrieved_docs)} docs {self._log_context()}"
+        )
+
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"[retriever] retrieved {len(retrieved_docs)} docs")
             for doc in retrieved_docs:
                 logger.debug(
                     f"[retriever] doc "
@@ -1666,6 +1736,10 @@ class RagGraph:
     def guardrail_violation_response_node(self, state: GraphState) -> GraphState:
         """Guardrail response node"""
         state.response = "Guardrail violation"
+        logger.warning(
+            f"[guardrail_violation_response] category={state.guardrail_category} "
+            f"{self._log_context()}"
+        )
 
         return state
 
@@ -1994,6 +2068,19 @@ class RagGraph:
                 )
 
     def stream(self, query: str):
+        started_at = time.monotonic()
+        # Set by whichever branch ends the stream; the end record is emitted
+        # once, from the finally, so that every way out of the generator is
+        # reported exactly the same way.
+        outcome = "COMPLETED"
+        result_answer = ""
+
+        logger.info(
+            f"[request] start rag_type={self.rag_type} "
+            f"{content_fingerprint('query', query)} {self._log_context()}"
+            + debug_extra(logger, query=query)
+        )
+
         # Resolve the answer language once, BEFORE running the graph, so the
         # resolver's utility LLM call is not part of the llm_response token
         # stream (otherwise its JSON output leaks to the client as chunks).
@@ -2051,6 +2138,7 @@ class RagGraph:
                                     result_answer,
                                 )
                                 if scope_gate == "OFF_SCOPE":
+                                    outcome = "OFF_SCOPE"
                                     yield json.dumps(
                                         {
                                             "chunk": self.scope_gate_redirect_message,
@@ -2067,6 +2155,7 @@ class RagGraph:
                                 scope_checked = True
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
+                        outcome = "ERROR"
                         yield json.dumps(
                             {
                                 "chunk": "Rate limit exceeded. Try again later.",
@@ -2085,6 +2174,7 @@ class RagGraph:
                         result_answer,
                     )
                     if scope_gate == "OFF_SCOPE":
+                        outcome = "OFF_SCOPE"
                         yield json.dumps(
                             {
                                 "chunk": self.scope_gate_redirect_message,
@@ -2138,12 +2228,13 @@ class RagGraph:
 
                             if len(chunk_batch) == self.output_guardrail_chunk_interval:
                                 llm_output_guardrail = self._llm_output_guardrail(
-                                    result_answer
+                                    result_answer, "chunk_interval"
                                 )
                                 if (
                                     llm_output_guardrail
                                     and llm_output_guardrail != "NONE"
                                 ):
+                                    outcome = "BLOCKED_OUTPUT"
                                     yield json.dumps(
                                         {
                                             "chunk": "Inappropriate content",
@@ -2158,6 +2249,7 @@ class RagGraph:
                                     chunk_batch = []
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
+                        outcome = "ERROR"
                         yield json.dumps(
                             {
                                 "chunk": "Rate limit exceeded. Try again later.",
@@ -2168,9 +2260,12 @@ class RagGraph:
                     raise e
 
                 if chunk_batch:
-                    llm_output_guardrail = self._llm_output_guardrail(result_answer)
+                    llm_output_guardrail = self._llm_output_guardrail(
+                        result_answer, "final_tail"
+                    )
 
                     if llm_output_guardrail and llm_output_guardrail != "NONE":
+                        outcome = "BLOCKED_OUTPUT"
                         yield json.dumps(
                             {"chunk": "Inappropriate content", "type": "CANCEL"}
                         )
@@ -2219,12 +2314,13 @@ class RagGraph:
 
                             if chunk_number == self.output_guardrail_chunk_interval:
                                 llm_output_guardrail = self._llm_output_guardrail(
-                                    result_answer
+                                    result_answer, "chunk_interval"
                                 )
                                 chunk_number = 0
                                 result_answer = ""
 
                                 if llm_output_guardrail != "NONE":
+                                    outcome = "BLOCKED_OUTPUT"
                                     yield json.dumps(
                                         {
                                             "chunk": "Inappropriate content",
@@ -2236,6 +2332,7 @@ class RagGraph:
 
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
+                        outcome = "ERROR"
                         yield json.dumps(
                             {
                                 "chunk": "Rate limit exceeded. Try again later.",
@@ -2246,9 +2343,12 @@ class RagGraph:
                     raise e
 
                 if chunk_number > 0:
-                    llm_output_guardrail = self._llm_output_guardrail(result_answer)
+                    llm_output_guardrail = self._llm_output_guardrail(
+                        result_answer, "final_tail"
+                    )
 
                     if llm_output_guardrail != "NONE":
+                        outcome = "BLOCKED_OUTPUT"
                         yield json.dumps(
                             {"chunk": "Inappropriate content", "type": "CANCEL"}
                         )
@@ -2289,6 +2389,7 @@ class RagGraph:
 
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
+                        outcome = "ERROR"
                         yield json.dumps(
                             {
                                 "chunk": "Rate limit exceeded. Try again later.",
@@ -2327,15 +2428,8 @@ class RagGraph:
                 ):
                     yield from self._stream_documents(documents)
 
-            info = {
-                "chain": "agentic_rag",
-                "user_id": self.user_id,
-                "chat_id": self.chat_id,
-                "answer": result_answer[:200] + "...",
-            }
-            logger.info(json.dumps(info))
-
             if last_state.values.get("guardrail_check"):
+                outcome = "BLOCKED_INPUT"
                 yield json.dumps(
                     {
                         "chunk": f"{last_state.values.get('response')}",
@@ -2346,7 +2440,8 @@ class RagGraph:
             yield json.dumps({"chunk": "", "type": "END"})
 
         except Exception as e:
-            logger.error(f"Streaming error: {e}")
+            outcome = "ERROR"
+            logger.error(f"Streaming error: {e} {self._log_context()}")
             content_policy_markers = (
                 "content_filter",
                 "contentpolicyviolationerror",
@@ -2354,7 +2449,21 @@ class RagGraph:
                 "content management policy",
             )
             if any(marker in str(e).lower() for marker in content_policy_markers):
+                # The provider refused the generation on its own filter: a
+                # block, reported as one, not as a failure of the service.
+                outcome = "BLOCKED_OUTPUT"
+                logger.warning(
+                    f"[output_guardrail] BLOCKED by provider content policy "
+                    f"{self._log_context()}"
+                )
                 yield json.dumps({"chunk": "Guardrail violation", "type": "GUARDRAIL"})
                 yield json.dumps({"chunk": "", "type": "END"})
                 return
             yield json.dumps(error_event(e, str(e)))
+        finally:
+            logger.info(
+                f"[request] end outcome={outcome} "
+                f"duration_ms={int((time.monotonic() - started_at) * 1000)} "
+                f"chain=agentic_rag {self._log_context()}"
+                + debug_extra(logger, answer=result_answer)
+            )

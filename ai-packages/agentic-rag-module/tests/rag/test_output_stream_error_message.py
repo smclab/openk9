@@ -47,6 +47,7 @@ def _graph(stream_exception):
     graph.output_guardrail_type = 0
     graph.config = {}
     graph.chat_sequence_number = 1
+    graph.tenant_id = None
     graph.user_id = None
     graph.chat_id = None
     graph.rag_type = "SIMPLE_GENERATE"

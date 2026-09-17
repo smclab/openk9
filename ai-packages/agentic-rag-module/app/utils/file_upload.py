@@ -17,7 +17,9 @@ from app.external_services.grpc.grpc_client import (
 )
 from app.utils.chat_history import save_uploaded_documents
 from app.utils.embedding import documents_embedding
-from app.utils.logger import logger
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 async def process_file(

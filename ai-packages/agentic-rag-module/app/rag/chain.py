@@ -22,7 +22,9 @@ from app.utils.error_events import error_event
 from app.utils.llm import (
     initialize_language_model,
 )
-from app.utils.logger import logger
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 

@@ -21,10 +21,12 @@ import grpc
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
 from app.external_services.grpc.searcher import searcher_pb2, searcher_pb2_grpc
 from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
-from app.utils.logger import logger
+from app.utils.logger import get_logger
 from fastapi import HTTPException, status
 from google.protobuf import json_format
 from google.protobuf.json_format import ParseDict
+
+logger = get_logger(__name__)
 
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 

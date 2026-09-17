@@ -23,7 +23,9 @@ It includes functions to decode JWT tokens and handle unauthorized responses.
 import jwt
 from fastapi import HTTPException, status
 
-from app.utils.logger import logger
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def decode_token(token: str) -> dict:

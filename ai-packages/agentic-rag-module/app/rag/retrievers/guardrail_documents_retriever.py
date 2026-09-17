@@ -5,7 +5,10 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 
 from app.utils.embedding import query_embedding
+from app.utils.logger import get_logger
 from app.utils.opensearch_client import get_opensearch_client
+
+logger = get_logger(__name__)
 
 VECTORIAL_RETRIEVE_TYPES = ["KNN", "HYBRID"]
 
@@ -122,6 +125,10 @@ class OpenSearchGuardrailDocumentsRetriever(BaseRetriever):
         # Degenerate input (empty/whitespace/emoji-only) has nothing to embed;
         # with no vector there is nothing to retrieve.
         if vector_query is None:
+            logger.debug(
+                "[guardrail_retriever] nothing to embed, search skipped "
+                f"index={self.uploaded_documents_index}"
+            )
             return []
 
         documents = []
@@ -166,6 +173,12 @@ class OpenSearchGuardrailDocumentsRetriever(BaseRetriever):
                 body=open_search_query, index=self.uploaded_documents_index
             )
 
+            logger.debug(
+                f"[guardrail_retriever] index={self.uploaded_documents_index} "
+                f"retrieve_type={self.retrieve_type} "
+                f"hits={len(response['hits']['hits'])}"
+            )
+
             for row in response["hits"]["hits"]:
                 document_source = row.get("_source")
                 document_id = document_source.get("document_id")
@@ -180,5 +193,10 @@ class OpenSearchGuardrailDocumentsRetriever(BaseRetriever):
                     },
                 )
                 documents.append(document)
+        else:
+            logger.debug(
+                "[guardrail_retriever] index missing, search skipped "
+                f"index={self.uploaded_documents_index}"
+            )
 
         return documents
