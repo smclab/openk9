@@ -8,6 +8,7 @@ data:
   # Env variables
   ORIGINS: {{ .Values.cors.origins | quote }}
   LOGGING_LEVEL:  {{ .Values.log.level | quote }}
+  DEPENDENCIES_LOGGING_LEVEL:  {{ .Values.log.dependenciesLevel | quote }}
 
   # Opensearch env variables
   {{- $protocol := .Values.opensearch.protocol | default "http" }}
