@@ -124,7 +124,7 @@ def test_the_answer_never_appears_at_info(caplog):
 def test_the_answer_rides_on_the_same_record_at_debug(caplog):
     graph = _output_guardrail_graph("VIOLENCE/WEAPONS")
 
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger="app"):
         _run(graph, "chunk_interval")
 
     blocked = [m for m in _messages(caplog, logging.WARNING) if "BLOCKED" in m]

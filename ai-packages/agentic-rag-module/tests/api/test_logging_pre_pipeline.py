@@ -108,7 +108,7 @@ def test_the_rejected_input_never_appears_at_info(path, body_for, client, caplog
 
 @pytest.mark.parametrize("path, body_for", ENDPOINTS, ids=ENDPOINT_IDS)
 def test_the_rejected_input_appears_at_debug(path, body_for, client, caplog):
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger="app"):
         client.post(path, json=body_for(BASE64_BLOB), headers=HEADERS)
 
     blocked = [m for m in _messages(caplog, logging.WARNING) if "BLOCKED" in m]

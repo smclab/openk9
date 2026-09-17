@@ -88,7 +88,7 @@ def test_neither_the_query_nor_the_prefix_appear_at_info(caplog):
 def test_query_and_prefix_ride_on_the_same_record_at_debug(caplog):
     graph = _scope_gate_graph("OFF_SCOPE")
 
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger="app"):
         graph._llm_scope_gate(QUERY, "Contesto di dominio.", PREFIX)
 
     off_scope = [m for m in _messages(caplog, logging.WARNING) if "OFF_SCOPE" in m]
