@@ -44,9 +44,9 @@ This module provides:
 
 ### OpenK9 Setup
 ```bash
-rag-module:
-    image: smclab/openk9-rag-module:2026.1.0-SNAPSHOT
-    container_name: rag-module
+agentic-rag-module:
+    image: smclab/openk9-agentic-rag-module:2026.1.0-SNAPSHOT
+    container_name: agentic-rag-module
     environment:
         ORIGINS: '*'
         OPENSEARCH_USERNAME: 'opensearch'
@@ -54,11 +54,11 @@ rag-module:
         GRPC_DATASOURCE_HOST: 'datasource:9000'
         GRPC_TENANT_MANAGER_HOST: 'tenant-manager:9000'
         GRPC_EMBEDDING_MODULE_HOST: 'embedding-module:5000'
-        KEYCLOAK_URL: 'http://keycloak.openk9.localhost:8081'
         UPLOAD_DIR: 'uploads'
         UPLOAD_FILE_EXTENSIONS: '[".pdf",".md",".docx",".xlsx",".pptx",".csv"]'
         MAX_UPLOAD_FILE_SIZE: '10'
         MAX_UPLOAD_FILES_NUMBER: '5'
+        OPENK9_SECURITY_ADMIN_PASSWORD: 'admin'
 
 embedding-module:
     image: smclab/openk9-embedding-module-base:2026.1.0-SNAPSHOT

@@ -1,7 +1,7 @@
 ---
-id: rag-module
-title: Rag Module
-slug: /rag-module
+id: agentic-rag-module
+title: Agentic Rag Module
+slug: /agentic-rag-module
 
 ---
 

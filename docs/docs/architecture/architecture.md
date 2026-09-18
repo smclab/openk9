@@ -32,7 +32,7 @@ Core components are:
 
 Gen Ai components are:
 
-- [**Rag Module**](rag-module): is the component that implements Retrieval Augmented Generation logic. 
+- [**Agentic Rag Module**](agentic-rag-module): is the component that implements Retrieval Augmented Generation logic. 
 - [**Embedding Module**](embedding-module): is the component that performs data vectorization.
 
 File handlign components are:
