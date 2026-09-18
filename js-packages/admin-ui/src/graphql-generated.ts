@@ -6186,7 +6186,7 @@ export type CreateDataIndexMutationVariables = Exact<{
 }>;
 
 
-export type CreateDataIndexMutation = { __typename?: 'Mutation', dataIndex?: { __typename?: 'Response_DataIndex', entity?: { __typename?: 'DataIndex', name?: string | null } | null } | null };
+export type CreateDataIndexMutation = { __typename?: 'Mutation', dataIndex?: { __typename?: 'Response_DataIndex', entity?: { __typename?: 'DataIndex', name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
 export type DataIndicesQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -13377,6 +13377,10 @@ export const CreateDataIndexDocument = gql`
   ) {
     entity {
       name
+    }
+    fieldValidators {
+      field
+      message
     }
   }
 }

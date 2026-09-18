@@ -1,4 +1,4 @@
-import { CodeInput, ContainerFluid, useToast } from "@components/Form";
+import { CodeInput, combineErrorMessages, ContainerFluid, useToast } from "@components/Form";
 import { Button, Stack, TextField } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -31,9 +31,10 @@ export function VerifyDataindexData({
       } else {
         toast({
           title: `Error`,
-          content: "",
+          content: combineErrorMessages(data.dataIndex?.fieldValidators),
           displayType: "error",
         });
+        setVerifyData("edit");
       }
     },
   });

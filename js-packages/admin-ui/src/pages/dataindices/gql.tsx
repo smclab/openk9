@@ -30,6 +30,10 @@ export const CreateDataIndexMutation = gql`
       entity {
         name
       }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
 `;
