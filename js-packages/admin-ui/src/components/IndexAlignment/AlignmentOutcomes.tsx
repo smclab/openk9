@@ -15,9 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import {
-  Alert,
   AlertColor,
-  AlertTitle,
   Box,
   Chip,
   Paper,
@@ -27,7 +25,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Typography,
 } from "@mui/material";
 import React from "react";
 import { Link } from "react-router-dom";
@@ -118,57 +115,5 @@ export function OutcomesTable({ outcomes }: { outcomes: Array<AlignmentOutcome> 
         </TableBody>
       </Table>
     </TableContainer>
-  );
-}
-
-/**
- * The outcome of an alignment, presented next to the control that started it.
- *
- * It is an Alert and not a toast on purpose: three of the five statuses carry
- * something to read, a FAILED one carries the raw refusal of OpenSearch, and a
- * toast takes all of that away after six seconds. Where the outcome is read
- * once and dismissed, AlignmentOutcomesModal presents the same thing instead.
- */
-export function AlignmentOutcomes({
-  outcomes,
-  error,
-  title,
-  note = OUTCOMES_NOTE,
-  emptyMessage = NOTHING_TO_ALIGN,
-}: {
-  outcomes: Array<AlignmentOutcome> | null;
-  error?: string | null;
-  title?: string;
-  note?: string;
-  emptyMessage?: string;
-}) {
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mt: 2 }}>
-        <AlertTitle>The request was refused</AlertTitle>
-        {error}
-      </Alert>
-    );
-  }
-
-  if (!outcomes) return null;
-
-  if (outcomes.length === 0) {
-    return (
-      <Alert severity="info" sx={{ mt: 2 }}>
-        <AlertTitle>Nothing to align</AlertTitle>
-        {emptyMessage}
-      </Alert>
-    );
-  }
-
-  return (
-    <Alert severity={worstSeverity(outcomes)} sx={{ mt: 2 }}>
-      <AlertTitle>{title ?? outcomesTitle(outcomes)}</AlertTitle>
-      <Typography variant="body2" sx={{ mb: 1 }}>
-        {note}
-      </Typography>
-      <OutcomesTable outcomes={outcomes} />
-    </Alert>
   );
 }

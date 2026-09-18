@@ -56,7 +56,7 @@ import {
   useDocumentTypesQuery,
   useUpdateIndexSettingsMutation,
 } from "../../graphql-generated";
-import { AlignmentOutcomes } from "@components/IndexAlignment/AlignmentOutcomes";
+import { AlignmentOutcomesModal } from "@components/IndexAlignment/AlignmentOutcomesModal";
 import { useAlignmentRun } from "@components/IndexAlignment/useAlignmentRun";
 import { useDataSources, useDocTypeOptions } from "../../utils/RelationOneToOne";
 
@@ -679,15 +679,21 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             </Typography>
           </Box>
         )}
-        <AlignmentOutcomes
-          outcomes={settingsRun.outcomes}
-          error={settingsRun.error}
-          title="Outcome of the custom settings"
-          note="An applied outcome means OpenSearch took the settings, and they were recorded and written to the index template."
-        />
-        <AlignmentOutcomes outcomes={alignRun.outcomes} error={alignRun.error} />
         {settingsRun.ConfirmClosing}
         {alignRun.ConfirmClosing}
+        {/* the outcome waits for the closing question: two stacked dialogs would bury it */}
+        {!settingsRun.isAsking && (
+          <AlignmentOutcomesModal
+            outcomes={settingsRun.outcomes}
+            error={settingsRun.error}
+            onClose={settingsRun.dismiss}
+            title="Outcome of the custom settings"
+            note="An applied outcome means OpenSearch took the settings, and they were recorded and written to the index template."
+          />
+        )}
+        {!alignRun.isAsking && (
+          <AlignmentOutcomesModal outcomes={alignRun.outcomes} error={alignRun.error} onClose={alignRun.dismiss} />
+        )}
         <Box mt={2}>
           <CodeInput
             id="settings-derived-code-input"

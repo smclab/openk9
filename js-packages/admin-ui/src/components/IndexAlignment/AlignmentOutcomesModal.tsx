@@ -31,12 +31,13 @@ import {
 const nothingToConfirm = () => undefined;
 
 /**
- * The same outcome AlignmentOutcomes shows, as the modal the rest of this
- * screen uses.
+ * The outcome of an alignment, in the modal the rest of the admin uses.
  *
- * It belongs where the outcome is read once and dismissed and the page under it
- * has to stay where it is; where the outcome is looked at while working on the
- * same screen, the panel is the better place for it.
+ * It is a modal and not a toast on purpose: three of the five statuses carry
+ * something to read, a FAILED one carries the raw refusal of OpenSearch, and a
+ * toast takes all of that away after six seconds. It is not a panel either,
+ * because an outcome is read once and dismissed, and a panel pushes down the
+ * very thing the outcome is about.
  */
 export function AlignmentOutcomesModal({
   outcomes,
