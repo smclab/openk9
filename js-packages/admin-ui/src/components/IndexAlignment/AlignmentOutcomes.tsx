@@ -88,10 +88,14 @@ function worstSeverity(outcomes: Array<AlignmentOutcome>): AlertColor {
 export function AlignmentOutcomes({
   outcomes,
   error,
+  title,
+  note = "An applied outcome means OpenSearch accepted what was sent to it, not that the index matches the model.",
   emptyMessage = "No current index uses it, so there was nothing to align.",
 }: {
   outcomes: Array<AlignmentOutcome> | null;
   error?: string | null;
+  title?: string;
+  note?: string;
   emptyMessage?: string;
 }) {
   if (error) {
@@ -117,10 +121,10 @@ export function AlignmentOutcomes({
   return (
     <Alert severity={worstSeverity(outcomes)} sx={{ mt: 2 }}>
       <AlertTitle>
-        {outcomes.length === 1 ? "Outcome of the alignment" : `Outcome for ${outcomes.length} indexes`}
+        {title ?? (outcomes.length === 1 ? "Outcome of the alignment" : `Outcome for ${outcomes.length} indexes`)}
       </AlertTitle>
       <Typography variant="body2" sx={{ mb: 1 }}>
-        An applied outcome means OpenSearch accepted what was sent to it, not that the index matches the model.
+        {note}
       </Typography>
       <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
         <Table size="small">

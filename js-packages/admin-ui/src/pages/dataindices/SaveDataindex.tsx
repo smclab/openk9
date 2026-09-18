@@ -76,6 +76,20 @@ export type DataindexData = {
   embeddingJsonConfig: string | null;
 };
 
+/**
+ * Indents a JSON document for the editor, leaving it alone when it does not
+ * parse: what a dataIndex recorded before this screen existed may be anything.
+ */
+function prettyJson(value: string | null | undefined): string {
+  if (!value) return "{}";
+
+  try {
+    return JSON.stringify(JSON.parse(value), null, 2);
+  } catch {
+    return value;
+  }
+}
+
 export const useOptionsDataSource = () => {
   const datasourcersQuery = useDataSourcesQuery();
 
@@ -177,11 +191,11 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   }, [isNew, dataindexId, dataindexQuery.data]);
 
   useEffect(() => {
-    setSettings(dataindexData.settings || "{}");
+    setSettings(prettyJson(dataindexData.settings));
   }, [dataindexData.settings]);
 
   useEffect(() => {
-    setCustomSettings(dataindexData.customSettings || "{}");
+    setCustomSettings(prettyJson(dataindexData.customSettings));
   }, [dataindexData.customSettings]);
 
   const [createOrUpdateDataIndexModelMutate, createOrUpdateDataIndexModel] = useCreateDataIndexMutation({
@@ -328,6 +342,10 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
   const [updateIndexSettings] = useUpdateIndexSettingsMutation();
   const settingsRun = useAlignmentRun({
+    // CodeInput emits its value only when the editor loses focus, so what is
+    // sent here is whatever the last blur left. Clicking the button blurs the
+    // editor first, which is what keeps this current: a path that applies
+    // without moving the focus away would send the previous document.
     run: useCallback(
       async (closeIfNeeded: boolean) => {
         const result = await updateIndexSettings({
@@ -661,7 +679,12 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             </Typography>
           </Box>
         )}
-        <AlignmentOutcomes outcomes={settingsRun.outcomes} error={settingsRun.error} />
+        <AlignmentOutcomes
+          outcomes={settingsRun.outcomes}
+          error={settingsRun.error}
+          title="Outcome of the custom settings"
+          note="An applied outcome means OpenSearch took the settings, and they were recorded and written to the index template."
+        />
         <AlignmentOutcomes outcomes={alignRun.outcomes} error={alignRun.error} />
         {settingsRun.ConfirmClosing}
         {alignRun.ConfirmClosing}
