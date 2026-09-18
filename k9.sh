@@ -111,7 +111,7 @@ CORE_SERVICES=(
     api-gateway tenant-manager datasource ingestion searcher
     search-frontend admin-ui tenant-ui web-connector
 )
-GEN_AI_SERVICES=(rag-module embedding-module talk-to agentic-rag-module evaluator evaluator-offline)
+GEN_AI_SERVICES=(embedding-module talk-to agentic-rag-module evaluator evaluator-offline)
 FILE_HANDLING_SERVICES=(tika minio-connector docling-processor)
 
 VALID_SERVICES=(
@@ -430,9 +430,6 @@ build_single() {
             # wheels) instead of forcing amd64 under emulation on Apple Silicon.
             docker build --pull --platform "$JIB_PLATFORM" --build-arg "MODE=cpu" -t "$GROUP/openk9-docling-processor:$TAG" -f enrichers/docling-processor/enricher/Dockerfile enrichers/docling-processor/enricher
             ;;
-        rag-module)
-            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
-            ;;
         embedding-module)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
             ;;
@@ -677,7 +674,7 @@ Profiles (--with):
 Services (for targeted build/restart):
   api-gateway  tenant-manager  datasource  ingestion  searcher
   search-frontend  admin-ui  tenant-ui  web-connector
-  rag-module  agentic-rag-module  embedding-module  talk-to
+  agentic-rag-module  embedding-module  talk-to
   tika  minio-connector
 
 Build details:

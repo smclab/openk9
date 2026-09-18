@@ -109,7 +109,6 @@ done
 # ---------------------------------------------------------------------------
 echo "==> [5/9] Python pyproject.toml"
 for f in \
-  "$ROOT/ai-packages/rag-module/pyproject.toml" \
   "$ROOT/ai-packages/embedding-modules/pyproject.toml"; do
   [[ -f "$f" ]] || continue
   sed -i -E "s/^(version[[:space:]]*=[[:space:]]*\")[^\"]+(\")/\1$NEW\2/" "$f"
@@ -118,15 +117,11 @@ done
 
 # ---------------------------------------------------------------------------
 # 6) Python FastAPI — `version="..."` argument in the service entrypoints
-#    (rag-module / agentic-rag-module server.py and the docling-processor
-#    enricher file_manager modules).
+#    (agentic-rag-module server.py).
 # ---------------------------------------------------------------------------
 echo "==> [6/9] Python FastAPI version"
 for f in \
-  "$ROOT/ai-packages/rag-module/app/server.py" \
-  "$ROOT/ai-packages/agentic-rag-module/app/server.py" \
-  "$ROOT/enrichers/docling-processor/enricher/external/file_manager.py" \
-  "$ROOT/enrichers/docling-processor/enricher/external/file_manager2.py"; do
+  "$ROOT/ai-packages/agentic-rag-module/app/server.py"; do
   [[ -f "$f" ]] || continue
   sed -i -E "s/(version[[:space:]]*=[[:space:]]*\")${OLD_RE}(\")/\1$NEW\2/g" "$f"
   echo "    $f"
