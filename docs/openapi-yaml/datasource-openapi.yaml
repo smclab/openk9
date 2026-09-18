@@ -3578,10 +3578,12 @@ paths:
               $ref: "#/components/schemas/JsonObject"
         required: true
       responses:
-        "201":
-          description: Created
+        "202":
+          description: Accepted, the callback was awaited and delivered to the pipeline
         "400":
-          description: Bad Request
+          description: Bad Request, malformed token
+        "404":
+          description: Not Found, no pipeline is awaiting this token
       summary: Callback
       tags:
       - Pipeline Resource
