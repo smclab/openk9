@@ -31,12 +31,12 @@ import io.openk9.datasource.pipeline.actor.EmbeddingProcessor;
 import io.openk9.datasource.pipeline.actor.EnrichPipeline;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.actor.enrichitem.Token;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 
 import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
+import org.apache.pekko.cluster.sharding.typed.ClusterShardingSettings;
 import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
 import org.apache.pekko.cluster.sharding.typed.javadsl.Entity;
 import org.apache.pekko.cluster.typed.Cluster;
@@ -82,30 +82,34 @@ public class ActorSystemConfig {
 		return actorSystem -> {
 			ClusterSharding sharding = ClusterSharding.get(actorSystem);
 
+			// these entities keep in-flight state (held messages, awaited
+			// callbacks) in memory and look idle while an enricher works, so
+			// the sharding must not passivate them: they stop by themselves
+			// once their work is done
+			var noPassivation = ClusterShardingSettings
+				.create(actorSystem)
+				.withNoPassivationStrategy();
+
 			sharding.init(Entity.of(
 				Scheduling.ENTITY_TYPE_KEY, entityCtx -> {
-				String entityId = entityCtx.getEntityId();
-				var schedulingKey = ShardingKey.fromString(entityId);
+					String entityId = entityCtx.getEntityId();
+					var schedulingKey = ShardingKey.fromString(entityId);
 					return Scheduling.create(schedulingKey);
-			}));
+				}).withSettings(noPassivation));
 
-			sharding.init(Entity.of(Token.ENTITY_TYPE_KEY, entityCtx -> {
-				String entityId = entityCtx.getEntityId();
-				var schedulingKey = ShardingKey.fromString(entityId);
-				return Token.create(schedulingKey);
-			}));
+			sharding.init(Entity.of(
+				EnrichPipeline.ENTITY_TYPE_KEY, entityCtx -> {
+					String entityId = entityCtx.getEntityId();
+					var enrichPipelineKey = ShardingKey.fromString(entityId);
+					return EnrichPipeline.create(enrichPipelineKey);
+				}).withSettings(noPassivation));
 
-			sharding.init(Entity.of(EnrichPipeline.ENTITY_TYPE_KEY, entityCtx -> {
-				String entityId = entityCtx.getEntityId();
-				var enrichPipelineKey = ShardingKey.fromString(entityId);
-				return EnrichPipeline.create(enrichPipelineKey);
-			}));
-
-			sharding.init(Entity.of(EmbeddingProcessor.ENTITY_TYPE_KEY, entityCtx -> {
-				String entityId = entityCtx.getEntityId();
-				var processKey = ShardingKey.fromString(entityId);
-				return EmbeddingProcessor.create(processKey);
-			}));
+			sharding.init(Entity.of(
+				EmbeddingProcessor.ENTITY_TYPE_KEY, entityCtx -> {
+					String entityId = entityCtx.getEntityId();
+					var processKey = ShardingKey.fromString(entityId);
+					return EmbeddingProcessor.create(processKey);
+				}).withSettings(noPassivation));
 
 		};
 	}
