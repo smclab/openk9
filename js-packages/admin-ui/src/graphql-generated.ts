@@ -7277,7 +7277,7 @@ export type CreateDataIndexMutationVariables = Exact<{
 }>;
 
 
-export type CreateDataIndexMutation = { __typename?: 'Mutation', dataIndex?: { __typename?: 'Response_DataIndex', entity?: { __typename?: 'DataIndex', name?: string | null } | null } | null };
+export type CreateDataIndexMutation = { __typename?: 'Mutation', dataIndex?: { __typename?: 'Response_DataIndex', entity?: { __typename?: 'DataIndex', name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
 export type DataIndicesQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -15673,6 +15673,10 @@ export const CreateDataIndexDocument = gql`
     entity {
       name
     }
+    fieldValidators {
+      field
+      message
+    }
   }
 }
     `;
@@ -16983,4 +16987,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-08-05T14:45:51+02:00
+// Generated on 2026-09-18T10:19:35+02:00

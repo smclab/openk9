@@ -16,8 +16,10 @@
  */
 import {
   CodeInput,
+  combineErrorMessages,
   ContainerFluid,
   CreateDataEntity,
+  fromFieldValidators,
   NumberInput,
   TextInput,
   TitleEntity,
@@ -181,9 +183,11 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       } else {
         toast({
           title: t("common.error"),
-          content: "",
+          content: combineErrorMessages(data.dataIndex?.fieldValidators),
           displayType: "error",
         });
+        setPage(0);
+        setStep("configureStandart");
       }
     },
     onError(error) {
@@ -242,6 +246,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
       createOrUpdateDataIndexModelMutate({ variables });
     },
+    getValidationMessages: fromFieldValidators(createOrUpdateDataIndexModel.data?.dataIndex?.fieldValidators),
   });
 
   const documentTypesSelected = useMemo(
