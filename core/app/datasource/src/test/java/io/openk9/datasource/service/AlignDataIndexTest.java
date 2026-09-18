@@ -469,6 +469,29 @@ public class AlignDataIndexTest {
 	}
 
 	@Test
+	void should_answer_the_template_settings_as_json() {
+		docTypeFieldService
+			.bindSearchAnalyzer(docTypeField.getId(), analyzer.getId())
+			.await().indefinitely();
+
+		align();
+
+		var settings = dataIndexService
+			.getIndexTemplateSettings(dataIndex.getId())
+			.await().indefinitely();
+
+		// the client hands the settings over as a map, and printing it would
+		// give {index={...}}, which the admin shows in a JSON editor
+		var decoded = Assertions.assertDoesNotThrow(
+			() -> new JsonObject(settings),
+			"the settings of a template must be JSON: " + settings);
+
+		Assertions.assertTrue(
+			decoded.getJsonObject("index").encode().contains(ANALYZER_NAME),
+			"and must carry what the docTypes derive: " + settings);
+	}
+
+	@Test
 	void should_refuse_settings_that_name_a_derived_definition() {
 		docTypeFieldService
 			.bindSearchAnalyzer(docTypeField.getId(), analyzer.getId())

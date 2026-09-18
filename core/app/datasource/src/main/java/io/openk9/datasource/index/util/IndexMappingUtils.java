@@ -450,6 +450,12 @@ public final class IndexMappingUtils {
 			}
 			else if (entry.getValue() instanceof JsonObject nested) {
 				removeNulls(nested);
+
+				// a branch a removal emptied holds no setting, and would
+				// otherwise stay in what is recorded for good
+				if (nested.isEmpty()) {
+					removed.add(entry.getKey());
+				}
 			}
 		}
 

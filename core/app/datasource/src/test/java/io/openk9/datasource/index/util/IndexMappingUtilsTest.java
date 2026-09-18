@@ -603,6 +603,43 @@ public class IndexMappingUtilsTest {
 	}
 
 	@Test
+	void mergeSettingsLeavesNoEmptyBranchBehind() {
+		var recorded = new JsonObject().put("analysis", new JsonObject()
+			.put("filter", new JsonObject()
+				.put("mine", new JsonObject().put("type", "lowercase"))));
+
+		var merged = IndexMappingUtils.mergeSettings(
+			recorded,
+			new JsonObject().put("analysis", new JsonObject()
+				.put("filter", new JsonObject().putNull("mine")))
+		);
+
+		Assertions.assertFalse(
+			merged.containsKey("analysis"),
+			"the branches a removal emptied must go with it, or what is "
+				+ "recorded keeps them for good: " + merged.encode());
+	}
+
+	@Test
+	void mergeSettingsKeepsABranchThatStillHoldsSomething() {
+		var recorded = new JsonObject().put("analysis", new JsonObject()
+			.put("filter", new JsonObject()
+				.put("mine", new JsonObject().put("type", "lowercase"))
+				.put("yours", new JsonObject().put("type", "uppercase"))));
+
+		var merged = IndexMappingUtils.mergeSettings(
+			recorded,
+			new JsonObject().put("analysis", new JsonObject()
+				.put("filter", new JsonObject().putNull("mine")))
+		);
+
+		var filter = merged.getJsonObject("analysis").getJsonObject("filter");
+
+		Assertions.assertFalse(filter.containsKey("mine"));
+		Assertions.assertTrue(filter.containsKey("yours"));
+	}
+
+	@Test
 	void withoutAnalysisLeavesWhatAnOpenIndexAccepts() {
 		var settings = Map.<String, Object>of(
 			"analysis", Map.of("analyzer", Map.of("x", Map.of("type", "standard"))),

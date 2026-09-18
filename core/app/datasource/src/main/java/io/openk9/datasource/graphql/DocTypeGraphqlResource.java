@@ -100,7 +100,9 @@ public class DocTypeGraphqlResource {
 
 		return dataIndexService.alignDataIndexes(docTypeId, closeIfNeeded)
 			.onFailure(ValidationException.class)
-			.transform(K9Error::new);
+			// the message alone: K9Error(Throwable) would show the caller the
+			// name of the Java class it came from
+			.transform(failure -> new K9Error(failure.getMessage(), failure));
 	}
 
 	@Mutation

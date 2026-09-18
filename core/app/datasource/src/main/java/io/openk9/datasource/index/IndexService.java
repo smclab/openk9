@@ -303,9 +303,29 @@ public class IndexService {
 				.filter(indexTemplateItem -> indexTemplateItem.name().equals(indexTemplateName))
 				.findFirst()
 				.map(indexTemplateItem -> indexTemplateItem.indexTemplate().template())
-				.map(indexTemplate -> indexTemplate.settings().toString())
+				.map(indexTemplate -> asJson(indexTemplate.settings()))
 				.orElseThrow(() -> new IndexNotFoundException(indexTemplateName))
 			);
+	}
+
+	/**
+	 * Renders the settings of an index template as JSON.
+	 * <p>
+	 * The client hands them over as a map whose values carry their own JSON,
+	 * so printing the map yields {@code {index={"analysis":...}}}, which is
+	 * neither JSON nor anything an editor can show.
+	 *
+	 * @param settings the settings as the client returns them
+	 * @return the same settings as a JSON object
+	 */
+	private static String asJson(Map<String, ?> settings) {
+
+		var json = new JsonObject();
+
+		settings.forEach((key, value) ->
+			json.put(key, Json.decodeValue(String.valueOf(value))));
+
+		return json.encode();
 	}
 
 	private void deleteIndexTemplate(IndexName indexName) {
