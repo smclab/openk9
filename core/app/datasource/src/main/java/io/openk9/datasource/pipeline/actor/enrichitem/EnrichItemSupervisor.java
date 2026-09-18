@@ -30,7 +30,6 @@ import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,12 +38,12 @@ public class EnrichItemSupervisor {
 	public sealed interface Command extends CborSerializable {}
 	public record Execute(
 		EnrichItemDTO enrichItem, DataPayload dataPayload,
-		LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
+		ActorRef<Response> replyTo) implements Command {}
 	private record HttpSupervisorWrapper(HttpSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
 	private record GroovySupervisorWrapper(GroovyActor.Response response, ActorRef<Response> replyTo) implements Command {}
 	private record GroovyValidatorWrapper(
 		GroovyActor.Response response, EnrichItemDTO enrichItem,
-		EnricherInputDTO enricherInputDTO, LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
+		EnricherInputDTO enricherInputDTO, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response extends CborSerializable {}
 	public record Body(byte[] body) implements Response {}
 	public record Error(String error) implements Response {}
@@ -92,7 +91,7 @@ public class EnrichItemSupervisor {
 						type == EnrichItem.EnrichItemType.HTTP_ASYNC,
 						enrichItem.getResourceUri(),
 						enricherInputDTO,
-						gvw.expiredDate, responseActorRef
+						responseActorRef
 					)
 				);
 
@@ -157,7 +156,6 @@ public class EnrichItemSupervisor {
 		EnrichItemDTO enrichItem = execute.enrichItem;
 		DataPayload dataPayload = execute.dataPayload;
 		ActorRef<Response> replyTo = execute.replyTo;
-		LocalDateTime expiredDate = execute.expiredDate;
 
 		ctx.getLog().info(
 			"Execute enrichItemId: {}, type: {}, replyTo: {}", enrichItem.getId(), enrichItem.getType(), replyTo);
@@ -178,7 +176,7 @@ public class EnrichItemSupervisor {
 			.build();
 
 		switch (enrichItem.getType()) {
-			case HTTP_ASYNC, HTTP_SYNC -> onHttpEnrichItem(enrichItem, enricherInputDTO, replyTo, httpSupervisor, expiredDate, ctx);
+			case HTTP_ASYNC, HTTP_SYNC -> onHttpEnrichItem(enrichItem, enricherInputDTO, replyTo, httpSupervisor, ctx);
 			case GROOVY_SCRIPT -> onGroovyEnrichItem(enrichItem, enricherInputDTO, replyTo, ctx);
 		}
 
@@ -209,7 +207,7 @@ public class EnrichItemSupervisor {
 	private static void onHttpEnrichItem(
 		EnrichItemDTO enrichItem, EnricherInputDTO enricherInputDTO,
 		ActorRef<Response> replyTo, ActorRef<HttpSupervisor.Command> httpSupervisor,
-		LocalDateTime expiredDate, ActorContext<Command> ctx) {
+		ActorContext<Command> ctx) {
 
 		ActorRef<HttpSupervisor.Response> responseActorRef =
 			ctx.messageAdapter(
@@ -224,7 +222,7 @@ public class EnrichItemSupervisor {
 			ActorRef<GroovyActor.Response> groovyValidatorRef =
 				ctx.messageAdapter(
 					GroovyActor.Response.class,
-					response -> new GroovyValidatorWrapper(response, enrichItem, enricherInputDTO, expiredDate, replyTo)
+					response -> new GroovyValidatorWrapper(response, enrichItem, enricherInputDTO, replyTo)
 				);
 
 			ActorRef<GroovyActor.Command> groovyActor =
@@ -242,7 +240,6 @@ public class EnrichItemSupervisor {
 				type == EnrichItem.EnrichItemType.HTTP_ASYNC,
 				enrichItem.getResourceUri(),
 				enricherInputDTO,
-				expiredDate,
 				responseActorRef
 			)
 		);

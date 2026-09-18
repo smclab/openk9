@@ -14,37 +14,59 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package io.openk9.datasource.pipeline.actor.enrichitem;
 
-import java.time.LocalDateTime;
-import io.openk9.datasource.model.ResourceUri;
+import java.util.function.Supplier;
+
 import io.openk9.common.util.ingestion.ShardingKey;
+import io.openk9.datasource.model.ResourceUri;
+import io.openk9.datasource.pipeline.actor.common.Http;
+import io.openk9.datasource.pipeline.stages.working.Processor;
 import io.openk9.datasource.util.CborSerializable;
 import io.openk9.datasource.web.dto.EnricherInputDTO;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
-import org.apache.pekko.actor.typed.RecipientRef;
 import org.apache.pekko.actor.typed.SupervisorStrategy;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
-import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
 
 public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
+	private final ShardingKey processKey;
+	private final ActorRef<Processor.Command> pipeline;
+	private final Supplier<Behavior<Http.Command>> httpFactory;
+
 	public HttpSupervisor(
-		ActorContext<Command> context, ShardingKey key) {
+		ActorContext<Command> context,
+		ShardingKey processKey,
+		ActorRef<Processor.Command> pipeline,
+		Supplier<Behavior<Http.Command>> httpFactory) {
 
 		super(context);
-		ClusterSharding clusterSharding = ClusterSharding.get(context.getSystem());
-		this.tokenActorRef = clusterSharding.entityRefFor(Token.ENTITY_TYPE_KEY, key.asString());
+		this.processKey = processKey;
+		this.pipeline = pipeline;
+		this.httpFactory = httpFactory;
 	}
 
-	public static Behavior<Command> create(ShardingKey key) {
+	/**
+	 * Creates the supervisor of the HTTP calls issued by one pipeline entity.
+	 *
+	 * @param processKey the sharding key of the pipeline entity
+	 * @param pipeline the pipeline entity, target of asynchronous callbacks
+	 * @param httpFactory factory of the actor performing the HTTP requests
+	 * @return the behavior
+	 */
+	public static Behavior<Command> create(
+		ShardingKey processKey,
+		ActorRef<Processor.Command> pipeline,
+		Supplier<Behavior<Http.Command>> httpFactory) {
+
 		return Behaviors
-			.<Command>supervise(Behaviors.setup(ctx -> new HttpSupervisor(ctx, key)))
+			.<Command>supervise(Behaviors.setup(ctx -> new HttpSupervisor(
+				ctx, processKey, pipeline, httpFactory)))
 			.onFailure(SupervisorStrategy.resume());
 	}
 
@@ -58,8 +80,7 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
 				ActorRef<Response> replyTo = wrapper.replyTo;
 
-				if (response instanceof HttpProcessor.Body) {
-					HttpProcessor.Body ok = (HttpProcessor.Body) response;
+				if (response instanceof HttpProcessor.Body ok) {
 					replyTo.tell(new Body(ok.body()));
 				}
 				else {
@@ -76,8 +97,8 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 	private Behavior<Command> onCall(Call call) {
 
 		ActorRef<HttpProcessor.Command> httpProcessor =
-			getContext().spawnAnonymous(
-				HttpProcessor.create(call.async, tokenActorRef));
+			getContext().spawnAnonymous(HttpProcessor.create(
+				call.async, processKey, pipeline, httpFactory));
 
 		ActorRef<HttpProcessor.Response> httpProcessorAdapter =
 			getContext().messageAdapter(
@@ -87,7 +108,6 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 		httpProcessor.tell(new HttpProcessor.Start(
 			call.resourceUri,
 			call.enricherInputDTO,
-			call.expiredDate,
 			httpProcessorAdapter
 		));
 
@@ -95,16 +115,24 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
 	}
 
-	private final RecipientRef<Token.Command> tokenActorRef;
-
 	public sealed interface Command extends CborSerializable {}
-	public record Call(
-		boolean async, ResourceUri resourceUri, EnricherInputDTO enricherInputDTO,
-		LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
-	private record ResponseWrapper(HttpProcessor.Response response, ActorRef<Response> replyTo) implements Command {}
-	public sealed interface Response extends CborSerializable {}
-	public record Body(byte[] jsonObject) implements Response {}
-	public record Error(String error) implements Response {}
 
+	public record Call(
+		boolean async,
+		ResourceUri resourceUri,
+		EnricherInputDTO enricherInputDTO,
+		ActorRef<Response> replyTo
+	) implements Command {}
+
+	private record ResponseWrapper(
+		HttpProcessor.Response response,
+		ActorRef<Response> replyTo
+	) implements Command {}
+
+	public sealed interface Response extends CborSerializable {}
+
+	public record Body(byte[] jsonObject) implements Response {}
+
+	public record Error(String error) implements Response {}
 
 }
