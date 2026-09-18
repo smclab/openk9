@@ -42,6 +42,7 @@ export function ModalConfirm({
   fullWidth = false,
   type = "info",
   confirmationWord,
+  hideCancel = false,
 }: {
   actionConfirm(): void;
   labelConfirm: string;
@@ -53,6 +54,7 @@ export function ModalConfirm({
   maxWidth?: Breakpoint;
   type?: "success" | "info" | "error" | "warning";
   confirmationWord?: string;
+  hideCancel?: boolean;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = React.useState(true);
@@ -143,18 +145,20 @@ export function ModalConfirm({
         )}
       </DialogContent>
       <DialogActions sx={{ display: "flex", justifyContent: "center", pb: 3 }}>
-        <Button
-          onClick={handleClose}
-          color="primary"
-          variant="outlined"
-          sx={{
-            padding: "8px 24px",
-            textTransform: "none",
-            fontWeight: "bold",
-          }}
-        >
-          {t("common.cancel")}
-        </Button>
+        {!hideCancel && (
+          <Button
+            onClick={handleClose}
+            color="primary"
+            variant="outlined"
+            sx={{
+              padding: "8px 24px",
+              textTransform: "none",
+              fontWeight: "bold",
+            }}
+          >
+            {t("common.cancel")}
+          </Button>
+        )}
         <Button
           onClick={() => {
             actionConfirm();

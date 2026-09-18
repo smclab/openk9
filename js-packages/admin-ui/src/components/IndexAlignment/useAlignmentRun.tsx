@@ -43,6 +43,9 @@ export function useAlignmentRun({
     async (closeIfNeeded: boolean) => {
       setIsRunning(true);
       setError(null);
+      // a result already on screen belongs to the previous run, and the second
+      // leg of a confirmed closing would otherwise flash it while it waits
+      setOutcomes(null);
 
       try {
         const result = await run(closeIfNeeded);
@@ -71,6 +74,11 @@ export function useAlignmentRun({
     void execute(false);
   }, [execute, isRunning]);
 
+  const dismiss = React.useCallback(() => {
+    setOutcomes(null);
+    setError(null);
+  }, []);
+
   const ConfirmClosing = toClose ? (
     <ModalConfirm
       title="Close the index to apply it?"
@@ -95,5 +103,7 @@ export function useAlignmentRun({
     </ModalConfirm>
   ) : null;
 
-  return { outcomes, error, isRunning, start, ConfirmClosing };
+  // isAsking lets a caller that presents the outcome as a modal hold it back
+  // until the closing question has an answer, instead of stacking two dialogs
+  return { outcomes, error, isRunning, start, dismiss, isAsking: toClose !== null, ConfirmClosing };
 }

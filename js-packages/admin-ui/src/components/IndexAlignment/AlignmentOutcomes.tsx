@@ -71,26 +71,70 @@ export function needsClosing(outcomes: Array<AlignmentOutcome>): Array<Alignment
   return outcomes.filter((outcome) => outcome.status === "CLOSE_REQUIRED");
 }
 
-function worstSeverity(outcomes: Array<AlignmentOutcome>): AlertColor {
+export function worstSeverity(outcomes: Array<AlignmentOutcome>): AlertColor {
   return outcomes.reduce<AlertColor>((worst, outcome) => {
     const severity = statusColor(outcome.status);
     return SEVERITY_RANK.indexOf(severity) > SEVERITY_RANK.indexOf(worst) ? severity : worst;
   }, "success");
 }
 
+export const OUTCOMES_NOTE =
+  "An applied outcome means OpenSearch accepted what was sent to it, not that the index matches the model.";
+
+export const NOTHING_TO_ALIGN = "No current index uses it, so there was nothing to align.";
+
+export function outcomesTitle(outcomes: Array<AlignmentOutcome>): string {
+  return outcomes.length === 1 ? "Outcome of the alignment" : `Outcome for ${outcomes.length} indexes`;
+}
+
+/** One row per index, shared by the panel and the modal that present an outcome. */
+export function OutcomesTable({ outcomes }: { outcomes: Array<AlignmentOutcome> }) {
+  return (
+    <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Status</TableCell>
+            <TableCell>Index</TableCell>
+            <TableCell>Reason</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {outcomes.map((outcome, index) => (
+            <TableRow key={`${outcome.dataIndexId ?? "unknown"}-${index}`}>
+              <TableCell>
+                <Chip size="small" color={statusColor(outcome.status)} label={statusLabel(outcome.status)} />
+              </TableCell>
+              <TableCell>
+                {outcome.dataIndexId ? (
+                  <Link to={`/dataindex/${outcome.dataIndexId}/mode/view`}>{outcome.indexName}</Link>
+                ) : (
+                  <Box component="span">{outcome.indexName}</Box>
+                )}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: "pre-wrap" }}>{outcome.reason || "—"}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
 /**
- * The outcome of an alignment, one row per index.
+ * The outcome of an alignment, presented next to the control that started it.
  *
  * It is an Alert and not a toast on purpose: three of the five statuses carry
  * something to read, a FAILED one carries the raw refusal of OpenSearch, and a
- * toast takes all of that away after six seconds.
+ * toast takes all of that away after six seconds. Where the outcome is read
+ * once and dismissed, AlignmentOutcomesModal presents the same thing instead.
  */
 export function AlignmentOutcomes({
   outcomes,
   error,
   title,
-  note = "An applied outcome means OpenSearch accepted what was sent to it, not that the index matches the model.",
-  emptyMessage = "No current index uses it, so there was nothing to align.",
+  note = OUTCOMES_NOTE,
+  emptyMessage = NOTHING_TO_ALIGN,
 }: {
   outcomes: Array<AlignmentOutcome> | null;
   error?: string | null;
@@ -120,40 +164,11 @@ export function AlignmentOutcomes({
 
   return (
     <Alert severity={worstSeverity(outcomes)} sx={{ mt: 2 }}>
-      <AlertTitle>
-        {title ?? (outcomes.length === 1 ? "Outcome of the alignment" : `Outcome for ${outcomes.length} indexes`)}
-      </AlertTitle>
+      <AlertTitle>{title ?? outcomesTitle(outcomes)}</AlertTitle>
       <Typography variant="body2" sx={{ mb: 1 }}>
         {note}
       </Typography>
-      <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Status</TableCell>
-              <TableCell>Index</TableCell>
-              <TableCell>Reason</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {outcomes.map((outcome, index) => (
-              <TableRow key={`${outcome.dataIndexId ?? "unknown"}-${index}`}>
-                <TableCell>
-                  <Chip size="small" color={statusColor(outcome.status)} label={statusLabel(outcome.status)} />
-                </TableCell>
-                <TableCell>
-                  {outcome.dataIndexId ? (
-                    <Link to={`/dataindex/${outcome.dataIndexId}/mode/view`}>{outcome.indexName}</Link>
-                  ) : (
-                    <Box component="span">{outcome.indexName}</Box>
-                  )}
-                </TableCell>
-                <TableCell sx={{ whiteSpace: "pre-wrap" }}>{outcome.reason || "—"}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <OutcomesTable outcomes={outcomes} />
     </Alert>
   );
 }

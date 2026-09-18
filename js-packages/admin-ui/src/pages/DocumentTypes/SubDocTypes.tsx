@@ -41,7 +41,7 @@ import {
   useCreateOrUpdateDocumentTypeFieldMutation,
   useDocTypeFieldsByParentQuery,
 } from "../../graphql-generated";
-import { AlignmentOutcomes } from "@components/IndexAlignment/AlignmentOutcomes";
+import { AlignmentOutcomesModal } from "@components/IndexAlignment/AlignmentOutcomesModal";
 import { useAlignmentRun } from "@components/IndexAlignment/useAlignmentRun";
 import { useParams } from "react-router-dom";
 import { Logo } from "@components/common";
@@ -472,8 +472,15 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
             <Typography variant="body2" color="text.secondary" role="status" aria-live="polite" sx={{ minHeight: 20 }}>
               {alignment.isRunning ? "Writing the model to the indexes that use this document type…" : ""}
             </Typography>
-            <AlignmentOutcomes outcomes={alignment.outcomes} error={alignment.error} />
             {alignment.ConfirmClosing}
+            {/* the outcome waits for the closing question: two stacked dialogs would bury it */}
+            {!alignment.isAsking && (
+              <AlignmentOutcomesModal
+                outcomes={alignment.outcomes}
+                error={alignment.error}
+                onClose={alignment.dismiss}
+              />
+            )}
             <Box sx={{ position: "relative", minHeight: "800px" }}>
               {loading && (
                 <Box
