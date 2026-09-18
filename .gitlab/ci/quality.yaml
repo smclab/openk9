@@ -164,18 +164,6 @@ SonarQube Check:
 # ============================================================================
 
 # --- AI modules (ai-packages/) ---
-Trivy FS rag-module:
-  extends: .trivy-fs-scan
-  variables:
-    SCAN_DIR: "ai-packages/rag-module"
-    IGNOREFILE: "ai-packages/.trivyignore.yaml"
-  rules:
-    - !reference [.rules:antispam-new-branch, rules]
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes: [ "ai-packages/rag-module/**/*" ]
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: [ "ai-packages/rag-module/**/*" ]
-
 Trivy FS agentic-rag-module:
   extends: .trivy-fs-scan
   variables:

@@ -192,18 +192,6 @@ def run(verbose=False, kfilter=None):
               no_fire=["Copy Embedding OpenAI to DockerHub"],
               verbose=verbose)
 
-    # ── AI — rag (single image) ────────────────────────────────────────────────
-    f = ".gitlab-ci-rag-module.yaml"
-    if want(f):
-        section("AI — rag-module")
-        check(f"tag {TAG_V} → Build Release + Copy",
-              list_jobs(f, tag=TAG_V),
-              fire=["Build Rag Release", "Copy Rag Module to DockerHub"],
-              verbose=verbose)
-        check(f"tag {TAG_NOV} (no v) → NO Copy",
-              list_jobs(f, tag=TAG_NOV),
-              no_fire=["Copy Rag Module to DockerHub"], verbose=verbose)
-
     # ── Frontend — admin-ui (Kaniko, version.env) ──────────────────────────────
     f = ".gitlab-ci-admin-frontend.yaml"
     if want(f):

@@ -65,7 +65,7 @@ FRONTEND_TRIGGERS = [
     "Trigger OpenK9-Chatbot",
 ]
 AI_TRIGGERS = [
-    "Trigger Rag Module", "Trigger Agentic Rag Module",
+    "Trigger Agentic Rag Module",
     "Trigger Embedding Modules", "Trigger Chunk Evaluation Module",
 ]
 ENRICHER_TRIGGERS = [
@@ -88,7 +88,6 @@ DOMAIN_FOLDERS = {
         "js-packages/openk9-chatbot",
     ],
     "ai":        [
-        "ai-packages/rag-module",
         "ai-packages/agentic-rag-module",
         "ai-packages/embedding-modules",
         "ai-packages/chunk-evaluation-module",

@@ -10,11 +10,11 @@
 replicaCount: 1
 
 ## @section Talk To Image parameters
-## Docker Rag Module image version
+## Docker Talk To image version
 ## ref: https://hub.docker.com/u/smclab
 ## @param image.registry [default: REGISTRY_NAME] Talk To image registry
-## @skip image.tag Rag Module image tag (immutable tags are recommended)
-## @param image.pullPolicy Rag Module image pull policy
+## @skip image.tag Talk To image tag (immutable tags are recommended)
+## @param image.pullPolicy Talk To image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
   registry: ""   #-TBMD
@@ -59,11 +59,11 @@ service:
   port: 8080
 
 
-## Rag Module pods ServiceAccount
+## Talk To pods ServiceAccount
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 ##
 serviceAccount:
-  ## @param serviceAccount.create Enable creation of ServiceAccount for Rag Module pods
+  ## @param serviceAccount.create Enable creation of ServiceAccount for Talk To pods
   ##
   create: false
   ## @param serviceAccount.annotations Annotations for service account. Evaluated as a template. Only used if `create` is `true`.
@@ -75,18 +75,18 @@ serviceAccount:
   automountServiceAccountToken: false
   name: ""
 
-## @param podAnnotations Rag Module Pod annotations. Evaluated as a template
+## @param podAnnotations Talk To Pod annotations. Evaluated as a template
 ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 ##
 podAnnotations: {}
 
-## Rag Module pods' Security Context
+## Talk To pods' Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
-## @param podSecurityContext.enabled Enable Rag Module pods' Security Context
+## @param podSecurityContext.enabled Enable Talk To pods' Security Context
 ## @param podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
 ## @param podSecurityContext.sysctls Set kernel settings using the sysctl interface
 ## @param podSecurityContext.supplementalGroups Set filesystem extra groups
-## @param podSecurityContext.fsGroup Set Rag Module pod's Security Context fsGroup
+## @param podSecurityContext.fsGroup Set Talk To pod's Security Context fsGroup
 ##
 podSecurityContext:
   runAsNonRoot: true
@@ -109,7 +109,7 @@ containerSecurityContext:
 hostAliases: []
 
 ## Configure the ingress resource that allows you to access the
-## Rag Module installation. Set up the URL
+## Talk To installation. Set up the URL
 ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ##
 ingress:
@@ -118,10 +118,10 @@ ingress:
   ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
   ##
   ingressClassName: ""
-  ## @param ingress.enabled Enable ingress resource for Rag Module console
+  ## @param ingress.enabled Enable ingress resource for Talk To console
   ##
   enabled: false
-  ## @param ingress.enabled Enable ingress resource for Rag Module console
+  ## @param ingress.enabled Enable ingress resource for Talk To console
   ##
   host: openk9.local   #-TBMD
   ## @param ingress.annotations Additional annotations for the Ingress resource.

@@ -90,7 +90,6 @@ OpenK9 uses a **Parent-Child CI/CD pipeline** on GitLab. The parent pipeline act
 ├── .gitlab-ci-openk9-chatbot.yaml     ← NPM publish only, no Docker image
 │
 │   # AI / enricher child pipelines
-├── .gitlab-ci-rag-module.yaml
 ├── .gitlab-ci-agentic-rag-module.yaml
 ├── .gitlab-ci-embedding-module.yaml
 ├── .gitlab-ci-chunk-evaluation-module.yaml
