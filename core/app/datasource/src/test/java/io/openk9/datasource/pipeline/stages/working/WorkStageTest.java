@@ -150,7 +150,7 @@ class WorkStageTest {
 	}
 
 	@Test
-	void should_give_a_distinct_process_key_to_each_incarnation() throws Exception {
+	void should_give_a_distinct_process_key_to_each_instance() throws Exception {
 		// two WorkStages for the same scheduling, as after a restart
 		var first = workingKeyOf(newWorkStage());
 		Thread.sleep(2);
@@ -160,18 +160,18 @@ class WorkStageTest {
 		Assertions.assertEquals(SHARDING_KEY, first.baseKey());
 		Assertions.assertEquals(SHARDING_KEY, second.baseKey());
 
-		// but the first message of each incarnation gets its own entity
+		// but the first message of each instance gets its own entity
 		Assertions.assertNotEquals(first, second);
 	}
 
 	@Test
-	void should_number_the_messages_within_an_incarnation() {
+	void should_number_the_messages_within_an_instance() {
 		// two messages through the same WorkStage
 		var workStage = newWorkStage();
 		var first = workingKeyOf(workStage);
 		var second = workingKeyOf(workStage);
 
-		// same incarnation segment, different counter
+		// same instance segment, different counter
 		Assertions.assertEquals(4, first.elements().length);
 		Assertions.assertEquals(first.elements()[2], second.elements()[2]);
 		Assertions.assertNotEquals(first, second);
