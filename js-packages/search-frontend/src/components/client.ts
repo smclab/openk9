@@ -646,10 +646,10 @@ export function OpenK9Client({
       if (request.searchText === "") return null;
       if (mock)
         return {
-          searchText: "Questo Ã¨ un esempio di testo per l'analisi",
+          searchText: "Questo è un esempio di testo per l'analisi",
           analysis: [
             {
-              text: "Questo Ã¨ un nuovo",
+              text: "Questo è un nuovo",
               start: 0,
               end: 5,
               tokens: [

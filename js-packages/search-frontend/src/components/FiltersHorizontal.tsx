@@ -124,7 +124,7 @@ function FiltersHorizontal({
     }
   };
 
-  let isPresent = true; //per sapere se Ã¨ presente almeno un filtro all'interno di una qualsiasi suggestion
+  let isPresent = true; //per sapere se è presente almeno un filtro all'interno di una qualsiasi suggestion
   const { t } = useTranslation();
 
   return (

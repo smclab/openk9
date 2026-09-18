@@ -26,7 +26,7 @@ interface CronComponents {
  * Converte una stringa cron nei suoi componenti
  * @param cronString - Stringa cron nel formato "* * * * *" (minute hour dayOfMonth month dayOfWeek)
  * @returns Oggetto con i componenti della stringa cron separati
- * @throws Error se la stringa cron non Ã¨ nel formato corretto
+ * @throws Error se la stringa cron non è nel formato corretto
  */
 export function parseCronExpression(cronString: string): CronComponents {
   // Rimuove eventuali secondi dalla stringa cron (alcuni formati includono i secondi all'inizio)
@@ -50,9 +50,9 @@ export function parseCronExpression(cronString: string): CronComponents {
 }
 
 /**
- * Verifica se una stringa cron Ã¨ valida
+ * Verifica se una stringa cron è valida
  * @param cronString - Stringa cron da validare
- * @returns true se la stringa Ã¨ valida, false altrimenti
+ * @returns true se la stringa è valida, false altrimenti
  */
 export function isValidCronExpression(cronString: string): boolean {
   try {

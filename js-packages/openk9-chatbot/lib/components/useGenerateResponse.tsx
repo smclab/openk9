@@ -302,7 +302,7 @@ const useGenerateResponse = ({
             ? {
                 ...msg,
                 status: "END",
-                answer: "La risposta Ã¨ stata annullata",
+                answer: "La risposta è stata annullata",
               }
             : msg,
         ),
@@ -328,7 +328,7 @@ const useGenerateResponse = ({
           ? {
               ...msg,
               status: "END",
-              answer: msg.answer + "... La risposta Ã¨ stata annullata",
+              answer: msg.answer + "... La risposta è stata annullata",
             }
           : msg,
       ),

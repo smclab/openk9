@@ -208,7 +208,7 @@ export function ModalAddSingle({
       //   toast({
       //     displayType: "error",
       //     title: "Errore",
-      //     content: error.message || "Si Ã¨ verificato un errore.",
+      //     content: error.message || "Si è verificato un errore.",
       //   });
       // },
     });

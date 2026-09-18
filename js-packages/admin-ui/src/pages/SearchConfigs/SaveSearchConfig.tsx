@@ -541,7 +541,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     let newValue = parseFloat(event.target.value);
 
-    // Se il valore Ã¨ un numero valido, aggiorna lo stato
+    // Se il valore è un numero valido, aggiorna lo stato
     if (!isNaN(newValue)) {
       // Assicurati che il valore rimanga nel range [0, 1]
       newValue = Math.max(0, Math.min(1, newValue));
@@ -617,7 +617,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
         <Dialog
           onClose={handleClose}
           aria-labelledby="customized-dialog-title"
-          open // Mostra la modale se isHybridSearch Ã¨ true
+          open // Mostra la modale se isHybridSearch è true
         >
           <DialogTitle
             sx={{ m: 0, p: 2 }}

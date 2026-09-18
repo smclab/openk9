@@ -336,7 +336,7 @@ const darkTheme = createTheme({
       main: "#2980B9",
     },
     background: {
-      paper: "#303030", // Sfondo piÃ¹ scuro
+      paper: "#303030", // Sfondo più scuro
       default: "#2c2a29", // Sfondo generale scuro
     },
     primary: {
@@ -545,7 +545,7 @@ export default function App() {
     const handleScroll = () => {
       const mainContent = document.querySelector("main");
       if (mainContent) {
-        setShowScrollTop(mainContent.scrollTop > 100); // Ridotto a 100px per renderlo piÃ¹ visibile
+        setShowScrollTop(mainContent.scrollTop > 100); // Ridotto a 100px per renderlo più visibile
       }
     };
 
