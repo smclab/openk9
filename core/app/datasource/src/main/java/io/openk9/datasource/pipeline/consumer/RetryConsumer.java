@@ -27,6 +27,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import com.typesafe.config.Config;
+import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.AskPattern;
 import org.jboss.logging.Logger;
@@ -88,9 +89,15 @@ public class RetryConsumer extends BaseConsumer {
 		else {
 			getChannel().basicNack(envelope.getDeliveryTag(), false, false);
 
+			var cause = String.format(
+				"message discarded after %d delivery attempts on queue %s, " +
+				"see the datasource log for the failing step",
+				count, queueBind.getMainKey());
+
 			AskPattern.ask(
 				getScheduling(),
-				Scheduling.TrackError::new,
+				(ActorRef<Scheduling.Response> replyTo) ->
+					new Scheduling.TrackError(cause, replyTo),
 				timeout,
 				context.getSystem().scheduler()
 			).whenComplete((r, t) -> {

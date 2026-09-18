@@ -505,10 +505,26 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onPostStop(PostStop postStop) {
 		Set<ActorRef<Response>> released = new HashSet<>();
 
+		if (!heldMessages.isEmpty()) {
+			// a stop with work in flight is what turns into silent nacks and
+			// redeliveries downstream, so it has to leave a trace here
+			log.warnf(
+				"Scheduling %s stopped with %d messages in flight, " +
+				"releasing them as failures: %s",
+				shardingKey.asString(),
+				heldMessages.size(),
+				heldMessages.keySet()
+			);
+		}
+
+		var failure = new Failure(String.format(
+			"scheduling %s stopped with %d messages in flight",
+			shardingKey.asString(), heldMessages.size()));
+
 		for (ActorRef<Response> replyTo : heldMessages.values()) {
 
 			if (!released.contains(replyTo)) {
-				replyTo.tell(new Failure("stopped for unexpected reason"));
+				replyTo.tell(failure);
 				released.add(replyTo);
 			}
 		}
@@ -664,16 +680,29 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onTrackError(TrackError trackError) {
 
-		if (scheduler.getStatus() != Scheduler.SchedulerStatus.ERROR) {
-			getContext().getSelf().tell(
-				new UpdateStatus(Scheduler.SchedulerStatus.ERROR, trackError.replyTo)
-			);
-		}
-		else {
+		if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
 			trackError.replyTo().tell(Success.INSTANCE);
+
+			return next();
 		}
 
-		return next();
+		log.warnf(
+			"Scheduling %s goes in ERROR: %s", shardingKey.asString(), trackError.cause());
+
+		// the status alone would leave a red scheduling with no explanation:
+		// persist the cause first, then the status
+		var exception = new WorkStageException(trackError.cause());
+		var startWrapper = getStartWrapper(trackError.replyTo());
+
+		getContext().pipeToSelf(
+			SchedulingService.persistErrorDescription(shardingKey, exception)
+				.thenCompose(ignore -> SchedulingService.persistStatus(
+					shardingKey, Scheduler.SchedulerStatus.ERROR)),
+			(scheduler, throwable) -> new UpdateScheduler(
+				scheduler, (Exception) throwable, startWrapper)
+		);
+
+		return settingUp();
 	}
 
 	private Behavior<Command> onTrackFailure(TrackFailure trackFailure) {
@@ -905,7 +934,15 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	public record Restart(ActorRef<Response> replyTo) implements Command {}
 
-	public record TrackError(ActorRef<Response> replyTo) implements Command {}
+	/**
+	 * Marks the scheduling as failed because a message was discarded after
+	 * exhausting its retries.
+	 *
+	 * @param cause what happened, persisted as the error description
+	 * @param replyTo where to confirm the tracking
+	 */
+	public record TrackError(String cause, ActorRef<Response> replyTo)
+		implements Command {}
 
 	private record CloseStageResponse(CloseStage.Response response) implements Command {}
 
