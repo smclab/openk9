@@ -17,7 +17,9 @@
 
 package io.openk9.datasource.pipeline.stages.working;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
@@ -30,6 +32,7 @@ import io.vertx.core.json.Json;
 import org.apache.pekko.actor.testkit.typed.Effect;
 import org.apache.pekko.actor.testkit.typed.javadsl.BehaviorTestKit;
 import org.apache.pekko.actor.testkit.typed.javadsl.TestInbox;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -108,5 +111,69 @@ class WorkStageTest {
 
 		Assertions.assertEquals(1, spawned.size());
 	}
+
+	@Test
+	void should_give_a_distinct_process_key_to_each_instance() throws Exception {
+		// two WorkStages for the same scheduling, as after a restart
+		var first = workingKeyOf(newWorkStage());
+		Thread.sleep(2);
+		var second = workingKeyOf(newWorkStage());
+
+		// both keys address the same scheduling
+		Assertions.assertEquals(SHARDING_KEY, first.baseKey());
+		Assertions.assertEquals(SHARDING_KEY, second.baseKey());
+
+		// but the first message of each instance gets its own entity
+		Assertions.assertNotEquals(first, second);
+	}
+
+	@Test
+	void should_number_the_messages_within_an_instance() {
+		// two messages through the same WorkStage
+		var workStage = newWorkStage();
+		var first = workingKeyOf(workStage);
+		var second = workingKeyOf(workStage);
+
+		// same instance segment, different counter
+		Assertions.assertEquals(4, first.elements().length);
+		Assertions.assertEquals(first.elements()[2], second.elements()[2]);
+		Assertions.assertNotEquals(first, second);
+	}
+
+	private static BehaviorTestKit<WorkStage.Command> newWorkStage() {
+		var replyToInbox = TestInbox.<WorkStage.Response>create();
+		var workStage = BehaviorTestKit.create(WorkStage.create(
+			SHARDING_KEY,
+			replyToInbox.getRef(),
+			new WorkStage.Configurations(
+				new LinkedList<>(), (dto, writerAdapter) -> Behaviors.ignore())
+		));
+		REPLY_TO_INBOXES.put(workStage, replyToInbox);
+
+		return workStage;
+	}
+
+	// drives a deletion through the WorkStage and returns the process key it
+	// assigned to the message
+	private static ShardingKey workingKeyOf(BehaviorTestKit<WorkStage.Command> workStage) {
+		var requesterInbox = TestInbox.<Scheduling.Response>create();
+		var payload = Json.encodeToBuffer(DataPayload.builder()
+				.type(PayloadType.DOCUMENT)
+				.contentId("content-1")
+				.build())
+			.getBytes();
+
+		workStage.run(new WorkStage.StartWorker(
+			scheduler(), payload, requesterInbox.getRef()));
+
+		var working = Assertions.assertInstanceOf(
+			WorkStage.Working.class,
+			REPLY_TO_INBOXES.get(workStage).receiveMessage());
+
+		return working.heldMessage().processKey();
+	}
+
+	private static final Map<BehaviorTestKit<WorkStage.Command>, TestInbox<WorkStage.Response>>
+		REPLY_TO_INBOXES = new HashMap<>();
 
 }

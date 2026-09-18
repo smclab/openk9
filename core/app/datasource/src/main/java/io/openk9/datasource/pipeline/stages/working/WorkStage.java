@@ -52,6 +52,12 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private ActorRef<Writer.Command> partialWriter;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final LinkedList<EntityTypeKey<Processor.Command>> processorTypes;
+	// the counter restarts whenever the owning Scheduling is recreated, so
+	// the key gets a segment unique to this WorkStage instance (its creation
+	// time in base 36): a redelivered message must never land on the
+	// processor entity of a previous attempt
+	private final String instanceId =
+		Long.toString(System.currentTimeMillis(), Character.MAX_RADIX);
 	private long counter = 0;
 
 	public WorkStage(
@@ -168,7 +174,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				counter++;
 				var parsingDateTimeStamp = dataPayload.getParsingDate();
 
-				var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
+				var processKey = ShardingKey.concat(
+					shardingKey, instanceId, String.valueOf(counter));
 
 				var heldMessage = new HeldMessage(
 					processKey,
@@ -221,7 +228,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				counter++;
 				var parsingDateTimeStamp = dataPayload.getParsingDate();
 
-				var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
+				var processKey = ShardingKey.concat(
+					shardingKey, instanceId, String.valueOf(counter));
 
 				var heldMessage = new HeldMessage(
 					processKey,

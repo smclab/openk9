@@ -18,21 +18,23 @@
 package io.openk9.datasource.pipeline.actor;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.pipeline.actor.common.Http;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
+import io.openk9.datasource.pipeline.actor.enrichitem.HttpProcessor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.pipeline.service.dto.EnrichItemDTO;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
 import io.openk9.datasource.processor.payload.DataPayload;
+import io.openk9.datasource.util.CborSerializable;
 import io.openk9.datasource.util.JsonMerge;
 
 import io.vertx.core.buffer.Buffer;
@@ -51,14 +53,53 @@ public class EnrichPipeline {
 		EntityTypeKey.create(Processor.Command.class, "enrich-pipeline");
 	private static final Logger log = Logger.getLogger(EnrichPipeline.class);
 
+	/**
+	 * Creates the entity behavior, calling enrichers through the CDI-managed
+	 * HTTP actor.
+	 *
+	 * @param processKey the sharding key of this entity
+	 * @return the behavior
+	 */
 	public static Behavior<Processor.Command> create(ShardingKey processKey) {
+		return create(processKey, Http::create);
+	}
+
+	/**
+	 * Creates the entity behavior with a custom factory for the actor that
+	 * performs the HTTP requests to the enrichers.
+	 *
+	 * @param processKey the sharding key of this entity
+	 * @param httpFactory factory of the HTTP actor
+	 * @return the behavior
+	 */
+	public static Behavior<Processor.Command> create(
+		ShardingKey processKey,
+		Supplier<Behavior<Http.Command>> httpFactory) {
+
 		return Behaviors.setup(ctx -> Behaviors
 			.receive(Processor.Command.class)
 			.onMessage(Processor.Start.class, setup -> onSetup(
 				ctx,
 				processKey,
+				httpFactory,
 				setup
 			))
+			.onMessage(Callback.class, callback -> {
+
+				// the sharding recreates the entity on any message addressed
+				// to it: a callback with no pipeline running is stale, tell so
+				// and leave right away not to linger as an empty entity
+				log.warnf(
+					"[processKey: %s] unknown callback %s: no pipeline is running, " +
+					"stopping.",
+					processKey.asString(),
+					callback.nonce()
+				);
+
+				callback.replyTo().tell(CallbackResponse.UNKNOWN);
+
+				return Behaviors.stopped();
+			})
 			.build()
 		);
 	}
@@ -66,6 +107,7 @@ public class EnrichPipeline {
 	public static Behavior<Processor.Command> onSetup(
 		ActorContext<Processor.Command> ctx,
 		ShardingKey processKey,
+		Supplier<Behavior<Http.Command>> httpFactory,
 		Processor.Start setup
 	) {
 
@@ -85,7 +127,8 @@ public class EnrichPipeline {
 		);
 
 		ActorRef<HttpSupervisor.Command> supervisorActorRef =
-			ctx.spawnAnonymous(HttpSupervisor.create(processKey.baseKey()));
+			ctx.spawnAnonymous(HttpSupervisor.create(
+				processKey, ctx.getSelf(), httpFactory));
 
 		return initPipeline(
 			ctx,
@@ -150,8 +193,7 @@ public class EnrichPipeline {
 
 		Long requestTimeout = enrichItem.getRequestTimeout();
 
-		LocalDateTime expiredDate =
-			LocalDateTime.now().plus(requestTimeout, ChronoUnit.MILLIS);
+		var pending = new PendingCallback();
 
 		ctx.ask(
 			EnrichItemSupervisor.Response.class,
@@ -159,7 +201,7 @@ public class EnrichPipeline {
 			Duration.ofMillis(requestTimeout),
 			enrichItemReplyTo ->
 				new EnrichItemSupervisor.Execute(
-					enrichItem, dataPayload, expiredDate, enrichItemReplyTo),
+					enrichItem, dataPayload, enrichItemReplyTo),
 			(r, t) -> {
 				if (t != null) {
 					return new EnrichItemError(new DataProcessException(t));
@@ -377,6 +419,64 @@ public class EnrichPipeline {
 				return Behaviors.stopped();
 
 			})
+			.onMessage(HttpProcessor.RegisterCallback.class, register -> {
+
+				pending.nonce = register.nonce();
+				pending.waiter = register.waiter();
+
+				return Behaviors.same();
+
+			})
+			.onMessage(Callback.class, callback -> {
+
+				if (pending.nonce == null || !pending.nonce.equals(callback.nonce())) {
+
+					log.warnf(
+						"[schedulerId: %s, messageNumber: %s] unknown callback %s " +
+						"for enrichItem %s, discarding.",
+						schedulerId,
+						heldMessage.messageNumber(),
+						callback.nonce(),
+						enrichItem.getId()
+					);
+
+					callback.replyTo().tell(CallbackResponse.UNKNOWN);
+
+					return Behaviors.same();
+				}
+
+				pending.waiter.tell(new HttpProcessor.Callback(callback.body()));
+				pending.nonce = null;
+				pending.waiter = null;
+
+				callback.replyTo().tell(CallbackResponse.ACCEPTED);
+
+				return Behaviors.same();
+
+			})
+			.onMessage(Processor.Start.class, start -> {
+
+				// a redelivery landed on the entity still working on the
+				// previous delivery: fail it fast instead of letting the
+				// consumer wait for an answer that will never come
+				log.warnf(
+					"[schedulerId: %s, messageNumber: %s] start received while " +
+					"enrichItem %s is in progress, rejecting the redelivery.",
+					schedulerId,
+					heldMessage.messageNumber(),
+					enrichItem.getId()
+				);
+
+				start.replyTo().tell(new Processor.Failure(
+					new DataProcessException(
+						"processor " + heldMessage.processKey().asString() +
+						" is still working on a previous delivery"),
+					start.heldMessage()
+				));
+
+				return Behaviors.same();
+
+			})
 			.build();
 
 	}
@@ -428,4 +528,31 @@ public class EnrichPipeline {
 
 	private record InternalError(DataProcessException exception) implements Processor.Command {}
 
+	/**
+	 * The body posted by an asynchronous enricher to the callback endpoint.
+	 *
+	 * @param nonce the nonce carried by the token the enricher was given
+	 * @param body the posted body
+	 * @param replyTo where to tell whether the callback was awaited
+	 */
+	public record Callback(
+		String nonce,
+		byte[] body,
+		ActorRef<CallbackResponse> replyTo
+	) implements Processor.Command {}
+
+	public enum CallbackResponse implements CborSerializable {
+		ACCEPTED,
+		UNKNOWN
+	}
+
+	/**
+	 * The callback awaited by the enrich item in progress, if any.
+	 */
+	private static final class PendingCallback {
+		private String nonce;
+		private ActorRef<HttpProcessor.Command> waiter;
+	}
+
 }
+
