@@ -1,0 +1,37 @@
+# jaraco.context (CVE-2026-23949) and wheel (CVE-2026-24049) are flagged by
+# Trivy at versions 5.3.0 / 0.45.1, but those versions come from setuptools'
+# own internal vendored copy (site-packages/setuptools/_vendor/), which just
+# records the versions setuptools vendors for its own bundled/internal use.
+# These are not installed application packages and are not reachable via
+# this connector's code or any untrusted external input. The real top-level
+# "wheel" package installed for the app is already at 0.46.3, which is
+# newer than the fixed version.
+#
+# Verified 2026-09-18 in the built image:
+#   pip show jaraco.context  -> Package(s) not found
+#   pip show wheel           -> Version: 0.46.3 (already fixed)
+#   (both vulnerable versions only found under setuptools/_vendor/*.dist-info)
+#
+# Re-evaluate if setuptools itself bumps its vendored copies to fixed
+# versions, or if a future finding shows a real installed-package occurrence
+# (not setuptools/_vendor).
+CVE-2026-23949
+CVE-2026-24049
+
+# msgpack (GHSA-6v7p-g79w-8964) and setuptools (CVE-2025-47273) are flagged by
+# Trivy at versions 1.1.2 / 70.3.0, but those versions come from pip's own
+# internal vendor.txt manifest (/usr/local/lib/python3.13/site-packages/pip/_vendor/vendor.txt),
+# which just records which versions pip vendors for its own bundled/internal
+# use. This is not an installed application package and is not reachable via
+# this connector's code or any untrusted external input.
+#
+# Verified 2026-09-18 in the built image (after switching to python:3.13-slim):
+#   pip show msgpack     -> Package(s) not found
+#   pip show setuptools  -> Package(s) not found
+# (same pip-vendor pattern as the main-branch and email-connector/
+# gitlab-connector/database-connector 3.0.x fixes, issue #2439)
+#
+# Re-evaluate if pip itself bumps its vendored copies to fixed versions, or if
+# a future finding shows a real installed-package occurrence (not pip/_vendor).
+GHSA-6v7p-g79w-8964
+CVE-2025-47273

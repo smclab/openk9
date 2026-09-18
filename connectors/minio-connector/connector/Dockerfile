@@ -1,6 +1,10 @@
-FROM python:3.11
+FROM python:3.13-slim
 
 COPY requirements.txt /requirements.txt
+
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN pip install -r requirements.txt
 
