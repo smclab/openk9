@@ -213,16 +213,6 @@ components:
           type: boolean
         scheduling:
           type: string
-    DatasourceJobStatus:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        status:
-          $ref: "#/components/schemas/JobStatus"
     DatasourceMessage:
       type: object
       properties:
@@ -876,14 +866,6 @@ components:
       - JAVASCRIPT_SOURCE
       - TYPESCRIPT_SOURCE
       - JAVASCRIPT_COMPILED
-    TriggerResourceDTO:
-      type: object
-      properties:
-        datasourceIds:
-          type: array
-          items:
-            type: integer
-            format: int64
     Tuple2BucketDatasource:
       type: object
       properties:
@@ -4924,36 +4906,6 @@ paths:
       summary: Get Fields
       tags:
       - Date Filter Resource
-  /api/datasource/v1/index/reindex:
-    post:
-      deprecated: true
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TriggerResourceDTO"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/DatasourceJobStatus"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
-      summary: Reindex
-      tags:
-      - Reindex Resource
-      security:
-      - SecurityScheme:
-        - k9-admin
   /api/datasource/v1/search-config/{id}/configure-hybrid-search:
     post:
       operationId: configure-hybrid-search
@@ -4995,36 +4947,6 @@ paths:
         "400":
           description: invalid
       summary: Configure Hybrid Search
-  /api/datasource/v1/trigger:
-    post:
-      deprecated: true
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TriggerResourceDTO"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/DatasourceJobStatus"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
-      summary: Trigger
-      tags:
-      - Trigger Resource
-      security:
-      - SecurityScheme:
-        - k9-admin
   /api/datasource/v2/trigger:
     post:
       operationId: v2-trigger
