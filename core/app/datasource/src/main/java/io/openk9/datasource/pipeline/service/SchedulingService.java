@@ -74,10 +74,45 @@ public class SchedulingService {
 	public static CompletableFuture<SchedulerDTO> persistErrorDescription(
 		ShardingKey shardingKey, Exception exception) {
 
+		return persistErrorDescription(
+			shardingKey, SchedulerUtil.getErrorDescription(exception));
+	}
+
+	/**
+	 * Persists an error description, replacing the recorded one.
+	 *
+	 * @param shardingKey the scheduling
+	 * @param description the text to record
+	 * @return the refreshed scheduler
+	 */
+	public static CompletableFuture<SchedulerDTO> persistErrorDescription(
+		ShardingKey shardingKey, String description) {
+
+		return persistErrorDescription(shardingKey, description, false);
+	}
+
+	/**
+	 * Appends a cause to the recorded error description, on a new line,
+	 * within the same transaction that reads it: what was recorded before
+	 * (e.g. why a payload was refused) is kept.
+	 *
+	 * @param shardingKey the scheduling
+	 * @param cause the text to append
+	 * @return the refreshed scheduler
+	 */
+	public static CompletableFuture<SchedulerDTO> appendErrorDescription(
+		ShardingKey shardingKey, String cause) {
+
+		return persistErrorDescription(shardingKey, cause, true);
+	}
+
+	private static CompletableFuture<SchedulerDTO> persistErrorDescription(
+		ShardingKey shardingKey, String description, boolean append) {
+
 		return EventBusInstanceHolder
 			.request(
 				PERSIST_ERROR_DESCRIPTION,
-				new PersistErrorDescription(shardingKey, exception)
+				new PersistErrorDescription(shardingKey, description, append)
 			)
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
@@ -141,14 +176,17 @@ public class SchedulingService {
 		var schedulingKey = request.shardingKey();
 		var tenantId = schedulingKey.tenantId();
 		var scheduleId = schedulingKey.scheduleId();
-		var exception = request.exception();
+		var description = request.description();
 
 		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
 				s, scheduleId)
 				.flatMap(entity -> {
-					var errorDescription = SchedulerUtil.getErrorDescription(exception);
+					var recorded = entity.getErrorDescription();
 
-					entity.setErrorDescription(errorDescription);
+					entity.setErrorDescription(
+						request.append() && recorded != null && !recorded.isBlank()
+							? recorded + "\n" + description
+							: description);
 
 					return s.merge(entity);
 				})
@@ -199,7 +237,8 @@ public class SchedulingService {
 
 	private record PersistErrorDescription(
 		ShardingKey shardingKey,
-		Exception exception
+		String description,
+		boolean append
 	) {}
 
 	private record PersistLastIngestionDateRequest(

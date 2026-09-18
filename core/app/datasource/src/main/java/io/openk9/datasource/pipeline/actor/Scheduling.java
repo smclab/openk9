@@ -688,12 +688,13 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			"Scheduling %s goes in ERROR: %s", shardingKey.asString(), trackError.cause());
 
 		// the status alone would leave a red scheduling with no explanation:
-		// persist the cause first, then the status
-		var exception = new WorkStageException(trackError.cause());
+		// persist the cause first, then the status. A description recorded
+		// earlier (e.g. why the payload was refused) is kept, the cause of
+		// the discard goes after it
 		var startWrapper = getStartWrapper(trackError.replyTo());
 
 		getContext().pipeToSelf(
-			SchedulingService.persistErrorDescription(shardingKey, exception)
+			SchedulingService.appendErrorDescription(shardingKey, trackError.cause())
 				.thenCompose(ignore -> SchedulingService.persistStatus(
 					shardingKey, Scheduler.SchedulerStatus.ERROR)),
 			(scheduler, throwable) -> new UpdateScheduler(
