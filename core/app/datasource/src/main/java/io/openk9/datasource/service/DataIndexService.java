@@ -856,8 +856,8 @@ public class DataIndexService
 				return Uni.createFrom().item(closeRequired(
 					dataIndex,
 					indexName,
-					"the index has to be closed to take the analyzers the "
-						+ "model declares"
+					"the index has to be closed to take the analysis "
+						+ "definitions the model declares"
 				));
 			}
 
@@ -868,8 +868,8 @@ public class DataIndexService
 						return Uni.createFrom().item(skipped(
 							dataIndex,
 							indexName,
-							"the index has to be closed to take the analyzers the "
-								+ "model declares",
+							"the index has to be closed to take the analysis "
+								+ "definitions the model declares",
 							jobStatus
 						));
 					}
@@ -1171,10 +1171,10 @@ public class DataIndexService
 			TEMPLATE_ONLY,
 
 			/**
-			 * The index had to be closed to take the analyzers the model
-			 * declares, and a scheduling is running on its datasource: closing
-			 * it would have broken that ingestion, so the live index was left
-			 * alone.
+			 * The index had to be closed to take the analysis definitions the
+			 * model declares, and a scheduling is running on its datasource:
+			 * closing it would have broken that ingestion, so the live index
+			 * was left alone.
 			 */
 			@Description(
 				"The index had to be closed and a scheduling is running on its "
