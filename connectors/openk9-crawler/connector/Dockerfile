@@ -16,7 +16,8 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY ./requirements.txt /requirements.txt
-RUN pip install --no-cache-dir -r /requirements.txt
+RUN pip install --no-cache-dir --upgrade pip==26.1.1 && \
+    pip install --no-cache-dir -r /requirements.txt
 RUN if [ "$WITH_SCRAPYDWEB" = 1 ]; then \
     # Install scrapydweb and copy settings file
     # Also creates data folder
