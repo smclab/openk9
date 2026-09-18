@@ -100,7 +100,7 @@ export function ModalAdd<TAssociation, TRemove>({
               toast({
                 displayType: "error",
                 title: "Errore",
-                content: error.message || "Si Ã¨ verificato un errore.",
+                content: error.message || "Si è verificato un errore.",
               });
               callbackClose();
             },
@@ -189,7 +189,7 @@ export function ModalAddSingle({
         toast({
           displayType: "error",
           title: "Errore",
-          content: error.message || "Si Ã¨ verificato un errore.",
+          content: error.message || "Si è verificato un errore.",
         });
       },
       // onCompleted: () => {
@@ -205,7 +205,7 @@ export function ModalAddSingle({
       //   toast({
       //     displayType: "error",
       //     title: "Errore",
-      //     content: error.message || "Si Ã¨ verificato un errore.",
+      //     content: error.message || "Si è verificato un errore.",
       //   });
       // },
     });

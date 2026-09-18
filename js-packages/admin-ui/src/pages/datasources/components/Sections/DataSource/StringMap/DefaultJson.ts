@@ -27,7 +27,7 @@ export const DEFAULT_XPATH_TEST_TEXT = `<html>
   <body>
     <h1>Benvenuto!</h1>
     <div class="content">
-      <p id="intro">Questo Ã¨ un esempio di contenuto.</p>
+      <p id="intro">Questo è un esempio di contenuto.</p>
       <p class="highlight">Contenuto importante</p>
       <a href="https://example.com/page1">Pagina 1</a>
       <a href="https://example.com/page2">Pagina 2</a>

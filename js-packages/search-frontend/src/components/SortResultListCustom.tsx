@@ -95,7 +95,7 @@ function SortResultList({
     });
   }, [selectOptions, t]);
 
-  // TODO: `event` dovrÃ  essere di tipo `{value: string | undefined, name: string | undefined, icon: string}`
+  // TODO: `event` dovrà essere di tipo `{value: string | undefined, name: string | undefined, icon: string}`
   const handleChange = (event: any) => {
     const eventValue = event?.value && JSON.parse(event.value);
 

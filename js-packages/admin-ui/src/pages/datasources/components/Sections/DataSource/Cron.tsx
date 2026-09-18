@@ -81,7 +81,7 @@ const fieldLimits: Record<CronFieldType, { min: number; max: number }> = {
 };
 
 const getDaysInMonth = (month: number, year: number = new Date().getFullYear()): number => {
-  // Per febbraio, controlliamo se Ã¨ un anno bisestile
+  // Per febbraio, controlliamo se è un anno bisestile
   if (month === 2) {
     return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28;
   }
@@ -472,7 +472,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
 
   const validateCronExpression = (cronExp: string): boolean => {
     try {
-      // Verifica se l'espressione cron Ã¨ valida usando cronstrue
+      // Verifica se l'espressione cron è valida usando cronstrue
       cronstrue.toString(cronExp);
       return true;
     } catch (error) {
