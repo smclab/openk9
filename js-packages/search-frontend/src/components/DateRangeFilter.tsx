@@ -370,7 +370,7 @@ export function DateRangeFilter({
           aria-label={t("filter-by-date") || "Filtra per data"}
           css={css`
             position: absolute;
-            top: calc(100% + 8px);
+            top: calc(100% + var(--openk9-embeddable-search--spacing-sm));
             right: 0;
             z-index: 100;
             background: var(

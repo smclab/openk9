@@ -333,8 +333,8 @@ function RealFiltersPanel({
           css={css`
             /* desktop: in alto a destra dentro l'header */
             position: absolute;
-            top: 16px;
-            right: 20px;
+            top: var(--openk9-embeddable-search--spacing-lg);
+            right: var(--openk9-embeddable-search--spacing-xl);
             /* mobile: sotto il separatore, prima dei filtri, così non si
              confonde con la × di chiusura in alto a destra */
             @media (max-width: 1024px) {

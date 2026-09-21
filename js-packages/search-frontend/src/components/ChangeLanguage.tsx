@@ -121,7 +121,11 @@ export function ChangeLanguage({
       },
     }),
     indicatorSeparator: () => ({ display: "none" }),
-    dropdownIndicator: (base) => ({ ...base, color, padding: "0 8px 0 0" }),
+    dropdownIndicator: (base) => ({
+      ...base,
+      color,
+      padding: "0 var(--openk9-embeddable-search--spacing-sm) 0 0",
+    }),
     singleValue: (base) => ({ ...base, color }),
     placeholder: (base) => ({ ...base, color }),
   };
