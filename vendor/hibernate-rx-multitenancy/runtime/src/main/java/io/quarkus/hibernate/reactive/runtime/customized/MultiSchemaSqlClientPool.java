@@ -19,7 +19,6 @@ package io.quarkus.hibernate.reactive.runtime.customized;
 
 import java.util.concurrent.CompletionStage;
 
-import io.vertx.sqlclient.Pool;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -29,6 +28,8 @@ import org.hibernate.reactive.pool.impl.SqlClientPool;
 import org.hibernate.reactive.util.impl.CompletionStages;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import io.vertx.sqlclient.Pool;
 
 public class MultiSchemaSqlClientPool extends SqlClientPool
         implements ServiceRegistryAwareService {
@@ -42,8 +43,8 @@ public class MultiSchemaSqlClientPool extends SqlClientPool
     public MultiSchemaSqlClientPool(Pool pool) {
         this.pool = pool;
         this.dbKind = ConfigProvider
-            .getConfig()
-            .getValue("quarkus.datasource.db-kind", String.class);
+                .getConfig()
+                .getValue("quarkus.datasource.db-kind", String.class);
     }
 
     @Override
@@ -60,9 +61,9 @@ public class MultiSchemaSqlClientPool extends SqlClientPool
     @Override
     public CompletionStage<ReactiveConnection> getConnection(String tenantId) {
         return super.getConnection(tenantId)
-            .thenCompose(c -> c
-                .execute(alterSessionSchema(dbKind, tenantId))
-                .thenApply(unused -> c));
+                .thenCompose(c -> c
+                        .execute(alterSessionSchema(dbKind, tenantId))
+                        .thenApply(unused -> c));
     }
 
     @Override
@@ -79,8 +80,8 @@ public class MultiSchemaSqlClientPool extends SqlClientPool
     protected SqlExceptionHelper getSqlExceptionHelper() {
         if (sqlExceptionHelper == null) {
             sqlExceptionHelper = serviceRegistry
-                .getService(JdbcServices.class)
-                .getSqlExceptionHelper();
+                    .getService(JdbcServices.class)
+                    .getSqlExceptionHelper();
         }
         return sqlExceptionHelper;
     }

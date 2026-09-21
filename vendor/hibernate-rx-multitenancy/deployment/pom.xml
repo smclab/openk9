@@ -22,7 +22,7 @@
     <parent>
         <artifactId>hibernate-rx-multitenancy-parent</artifactId>
         <groupId>io.openk9</groupId>
-        <version>3.27.4</version>
+        <version>3.33.3.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -31,8 +31,8 @@
     <name>Quarkus - Hibernate Reactive - Deployment</name>
 
     <properties>
-        <postgres.reactive.url>vertx-reactive:postgresql://localhost:5431/hibernate_orm_test
-        </postgres.reactive.url>
+        <postgres.reactive.url>vertx-reactive:postgresql://localhost:5431/hibernate_orm_test</postgres.reactive.url>
+        <postgres.blocking.url>jdbc:postgresql://localhost:5431/hibernate_orm_test</postgres.blocking.url>
     </properties>
 
     <dependencies>
@@ -73,7 +73,7 @@
         <dependency>
             <groupId>io.openk9</groupId>
             <artifactId>hibernate-rx-multitenancy</artifactId>
-            <version>3.27.4</version>
+            <version>3.33.3.2</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -85,7 +85,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5-internal</artifactId>
+            <artifactId>quarkus-junit-internal</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -210,8 +210,7 @@
                                     <run>
                                         <env>
                                             <POSTGRES_USER>hibernate_orm_test</POSTGRES_USER>
-                                            <POSTGRES_PASSWORD>hibernate_orm_test
-                                            </POSTGRES_PASSWORD>
+                                            <POSTGRES_PASSWORD>hibernate_orm_test</POSTGRES_PASSWORD>
                                             <POSTGRES_DB>hibernate_orm_test</POSTGRES_DB>
                                         </env>
                                         <ports>
@@ -224,9 +223,7 @@
                                             See also how the condition is configured in testcontainers:
                                             https://github.com/testcontainers/testcontainers-java/blob/c64aab9fd5e3a452ee0faf793560327eb4da9841/modules/postgresql/src/main/java/org/testcontainers/containers/PostgreSQLContainer.java#L52-L55 -->
                                             <time>20000</time>
-                                            <log>(?s)ready to accept connections.*ready to accept
-                                                connections
-                                            </log>
+                                            <log>(?s)ready to accept connections.*ready to accept connections</log>
                                         </wait>
                                     </run>
                                 </image>

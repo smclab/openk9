@@ -22,16 +22,14 @@
     <parent>
         <artifactId>hibernate-rx-multitenancy-parent</artifactId>
         <groupId>io.openk9</groupId>
-        <version>3.27.4</version>
+        <version>3.33.3.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>hibernate-rx-multitenancy</artifactId>
     <name>Quarkus - Hibernate Reactive - Runtime</name>
-    <description>A reactive API for Hibernate ORM, supporting non-blocking database drivers and a
-        reactive style of interaction with the database.
-    </description>
+    <description>A reactive API for Hibernate ORM, supporting non-blocking database drivers and a reactive style of interaction with the database.</description>
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
