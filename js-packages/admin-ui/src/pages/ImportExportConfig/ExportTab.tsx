@@ -31,18 +31,21 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  Tooltip,
   Typography,
 } from "@mui/material";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import type { ConfigEntityType } from "openapi-generated";
 import React from "react";
 import { extractProblemDetails } from "utils/health";
 import { downloadConfigPackage, redactedEntities } from "./configPackage";
-import { ExportGroupId, exportGroups, typesOfGroups } from "./exportTypeGroups";
+import { selectableTypes } from "./exportTypes";
 import { useTranslation } from "react-i18next";
 
 const SECRETS_NOTE =
   'Secrets (e.g. API keys) and the keys in the denylist are automatically removed or replaced with "__REDACTED__".';
+
+/** How many more types each "Load more" reveals. */
+const PAGE_SIZE = 8;
 
 type Depth = "deep" | "shallow";
 
@@ -68,18 +71,39 @@ export function ExportTab() {
   const restClient = useRestClient();
   const showToast = useToast();
 
-  const [selected, setSelected] = React.useState<ReadonlySet<ExportGroupId>>(new Set());
+  const [selected, setSelected] = React.useState<ReadonlySet<ConfigEntityType>>(new Set());
   const [depth, setDepth] = React.useState<Depth>("deep");
 
-  const toggle = (id: ExportGroupId) =>
+  const [visibleCount, setVisibleCount] = React.useState(PAGE_SIZE);
+
+  const toggleType = (type: ConfigEntityType) =>
     setSelected((current) => {
       const next = new Set(current);
-      if (!next.delete(id)) next.add(id);
+      if (!next.delete(type)) next.add(type);
       return next;
     });
 
+  // The registry does not depend on the tenant and does not change at runtime,
+  // so it is read once. A failure is not fatal: the export falls back to
+  // sending every type of the selected groups, which is what it did before.
+  const entityTypesQuery = useQuery({
+    queryKey: ["config-entity-types"],
+    queryFn: () => restClient.configResource.entityTypes(),
+    staleTime: Infinity,
+  });
+
+  // the tab offers what the backend says it can export, nothing more
+  const types = React.useMemo(
+    () => (entityTypesQuery.data ? selectableTypes(entityTypesQuery.data) : []),
+    [entityTypesQuery.data],
+  );
+
+  // slice() takes care of a count larger than the list, so nothing has to be
+  // reset when the registry answers and the list grows from empty
+  const shownTypes = types.slice(0, visibleCount);
+
   const exportMutation = useMutation({
-    mutationFn: () => restClient.configResource.exportConfig(typesOfGroups(selected), depth === "deep"),
+    mutationFn: () => restClient.configResource.exportConfig([...selected], depth === "deep"),
     onSuccess: (configPackage) => {
       downloadConfigPackage(configPackage);
       const entities = configPackage.entities ?? [];
@@ -116,30 +140,40 @@ export function ExportTab() {
             Configuration types
           </Typography>
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 1 }}>
-            {exportGroups.map(({ id, label, Icon, types }) => (
-              <Tooltip key={id} title={types.join(", ")}>
-                <FormControlLabel
-                  control={<Checkbox checked={selected.has(id)} onChange={() => toggle(id)} />}
-                  label={
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}>
-                      <Icon fontSize="small" color="action" />
-                      <Typography variant="body2" noWrap>
-                        {label}
-                      </Typography>
-                    </Box>
-                  }
-                  sx={{ m: 0, px: 1, borderRadius: 2, border: "1px solid", borderColor: "divider", minWidth: 0 }}
-                />
-              </Tooltip>
+            {shownTypes.map((type) => (
+              <FormControlLabel
+                key={type}
+                control={<Checkbox checked={selected.has(type)} onChange={() => toggleType(type)} />}
+                label={
+                  <Typography variant="body2" noWrap>
+                    {type}
+                  </Typography>
+                }
+                sx={{ m: 0, px: 1, borderRadius: 2, border: "1px solid", borderColor: "divider", minWidth: 0 }}
+              />
             ))}
+            {shownTypes.length < types.length && (
+              <Button
+                onClick={() => setVisibleCount((current) => current + PAGE_SIZE)}
+                sx={{
+                  px: 1,
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "primary.main",
+                  color: "primary.main",
+                  textTransform: "uppercase",
+                  minWidth: 0,
+                }}
+              >
+                <Typography variant="body2" color="primary.main" noWrap>
+                  Load more
+                </Typography>
+              </Button>
+            )}
           </Box>
 
           <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => setSelected(new Set(exportGroups.map((group) => group.id)))}
-            >
+            <Button variant="outlined" size="small" onClick={() => setSelected(new Set(types))}>
               Select all
             </Button>
             <Button variant="outlined" size="small" onClick={() => setSelected(new Set())}>

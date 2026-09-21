@@ -25,6 +25,11 @@ export type ConfigEntity = {
 
 export type ConfigEntityType = 'BUCKET' | 'DATASOURCE' | 'PLUGIN_DRIVER' | 'ENRICH_PIPELINE' | 'ENRICH_PIPELINE_ITEM' | 'ENRICH_ITEM' | 'DOC_TYPE' | 'DOC_TYPE_FIELD' | 'DOC_TYPE_TEMPLATE' | 'ANALYZER' | 'CHAR_FILTER' | 'TOKEN_FILTER' | 'TOKENIZER' | 'ACL_MAPPING' | 'QUERY_ANALYSIS' | 'ANNOTATOR' | 'RULE' | 'QUERY_PARSER_CONFIG' | 'SEARCH_CONFIG' | 'EMBEDDING_MODEL' | 'LARGE_LANGUAGE_MODEL' | 'LANGUAGE' | 'RAG_CONFIGURATION' | 'SUGGESTION_CATEGORY' | 'TAB' | 'SORTING' | 'TOKEN_TAB' | 'AUTOCOMPLETE' | 'AUTOCORRECTION' | 'HIGHLIGHT';
 
+export type ConfigEntityTypeResponseDto = {
+    name?: string;
+    selectable?: boolean;
+};
+
 export type ConfigMetadata = {
     exportedAt?: string;
     sourceVirtualHost?: string;
@@ -1083,6 +1088,22 @@ export type GetTemplatesByIdCompiledResponses = {
 };
 
 export type GetTemplatesByIdCompiledResponse = GetTemplatesByIdCompiledResponses[keyof GetTemplatesByIdCompiledResponses];
+
+export type GetV1ConfigEntityTypesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/config/entity-types';
+};
+
+export type GetV1ConfigEntityTypesResponses = {
+    /**
+     * OK
+     */
+    200: Array<ConfigEntityTypeResponseDto>;
+};
+
+export type GetV1ConfigEntityTypesResponse = GetV1ConfigEntityTypesResponses[keyof GetV1ConfigEntityTypesResponses];
 
 export type GetV1ConfigExportData = {
     body?: never;

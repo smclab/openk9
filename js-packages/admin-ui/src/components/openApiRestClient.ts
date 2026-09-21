@@ -29,6 +29,7 @@ import {
   getPluginDriversDocumentTypesById,
   getPluginDriversFormById,
   getPluginDriversHealthById,
+  getV1ConfigEntityTypes,
   getV1ConfigExport,
   health,
   postPluginDriversDocumentTypesById,
@@ -77,6 +78,9 @@ export const openApiRestClient = {
     form: (body: ResourceUri) => form({ body, ...t }).then((r) => r.data),
   },
   configResource: {
+    // The registry of exportable types, with the flag that says which of them
+    // are valid seeds for a per-type export. It is the same for every tenant.
+    entityTypes: () => getV1ConfigEntityTypes({ ...t }).then((r) => r.data),
     // An empty `types` exports the whole tenant, so it is left out rather than
     // sent as an empty parameter.
     exportConfig: (types: ConfigEntityType[], includeDependencies: boolean) =>
