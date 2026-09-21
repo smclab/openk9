@@ -67,12 +67,18 @@
   --openk9-embeddable-search--focus-ring-color: #ee4848;
 
   /* Type ramp. Unlike the radii, these suffixes are ordinals inside the ramp and
-     not px values shared with the spacing scale: body copy sits at sm/md. */
-  --openk9-embeddable-search--font-size-xs: 12px;
-  --openk9-embeddable-search--font-size-sm: 14px;
-  --openk9-embeddable-search--font-size-md: 16px;
-  --openk9-embeddable-search--font-size-lg: 18px;
-  --openk9-embeddable-search--font-size-xl: 20px;
+     not px values shared with the spacing scale: body copy sits at sm/md.
+
+     A geometric ramp of about 1.15, rounded to whole pixels, rather than the
+     flat +2px it used to be: a linear ramp loses ratio as it climbs (1.167 down
+     to 1.111), so the top compresses and a heading barely separates from the
+     copy under it. Keeping the ratio constant holds that separation while every
+     step lands one notch lower than before. */
+  --openk9-embeddable-search--font-size-xs: 11px;
+  --openk9-embeddable-search--font-size-sm: 12px;
+  --openk9-embeddable-search--font-size-md: 14px;
+  --openk9-embeddable-search--font-size-lg: 16px;
+  --openk9-embeddable-search--font-size-xl: 18px;
 
   --openk9-embeddable-search--font-weight-regular: 400;
   --openk9-embeddable-search--font-weight-medium: 500;

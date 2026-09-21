@@ -305,6 +305,7 @@ export function SkeletonFilters() {
       className="container-openk9-skeleton"
       css={css`
         width: 100%;
+        margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
       `}
     >
       <div

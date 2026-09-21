@@ -27,6 +27,7 @@ import { Logo } from "./components/Logo";
 // il demo consuma la stessa superficie pubblica di un embedder reale: hook e tipi
 // arrivano dall'entry del package, non da percorsi interni `./components/*`
 import { type ChatSource } from "./components/client";
+import { fadingSeparator } from "./components/fadingSeparator";
 import { OpenK9 } from "./embeddable/entry";
 
 const isOAuth2Enabled = import.meta.env.VITE_OAUTH2_ENABLED !== "false";
@@ -65,7 +66,10 @@ const panelStyle = css`
 const sectionHeaderStyle = css`
   padding: var(--openk9-embeddable-search--spacing-lg, 16px)
     var(--openk9-embeddable-search--spacing-xl, 20px);
-  border-bottom: 1px solid ${BORDER};
+  ${fadingSeparator(
+    BORDER,
+    "var(--openk9-embeddable-search--spacing-xl, 20px)",
+  )}
 `;
 
 const sectionHeaderRowStyle = css`
@@ -79,7 +83,7 @@ const sectionTitleStyle = css`
   display: inline-flex;
   align-items: center;
   gap: var(--openk9-embeddable-search--spacing-sm, 8px);
-  font-size: var(--openk9-embeddable-search--font-size-lg, 18px);
+  font-size: var(--openk9-embeddable-search--font-size-md, 14px);
   font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
   color: var(--openk9-embeddable-search--strong-text-color, #1e1c21);
 `;
@@ -212,7 +216,10 @@ function RealFiltersPanel({
           }
           .openk9-filter-category-container {
             /* separatore delicato, sempre presente, sotto le suggestion */
-            border-bottom: 1px solid #eef0f2;
+            ${fadingSeparator(
+              "#eef0f2",
+              "var(--openk9-embeddable-search--spacing-lg, 16px)",
+            )}
             padding: var(--openk9-embeddable-search--spacing-lg, 16px) 0;
             margin-bottom: 0;
           }
@@ -220,7 +227,10 @@ function RealFiltersPanel({
             margin-left: 0;
             padding: 0 0 var(--openk9-embeddable-search--spacing-sm, 8px);
             /* separatore persistente tra nome categoria e ricerca */
-            border-bottom: 1px solid #eef0f2;
+            ${fadingSeparator(
+              "#eef0f2",
+              "var(--openk9-embeddable-search--spacing-lg, 16px)",
+            )}
           }
           .openk9-filter-category-title strong,
           .name-category-filter {
@@ -243,7 +253,6 @@ function RealFiltersPanel({
           .openk9-filter-form-check-container {
             padding-left: 0;
             gap: var(--openk9-embeddable-search--spacing-md, 12px);
-            margin-top: var(--openk9-embeddable-search--spacing-md, 12px);
           }
           .form-check {
             align-items: center;
@@ -1283,7 +1292,11 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
             <div
               css={css`
                 ${sectionHeaderRowStyle}
-                border-bottom: none;
+                /* the separator is a pseudo-element now, so it is called off
+                   rather than zeroed like a border */
+                &::after {
+                  content: none;
+                }
                 padding-bottom: 0px;
                 @media (max-width: 1024px) {
                   flex-wrap: wrap;

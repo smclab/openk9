@@ -16,6 +16,7 @@
 */
 import React from "react";
 import { css } from "styled-components";
+import { fadingSeparator } from "./fadingSeparator";
 import { WebDetail } from "../renderers/openk9/web/WebDetail";
 import { GenericResultItem, DetailRendererProps } from "./client";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
@@ -162,8 +163,10 @@ function Detail<E>(props: DetailProps<E>) {
           box-sizing: border-box;
           align-items: center;
           justify-content: space-between;
-          border-bottom: 1px solid
-            var(--openk9-embeddable-search--border-color, #ced4da);
+          ${fadingSeparator(
+            "var(--openk9-embeddable-search--border-color, #ced4da)",
+            "var(--openk9-embeddable-search--spacing-xl, 20px)",
+          )}
           border-top-left-radius: ${setDetailMobile ? "20px" : "0px"};
           border-top-right-radius: ${setDetailMobile ? "20px" : "0px"};
         `}

@@ -349,8 +349,6 @@ function FilterCategoryDynamic({
                 display: flex;
                 align-items: center;
                 gap: var(--openk9-embeddable-search--spacing-sm, 8px);
-                margin: var(--openk9-embeddable-search--spacing-xs, 4px) 0
-                  var(--openk9-embeddable-search--spacing-md, 12px);
               `}
             >
               <div
@@ -513,7 +511,9 @@ function FilterCategoryDynamic({
                       type="button"
                       className="openk9-filter-chip"
                       title={label}
-                      aria-label={`${t("filter-remove") || "Rimuovi"}: ${label}`}
+                      aria-label={`${
+                        t("filter-remove") || "Rimuovi"
+                      }: ${label}`}
                       onClick={() =>
                         onRemove(mapSuggestionToSearchToken(s, true))
                       }
