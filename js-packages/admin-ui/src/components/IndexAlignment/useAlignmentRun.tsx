@@ -14,10 +14,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+import { ApolloError } from "@apollo/client";
 import { ModalConfirm } from "@components/Form";
 import { Box } from "@mui/material";
 import React from "react";
 import { AlignmentOutcome, needsClosing } from "./AlignmentOutcomes";
+
+/** The reason OpenSearch gave, when the refusal carries one. */
+function errorMessage(caught: unknown): string {
+  if (caught instanceof ApolloError) {
+    return caught.graphQLErrors[0]?.message || caught.message;
+  }
+  if (caught instanceof Error) {
+    return caught.message;
+  }
+  return "Unknown error";
+}
 
 /**
  * Runs an alignment without allowing the backend to close anything, and asks
@@ -58,9 +70,9 @@ export function useAlignmentRun({
         } else if (onApplied) {
           onApplied(result);
         }
-      } catch (caught: any) {
+      } catch (caught: unknown) {
         setOutcomes(null);
-        setError(caught?.graphQLErrors?.[0]?.message || caught?.message || "Unknown error");
+        setError(errorMessage(caught));
       } finally {
         setIsRunning(false);
       }
@@ -87,7 +99,12 @@ export function useAlignmentRun({
       maxWidth="sm"
       fullWidth
       body="While it is closed an index is neither searchable nor writable. Nothing has been written to it yet."
-      close={() => setToClose(null)}
+      close={() => {
+        setToClose(null);
+        // the run was declined: its outcome is not a result to present
+        setOutcomes(null);
+        setError(null);
+      }}
       actionConfirm={() => {
         setToClose(null);
         void execute(true);

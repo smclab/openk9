@@ -116,6 +116,7 @@
     "create": "Crea entità",
     "create-new": "Crea {{name}}",
     "edit": "Modifica {{name}}",
+    "view": "Visualizza {{name}}",
     "update": "Aggiorna entità",
     "create-entity": "Crea entità",
     "modify": "Modifica entità"
@@ -619,7 +620,7 @@
       "impossible-to-create": "Impossibile creare l'indice dati",
       "settings-fetch-error": "Errore nel recupero delle impostazioni.",
       "mappings-fetch-error": "Errore nel recupero dei mapping.",
-      "edit-settings": "Modifica impostazioni Data Index",
+      "settings-title": "Impostazioni Data Index",
       "custom-settings": "Impostazioni personalizzate",
       "index-mapping": "Mapping dell'indice"
     },

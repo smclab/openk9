@@ -22,17 +22,24 @@ export function TitleEntity({
   nameEntity,
   description,
   id,
+  readOnly = false,
 }: {
   nameEntity?: string;
   description?: string;
   id: string;
+  /** A page opened to be read says so, instead of promising an edit it does not offer. */
+  readOnly?: boolean;
 }) {
   const { t } = useTranslation();
   return (
     <React.Fragment>
       <Box>
         <Typography component="h1" variant="h1" fontWeight="600">
-          {id === "new" ? t("entity.create-new", { name: nameEntity }) : t("entity.edit", { name: nameEntity })}
+          {id === "new"
+            ? t("entity.create-new", { name: nameEntity })
+            : readOnly
+              ? t("entity.view", { name: nameEntity })
+              : t("entity.edit", { name: nameEntity })}
         </Typography>
         <p>{description}</p>
       </Box>

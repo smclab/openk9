@@ -18,6 +18,7 @@ import {
   AlertColor,
   Box,
   Chip,
+  Link as MuiLink,
   Paper,
   Table,
   TableBody,
@@ -27,45 +28,46 @@ import {
   TableRow,
 } from "@mui/material";
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
+import { Status } from "../../graphql-generated";
 
-// the status is typed as a string and not as the generated enum: a string enum
-// member is assignable to string, so both callers can pass what they get back
+// the status is the generated enum, so the maps below stop compiling the day a
+// status is added and a rename cannot silently slip past the comparisons
 export type AlignmentOutcome = {
   dataIndexId?: string | number | null;
   indexName?: string | null;
-  status?: string | null;
+  status?: Status | null;
   reason?: string | null;
 };
 
-const STATUS_COLOR: Record<string, AlertColor> = {
-  APPLIED: "success",
-  TEMPLATE_ONLY: "info",
-  SKIPPED: "warning",
-  CLOSE_REQUIRED: "warning",
-  FAILED: "error",
+const STATUS_COLOR: Record<Status, AlertColor> = {
+  [Status.Applied]: "success",
+  [Status.TemplateOnly]: "info",
+  [Status.Skipped]: "warning",
+  [Status.CloseRequired]: "warning",
+  [Status.Failed]: "error",
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  APPLIED: "Applied",
-  TEMPLATE_ONLY: "Template only",
-  SKIPPED: "Skipped",
-  CLOSE_REQUIRED: "Close required",
-  FAILED: "Failed",
+const STATUS_LABEL: Record<Status, string> = {
+  [Status.Applied]: "Applied",
+  [Status.TemplateOnly]: "Template only",
+  [Status.Skipped]: "Skipped",
+  [Status.CloseRequired]: "Close required",
+  [Status.Failed]: "Failed",
 };
 
 const SEVERITY_RANK: Array<AlertColor> = ["success", "info", "warning", "error"];
 
-export function statusColor(status?: string | null): AlertColor {
+function statusColor(status?: Status | null): AlertColor {
   return (status && STATUS_COLOR[status]) || "info";
 }
 
-export function statusLabel(status?: string | null): string {
+function statusLabel(status?: Status | null): string {
   return (status && STATUS_LABEL[status]) || status || "Unknown";
 }
 
 export function needsClosing(outcomes: Array<AlignmentOutcome>): Array<AlignmentOutcome> {
-  return outcomes.filter((outcome) => outcome.status === "CLOSE_REQUIRED");
+  return outcomes.filter((outcome) => outcome.status === Status.CloseRequired);
 }
 
 export function worstSeverity(outcomes: Array<AlignmentOutcome>): AlertColor {
@@ -104,12 +106,22 @@ export function OutcomesTable({ outcomes }: { outcomes: Array<AlignmentOutcome> 
               </TableCell>
               <TableCell>
                 {outcome.dataIndexId ? (
-                  <Link to={`/dataindex/${outcome.dataIndexId}/mode/view`}>{outcome.indexName}</Link>
+                  <MuiLink
+                    component={RouterLink}
+                    to={`/dataindex/${outcome.dataIndexId}/mode/view`}
+                    underline="hover"
+                    color="primary"
+                  >
+                    {outcome.indexName || `Data index ${outcome.dataIndexId}`}
+                  </MuiLink>
                 ) : (
-                  <Box component="span">{outcome.indexName}</Box>
+                  <Box component="span">{outcome.indexName || "—"}</Box>
                 )}
               </TableCell>
-              <TableCell sx={{ whiteSpace: "pre-wrap" }}>{outcome.reason || "—"}</TableCell>
+              {/* an OpenSearch refusal is often one long unbroken token */}
+              <TableCell sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", maxWidth: 420 }}>
+                {outcome.reason || "—"}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

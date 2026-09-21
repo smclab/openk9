@@ -22,7 +22,7 @@ import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker"
 import { BaseInputProps } from "..";
 import prettier from "prettier/standalone";
 import parserTypeScript from "prettier/parser-typescript";
-import { Box, Paper, Theme, Typography, useTheme } from "@mui/material";
+import { Box, FormHelperText, Paper, Theme, Typography, useTheme } from "@mui/material";
 
 self.MonacoEnvironment = {
   getWorker(_, label) {
@@ -256,6 +256,7 @@ export function CodeInput({
       <Box style={{ width: "100%", position: "relative" }}>
         <Paper variant="outlined" ref={editorElementRef} style={editorStyle} />
       </Box>
+      {description && <FormHelperText id={`${id}-helper-text`}>{description}</FormHelperText>}
       <Box className="form-feedback-group">
         {validationMessages.map((validationMessage, index) => {
           return (

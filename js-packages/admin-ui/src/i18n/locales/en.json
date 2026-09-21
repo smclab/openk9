@@ -116,6 +116,7 @@
     "create": "Create entity",
     "create-new": "Create new {{name}}",
     "edit": "Edit {{name}}",
+    "view": "View {{name}}",
     "update": "Update entity",
     "create-entity": "Create entity",
     "modify": "Modify entity"
@@ -619,7 +620,7 @@
       "impossible-to-create": "Impossible to create the Data Index Model",
       "settings-fetch-error": "Error while fetching the settings.",
       "mappings-fetch-error": "Error while fetching the mappings.",
-      "edit-settings": "Edit Data Index settings",
+      "settings-title": "Data Index settings",
       "custom-settings": "Custom settings",
       "index-mapping": "Index Mapping"
     },

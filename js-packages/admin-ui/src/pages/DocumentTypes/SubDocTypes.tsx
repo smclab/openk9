@@ -103,6 +103,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
     parentId: string;
   } | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ id: string; name: string; step: 1 | 2 } | null>(null);
+  const [confirmAlign, setConfirmAlign] = useState(false);
   const [alignIndexes] = useAlignIndexesMutation();
   const alignment = useAlignmentRun({
     run: React.useCallback(
@@ -403,7 +404,16 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                 }}
               />
             </div>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "10px",
+                marginBottom: "20px",
+              }}
+            >
               <Breadcrumbs aria-label={t("common.breadcrumb")} separator=">" sx={{ overflow: "auto", width: "100%" }}>
                 <LinkRRD
                   to="/document-types"
@@ -454,7 +464,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                       <PublishedWithChangesIcon />
                     )
                   }
-                  onClick={alignment.start}
+                  onClick={() => setConfirmAlign(true)}
                 >
                   Align indexes
                 </Button>
@@ -472,6 +482,21 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
             <Typography variant="body2" color="text.secondary" role="status" aria-live="polite" sx={{ minHeight: 20 }}>
               {alignment.isRunning ? "Writing the model to the indexes that use this document type…" : ""}
             </Typography>
+            {confirmAlign && (
+              <ModalConfirm
+                title="Align the indexes to this document type?"
+                body="The model is written to every index that uses this document type. An index that cannot take it is reported back and left untouched."
+                labelConfirm="Align"
+                type="warning"
+                maxWidth="sm"
+                fullWidth
+                actionConfirm={() => {
+                  setConfirmAlign(false);
+                  alignment.start();
+                }}
+                close={() => setConfirmAlign(false)}
+              />
+            )}
             {alignment.ConfirmClosing}
             {/* the outcome waits for the closing question: two stacked dialogs would bury it */}
             {!alignment.isAsking && (

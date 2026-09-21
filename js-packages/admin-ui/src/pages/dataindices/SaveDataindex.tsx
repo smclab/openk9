@@ -33,6 +33,7 @@ import {
   Button,
   Checkbox,
   CircularProgress,
+  Divider,
   FormControlLabel,
   Paper,
   Table,
@@ -107,6 +108,8 @@ export const useOptionsDataSource = () => {
     OptionDataSourceType,
   };
 };
+
+const DATA_INDEX_NOTHING_TO_ALIGN = "This data index has no live index yet, so there was nothing to align.";
 
 const DEFAULT_DATAINDEX_VALUES: DataindexData = {
   dataindexId: "new",
@@ -294,21 +297,21 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     const docTypeIds = form.inputProps("docTypeIds").value;
     if (!docTypeIds?.length) return;
 
-    try {
-      setSettingsLoading(true);
-      setSettingsError(null);
-      const response = await restClient.dataIndexResource.postApiDatasourceV1DataIndexGetSettingsFromDocTypes({
-        docTypeIds,
-      });
-      // an existing dataIndex answers its own index template, which is what it
-      // has; the document derived from the docTypes is all there is before one
-      if (isNew) {
+    // an existing dataIndex answers its own index template, which is what it
+    // has; the document derived from the docTypes is all there is before one
+    if (isNew) {
+      try {
+        setSettingsLoading(true);
+        setSettingsError(null);
+        const response = await restClient.dataIndexResource.postApiDatasourceV1DataIndexGetSettingsFromDocTypes({
+          docTypeIds,
+        });
         setSettings(JSON.stringify(response, null, 2));
+      } catch (error) {
+        setSettingsError(t("pages.data-indices.settings-fetch-error"));
+      } finally {
+        setSettingsLoading(false);
       }
-    } catch (error) {
-      setSettingsError(t("pages.data-indices.settings-fetch-error"));
-    } finally {
-      setSettingsLoading(false);
     }
 
     try {
@@ -340,6 +343,8 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     form.inputProps("settings").onChange(customSettings);
   }, [customSettings]);
 
+  const refetchDataIndex = dataindexQuery.refetch;
+
   const [updateIndexSettings] = useUpdateIndexSettingsMutation();
   const settingsRun = useAlignmentRun({
     // CodeInput emits its value only when the editor loses focus, so what is
@@ -358,8 +363,8 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     ),
     onApplied: useCallback(() => {
       // the read-only document is the index template, which has just been rewritten
-      dataindexQuery.refetch();
-    }, [dataindexQuery]),
+      refetchDataIndex();
+    }, [refetchDataIndex]),
   });
 
   const [alignIndex] = useAlignIndexMutation();
@@ -373,9 +378,14 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       [alignIndex, dataindexId],
     ),
     onApplied: useCallback(() => {
-      dataindexQuery.refetch();
-    }, [dataindexQuery]),
+      refetchDataIndex();
+    }, [refetchDataIndex]),
   });
+
+  // both write to the same index, so they take turns; the guard is not
+  // `disabled`, which would move the focus away mid-action
+  const isBusy = settingsRun.isRunning || alignRun.isRunning || settingsRun.isAsking || alignRun.isAsking;
+  const hasSettingsOutcome = settingsRun.outcomes !== null || settingsRun.error !== null;
 
   const recapSections = useMemo(
     () =>
@@ -492,7 +502,12 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
   const renderConfigureStandard = () => (
     <>
-      <TitleEntity nameEntity={t("pages.data-indices.entity-name")} description="" id={dataindexData.dataindexId} />
+      <TitleEntity
+        nameEntity={t("pages.data-indices.entity-name")}
+        description=""
+        id={dataindexData.dataindexId}
+        readOnly={isReadOnly}
+      />
 
       <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
         <CreateDataEntity
@@ -507,8 +522,12 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             {
               content: (
                 <div>
-                  <TextInput label={t("common.name")} {...form.inputProps("name")} />
-                  <TextInput label={t("common.description")} {...form.inputProps("description")} />
+                  <TextInput label={t("common.name")} {...form.inputProps("name")} disabled={isReadOnly} />
+                  <TextInput
+                    label={t("common.description")}
+                    {...form.inputProps("description")}
+                    disabled={isReadOnly}
+                  />
                   <AutocompleteDropdown
                     label={t("fields.associate-datasource")}
                     onChange={(val) => form.inputProps("datasourceId").onChange({ id: val.id, name: val.name })}
@@ -632,7 +651,9 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
     return (
       <>
-        {!isReadOnly && <Typography variant="h6">{t("pages.data-indices.edit-settings")}</Typography>}
+        <Typography variant="h6" mb={2}>
+          {t("pages.data-indices.settings-title")}
+        </Typography>
         <CodeInput
           id="settings-code-input"
           readonly={false}
@@ -656,28 +677,57 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                   <CircularProgress size={16} color="inherit" aria-label="Apply in progress" />
                 ) : undefined
               }
-              onClick={settingsRun.start}
+              onClick={() => {
+                if (!isBusy) settingsRun.start();
+              }}
             >
               Apply settings
             </Button>
-            <Button
-              variant="outlined"
-              color="primary"
-              aria-busy={alignRun.isRunning}
-              startIcon={
-                alignRun.isRunning ? (
-                  <CircularProgress size={16} color="inherit" aria-label="Alignment in progress" />
-                ) : undefined
-              }
-              onClick={alignRun.start}
-            >
-              Align index
-            </Button>
             {/* always rendered, so the change of content is announced */}
             <Typography variant="body2" color="text.secondary" role="status" aria-live="polite" sx={{ minHeight: 20 }}>
-              {settingsRun.isRunning || alignRun.isRunning ? "Writing to the index on OpenSearch…" : ""}
+              {settingsRun.isRunning ? "Writing the settings to the index on OpenSearch…" : ""}
             </Typography>
           </Box>
+        )}
+
+        {!isNew && (
+          <>
+            <Divider sx={{ my: 3 }} />
+            <Typography variant="subtitle1" fontWeight={600}>
+              Align to the document types
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Writes to the index the mapping the document types of this data index derive. It is a separate action from
+              the one above: it does not send the custom settings.
+            </Typography>
+            <Box display="flex" alignItems="center" gap="10px" mt={1}>
+              <Button
+                variant="outlined"
+                color="primary"
+                aria-busy={alignRun.isRunning}
+                startIcon={
+                  alignRun.isRunning ? (
+                    <CircularProgress size={16} color="inherit" aria-label="Alignment in progress" />
+                  ) : undefined
+                }
+                onClick={() => {
+                  if (!isBusy) alignRun.start();
+                }}
+              >
+                Align index
+              </Button>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                role="status"
+                aria-live="polite"
+                sx={{ minHeight: 20 }}
+              >
+                {alignRun.isRunning ? "Writing the mapping to the index on OpenSearch…" : ""}
+              </Typography>
+            </Box>
+            <Divider sx={{ my: 3 }} />
+          </>
         )}
         {settingsRun.ConfirmClosing}
         {alignRun.ConfirmClosing}
@@ -689,10 +739,17 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             onClose={settingsRun.dismiss}
             title="Outcome of the custom settings"
             note="An applied outcome means OpenSearch took the settings, and they were recorded and written to the index template."
+            emptyMessage={DATA_INDEX_NOTHING_TO_ALIGN}
           />
         )}
-        {!alignRun.isAsking && (
-          <AlignmentOutcomesModal outcomes={alignRun.outcomes} error={alignRun.error} onClose={alignRun.dismiss} />
+        {/* one outcome at a time, or the second dialog buries the first */}
+        {!alignRun.isAsking && !hasSettingsOutcome && (
+          <AlignmentOutcomesModal
+            outcomes={alignRun.outcomes}
+            error={alignRun.error}
+            onClose={alignRun.dismiss}
+            emptyMessage={DATA_INDEX_NOTHING_TO_ALIGN}
+          />
         )}
         <Box mt={2}>
           <CodeInput
