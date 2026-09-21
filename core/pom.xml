@@ -266,19 +266,6 @@
 				<version>${project.version}</version>
 			</dependency>
 
-			<!-- FIXME: fixes CVE-2025-48924, review during quarkus version update after 3.20.2 -->
-			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-lang3</artifactId>
-				<version>3.18.0</version>
-			</dependency>
-			<!-- FIXME: fixes CVE-2025-12183, review when org.lz4:lz4-java is bumped past 1.8.0
-				   by pekko-bom->pekko-serialization-jackson -->
-			<dependency>
-				<groupId>org.lz4</groupId>
-				<artifactId>lz4-java</artifactId>
-				<version>1.8.1</version>
-			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
