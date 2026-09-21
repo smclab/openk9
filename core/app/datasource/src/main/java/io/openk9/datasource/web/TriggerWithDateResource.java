@@ -67,9 +67,6 @@ public class TriggerWithDateResource {
 	 *         if present as a {@link SchedulerService.TriggerResponse}.
 	 */
 	@APIResponses(value = {
-		@APIResponse(responseCode = "200", description = "success"),
-		@APIResponse(responseCode = "404", description = "not found"),
-		@APIResponse(responseCode = "400", description = "invalid"),
 		@APIResponse(
 			responseCode = "200",
 			description = "Auto Generate successful",

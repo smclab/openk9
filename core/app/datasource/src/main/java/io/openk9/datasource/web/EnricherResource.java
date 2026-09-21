@@ -56,9 +56,6 @@ public class EnricherResource {
 	@Operation(operationId = "health")
 	@Tag(name = "Health API", description = "Perform health check for enricher")
 	@APIResponses(value = {
-		@APIResponse(responseCode = "200", description = "success"),
-		@APIResponse(responseCode = "404", description = "not found"),
-		@APIResponse(responseCode = "400", description = "invalid"),
 		@APIResponse(
 			responseCode = "200",
 			description = "Health Check Ok",
