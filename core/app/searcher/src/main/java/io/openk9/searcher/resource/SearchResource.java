@@ -476,9 +476,6 @@ public class SearchResource {
 		description = "Return autocomplete suggestions based on indexed data according to the Autocomplete configurations."
 	)
 	@APIResponses(value = {
-		@APIResponse(responseCode = "200", description = "success"),
-		@APIResponse(responseCode = "404", description = "not found"),
-		@APIResponse(responseCode = "400", description = "invalid"),
 		@APIResponse(
 			responseCode = "200",
 			description = "Ingestion successful",
@@ -527,9 +524,6 @@ public class SearchResource {
 		description = "Transform Openk9 Autocomplete Request in equivalent OpenSearch query configured for autocomplete suggestions"
 	)
 	@APIResponses(value = {
-		@APIResponse(responseCode = "200", description = "success"),
-		@APIResponse(responseCode = "404", description = "not found"),
-		@APIResponse(responseCode = "400", description = "invalid"),
 		@APIResponse(
 			responseCode = "200",
 			description = "Query generation successful",
@@ -574,9 +568,6 @@ public class SearchResource {
 		description = "Transform Openk9 Search Request in equivalent OpenSearch query configured for autocorrection suggestions"
 	)
 	@APIResponses(value = {
-		@APIResponse(responseCode = "200", description = "success"),
-		@APIResponse(responseCode = "404", description = "not found"),
-		@APIResponse(responseCode = "400", description = "invalid"),
 		@APIResponse(
 			responseCode = "200",
 			description = "Ingestion successful",
@@ -619,9 +610,6 @@ public class SearchResource {
 	@Operation(operationId = "query-analysis")
 	@Tag(name = "Query Analysis API", description = "Performs sematic query analysis on search query, as well as provides autocomplete suggestions.")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Ingestion successful",
@@ -673,9 +661,6 @@ public class SearchResource {
 	@Operation(operationId = "search")
 	@Tag(name = "Search API", description = "Execute search on indexed data. Returns list of matching results ordered by score.")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Ingestion successful",
@@ -741,9 +726,6 @@ public class SearchResource {
 	@Operation(operationId = "search-query")
 	@Tag(name = "Search Query API", description = "Transform Openk9 Search Request in equivalent Opensearch query")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Ingestion successful",
@@ -805,9 +787,6 @@ public class SearchResource {
 	@Operation(operationId = SUGGESTIONS)
 	@Tag(name = "Suggestions API", description = "Return filter options for a specific filed based on search results.")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Ingestion successful",
