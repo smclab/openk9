@@ -69,6 +69,13 @@ export default function DynamicForm({
                 isDefault: true,
               },
             ];
+          } else if (field.type === "number") {
+            updatedValues = [
+              {
+                value: newValue as number,
+                isDefault: true,
+              },
+            ];
           } else {
             const formattedValue = field.type === "list" ? (newValue as string[]) : [String(newValue)];
             updatedValues = formattedValue.map((val) => ({
@@ -167,6 +174,14 @@ function convertJsonToTemplate({ template, jsonConfig }: { template: Template; j
   return { fields: updatedFields };
 }
 
+export function toJsonNumber(fieldValue: unknown): unknown {
+  if (fieldValue === "" || fieldValue === null || fieldValue === undefined) {
+    return fieldValue;
+  }
+  const numberValue = Number(fieldValue);
+  return Number.isFinite(numberValue) ? numberValue : fieldValue;
+}
+
 function convertTemplateToJson(template: Template): string {
   const jsonConfig = template.fields.reduce((acc, field) => {
     const fieldValue = getDefaultValue(field);
@@ -175,7 +190,7 @@ function convertTemplateToJson(template: Template): string {
         acc[field.name] = fieldValue as string;
         break;
       case "number":
-        acc[field.name] = fieldValue as number;
+        acc[field.name] = toJsonNumber(fieldValue);
         break;
       case "boolean":
         acc[field.name] = fieldValue as boolean;
@@ -244,7 +259,7 @@ function getDefaultValue(field: Field): string | number | boolean | string[] | R
 }
 
 type FieldValue = {
-  value: string | Array<string> | boolean | KeyValue;
+  value: string | number | Array<string> | boolean | KeyValue;
   isDefault: boolean;
   [key: string]: any;
 };
@@ -337,12 +352,13 @@ export function GenerateDynamicForm({
             <NumberInputSimple
               key={field.name}
               label={field.label}
-              value={Number(value)}
+              value={value as number | string}
               isRequired={field.required}
               description={field.info}
               disabled={disabled}
               onChange={(e) => {
-                changeValueKey(field.name, Number(e.currentTarget.value));
+                const rawValue = e.currentTarget.value;
+                changeValueKey(field.name, rawValue === "" ? "" : Number(rawValue));
               }}
             />
           );
@@ -641,6 +657,13 @@ export function DynamicFormArray({
               updatedValues = [
                 {
                   value: typeof newValue === "boolean" ? newValue : newValue === "true",
+                  isDefault: true,
+                },
+              ];
+            } else if (field.type === "number") {
+              updatedValues = [
+                {
+                  value: newValue as number,
                   isDefault: true,
                 },
               ];

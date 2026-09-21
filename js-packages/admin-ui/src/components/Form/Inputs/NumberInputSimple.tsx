@@ -12,7 +12,7 @@ export function NumberInputSimple({
   label: string;
   description?: string;
   isRequired?: boolean;
-  value: number;
+  value: number | string;
   disabled?: boolean;
   onChange(event: any): void;
 }) {
