@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Set;
 import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
 
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.EntitiesUtils;
@@ -33,7 +34,6 @@ import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
-import org.hibernate.HibernateException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
 
@@ -224,7 +224,7 @@ public class DocTypeServiceTest {
 				.build())
 			.await().indefinitely();
 
-		assertThrows(HibernateException.class, () -> docTypeService.addDocTypeField(
+		assertThrows(ConstraintViolationException.class, () -> docTypeService.addDocTypeField(
 					docType.getId(),
 					DocTypeFieldDTO.builder()
 						.name("offsetSourceField")
@@ -257,7 +257,7 @@ public class DocTypeServiceTest {
 			)
 			.await().indefinitely().right;
 
-		assertThrows(HibernateException.class, () -> docTypeFieldService.createSubField(
+		assertThrows(ConstraintViolationException.class, () -> docTypeFieldService.createSubField(
 					parent.getId(),
 					DocTypeFieldDTO.builder()
 						.name("keywordSubField")

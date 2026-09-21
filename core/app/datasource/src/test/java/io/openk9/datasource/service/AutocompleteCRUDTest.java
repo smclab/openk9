@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
 
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.Autocomplete;
@@ -168,7 +169,7 @@ public class AutocompleteCRUDTest {
 			.build();
 
 		var exception = assertThrows(
-			HibernateException.class, () -> EntitiesUtils.createEntity(dto, service, sf));
+			ConstraintViolationException.class, () -> EntitiesUtils.createEntity(dto, service, sf));
 
 		var defaultValidatorMessage = ValidAutocompleteFields.class
 			.getMethod("message")
@@ -184,7 +185,7 @@ public class AutocompleteCRUDTest {
 		Autocomplete autocomplete = new Autocomplete();
 
 		var exception = assertThrows(
-			HibernateException.class, () -> EntitiesUtils.createEntity(autocomplete, service, sf));
+			ConstraintViolationException.class, () -> EntitiesUtils.createEntity(autocomplete, service, sf));
 
 		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
 	}
@@ -195,7 +196,7 @@ public class AutocompleteCRUDTest {
 		autocomplete.setName(AUTOCOMPLETE_NAME_ONE);
 
 		var exception = assertThrows(
-			HibernateException.class, () -> EntitiesUtils.createEntity(autocomplete, service, sf));
+			ConstraintViolationException.class, () -> EntitiesUtils.createEntity(autocomplete, service, sf));
 
 		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
 	}
@@ -233,7 +234,7 @@ public class AutocompleteCRUDTest {
 			.build();
 
 		var exception = assertThrows(
-			HibernateException.class, () -> EntitiesUtils.createEntity(dto, service, sf));
+			ConstraintViolationException.class, () -> EntitiesUtils.createEntity(dto, service, sf));
 
 		var defaultValidatorMessage = ValidAutocompleteFields.class
 			.getMethod("message")
