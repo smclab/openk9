@@ -52,6 +52,7 @@ import {
   DynamicFormArray,
   GenerateDynamicForm,
   Template,
+  toJsonNumber,
 } from "@pages/datasources/components/Sections/DataSource/DynamicForm";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { useMutation } from "@tanstack/react-query";
@@ -251,10 +252,11 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
           }
           item.fields.forEach((field) => {
             const valueFromJson = parsedJson[field.name];
-            jsonObj[field.name] =
+            const rawValue =
               valueFromJson !== undefined && valueFromJson !== null && valueFromJson !== ""
                 ? valueFromJson
                 : field.values?.[0]?.value ?? "";
+            jsonObj[field.name] = field.type === "number" ? toJsonNumber(rawValue) : rawValue;
           });
           return JSON.stringify(jsonObj);
         });
