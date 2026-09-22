@@ -204,7 +204,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
                       {...form.inputProps("priority")}
                       description={t("pages.tabs.define-priority-according-to-which-suggestion-cateogories")}
                     />
-                    <TooltipDescription informationDescription="Token Tabs associated to current Tab">
+                    <TooltipDescription informationDescription={t("pages.tabs.token-tabs-associated-to-current-tab")}>
                       <MultiAssociationCustomQuery
                         list={{
                           ...tokenTab,
@@ -213,7 +213,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
                         createPath={{ path: "/token-tab/new", entity: "token-tabs" }}
                         disabled={page === 1 || view === "view"}
                         isRecap={page === 1}
-                        titleAssociation="Association with token tabs"
+                        titleAssociation={t("pages.tabs.association-with-token-tabs")}
                         onSelect={({ items, isAdd }) => {
                           const data = form.inputProps("tokenTabIds").value;
 
@@ -230,7 +230,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
                         }}
                       />
                     </TooltipDescription>
-                    <TooltipDescription informationDescription="Sortings associated to current Tab">
+                    <TooltipDescription informationDescription={t("pages.tabs.sortings-associated-to-current-tab")}>
                       <MultiAssociationCustomQuery
                         list={{
                           ...sorting,
@@ -239,7 +239,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
                         createPath={{ path: "/sorting/new", entity: "sortings" }}
                         disabled={page === 1 || view === "view"}
                         isRecap={page === 1}
-                        titleAssociation="Association with sortings"
+                        titleAssociation={t("pages.tabs.association-with-sortings")}
                         onSelect={({ items, isAdd }) => {
                           const data = form.inputProps("sortingIds").value;
 

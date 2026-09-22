@@ -343,7 +343,9 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                       description={t("pages.token-tabs.value-it-must-match-for-this-token")}
                     />
 
-                    <TooltipDescription informationDescription="Type of Token Tab. Every type implements a different search logic.">
+                    <TooltipDescription
+                      informationDescription={t("pages.token-tabs.type-of-token-tab-every-type-implements")}
+                    >
                       <TokenTypeAutocomplete<TokenType>
                         label={t("fields.token-type")}
                         dict={TokenType}

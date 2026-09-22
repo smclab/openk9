@@ -47,6 +47,7 @@ import {
 } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
 import cronstrue from "cronstrue";
+import "cronstrue/locales/it";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -99,7 +100,7 @@ const TypeAvatar = styled(Avatar)<{ bgcolor: string }>(({ theme, bgcolor }) => (
 }));
 
 const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [datasources, setDatasources] = useState<Datasource[]>([]);
   React.useEffect(() => {
     if (datasourcesData?.length > 0) {
@@ -142,10 +143,14 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
     description: "",
   });
 
+  const cronstrueLocale = i18n.resolvedLanguage === "it" ? "it" : "en";
+
   const getReadableCronDescription = (cronExpression: string): string => {
     try {
       const fullCronExpression = `${cronExpression}`;
-      return cronstrue.toString(fullCronExpression);
+      return cronstrue.toString(fullCronExpression, {
+        locale: cronstrueLocale,
+      });
     } catch (error) {
       return t("datasource-cards.invalid-cron");
     }

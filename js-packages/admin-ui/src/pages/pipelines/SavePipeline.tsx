@@ -149,7 +149,8 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       const isNew = pipelineId === "new" ? "create" : "update";
       toast({
         title: isNew === "create" ? t("pages.pipelines.create-error-title") : t("pages.pipelines.update-error-title"),
-        content: isNew === "create" ? t("pages.pipelines.create-error-content") : t("pages.pipelines.update-error-content"),
+        content:
+          isNew === "create" ? t("pages.pipelines.create-error-content") : t("pages.pipelines.update-error-content"),
         displayType: "error",
       });
     },
@@ -272,7 +273,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       {open && !modalDataLost && (
         <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="lg">
           <DialogTitle>
-            {modalDataLost ? "Attention" : "Enrich Items"}
+            {modalDataLost ? t("common.attention") : t("pages.enrich-items.title")}
             <IconButton
               aria-label={t("common.close")}
               onClick={() => setOpen(false)}
@@ -383,7 +384,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         </Box>
         <Box sx={{ marginBottom: -1 }}>
           <Typography variant="subtitle1" component="label" htmlFor={"name-create-pipeline"}>
-            {"Name:"}
+            {`${t("common.name")}:`}
           </Typography>
         </Box>
         <TextField
@@ -401,7 +402,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         />
         <Box sx={{ marginBottom: -1, marginTop: 1 }}>
           <Typography variant="subtitle1" component="label" htmlFor={"description-create-pipeline"}>
-            {"Description:"}
+            {`${t("common.description")}:`}
           </Typography>
         </Box>
         <TextField
@@ -560,7 +561,9 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
               }}
               disabled={!pipelineData.name}
             >
-              {pipelineData.pipelineId === "new" ? "Create Pipeline" : "Update Pipeline"}
+              {pipelineData.pipelineId === "new"
+                ? t("pages.pipelines.create-pipeline")
+                : t("pages.pipelines.update-pipeline")}
             </Button>
           )}
         </Box>
@@ -587,7 +590,10 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
               },
             });
           },
-          submitLabel: pipelineData.pipelineId === "new" ? t("entity.create") : t("entity.update"),
+          submitLabel:
+            pipelineData.pipelineId === "new"
+              ? t("pages.pipelines.create-pipeline")
+              : t("pages.pipelines.update-pipeline"),
         }}
       />
     </>

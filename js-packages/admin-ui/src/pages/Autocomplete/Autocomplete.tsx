@@ -370,8 +370,8 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
         actions={{
           onBack: () => setPage(0),
           onSubmit: () => form.submit(),
-          submitLabel: autocompletId === "new" ? "Create entity" : "Update entity",
-          backLabel: "Back",
+          submitLabel: autocompletId === "new" ? t("entity.create") : t("entity.update"),
+          backLabel: t("common.back"),
         }}
       />
     </ContainerFluid>

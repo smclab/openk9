@@ -35,6 +35,7 @@ import {
   useTheme,
 } from "@mui/material";
 import cronstrue from "cronstrue";
+import "cronstrue/locales/it";
 import React, { useEffect, useState } from "react";
 import { useToast } from "../../../../../components/Form/Form/ToastProvider";
 import { ConnectionData } from "../../../types";
@@ -204,6 +205,7 @@ interface FieldMappings {
 
 interface CronEditorProps {
   title: string;
+  sectionId: "reindex" | "scheduling" | "purge";
   dataDatasource: ConnectionData;
   setDataDatasource: React.Dispatch<React.SetStateAction<ConnectionData>>;
   isActive: boolean;
@@ -214,6 +216,7 @@ interface CronEditorProps {
 
 const CronEditor: React.FC<CronEditorProps> = ({
   title,
+  sectionId,
   dataDatasource,
   setDataDatasource,
   isActive,
@@ -221,7 +224,8 @@ const CronEditor: React.FC<CronEditorProps> = ({
   isView,
   // onChangeData,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const cronLocale = i18n.resolvedLanguage === "it" ? "it" : "en";
   const getCronFromType = () => {
     const defaultCronValues = {
       reindex: "0 0 1 * * ?",
@@ -229,7 +233,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
       purge: "0 0 1 * * ?",
     };
 
-    const type = title.toLowerCase() as keyof typeof defaultCronValues;
+    const type = sectionId;
     const cronString =
       type === "reindex"
         ? dataDatasource?.reindexing || defaultCronValues.reindex
@@ -284,8 +288,8 @@ const CronEditor: React.FC<CronEditorProps> = ({
     ],
     DayOfMonth: [
       { value: "*", label: t("pages.datasources.cron.every-day"), description: t("pages.datasources.cron.run-every-day-of-the-month") },
-      { value: "1", label: "1st of month", description: t("pages.datasources.cron.run-on-the-first-day-of-every") },
-      { value: "15", label: "15th of month", description: t("pages.datasources.cron.run-on-the-15th-day-of-every") },
+      { value: "1", label: t("pages.datasources.cron.first-of-month"), description: t("pages.datasources.cron.run-on-the-first-day-of-every") },
+      { value: "15", label: t("pages.datasources.cron.fifteenth-of-month"), description: t("pages.datasources.cron.run-on-the-15th-day-of-every") },
       { value: "L", label: t("pages.datasources.cron.last-day"), description: t("pages.datasources.cron.run-on-the-last-day-of-every") },
       { value: "1-5", label: t("pages.datasources.cron.days-1-5"), description: t("pages.datasources.cron.run-on-the-first-5-days-of") },
     ],
@@ -302,24 +306,24 @@ const CronEditor: React.FC<CronEditorProps> = ({
       { value: "2", label: t("pages.datasources.cron.monday"), description: t("pages.datasources.cron.run-only-on-monday") },
     ],
     maxPurgeAge: [
-      { value: "1d", label: "1 days", description: t("pages.datasources.cron.purge-data-older-than-1-day") },
-      { value: "2d", label: "2 days", description: t("pages.datasources.cron.purge-data-older-than-2-days") },
-      { value: "3d", label: "3 days", description: t("pages.datasources.cron.purge-data-older-than-3-days") },
-      { value: "7d", label: "1 week", description: t("pages.datasources.cron.purge-data-older-than-7-days-1") },
-      { value: "15d", label: "15 days", description: t("pages.datasources.cron.purge-data-older-than-15-days") },
-      { value: "30d", label: "30 days", description: t("pages.datasources.cron.purge-data-older-than-30-days") },
+      { value: "1d", label: t("pages.datasources.cron.1-day"), description: t("pages.datasources.cron.purge-data-older-than-1-day") },
+      { value: "2d", label: t("pages.datasources.cron.2-days"), description: t("pages.datasources.cron.purge-data-older-than-2-days") },
+      { value: "3d", label: t("pages.datasources.cron.3-days"), description: t("pages.datasources.cron.purge-data-older-than-3-days") },
+      { value: "7d", label: t("pages.datasources.cron.1-week"), description: t("pages.datasources.cron.purge-data-older-than-7-days-1") },
+      { value: "15d", label: t("pages.datasources.cron.15-days"), description: t("pages.datasources.cron.purge-data-older-than-15-days") },
+      { value: "30d", label: t("pages.datasources.cron.30-days"), description: t("pages.datasources.cron.purge-data-older-than-30-days") },
     ],
   };
 
   const fieldLabels: Record<CronFieldType, string> = {
-    Minute: "Minutes (0-59)",
-    Hour: "Hours (0-23)",
-    DayOfMonth: "Days of Month (1-31)",
-    Month: "Months (1-12)",
-    DayOfWeek: "Days of Week (1-7)",
-    ...(title.toLowerCase() === "purge"
+    Minute: t("pages.datasources.cron.minutes-0-59"),
+    Hour: t("pages.datasources.cron.hours-0-23"),
+    DayOfMonth: t("pages.datasources.cron.days-of-month-1-31"),
+    Month: t("pages.datasources.cron.months-1-12"),
+    DayOfWeek: t("pages.datasources.cron.days-of-week-1-7"),
+    ...(sectionId === "purge"
       ? {
-          maxPurgeAge: "Max Purge Age",
+          maxPurgeAge: t("pages.datasources.cron.max-purge-age"),
         }
       : {}),
   };
@@ -376,9 +380,9 @@ const CronEditor: React.FC<CronEditorProps> = ({
   const getReadableCronDescription = (): string => {
     try {
       const fullCronExpression = `${cronExpression}`;
-      return cronstrue.toString(fullCronExpression, { dayOfWeekStartIndexZero: false });
+      return cronstrue.toString(fullCronExpression, { locale: cronLocale, dayOfWeekStartIndexZero: false });
     } catch (error) {
-      return "Invalid cron expression";
+      return t("datasource-cards.invalid-cron");
     }
   };
 
@@ -538,16 +542,16 @@ const CronEditor: React.FC<CronEditorProps> = ({
 
     setDataDatasource((prev) => ({
       ...prev,
-      scheduling: title.toLowerCase() === "scheduling" ? newCronExpression : prev.scheduling,
-      reindexing: title.toLowerCase() === "reindex" ? newCronExpression : prev.reindexing,
-      purging: title.toLowerCase() === "purge" ? newCronExpression : prev.purging,
-      ...(title.toLowerCase() === "purge" ? { purgeMaxAge: cronValues.maxPurgeAge } : {}),
+      scheduling: sectionId === "scheduling" ? newCronExpression : prev.scheduling,
+      reindexing: sectionId === "reindex" ? newCronExpression : prev.reindexing,
+      purging: sectionId === "purge" ? newCronExpression : prev.purging,
+      ...(sectionId === "purge" ? { purgeMaxAge: cronValues.maxPurgeAge } : {}),
     }));
 
     showToast({
       displayType: "success",
       title: t("pages.datasources.cron.success"),
-      content: `${title} configuration has been saved successfully.`,
+      content: t("pages.datasources.cron.configuration-saved", { section: title }),
     });
   };
 
@@ -555,13 +559,13 @@ const CronEditor: React.FC<CronEditorProps> = ({
     <Card>
       <CardContent>
         <Typography variant="h5" gutterBottom>
-          {title} - Task Scheduler
+          {title} - {t("pages.datasources.cron.task-scheduler")}
         </Typography>
 
         <Box sx={{ mt: 3, mb: 4, opacity: isView || isActive ? 1 : 0.6 }}>
           <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
             <Stack direction="row" spacing={1}>
-              {Object.entries(fieldIcons(title.toLowerCase() === "purge", t)).map(([field, { icon, tooltip }]) => (
+              {Object.entries(fieldIcons(sectionId === "purge", t)).map(([field, { icon, tooltip }]) => (
                 <Tooltip key={field} title={tooltip}>
                   <Button
                     variant={selectedField === field ? "contained" : "outlined"}
@@ -609,7 +613,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      {fieldIcons(title.toLowerCase() === "purge", t)[selectedField].icon}
+                      {fieldIcons(sectionId === "purge", t)[selectedField].icon}
                     </InputAdornment>
                   ),
                 }}
@@ -642,7 +646,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
 
               <Box flex={1}>
                 <Typography variant="subtitle2" gutterBottom>
-                  {title.toLowerCase() === "purge" ? "" : "Specific values:"}
+                  {sectionId === "purge" ? "" : t("pages.datasources.cron.specific-values")}
                 </Typography>
                 <Box
                   sx={{
@@ -703,7 +707,9 @@ const CronEditor: React.FC<CronEditorProps> = ({
             {cronExpression}
           </Typography>
           <Typography variant="body1" sx={{ fontFamily: "monospace", fontSize: "1.1rem", mt: 2, mb: 2 }}>
-            {title.toLowerCase() === "purge" && cronValues.maxPurgeAge && `Max Purge Age: ${cronValues.maxPurgeAge}`}
+            {sectionId === "purge" &&
+              cronValues.maxPurgeAge &&
+              `${t("pages.datasources.cron.max-purge-age")}: ${cronValues.maxPurgeAge}`}
           </Typography>
           <Divider />
           <Typography variant="subtitle1" sx={{ mt: 2 }} gutterBottom>

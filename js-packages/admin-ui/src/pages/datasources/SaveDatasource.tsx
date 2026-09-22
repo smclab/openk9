@@ -125,15 +125,27 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
       const response = await restClient.pluginDriverResource.getApiDatasourcePluginDriversHealth(id);
       const ui = mapHealthStatus(response.status);
       if (ui === "success") {
-        toast({ displayType: "success", title: t("pages.datasources.success"), content: t("pages.datasources.connection-successful") });
+        toast({
+          displayType: "success",
+          title: t("pages.datasources.success"),
+          content: t("pages.datasources.connection-successful"),
+        });
       } else if (ui === "down") {
-        toast({ displayType: "error", title: t("pages.datasources.service-unavailable"), content: t("pages.datasources.the-service-is-reachable-but-reports-down") });
+        toast({
+          displayType: "error",
+          title: t("pages.datasources.service-unavailable"),
+          content: t("pages.datasources.the-service-is-reachable-but-reports-down"),
+        });
       } else {
-        toast({ displayType: "warning", title: t("pages.datasources.service-status-unknown"), content: t("pages.datasources.unexpected-status", { status: response.status }) });
+        toast({
+          displayType: "warning",
+          title: t("pages.datasources.service-status-unknown"),
+          content: t("pages.datasources.unexpected-status", { status: response.status }),
+        });
       }
     } catch (error) {
       const { title, detail } = extractProblemDetails(error, t);
-      toast({ displayType: "error", title, content: detail ?? "Unable to reach the service" });
+      toast({ displayType: "error", title, content: detail ?? t("pages.datasources.unable-to-reach-the-service") });
     }
   };
 
@@ -142,11 +154,11 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
       const response = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth(requestBody);
       const ui = mapHealthStatus(response.status);
       if (ui === "success") {
-        alert("Connection successful");
+        alert(t("pages.datasources.connection-successful"));
       } else if (ui === "down") {
-        alert("Service unavailable: the service is reachable but reports DOWN");
+        alert(t("pages.datasources.the-service-is-reachable-but-reports-down"));
       } else {
-        alert(`Service status unknown: ${response.status}`);
+        alert(t("pages.datasources.unexpected-status", { status: response.status }));
       }
     } catch (error) {
       const { title, detail } = extractProblemDetails(error, t);

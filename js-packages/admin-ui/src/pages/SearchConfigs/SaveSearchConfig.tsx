@@ -397,13 +397,15 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                         description={t("pages.search-configs.maximum-length-allowed-for-text-search-queries")}
                       />
                       {/* </Box> */}
-                      <TooltipDescription informationDescription="Set Hybrid Search after creation">
+                      <TooltipDescription
+                        informationDescription={t("pages.search-configs.set-hybrid-search-after-creation")}
+                      >
                         <Button
                           type="button"
                           color="primary"
                           disabled={searchConfigId === "new"}
                           onClick={() => setIsHybridSearch(true)}
-                          children={"Set Hybrid Search"}
+                          children={t("pages.search-configs.set-hybrid-search")}
                           variant="outlined"
                           sx={{
                             marginTop: 1,

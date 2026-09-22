@@ -159,7 +159,9 @@ export function Datasources() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {isScheduled ? "Schedulable Active" : "Schedulable Idle"}
+                        {isScheduled
+                          ? t("pages.datasources.schedulable-active")
+                          : t("pages.datasources.schedulable-idle")}
                       </Typography>
                       <Typography
                         variant="body2"
@@ -172,7 +174,9 @@ export function Datasources() {
                           fontWeight: 600,
                         }}
                       >
-                        {isReindex ? "Reindexable Active" : "Reindexable Idle"}
+                        {isReindex
+                          ? t("pages.datasources.reindexable-active")
+                          : t("pages.datasources.reindexable-idle")}
                       </Typography>
                     </Box>
                   );

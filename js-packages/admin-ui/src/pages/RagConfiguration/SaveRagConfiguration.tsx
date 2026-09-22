@@ -266,7 +266,11 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                         disabled={view === "view" || page === 1}
                         description={t("pages.rag-configurations.the-main-prompt-for-the-rag-system")}
                       />
-                      <TooltipDescription informationDescription="If enabled, the user question is reformulated using the Rephrase Prompt before being sent to the retriever.">
+                      <TooltipDescription
+                        informationDescription={t(
+                          "pages.rag-configurations.if-enabled-the-user-question-is-reformulated",
+                        )}
+                      >
                         <FormControlLabel
                           control={
                             <Checkbox
@@ -301,7 +305,11 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                         disabled={view === "view" || page === 1}
                         description={t("pages.rag-configurations.json-configuration-for-the-rag-system")}
                       />
-                      <TooltipDescription informationDescription="If enabled, an automatic title is generated for each conversation based on its content.">
+                      <TooltipDescription
+                        informationDescription={t(
+                          "pages.rag-configurations.if-enabled-an-automatic-title-is-generated",
+                        )}
+                      >
                         <FormControlLabel
                           control={
                             <Checkbox

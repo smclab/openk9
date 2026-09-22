@@ -381,28 +381,36 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         label={t("fields.date")}
                         {...form.inputProps("refreshOnDate")}
                       />
-                      <TooltipDescription informationDescription="Refresh filters when date filter is applied" />
+                      <TooltipDescription
+                        informationDescription={t("pages.buckets.refresh-filters-when-date-filter-is-applied")}
+                      />
                       <BooleanInput
                         sxCheckbox={sxCheckbox}
                         sxControl={sxControl}
                         label={t("fields.query")}
                         {...form.inputProps("refreshOnQuery")}
                       />
-                      <TooltipDescription informationDescription="Refresh filters when query search is performed" />
+                      <TooltipDescription
+                        informationDescription={t("pages.buckets.refresh-filters-when-query-search-is-performed")}
+                      />
                       <BooleanInput
                         sxCheckbox={sxCheckbox}
                         sxControl={sxControl}
                         label={t("fields.suggestioncategory")}
                         {...form.inputProps("refreshOnSuggestionCategory")}
                       />
-                      <TooltipDescription informationDescription="Refresh filters when filters are applied" />
+                      <TooltipDescription
+                        informationDescription={t("pages.buckets.refresh-filters-when-filters-are-applied")}
+                      />
                       <BooleanInput
                         sxCheckbox={sxCheckbox}
                         sxControl={sxControl}
                         label={t("fields.tab")}
                         {...form.inputProps("refreshOnTab")}
                       />
-                      <TooltipDescription informationDescription="Refresh filters Tab is applied" />
+                      <TooltipDescription
+                        informationDescription={t("pages.buckets.refresh-filters-when-tab-is-applied")}
+                      />
                     </RefreshOptionsLayout>
 
                     <CustomSelect

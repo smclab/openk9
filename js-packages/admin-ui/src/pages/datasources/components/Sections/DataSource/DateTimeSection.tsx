@@ -68,7 +68,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
       title: t("pages.datasources.date-time.purge"),
       active: dataDatasource.isCronSectionpurge,
     },
-  ];
+  ] as const;
 
   const toggleSectionDisabled = (sectionId: string) => {
     const section = sections.find((s) => s.id === sectionId);
@@ -95,7 +95,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
               <Button
                 size="small"
                 key={section.id}
-                onClick={() => setActiveSection(section.id as typeof activeSection)}
+                onClick={() => setActiveSection(section.id)}
                 onFocus={() => setExpandedLockSection(section.id)}
                 onBlur={() => setExpandedLockSection(null)}
                 sx={{
@@ -171,7 +171,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
                         ml: isLockExpanded ? 0.5 : 0,
                       }}
                     >
-                      {isLockExpanded && (isActive ? "Disable" : "Enable")}
+                      {isLockExpanded && (isActive ? t("common.disable") : t("common.enable"))}
                     </Typography>
                   </IconButton>
                 </Grid>
@@ -212,6 +212,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
           <CronEditor
             key={`${section.id}-editor`}
             title={section.title}
+            sectionId={section.id}
             dataDatasource={dataDatasource}
             setDataDatasource={setDataDatasource}
             isActive={section.active || false}

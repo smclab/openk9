@@ -282,7 +282,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       disabled={view ? true : false}
                       description={t("pages.embedding-models.specific-embedding-model-identifier-of-the-selected")}
                     />
-                    <TooltipDescription informationDescription="Api key in case of external api service">
+                    <TooltipDescription informationDescription={t("fields.api-key-in-case-of-external-api")}>
                       <TextInput
                         label={t("fields.api-key")}
                         {...form.inputProps("apiKey")}
@@ -300,7 +300,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                         }}
                       />
                     </TooltipDescription>
-                    <TooltipDescription informationDescription="Api url in case of service hosted on on premise service">
+                    <TooltipDescription informationDescription={t("fields.api-url-in-case-of-service-hosted")}>
                       <TextInput label={t("fields.api-url")} {...form.inputProps("apiUrl")} />
                     </TooltipDescription>
                     <ContainerFluid size="md" style={{ marginRight: 0 }}>
@@ -315,7 +315,9 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                         disabled={false}
                         height="400px"
                         tooltip={
-                          <TooltipDescription informationDescription="Json config to set up Embedding Model settings" />
+                          <TooltipDescription
+                            informationDescription={t("pages.embedding-models.json-config-to-set-up-embedding-model")}
+                          />
                         }
                       />
                     </ContainerFluid>

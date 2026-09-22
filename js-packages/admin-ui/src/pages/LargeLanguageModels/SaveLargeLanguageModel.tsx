@@ -212,7 +212,7 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
                       {...form.inputProps("description")}
                       description={t("pages.large-language-models.free-text-description-of-the-llm-e")}
                     />
-                    <TooltipDescription informationDescription="Api key in case of external api service">
+                    <TooltipDescription informationDescription={t("fields.api-key-in-case-of-external-api")}>
                       <TextInput
                         label={t("fields.api-key")}
                         {...form.inputProps("apiKey")}
@@ -230,7 +230,7 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
                         }}
                       />
                     </TooltipDescription>
-                    <TooltipDescription informationDescription="Api url in case of service hosted on on premise service">
+                    <TooltipDescription informationDescription={t("fields.api-url-in-case-of-service-hosted")}>
                       <TextInput label={t("fields.api-url")} {...form.inputProps("apiUrl")} />
                     </TooltipDescription>
                     <NumberInput
@@ -285,7 +285,9 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
                       disabled={false}
                       height="400px"
                       tooltip={
-                        <TooltipDescription informationDescription="Json config to set up Large Language Model settings" />
+                        <TooltipDescription
+                          informationDescription={t("pages.large-language-models.json-config-to-set-up-large-language")}
+                        />
                       }
                     />
                   </ContainerFluid>
