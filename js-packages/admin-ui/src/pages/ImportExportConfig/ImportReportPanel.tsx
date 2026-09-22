@@ -17,6 +17,7 @@
 import { Alert, AlertTitle, Box, Chip, Divider, Typography } from "@mui/material";
 import type { Action, ImportReport, PlannedAction } from "openapi-generated";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 /** The planned actions grouped by kind, in the order they are reported. */
 const ACTION_ORDER: Action[] = ["CREATE", "OVERWRITE", "SKIP"];
@@ -37,10 +38,10 @@ function severity({ blockingErrors, applied }: ImportReport): "error" | "info" |
   return applied ? "success" : "info";
 }
 
-function title({ blockingErrors, applied, dryRun }: ImportReport): string {
-  if ((blockingErrors ?? []).length > 0) return "The import cannot proceed";
-  if (applied) return "Import applied";
-  return dryRun ? "Preview: nothing was changed" : "Import not applied";
+function titleKey({ blockingErrors, applied, dryRun }: ImportReport): string {
+  if ((blockingErrors ?? []).length > 0) return "report-title.blocked";
+  if (applied) return "report-title.applied";
+  return dryRun ? "report-title.preview" : "report-title.not-applied";
 }
 
 function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
@@ -66,6 +67,7 @@ function actionsOfKind(actions: PlannedAction[], kind: Action): PlannedAction[] 
  * the outcome differs.
  */
 export function ImportReportPanel({ report }: { report: ImportReport }) {
+  const { t } = useTranslation();
   const actions = report.actions ?? [];
   const missingReferences = report.missingReferences ?? [];
   const secretsToReenter = report.secretsToReenter ?? [];
@@ -73,7 +75,7 @@ export function ImportReportPanel({ report }: { report: ImportReport }) {
 
   return (
     <Alert severity={severity(report)} sx={{ mt: 2.5 }}>
-      <AlertTitle>{title(report)}</AlertTitle>
+      <AlertTitle>{t(`pages.admin-settings.import-export.${titleKey(report)}`)}</AlertTitle>
 
       <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
         {counts(report).map((count) => (
@@ -83,7 +85,7 @@ export function ImportReportPanel({ report }: { report: ImportReport }) {
       </Box>
 
       {blockingErrors.length > 0 && (
-        <Section heading="Blocking errors">
+        <Section heading={t("pages.admin-settings.import-export.report-content.errors")}>
           {blockingErrors.map((error) => (
             <Typography component="li" variant="body2" key={error}>
               {error}
@@ -95,7 +97,7 @@ export function ImportReportPanel({ report }: { report: ImportReport }) {
       {secretsToReenter.length > 0 && (
         <>
           <Divider sx={{ mt: 1.5 }} />
-          <Section heading="Secrets to enter again — they were not copied and have to be set by hand">
+          <Section heading={t("pages.admin-settings.import-export.report-secrets-heading")}>
             {secretsToReenter.map((secret, index) => (
               <Typography component="li" variant="body2" key={`${secret.ref}-${index}`}>
                 {secret.type} “{secret.key}”: {(secret.fields ?? []).join(", ")}
@@ -106,7 +108,7 @@ export function ImportReportPanel({ report }: { report: ImportReport }) {
       )}
 
       {missingReferences.length > 0 && (
-        <Section heading="Missing references — the package points outside itself">
+        <Section heading={t("pages.admin-settings.import-export.report-missing-heading")}>
           {missingReferences.map((reference) => (
             <Typography
               component="li"

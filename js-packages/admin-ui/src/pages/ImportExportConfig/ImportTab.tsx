@@ -45,20 +45,17 @@ import { ParsedPackage, readConfigPackage } from "./configPackage";
 import { ImportReportPanel } from "./ImportReportPanel";
 import { useTranslation } from "react-i18next";
 
-const IMPORT_MODES: { value: ImportMode; label: string }[] = [
-  { value: "SKIP", label: "SKIP (default)" },
-  { value: "OVERWRITE", label: "OVERWRITE" },
+const IMPORT_MODES: { value: ImportMode; labelKey: string }[] = [
+  { value: "SKIP", labelKey: "mode-skip" },
+  { value: "OVERWRITE", labelKey: "mode-overwrite" },
 ];
 
-const MODE_HELP =
-  "SKIP leaves the entities that already exist untouched. OVERWRITE replaces them with the ones in the package.";
-
-const REPORT_CONTENT = [
-  "Planned actions (CREATE / OVERWRITE / SKIP)",
-  "Conflicts found",
-  "Secrets to enter again (secretsToReenter)",
-  "Missing references (missingReferences)",
-  "Blocking errors",
+const REPORT_CONTENT_KEYS = [
+  "report-content.actions",
+  "report-content.conflicts",
+  "report-content.secrets",
+  "report-content.missing-references",
+  "report-content.errors",
 ];
 
 type SelectedFile = {
@@ -87,9 +84,9 @@ export function ImportTab() {
   const [report, setReport] = React.useState<ImportReport | null>(null);
 
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Overwrite the current configuration?",
-    body: "OVERWRITE replaces every entity of this tenant that also appears in the package. The operation cannot be undone.",
-    labelConfirm: "Import and overwrite",
+    title: t("pages.admin-settings.import-export.confirm-overwrite-title"),
+    body: t("pages.admin-settings.import-export.confirm-overwrite-body"),
+    labelConfirm: t("pages.admin-settings.import-export.confirm-overwrite-label"),
   });
 
   const importMutation = useMutation({
@@ -114,12 +111,12 @@ export function ImportTab() {
       setReport(null);
       showToast({
         displayType: "error",
-        title: "Import failed",
+        title: t("pages.admin-settings.import-export.import-error-title"),
         // The backend answers with a Problem body, whose detail is the message
         // to show; the fallback covers a request that never reached it.
         content:
           extractProblemDetails(error, t).detail ??
-          "The backend rejected the package. Nothing was applied: the import runs in a single transaction.",
+          t("pages.admin-settings.import-export.import-error-content"),
       });
     },
   });
@@ -187,14 +184,17 @@ export function ImportTab() {
           >
             <UploadFileOutlinedIcon color="action" />
             <Box sx={{ textAlign: "center" }}>
-              <Typography variant="body2">{file ? file.name : "Drop the JSON file here"}</Typography>
+              <Typography variant="body2">{file ? file.name : t("pages.admin-settings.import-export.dropzone-title")}</Typography>
               <Typography variant="body2" color="text.secondary">
                 {file
-                  ? `schema ${file.parsed.schemaVersion} · ${file.parsed.entities.length} entities`
+                  ? t("pages.admin-settings.import-export.file-summary", {
+                      schemaVersion: file.parsed.schemaVersion,
+                      total: file.parsed.entities.length,
+                    })
                   : "or click to select it"}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Maximum size 50 MB
+                {t("pages.admin-settings.import-export.max-size")}
               </Typography>
             </Box>
           </ButtonBase>
@@ -208,8 +208,8 @@ export function ImportTab() {
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <Typography variant="body2">Import mode</Typography>
-            <Tooltip title={MODE_HELP}>
+            <Typography variant="body2">{t("pages.admin-settings.import-export.mode-label")}</Typography>
+            <Tooltip title={t("pages.admin-settings.import-export.mode-help")}>
               <InfoOutlinedIcon fontSize="small" color="action" />
             </Tooltip>
           </Box>
@@ -219,12 +219,12 @@ export function ImportTab() {
             fullWidth
             value={mode}
             onChange={(event) => setMode(event.target.value === "OVERWRITE" ? "OVERWRITE" : "SKIP")}
-            helperText="How entities with the same name are handled."
+            helperText={t("pages.admin-settings.import-export.mode-helper")}
             sx={{ mt: 0.5 }}
           >
             {IMPORT_MODES.map((importMode) => (
               <MenuItem key={importMode.value} value={importMode.value}>
-                {importMode.label}
+                {t(`pages.admin-settings.import-export.${importMode.labelKey}`)}
               </MenuItem>
             ))}
           </TextField>
@@ -232,25 +232,25 @@ export function ImportTab() {
           <FormControlLabel
             sx={{ mt: 1 }}
             control={<Switch checked={dryRun} onChange={(event) => setDryRun(event.target.checked)} />}
-            label={<Typography variant="body2">Dry run (preview)</Typography>}
+            label={<Typography variant="body2">{t("pages.admin-settings.import-export.dry-run-label")}</Typography>}
           />
           <Typography variant="body2" color="text.secondary">
             {dryRun
-              ? "On by default: runs the preview without applying any change."
-              : "Off: the package will be applied in a single transaction."}
+              ? t("pages.admin-settings.import-export.dry-run-on")
+              : t("pages.admin-settings.import-export.dry-run-off")}
           </Typography>
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0, p: 1.5, borderRadius: 2.5, border: "1px solid", borderColor: "divider" }}>
           <Typography variant="body2" fontWeight="600">
-            What the report includes
+            {t("pages.admin-settings.import-export.report-content-title")}
           </Typography>
           <Box sx={{ mt: 0.5, display: "flex", flexDirection: "column", gap: 0.5 }}>
-            {REPORT_CONTENT.map((entry) => (
+            {REPORT_CONTENT_KEYS.map((entry) => (
               <Box key={entry} sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
                 <CheckCircleOutlineIcon fontSize="small" color="success" />
                 <Typography variant="body2" color="text.secondary">
-                  {entry}
+                  {t(`pages.admin-settings.import-export.${entry}`)}
                 </Typography>
               </Box>
             ))}
@@ -263,7 +263,7 @@ export function ImportTab() {
           variant="contained"
           startIcon={
             importMutation.isLoading ? (
-              <CircularProgress size={16} color="inherit" aria-label="Import in progress" />
+              <CircularProgress size={16} color="inherit" aria-label={t("pages.admin-settings.import-export.import-in-progress-aria")} />
             ) : (
               <UploadOutlinedIcon />
             )
@@ -272,18 +272,18 @@ export function ImportTab() {
           aria-busy={importMutation.isLoading}
           onClick={() => void onImport()}
         >
-          Run import
+          {t("pages.admin-settings.import-export.import-button")}
         </Button>
         {dryRun && <Chip size="small" color="success" variant="outlined" label="DRY RUN ON" />}
         <Typography variant="body2" color="text.secondary">
           {dryRun
             ? "A detailed report will be produced without applying any change."
-            : "The package will be applied: at the first error nothing is saved."}
+            : t("pages.admin-settings.import-export.apply-warning")}
         </Typography>
       </Box>
       {/* Always rendered, so the change of content is announced. */}
       <Typography variant="body2" color="text.secondary" role="status" aria-live="polite" sx={{ minHeight: 20 }}>
-        {importMutation.isLoading ? "Importing the configuration…" : ""}
+        {importMutation.isLoading ? t("pages.admin-settings.import-export.importing-status") : ""}
       </Typography>
 
       {report && <ImportReportPanel report={report} />}

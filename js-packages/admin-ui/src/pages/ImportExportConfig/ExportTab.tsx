@@ -41,26 +41,22 @@ import { downloadConfigPackage, redactedEntities } from "./configPackage";
 import { selectableTypes } from "./exportTypes";
 import { useTranslation } from "react-i18next";
 
-const SECRETS_NOTE =
-  'Secrets (e.g. API keys) and the keys in the denylist are automatically removed or replaced with "__REDACTED__".';
-
 /** How many more types each "Load more" reveals. */
 const PAGE_SIZE = 8;
 
 type Depth = "deep" | "shallow";
 
-const DEPTHS: { value: Depth; label: string; description: string; Icon: typeof AccountTreeOutlinedIcon }[] = [
+const DEPTHS: { value: Depth; labelKey: string; descriptionKey: string; Icon: typeof AccountTreeOutlinedIcon }[] = [
   {
     value: "deep",
-    label: "Deep (with dependencies)",
-    description: "Automatically includes every dependent entity, for a self-contained package.",
+    labelKey: "depth-deep-label",
+    descriptionKey: "depth-deep-description",
     Icon: AccountTreeOutlinedIcon,
   },
   {
     value: "shallow",
-    label: "Shallow (selection only)",
-    description:
-      "Exports only the selected types, adding no dependencies. The missing references are reported on import.",
+    labelKey: "depth-shallow-label",
+    descriptionKey: "depth-shallow-description",
     Icon: CropFreeOutlinedIcon,
   },
 ];
@@ -110,17 +106,17 @@ export function ExportTab() {
       const redacted = redactedEntities(entities).reduce((total, entity) => total + entity.fields.length, 0);
       showToast({
         displayType: "success",
-        title: "Configuration exported",
-        content: `${entities.length} entities downloaded, ${redacted} secret fields redacted.`,
+        title: t("pages.admin-settings.import-export.export-success-title"),
+        content: t("pages.admin-settings.import-export.export-success-detail", { total: entities.length, redacted }),
       });
     },
     onError: (error: unknown) => {
       showToast({
         displayType: "error",
-        title: "Export failed",
+        title: t("pages.admin-settings.import-export.export-error-title"),
         // The backend answers with a Problem body, whose detail is the message
         // to show; the fallback covers a request that never reached it.
-        content: extractProblemDetails(error, t).detail ?? "The tenant configuration could not be exported.",
+        content: extractProblemDetails(error, t).detail ?? t("pages.admin-settings.import-export.export-error-content"),
       });
     },
   });
@@ -137,7 +133,7 @@ export function ExportTab() {
           </Typography>
 
           <Typography variant="body2" fontWeight="600" sx={{ mb: 1 }}>
-            Configuration types
+            {t("pages.admin-settings.import-export.types-title")}
           </Typography>
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 1 }}>
             {shownTypes.map((type) => (
@@ -166,7 +162,7 @@ export function ExportTab() {
                 }}
               >
                 <Typography variant="body2" color="primary.main" noWrap>
-                  Load more
+                  {t("pages.admin-settings.import-export.load-more")}
                 </Typography>
               </Button>
             )}
@@ -174,10 +170,10 @@ export function ExportTab() {
 
           <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
             <Button variant="outlined" size="small" onClick={() => setSelected(new Set(types))}>
-              Select all
+              {t("pages.admin-settings.import-export.select-all")}
             </Button>
             <Button variant="outlined" size="small" onClick={() => setSelected(new Set())}>
-              Deselect all
+              {t("pages.admin-settings.import-export.deselect-all")}
             </Button>
           </Box>
 
@@ -190,14 +186,14 @@ export function ExportTab() {
               disabled={exportMutation.isLoading}
               onClick={() => exportMutation.mutate()}
             >
-              Export configuration
+              {t("pages.admin-settings.import-export.export-button")}
             </Button>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <InfoOutlinedIcon fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
                 {selected.size === 0
-                  ? "No selection: the whole tenant will be downloaded as JSON."
-                  : "The package will be downloaded as JSON."}
+                  ? t("pages.admin-settings.import-export.export-hint-all")
+                  : t("pages.admin-settings.import-export.export-hint-selection")}
               </Typography>
             </Box>
           </Box>
@@ -207,17 +203,17 @@ export function ExportTab() {
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography component="h2" variant="h3" fontWeight="600">
-            Export depth
+            {t("pages.admin-settings.import-export.depth-title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            Choose whether to also include the dependencies of the selected entities.
+            {t("pages.admin-settings.import-export.depth-description")}
           </Typography>
 
           <RadioGroup
             value={depth}
             onChange={(event) => setDepth(event.target.value === "shallow" ? "shallow" : "deep")}
           >
-            {DEPTHS.map(({ value, label, description, Icon }) => (
+            {DEPTHS.map(({ value, labelKey, descriptionKey, Icon }) => (
               <FormControlLabel
                 key={value}
                 value={value}
@@ -236,10 +232,10 @@ export function ExportTab() {
                     <Icon fontSize="small" color={depth === value ? "primary" : "action"} sx={{ mt: 0.25 }} />
                     <Box>
                       <Typography variant="body2" fontWeight="600">
-                        {label}
+                        {t(`pages.admin-settings.import-export.${labelKey}`)}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {description}
+                        {t(`pages.admin-settings.import-export.${descriptionKey}`)}
                       </Typography>
                     </Box>
                   </Box>
@@ -252,11 +248,11 @@ export function ExportTab() {
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
               <LockOutlinedIcon fontSize="small" color="action" />
               <Typography variant="body2" fontWeight="600">
-                Secret redaction
+                {t("pages.admin-settings.import-export.secrets-title")}
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {SECRETS_NOTE}
+              {t("pages.admin-settings.import-export.secrets-note")}
             </Typography>
           </Box>
         </Box>

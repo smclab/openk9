@@ -19,6 +19,7 @@ import { Box, Tab, Tabs, Typography } from "@mui/material";
 import React from "react";
 import { ExportTab } from "./ExportTab";
 import { ImportTab } from "./ImportTab";
+import { useTranslation } from "react-i18next";
 
 type TabId = "export" | "import";
 
@@ -31,6 +32,7 @@ type TabId = "export" | "import";
  * form, and switching tab is exactly how an operator restarts from scratch.
  */
 export function ImportExportConfig() {
+  const { t } = useTranslation();
   const [tab, setTab] = React.useState<TabId>("export");
 
   return (
@@ -50,8 +52,8 @@ export function ImportExportConfig() {
         onChange={(_event, value: TabId) => setTab(value)}
         sx={{ borderBottom: "1px solid", borderColor: "divider" }}
       >
-        <Tab value="export" label="Export configuration" id="import-export-tab-export" sx={{ textTransform: "none" }} />
-        <Tab value="import" label="Import configuration" id="import-export-tab-import" sx={{ textTransform: "none" }} />
+        <Tab value="export" label={t("pages.admin-settings.import-export.export-title")} id="import-export-tab-export" sx={{ textTransform: "none" }} />
+        <Tab value="import" label={t("pages.admin-settings.import-export.import-title")} id="import-export-tab-import" sx={{ textTransform: "none" }} />
       </Tabs>
 
       <Box role="tabpanel" aria-labelledby={`import-export-tab-${tab}`}>
