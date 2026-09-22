@@ -301,7 +301,7 @@ export function ConfigureConnectors({
         <Button variant="contained" color="secondary" aria-label={t("common.back")} onClick={() => navigate("/data-sources")}>
           {t("common.back")}
         </Button>
-        <Tooltip title={isDisabledNextStep ? "Please select on plugin or create one" : ""}>
+        <Tooltip title={isDisabledNextStep ? t("pages.datasources.select-a-connector-or-create-one") : ""}>
           <span style={{ cursor: "pointer" }}>
             <Button
               variant="contained"

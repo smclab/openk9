@@ -214,14 +214,14 @@ export default function DataIndexFormsource({
 
   return (
     <div>
-      {isLoading && "loading..."}
+      {isLoading && t("common.loading")}
       {!isLoading && (
         <FormControl>
           <div>
             <FormControl fullWidth margin="normal">
               <Box sx={{ marginBottom: 1 }}>
                 <Typography variant="subtitle1" component="label" htmlFor={"name-create-data-index"}>
-                  {"Name"}
+                  {t("common.name")}
                 </Typography>
               </Box>
               <TextField
@@ -230,7 +230,7 @@ export default function DataIndexFormsource({
                 disabled={isDisabled}
                 value={microForm.name || ""}
                 error={nameError && !microForm.name?.trim()}
-                helperText={nameError && !microForm.name?.trim() ? "Name is required" : ""}
+                helperText={nameError && !microForm.name?.trim() ? t("common.name-is-required") : ""}
                 onChange={(e) => {
                   setDataIndexForm({ key: "name", value: e.target.value });
                   if (e.target.value.trim()) {
@@ -240,7 +240,7 @@ export default function DataIndexFormsource({
               />
               <Box sx={{ marginBottom: 1 }}>
                 <Typography variant="subtitle1" component="label" htmlFor={"description-create-data-index"}>
-                  {"Description"}
+                  {t("common.description")}
                 </Typography>
               </Box>
               <TextField
@@ -256,7 +256,7 @@ export default function DataIndexFormsource({
             <FormControl fullWidth margin="normal">
               <Box sx={{ marginBottom: 1 }}>
                 <Typography variant="subtitle1" component="label">
-                  {"Associate Datasource"}
+                  {t("fields.associate-datasource")}
                 </Typography>
               </Box>
               <TableContainer component={Paper} sx={{ width: "70vw" }}>
@@ -264,7 +264,7 @@ export default function DataIndexFormsource({
                   <TableHead>
                     <TableRow>
                       <TableCell></TableCell>
-                      <TableCell>Name</TableCell>
+                      <TableCell>{t("common.name")}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>

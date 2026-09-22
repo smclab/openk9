@@ -43,20 +43,22 @@ export const useDatasourceMutations = (datasourceId: string, navigate: NavigateF
     refetchQueries: ["DataSources", "EnrichPipelineOptions", DataSourceQuery],
     onCompleted(data) {
       if (data.createDatasourceConnection?.entity) {
-        const isNew = datasourceId === "new" ? "created" : "updated";
+        const isNewDatasource = datasourceId === "new";
         toast({
-          title: `Datasource ${isNew}`,
-          content: `Datasource has been ${isNew} successfully`,
+          title: isNewDatasource ? t("pages.datasources.created-title") : t("pages.datasources.updated-title"),
+          content: isNewDatasource ? t("pages.datasources.created-content") : t("pages.datasources.updated-content"),
           displayType: "success",
         });
         navigate("/data-sources");
       }
     },
-    onError(error) {
-      const isNew = datasourceId === "new" ? "create" : "update";
+    onError() {
+      const isNewDatasource = datasourceId === "new";
       toast({
-        title: `Error ${isNew}`,
-        content: `Impossible to ${isNew} Datasource`,
+        title: isNewDatasource
+          ? t("pages.datasources.error-creating-datasource")
+          : t("pages.datasources.error-updating-datasource"),
+        content: t("common.generic-error"),
         displayType: "error",
       });
     },

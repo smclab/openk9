@@ -509,7 +509,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                               sx={{ display: "flex", alignItems: "center", gap: 1 }}
                             >
                               <FiberManualRecordIcon sx={{ color: "error.main", fontSize: 18 }} />
-                              {testError?.title ?? "Endpoint unreachable"}
+                              {testError?.title ?? t("pages.enrich-items.endpoint-unreachable")}
                             </Typography>
                             {testError?.detail && (
                               <Typography variant="caption" color="error.main" sx={{ ml: 3 }}>
@@ -622,7 +622,9 @@ export const SavePluginnDriverModel = React.forwardRef(
                 );
                 toast({
                   title: t("pages.connectors.document-types-generation"),
-                  content: result ? "Document types generated successfully" : "Error generating document types",
+                  content: result
+                    ? t("pages.connectors.document-types-generated-successfully")
+                    : t("pages.connectors.error-generating-document-types"),
                   displayType: result ? "success" : "error",
                 });
               } catch (error) {
@@ -671,7 +673,7 @@ function extractCustomGraphQLError(error: ApolloError): {
 
   return {
     hasCustomError: true,
-    title: description ?? "Connector error",
+    title: description ?? i18n.t("common.error"),
     content: exception ?? description ?? error.message,
   };
 }

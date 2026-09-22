@@ -366,6 +366,7 @@ export function MonitoringTab({ id }: { id: string }) {
 }
 
 export function useReindexMutation() {
+  const { t } = useTranslation();
   const restClient = useRestClient();
   const toast = useToast();
   return useMutation(
@@ -390,8 +391,8 @@ export function useReindexMutation() {
         const status = data.status;
         const isSuccess = status === "ON_SCHEDULING";
         toast({
-          title: `Reindex completed with status: ${status} ${!isSuccess ? "view monitoring area" : ""}`,
-          content: ``,
+          title: t("pages.datasources.monitoring.reindex-completed", { status }),
+          content: !isSuccess ? t("pages.datasources.monitoring.view-monitoring-area") : "",
           displayType: isSuccess ? "success" : "info",
         });
       },

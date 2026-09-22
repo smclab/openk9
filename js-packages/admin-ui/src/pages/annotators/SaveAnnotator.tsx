@@ -83,7 +83,7 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         const errorMessage = combineErrorMessages(data.annotatorWithDocTypeField?.fieldValidators || []);
         toast({
           title: t("common.error"),
-          content: errorMessage || "An unknown error occurred.",
+          content: errorMessage || t("common.generic-error"),
           displayType: "error",
         });
       }
@@ -93,7 +93,11 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       const isNew = annotatorId === "new" ? "create" : "update";
       toast({
         title: isNew === "create" ? t("pages.annotators.create-error-title") : t("pages.annotators.update-error-title"),
-        content: error.message || `Impossible to ${isNew} Annotator`,
+        content:
+          error.message ||
+          (isNew === "create"
+            ? t("pages.annotators.create-error-content")
+            : t("pages.annotators.update-error-content")),
         displayType: "error",
       });
     },

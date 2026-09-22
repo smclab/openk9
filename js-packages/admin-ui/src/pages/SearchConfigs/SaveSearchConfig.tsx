@@ -417,7 +417,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                         options={[]}
                         config={{
                           title: t("pages.search-configs.set-query-parser"),
-                          description: activeType ? `${activeType}` : "Query Parser Configuration",
+                          description: activeType ? `${activeType}` : t("pages.search-configs.query-parser-config"),
                         }}
                         onAddField={() => {
                           // const remappedData= mappingDynamicForm.map((mapping)=>)

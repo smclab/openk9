@@ -64,6 +64,7 @@
     "generic-error": "An error occurred.",
     "language": "Language",
     "name": "Name",
+    "name-is-required": "Name is required",
     "no": "no",
     "no-name": "No Name",
     "ok": "Ok",
@@ -348,6 +349,8 @@
       "create-new-aria": "new annotator",
       "delete-body": "Are you sure you want to delete this annotator? This action is irreversible and all associated data will be lost.",
       "delete-error-content": "Impossible to delete Annotator",
+      "create-error-content": "Impossible to create Annotator",
+      "update-error-content": "Impossible to update Annotator",
       "deleted-content": "Annotator has been deleted successfully",
       "deleted-title": "Annotator Deleted",
       "field-name": "Field Name",
@@ -532,6 +535,7 @@
       "select-at-least-one-document-type-field": "Select at least one document type field before adding ACL mappings.",
       "each-acl-mapping-must-have-both-a": "Each ACL mapping must have both a user field option and a document type field.",
       "error-generating-document-types": "Error generating document types",
+      "document-types-generated-successfully": "Document types generated successfully",
       "are-you-sure-you-want-to-edit": "Are you sure you want to edit this Connector?",
       "acl-mapping": "ACL Mapping",
       "generate-document-types": "Generate document types",
@@ -809,8 +813,11 @@
         "confirm-action": "Confirm Action",
         "confirm-close": "Do you want to close this scheduling?",
         "confirm-cancel": "Do you want to cancel this scheduling?",
-        "confirm-reroute": "Do you want to reprocess failed messages for this scheduling?"
-      }
+        "confirm-reroute": "Do you want to reprocess failed messages for this scheduling?",
+        "reindex-completed": "Reindex completed with status: {{status}}",
+        "view-monitoring-area": "View the monitoring area"
+      },
+      "select-a-connector-or-create-one": "Please select a connector or create one"
     },
     "document-types": {
       "title": "Document Types",
@@ -958,7 +965,8 @@
       "json-path-description": "Json Path for merging result. To merge entire Json response set $",
       "type-description": "Enrich Type. Set Sync/Async for external Openk9 compatible service or Groovy Script for simple script enrich.",
       "behavior-merge-type-description": "If merge or replace original message with enrich response",
-      "dynamic-configuration": "Dynamic Configuration"
+      "dynamic-configuration": "Dynamic Configuration",
+      "added-to-pipeline": "Enrich Item added to Pipeline"
     },
     "filters": {
       "title": "Filters",
@@ -1136,7 +1144,8 @@
       "create-error-title": "Error create",
       "update-error-title": "Error update",
       "create-error-content": "Impossible to create RAG Configuration",
-      "update-error-content": "Impossible to update RAG Configuration"
+      "update-error-content": "Impossible to update RAG Configuration",
+      "range-end-must-be-greater-than-range-start": "Range End must be greater than Range Start"
     },
     "search-configs": {
       "title": "Search Configs",

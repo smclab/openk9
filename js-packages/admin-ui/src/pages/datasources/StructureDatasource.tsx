@@ -297,19 +297,23 @@ export const FormSection = ({
   setFormValues: React.Dispatch<React.SetStateAction<ConnectionData>>;
   isView: boolean;
   isRecap: boolean;
-}) => (
-  <Box display={"flex"} flexDirection={"column"} gap={"10px"} maxWidth={"250px"}>
-    <Typography>Name</Typography>
-    <TextField
-      disabled={isView || isRecap}
-      value={formValues?.name}
-      onChange={(event) =>
-        setFormValues((pre) => ({
-          ...pre,
-          name: event?.target?.value,
-        }))
-      }
-    />
-  </Box>
-);
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <Box display={"flex"} flexDirection={"column"} gap={"10px"} maxWidth={"250px"}>
+      <Typography>{t("common.name")}</Typography>
+      <TextField
+        disabled={isView || isRecap}
+        value={formValues?.name}
+        onChange={(event) =>
+          setFormValues((pre) => ({
+            ...pre,
+            name: event?.target?.value,
+          }))
+        }
+      />
+    </Box>
+  );
+};
 

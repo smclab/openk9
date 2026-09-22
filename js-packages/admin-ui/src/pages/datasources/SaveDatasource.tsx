@@ -202,7 +202,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           setActiveTab("recap");
           toast({
             title: t("pages.datasources.error-updating-datasource"),
-            content: error.message || "An error occurred while updating the datasource",
+            content: error.message || t("common.generic-error"),
             displayType: "error",
           });
         },
@@ -241,7 +241,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           setActiveTab("recap");
           toast({
             title: t("pages.datasources.error-creating-datasource"),
-            content: error.message || "An error occurred while creating the datasource",
+            content: error.message || t("common.generic-error"),
             displayType: "error",
           });
         },

@@ -72,7 +72,10 @@ export function SaveSubDocType({
       if (data.docTypeFieldWithAnalyzer?.entity?.id) {
         toast({
           displayType: "success",
-          title: t("pages.document-types.document-type-field") + (subDocTypesId === "new" ? "Create" : "Update"),
+          title:
+            subDocTypesId === "new"
+              ? t("pages.document-types.document-type-create")
+              : t("pages.document-types.document-type-update"),
           content: "",
         });
       } else {
@@ -92,7 +95,10 @@ export function SaveSubDocType({
       if (data.createSubField?.entity?.id) {
         toast({
           displayType: "success",
-          title: t("pages.document-types.document-type-field") + (subDocTypesId === "new" ? "Create" : "Update"),
+          title:
+            subDocTypesId === "new"
+              ? t("pages.document-types.document-type-create")
+              : t("pages.document-types.document-type-update"),
           content: "",
         });
       } else {

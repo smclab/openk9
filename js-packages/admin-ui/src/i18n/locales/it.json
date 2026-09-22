@@ -64,6 +64,7 @@
     "generic-error": "Si è verificato un errore.",
     "language": "Lingua",
     "name": "Nome",
+    "name-is-required": "Il nome è obbligatorio",
     "no": "no",
     "no-name": "Senza nome",
     "ok": "Ok",
@@ -348,6 +349,8 @@
       "create-new-aria": "nuovo annotatore",
       "delete-body": "Sei sicuro di voler eliminare questo annotatore? L'azione è irreversibile e tutti i dati associati andranno persi.",
       "delete-error-content": "Impossibile eliminare l'annotatore",
+      "create-error-content": "Impossibile creare l'annotatore",
+      "update-error-content": "Impossibile aggiornare l'annotatore",
       "deleted-content": "Annotatore eliminato con successo",
       "deleted-title": "Annotatore eliminato",
       "field-name": "Nome campo",
@@ -532,6 +535,7 @@
       "select-at-least-one-document-type-field": "Seleziona almeno un campo del tipo di documento prima di aggiungere i mapping ACL.",
       "each-acl-mapping-must-have-both-a": "Ogni mapping ACL deve avere sia un campo utente sia un campo del tipo di documento.",
       "error-generating-document-types": "Errore nella generazione dei tipi di documento",
+      "document-types-generated-successfully": "Tipi di documento generati con successo",
       "are-you-sure-you-want-to-edit": "Sei sicuro di voler modificare questo connettore?",
       "acl-mapping": "Mapping ACL",
       "generate-document-types": "Genera tipi di documento",
@@ -809,8 +813,11 @@
         "confirm-action": "Conferma l'azione",
         "confirm-close": "Vuoi chiudere questa schedulazione?",
         "confirm-cancel": "Vuoi annullare questa schedulazione?",
-        "confirm-reroute": "Vuoi rielaborare i messaggi falliti di questa schedulazione?"
-      }
+        "confirm-reroute": "Vuoi rielaborare i messaggi falliti di questa schedulazione?",
+        "reindex-completed": "Reindicizzazione completata con stato: {{status}}",
+        "view-monitoring-area": "Consulta l'area di monitoraggio"
+      },
+      "select-a-connector-or-create-one": "Seleziona un connettore o creane uno"
     },
     "document-types": {
       "title": "Tipi di documento",
@@ -958,7 +965,8 @@
       "json-path-description": "Json Path per unire il risultato. Per unire l'intera risposta Json imposta $",
       "type-description": "Tipo di enrich. Imposta Sync/Async per un servizio esterno compatibile con Openk9 oppure Groovy Script per un enrich via script.",
       "behavior-merge-type-description": "Se unire o sostituire il messaggio originale con la risposta dell'enrich",
-      "dynamic-configuration": "Configurazione dinamica"
+      "dynamic-configuration": "Configurazione dinamica",
+      "added-to-pipeline": "Elemento di arricchimento aggiunto alla pipeline"
     },
     "filters": {
       "title": "Filtri",
@@ -1136,7 +1144,8 @@
       "create-error-title": "Errore di creazione",
       "update-error-title": "Errore di aggiornamento",
       "create-error-content": "Impossibile creare la configurazione RAG",
-      "update-error-content": "Impossibile aggiornare la configurazione RAG"
+      "update-error-content": "Impossibile aggiornare la configurazione RAG",
+      "range-end-must-be-greater-than-range-start": "Fine intervallo deve essere maggiore di Inizio intervallo"
     },
     "search-configs": {
       "title": "Configurazioni di ricerca",

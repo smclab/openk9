@@ -56,7 +56,7 @@ export default function ReindexArea({
       >
         {showDialog.isShow && (
           <ModalConfirm
-            title={showDialog.title || "Leave wizard?"}
+            title={showDialog.title || t("pages.datasources.reindex.leave-wizard")}
             body={showDialog.message}
             labelConfirm={t("pages.datasources.reindex.leave-and-create")}
             type="warning"

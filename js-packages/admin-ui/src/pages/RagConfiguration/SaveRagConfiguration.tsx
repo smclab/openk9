@@ -82,7 +82,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
       } else {
         toast({
           title: t("common.error"),
-          content: fromFieldValidators(data.createRAGConfiguration?.fieldValidators)("") || "Validation error",
+          content: fromFieldValidators(data.createRAGConfiguration?.fieldValidators)("") || t("common.generic-error"),
           displayType: "error",
         });
       }
@@ -112,7 +112,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
       } else {
         toast({
           title: t("common.error"),
-          content: fromFieldValidators(data.updateRAGConfiguration?.fieldValidators)("") || "Validation error",
+          content: fromFieldValidators(data.updateRAGConfiguration?.fieldValidators)("") || t("common.generic-error"),
           displayType: "error",
         });
       }
@@ -178,7 +178,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
   const rangeStartValue = form.inputProps("rangeStart").value;
   const rangeEndValue = form.inputProps("rangeEnd").value;
   const rangeError = rangeStartValue !== 0 || rangeEndValue !== 0
-    ? rangeEndValue <= rangeStartValue ? "Range End must be greater than Range Start" : ""
+    ? rangeEndValue <= rangeStartValue ? t("pages.rag-configurations.range-end-must-be-greater-than-range-start") : ""
     : "";
 
   const recapSections = mappingCardRecap({

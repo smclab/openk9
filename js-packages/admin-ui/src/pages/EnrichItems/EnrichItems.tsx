@@ -149,7 +149,7 @@ export function EnrichItems() {
           id={isAdd.id}
           callbackClose={() => setIsAdd({ id: null, isVisible: false })}
           title={t("pages.enrich-items.association-title")}
-          messageSuccess={"Enrich Item added to Pipeline"}
+          messageSuccess={t("pages.enrich-items.added-to-pipeline")}
           list={unboundListEnrichPipeline.data?.unboundEnrichPipelines}
           association={({ parentId, childId, onSuccessCallback, onErrorCallback }) => {
             addMutate({
