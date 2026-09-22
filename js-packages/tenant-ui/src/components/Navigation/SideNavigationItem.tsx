@@ -20,7 +20,7 @@ export function SideNavigationItem({ item, level = 0 }: SideNavigationItemProps)
   const hasActiveChild = (menuItem: MenuItem): boolean => {
     if (menuItem.value === navigation) return true;
     if (menuItem.children) {
-      return menuItem.children.some((child: any) => hasActiveChild(child));
+      return menuItem.children.some((child) => hasActiveChild(child));
     }
     return false;
   };
@@ -133,7 +133,7 @@ export function SideNavigationItem({ item, level = 0 }: SideNavigationItemProps)
       {item.isGroup && (
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
-            {item.children?.map((child: any, index: number) => (
+            {item.children?.map((child, index) => (
               <SideNavigationItem key={index} item={child} level={level + 1} />
             ))}
           </List>

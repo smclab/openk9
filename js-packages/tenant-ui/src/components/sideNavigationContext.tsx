@@ -15,7 +15,7 @@ type SideNavigationContextValue = {
   navigation: NamePath;
 };
 
-const AuthenticationContext = React.createContext<SideNavigationContextValue>(null as any);
+const AuthenticationContext = React.createContext<SideNavigationContextValue | null>(null);
 
 export function SideNavigationContextProvider({ children }: { children: React.ReactNode }) {
   const params = useLocation().pathname.replace("/", "");
@@ -26,5 +26,9 @@ export function SideNavigationContextProvider({ children }: { children: React.Re
 }
 
 export function useSideNavigation() {
-  return React.useContext(AuthenticationContext);
+  const value = React.useContext(AuthenticationContext);
+  if (!value) {
+    throw new Error("useSideNavigation must be used within a SideNavigationContextProvider");
+  }
+  return value;
 }

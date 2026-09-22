@@ -7,10 +7,13 @@ type ToastDefinition = {
   content: React.ReactNode;
 };
 
-const ToastContext = React.createContext<(params: ToastDefinition) => void>(null as any);
+const ToastContext = React.createContext<((params: ToastDefinition) => void) | null>(null);
 
 export function useToast() {
   const showToast = React.useContext(ToastContext);
+  if (!showToast) {
+    throw new Error("useToast must be used within a ToastProvider");
+  }
   return showToast;
 }
 

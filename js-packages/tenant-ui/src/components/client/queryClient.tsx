@@ -24,12 +24,12 @@ const RestClientContext = React.createContext(
       // The OpenAPI spec produced at build time carries bare paths,
       // so prepend it here.
       BASE: "/api/tenant-manager",
-      async HEADERS() {
+      async HEADERS(): Promise<Record<string, string>> {
         const authHeader = getAuthHeader();
         if (authHeader) {
           return { Authorization: authHeader };
         }
-        return {} as any;
+        return {};
       },
     },
     ActivityHttpRequest

@@ -9,7 +9,7 @@ interface SideNavigationProps {
 export function SideNavigation({ isSideMenuOpen }: SideNavigationProps) {
   return (
     <List component="nav" sx={{ p: 1 }}>
-      {menuItems.map((item: any, index: number) => (
+      {menuItems.map((item, index) => (
         <SideNavigationItem key={index} item={item} />
       ))}
     </List>

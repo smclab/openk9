@@ -3,6 +3,7 @@ import DomainIcon from "@mui/icons-material/Domain";
 import { Box, Button, CircularProgress, Container, IconButton, Step, StepLabel, Stepper, Toolbar, Typography } from "@mui/material";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { ApiError } from "../../openapi-generated";
 import { useRestClient } from "../client/queryClient";
 import { useToast } from "../ToastProvider";
 import { buildCreateTenantRequest } from "./payload";
@@ -33,6 +34,19 @@ export function TenantCreate() {
   function handleBack() {
     setActiveStep((s) => Math.max(0, s - 1));
   }
+  /** L'errore puo' essere un ApiError con corpo JSON, un Error, o altro. */
+  function toErrorMessage(error: unknown): string {
+    if (error instanceof ApiError) {
+      const body = error.body;
+      if (typeof body === "object" && body !== null && "message" in body) {
+        const message = (body as { message?: unknown }).message;
+        if (typeof message === "string") return message;
+      }
+    }
+    if (error instanceof Error) return error.message;
+    return "Unknown error";
+  }
+
   async function handleSubmit() {
     if (!state.step2.securityConfiguration) return;
     setLoading(true);
@@ -40,11 +54,11 @@ export function TenantCreate() {
       const tenant = await restClient.tenantProvisioning.createTenant(buildCreateTenantRequest(state));
       setCreated({ id: String(tenant.id), tenantName: tenant.tenantName ?? state.step1.tenantName });
       showToast({ displayType: "success", title: "Tenant created", content: "" });
-    } catch (error: any) {
+    } catch (error) {
       showToast({
         displayType: "error",
         title: "Tenant creation failed",
-        content: error?.body?.message ?? error?.message ?? "Unknown error",
+        content: toErrorMessage(error),
       });
     } finally {
       setLoading(false);

@@ -23,10 +23,13 @@ type ModalDefinition = {
   callback?(): void;
 };
 
-const ModalContext = React.createContext<(params: ModalDefinition) => void>(null as any);
+const ModalContext = React.createContext<((params: ModalDefinition) => void) | null>(null);
 
 export function useModal() {
   const showModal = React.useContext(ModalContext);
+  if (!showModal) {
+    throw new Error("useModal must be used within a ModalProvider");
+  }
   return showModal;
 }
 

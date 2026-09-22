@@ -1,10 +1,11 @@
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, TextField } from "@mui/material";
 import React from "react";
-import { useCreateApiKeyMutation } from "../../../graphql-generated";
+import { ApiGroup, useCreateApiKeyMutation } from "../../../graphql-generated";
 import { useToast } from "../../ToastProvider";
 import { apiGroupDescription, apiGroupLabel } from "./labels";
 
-const apiGroups = ["ADMINISTRATION", "PUBLIC", "SEARCH", "INGESTION"] as const;
+// Ordine di presentazione nel menu; i valori vengono dall'enum generato.
+const apiGroups = [ApiGroup.Administration, ApiGroup.Public, ApiGroup.Search, ApiGroup.Ingestion];
 
 type Props = {
   tenantName: string;
@@ -16,7 +17,7 @@ type Props = {
 export function CreateApiKeyModal({ tenantName, open, onClose, onCreated }: Props) {
   const showToast = useToast();
   const [name, setName] = React.useState("");
-  const [apiGroup, setApiGroup] = React.useState<(typeof apiGroups)[number]>("ADMINISTRATION");
+  const [apiGroup, setApiGroup] = React.useState<ApiGroup>(ApiGroup.Administration);
   const [expirationDate, setExpirationDate] = React.useState<string>("");
 
   const [createApiKey, { loading }] = useCreateApiKeyMutation({
@@ -34,7 +35,7 @@ export function CreateApiKeyModal({ tenantName, open, onClose, onCreated }: Prop
 
   function reset() {
     setName("");
-    setApiGroup("ADMINISTRATION");
+    setApiGroup(ApiGroup.Administration);
     setExpirationDate("");
   }
 
@@ -50,7 +51,7 @@ export function CreateApiKeyModal({ tenantName, open, onClose, onCreated }: Prop
         createApiKeyRequest: {
           tenantName,
           name: name.trim(),
-          apiGroup: apiGroup as any,
+          apiGroup,
           expirationDate: expirationDate ? new Date(expirationDate).toISOString() : null,
         },
       },
@@ -78,7 +79,7 @@ export function CreateApiKeyModal({ tenantName, open, onClose, onCreated }: Prop
               select
               label="API Group"
               value={apiGroup}
-              onChange={(e) => setApiGroup(e.target.value as (typeof apiGroups)[number])}
+              onChange={(e) => setApiGroup(e.target.value as ApiGroup)}
               required
               fullWidth
               helperText={apiGroupDescription[apiGroup]}

@@ -89,14 +89,14 @@ export function Table<
       }
     | undefined;
   onCreatePath: string;
-  rowActions: Array<{ label: string; action(suggestionCategory?: any): void; isDisabled?: (dat: any) => boolean }>;
+  rowActions: Array<{ label: string; action(row?: Row): void; isDisabled?: (row: Row | undefined) => boolean }>;
 }) {
   const [searchText, setSearchText] = React.useState("");
   const [showSelectedItemsTable] = React.useState(false);
   const [viewDeleteModal, setViewDeleteModal] = React.useState({ isView: false, name: "", id: "" });
 
   React.useEffect(() => {
-    refetch({ searchText: searchText } as any);
+    refetch({ searchText: searchText } as Partial<Parameters>);
   }, [refetch, searchText]);
   const theme = useTheme();
   const borderColor = theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)";
@@ -202,7 +202,7 @@ export function Table<
                   <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "10px" }}>
                     {rowActions.map((rowAction, indexMap) => {
                       const row = rowAction.isDisabled === undefined;
-                      const isActive = row || (rowAction?.isDisabled && rowAction.isDisabled(field(data)?.edges?.[index]?.node));
+                      const isActive = row || (rowAction?.isDisabled && rowAction.isDisabled(field(data)?.edges?.[index]?.node ?? undefined));
                       return (
                         <Button
                           key={indexMap}
@@ -224,7 +224,7 @@ export function Table<
                           }}
                           onClick={() => {
                             if (isActive) {
-                              rowAction.action(field(data)?.edges?.[index]?.node);
+                              rowAction.action(field(data)?.edges?.[index]?.node ?? undefined);
                             }
                           }}
                         >
