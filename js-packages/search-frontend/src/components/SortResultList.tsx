@@ -17,7 +17,12 @@
 import { css } from "styled-components";
 import { UseQueryResult } from "react-query";
 import React from "react";
-import Select, { AriaOnFocus, components, StylesConfig } from "react-select";
+import Select, {
+  AriaOnFocus,
+  components,
+  SingleValueProps,
+  StylesConfig,
+} from "react-select";
 import { useQuery } from "react-query";
 import { useTranslation } from "react-i18next";
 import { SortField, useOpenK9Client } from "../components/client";
@@ -85,7 +90,7 @@ function SortResultList({
     return base;
   }, [labelSortData, startValue, t]);
 
-  const SingleValue = (props: any) => (
+  const SingleValue = (props: SingleValueProps<OptionShape, false>) => (
     <components.SingleValue {...props}>
       <div
         css={css`
@@ -100,11 +105,16 @@ function SortResultList({
   );
 
   const handleChange = React.useCallback(
-    (event: any) => {
-      if (event.value === relevance) {
+    (event: OptionShape | null) => {
+      if (!event) return;
+      if (event.value === relevance || !event.value) {
         setSortResult(undefined);
       } else {
-        setSortResult({ field: event.value.label, type: event.value.sort });
+        // `value` e' il JSON prodotto in `sortOptions`: va riletto prima di usarlo.
+        const parsed: { label: string; sort: "asc" | "desc" } = JSON.parse(
+          event.value,
+        );
+        setSortResult({ field: parsed.label, type: parsed.sort });
       }
       setMyValue(event);
     },
@@ -177,7 +187,7 @@ function SortResultList({
           classNamePrefix="openk9-react-select"
           options={sortOptions}
           components={{ SingleValue }}
-          onChange={handleChange as any}
+          onChange={handleChange}
           getOptionLabel={(e) => e.name}
           getOptionValue={(e) => String(e.value)}
           value={myValue}

@@ -27,12 +27,16 @@ import {
 
 export { CHAT_TOOL_ENDPOINT };
 export type { ChatSource, ChatHistoryEntry, ChatRequest };
-export const OpenK9ClientContext = React.createContext<
-  ReturnType<typeof OpenK9Client>
->(null as any /* must break app if not provided */);
+export const OpenK9ClientContext = React.createContext<ReturnType<
+  typeof OpenK9Client
+> | null>(null);
 
 export function useOpenK9Client() {
-  return React.useContext(OpenK9ClientContext);
+  const client = React.useContext(OpenK9ClientContext);
+  if (!client) {
+    throw new Error("useOpenK9Client must be used within an OpenK9 provider");
+  }
+  return client;
 }
 
 const OAUTH2_SETTINGS_PATH = "/api/datasource/oauth2/settings";
@@ -381,7 +385,7 @@ export function OpenK9Client({
       const data = await response.json();
       return data;
     },
-    async generateResponse<E>(searchRequest: GenerateRequest): Promise<any> {
+    async generateResponse<E>(searchRequest: GenerateRequest): Promise<unknown> {
       const response = await authFetch(`/api/rag/generate`, {
         method: "POST",
         body: JSON.stringify(searchRequest),
@@ -432,8 +436,8 @@ export function OpenK9Client({
         throw new Error();
       }
       const data: Array<{
-        createDate: any;
-        modifiedDate: any;
+        createDate: string;
+        modifiedDate: string;
         id: number;
         name: string;
         value: "value";
@@ -613,8 +617,10 @@ export function OpenK9Client({
           },
         },
       );
-      const data = await response.json();
-      return data.map(({ id }: any) => id);
+      // L'endpoint restituisce id numerici, mentre `loadTemplate` ne attende
+      // la forma testuale: la conversione avviene qui, una volta sola.
+      const data: Array<{ id: number | string }> = await response.json();
+      return data.map(({ id }) => String(id));
     },
     async loadTemplate<E>(id: string): Promise<Template<E> | null> {
       let blobUrl: string | null = null;
@@ -624,8 +630,6 @@ export function OpenK9Client({
         const src = await res.text();
         const blob = new Blob([src], { type: "text/javascript" });
         blobUrl = URL.createObjectURL(blob);
-        // @ts-ignore
-
         const code = await import(
           /* @vite-ignore */ /* webpackIgnore: true */ blobUrl
         );
@@ -707,6 +711,19 @@ export function OpenK9Client({
   };
 }
 
+/**
+ * Il tipo concreto di un risultato e' deciso a runtime dal suo document type:
+ * questo e' l'unico punto in cui quella scelta viene asserita staticamente.
+ */
+export function asResultItem<T = unknown, S = Record<string, unknown>>(
+  item: GenericResultItem<S>,
+): GenericResultItem<T> {
+  return item as unknown as GenericResultItem<T>;
+}
+
+/** Apre il dettaglio di un risultato su mobile, o lo chiude con `null`. */
+export type SetDetailMobile = (result: GenericResultItem<unknown> | null) => void;
+
 export type GenericResultItem<E = {}> = {
   source: {
     documentTypes: (keyof E)[];
@@ -741,11 +758,11 @@ export type GenericResultItemFields<E> = DeepKeys<
 >;
 
 type PathImpl<T, Key extends keyof T> = Key extends string
-  ? T[Key] extends Record<string, any>
+  ? T[Key] extends Record<string, unknown>
     ?
-        | `${Key}.${PathImpl<T[Key], Exclude<keyof T[Key], keyof any[]>> &
+        | `${Key}.${PathImpl<T[Key], Exclude<keyof T[Key], keyof unknown[]>> &
             string}`
-        | `${Key}.${Exclude<keyof T[Key], keyof any[]> & string}`
+        | `${Key}.${Exclude<keyof T[Key], keyof unknown[]> & string}`
     : never
   : never;
 type PathImpl2<T> = PathImpl<T, keyof T> | keyof T;

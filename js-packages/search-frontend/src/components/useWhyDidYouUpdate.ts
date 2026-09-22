@@ -1,6 +1,6 @@
 import React from "react";
 
-export function useWhyDidYouUpdate<Props extends Record<string, any>>(
+export function useWhyDidYouUpdate<Props extends Record<string, unknown>>(
   label: string,
   props: Props,
 ) {

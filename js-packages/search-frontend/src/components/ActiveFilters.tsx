@@ -25,7 +25,10 @@ import capitalize from "lodash/capitalize";
 import { useTranslation } from "react-i18next";
 import { height } from "@fortawesome/free-solid-svg-icons/faFileAlt";
 
-const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
+// Il tipo del componente rompe il build dentro docker: qui lo si riduce a
+// un element type generico, senza perdere il controllo sul resto del file.
+const OverlayScrollbarsComponentDockerFix =
+  OverlayScrollbarsComponent as React.ElementType;
 export function ActiveFilter({
   searchQuery,
   onRemoveFilterToken,

@@ -17,7 +17,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useInfiniteQuery } from "react-query";
-import { Virtuoso } from "react-virtuoso";
+import { Virtuoso, Components } from "react-virtuoso";
 import styled, { css } from "styled-components";
 import { TemplatesProps } from "../embeddable/entry";
 import { CustomVirtualScrollbar } from "./CustomScrollbar";
@@ -61,7 +61,7 @@ type ResultsProps<E> = {
   selectOptions: Options;
   viewButton: boolean;
   templateCustom: TemplatesProps | null;
-  NoResultsCustom?: any | undefined | null;
+  NoResultsCustom?: React.ReactNode;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedSort: setSortResultsType;
   setIdPreview?:
@@ -595,7 +595,9 @@ export function VirtualResults<E>({
           }
         }}
         components={{
-          Scroller: CustomVirtualScrollbar as any,
+          // Virtuoso pretende la propria firma per lo Scroller: qui si dichiara
+          // che il wrapper la rispetta, senza rinunciare ai tipi nel resto.
+          Scroller: CustomVirtualScrollbar as Components["Scroller"],
           Footer() {
             return (
               <div
@@ -674,7 +676,7 @@ export function useInfiniteResults<E>(
 
       const remappingSearchQuery =
         overrideSearchWithCorrection?.isAutocorrection === false
-          ? searchQuery.map((token: any) =>
+          ? searchQuery.map((token) =>
               token.tokenType === "TEXT" && token.search
                 ? { ...token, overrideSearchWithCorrection: false }
                 : token,
@@ -731,7 +733,7 @@ export function recoverySearchQueryAndSort(searchQuery: SearchToken[]) {
   const sortData = searchQuery.find((info) => info.hasOwnProperty("isSort"));
   const sort =
     sortData && sortData.hasOwnProperty("sort")
-      ? (sortData as any).sort
+      ? (sortData as { sort?: SortField }).sort
       : undefined;
 
   return {

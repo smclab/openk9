@@ -59,6 +59,22 @@ function setOrDelete(
   }
 }
 
+/** Chiavi di `queryStringMapType` che rimappano un valore (tutte tranne `keyObj`). */
+const QUERY_STRING_MAP_KEYS = [
+  "text",
+  "textOnChange",
+  "filters",
+  "selection",
+] as const;
+type QueryStringMapKey = (typeof QUERY_STRING_MAP_KEYS)[number];
+
+/** Le chiavi effettivamente presenti nella mappa passata dal consumatore. */
+function mappedKeysOf(
+  queryStringMap: NonNullable<queryStringMapType>,
+): QueryStringMapKey[] {
+  return QUERY_STRING_MAP_KEYS.filter((key) => queryStringMap[key] !== undefined);
+}
+
 const ALL_QUERY_KEYS: QueryKey[] = [
   "search",
   "text",
@@ -75,24 +91,22 @@ export function loadQueryString<Value extends QueryValueShape>(
   const mergedValueRecord: Record<string, unknown> = { ...defaultValue };
 
   if (queryStringMap) {
-    const mappingKeys = Object.keys(queryStringMap).filter(
-      (k) => k !== "keyObj",
-    );
+    const mappingKeys = mappedKeysOf(queryStringMap);
     if (queryStringMap.keyObj && searchParams.has(queryStringMap.keyObj)) {
       const mappedObject = safeParse<Record<string, unknown>>(
         searchParams.get(queryStringMap.keyObj),
       );
       if (mappedObject && typeof mappedObject === "object") {
         for (const key of mappingKeys) {
-          const mappedKey = (queryStringMap as any)[key];
+          const mappedKey = queryStringMap[key] as string;
           if (Object.prototype.hasOwnProperty.call(mappedObject, mappedKey)) {
-            mergedValueRecord[key] = (mappedObject as any)[mappedKey];
+            mergedValueRecord[key] = mappedObject[mappedKey];
           }
         }
       }
     } else {
       for (const key of mappingKeys) {
-        const mappedKey = (queryStringMap as any)[key];
+        const mappedKey = queryStringMap[key] as string;
         if (searchParams.has(mappedKey)) {
           if (key === "filters") {
             const parsedValue = safeParse(searchParams.get(mappedKey));
@@ -133,15 +147,13 @@ export function saveQueryString<Value extends QueryValueShape>(
   const searchParams = new URLSearchParams(window.location.search);
 
   if (queryStringMap) {
-    const mappingKeys = Object.keys(queryStringMap).filter(
-      (k) => k !== "keyObj",
-    );
+    const mappingKeys = mappedKeysOf(queryStringMap);
     const payloadObject: Record<string, unknown> = {};
     for (const key of mappingKeys) {
-      const mappedKey = (queryStringMap as any)[key];
-      let valueForKey = (value as any)[key];
+      const mappedKey = queryStringMap[key] as string;
+      let valueForKey: unknown = value[key];
       if (key === "filters") {
-        valueForKey = serializeFiltersGrouped(valueForKey);
+        valueForKey = serializeFiltersGrouped(toSearchTokens(valueForKey));
       }
       if (Array.isArray(valueForKey) && valueForKey.length === 0) continue;
       if (
@@ -159,28 +171,28 @@ export function saveQueryString<Value extends QueryValueShape>(
         searchParams.delete(queryStringMap.keyObj);
       }
       for (const key of mappingKeys)
-        searchParams.delete((queryStringMap as any)[key]);
+        searchParams.delete(queryStringMap[key] as string);
     } else {
       for (const key of mappingKeys) {
-        let valueForKey = (value as any)[key];
+        let valueForKey: unknown = value[key];
         if (key === "filters") {
-          valueForKey = serializeFiltersGrouped(valueForKey);
+          valueForKey = serializeFiltersGrouped(toSearchTokens(valueForKey));
         }
         if (Array.isArray(valueForKey) && valueForKey.length === 0) {
-          setOrDelete(searchParams, (queryStringMap as any)[key], undefined);
+          setOrDelete(searchParams, queryStringMap[key] as string, undefined);
         } else {
-          setOrDelete(searchParams, (queryStringMap as any)[key], valueForKey);
+          setOrDelete(searchParams, queryStringMap[key] as string, valueForKey);
         }
       }
     }
   } else {
     for (const key of ALL_QUERY_KEYS) {
-      let valueForKey = (value as any)[key];
+      let valueForKey: unknown = value[key];
       if (key === "filters") {
         valueForKey =
           Array.isArray(valueForKey) && valueForKey.length === 0
             ? undefined
-            : serializeFiltersGrouped(valueForKey);
+            : serializeFiltersGrouped(toSearchTokens(valueForKey));
       }
       if (searchParams.has(key) || valueForKey !== undefined) {
         setOrDelete(searchParams, key, valueForKey);
@@ -267,12 +279,10 @@ export function saveLocalStorage<Value extends QueryValueShape>(
   let payloadObject: Record<string, unknown> = {};
 
   if (queryStringMap) {
-    const mappingKeys = Object.keys(queryStringMap).filter(
-      (k) => k !== "keyObj",
-    );
+    const mappingKeys = mappedKeysOf(queryStringMap);
     for (const key of mappingKeys) {
-      const mappedKey = (queryStringMap as any)[key];
-      const valueForKey = (value as any)[key];
+      const mappedKey = queryStringMap[key] as string;
+      const valueForKey: unknown = value[key];
       if (Array.isArray(valueForKey) && valueForKey.length === 0) continue;
       if (
         valueForKey !== undefined &&
@@ -304,7 +314,15 @@ export function saveLocalStorage<Value extends QueryValueShape>(
   }
 }
 
-export function serializeFilters(filters: SearchToken[]): any[] {
+/** Forma piatta dei filtri: un oggetto per token. */
+export type SerializedFilter = {
+  value: string;
+  suggestionCategoryId: number | undefined;
+  tokenType: SearchToken["tokenType"];
+  keywordKey: string | undefined;
+};
+
+export function serializeFilters(filters: SearchToken[]): SerializedFilter[] {
   return (filters || []).map((token) => ({
     value: token.values?.[0] ?? "",
     suggestionCategoryId: token.suggestionCategoryId,
@@ -313,7 +331,7 @@ export function serializeFilters(filters: SearchToken[]): any[] {
   }));
 }
 
-export function deserializeFilters(serializedArray: any[]): SearchToken[] {
+export function deserializeFilters(serializedArray: unknown): SearchToken[] {
   if (!Array.isArray(serializedArray)) return [];
   return serializedArray.map((item) => ({
     values: [item.value],
@@ -322,10 +340,20 @@ export function deserializeFilters(serializedArray: any[]): SearchToken[] {
     keywordKey: item.keywordKey,
     filter: true,
     isFilter: true,
-  }));
+  })) as SearchToken[];
 }
 
-export function serializeFiltersGrouped(filters: SearchToken[]): any {
+/** Forma compatta dei filtri in query string: liste parallele indicizzate. */
+export type GroupedFilters = {
+  values: string[];
+  suggestionCategoryId: Array<number | undefined>;
+  tokenType: Array<SearchToken["tokenType"]>;
+  keywordKey: Array<string | undefined>;
+};
+
+export function serializeFiltersGrouped(
+  filters: SearchToken[],
+): GroupedFilters | undefined {
   if (!filters || filters.length === 0) return undefined;
   return {
     values: filters.map((token) => token.values?.[0] ?? ""),
@@ -335,15 +363,30 @@ export function serializeFiltersGrouped(filters: SearchToken[]): any {
   };
 }
 
-export function deserializeFiltersGrouped(serialized: any): SearchToken[] {
-  if (!serialized || !Array.isArray(serialized.values)) return [];
-  return serialized.values.map((valueItem: any, index: number) => ({
+/** I filtri arrivano dalla query string: si accetta solo cio' che e' un array. */
+function toSearchTokens(value: unknown): SearchToken[] {
+  return Array.isArray(value) ? (value as SearchToken[]) : [];
+}
+
+function isGroupedFilters(value: unknown): value is GroupedFilters {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    Array.isArray((value as { values?: unknown }).values)
+  );
+}
+
+export function deserializeFiltersGrouped(serialized: unknown): SearchToken[] {
+  if (!isGroupedFilters(serialized)) return [];
+  // I token arrivano dalla query string: la union discriminata non e'
+  // verificabile staticamente, si asserisce una volta sola qui.
+  return serialized.values.map((valueItem, index) => ({
     values: [valueItem],
     suggestionCategoryId: serialized.suggestionCategoryId?.[index],
     tokenType: serialized.tokenType?.[index],
     keywordKey: serialized.keywordKey?.[index],
     filter: true,
     isFilter: true,
-  }));
+  })) as SearchToken[];
 }
 

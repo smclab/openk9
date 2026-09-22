@@ -1,4 +1,6 @@
 import React from "react";
+import type { Moment } from "moment";
+import type { FocusedInputShape } from "react-dates";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "react-query";
 import * as RestApi from "../components/client";
@@ -7,6 +9,7 @@ import {
   SearchToken,
   OpenK9ClientContext,
   ChatSource,
+  GenericResultItem,
 } from "../components/client";
 import { Message } from "../components/useGenerateResponse";
 import { useCopilotChat as useCopilotChatHook } from "../components/useCopilotChat";
@@ -123,8 +126,9 @@ export class OpenK9 {
       return document.createDocumentFragment();
     } else {
       // needed for hot-reloading in development
-      const win: Window & { ["openk9-react-root"]?: DocumentFragment } =
-        window as any;
+      const win = window as Window & {
+        ["openk9-react-root"]?: DocumentFragment;
+      };
       if (win["openk9-react-root"]) {
         return win["openk9-react-root"];
       } else {
@@ -170,19 +174,22 @@ export class OpenK9 {
     queryStateChange: new Set(),
   };
   private notify<E extends keyof Events>(event: E, payload: Events[E]) {
-    this.listeners[event].forEach((listener) => listener(payload as any));
+    const listeners: Set<(payload: Events[E]) => void> = this.listeners[event];
+    listeners.forEach((listener) => listener(payload));
   }
   addEventListener<E extends keyof Events>(
     event: E,
     listener: (payload: Events[E]) => void,
   ) {
-    this.listeners[event].add(listener as any);
+    const listeners: Set<(payload: Events[E]) => void> = this.listeners[event];
+    listeners.add(listener);
   }
   removeEventListener<E extends keyof Events>(
     event: E,
     listener: (payload: Events[E]) => void,
   ) {
-    this.listeners[event].delete(listener as any);
+    const listeners: Set<(payload: Events[E]) => void> = this.listeners[event];
+    listeners.delete(listener);
   }
 
   private onQueryStateChange = (queryState: QueryState) => {
@@ -224,26 +231,27 @@ type CalendarMobileConfiguration = {
   element: Element | string | null;
   isVisible: boolean;
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  startDate: any;
-  setStartDate: any;
-  endDate: any;
-  setEndDate: any;
-  focusedInput: any;
-  setFocusedInput: any;
+  startDate: Moment | null;
+  setStartDate: React.Dispatch<React.SetStateAction<Moment | null>>;
+  endDate: Moment | null;
+  setEndDate: React.Dispatch<React.SetStateAction<Moment | null>>;
+  focusedInput: FocusedInputShape | null;
+  setFocusedInput: React.Dispatch<React.SetStateAction<FocusedInputShape | null>>;
   isCLickReset: boolean;
   setIsCLickReset: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 type DataRangePickerProps = {
   element: Element | string | null;
-  start?: any;
-  end?: any;
+  start?: Moment | null;
+  end?: Moment | null;
 };
 
 type DataRangePickerVerticalProps = {
   element: Element | string | null;
-  start?: any;
-  end?: any;
+  // NOTA: dichiarate nella configurazione ma non lette dal picker verticale.
+  start?: Moment | null;
+  end?: Moment | null;
   readOnly?: boolean;
   internationalLabel?: {
     labelStart?: string;
@@ -454,8 +462,8 @@ export type resetFiltersType = Array<
 
 export type TemplatesProps = Array<{
   source: string;
-  Template: React.FC<any>;
-  TemplateDetail: React.FC<any>;
+  Template: React.FC<GenericResultItem<Record<string, unknown>>>;
+  TemplateDetail: React.FC<GenericResultItem<Record<string, unknown>>>;
 }>;
 
 export type ExtraClassProps = {
@@ -477,6 +485,7 @@ export type queryStringMapType =
   | ({
       keyObj?: string | null | undefined;
     } & Partial<{
+      search: string;
       text: string;
       textOnChange: string;
       filters: string;
@@ -747,6 +756,6 @@ declare global {
 }
 
 export type queryStringValues =
-  | ("text" | "selection" | "textOnChange" | "filters")[]
+  | ("search" | "text" | "selection" | "textOnChange" | "filters")[]
   | null
   | undefined;

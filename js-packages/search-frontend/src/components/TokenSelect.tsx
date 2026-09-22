@@ -54,7 +54,7 @@ export function TokenSelect({
   const [subtitle, setSubtitle] = React.useState(false);
   const { t } = useTranslation();
 
-  const statusStyles: Record<Status, any> = {
+  const statusStyles: Record<Status, ReturnType<typeof css>> = {
     "can-select": css`
       display: ${isColorSearch ? "block" : "none"};
       color: ${isColorSearch

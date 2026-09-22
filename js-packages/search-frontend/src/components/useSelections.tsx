@@ -49,7 +49,7 @@ export function useSelections({
     commitId: 0,
   };
 
-  const enabled = toEnabledSet(queryStringValues as any);
+  const enabled = toEnabledSet(queryStringValues);
   const buildMap: queryStringMapType = {
     keyObj: queryStringMap?.keyObj,
     ...(enabled.has("text") ? { text: queryStringMap?.text ?? "text" } : {}),
@@ -63,7 +63,7 @@ export function useSelections({
       ? { filters: queryStringMap?.filters ?? "filters" }
       : {}),
     ...(enabled.has("search")
-      ? { search: (queryStringMap as any)?.search ?? "search" }
+      ? { search: queryStringMap?.search ?? "search" }
       : {}),
   };
 

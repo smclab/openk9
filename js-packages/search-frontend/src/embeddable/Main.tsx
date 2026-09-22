@@ -137,8 +137,12 @@ export function Main({
     });
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
-  const [prevSearchQuery, setPrevSearchQuery] = React.useState([]);
-  const [prevSearchQueryMobile, setPrevSearchQueryMobile] = React.useState([]);
+  const [prevSearchQuery, setPrevSearchQuery] = React.useState<
+    Array<SearchToken>
+  >([]);
+  const [prevSearchQueryMobile, setPrevSearchQueryMobile] = React.useState<
+    Array<SearchToken>
+  >([]);
   const [viewButtonDetail, setViewButtonDetail] = React.useState(false);
   const [showCopilot, setShowCopilot] = React.useState(false);
   // embedded mode: a container is provided without a toggle, so the panel is
@@ -1433,7 +1437,7 @@ function useSearch({
   configuration: Configuration;
   debounceTimeSearch: number;
   tabTokens: {
-    tabToken: any;
+    tabToken: Array<SearchToken> | undefined;
     sort:
       | {
           sort: {
@@ -2037,7 +2041,7 @@ function useDateTokens() {
 
 function useDetails(
   searchQuery: Array<SearchToken>,
-  setPrevSearchQuery: any,
+  setPrevSearchQuery: React.Dispatch<React.SetStateAction<Array<SearchToken>>>,
   prevSearchQuery: Array<SearchToken>,
 ) {
   const [detail, setDetail] = React.useState<GenericResultItem<unknown> | null>(
@@ -2063,7 +2067,7 @@ function renderPortal(
   return (
     <SimpleErrorBoundary>
       <React.Suspense>
-        {element ? (ReactDOM.createPortal(node, element) as any) : null}
+        {element ? ReactDOM.createPortal(node, element) : null}
       </React.Suspense>
     </SimpleErrorBoundary>
   );
@@ -2072,7 +2076,9 @@ function renderPortal(
 function useDetailsMobile(
   searchQuery: Array<SearchToken>,
   prevSearchQueryMobile: Array<SearchToken>,
-  setPrevSearchQueryMobile: any,
+  setPrevSearchQueryMobile: React.Dispatch<
+    React.SetStateAction<Array<SearchToken>>
+  >,
 ) {
   const [idPreview, setIdPreview] = React.useState("");
   const [detailMobile, setDetailMobile] =

@@ -15,7 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React from "react";
-import { GenericResultItem, DetailRendererProps } from "./client";
+import { GenericResultItem, DetailRendererProps, SetDetailMobile, asResultItem } from "./client";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { DetailMemo } from "./Detail";
 import { ModalDetail } from "./ModalDetail";
@@ -25,35 +25,35 @@ import { css } from "styled-components";
 
 export type DetailMobileProps<E> = {
   result: GenericResultItem<E> | null;
-  setDetailMobile: any;
+  setDetailMobile: SetDetailMobile;
   onClose(): void;
   cardDetailsOnOver: boolean;
   template: TemplatesProps | null;
 };
 
 function DetailMobile<E>(props: DetailMobileProps<E>) {
-  const result = props.result as any;
-  const setDetailMobile = props.setDetailMobile as any;
+  const result = props.result;
+  const setDetailMobile = props.setDetailMobile;
   const action = props.onClose;
   const cardDetailsOnOver = props.cardDetailsOnOver;
   const template = props.template;
-  const modalRef = React.useRef(null);
+  const modalRef = React.useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = React.useState(true);
   const [isViewButton, setIsViewButton] = React.useState(false);
 
   const { t } = useTranslation();
 
   React.useEffect(() => {
-    const modalElement = modalRef.current as any;
+    const modalElement = modalRef.current;
 
     if (modalElement) {
-      const focusableElements = modalElement?.querySelectorAll(
+      const focusableElements = modalElement.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
 
-      const handleTabKeyPress = (event: any) => {
+      const handleTabKeyPress = (event: KeyboardEvent) => {
         if (event.key === "Tab") {
           if (event.shiftKey && document.activeElement === firstElement) {
             event.preventDefault();
@@ -68,7 +68,7 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
         }
       };
 
-      const handleEscapeKeyPress = (event: any) => {
+      const handleEscapeKeyPress = (event: KeyboardEvent) => {
         if (event.key === "Escape") {
           setIsOpen(false);
         }
@@ -97,7 +97,7 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
       aria-modal={isOpen ? "true" : "false"}
     >
       <DetailMemo
-        result={result}
+        result={result && asResultItem(result)}
         setDetailMobile={setDetailMobile}
         isMobile={true}
         actionOnCLose={action}

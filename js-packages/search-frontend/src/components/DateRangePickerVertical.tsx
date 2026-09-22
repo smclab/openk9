@@ -17,7 +17,7 @@
 import React from "react";
 import { SingleDatePicker } from "react-dates";
 import { SearchDateRange } from "../embeddable/Main";
-import moment from "moment";
+import moment, { Moment } from "moment";
 import { useTranslation } from "react-i18next";
 import { mappingNameLanguage } from "./CalendarModal";
 import "moment/locale/de";
@@ -40,8 +40,9 @@ export function DataRangePickerVertical({
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
   language: string;
-  start?: any;
-  end?: any;
+  // NOTA: ricevute come prop ma non lette dal corpo del componente.
+  start?: Moment | null;
+  end?: Moment | null;
   classTab?: string;
   readOnly?: boolean;
   isOpenFilter?: boolean;
@@ -62,9 +63,9 @@ export function DataRangePickerVertical({
   moment.locale(languageCalendar);
   const { t } = useTranslation();
 
-  const [startDate, setStartDate] = React.useState<any | null>(null);
+  const [startDate, setStartDate] = React.useState<Moment | null>(null);
   const [focusedStartInput, setFocusedStartInput] = React.useState(false);
-  const [endDate, setEndDate] = React.useState<any | null>(null);
+  const [endDate, setEndDate] = React.useState<Moment | null>(null);
   const [focusedEndInput, setFocusedEndInput] = React.useState(false);
   const [dataEnd, setDataEnd] = React.useState("");
   const [dataStart, setDataStart] = React.useState("");
@@ -289,8 +290,8 @@ export function DataRangePickerVertical({
                 onDateChange={(d) => {
                   setStartDate(d);
                   onChange({
-                    startDate: (d as any)?._d || undefined,
-                    endDate: endDate?._d || undefined,
+                    startDate: d?.toDate() || undefined,
+                    endDate: endDate?.toDate() || undefined,
                     keywordKey: undefined,
                   });
                 }}
@@ -305,7 +306,7 @@ export function DataRangePickerVertical({
                 isOutsideRange={(day) => {
                   return (
                     day.isAfter(moment().endOf("day")) ||
-                    (endDate && day.isAfter(endDate))
+                    Boolean(endDate && day.isAfter(endDate))
                   );
                 }}
                 placeholder={
@@ -326,7 +327,7 @@ export function DataRangePickerVertical({
                   setDataStart("");
                   onChange({
                     startDate: undefined,
-                    endDate: endDate?._d || undefined,
+                    endDate: endDate?.toDate() || undefined,
                     keywordKey: undefined,
                   });
                 }}
@@ -482,8 +483,8 @@ export function DataRangePickerVertical({
                 onDateChange={(d) => {
                   setEndDate(d);
                   onChange({
-                    startDate: startDate?._d || undefined,
-                    endDate: (d as any)?._d || undefined,
+                    startDate: startDate?.toDate() || undefined,
+                    endDate: d?.toDate() || undefined,
                     keywordKey: undefined,
                   });
                 }}
@@ -498,7 +499,7 @@ export function DataRangePickerVertical({
                 isOutsideRange={(day) => {
                   return (
                     day.isAfter(moment().endOf("day")) ||
-                    (startDate && startDate.isAfter(day))
+                    Boolean(startDate && startDate.isAfter(day))
                   );
                 }}
                 placeholder={
@@ -516,7 +517,7 @@ export function DataRangePickerVertical({
                   setEndDate(null);
                   setDataEnd("");
                   onChange({
-                    startDate: startDate?._d || undefined,
+                    startDate: startDate?.toDate() || undefined,
                     endDate: undefined,
                     keywordKey: undefined,
                   });

@@ -18,9 +18,9 @@ import React from "react";
 import { SearchDateRange } from "../embeddable/Main";
 import { useTranslation } from "react-i18next";
 import "react-dates/initialize";
-import { DateRangePicker } from "react-dates";
+import { DateRangePicker, FocusedInputShape } from "react-dates";
 import { CreateLabel } from "./Filters";
-import moment from "moment";
+import moment, { Moment } from "moment";
 import { DeleteLogo } from "./DeleteLogo";
 import { CalendarLogo } from "./CalendarLogo";
 import { css } from "styled-components";
@@ -38,13 +38,13 @@ export function DataRangePicker({
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
-  start?: any;
-  end?: any;
+  start?: Moment | null;
+  end?: Moment | null;
   language: string;
 }) {
-  const [startDate, setStartDate] = React.useState<any | null>(null);
-  const [endDate, setEndDate] = React.useState<any | null>(null);
-  const [focusedInput, setFocusedInput] = React.useState(null);
+  const [startDate, setStartDate] = React.useState<Moment | null>(null);
+  const [endDate, setEndDate] = React.useState<Moment | null>(null);
+  const [focusedInput, setFocusedInput] = React.useState<FocusedInputShape | null>(null);
   const { t } = useTranslation();
   const languageCalendar = mappingNameLanguage(language);
   moment.locale(languageCalendar);
@@ -53,14 +53,14 @@ export function DataRangePicker({
     startDate,
     endDate,
   }: {
-    startDate: any;
-    endDate: any;
+    startDate: Moment | null;
+    endDate: Moment | null;
   }) => {
-    setStartDate(startDate || undefined);
-    setEndDate(endDate || undefined);
+    setStartDate(startDate);
+    setEndDate(endDate);
   };
 
-  const handleFocusChange = (focusedInput: any) => {
+  const handleFocusChange = (focusedInput: FocusedInputShape | null) => {
     setFocusedInput(focusedInput);
   };
   const renderCalendarInfo = () => (
@@ -136,8 +136,8 @@ export function DataRangePicker({
           padding="10px 6px"
           action={() =>
             onChange({
-              startDate: startDate?._d || undefined,
-              endDate: endDate?._d || undefined,
+              startDate: startDate?.toDate() || undefined,
+              endDate: endDate?.toDate() || undefined,
               keywordKey: undefined,
             })
           }

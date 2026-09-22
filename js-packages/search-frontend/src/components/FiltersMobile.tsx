@@ -44,7 +44,7 @@ export type FiltersMobileProps<E> = {
   isDynamicElement: WhoIsDynamic[];
   selectionsDispatch: React.Dispatch<SelectionsAction>;
   numberResultOfFilters: number | null | undefined;
-  memoryResults: any;
+  memoryResults: boolean;
   filtersMobileBasicCallback?:
     | (() => void | null | undefined)
     | null

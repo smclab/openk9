@@ -22,11 +22,11 @@ import { css } from "styled-components";
 import { DeleteLogo } from "./DeleteLogo";
 import useGenerateResponse, { Message } from "./useGenerateResponse";
 import { useRange } from "./useRange";
-import { SortField } from "./client";
+import { SearchToken, SortField } from "./client";
 
 type Props = {
   question: string;
-  searchQuery: any[];
+  searchQuery: SearchToken[];
   language: string;
   sortAfterKey: string;
   sort?: SortField[];
@@ -50,7 +50,7 @@ export default function GenerateResponse({
     });
 
   const [prevSearchQuery, setPrevSearchQuery] =
-    React.useState<any[]>(searchQuery);
+    React.useState<SearchToken[]>(searchQuery);
   const [prevRange, setPrevRange] = React.useState<[number, number]>(
     range as [number, number],
   );
@@ -61,15 +61,21 @@ export default function GenerateResponse({
       setPrevSearchQuery(searchQuery);
       setPrevRange(range as [number, number]);
 
+      // I campi di sola UI non vanno inviati al backend. La union e' composta
+      // da varianti diverse, quindi si scartano le chiavi per nome.
+      const UI_ONLY_KEYS = [
+        "search",
+        "isTab",
+        "filter",
+        "goToSuggestion",
+        "count",
+      ];
+      // Il backend riceve gli stessi token privati dei campi di sola UI.
       const clearSearchQuery = searchQuery.map(
-        ({
-          search: _s,
-          isTab: _t,
-          filter: _f,
-          goToSuggestion: _g,
-          count: _c,
-          ...rest
-        }: any) => rest,
+        (token) =>
+          Object.fromEntries(
+            Object.entries(token).filter(([key]) => !UI_ONLY_KEYS.includes(key)),
+          ) as SearchToken,
       );
 
       cancelAllResponses();

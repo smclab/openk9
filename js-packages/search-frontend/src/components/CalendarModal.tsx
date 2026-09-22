@@ -43,7 +43,8 @@ import { DateRangePicker } from "react-dates";
 import { CalendarMobileSvg } from "../svgElement/CalendarMobileSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
 import { TrashSvg } from "../svgElement/TrashSvg";
-import moment from "moment";
+import moment, { Moment } from "moment";
+import { FocusedInputShape } from "react-dates";
 import "moment/locale/it";
 import "moment/locale/es";
 import "moment/locale/fr";
@@ -74,12 +75,16 @@ export function CalendarMobile({
   setIsVisibleCalendar:
     | React.Dispatch<React.SetStateAction<boolean>>
     | undefined;
-  startDate: any;
-  endDate: any;
-  focusedInput: any;
-  setStartDate: any;
-  setEndDate: any;
-  setFocusedInput: any;
+  // La configurazione `calendarMobile` e' opzionale: queste prop possono mancare,
+  // come gia' avviene per `setIsVisibleCalendar`.
+  startDate: Moment | null | undefined;
+  endDate: Moment | null | undefined;
+  focusedInput: FocusedInputShape | null | undefined;
+  setStartDate: React.Dispatch<React.SetStateAction<Moment | null>> | undefined;
+  setEndDate: React.Dispatch<React.SetStateAction<Moment | null>> | undefined;
+  setFocusedInput:
+    | React.Dispatch<React.SetStateAction<FocusedInputShape | null>>
+    | undefined;
   activeLanguage?: string;
   isCLickReset: boolean;
   setIsCLickReset: React.Dispatch<React.SetStateAction<boolean>> | undefined;
@@ -89,14 +94,14 @@ export function CalendarMobile({
     startDate,
     endDate,
   }: {
-    startDate: any;
-    endDate: any;
+    startDate: Moment | null;
+    endDate: Moment | null;
   }) => {
-    setStartDate(startDate || undefined);
-    setEndDate(endDate || undefined);
+    setStartDate?.(startDate);
+    setEndDate?.(endDate);
   };
-  const handleFocusChange = (focusedInput: any) => {
-    setFocusedInput(focusedInput);
+  const handleFocusChange = (focusedInput: FocusedInputShape | null) => {
+    setFocusedInput?.(focusedInput);
   };
 
   const { t } = useTranslation();
@@ -193,8 +198,8 @@ export function CalendarMobile({
               endDate: undefined,
               keywordKey: undefined,
             });
-            setStartDate(null);
-            setEndDate(null);
+            setStartDate?.(null);
+            setEndDate?.(null);
           }}
         >
           {t("close")} <DeleteLogo heightParam={8} widthParam={8} />
@@ -229,8 +234,8 @@ export function CalendarMobile({
             white-space: nowrap;
           `}
           onClick={() => {
-            setStartDate(moment());
-            setEndDate(moment());
+            setStartDate?.(moment());
+            setEndDate?.(moment());
           }}
         >
           {t("today")}
@@ -251,8 +256,8 @@ export function CalendarMobile({
             white-space: nowrap;
           `}
           onClick={() => {
-            setStartDate(moment().startOf("week"));
-            setEndDate(moment().endOf("week"));
+            setStartDate?.(moment().startOf("week"));
+            setEndDate?.(moment().endOf("week"));
           }}
         >
           {t("this-week")}
@@ -273,8 +278,8 @@ export function CalendarMobile({
             white-space: nowrap;
           `}
           onClick={() => {
-            setStartDate(moment().startOf("month"));
-            setEndDate(moment().endOf("month"));
+            setStartDate?.(moment().startOf("month"));
+            setEndDate?.(moment().endOf("month"));
           }}
         >
           {t("this-month")}
@@ -295,8 +300,8 @@ export function CalendarMobile({
             white-space: nowrap;
           `}
           onClick={() => {
-            setStartDate(moment().startOf("year"));
-            setEndDate(moment().endOf("year"));
+            setStartDate?.(moment().startOf("year"));
+            setEndDate?.(moment().endOf("year"));
           }}
         >
           {t("this-year")}
@@ -309,8 +314,8 @@ export function CalendarMobile({
         `}
       >
         <DateRangePicker
-          startDate={startDate}
-          endDate={endDate}
+          startDate={startDate ?? null}
+          endDate={endDate ?? null}
           onDatesChange={handleDatesChange}
           focusedInput={focusedInput || "startDate"}
           onFocusChange={handleFocusChange}
@@ -482,8 +487,8 @@ export function CalendarMobile({
               endDate: undefined,
               keywordKey: undefined,
             });
-            setStartDate(null);
-            setEndDate(null);
+            setStartDate?.(null);
+            setEndDate?.(null);
           }}
         >
           <div>{t("don-t-filter-for-date")} </div>
@@ -546,8 +551,8 @@ export function CalendarMobile({
           onClick={() => {
             if (setIsVisibleCalendar) setIsVisibleCalendar(false);
             onChange({
-              startDate: startDate?._d || undefined,
-              endDate: endDate?._d || undefined,
+              startDate: startDate?.toDate() || undefined,
+              endDate: endDate?.toDate() || undefined,
               keywordKey: undefined,
             });
           }}

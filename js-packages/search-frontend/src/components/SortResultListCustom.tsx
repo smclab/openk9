@@ -16,8 +16,15 @@
 */
 import React from "react";
 import { useTranslation } from "react-i18next";
-import Select, { AriaOnFocus, components } from "react-select";
+import Select, { AriaOnFocus, components, StylesConfig } from "react-select";
 import { setSortResultsType } from "./SortResults";
+
+/** Opzione dell'elenco di ordinamento: `value` e' il JSON di `{ label, sort }`. */
+type SortOption = {
+  value: string | undefined;
+  name: string | undefined;
+  icon: string;
+};
 
 function SortResultList({
   classTab,
@@ -95,8 +102,7 @@ function SortResultList({
     });
   }, [selectOptions, t]);
 
-  // TODO: `event` dovrà essere di tipo `{value: string | undefined, name: string | undefined, icon: string}`
-  const handleChange = (event: any) => {
+  const handleChange = (event: SortOption | null) => {
     const eventValue = event?.value && JSON.parse(event.value);
 
     if (eventValue) {
@@ -108,15 +114,15 @@ function SortResultList({
     }
   };
 
-  const customStyles = {
-    control: (provided: any, state: any) => ({
+  const customStyles: StylesConfig<SortOption, false> = {
+    control: (provided) => ({
       ...provided,
     }),
-    menu: (provided: any, state: any) => ({
+    menu: (provided, state) => ({
       ...provided,
       zIndex: state.selectProps.menuIsOpen ? "1000" : "1",
     }),
-    option: (provided: any, state: any) => ({
+    option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isFocused ? "#your-option-focus-color" : "white",
       color: "black",
@@ -134,7 +140,7 @@ function SortResultList({
     }),
   };
 
-  const onFocus: AriaOnFocus<any> = ({ focused }) => {
+  const onFocus: AriaOnFocus<SortOption> = ({ focused }) => {
     const msg = t("you-are-on") + focused.name;
     return msg;
   };

@@ -99,7 +99,10 @@ function FiltersHorizontal({
   const [filterSelect, setFilterSelect] =
     React.useState<Array<SearchToken>>(searchQuery);
 
-  const handleCheckboxChange = (event: any, token: SearchToken) => {
+  const handleCheckboxChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    token: SearchToken,
+  ) => {
     const isChecked = event.target.checked;
     const newFilter = {
       ...token,
@@ -457,7 +460,7 @@ function FiltersHorizontal({
               </div>
               <GridContainer>
                 {isOpen &&
-                  filters.map((token: any, index: number) => {
+                  filters.map((token, index) => {
                     const asSearchToken = mapSuggestionToSearchToken(
                       token,
                       true,
@@ -622,7 +625,7 @@ function FiltersHorizontal({
 
 export const FiltersHorizontalMemo = React.memo(FiltersHorizontal);
 
-const GridContainer = ({ children }: { children: any }) => (
+const GridContainer = ({ children }: { children: React.ReactNode }) => (
   <div
     className="openk9-filters-horizontal-container"
     css={css`

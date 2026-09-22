@@ -24,8 +24,8 @@ import { css } from "styled-components";
 import { GloboSvg } from "../svgElement/Globo";
 
 export type LanguageItem = {
-  createDate: any;
-  modifiedDate: any;
+  createDate: string;
+  modifiedDate: string;
   id: number;
   name: string;
   value: string;

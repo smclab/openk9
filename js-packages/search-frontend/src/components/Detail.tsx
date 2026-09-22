@@ -18,9 +18,12 @@ import React from "react";
 import { css } from "styled-components";
 import { fadingSeparator } from "./fadingSeparator";
 import { WebDetail } from "../renderers/openk9/web/WebDetail";
-import { GenericResultItem, DetailRendererProps } from "./client";
+import { GenericResultItem, DetailRendererProps, SetDetailMobile, asResultItem } from "./client";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
+import type { PdfResultItem } from "../renderers/openk9/pdf/PdfItem";
+import type { DocumentResultItem } from "../renderers/openk9/document/DocumentItem";
+import type { WebResultItem } from "../renderers/openk9/web/WebItem";
 import { useRenderers } from "./useRenderers";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
@@ -28,7 +31,7 @@ import { TemplatesProps } from "../embeddable/entry";
 
 export type DetailProps<E> = {
   result: GenericResultItem<E> | null;
-  setDetailMobile?: any;
+  setDetailMobile?: SetDetailMobile;
   isMobile?: boolean;
   cardDetailsOnOver: boolean;
   actionOnCLose(): void;
@@ -38,7 +41,9 @@ export type DetailProps<E> = {
   template: TemplatesProps | null;
 };
 function Detail<E>(props: DetailProps<E>) {
-  const result = props.result as any;
+  // Il dispatch sui renderer avviene per nome di document type a runtime: in
+  // questo punto il risultato si tratta come generico, non come `E`.
+  const result = props.result as GenericResultItem<Record<string, unknown>> | null;
   const setDetailMobile = props.setDetailMobile;
   const actionOnCLose = props.actionOnCLose;
   const renderers = useRenderers();
@@ -50,19 +55,19 @@ function Detail<E>(props: DetailProps<E>) {
 
   const [showButton, setShowButton] = React.useState(false);
 
-  const modalRef = React.useRef(null);
+  const modalRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    const modalElement = modalRef.current as any;
+    const modalElement = modalRef.current;
 
     if (modalElement && result) {
-      const focusableElements = modalElement?.querySelectorAll(
+      const focusableElements = modalElement.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
 
-      const handleTabKeyPress = (event: any) => {
+      const handleTabKeyPress = (event: KeyboardEvent) => {
         if (event.key === "Tab") {
           setShowButton(true);
 
@@ -79,7 +84,7 @@ function Detail<E>(props: DetailProps<E>) {
         }
       };
 
-      const handleEscapeKeyPress = (event: any) => {};
+      const handleEscapeKeyPress = (event: KeyboardEvent) => {};
 
       modalElement?.addEventListener("keydown", handleTabKeyPress);
       modalElement?.addEventListener("keydown", handleEscapeKeyPress);
@@ -111,7 +116,7 @@ function Detail<E>(props: DetailProps<E>) {
     if (!template || template.length === 0) return null;
 
     const matchedTemplate = template.find((templat) =>
-      result.source.documentTypes.includes(templat.source),
+      result?.source.documentTypes.includes(templat.source),
     );
 
     return matchedTemplate?.TemplateDetail ?? null;
@@ -262,10 +267,9 @@ function Detail<E>(props: DetailProps<E>) {
           `}
         >
           {(() => {
-            const Renderer: React.FC<DetailRendererProps<E>> =
-              result.source.documentTypes
-                .map((k: string) => renderers?.detailRenderers[k])
-                .find(Boolean);
+            const Renderer = result.source.documentTypes
+              .map((k) => renderers?.detailRenderers[k])
+              .find(Boolean);
 
             const CustomTemplate = getCustomTemplate();
 
@@ -276,17 +280,21 @@ function Detail<E>(props: DetailProps<E>) {
                 </React.Fragment>
               );
             }
+            // Il tipo concreto del risultato e' deciso dal document type a
+            // runtime: ogni ramo asserisce la forma che il proprio renderer attende.
             if (Renderer) {
-              return <Renderer result={result} />;
+              return <Renderer result={asResultItem(result)} />;
             }
             if (result.source.documentTypes.includes("pdf")) {
-              return <PdfDetail result={result} />;
+              return <PdfDetail result={asResultItem<PdfResultItem>(result)} />;
             }
             if (result.source.documentTypes.includes("document")) {
-              return <DocumentDetail result={result} />;
+              return (
+                <DocumentDetail result={asResultItem<DocumentResultItem>(result)} />
+              );
             }
             if (result.source.documentTypes.includes("web")) {
-              return <WebDetail result={result} />;
+              return <WebDetail result={asResultItem<WebResultItem>(result)} />;
             }
             return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
           })()}

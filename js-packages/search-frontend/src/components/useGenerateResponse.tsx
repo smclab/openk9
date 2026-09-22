@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ChatSource, GenerateRequest, useOpenK9Client } from "./client";
+import {
+  ChatSource,
+  GenerateRequest,
+  SearchToken,
+  SortField,
+  useOpenK9Client,
+} from "./client";
 
 export interface Message {
   question: string;
@@ -18,10 +24,10 @@ type UseArgs = {
 
 type GenerateFn = (
   query: string,
-  searchQuery: any[],
+  searchQuery: SearchToken[],
   language: string,
   sortAfterKey: string,
-  sort: any,
+  sort: SortField | undefined,
   range: [number, number],
 ) => Promise<void>;
 
@@ -68,7 +74,8 @@ const useGenerateResponse = ({
         searchText: query,
         language,
         range,
-        sort,
+        // Il backend RAG dichiara `sort` come lista: qui arriva un solo criterio.
+        sort: sort ? [sort] : [],
         sortAfterKey,
         searchQuery,
       };

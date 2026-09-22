@@ -17,7 +17,10 @@
 import React from "react";
 import { css } from "styled-components";
 import { WebResult } from "../renderers/openk9/web/WebResult";
-import { GenericResultItem, ResultRendererProps } from "./client";
+import { GenericResultItem, ResultRendererProps, SetDetailMobile, asResultItem } from "./client";
+import type { PdfResultItem } from "../renderers/openk9/pdf/PdfItem";
+import type { DocumentResultItem } from "../renderers/openk9/document/DocumentItem";
+import type { WebResultItem } from "../renderers/openk9/web/WebItem";
 import { DocumentResult } from "../renderers/openk9/document/DocumentResult";
 import { PdfResult } from "../renderers/openk9/pdf/PdfResult";
 import { Renderers } from "./useRenderers";
@@ -42,7 +45,9 @@ type ResultProps<E> = {
 };
 
 function Result<E>(props: ResultProps<E>) {
-  const result = props.result as any;
+  // Il dispatch sui renderer avviene per nome di document type a runtime: in
+  // questo punto il risultato si tratta come generico, non come `E`.
+  const result = props.result as GenericResultItem<Record<string, unknown>>;
   const {
     onDetail,
     renderers,
@@ -69,13 +74,13 @@ function Result<E>(props: ResultProps<E>) {
       className={`openk9-embeddable-search--result-container openk9-card-${result?.source?.id}`}
       onMouseEnter={() => {
         if (overChangeCard && !isMobile) {
-          onDetail(result);
+          onDetail(asResultItem<E>(result));
           if (setIdPreview) setIdPreview(result?.source?.id || "");
         }
       }}
       onClick={() => {
         if (!overChangeCard && !isMobile && !viewButton) {
-          onDetail(result);
+          onDetail(asResultItem<E>(result));
           if (setIdPreview) setIdPreview(result?.source?.id || "");
         }
       }}
@@ -94,27 +99,26 @@ function Result<E>(props: ResultProps<E>) {
                 <CreateButton
                   setIdPreview={setIdPreview}
                   setDetailMobile={setDetailMobile}
-                  result={result}
+                  result={asResultItem<E>(result)}
                 />
               )}
             </React.Fragment>
           );
         }
 
-        const Renderer: React.FC<ResultRendererProps<E>> =
-          result.source.documentTypes
-            .map((k: string) => renderers?.resultRenderers[k])
-            .find(Boolean);
+        const Renderer = result.source.documentTypes
+          .map((k) => renderers?.resultRenderers[k])
+          .find(Boolean);
 
         if (Renderer && typeof Renderer === "function") {
           return (
             <React.Fragment>
-              <Renderer result={result} />
+              <Renderer result={asResultItem(result)} />
               {isMobile && (
                 <CreateButton
                   setIdPreview={setIdPreview}
                   setDetailMobile={setDetailMobile}
-                  result={result}
+                  result={asResultItem<E>(result)}
                 />
               )}
               {viewButton && !isMobile && (
@@ -132,12 +136,12 @@ function Result<E>(props: ResultProps<E>) {
         if (result.source.documentTypes.includes("pdf")) {
           return (
             <React.Fragment>
-              <PdfResult result={result} />
+              <PdfResult result={asResultItem<PdfResultItem>(result)} />
               {isMobile && (
                 <CreateButton
                   setIdPreview={setIdPreview}
                   setDetailMobile={setDetailMobile}
-                  result={result}
+                  result={asResultItem<E>(result)}
                 />
               )}
             </React.Fragment>
@@ -147,12 +151,12 @@ function Result<E>(props: ResultProps<E>) {
         if (result.source.documentTypes.includes("document")) {
           return (
             <React.Fragment>
-              <DocumentResult result={result} />
+              <DocumentResult result={asResultItem<DocumentResultItem>(result)} />
               {isMobile && (
                 <CreateButton
                   setIdPreview={setIdPreview}
                   setDetailMobile={setDetailMobile}
-                  result={result}
+                  result={asResultItem<E>(result)}
                 />
               )}
               {viewButton && !isMobile && (
@@ -170,12 +174,12 @@ function Result<E>(props: ResultProps<E>) {
         if (result.source.documentTypes.includes("web")) {
           return (
             <React.Fragment>
-              <WebResult result={result} />
+              <WebResult result={asResultItem<WebResultItem>(result)} />
               {isMobile && (
                 <CreateButton
                   setIdPreview={setIdPreview}
                   setDetailMobile={setDetailMobile}
-                  result={result}
+                  result={asResultItem<E>(result)}
                 />
               )}
               {viewButton && !isMobile && (
@@ -207,13 +211,13 @@ function Result<E>(props: ResultProps<E>) {
   );
 }
 
-function CreateButton({
+function CreateButton<E>({
   setDetailMobile,
   result,
   setIdPreview,
 }: {
-  setDetailMobile: (result: GenericResultItem<any> | null) => void;
-  result: GenericResultItem<any>;
+  setDetailMobile(result: GenericResultItem<E> | null): void;
+  result: GenericResultItem<E>;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
@@ -277,7 +281,7 @@ function ButtonDetail<E>({
   setIdPreview,
   setViewButtonDetail,
 }: {
-  result: GenericResultItem<any>;
+  result: GenericResultItem<Record<string, unknown>>;
   onDetail: (result: GenericResultItem<E> | null) => void;
   setIdPreview: React.Dispatch<React.SetStateAction<string>> | null | undefined;
   setViewButtonDetail?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -326,8 +330,8 @@ function ButtonDetail<E>({
         onClick={(e) => {
           const recoveryButton = document.getElementById(
             "title-preview-openk9",
-          ) as any;
-          onDetail(result);
+          );
+          onDetail(asResultItem<E>(result));
           if (e.screenX === 0 && e.screenY === 0) {
             setViewButtonDetail && setViewButtonDetail(true);
           } else {

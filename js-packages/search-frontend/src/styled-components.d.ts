@@ -1,5 +1,7 @@
-declare namespace React {
+import type { Interpolation } from "styled-components";
+
+declare module "react" {
   interface DOMAttributes<T> {
-    css?: any;
+    css?: Interpolation<object>;
   }
 }

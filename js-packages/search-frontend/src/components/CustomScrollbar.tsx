@@ -18,12 +18,23 @@ import React from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 
-export const CustomVirtualScrollbar = React.forwardRef(
-  ({ children, className, style, ...props }: any, ref: any) => {
+type OverlayScrollbarsInstance = {
+  osInstance(): { getElements(): { viewport: HTMLElement } };
+};
+
+export const CustomVirtualScrollbar = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentPropsWithoutRef<"div">
+>(({ children, className, style, ...props }, ref) => {
     const refSetter = React.useCallback(
-      (scrollbarsRef: any) => {
-        if (scrollbarsRef) {
-          ref.current = scrollbarsRef.osInstance().getElements().viewport;
+      (scrollbarsRef: OverlayScrollbarsInstance | null) => {
+        if (!scrollbarsRef) return;
+        const viewport = scrollbarsRef.osInstance().getElements()
+          .viewport as HTMLDivElement;
+        if (typeof ref === "function") {
+          ref(viewport);
+        } else if (ref) {
+          ref.current = viewport;
         }
       },
       [ref],

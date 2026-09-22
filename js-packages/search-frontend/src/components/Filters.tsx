@@ -88,7 +88,7 @@ function Filters({
 
   const [offset, elementForPage] = state.range;
 
-  const infiniteResults = useInfiniteResults<any>(
+  const infiniteResults = useInfiniteResults<unknown>(
     state,
     searchQuery,
     sort,

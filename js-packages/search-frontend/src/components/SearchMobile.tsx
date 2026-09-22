@@ -683,7 +683,7 @@ type Status =
   | "has-selected"
   | "auto-selected"
   | "not-interactive";
-const statusStyles: Record<Status, any> = {
+const statusStyles: Record<Status, ReturnType<typeof css>> = {
   "can-select": css`
     color: var(--openk9-embeddable-search--primary-color);
   `,
