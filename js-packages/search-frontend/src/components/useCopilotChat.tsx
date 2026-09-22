@@ -6,6 +6,7 @@ import {
   ChatRequest,
   ChatSource,
   useOpenK9Client,
+  useOptionalOpenK9Client,
 } from "./client";
 import { Message } from "./useGenerateResponse";
 
@@ -97,8 +98,13 @@ export function useCopilotChat({
   /** pass `openk9.client` to use the hook without the React context provider */
   client?: ReturnType<typeof useOpenK9Client>;
 } = {}) {
-  const contextClient = useOpenK9Client();
+  const contextClient = useOptionalOpenK9Client();
   const client = clientOverride ?? contextClient;
+  if (!client) {
+    throw new Error(
+      "useCopilotChat needs an OpenK9 provider or an explicit `client` option",
+    );
+  }
   const { t } = useTranslation();
   const [messages, setMessages] = useState<Turn[]>([]);
   const [isChatting, setIsChatting] = useState(false);

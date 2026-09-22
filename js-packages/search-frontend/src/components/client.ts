@@ -39,6 +39,14 @@ export function useOpenK9Client() {
   return client;
 }
 
+/**
+ * Variante che tollera l'assenza del provider: serve a chi riceve il client
+ * per altra via, come l'API embeddable che espone gli hook fuori dall'albero.
+ */
+export function useOptionalOpenK9Client() {
+  return React.useContext(OpenK9ClientContext);
+}
+
 const OAUTH2_SETTINGS_PATH = "/api/datasource/oauth2/settings";
 
 /**
