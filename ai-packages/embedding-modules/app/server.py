@@ -436,10 +436,11 @@ def _is_one_vector_per_text(vectors, texts):
     """Whether the langchain class answered one vector per text.
 
     The batch call has a way of not reading the answer without raising:
-    `BedrockEmbeddings.embed_documents` walks the `embeddings` of a
-    `cohere.embed-v4` answer, which is keyed by embedding type and not a
-    list, and returns its keys as if they were the vectors. Its
-    single-text sibling indexes the same dict instead, and raises. Only
+    it returns something that is not a vector. `BedrockEmbeddings` did
+    exactly that on a `cohere.embed-v4` answer until langchain-aws 1.x,
+    walking an `embeddings` keyed by embedding type as if it were a list
+    and returning its keys; langchain-aws reads that schema now, but the
+    multimodal models that reach this path are not only its own. Only
     what cannot be a vector is rejected, so a provider answering with
     something list-like other than a list stays on langchain.
     """
