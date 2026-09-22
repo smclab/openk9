@@ -2,9 +2,9 @@ grpcio==1.76.0
 grpcio-health-checking==1.76.0
 grpcio-reflection==1.76.0
 grpcio-tools==1.76.0
-langchain==0.3.27
+langchain==0.3.30
 langchain-community==0.3.27
-langchain-core==0.3.81
+langchain-core==0.3.85
 langchain-experimental==0.3.4
 langchain-huggingface==0.1.2
 langchain-text-splitters==0.3.9
