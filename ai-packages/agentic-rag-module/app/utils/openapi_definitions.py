@@ -53,7 +53,7 @@ API_RAG_GENERATE_RESPONSES = {
             }
         },
     },
-    status.HTTP_422_UNPROCESSABLE_ENTITY: {
+    status.HTTP_422_UNPROCESSABLE_CONTENT: {
         "description": "Validation Error - Invalid request body or parameters",
         "content": {
             "application/json": {
@@ -146,7 +146,7 @@ API_RAG_CHAT_RESPONSES = {
             }
         },
     },
-    status.HTTP_422_UNPROCESSABLE_ENTITY: {
+    status.HTTP_422_UNPROCESSABLE_CONTENT: {
         "description": "Validation Error - Invalid request body or parameters",
         "content": {
             "application/json": {
@@ -319,7 +319,7 @@ API_RAG_CHAT_TOOL_RESPONSES = {
             }
         },
     },
-    status.HTTP_422_UNPROCESSABLE_ENTITY: {
+    status.HTTP_422_UNPROCESSABLE_CONTENT: {
         "description": "Validation Error - Invalid request body or parameters",
         "content": {
             "application/json": {
@@ -515,7 +515,7 @@ API_RAG_CHAT_GET_RESPONSES = {
             }
         },
     },
-    status.HTTP_422_UNPROCESSABLE_ENTITY: {
+    status.HTTP_422_UNPROCESSABLE_CONTENT: {
         "description": "Validation Error - Invalid request parameters or structure",
         "content": {
             "application/json": {
@@ -567,7 +567,7 @@ API_RAG_CHAT_DELETE_RESPONSES = {
             }
         },
     },
-    status.HTTP_422_UNPROCESSABLE_ENTITY: {
+    status.HTTP_422_UNPROCESSABLE_CONTENT: {
         "description": "Invalid request parameters or structure",
         "content": {
             "application/json": {
@@ -617,7 +617,7 @@ API_RAG_CHAT_PATCH_RESPONSES = {
             }
         },
     },
-    status.HTTP_422_UNPROCESSABLE_ENTITY: {
+    status.HTTP_422_UNPROCESSABLE_CONTENT: {
         "description": "Invalid request parameters or structure",
         "content": {
             "application/json": {
