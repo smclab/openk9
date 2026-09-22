@@ -115,12 +115,20 @@
 		<zstd-jni.version>1.5.6-3</zstd-jni.version>
 		<netty.groupd-id>io.netty</netty.groupd-id>
 		<netty.artifact-id>netty-bom</netty.artifact-id>
-		<!-- Spring Boot 4 ships Netty on the 4.2.x line; this BOM is imported by spring-boot-app.
-		     Quarkus apps continue to use ${netty.version} (4.1.x line). -->
-		<netty-springboot.version>4.2.13.Final</netty-springboot.version>
-		<postgresql-springboot.version>42.7.11</postgresql-springboot.version>
-		<spring-cloud.version>2025.1.1</spring-cloud.version>
-		<spring-boot.version>4.0.6</spring-boot.version>
+		<!-- Netty ships on two lines here: Quarkus apps on 4.1.x, Spring Boot 4 on 4.2.x.
+		     Both BOMs are pinned ahead of the platform they come from, because the platform
+		     versions lag the Netty releases that fix the netty-handler / netty-codec-* CVEs.
+		     The 4.1.x BOM is imported below; the 4.2.x one by spring-boot-app. -->
+		<netty-quarkus.version>4.1.138.Final</netty-quarkus.version>
+		<netty-springboot.version>4.2.18.Final</netty-springboot.version>
+		<postgresql-springboot.version>42.7.13</postgresql-springboot.version>
+		<spring-cloud.version>2025.1.3</spring-cloud.version>
+		<spring-boot.version>4.0.8</spring-boot.version>
+		<bouncycastle.version>1.86</bouncycastle.version>
+		<httpcore5.version>5.4.3</httpcore5.version>
+		<lz4.version>1.11.3</lz4.version>
+		<amqp-client.version>5.36.0</amqp-client.version>
+		<scram.version>3.3</scram.version>
 		<jib-plugin.version>3.5.1</jib-plugin.version>
 		<jib.platform.architecture>amd64</jib.platform.architecture>
 
@@ -128,6 +136,16 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- Declared before the Quarkus platform on purpose: the first import wins,
+			     and the platform still pins a Netty older than the one fixing the
+			     netty-handler CVE block on the 4.1.x line. -->
+			<dependency>
+				<groupId>${netty.groupd-id}</groupId>
+				<artifactId>${netty.artifact-id}</artifactId>
+				<version>${netty-quarkus.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.apache.pekko</groupId>
 				<artifactId>pekko-bom_${scala.version}</artifactId>
@@ -141,6 +159,44 @@
 				<version>${quarkus.platform.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+			<!-- Bouncy Castle arrives through MinIO, Tika and the Spring Cloud starter,
+			     none of which is governed by a BOM we import. Kept on one version so the
+			     three artifacts never drift apart. -->
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcprov-jdk18on</artifactId>
+				<version>${bouncycastle.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcpkix-jdk18on</artifactId>
+				<version>${bouncycastle.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcutil-jdk18on</artifactId>
+				<version>${bouncycastle.version}</version>
+			</dependency>
+			<!-- Pulled by the OpenSearch Apache transport, which is pinned to an
+			     extension release that still resolves a vulnerable HttpCore5. -->
+			<dependency>
+				<groupId>org.apache.httpcomponents.core5</groupId>
+				<artifactId>httpcore5</artifactId>
+				<version>${httpcore5.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents.core5</groupId>
+				<artifactId>httpcore5-h2</artifactId>
+				<version>${httpcore5.version}</version>
+			</dependency>
+			<!-- Replaces the abandoned org.lz4:lz4-java that Pekko serialization pulls in;
+			     see the exclusion in app/datasource. Same net.jpountz packages, still
+			     maintained. The platform pins an older one that is not yet fixed. -->
+			<dependency>
+				<groupId>at.yawk.lz4</groupId>
+				<artifactId>lz4-java</artifactId>
+				<version>${lz4.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.quarkiverse.opensearch</groupId>

@@ -35,4 +35,19 @@
         <module>runtime</module>
     </modules>
 
+    <dependencyManagement>
+        <dependencies>
+            <!-- The extensions parent still pins a Netty older than the one fixing the
+                 netty-handler CVE block, and this module is scanned on its own. Kept in
+                 step with netty-quarkus.version in core/pom.xml. -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>4.1.138.Final</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
 </project>
