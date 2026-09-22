@@ -149,6 +149,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	private static final Logger log = Logger.getLogger(SearcherService.class);
 	private static final Integer DEFAULT_MAX_SEARCH_PAGE_FROM = 10000;
 	private static final Integer DEFAULT_MAX_SEARCH_PAGE_SIZE = 200;
+	private static final String TIE_BREAK_FIELD = "contentId.keyword";
+	private static final String TIE_BREAK_CHUNK_FIELD = "number";
 
 	@Inject
 	BucketService bucketService;
@@ -502,6 +504,81 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		}
 
+	}
+
+	/**
+	 * Appends the deterministic tie-break, always last. Without a unique
+	 * final criterion the order of tying documents falls back to Lucene's
+	 * {@code docID}, which differs between copies of a shard. Both fields
+	 * are needed: with chunking several indexed documents share a
+	 * {@code contentId} and differ only by {@code number}.
+	 *
+	 * @param searchSourceBuilder the request the tie-break is appended to
+	 * @param hybrid whether the request carries a hybrid query
+	 */
+	static void applyTieBreak(
+		SearchSourceBuilder searchSourceBuilder, boolean hybrid) {
+
+		var sorts = searchSourceBuilder.sorts();
+
+		if (sorts == null || sorts.isEmpty()) {
+			if (hybrid) {
+				// A hybrid query rejects _score next to any other criterion,
+				// because the final score only exists once the normalization
+				// processor has combined the sub-queries. Ordering by the
+				// tie-break alone would throw relevance away, so the ordering
+				// of tying documents stays as it is.
+				return;
+			}
+
+			// An explicit sort clause replaces the implicit ordering by
+			// relevance, so _score has to be restated to preserve it.
+			searchSourceBuilder.sort(SortBuilders.scoreSort());
+		}
+
+		if (!hasFieldSort(searchSourceBuilder, TIE_BREAK_FIELD)) {
+			searchSourceBuilder.sort(
+				SortBuilders
+					.fieldSort(TIE_BREAK_FIELD)
+					.order(SortOrder.ASC)
+					// unmappedType keeps the search from failing on indices
+					// where the field is not mapped at all.
+					.unmappedType("keyword")
+			);
+		}
+
+		if (!hasFieldSort(searchSourceBuilder, TIE_BREAK_CHUNK_FIELD)) {
+			searchSourceBuilder.sort(
+				SortBuilders
+					.fieldSort(TIE_BREAK_CHUNK_FIELD)
+					.order(SortOrder.ASC)
+					// Only chunk documents carry it: everywhere else the
+					// criterion is inert and contentId already discriminates.
+					.missing("_last")
+					.unmappedType("integer")
+			);
+		}
+
+	}
+
+	private static boolean hasFieldSort(
+		SearchSourceBuilder searchSourceBuilder, String fieldName) {
+
+		var sorts = searchSourceBuilder.sorts();
+
+		if (sorts == null) {
+			return false;
+		}
+
+		for (var sortBuilder : sorts) {
+			if (sortBuilder instanceof FieldSortBuilder fieldSortBuilder
+				&& fieldName.equals(fieldSortBuilder.getFieldName())) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private static boolean containsIgnoreCase(String str, String searchStr) {
@@ -1101,11 +1178,14 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					String language = _getLanguage(request, bucket);
 
-					var searchSourceBuilder = _getSearchSourceBuilder(request, bucket, language);
+					var hybrid = tokenGroup.containsKey(QueryParserType.HYBRID);
+
+					var searchSourceBuilder = _getSearchSourceBuilder(
+						request, bucket, language, hybrid);
 
 					Map<String, String> queryParams;
 
-					if (tokenGroup.containsKey(QueryParserType.HYBRID)) {
+					if (hybrid) {
 
 						queryParams = _getQueryParams(bucket);
 
@@ -1549,7 +1629,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	}
 
 	private SearchSourceBuilder _getSearchSourceBuilder(
-		QueryParserRequest request, Bucket bucket, String language) {
+		QueryParserRequest request, Bucket bucket, String language,
+		boolean hybrid) {
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -1580,6 +1661,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
 			searchSourceBuilder
 		);
+
+		applyTieBreak(searchSourceBuilder, hybrid);
 
 		applyHighlightAndIncludeExclude(
 			searchSourceBuilder,
