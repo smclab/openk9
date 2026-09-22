@@ -3,6 +3,9 @@ import { Autocomplete, Button, Dialog, DialogActions, DialogContent, DialogConte
 import React from "react";
 import { useToast } from "../ToastProvider";
 
+/** Variabili comuni alle mutation di associazione/dissociazione. */
+type AssociationVariables = { parentId: string; childId: string };
+
 export function ModalAdd<TAssociation, TRemove>({
   id,
   callbackClose,
@@ -28,8 +31,8 @@ export function ModalAdd<TAssociation, TRemove>({
       }
     | undefined
     | null;
-  association: () => MutationTuple<TAssociation, any>;
-  remove: () => MutationTuple<TRemove, any>;
+  association: () => MutationTuple<TAssociation, AssociationVariables>;
+  remove: () => MutationTuple<TRemove, AssociationVariables>;
 }) {
   const [add] = association();
   const [deleteMutation] = remove();

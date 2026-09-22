@@ -17,6 +17,8 @@
 import React from "react";
 import ReactFlow, { Background, Controls, Edge, MiniMap, Node, NodeChange, applyNodeChanges } from "react-flow-renderer";
 import { RulesQuery, useRulesQuery } from "../../graphql-generated";
+import NodeGraphRule from "./Function/NodeGraphRule";
+import NodeGraphRuleDouble from "./Function/NodeGraphRuleDouble";
 
 type RuleEdges = NonNullable<NonNullable<RulesQuery["rules"]>["edges"]>;
 
@@ -30,8 +32,7 @@ export type RuleNodeData = {
   idAssociation?: string;
   fatherLabel?: string;
 };
-import NodeGraphRule from "./Function/NodeGraphRule";
-import NodeGraphRuleDouble from "./Function/NodeGraphRuleDouble";
+
 
 const nodeTypes = {
   custom: NodeGraphRule,

@@ -24,6 +24,7 @@ import {
   Visibility as VisibilityIcon,
   Language as WebIcon,
 } from "@mui/icons-material";
+import { useFormatDate } from "@components/common/FormatDate";
 import {
   Avatar,
   Box,
@@ -67,12 +68,12 @@ interface Datasource {
   scheduling?: string | null;
   reindexable?: boolean | null;
   reindexing?: string | null;
-  // NOTA: non presenti nella query DataSources. Sono valorizzati solo dalla
-  // creazione ottimistica lato client, quindi per i datasource reali restano vuoti.
+  lastIngestionDate?: string | null;
+  // NOTA: non presenti nella query DataSources e mai letti dalla card. Sono
+  // valorizzati solo dalla creazione ottimistica lato client.
   type?: string;
   status?: DatasourceStatus | string;
   documentsCount?: number;
-  lastSync?: string;
 }
 
 interface NewDatasource {
@@ -106,6 +107,7 @@ const TypeAvatar = styled(Avatar)<{ bgcolor: string }>(({ theme, bgcolor }) => (
 
 const DatasourcesSection = ({ datasourcesData }: { datasourcesData: Datasource[] | undefined }) => {
   const { t, i18n } = useTranslation();
+  const formatDate = useFormatDate();
   const [datasources, setDatasources] = useState<Datasource[]>([]);
   React.useEffect(() => {
     if (datasourcesData && datasourcesData.length > 0) {
@@ -209,7 +211,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: Datasource[]
         type: newDatasource.type,
         status: "active",
         documentsCount: 0,
-        lastSync: t("datasource-cards.just-now"),
+        lastIngestionDate: new Date().toISOString(),
       };
       setDatasources([...datasources, newItem]);
       setNewDatasource({ name: "", type: "database", description: "" });
@@ -347,7 +349,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: Datasource[]
                       maxWidth: 100,
                     }}
                   >
-                    {datasource.lastSync}
+                    {formatDate(datasource.lastIngestionDate)}
                   </Typography>
                 </Box>
               </Stack>

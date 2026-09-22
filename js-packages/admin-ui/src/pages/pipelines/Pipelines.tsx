@@ -132,17 +132,6 @@ export function Pipelines() {
                 </Typography>
               ),
             },
-            {
-              header: t("common.priority"),
-              // TODO: `priority` non esiste su EnrichPipeline nello schema GraphQL:
-              // questa colonna e' sempre vuota. Serve decidere se aggiungere il
-              // campo lato backend o rimuovere la colonna.
-              content: (pipeline: any) => (
-                <Typography variant="body2" className="pipeline-title">
-                  {pipeline?.priority}
-                </Typography>
-              ),
-            },
           ]}
         />
       </Box>

@@ -43,7 +43,7 @@ type Props = {
   disabled?: boolean;
   useOptions: UseOptionsHook;
   sx?: SxProps<Theme>;
-  extraVariables?: Record<string, any>;
+  extraVariables?: Record<string, unknown>;
 };
 
 type PropsWithOptions = {

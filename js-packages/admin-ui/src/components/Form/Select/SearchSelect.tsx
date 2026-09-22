@@ -34,8 +34,10 @@ import useDebounced from "@components/common/useDebounced";
 
 export function SearchSelect<
   Value,
-  Change extends Record<string, any>,
-  Remove extends Record<string, any>,
+  Change extends object,
+  Remove extends object,
+  ChangeMutation = unknown,
+  RemoveMutation = unknown,
 >({
   label,
   value,
@@ -79,9 +81,9 @@ export function SearchSelect<
     { searchText?: string | null; cursor?: string | null }
   >;
   mapValueToMutationVariables(id: string): Change;
-  useChangeMutation: MutationHook<any, Change>;
+  useChangeMutation: MutationHook<ChangeMutation, Change>;
   mapValueToRemoveMutationVariables(): Remove;
-  useRemoveMutation: MutationHook<any, Remove>;
+  useRemoveMutation: MutationHook<RemoveMutation, Remove>;
   invalidate(): void;
 }) {
   const { t } = useTranslation();

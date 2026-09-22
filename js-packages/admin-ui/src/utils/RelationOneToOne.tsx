@@ -36,7 +36,7 @@ export type UseOptionsResult = {
   hasNextPage: boolean;
   loadMore?: () => Promise<void>;
 };
-export type UseOptionsHook = (searchText: string, extraVariables?: Record<string, any>) => UseOptionsResult;
+export type UseOptionsHook = (searchText: string, extraVariables?: Record<string, unknown>) => UseOptionsResult;
 
 type ConnectionLike<Node = unknown> =
   | {

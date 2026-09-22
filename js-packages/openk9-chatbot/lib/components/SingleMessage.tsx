@@ -31,10 +31,9 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
+import type { Source } from "./client";
 
 type Theme = "light" | "dark";
-
-type Source = { score?: string; title?: string; url?: string };
 
 export function SingleMessage({
   contentMessage,
@@ -76,10 +75,12 @@ export function SingleMessage({
   const canToggleSources = visibleSources.length > INITIAL_VISIBLE_SOURCES;
 
   const copySource = async (source: Source) => {
+    // `url` e' opzionale sulla sorgente: senza non c'e' nulla da copiare.
     if (!source.url) return;
+    const url = source.url;
     try {
-      await navigator.clipboard.writeText(source.url);
-      setCopiedSource(source.url);
+      await navigator.clipboard.writeText(url);
+      setCopiedSource(url);
       setTimeout(() => setCopiedSource(null), 2000);
     } catch (err) {
       console.error("Errore durante la copia:", err);

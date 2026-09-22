@@ -19,7 +19,7 @@ import { BaseInputProps, TemplateArray } from "../utils";
 import { useState } from "react";
 import { InformationField } from "../utils/informationField";
 
-export function CustomSelect<E extends Record<string, any>>({
+export function CustomSelect<E extends Record<string, string>>({
   id,
   label,
   value,
@@ -29,7 +29,7 @@ export function CustomSelect<E extends Record<string, any>>({
   dict,
   isNotEnum,
   description,
-}: BaseInputProps<E[string]> & { dict: E }) {
+}: BaseInputProps<E[string]> & { dict: E | TemplateArray[] }) {
   const [savedDescription, setSavedDescription] = useState<string>("");
   return (
     <FormControl fullWidth error={validationMessages.length > 0} disabled={disabled} sx={{ marginBottom: 2 }}>
@@ -50,8 +50,8 @@ export function CustomSelect<E extends Record<string, any>>({
         onChange={(event) => onChange(event.target.value as E[string])}
         displayEmpty
       >
-        {isNotEnum
-          ? dict.map((filter: TemplateArray) => (
+        {isNotEnum && Array.isArray(dict)
+          ? dict.map((filter) => (
               <MenuItem
                 key={filter.title}
                 value={filter.title}
@@ -60,7 +60,7 @@ export function CustomSelect<E extends Record<string, any>>({
                 {filter.title}
               </MenuItem>
             ))
-          : Object.entries(dict).map(([label, value]) => (
+          : Object.entries(dict as E).map(([label, value]) => (
               <MenuItem key={value} value={value}>
                 {label}
               </MenuItem>

@@ -23,7 +23,7 @@ import { AutocompleteDropdownWithOptions } from "../Select/AutocompleteDropdown"
 import { InformationField } from "../utils/informationField";
 import Autocomplete from "./AutoComplete";
 
-function GenerateDynamicFields<E extends Record<string, any>>({
+function GenerateDynamicFields<E extends Record<string, string>>({
   templates,
   setType,
   isRecap,

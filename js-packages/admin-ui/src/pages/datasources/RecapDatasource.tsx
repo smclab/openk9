@@ -16,13 +16,14 @@
 */
 import { Box, Button, Card, CardContent, Divider, Tooltip, Typography } from "@mui/material";
 import { useRef, useState } from "react";
+import type { JsonValue } from "@pages/Recap/SaveRecap";
 
 export type areaType = {
   title?: string;
   description?: string;
   fields?: Array<{
     label?: string | null | undefined;
-    value?: string | number | boolean | Record<string, any> | null | undefined;
+    value?: JsonValue;
     type?: "string" | "number" | "boolean" | "json" | "array";
     jsonView?: boolean;
     divider?: boolean;
@@ -106,7 +107,8 @@ function RecapDatasource({
               <Box display="flex" flexDirection="column" gap={0.75}>
                 {section.fields?.flatMap((field, index) => {
                   if (field.type === "json") {
-                    let parsed: Record<string, any> | null = null;
+                    // Il valore json puo' essere sia un oggetto sia un array: Object.entries li gestisce entrambi.
+                    let parsed: Record<string, unknown> | JsonValue[] | null = null;
 
                     if (typeof field.value === "string") {
                       try {

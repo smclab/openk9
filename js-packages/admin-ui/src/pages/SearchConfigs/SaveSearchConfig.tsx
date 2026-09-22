@@ -237,12 +237,12 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
       const template = parsed?.map((pars: { form: Template }) => ({ ...pars?.form }));
       if (jsonConfigs.length === 0 && Array.isArray(template)) {
         const mappedData = template.map((item: Template, idx: number) => {
-          const jsonObj: Record<string, any> = {};
+          const jsonObj: Record<string, unknown> = {};
           const edge = searchConfigQuery.data?.searchConfig?.queryParserConfigs?.edges?.find((e) => {
             return e?.node?.type?.toLowerCase() === mappedType[idx]?.itemLabelId?.toLowerCase();
           });
 
-          let parsedJson: Record<string, any> = {};
+          let parsedJson: Record<string, unknown> = {};
           if (edge?.node?.jsonConfig) {
             try {
               parsedJson = JSON.parse(edge.node.jsonConfig);
@@ -295,7 +295,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
     }
 
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, unknown>);
 
   const recapSections = mappingCardRecap({
     form,

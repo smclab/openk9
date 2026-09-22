@@ -110,7 +110,7 @@ export function createJsonString({
     return "{}";
   }
 
-  const result: Record<string, any> = {};
+  const result: Record<string, unknown> = {};
   if (type) {
     result.type = type;
   }

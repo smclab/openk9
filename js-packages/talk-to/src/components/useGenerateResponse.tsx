@@ -8,7 +8,22 @@ import { useChatContext } from "../context/HistoryChatContext";
 import { useTranslation } from "react-i18next";
 import { isAuthenticated } from "../auth/oauth2";
 
-export type Source = { source?: string; title?: string; url?: string; filename?: string; file_extension?: string };
+/**
+ * Sorgente citata in una risposta. Ne esistono due varianti: i documenti
+ * indicizzati (`source`/`url`/`title`, piu' `score`/`domain` emessi da
+ * `_stream_documents` nel modulo RAG) e i file caricati dall'utente
+ * (`filename` + `file_extension`).
+ */
+export type Source = {
+	source?: string;
+	title?: string;
+	url?: string;
+	filename?: string;
+	file_extension?: string;
+	score?: number;
+	domain?: string;
+	citations?: unknown[];
+};
 
 /** Holds the `File`, not the bytes: base64 is built (memoized on `attachmentId`) in the fetch
  * path, so it never enters React state or react-query keys. */

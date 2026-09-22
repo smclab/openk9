@@ -20,7 +20,7 @@ import { QueryHookOptions, QueryResult } from "@apollo/client";
 
 
 
-export type QueryHook<Query, QueryVariables extends Record<string, any>> = (
+export type QueryHook<Query, QueryVariables extends object> = (
   baseOptions: QueryHookOptions<Query, QueryVariables>
 ) => QueryResult<Query, QueryVariables>;
 

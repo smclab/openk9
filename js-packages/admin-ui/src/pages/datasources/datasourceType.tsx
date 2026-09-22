@@ -21,8 +21,9 @@ import { ConnectionData, PluginDriverRequestBody } from "./types";
 import { defaultModal } from "./components/Sections/DataSource/ConfigureDatasource";
 import { ChangeValueKey, Template } from "./components/Sections/DataSource/DynamicForm";
 
-type ModalState = typeof defaultModal;
 import { SetStateAction } from "react";
+
+type ModalState = typeof defaultModal;
 
 export type HeaderType = {
   landingTabId: string;

@@ -29,6 +29,9 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../Form/ToastProvider";
 
+/** Variabili comuni alle mutation di associazione/dissociazione. */
+type AssociationVariables = { parentId: string; childId: string };
+
 export function ModalAdd<TAssociation, TRemove>({
   id,
   callbackClose,
@@ -54,8 +57,8 @@ export function ModalAdd<TAssociation, TRemove>({
       }
     | undefined
     | null;
-  association: () => MutationTuple<TAssociation, any>;
-  remove: () => MutationTuple<TRemove, any>;
+  association: () => MutationTuple<TAssociation, AssociationVariables>;
+  remove: () => MutationTuple<TRemove, AssociationVariables>;
 }) {
   const { t } = useTranslation();
   const [add] = association();

@@ -16,12 +16,11 @@
 */
 import React from "react";
 
-export const OpenK9ClientContext = React.createContext<
-  ReturnType<typeof OpenK9Client>
->(
-  // must break app if not provided
-  null as unknown as ReturnType<typeof OpenK9Client>,
-);
+/* Il valore e' `null` finche' un provider non lo fornisce: i consumatori sono
+   obbligati dal tipo a gestirne l'assenza. */
+export const OpenK9ClientContext = React.createContext<ReturnType<
+  typeof OpenK9Client
+> | null>(null);
 
 export default function Client() {
   return null;
@@ -123,7 +122,7 @@ export function OpenK9Client({
           question: string;
           answer: string;
           title: string;
-          sources: Array<unknown>;
+          sources: Array<Source>;
           chat_id: string;
           timestamp: string;
           chat_sequence_number: number;
@@ -183,6 +182,23 @@ export interface getUserInfo {
   refreshOnQuery: boolean;
   retrieveType: "MATCH" | "KNN" | "HYBRID";
 }
+
+/**
+ * Sorgente citata in una risposta. Ne esistono due varianti: i documenti
+ * indicizzati (`source`/`url`/`title`, piu' `score`/`domain` emessi da
+ * `_stream_documents` nel modulo RAG) e i file caricati dall'utente
+ * (`filename` + `file_extension`). L'interfaccia consuma solo `title` e `url`.
+ */
+export type Source = {
+  source?: string;
+  title?: string;
+  url?: string;
+  filename?: string;
+  file_extension?: string;
+  score?: number;
+  domain?: string;
+  citations?: unknown[];
+};
 
 export interface ChatHistory {
   chat_id: string | null;
