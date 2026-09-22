@@ -2,10 +2,10 @@ apscheduler==3.11.0
 fastapi==0.121.3
 grpcio==1.76.0
 grpcio-tools==1.76.0
-langchain==0.3.27
+langchain==0.3.30
 langchain-cli==0.0.36
 langchain-community==0.3.27
-langchain-core==0.3.81
+langchain-core==0.3.85
 langchain-google-vertexai==2.0.15
 langchain_ibm==0.3.8
 langchain-ollama==0.2.3
