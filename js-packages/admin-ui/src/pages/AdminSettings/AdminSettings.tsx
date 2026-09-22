@@ -17,6 +17,7 @@
 import { ContainerFluid } from "@components/Form";
 import { Box, Typography } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { AppearanceSection } from "./AppearanceSection";
 import { ImportExportSection } from "./ImportExportSection";
 
@@ -28,14 +29,16 @@ import { ImportExportSection } from "./ImportExportSection";
  * page-level save step.
  */
 export function AdminSettings() {
+  const { t } = useTranslation();
+
   return (
     <ContainerFluid size="lg" flexColumn>
       <Box>
         <Typography component="h1" variant="h1" fontWeight="600">
-          Admin Settings
+          {t("pages.admin-settings.title")}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Manage the global preferences of the tenant.
+          {t("pages.admin-settings.description")}
         </Typography>
       </Box>
 

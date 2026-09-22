@@ -36,8 +36,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
+import type { TFunction } from "i18next";
 import type { ImportMode, ImportReport } from "openapi-generated";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useConfirmModal } from "utils/useConfirmModal";
 import {
   downloadConfigPackage,
@@ -48,16 +50,12 @@ import {
 } from "./configPackage";
 import { SettingsSection } from "./SettingsSection";
 
-const IMPORT_MODES: { value: ImportMode; label: string }[] = [
-  { value: "SKIP", label: "SKIP (default)" },
-  { value: "OVERWRITE", label: "OVERWRITE" },
+// Both labels carry the backend enum token, so both keep it verbatim; they go
+// through the catalog anyway, so a locale can gloss either one.
+const getImportModes = (t: TFunction): { value: ImportMode; label: string }[] => [
+  { value: "SKIP", label: t("pages.admin-settings.import-export.mode-skip") },
+  { value: "OVERWRITE", label: t("pages.admin-settings.import-export.mode-overwrite") },
 ];
-
-const MODE_HELP =
-  "SKIP leaves the entities that already exist untouched. OVERWRITE replaces them with the ones in the package.";
-
-const SECRETS_NOTE =
-  'Sensitive values (secrets) are stripped and replaced with "__REDACTED__" before the file is exported.';
 
 type SelectedFile = {
   name: string;
@@ -85,19 +83,22 @@ function requestErrorMessage(error: unknown, fallback: string): string {
 
 /** Exports the tenant configuration to a file and imports one back. */
 export function ImportExportSection() {
+  const { t } = useTranslation();
   const restClient = useRestClient();
   const showToast = useToast();
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const [file, setFile] = React.useState<SelectedFile | null>(null);
-  const [fileError, setFileError] = React.useState<string | null>(null);
+  const [fileErrorKey, setFileErrorKey] = React.useState<string | null>(null);
   const [mode, setMode] = React.useState<ImportMode>("SKIP");
   const [outcome, setOutcome] = React.useState<ImportOutcome | null>(null);
 
+  const importModes = React.useMemo(() => getImportModes(t), [t]);
+
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
-    title: "Overwrite the current configuration?",
-    body: "OVERWRITE replaces every entity of this tenant that also appears in the package. The operation cannot be undone.",
-    labelConfirm: "Import and overwrite",
+    title: t("pages.admin-settings.import-export.confirm-overwrite-title"),
+    body: t("pages.admin-settings.import-export.confirm-overwrite-body"),
+    labelConfirm: t("pages.admin-settings.import-export.confirm-overwrite-label"),
   });
 
   const exportMutation = useMutation({
@@ -106,15 +107,17 @@ export function ImportExportSection() {
       downloadConfigPackage(configPackage);
       showToast({
         displayType: "success",
-        title: "Configuration exported",
-        content: `${configPackage.entities?.length ?? 0} entities downloaded.`,
+        title: t("pages.admin-settings.import-export.export-success-title"),
+        content: t("pages.admin-settings.import-export.export-success-content", {
+          total: configPackage.entities?.length ?? 0,
+        }),
       });
     },
     onError: (error: unknown) => {
       showToast({
         displayType: "error",
-        title: "Export failed",
-        content: requestErrorMessage(error, "The tenant configuration could not be exported."),
+        title: t("pages.admin-settings.import-export.export-error-title"),
+        content: requestErrorMessage(error, t("pages.admin-settings.import-export.export-error-content")),
       });
     },
   });
@@ -138,11 +141,8 @@ export function ImportExportSection() {
       setOutcome(null);
       showToast({
         displayType: "error",
-        title: "Import failed",
-        content: requestErrorMessage(
-          error,
-          "The backend rejected the package. Nothing was applied: the import runs in a single transaction.",
-        ),
+        title: t("pages.admin-settings.import-export.import-error-title"),
+        content: requestErrorMessage(error, t("pages.admin-settings.import-export.import-error-content")),
       });
     },
   });
@@ -153,10 +153,10 @@ export function ImportExportSection() {
     const result = parseConfigPackage(await selected.text());
     if (result.ok) {
       setFile({ name: selected.name, parsed: result.parsed });
-      setFileError(null);
+      setFileErrorKey(null);
     } else {
       setFile(null);
-      setFileError(result.error);
+      setFileErrorKey(result.errorKey);
     }
   };
 
@@ -177,16 +177,16 @@ export function ImportExportSection() {
   return (
     <SettingsSection
       icon={<SwapVertOutlinedIcon />}
-      title="Import / Export"
-      description="Move the tenant configuration between environments."
+      title={t("pages.admin-settings.import-export.title")}
+      description={t("pages.admin-settings.import-export.description")}
     >
       <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3 }}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="h4" fontWeight="600" gutterBottom>
-            Export configuration
+            {t("pages.admin-settings.import-export.export-title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Download the current tenant configuration as a versioned JSON file.
+            {t("pages.admin-settings.import-export.export-description")}
           </Typography>
           <Button
             variant="outlined"
@@ -196,7 +196,7 @@ export function ImportExportSection() {
             disabled={exportMutation.isLoading}
             onClick={() => exportMutation.mutate()}
           >
-            Export configuration
+            {t("pages.admin-settings.import-export.export-title")}
           </Button>
         </Box>
 
@@ -204,10 +204,10 @@ export function ImportExportSection() {
 
         <Box sx={{ flex: 1 }}>
           <Typography variant="h4" fontWeight="600" gutterBottom>
-            Import configuration
+            {t("pages.admin-settings.import-export.import-title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Select a JSON package exported from OpenK9.
+            {t("pages.admin-settings.import-export.import-description")}
           </Typography>
 
           <input
@@ -227,31 +227,36 @@ export function ImportExportSection() {
               gap: 1.5,
               borderRadius: 2.5,
               border: "1px dashed",
-              borderColor: fileError ? "error.main" : "divider",
+              borderColor: fileErrorKey ? "error.main" : "divider",
               justifyContent: "center",
               textAlign: "left",
             }}
           >
             <UploadFileOutlinedIcon color="action" />
             <Box>
-              <Typography variant="body2">{file ? file.name : "Drop the JSON file here"}</Typography>
+              <Typography variant="body2">
+                {file ? file.name : t("pages.admin-settings.import-export.dropzone-title")}
+              </Typography>
               <Typography variant="body2" color="text.secondary">
                 {file
-                  ? `schema ${file.parsed.schemaVersion} · ${file.parsed.entities.length} entities`
-                  : "or click to select it"}
+                  ? t("pages.admin-settings.import-export.file-summary", {
+                      schemaVersion: file.parsed.schemaVersion,
+                      total: file.parsed.entities.length,
+                    })
+                  : t("pages.admin-settings.import-export.dropzone-hint")}
               </Typography>
             </Box>
           </ButtonBase>
 
-          {fileError && (
+          {fileErrorKey && (
             <Alert severity="error" sx={{ mt: 1.5 }}>
-              {fileError}
+              {t(fileErrorKey)}
             </Alert>
           )}
 
           <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 0.5 }}>
-            <Typography variant="body2">Import mode</Typography>
-            <Tooltip title={MODE_HELP}>
+            <Typography variant="body2">{t("pages.admin-settings.import-export.mode-label")}</Typography>
+            <Tooltip title={t("pages.admin-settings.import-export.mode-help")}>
               <InfoOutlinedIcon fontSize="small" color="action" />
             </Tooltip>
           </Box>
@@ -262,7 +267,7 @@ export function ImportExportSection() {
             onChange={(event) => setMode(event.target.value === "OVERWRITE" ? "OVERWRITE" : "SKIP")}
             sx={{ mt: 0.5, minWidth: 200 }}
           >
-            {IMPORT_MODES.map((importMode) => (
+            {importModes.map((importMode) => (
               <MenuItem key={importMode.value} value={importMode.value}>
                 {importMode.label}
               </MenuItem>
@@ -274,7 +279,11 @@ export function ImportExportSection() {
               variant="contained"
               startIcon={
                 importMutation.isLoading ? (
-                  <CircularProgress size={16} color="inherit" aria-label="Import in progress" />
+                  <CircularProgress
+                    size={16}
+                    color="inherit"
+                    aria-label={t("pages.admin-settings.import-export.import-in-progress-aria")}
+                  />
                 ) : (
                   <UploadOutlinedIcon />
                 )
@@ -283,11 +292,11 @@ export function ImportExportSection() {
               aria-busy={importMutation.isLoading}
               onClick={() => void onImport()}
             >
-              Import configuration
+              {t("pages.admin-settings.import-export.import-title")}
             </Button>
             {/* Always rendered, so the change of content is announced. */}
             <Typography variant="body2" color="text.secondary" role="status" aria-live="polite" sx={{ minHeight: 20 }}>
-              {importMutation.isLoading ? "Importing the configuration…" : ""}
+              {importMutation.isLoading ? t("pages.admin-settings.import-export.importing-status") : ""}
             </Typography>
           </Box>
         </Box>
@@ -295,20 +304,27 @@ export function ImportExportSection() {
 
       {outcome && (
         <Alert severity="success" sx={{ mt: 2.5 }}>
-          <AlertTitle>Import completed</AlertTitle>
+          <AlertTitle>{t("pages.admin-settings.import-export.result-title")}</AlertTitle>
           <Typography variant="body2">
-            {outcome.summary.created ?? 0} created · {outcome.summary.overwritten ?? 0} overwritten ·{" "}
-            {outcome.summary.skipped ?? 0} skipped
+            {t("pages.admin-settings.import-export.result-counts", {
+              created: outcome.summary.created ?? 0,
+              overwritten: outcome.summary.overwritten ?? 0,
+              skipped: outcome.summary.skipped ?? 0,
+            })}
           </Typography>
           {outcome.secrets.length > 0 && (
             <Box sx={{ mt: 1 }}>
               <Typography variant="body2" fontWeight="600">
-                Secrets to enter again:
+                {t("pages.admin-settings.import-export.secrets-to-reenter")}
               </Typography>
               <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                 {outcome.secrets.map((secret) => (
                   <Typography component="li" variant="body2" key={`${secret.type}-${secret.key}`}>
-                    {secret.type} “{secret.key}”: {secret.fields.join(", ")}
+                    {t("pages.admin-settings.import-export.secret-entry", {
+                      type: secret.type,
+                      entityKey: secret.key,
+                      fields: secret.fields.join(", "),
+                    })}
                   </Typography>
                 ))}
               </Box>
@@ -320,7 +336,7 @@ export function ImportExportSection() {
       <Box sx={{ mt: 2.5, display: "flex", alignItems: "center", gap: 0.5 }}>
         <InfoOutlinedIcon fontSize="small" color="action" />
         <Typography variant="body2" color="text.secondary">
-          {SECRETS_NOTE}
+          {t("pages.admin-settings.import-export.secrets-note")}
         </Typography>
       </Box>
 

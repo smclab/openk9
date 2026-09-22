@@ -39,7 +39,7 @@
     "query-analysis": "Analisi query",
     "rules": "Regole",
     "annotators": "Annotatori",
-    "admin-settings": "Impostazioni amministratore"
+    "admin-settings": "Impostazioni di amministrazione"
   },
   "common": {
     "active": "Attivo",
@@ -261,6 +261,56 @@
     "vector-size": "Dimensione vettore"
   },
   "pages": {
+    "admin-settings": {
+      "title": "Impostazioni di amministrazione",
+      "description": "Gestisci le preferenze globali del tenant.",
+      "appearance": {
+        "title": "Aspetto",
+        "description": "Scegli l'aspetto dell'interfaccia di OpenK9.",
+        "dark": "Scuro",
+        "dark-description": "Usa il tema scuro.",
+        "light": "Chiaro",
+        "light-description": "Usa il tema chiaro."
+      },
+      "import-export": {
+        "title": "Importa / Esporta",
+        "description": "Sposta la configurazione del tenant da un ambiente all'altro.",
+        "export-title": "Esporta configurazione",
+        "export-description": "Scarica la configurazione attuale del tenant come file JSON versionato.",
+        "export-success-title": "Configurazione esportata",
+        "export-success-content": "Entità scaricate: {{total}}",
+        "export-error-title": "Errore di esportazione",
+        "export-error-content": "Impossibile esportare la configurazione del tenant",
+        "import-title": "Importa configurazione",
+        "import-description": "Seleziona un pacchetto JSON esportato da OpenK9.",
+        "dropzone-title": "Trascina qui il file JSON",
+        "dropzone-hint": "oppure clicca per selezionarlo",
+        "file-summary": "schema {{schemaVersion}} · entità: {{total}}",
+        "mode-label": "Modalità di importazione",
+        "mode-skip": "SKIP (predefinito)",
+        "mode-overwrite": "OVERWRITE",
+        "mode-help": "SKIP lascia invariate le entità già esistenti. OVERWRITE le sostituisce con quelle contenute nel pacchetto.",
+        "import-in-progress-aria": "Importazione in corso",
+        "importing-status": "Importazione della configurazione in corso...",
+        "confirm-overwrite-title": "Vuoi sovrascrivere la configurazione attuale?",
+        "confirm-overwrite-body": "OVERWRITE sostituisce tutte le entità di questo tenant presenti anche nel pacchetto. L'azione è irreversibile.",
+        "confirm-overwrite-label": "Importa e sovrascrivi",
+        "import-error-title": "Errore di importazione",
+        "import-error-content": "Il server ha rifiutato il pacchetto. Non è stato applicato nulla: l'importazione avviene in un'unica transazione.",
+        "result-title": "Importazione completata",
+        "result-counts": "Entità create: {{created}} · sovrascritte: {{overwritten}} · saltate: {{skipped}}",
+        "secrets-to-reenter": "Valori sensibili da reinserire:",
+        "secret-entry": "{{type}} \"{{entityKey}}\": {{fields}}",
+        "secrets-note": "I valori sensibili (secret) vengono rimossi e sostituiti con \"__REDACTED__\" prima dell'esportazione del file.",
+        "parse-error": {
+          "invalid-json": "Il file non è un JSON valido.",
+          "not-a-package": "Il file non contiene un pacchetto di configurazione.",
+          "missing-schema-version": "Il pacchetto non contiene schemaVersion: non è un'esportazione di configurazione OpenK9.",
+          "no-entities": "Il pacchetto non contiene entità da importare.",
+          "entity-without-type": "Il pacchetto contiene entità senza tipo."
+        }
+      }
+    },
     "analyzers": {
       "title": "Analizzatori",
       "description": "In questa sezione puoi creare e gestire gli analizzatori da usare per definire logiche di analisi avanzate quando crei gli indici dati. Per approfondire consulta la documentazione ufficiale di Opensearch.",

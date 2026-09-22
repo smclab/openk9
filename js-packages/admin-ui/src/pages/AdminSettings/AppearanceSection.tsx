@@ -19,6 +19,8 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import { Box, FormControlLabel, Paper, Radio, RadioGroup, Typography } from "@mui/material";
 import React from "react";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 import { ThemeMode, useThemeMode } from "utils/themeMode";
 import { SettingsSection } from "./SettingsSection";
 
@@ -29,17 +31,29 @@ type ModeOption = {
   icon: React.ReactNode;
 };
 
-const MODE_OPTIONS: ModeOption[] = [
-  { mode: "dark", label: "Dark", description: "Use the dark theme.", icon: <DarkModeOutlinedIcon /> },
-  { mode: "light", label: "Light", description: "Use the light theme.", icon: <LightModeOutlinedIcon /> },
+const getModeOptions = (t: TFunction): ModeOption[] => [
+  {
+    mode: "dark",
+    label: t("pages.admin-settings.appearance.dark"),
+    description: t("pages.admin-settings.appearance.dark-description"),
+    icon: <DarkModeOutlinedIcon />,
+  },
+  {
+    mode: "light",
+    label: t("pages.admin-settings.appearance.light"),
+    description: t("pages.admin-settings.appearance.light-description"),
+    icon: <LightModeOutlinedIcon />,
+  },
 ];
 
 /** Theme selector. The choice applies and is stored as soon as it is picked. */
 export function AppearanceSection() {
+  const { t } = useTranslation();
   const { mode, setMode } = useThemeMode();
+  const modeOptions = React.useMemo(() => getModeOptions(t), [t]);
 
   const onModeChange = (_event: React.ChangeEvent<HTMLInputElement>, value: string) => {
-    const option = MODE_OPTIONS.find((candidate) => candidate.mode === value);
+    const option = modeOptions.find((candidate) => candidate.mode === value);
     if (option) {
       setMode(option.mode);
     }
@@ -48,8 +62,8 @@ export function AppearanceSection() {
   return (
     <SettingsSection
       icon={<PaletteOutlinedIcon />}
-      title="Appearance"
-      description="Choose how the OpenK9 interface looks."
+      title={t("pages.admin-settings.appearance.title")}
+      description={t("pages.admin-settings.appearance.description")}
     >
       <RadioGroup
         name="theme-mode"
@@ -57,7 +71,7 @@ export function AppearanceSection() {
         onChange={onModeChange}
         sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 1.5 }}
       >
-        {MODE_OPTIONS.map((option) => (
+        {modeOptions.map((option) => (
           <Paper
             key={option.mode}
             variant="outlined"

@@ -42,7 +42,12 @@ export type ParsedPackage = {
   schemaVersion: string;
 };
 
-export type ParseResult = { ok: true; parsed: ParsedPackage } | { ok: false; error: string };
+/**
+ * On failure the result carries `errorKey`, a translation catalog key rather
+ * than a message: this module stays free of React and of the i18n instance, so
+ * the caller is the one that renders it through `t`.
+ */
+export type ParseResult = { ok: true; parsed: ParsedPackage } | { ok: false; errorKey: string };
 
 /**
  * Validates the shape the import endpoint requires: a schema version and a
@@ -54,25 +59,25 @@ export function parseConfigPackage(text: string): ParseResult {
   try {
     content = JSON.parse(text);
   } catch {
-    return { ok: false, error: "The file is not valid JSON." };
+    return { ok: false, errorKey: "pages.admin-settings.import-export.parse-error.invalid-json" };
   }
 
   if (!isRecord(content)) {
-    return { ok: false, error: "The file does not contain a configuration package." };
+    return { ok: false, errorKey: "pages.admin-settings.import-export.parse-error.not-a-package" };
   }
 
   const { schemaVersion, entities } = content;
 
   if (typeof schemaVersion !== "string" || schemaVersion.length === 0) {
-    return { ok: false, error: "The package has no schemaVersion: it is not an OpenK9 configuration export." };
+    return { ok: false, errorKey: "pages.admin-settings.import-export.parse-error.missing-schema-version" };
   }
 
   if (!Array.isArray(entities) || entities.length === 0) {
-    return { ok: false, error: "The package contains no entities to import." };
+    return { ok: false, errorKey: "pages.admin-settings.import-export.parse-error.no-entities" };
   }
 
   if (!entities.every(isConfigEntity)) {
-    return { ok: false, error: "The package contains entities without a type." };
+    return { ok: false, errorKey: "pages.admin-settings.import-export.parse-error.entity-without-type" };
   }
 
   return { ok: true, parsed: { value: content, entities, schemaVersion } };

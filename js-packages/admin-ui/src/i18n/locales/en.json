@@ -261,6 +261,56 @@
     "vector-size": "Vector Size"
   },
   "pages": {
+    "admin-settings": {
+      "title": "Admin Settings",
+      "description": "Manage the global preferences of the tenant.",
+      "appearance": {
+        "title": "Appearance",
+        "description": "Choose how the OpenK9 interface looks.",
+        "dark": "Dark",
+        "dark-description": "Use the dark theme.",
+        "light": "Light",
+        "light-description": "Use the light theme."
+      },
+      "import-export": {
+        "title": "Import / Export",
+        "description": "Move the tenant configuration between environments.",
+        "export-title": "Export configuration",
+        "export-description": "Download the current tenant configuration as a versioned JSON file.",
+        "export-success-title": "Configuration exported",
+        "export-success-content": "Entities downloaded: {{total}}",
+        "export-error-title": "Export failed",
+        "export-error-content": "The tenant configuration could not be exported",
+        "import-title": "Import configuration",
+        "import-description": "Select a JSON package exported from OpenK9.",
+        "dropzone-title": "Drop the JSON file here",
+        "dropzone-hint": "or click to select it",
+        "file-summary": "schema {{schemaVersion}} · entities: {{total}}",
+        "mode-label": "Import mode",
+        "mode-skip": "SKIP (default)",
+        "mode-overwrite": "OVERWRITE",
+        "mode-help": "SKIP leaves the entities that already exist untouched. OVERWRITE replaces them with the ones in the package.",
+        "import-in-progress-aria": "Import in progress",
+        "importing-status": "Importing the configuration...",
+        "confirm-overwrite-title": "Overwrite the current configuration?",
+        "confirm-overwrite-body": "OVERWRITE replaces every entity of this tenant that also appears in the package. The operation cannot be undone.",
+        "confirm-overwrite-label": "Import and overwrite",
+        "import-error-title": "Import failed",
+        "import-error-content": "The server rejected the package. Nothing was applied: the import runs in a single transaction.",
+        "result-title": "Import completed",
+        "result-counts": "Created: {{created}} · Overwritten: {{overwritten}} · Skipped: {{skipped}}",
+        "secrets-to-reenter": "Secrets to enter again:",
+        "secret-entry": "{{type}} \"{{entityKey}}\": {{fields}}",
+        "secrets-note": "Sensitive values (secrets) are stripped and replaced with \"__REDACTED__\" before the file is exported.",
+        "parse-error": {
+          "invalid-json": "The file is not valid JSON.",
+          "not-a-package": "The file does not contain a configuration package.",
+          "missing-schema-version": "The package has no schemaVersion: it is not an OpenK9 configuration export.",
+          "no-entities": "The package contains no entities to import.",
+          "entity-without-type": "The package contains entities without a type."
+        }
+      }
+    },
     "analyzers": {
       "title": "Analyzers",
       "description": "In this section you can create and handle Analyzers to use to define advanced analysis logic when you create Data Indices. To go into detail about Analyzers check official Opensearch Documentation.",
