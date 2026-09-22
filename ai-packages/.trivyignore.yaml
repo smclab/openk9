@@ -13,4 +13,14 @@
 #     - id: CVE-YYYY-NNNNN
 #       statement: "<why not exploitable / why no fix yet> (<module>)"
 #       expired_at: YYYY-MM-DD   # omit for permanent false positives
-vulnerabilities: []
+vulnerabilities:
+  - id: GHSA-6v7p-g79w-8964
+    statement: "msgpack 1.1.2 vendored inside pip's own bom.cdx.json, not an installed
+      package: no PkgPath, and pip 26.2.1 is the latest release on PyPI, so the module
+      cannot bump it. Detected on embedding-modules. Review when a newer pip ships."
+    expired_at: 2026-12-22
+  - id: CVE-2025-47273
+    statement: "setuptools 70.3.0 vendored inside pip's own bom.cdx.json, not an installed
+      package: no PkgPath, and pip 26.2.1 is the latest release on PyPI, so the module
+      cannot bump it. Detected on embedding-modules. Review when a newer pip ships."
+    expired_at: 2026-12-22
