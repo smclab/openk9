@@ -27,7 +27,7 @@ export function InputBooleanSimple({
   keyofF: string;
   description: string;
   value: boolean;
-  onChange(event: any): void;
+  onChange(event: React.ChangeEvent<HTMLInputElement>, checked: boolean): void;
   disabled?: boolean;
 }) {
   return (

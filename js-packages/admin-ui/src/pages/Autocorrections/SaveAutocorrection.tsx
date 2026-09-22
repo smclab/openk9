@@ -86,11 +86,13 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
           });
           navigate(`/autocorrections`);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error during onCompleted processing:", err);
         toast({
           title: t("pages.autocorrections.unexpected-error"),
-          content: t("pages.autocorrections.impossible-to-action", { action: err.message }),
+          content: t("pages.autocorrections.impossible-to-action", {
+            action: err instanceof Error ? err.message : String(err),
+          }),
           displayType: "error",
         });
       }
@@ -142,7 +144,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
   });
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [

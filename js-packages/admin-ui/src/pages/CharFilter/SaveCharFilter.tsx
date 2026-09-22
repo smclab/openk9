@@ -123,7 +123,7 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
   const recapSections = React.useMemo(
     () =>
       mappingCardRecap({
-        form: form as any,
+        form,
         sections: [
           {
             label: t("pages.char-filters.recap-label"),

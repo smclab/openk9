@@ -26,7 +26,7 @@ import { useDeleteSearchConfigMutation, useSearchConfigsQuery } from "../../grap
 export function SearchConfigs() {
   const { t } = useTranslation();
   const searchConfigQuery = useSearchConfigsQuery();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
@@ -98,7 +98,7 @@ export function SearchConfigs() {
             {
               label: t("common.edit"),
               action: (searchConfig) => {
-                searchConfig.id &&
+                searchConfig?.id &&
                   navigate(`/search-config/${searchConfig?.id}`, {
                     replace: true,
                   });

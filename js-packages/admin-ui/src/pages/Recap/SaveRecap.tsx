@@ -23,12 +23,15 @@ import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownR
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import Backdrop from "@mui/material/Backdrop";
 import Grow from "@mui/material/Grow";
+import { FormFieldReader } from "@components/Form/Form/useForm";
 import RecapDatasource, { areaType } from "@pages/datasources/RecapDatasource";
+
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export type RecapField = {
   key: string;
   label: string;
-  value: string | number | boolean | Record<string, any> | Array<any> | null;
+  value: JsonValue;
   type?: "string" | "number" | "boolean" | "json" | "array";
   isValid?: boolean;
   keyNotView?: string;
@@ -45,31 +48,22 @@ export type RecapSingleSection = {
   };
 };
 
-export type formType = {
-  id: string;
-  inputProps<K extends keyof any>(
-    field: K,
-  ): {
-    value: any;
-    validationMessages: string[];
-  };
-};
-
-function looksLikeJsonString(value: any): value is string {
+function looksLikeJsonString(value: unknown): value is string {
   if (typeof value !== "string") return false;
   const v = value.trim();
   return (v.startsWith("{") && v.endsWith("}")) || (v.startsWith("[") && v.endsWith("]"));
 }
 
-function safeJsonParse(value: string): any | null {
+function safeJsonParse(value: string): JsonValue | null {
   try {
-    return JSON.parse(value);
+    // JSON.parse restituisce `any`: l'unico punto in cui i dati entrano senza forma nota.
+    return JSON.parse(value) as JsonValue;
   } catch {
     return null;
   }
 }
 
-function detectValueType(value: any): RecapField["type"] {
+function detectValueType(value: unknown): RecapField["type"] {
   if (Array.isArray(value)) return "array";
   if (typeof value === "number") return "number";
   if (typeof value === "boolean") return "boolean";
@@ -83,15 +77,20 @@ function detectValueType(value: any): RecapField["type"] {
   return "string";
 }
 
-function normalizeValue(value: any, type?: RecapField["type"]) {
-  if ((type === "json" || type === "array") && typeof value === "string" && looksLikeJsonString(value)) {
+function normalizeValue(value: unknown, type?: RecapField["type"]): JsonValue {
+  if ((type === "json" || type === "array") && looksLikeJsonString(value)) {
     const parsed = safeJsonParse(value);
     if (parsed !== null) return parsed;
   }
 
-  if (type === "array") return value ?? [];
-  if (type === "json") return value ?? {};
-  return value ?? null;
+  if (value === null || value === undefined) {
+    if (type === "array") return [];
+    if (type === "json") return {};
+    return null;
+  }
+
+  // I valori del form arrivano da GraphQL/JSON: unico punto in cui assumono forma JSON.
+  return value as JsonValue;
 }
 
 export default function Recap({
@@ -348,17 +347,17 @@ export function mappingCardRecap({
   sections,
   valueOverride,
 }: {
-  form: formType;
+  form: FormFieldReader;
   sections: {
     label: string;
     cell: { key: string; label?: string; keyNotView?: string; jsonView?: boolean; divider?: boolean }[];
   }[];
-  valueOverride?: Record<string, any>;
+  valueOverride?: Record<string, unknown>;
 }): RecapSingleSection[] {
   return sections.map((sectionDef) => {
     const fields: RecapField[] = sectionDef.cell.flatMap((element) => {
       const { key, label, keyNotView, jsonView } = element;
-      const input = form.inputProps<any>(key as any);
+      const input = form.inputProps(key);
 
       const rawValue = valueOverride?.[key] !== undefined ? valueOverride[key] : input.value;
 
@@ -367,7 +366,7 @@ export function mappingCardRecap({
 
       if (keyNotView && type === "json") {
         if (Array.isArray(value)) {
-          value = value.map((item: any) => {
+          value = value.map((item) => {
             if (item && typeof item === "object" && !Array.isArray(item)) {
               const { [keyNotView]: _omit, ...rest } = item;
               return rest;
@@ -375,14 +374,14 @@ export function mappingCardRecap({
             return item;
           });
         } else if (value && typeof value === "object") {
-          const { [keyNotView]: _omit, ...rest } = value as Record<string, any>;
+          const { [keyNotView]: _omit, ...rest } = value;
           value = rest;
         }
       }
 
       // Case: object of object
       if (key === "queryParserConfig" && value && typeof value === "object" && !Array.isArray(value)) {
-        const parentObj = value as Record<string, any>;
+        const parentObj: { [key: string]: JsonValue } = value;
 
         const expanded: RecapField[] = [];
 
@@ -397,7 +396,7 @@ export function mappingCardRecap({
           });
 
           if (childObj && typeof childObj === "object") {
-            Object.entries(childObj as Record<string, any>).forEach(([childKey, childValue]) => {
+            Object.entries(childObj).forEach(([childKey, childValue]) => {
               expanded.push({
                 key: `${key}.${parentKey}.${childKey}`,
                 label: `  ${childKey}`, // indentazione visiva
@@ -417,7 +416,7 @@ export function mappingCardRecap({
           {
             key,
             label: label ?? `${key[0].toUpperCase()}${key.slice(1)}`,
-            value: rawValue,
+            value: normalizeValue(rawValue),
             type: "string",
             isValid: input.validationMessages.length === 0,
             keyNotView,

@@ -25,7 +25,7 @@ import { useDeleteTokenizerMutation, useTokenizersQuery } from "../../graphql-ge
 export function Tokenizers() {
   const { t } = useTranslation();
   const tokenizersQuery = useTokenizersQuery();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
@@ -91,7 +91,7 @@ export function Tokenizers() {
             {
               label: t("common.edit"),
               action: (tokenizer) => {
-                tokenizer.id &&
+                tokenizer?.id &&
                   navigate(`/tokenizer/${tokenizer?.id}`, {
                     replace: true,
                   });

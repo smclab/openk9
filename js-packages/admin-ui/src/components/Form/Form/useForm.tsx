@@ -11,7 +11,31 @@ function singeltonByKey<K, V>(factory: (key: K) => V) {
   };
 }
 
-export function useForm<F extends Record<string, any>>({
+export type FormInputProps<V> = {
+  id: string;
+  value: V;
+  onChange(value: V): void;
+  disabled: boolean;
+  validationMessages: Array<string>;
+  map<M>(mapValue: (value: V) => M, mapOnChange: (value: M) => V): Omit<FormInputProps<M>, "map">;
+};
+
+/**
+ * Vista in sola lettura di un form, per nome di campo. Qualunque `FormApi<F>`
+ * vi e' assegnabile: permette ai componenti generici (recap, wizard) di leggere
+ * un campo senza conoscere la forma del form ne' ricorrere a un cast.
+ */
+export type FormFieldReader = {
+  inputProps(field: string): { value: unknown; validationMessages: Array<string> };
+};
+
+export type FormApi<F extends object> = {
+  submit(): void;
+  inputProps<K extends keyof F>(field: K): FormInputProps<F[K]>;
+  canSubmit: boolean;
+};
+
+export function useForm<F extends object>({
   originalValues,
   initialValues,
   isLoading,
@@ -28,7 +52,7 @@ export function useForm<F extends Record<string, any>>({
   isLoading: boolean;
   onSubmit(data: F): void;
   getValidationMessages?(field: keyof F): Array<string>;
-}) {
+}): FormApi<F> {
   const [state, setState] = React.useState({
     values: initialValues,
     info: Object.fromEntries(Object.keys(initialValues).map((key) => [key, { isDirty: false }])) as {
@@ -43,11 +67,11 @@ export function useForm<F extends Record<string, any>>({
   );
   const onChangeByField = React.useMemo(
     () =>
-      singeltonByKey(<K extends keyof F>(field: K) => (value: F[K] | ((value: F[K]) => F[K])) => {
+      singeltonByKey(<K extends keyof F>(field: K) => (value: F[K] | ((current: F[K]) => F[K])) => {
         setState((state) => ({
           values: {
             ...state.values,
-            [field]: typeof value === "function" ? (value as any)(getValue(state, field)) : value,
+            [field]: value instanceof Function ? value(getValue(state, field)) : value,
           },
           info: {
             ...state.info,
@@ -59,7 +83,12 @@ export function useForm<F extends Record<string, any>>({
   );
   return {
     submit() {
-      onSubmit(Object.fromEntries(Object.keys(initialValues).map((key) => [key, getValue(state, key)])) as any);
+      const fields = Object.keys(initialValues) as Array<keyof F>;
+      const values = {} as F;
+      fields.forEach((field) => {
+        values[field] = getValue(state, field);
+      });
+      onSubmit(values);
     },
     inputProps<K extends keyof F>(field: K) {
       const id: string = field as string;

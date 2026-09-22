@@ -93,7 +93,7 @@ export function DocumentTypeTemplates() {
             {
               label: t("common.edit"),
               action: (docTypeTemplate) => {
-                docTypeTemplate.id &&
+                docTypeTemplate?.id &&
                   navigate(`/document-type-template/${docTypeTemplate?.id}`, {
                     replace: true,
                   });
@@ -102,7 +102,7 @@ export function DocumentTypeTemplates() {
             {
               label: t("common.delete"),
               action: (docTypeTemplate) => {
-                docTypeTemplate.id && setViewDeleteModal({ view: true, id: docTypeTemplate.id });
+                docTypeTemplate?.id && setViewDeleteModal({ view: true, id: docTypeTemplate.id });
               },
             },
           ]}

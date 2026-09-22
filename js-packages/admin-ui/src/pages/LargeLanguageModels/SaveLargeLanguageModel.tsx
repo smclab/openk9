@@ -156,7 +156,7 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
   }, [view, LargeLanguageModelId, form.inputProps("apiKey").value]);
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [

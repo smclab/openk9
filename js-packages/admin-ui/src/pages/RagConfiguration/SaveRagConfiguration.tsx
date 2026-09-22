@@ -182,7 +182,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
     : "";
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [
@@ -315,7 +315,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                             <Checkbox
                               name="EnableConversationTitle"
                               checked={form.inputProps("enableConversationTitle").value}
-                              onChange={(e: any, checked: any) => form.inputProps("enableConversationTitle").onChange(checked)}
+                              onChange={(e, checked) => form.inputProps("enableConversationTitle").onChange(checked)}
                               disabled={view === "view" || page === 1}
                             />
                           }

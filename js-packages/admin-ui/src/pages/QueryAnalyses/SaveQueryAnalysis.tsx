@@ -219,7 +219,7 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
   });
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [{ key: "name" }, { key: "description" }, { key: "stopWords" }],

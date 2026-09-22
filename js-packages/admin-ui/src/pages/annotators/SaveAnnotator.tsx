@@ -176,7 +176,7 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   };
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [

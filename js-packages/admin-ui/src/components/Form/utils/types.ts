@@ -64,7 +64,5 @@ export type ExtendedInputProps<T> = BaseInputProps<T> & {
   };
 
 
-export type KeyValue = {
-    [key: string]: any;
-};
+export type KeyValue = Record<string, unknown>;
 

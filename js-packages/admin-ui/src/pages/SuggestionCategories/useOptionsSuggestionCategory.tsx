@@ -14,7 +14,12 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-import { useDocTypeFieldsQuery, useUnboundDocTypeFieldsBySuggestionCategoryQuery } from "../../graphql-generated";
+import {
+  DocTypeFieldsQuery,
+  UnboundDocTypeFieldsBySuggestionCategoryQuery,
+  useDocTypeFieldsQuery,
+  useUnboundDocTypeFieldsBySuggestionCategoryQuery,
+} from "../../graphql-generated";
 
 export default function useOptionsSuggestionCategory({
   suggestionCategoryId,
@@ -29,20 +34,20 @@ export default function useOptionsSuggestionCategory({
     skip: suggestionCategoryId === "new",
   });
   const data = AllDocTypeData
-    ? extractAllData({ AllDocTypeData: AllDocTypeData as any })
-    : extractSuggestionData({ docTypeData: docTypeData as any });
+    ? extractAllData({ AllDocTypeData })
+    : extractSuggestionData({ docTypeData });
   return data;
 }
 
 function extractAllData({
   AllDocTypeData,
 }: {
-  AllDocTypeData?: { docTypeFields: { edges: [{ node: { id: string; name: string } }] } };
+  AllDocTypeData?: DocTypeFieldsQuery;
 }) {
   return (
     AllDocTypeData?.docTypeFields?.edges?.map((edge) => ({
-      value: edge.node.id,
-      label: edge.node.name,
+      value: edge?.node?.id ?? "",
+      label: edge?.node?.name ?? "",
     })) || []
   );
 }
@@ -50,12 +55,12 @@ function extractAllData({
 function extractSuggestionData({
   docTypeData,
 }: {
-  docTypeData?: { unboundDocTypeFieldsBySuggestionCategory: [{ id: string; name: string }] | null | undefined };
+  docTypeData?: UnboundDocTypeFieldsBySuggestionCategoryQuery;
 }) {
   return (
     docTypeData?.unboundDocTypeFieldsBySuggestionCategory?.map((item) => ({
-      value: item.id,
-      label: item.name,
+      value: item?.id ?? "",
+      label: item?.name ?? "",
     })) || []
   );
 }

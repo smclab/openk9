@@ -33,6 +33,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   useCreateOrUpdateSuggestionCategoryMutation,
+  DocTypeFieldsQuery,
   useDocTypeFieldsQuery,
   useSuggestionCategoryQuery,
 } from "../../graphql-generated";
@@ -130,7 +131,7 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
   const numericSuggestionCategoryId = Number(suggestionCategoryId);
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [
@@ -236,9 +237,9 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
 export const useOptions = (searchText?: string) => {
   const docTypes = useDocTypeFieldsQuery({ variables: { searchText } });
 
-  const getOptions = (data: any, key: "docTypeFields") => {
+  const getOptions = (data: DocTypeFieldsQuery | undefined, key: "docTypeFields") => {
     return (
-      data?.[key]?.edges?.map((item: { node: { id: string; name: string } }) => ({
+      data?.[key]?.edges?.map((item) => ({
         value: item?.node?.id || "",
         label: item?.node?.name || "",
       })) || []

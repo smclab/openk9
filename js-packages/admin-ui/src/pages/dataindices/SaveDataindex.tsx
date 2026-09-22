@@ -50,6 +50,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ChunkType,
+  CreateDataIndexMutationVariables,
   useAlignIndexMutation,
   useCreateDataIndexMutation,
   useDataIndexQuery,
@@ -249,7 +250,10 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     originalValues: dataindexData,
     isLoading: dataindexQuery.loading || createOrUpdateDataIndexModel.loading,
     onSubmit(values) {
-      const variables: any = {
+      const variables: CreateDataIndexMutationVariables = {
+        // `datasourceId` e' obbligatorio per la mutation: prima veniva impostato
+        // solo dentro una if e poteva mancare del tutto.
+        datasourceId: String(values.datasourceId?.id ?? ""),
         name: values.name,
         description: values.description,
         docTypeIds: values.docTypeIds,
@@ -258,9 +262,6 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         knnIndex: values.knnIndex,
       };
 
-      if (values.datasourceId?.id && Number(values.datasourceId.id) > 0) {
-        variables.datasourceId = Number(values.datasourceId.id);
-      }
 
       if (values.embeddingDocTypeFieldId?.id) {
         variables.embeddingDocTypeFieldId = values.embeddingDocTypeFieldId.id;
@@ -390,7 +391,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   const recapSections = useMemo(
     () =>
       mappingCardRecap({
-        form: form as any,
+        form,
         sections: [
           {
             cell: [

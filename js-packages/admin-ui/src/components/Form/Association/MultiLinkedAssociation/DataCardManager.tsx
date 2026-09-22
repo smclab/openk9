@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { Box } from "@mui/material";
+import { SelectOption } from "utils/getOptions";
 import { useEffect, useState } from "react";
 import DataCard from "./DataCard";
 import DataFormCard from "./DataFormCard";
@@ -68,7 +69,7 @@ export default function DataCardManager({
   onReset?: () => void;
   onAddField?: () => void;
   row: row;
-  options: any;
+  options: SelectOption[];
   isCreateButtonVisible?: boolean;
   onInit?: (methods: { openForm: () => void }) => void;
 }) {

@@ -18,6 +18,13 @@ import { Box, FormControl, InputLabel, MenuItem, SelectChangeEvent, Select as Se
 import React from "react";
 import { useTranslation } from "react-i18next";
 
+type DynamicFieldTemplate = {
+  title: string;
+  description: string;
+  Json: string;
+  visible: string;
+};
+
 export function MultiSelectForDinamicFields({
   id,
   setTitle,
@@ -31,10 +38,10 @@ export function MultiSelectForDinamicFields({
 }: {
   setTitle?: (value: string) => void;
   id: string;
-  templates: any;
-  onChangeDescription: any;
-  templateChoice: any;
-  setTemplateChoice: any;
+  templates: DynamicFieldTemplate[];
+  onChangeDescription(description: string): void;
+  templateChoice: unknown;
+  setTemplateChoice: React.Dispatch<React.SetStateAction<unknown>>;
   disabled?: boolean;
   valueSelect: string | null;
   setValueSelect: React.Dispatch<React.SetStateAction<string | null>>;
@@ -57,7 +64,7 @@ export function MultiSelectForDinamicFields({
             onChange={(event: SelectChangeEvent) => {
               const selectedValue = event.target.value;
               setValueSelect(selectedValue);
-              templates.map((element: any) => {
+              templates.map((element) => {
                 element.visible = "false";
                 if (element.title === selectedValue) {
                   element.visible = "true";
@@ -66,15 +73,16 @@ export function MultiSelectForDinamicFields({
                 }
               });
               const dataSelect = templates.find(
-                (element: { title: string; value: string }) => element.title === selectedValue,
+                (element) => element.title === selectedValue,
               );
+              if (!dataSelect) return;
               if (setTitle) {
                 setTitle(dataSelect.title);
               }
-              onChangeDescription(dataSelect!.description);
+              onChangeDescription(dataSelect.description);
             }}
           >
-            {templates.map((filter: { title: string }, index: number) => (
+            {templates.map((filter, index) => (
               <MenuItem key={index} value={filter.title}>
                 {filter.title}
               </MenuItem>

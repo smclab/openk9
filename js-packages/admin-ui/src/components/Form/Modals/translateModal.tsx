@@ -37,6 +37,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { DocumentNode } from "@apollo/client";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLanguagesOptionsQuery, useSuggestionCategoryQuery, useTabQuery } from "../../../graphql-generated";
@@ -50,7 +51,7 @@ interface TranslationDialogProps {
   initialData?: Partial<TranslationConfig>;
   entityId: string;
   entityType?: EntityType;
-  customMutation: any;
+  customMutation: DocumentNode;
 }
 
 interface TranslationConfig {

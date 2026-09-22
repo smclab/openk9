@@ -85,7 +85,7 @@ export function Dataindices() {
               {
                 label: t("common.view"),
                 action: (dataIndices) => {
-                  navigate(`/dataindex/${dataIndices.id}/mode/view`, {
+                  navigate(`/dataindex/${dataIndices?.id}/mode/view`, {
                     replace: true,
                   });
                 },

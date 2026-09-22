@@ -142,7 +142,7 @@ export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
   });
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [

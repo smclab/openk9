@@ -17,10 +17,11 @@
 import { useToast } from "@components/Form";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Handle, Position } from "react-flow-renderer";
+import { Handle, NodeProps, Position } from "react-flow-renderer";
 import { useCreateOrUpdateRuleQueryMutation, useDeleteRulesMutation } from "../../../graphql-generated";
+import { RuleNodeData } from "../Rules";
 
-export default function NodeGraphRuleDouble(props: any) {
+export default function NodeGraphRuleDouble(props: NodeProps<RuleNodeData>) {
   const { t } = useTranslation();
   const { data } = props;
   const [inputText, setInputText] = React.useState("");
@@ -35,8 +36,8 @@ export default function NodeGraphRuleDouble(props: any) {
 
   const fathers: string[] = [];
 
-  data.rules.forEach((rule: any) => {
-    fathers.push(rule.node.lhs);
+  data.rules.forEach((rule) => {
+    if (rule?.node?.lhs) fathers.push(rule.node.lhs);
   });
 
   const hasSon = labelParts.filter((x: string) => fathers.includes(x)).length;
@@ -232,18 +233,7 @@ export default function NodeGraphRuleDouble(props: any) {
                       {data.isDelete && !fathers.includes(labelParts[subNode - 1]) && hasSon === 0 && (
                         <button
                           onClick={() => {
-                            const removeRule = data?.rules?.find(
-                              (rules: {
-                                node: {
-                                  id: string;
-                                  name: string;
-                                  lhs: string;
-                                  rhs: string;
-                                };
-                              }) => {
-                                return rules.node.rhs === data.label;
-                              },
-                            );
+                            const removeRule = data?.rules?.find((rules) => rules?.node?.rhs === data.label);
                             deleteRuleMutate({
                               variables: { id: removeRule?.node?.id || "" },
                             });
@@ -283,7 +273,7 @@ export default function NodeGraphRuleDouble(props: any) {
                             variables: {
                               id: data.idAssociation,
                               name: data.fatherLabel + "_" + variableSymbol + labelParts.join(" "),
-                              lhs: data.fatherLabel,
+                              lhs: data.fatherLabel ?? "",
                               rhs: labelParts.join(" "),
                             },
                           });

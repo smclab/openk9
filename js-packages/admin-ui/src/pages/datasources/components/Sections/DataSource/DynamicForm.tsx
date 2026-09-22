@@ -49,10 +49,7 @@ export default function DynamicForm({
     }
   }, [template, jsonConfig]);
 
-  const changeValueTemplate = (
-    fieldName: string,
-    newValue: string | number | boolean | string[] | { location: string; title: string }[],
-  ) => {
+  const changeValueTemplate: ChangeValueKey = (fieldName, newValue) => {
     if (dynamicTemplate) {
       const updatedFields = dynamicTemplate.fields.map((field) => {
         if (field.name === fieldName) {
@@ -65,7 +62,7 @@ export default function DynamicForm({
               }));
             }
           } else if (field.type === "stringMap") {
-            updatedValues = newValue as any;
+            updatedValues = Array.isArray(newValue) ? newValue.filter(isStringMapEntry) : [];
           } else if (field.type === "select") {
             if (field.values && field.values.length > 0) {
               updatedValues = field?.values?.map((value) => ({
@@ -131,9 +128,10 @@ function convertJsonToTemplate({ template, jsonConfig }: { template: Template; j
       let updatedValues: FieldValue[] = [];
       if (field.type === "stringMap") {
         const obj = typeof fieldConfig === "object" && fieldConfig !== null ? fieldConfig : {};
-        updatedValues = Object.entries(obj).map(([key, value]) => ({
-          [key]: value,
-        })) as any[];
+        // TODO: qui i valori stringMap sono mappe `{ chiave: valore }`, mentre
+        // l'input del form ne produce coppie `{ key, value }`. Le due forme
+        // convivono da prima di questa migrazione: serve uniformarle.
+        updatedValues = Object.entries(obj).map(([key, value]) => ({ [key]: value })) as unknown as FieldValue[];
       } else if (field.type === "multiselect") {
         if (Array.isArray(field.values) && field.values.length > 0) {
           updatedValues = field.values.map((value) => ({
@@ -208,7 +206,7 @@ function convertTemplateToJson(template: Template): string {
         acc[field.name] = fieldValue as string;
         break;
       case "number":
-        acc[field.name] = toJsonNumber(fieldValue);
+        acc[field.name] = toJsonNumber(fieldValue) as ReturnType<typeof getDefaultValue>;
         break;
       case "boolean":
         acc[field.name] = fieldValue as boolean;
@@ -227,7 +225,7 @@ function convertTemplateToJson(template: Template): string {
         break;
     }
     return acc;
-  }, {} as { [key: string]: any });
+  }, {} as Record<string, ReturnType<typeof getDefaultValue>>);
   return JSON.stringify(jsonConfig);
 }
 
@@ -258,12 +256,12 @@ function getDefaultValue(field: Field): string | number | boolean | string[] | R
     }
   }
   if (field.type === "stringMap") {
-    const val = (field.values as KeyValue[]).reduce((acc, curr) => {
-      if (curr.key !== undefined && curr.value !== undefined) {
+    const val = field.values.reduce<Record<string, string>>((acc, curr) => {
+      if (curr.key !== undefined && typeof curr.value === "string") {
         acc[curr.key] = curr.value;
       }
       return acc;
-    }, {} as Record<string, string>);
+    }, {});
     return val;
   }
 
@@ -277,9 +275,10 @@ function getDefaultValue(field: Field): string | number | boolean | string[] | R
 }
 
 type FieldValue = {
-  value: string | number | Array<string> | boolean | KeyValue;
-  isDefault: boolean;
-  [key: string]: any;
+  value: string | number | Array<string> | boolean | Record<string, string>;
+  isDefault?: boolean;
+  /** Valorizzata solo per i campi `stringMap`, dove ogni valore e' una coppia. */
+  key?: string;
 };
 
 export type FieldValueWithLocation = {
@@ -322,9 +321,15 @@ export type Template = {
   fields: Field[];
 };
 
+export type StringMapEntry = { key: string; value: string };
+
+function isStringMapEntry(value: unknown): value is StringMapEntry {
+  return typeof value === "object" && value !== null && "key" in value && "value" in value;
+}
+
 export type ChangeValueKey = (
   fieldName: string,
-  newValue: string | number | boolean | string[] | { location: string; title: string }[],
+  newValue: string | number | boolean | string[] | { location: string; title: string }[] | StringMapEntry[],
 ) => void;
 
 export function GenerateDynamicForm({
@@ -341,10 +346,11 @@ export function GenerateDynamicForm({
     if (!templates || !templates.fields) return {};
     return templates.fields.reduce((acc, field) => {
       if (field.type === "stringMap") {
-        acc[field.name] = field?.values && field.values.length > 0 ? Object.assign({}, ...field.values) : {};
+        acc[field.name] =
+          field?.values && field.values.length > 0 ? (Object.assign({}, ...field.values) as Record<string, string>) : {};
       }
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, Record<string, string>>);
   }, [templates]);
 
   const renderField = (field: Field) => {
@@ -389,15 +395,15 @@ export function GenerateDynamicForm({
               key={field.name}
               defaultValue={
                 typeof firstValue === "object" && firstValue !== null
-                  ? Object.keys(firstValue).map((value: string) => ({
-                      key: value || "",
-                      value: (firstValue as KeyValue)[value] || "",
+                  ? Object.entries(firstValue).map(([key, value]) => ({
+                      key: key || "",
+                      value: value || "",
                     }))
                   : []
               }
               label={field.label}
               description={field.info}
-              onChange={(newMap) => changeValueKey(field.name, newMap as any)}
+              onChange={(newMap) => changeValueKey(field.name, newMap)}
             />
           );
         case "checkbox":
@@ -593,11 +599,12 @@ export function GenerateDynamicForm({
   );
 }
 
-function filterValidFields(template: any): Template | null {
-  if (!template || typeof template !== "object" || !Array.isArray(template.fields)) {
+function filterValidFields(template: unknown): Template | null {
+  if (!template || typeof template !== "object" || !("fields" in template) || !Array.isArray(template.fields)) {
     console.log("Template structure is invalid");
     return null;
   }
+  const templateFields: unknown[] = template.fields;
   const validTypes = [
     "text",
     "number",
@@ -613,9 +620,10 @@ function filterValidFields(template: any): Template | null {
     "stringMap",
     "multiselect",
   ];
-  const validFields = template.fields.filter((field: any) => {
-    const isFieldValid =
-      typeof field.label === "string" && typeof field.name === "string" && validTypes.includes(field.type);
+  const validFields = templateFields.filter((field): field is Field => {
+    if (!field || typeof field !== "object") return false;
+    const { label, name, type } = field as Partial<Field>;
+    const isFieldValid = typeof label === "string" && typeof name === "string" && validTypes.includes(type as string);
     if (!isFieldValid) {
       console.log("Invalid field:", field);
     }
@@ -647,10 +655,7 @@ export function DynamicFormArray({
       dynamicFormJson = convertTemplateToJson({ fields: dynamicTemplateUpdate.fields });
     }
 
-    const changeValueTemplate = (
-      fieldName: string,
-      newValue: string | number | boolean | string[] | Array<{ location: string; title: string }>,
-    ) => {
+    const changeValueTemplate: ChangeValueKey = (fieldName, newValue) => {
       if (dynamicTemplate) {
         const updatedFields = dynamicTemplate.fields.map((field) => {
           if (field.name === fieldName) {
@@ -663,7 +668,7 @@ export function DynamicFormArray({
                 }));
               }
             } else if (field.type === "stringMap") {
-              updatedValues = newValue as any;
+              updatedValues = Array.isArray(newValue) ? newValue.filter(isStringMapEntry) : [];
             } else if (field.type === "select") {
               if (field.values && field.values.length > 0) {
                 updatedValues = field?.values?.map((value) => ({

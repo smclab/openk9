@@ -33,7 +33,7 @@ export function TextInputSimple({
   label?: string;
   description?: string;
   value: string | number;
-  onChange(event: any): void;
+  onChange(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void;
   disabled?: boolean;
   isRequired?: boolean;
   sx?: SxProps<Theme> | undefined;

@@ -17,7 +17,11 @@
 import { useNavigate } from "react-router-dom";
 import { CustomForm, useGenerateDocumentTypesMutation } from "./Function";
 import { Section } from "./components/Sections/Connectors/ConfigureConnectors";
-import { ConnectionData } from "./types";
+import { ConnectionData, PluginDriverRequestBody } from "./types";
+import { defaultModal } from "./components/Sections/DataSource/ConfigureDatasource";
+import { ChangeValueKey, Template } from "./components/Sections/DataSource/DynamicForm";
+
+type ModalState = typeof defaultModal;
 import { SetStateAction } from "react";
 
 export type HeaderType = {
@@ -40,15 +44,15 @@ export type tabsPropsConstructor = {
   getHealthInfoWithoutId: () => Promise<void>;
   isView: boolean;
   setAreaEnabled: React.Dispatch<React.SetStateAction<Section>>;
-  setFormValues: React.Dispatch<React.SetStateAction<any>>;
-  setShowDialog: React.Dispatch<React.SetStateAction<any>>;
-  requestBody: any;
+  setFormValues: React.Dispatch<React.SetStateAction<ConnectionData>>;
+  setShowDialog: React.Dispatch<React.SetStateAction<ModalState>>;
+  requestBody: PluginDriverRequestBody;
   formCustom: CustomForm[] | undefined;
-  setFormCustom: React.Dispatch<React.SetStateAction<any>>;
+  setFormCustom: React.Dispatch<React.SetStateAction<CustomForm[] | undefined>>;
   datasourceId: string;
-  dynamicTemplate: any;
-  changeValueTemplate: any;
-  dynamicFormJson: any;
+  dynamicTemplate: Template | null;
+  changeValueTemplate: ChangeValueKey;
+  dynamicFormJson: string | null;
   loadingFormCustom: boolean;
   isRecap: boolean;
   setIsRecap: React.Dispatch<React.SetStateAction<boolean>>;

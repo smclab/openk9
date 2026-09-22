@@ -31,11 +31,11 @@ import {
 export function TokenFilters() {
   const { t } = useTranslation();
   const tokenFiltersQuery = useTokenFiltersQuery();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
-  const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
+  const [isAdd, setIsAdd] = React.useState<{ id: string | null | undefined; isVisible: boolean }>({ id: null, isVisible: false });
   const unboundListAnalyzer = useUnboundAnalyzersByTokenFilterQuery({
     variables: { tokenFilterId: Number(isAdd?.id) },
     skip: !isAdd.id,
@@ -103,7 +103,7 @@ export function TokenFilters() {
             {
               label: t("common.add"),
               action: (tokenFilters) => {
-                setIsAdd({ id: tokenFilters.id, isVisible: true });
+                setIsAdd({ id: tokenFilters?.id, isVisible: true });
               },
             },
             {
@@ -117,7 +117,7 @@ export function TokenFilters() {
             {
               label: t("common.edit"),
               action: (tokenFilters) => {
-                tokenFilters.id &&
+                tokenFilters?.id &&
                   navigate(`/token-filter/${tokenFilters?.id}`, {
                     replace: true,
                   });

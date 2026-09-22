@@ -14,7 +14,7 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-export const convertToInputFormat = (isoString: any) => {
+export const convertToInputFormat = (isoString: string) => {
   const date = new Date(isoString);
   const formattedDate = date.toISOString().slice(0, 19);
   return formattedDate;

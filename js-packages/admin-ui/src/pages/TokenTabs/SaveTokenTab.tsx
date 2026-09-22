@@ -178,7 +178,7 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         evictTokenTabAssociationLists(cache);
       }
     },
-    onCompleted(data: any) {
+    onCompleted(data) {
       if (data.tokenTabWithDocTypeField?.entity) {
         const isNew = tokenTabId === "new" ? "created" : "updated";
         toast({
@@ -192,7 +192,7 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       } else {
         toast({
           title: t("common.error"),
-          content: combineErrorMessages(data.tokenTab?.fieldValidators),
+          content: combineErrorMessages(data.tokenTabWithDocTypeField?.fieldValidators),
           displayType: "error",
         });
       }
@@ -279,7 +279,7 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
   });
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [

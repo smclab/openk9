@@ -75,19 +75,19 @@ export default function ReindexArea({
                 : undefined
             }
             onChange={(val) => {
-              setConnectionData((prev: any) => ({
+              setConnectionData((prev) => ({
                 ...prev,
                 dataIndex: { id: val.id, name: val.name },
               }));
             }}
             onClear={() => {
-              setConnectionData((prev: any) => ({
+              setConnectionData((prev) => ({
                 ...prev,
                 dataIndex: { id: "", name: "" },
               }));
             }}
             disabled={isView}
-            optionsDefault={connectionData.optionDataindex.map((item: any) => ({ value: item.id, label: item.name }))}
+            optionsDefault={connectionData.optionDataindex.map((item) => ({ value: item.id, label: item.name }))}
             description={t("pages.datasources.reindex.select-the-data-index-to-reindex-your")}
             sx={{ width: "100%" }}
           />

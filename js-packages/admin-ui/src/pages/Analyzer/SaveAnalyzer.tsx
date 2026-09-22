@@ -42,12 +42,14 @@ import {
   useCharfiltersQuery,
   useCreateOrUpdateAnalyzerMutation,
   useTokenFiltersQuery,
+  TokenizersQuery,
   useTokenizersQuery,
 } from "../../graphql-generated";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { TemplateAnalyzers } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
+import { associateType } from "utils/QueryFunctions";
 
 const getAssociationTabs = (t: TFunction): Array<{ label: string; id: string; tooltip?: string }> => [
   { label: t("pages.analyzers.char-filters"), id: "charFilters" },
@@ -200,7 +202,7 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
   const recapSections = React.useMemo(
     () =>
       mappingCardRecap({
-        form: form as any,
+        form,
         sections: [
           {
             cell: [
@@ -235,11 +237,11 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
 
   const handleAssociationSelect =
     (field: "charFilters" | "tokenFilters") =>
-      ({ items, isAdd }: { items: any[]; isAdd: boolean }) => {
+      ({ items, isAdd }: { items: associateType[]; isAdd: boolean }) => {
         const currentData = form.inputProps(field).value;
         const updatedData = isAdd
-          ? [...currentData, ...items.filter((item) => !currentData.some((d: any) => d.value === item.value))]
-          : currentData.filter((dataItem: any) => !items.some((item) => item.value === dataItem.value));
+          ? [...currentData, ...items.filter((item) => !currentData.some((d) => d.value === item.value))]
+          : currentData.filter((dataItem) => !items.some((item) => item.value === dataItem.value));
         form.inputProps(field).onChange(updatedData);
       };
 
@@ -391,10 +393,10 @@ const useAnalyzerData = ({
 const useOptions = () => {
   const searchConfigQuery = useTokenizersQuery();
 
-  const getOptions = (data: any, key: "tokenizers") =>
-    data?.[key]?.edges?.map((item: { node: { id: string; name: string } }) => ({
-      value: item.node.id || "",
-      label: item.node.name || "",
+  const getOptions = (data: TokenizersQuery | undefined, key: "tokenizers") =>
+    data?.[key]?.edges?.map((item) => ({
+      value: item?.node?.id || "",
+      label: item?.node?.name || "",
     })) || [];
 
   const OptionsTokenizer = getOptions(searchConfigQuery.data, "tokenizers");

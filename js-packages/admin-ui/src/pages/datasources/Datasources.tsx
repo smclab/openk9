@@ -34,7 +34,7 @@ export function Datasources() {
   const datasourcesQuery = useDataSourcesQuery();
   const theme = useTheme();
   const navigate = useNavigate();
-  const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
+  const [isAdd, setIsAdd] = React.useState<{ id: string | null | undefined; isVisible: boolean }>({ id: null, isVisible: false });
   const unboundListBuckets = useUnboundBucketsByDatasourceQuery({
     variables: { datasourceId: Number(isAdd?.id) },
     skip: !isAdd.id,
@@ -105,7 +105,7 @@ export function Datasources() {
               {
                 label: t("common.add"),
                 action: (datasources) => {
-                  setIsAdd({ id: datasources.id, isVisible: true });
+                  setIsAdd({ id: datasources?.id, isVisible: true });
                 },
               },
               {
@@ -119,7 +119,7 @@ export function Datasources() {
               {
                 label: t("common.edit"),
                 action: (datasources) => {
-                  datasources.id &&
+                  datasources?.id &&
                     navigate(`/data-source/${datasources?.id}/mode/edit/landingTab/datasource`, {
                       replace: true,
                     });

@@ -25,7 +25,7 @@ import { useAnnotatorsQuery, useDeleteAnnotatosMutation } from "../../graphql-ge
 export function Annotators() {
   const { t } = useTranslation();
   const annotatorsQuery = useAnnotatorsQuery();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
@@ -125,7 +125,7 @@ export function Annotators() {
             {
               label: t("common.edit"),
               action: (annotator) => {
-                annotator.id &&
+                annotator?.id &&
                   navigate(`/annotator/${annotator?.id}`, {
                     replace: true,
                   });

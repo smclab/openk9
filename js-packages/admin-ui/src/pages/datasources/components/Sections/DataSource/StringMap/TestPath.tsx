@@ -112,7 +112,7 @@ export function testJsonPath(
     return {
       valid: true,
       matched: Array.isArray(results) && results.length > 0,
-      results: results.map((r: any) => (typeof r === "object" ? JSON.stringify(r, null, 2) : String(r))),
+      results: (results as unknown[]).map((r) => (typeof r === "object" ? JSON.stringify(r, null, 2) : String(r))),
     };
   } catch (e) {
     return {

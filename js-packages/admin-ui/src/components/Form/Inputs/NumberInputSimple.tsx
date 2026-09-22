@@ -31,7 +31,7 @@ export function NumberInputSimple({
   isRequired?: boolean;
   value: number | string;
   disabled?: boolean;
-  onChange(event: any): void;
+  onChange(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void;
   setStyles?: SxProps<Theme> | undefined;
 }) {
   return (

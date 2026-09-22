@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { Stack, Box, Typography, TextField, Paper, Button } from "@mui/material";
+import { FormFieldReader } from "@components/Form/Form/useForm";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +33,7 @@ export function RecapData({
   multiAssociation,
   isCreate = true,
 }: {
-  form: any;
+  form: FormFieldReader & { submit(): void };
   page: number;
   isCreate?: boolean;
   submit: boolean;

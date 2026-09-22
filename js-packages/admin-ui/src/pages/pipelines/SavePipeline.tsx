@@ -51,8 +51,20 @@ import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { t } = useTranslation();
   const { pipelineId = "new", mode } = useParams();
-  type KeyValue = {
-    [key: string]: any;
+  type AssociatedEnrichItem = {
+    id: string | null | undefined;
+    name?: string | null;
+    description?: string | null;
+    weight: number;
+  };
+
+  type PipelineData = {
+    pipelineId?: string;
+    name?: string | null;
+    description?: string | null;
+    associatedEnrichItemsInitialValues?: AssociatedEnrichItem[];
+    associatedEnrichItemsOrder?: number[];
+    associatedEnrichItems: AssociatedEnrichItem[];
   };
 
   const pipelineQuery = useEnrichPipelineQuery({
@@ -67,9 +79,9 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
 
   const { changaSideNavigation } = useSideNavigation();
 
-  const pipelineValues = {};
+  const pipelineValues: PipelineData = { associatedEnrichItems: [] };
   const navigate = useNavigate();
-  const [pipelineData, setPipelineData] = React.useState<KeyValue>(pipelineValues);
+  const [pipelineData, setPipelineData] = React.useState<PipelineData>(pipelineValues);
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [modalDataLost, setModalDataLost] = useState(false);
@@ -92,7 +104,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
 
     originalValues: pipelineData,
     isLoading: pipelineQuery.loading || associatedEnrichItemsQuery.loading,
-    onSubmit(updated: any) {
+    onSubmit(updated) {
       setPipelineData((prev) => ({
         ...prev,
         ...updated,
@@ -104,7 +116,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
     if (pipelineData.associatedEnrichItems.length === 0) {
       return 0;
     }
-    return Math.max(0, ...pipelineData.associatedEnrichItems.map((item: any) => item?.weight ?? 0));
+    return Math.max(0, ...pipelineData.associatedEnrichItems.map((item) => item?.weight ?? 0));
   };
 
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
@@ -156,7 +168,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
     },
   });
 
-  const handleMoveUp = (index: any) => {
+  const handleMoveUp = (index: number) => {
     const enrichItems = [...pipelineData.associatedEnrichItems];
     if (index > 0 && enrichItems[index]?.weight !== undefined) {
       const orderToOverwrite = enrichItems[index - 1].weight;
@@ -170,7 +182,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
     }
   };
 
-  const handleMoveDown = (index: any) => {
+  const handleMoveDown = (index: number) => {
     const enrichItems = [...pipelineData.associatedEnrichItems];
     if (index < enrichItems.length - 1 && enrichItems[index]?.weight !== undefined) {
       const orderToOverwrite = enrichItems[index + 1].weight;
@@ -192,7 +204,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
   }, [mode]);
 
   React.useEffect(() => {
-    let pipelineValues: KeyValue = {
+    let pipelineValues: PipelineData = {
       pipelineId: pipelineId,
       name: "",
       description: "",
@@ -249,7 +261,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
   }
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [
@@ -264,7 +276,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       associatedEnrichItems:
         form
           .inputProps("associatedEnrichItems")
-          .value?.map((e: any, index: number) => ({ [index + 1]: e.name || e.label })) || [],
+          .value?.map((e, index) => ({ [index + 1]: e.name })) || [],
     },
   });
 
@@ -297,7 +309,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                     {enrichItemsClean.map((item) => {
                       if (
                         !pipelineData.associatedEnrichItems.some(
-                          (enrichItem: { id: string }) => enrichItem.id === item.id,
+                          (enrichItem) => enrichItem.id === item.id,
                         )
                       ) {
                         return (
@@ -432,7 +444,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
               </TableRow>
             </TableHead>
             <TableBody>
-              {pipelineData.associatedEnrichItems.map((item: any, index: any) => (
+              {pipelineData.associatedEnrichItems.map((item, index) => (
                 <TableRow key={item.id}>
                   <TableCell>
                     {item.weight !== 1 && (
@@ -550,9 +562,9 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                 createOrUpdatePipelineMutate({
                   variables: {
                     id: pipelineData.pipelineId !== "new" ? pipelineData.pipelineId : null,
-                    name: pipelineData.name,
-                    description: pipelineData.description,
-                    items: pipelineData.associatedEnrichItems.map((val: { id: string; weight: number }) => ({
+                    name: pipelineData.name ?? "",
+                    description: pipelineData.description ?? "",
+                    items: pipelineData.associatedEnrichItems.map((val) => ({
                       enrichItemId: val.id,
                       weight: val.weight,
                     })),
@@ -581,9 +593,9 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
             createOrUpdatePipelineMutate({
               variables: {
                 id: pipelineData.pipelineId !== "new" ? pipelineData.pipelineId : null,
-                name: pipelineData.name,
-                description: pipelineData.description,
-                items: pipelineData.associatedEnrichItems.map((val: { id: string; weight: number }) => ({
+                name: pipelineData.name ?? "",
+                description: pipelineData.description ?? "",
+                items: pipelineData.associatedEnrichItems.map((val) => ({
                   enrichItemId: val.id,
                   weight: val.weight,
                 })),

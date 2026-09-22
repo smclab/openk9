@@ -25,7 +25,7 @@ import { useAnalyzersQuery, useDeleteAnalyzerMutation } from "../../graphql-gene
 export function Analyzers() {
   const { t } = useTranslation();
   const analyzerQuery = useAnalyzersQuery();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });

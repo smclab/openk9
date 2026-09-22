@@ -40,6 +40,7 @@ import {
 import { aclOption } from "@pages";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SelectOption } from "utils/getOptions";
 import { defaultActions, row, RowItem } from "./DataCardManager";
 import { DataFormElementConfig, RowInfo } from "./types";
 
@@ -47,7 +48,7 @@ type DataCardProps = {
   onCreateClick: () => void;
   config: DataFormElementConfig;
   row: row;
-  options: any;
+  options: SelectOption[];
   isSearcheable?: boolean;
   isCreateButtonVisible?: boolean;
 };
@@ -62,7 +63,7 @@ const FieldItem = ({
   field: RowInfo;
   callbackSaveData?(row: RowInfo | null | undefined, position: number): void;
   closeFieldItem?(): void;
-  doctypeOptions: any;
+  doctypeOptions: SelectOption[];
   position: number;
 }) => {
   const { t } = useTranslation();
@@ -100,8 +101,8 @@ const FieldItem = ({
               options={doctypeOptions}
               getOptionLabel={(option) => option.label}
               value={
-                doctypeOptions.find((opt: any) => opt.label === tempFields?.associatedLabel) ||
-                doctypeOptions.find((opt: any) => opt.label === field?.associatedLabel) ||
+                doctypeOptions.find((opt) => opt.label === tempFields?.associatedLabel) ||
+                doctypeOptions.find((opt) => opt.label === field?.associatedLabel) ||
                 null
               }
               onChange={(_, newValue) => {
@@ -144,7 +145,7 @@ const FieldItem = ({
   );
 };
 
-const RowItemComponent = ({ item, options, position }: { item: RowItem; options: any; position: number }) => {
+const RowItemComponent = ({ item, options, position }: { item: RowItem; options: SelectOption[]; position: number }) => {
   const [isEdit, setIsEdit] = React.useState(false);
   const Edit = item?.actions?.find((it) => it.label === "Edit");
   return (

@@ -38,7 +38,7 @@ export type UseOptionsResult = {
 };
 export type UseOptionsHook = (searchText: string, extraVariables?: Record<string, any>) => UseOptionsResult;
 
-type ConnectionLike<Node = any> =
+type ConnectionLike<Node = unknown> =
   | {
       __typename?: string;
       edges?: Array<{ node?: Node | null } | null> | null;
@@ -47,10 +47,16 @@ type ConnectionLike<Node = any> =
   | null
   | undefined;
 
+function readField(source: unknown, key: string): string {
+  if (typeof source !== "object" || source === null) return "";
+  const value = (source as Record<string, unknown>)[key];
+  return value === null || value === undefined ? "" : String(value);
+}
+
 export function makeUseOptionsHook<
   TData extends Record<string, unknown>,
   TVariables extends Record<string, unknown>,
-  TNode = any,
+  TNode = unknown,
 >(p: {
   useQuery: (o: {
     variables: TVariables & { searchText: string; first: number; after: string | null };
@@ -61,7 +67,7 @@ export function makeUseOptionsHook<
     fetchMore: (o: {
       variables: TVariables & { searchText: string; first: number; after: string | null };
       updateQuery: (prev: TData, ctx: { fetchMoreResult?: TData }) => TData;
-    }) => Promise<any>;
+    }) => Promise<unknown>;
   };
   connectionKey: keyof TData;
   toOption?: (n: TNode | undefined | null) => Option;
@@ -70,12 +76,16 @@ export function makeUseOptionsHook<
   const {
     useQuery,
     connectionKey,
-    toOption = (n: any) => ({ value: n?.id ?? "", label: n?.name ?? "" }),
+    toOption = (n) => ({ value: readField(n, "id"), label: readField(n, "name") }),
     first = 20,
   } = p;
-  return (searchText: string, extraVariables: Record<string, any> = {}) => {
+  return (searchText: string, extraVariables: Record<string, unknown> = {}) => {
     const { data, loading, fetchMore } = useQuery({
-      variables: { searchText, first, after: null, ...extraVariables } as any,
+      variables: { searchText, first, after: null, ...extraVariables } as TVariables & {
+        searchText: string;
+        first: number;
+        after: string | null;
+      },
       notifyOnNetworkStatusChange: true,
     });
     const conn = data?.[connectionKey] as ConnectionLike<TNode> | TNode[] | undefined;
@@ -99,11 +109,11 @@ export function makeUseOptionsHook<
               first,
               after: (conn as ConnectionLike<TNode>)?.pageInfo?.endCursor ?? null,
               ...extraVariables,
-            } as any,
-            updateQuery: (prev: any, { fetchMoreResult }: { fetchMoreResult?: any }) => {
+            } as TVariables & { searchText: string; first: number; after: string | null },
+            updateQuery: (prev, { fetchMoreResult }) => {
               if (!fetchMoreResult) return prev;
-              const prevConn = prev?.[connectionKey];
-              const nextConn = fetchMoreResult?.[connectionKey];
+              const prevConn = prev?.[connectionKey] as ConnectionLike<TNode> | TNode[] | undefined;
+              const nextConn = fetchMoreResult?.[connectionKey] as ConnectionLike<TNode> | TNode[] | undefined;
               if (Array.isArray(prevConn) && Array.isArray(nextConn)) {
                 return {
                   ...prev,
@@ -179,7 +189,7 @@ export const useEnrichPipelineOptions: UseOptionsHook = makeUseOptionsHook({
     });
     return {
       ...inner,
-      fetchMore: (opts: any) =>
+      fetchMore: (opts: { variables: { searchText: string; after: string | null } }) =>
         inner.fetchMore({
           ...opts,
           variables: {
@@ -187,7 +197,7 @@ export const useEnrichPipelineOptions: UseOptionsHook = makeUseOptionsHook({
             cursor: opts.variables.after ?? undefined,
           },
         }),
-    } as any;
+    };
   },
   connectionKey: "options",
   first: 20,

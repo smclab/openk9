@@ -86,7 +86,8 @@ export const SavePluginnDriverModel = React.forwardRef(
       setExtraFab,
     }: {
       isConnector?: boolean;
-      customButtonModalStyle?: any;
+      // NOTA: prop dichiarata ma non usata nel corpo del componente.
+      customButtonModalStyle?: React.CSSProperties;
       onSubmitSuccess?: () => void;
       setExtraFab: (fab: React.ReactNode | null) => void;
     },
@@ -348,7 +349,7 @@ export const SavePluginnDriverModel = React.forwardRef(
     }));
 
     const recapSections = mappingCardRecap({
-      form: form as any,
+      form,
       sections: [
         {
           cell: [
@@ -419,8 +420,8 @@ export const SavePluginnDriverModel = React.forwardRef(
                         value={config?.baseUri || ""}
                         validationMessages={[]}
                         onChange={(e) =>
-                          setConfig((config: any) =>
-                            config ? { ...config, baseUri: e } : ({ baseUri: e } as ResourceUriInput),
+                          setConfig((config) =>
+                            config ? { ...config, baseUri: e } : { baseUri: e },
                           )
                         }
                         id={pluginDriverId}
@@ -432,8 +433,8 @@ export const SavePluginnDriverModel = React.forwardRef(
                         id={pluginDriverId}
                         value={config?.path || ""}
                         onChange={(e) =>
-                          setConfig((config: any) =>
-                            config ? { ...config, path: e } : ({ path: e } as ResourceUriInput),
+                          setConfig((config) =>
+                            config ? { ...config, path: e } : { path: e },
                           )
                         }
                         disabled={false}

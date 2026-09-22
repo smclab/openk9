@@ -93,7 +93,7 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
     },
   });
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [{ key: "name" }, { key: "description" }, { key: "docTypeTemplateId", label: t("pages.document-types.document-type-template") }],

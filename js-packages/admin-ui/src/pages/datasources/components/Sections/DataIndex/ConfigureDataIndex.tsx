@@ -79,7 +79,7 @@ type DataIndexFormsourceProps = {
   id: string;
   microForm: MicroForm;
   setDataIndexForm: (params: SetDataIndexFormParams) => void;
-  dataIndixes: DataIndex[] | undefined;
+  dataIndixes: DataIndex[] | null | undefined;
   changeDataIndex: (params: ChangeDataIndexParams) => void;
   extraParamsDataIndex: {
     knnIndex?: boolean | null | undefined;
@@ -100,6 +100,9 @@ type DataIndexFormsourceProps = {
   ) => void;
 };
 
+/** Riga della tabella document types, costruita dalla risposta REST del plugin driver. */
+type DocumentTypeRow = { node: { id: string; name: string; selected?: boolean } };
+
 export default function DataIndexFormsource({
   isDisabled,
   setDataIndexForm,
@@ -116,7 +119,7 @@ export default function DataIndexFormsource({
 }: DataIndexFormsourceProps) {
   const { t } = useTranslation();
   const restClient = useRestClient();
-  const [documentTypes, setDocumentTypes] = useState<any[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<DocumentTypeRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [nameError, setNameError] = useState(false);
   const { docTypesQuery } = useOptions();

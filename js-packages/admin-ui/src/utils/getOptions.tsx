@@ -14,51 +14,69 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-import { KeyValue } from "@components/Form";
 
-type Params = {
-  useQuery?: any;
-  data?: any;
+export type SelectOption = { value: string; label: string };
+
+/** `TVariables` viene dedotto dall'hook Apollo passato: ogni query porta le sue variabili. */
+type Params<TVariables> = {
+  useQuery?(options: {
+    variables?: TVariables;
+    fetchPolicy: "network-only" | "cache-first";
+  }): { data?: unknown };
+  data?: { data?: unknown };
   queryKeyPath: string;
   accessKey?: "node";
-  variables?: KeyValue;
+  variables?: TVariables;
   isNetworkOnly?: boolean;
 };
 const pathObject = {
   node: "node",
 };
 
-export default function useOptions({
+export default function useOptions<TVariables>({
   useQuery,
   data,
   queryKeyPath,
   accessKey = "node",
   variables,
   isNetworkOnly = false,
-}: Params) {
+}: Params<TVariables>) {
   const queryData =
-    useQuery?.({ variables: { ...variables }, fetchPolicy: isNetworkOnly ? "network-only" : "cache-first" }) || {};
+    useQuery?.({ variables, fetchPolicy: isNetworkOnly ? "network-only" : "cache-first" }) || {};
   const sourceData = data?.data || queryData?.data;
 
   const value = extract({ object: sourceData, pathKey: queryKeyPath });
 
-  const getOptions = (value: any) => {
-    return (
-      value?.map((item: any) => ({
-        value: item?.id || extract({ object: item, pathKey: pathObject[accessKey] })?.id || "",
-        label: item?.name || extract({ object: item, pathKey: pathObject[accessKey] })?.name || "",
-      })) || []
-    );
+  const getOptions = (value: unknown): SelectOption[] => {
+    if (!Array.isArray(value)) return [];
+    return value.map((item: unknown) => {
+      const nested = extract({ object: item, pathKey: pathObject[accessKey] });
+      return {
+        value: readString(item, "id") || readString(nested, "id") || "",
+        label: readString(item, "name") || readString(nested, "name") || "",
+      };
+    });
   };
 
-  const OptionQuery = (sourceData && getOptions(value)) || [];
+  const OptionQuery: SelectOption[] = sourceData ? getOptions(value) : [];
 
   return {
     OptionQuery,
   };
 }
 
-function extract({ object, pathKey }: { object: any; pathKey: string }) {
-  return pathKey.split(".")?.reduce((obj, key) => obj?.[key], object);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
+/** I risultati GraphQL arrivano di forma ignota: si legge un campo solo dopo averlo verificato. */
+function readString(source: unknown, key: string): string {
+  if (!isRecord(source)) return "";
+  const value = source[key];
+  if (value === null || value === undefined) return "";
+  return typeof value === "string" ? value : String(value);
+}
+
+function extract({ object, pathKey }: { object: unknown; pathKey: string }): unknown {
+  return pathKey.split(".").reduce<unknown>((obj, key) => (isRecord(obj) ? obj[key] : undefined), object);
+}

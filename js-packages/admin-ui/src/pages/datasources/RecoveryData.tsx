@@ -18,6 +18,29 @@ import React from "react";
 import type { TFunction } from "i18next";
 import { Field, Template } from "./components/Sections/DataSource/DynamicForm";
 import { CustomForm } from "./Function";
+import { useRestClient } from "@components/queryClient";
+
+type RestClient = ReturnType<typeof useRestClient>;
+/** Risposta dell'endpoint form del plugin driver, derivata dal client OpenAPI. */
+type PluginDriverForm = Awaited<ReturnType<RestClient["pluginDriverResource"]["getApiDatasourcePluginDriversForm"]>>;
+
+/** Un default salvato nel jsonConfig: un valore singolo o una lista di valori. */
+type DefaultValue = { value?: unknown; isDefault?: boolean };
+type DefaultConfig = Record<string, DefaultValue[] | DefaultValue | undefined>;
+
+function parseDefaultConfig(raw: string): DefaultConfig {
+  try {
+    const parsed: unknown = JSON.parse(raw || "{}");
+    return typeof parsed === "object" && parsed !== null ? (parsed as DefaultConfig) : {};
+  } catch {
+    return {};
+  }
+}
+
+type RecoveryFormValues = {
+  pluginDriverSelect?: { id?: string | null } | null;
+  jsonConfig?: string | null;
+};
 
 export async function recoveryForm({
   restClient,
@@ -25,64 +48,62 @@ export async function recoveryForm({
   defaultData,
   requestBody,
 }: {
-  restClient: any;
+  restClient: RestClient;
   id: string | undefined | null;
   defaultData: string;
-  requestBody: any;
+  // NOTA: parametro trasportato ma mai usato nel corpo della funzione.
+  requestBody: unknown;
 }) {
-  const defaultParsed = JSON.parse(defaultData || "{}");
+  // Il jsonConfig salvato e' testo libero: si legge solo dopo aver verificato la forma.
+  const defaultParsed: DefaultConfig = parseDefaultConfig(defaultData);
 
-  const remapFormData = (data: any) => {
+  const remapFormData = (data: PluginDriverForm) => {
     const fields = data.fields;
-    if (Array.isArray(fields)) {
-      return fields?.map((item) => {
-        if (defaultParsed[item.name] && (item.type === "text" || item.type === "number")) {
-          return {
-            ...item,
-            values: [{ value: defaultParsed[item.name][0]?.value, isDefault: true }],
-          };
-        }
-        if (defaultParsed[item.name] && item.type === "list") {
-          return {
-            ...item,
-            values: defaultParsed[item.name],
-          };
-        }
+    if (!Array.isArray(fields)) return data;
 
-        if (defaultParsed[item.name] && item.type === "select") {
-          return {
-            ...item,
-            values: item.values.map((v: any) =>
-              v === defaultParsed[item.name]?.value ? { ...v, isDefault: true } : { ...v },
-            ),
-          };
-        }
+    return fields.map((item) => {
+      const defaults = item.name ? defaultParsed[item.name] : undefined;
+      if (!defaults) return item;
+      const values = item.values ?? [];
 
-        if (defaultParsed[item.name] && item.type === "multiselect") {
-          return {
-            ...item,
-            values: item.values.map((v: any) =>
-              defaultParsed[item.name]?.some((selected: any) => selected.value === v.value)
-                ? { ...v, isDefault: true }
-                : { ...v },
-            ),
-          };
-        }
+      if (item.type === "text" || item.type === "number") {
+        const first = Array.isArray(defaults) ? defaults[0] : defaults;
+        return { ...item, values: [{ value: first?.value, isDefault: true }] };
+      }
 
-        return item;
-      });
-    }
+      if (item.type === "list") {
+        return { ...item, values: Array.isArray(defaults) ? defaults : [defaults] };
+      }
 
-    return data;
+      if (item.type === "select") {
+        const selected = Array.isArray(defaults) ? defaults[0]?.value : defaults.value;
+        return {
+          ...item,
+          values: values.map((v) => (v.value === selected ? { ...v, isDefault: true } : { ...v })),
+        };
+      }
+
+      if (item.type === "multiselect") {
+        const selectedValues = Array.isArray(defaults) ? defaults : [defaults];
+        return {
+          ...item,
+          values: values.map((v) =>
+            selectedValues.some((selected) => selected?.value === v.value) ? { ...v, isDefault: true } : { ...v },
+          ),
+        };
+      }
+
+      return item;
+    });
   };
 
   if (id) {
-    const response = await restClient.pluginDriverResource.getApiDatasourcePluginDriversForm(id);
+    const response = await restClient.pluginDriverResource.getApiDatasourcePluginDriversForm(Number(id));
     return remapFormData(response);
   }
 }
 
-export function useRecoveryForm(restClient: any, formValues: any, requestBody: any) {
+export function useRecoveryForm(restClient: RestClient, formValues: RecoveryFormValues, requestBody: unknown) {
   const [formCustom, setFormCustom] = React.useState<CustomForm[] | undefined>([]);
   const [loadingFormCustom, setLoadingFormCustom] = React.useState(true);
   const [recoveryFormStandart, setRecoveryFormStandart] = React.useState<Template | undefined>(undefined);
@@ -105,8 +126,11 @@ export function useRecoveryForm(restClient: any, formValues: any, requestBody: a
     });
 
     formCustomClient
-      .then((data: Field[]) => {
+      .then((response) => {
         if (cancelled) return;
+        // Il payload REST dichiara ogni campo opzionale; il form dinamico lavora
+        // sul modello `Field`. Unico punto di adattamento fra i due.
+        const data = (Array.isArray(response) ? response : []) as Field[];
         const remappedData = data
           ?.map((formItem) => {
             if (formItem.type === "text" && Array.isArray(formItem.values) && formItem.values.length === 0) {

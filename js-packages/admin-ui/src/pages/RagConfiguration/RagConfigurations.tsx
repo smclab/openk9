@@ -25,7 +25,7 @@ import { useRagConfigurationsQuery, useDeleteRagConfigurationMutation } from "..
 export function RagConfigurations() {
   const { t } = useTranslation();
   const ragConfigurationsQuery = useRagConfigurationsQuery();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });

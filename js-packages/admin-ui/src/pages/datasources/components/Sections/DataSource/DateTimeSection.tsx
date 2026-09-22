@@ -30,6 +30,8 @@ interface DateTimeSectionProps {
   //   isActive?: boolean;
 }
 
+type CronSectionKey = "isCronSectionscheduling" | "isCronSectionreindex" | "isCronSectionpurge";
+
 export type CronDataManagement = {
   type: "reindex" | "scheduling" | "purge";
   DayOfMonth: string | null;
@@ -73,9 +75,11 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
   const toggleSectionDisabled = (sectionId: string) => {
     const section = sections.find((s) => s.id === sectionId);
     if (section) {
+      // Le sezioni cron note sono scheduling/reindex/purge: la chiave e' una di quelle.
+      const key = `isCronSection${sectionId}` as CronSectionKey;
       setDataDatasource((prev) => ({
         ...prev,
-        [`isCronSection${sectionId}`]: !prev[`isCronSection${sectionId}`],
+        [key]: !prev[key],
       }));
     }
   };

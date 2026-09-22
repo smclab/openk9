@@ -24,13 +24,13 @@ export const DateTimeInput = ({
   setDateTime,
   step,
 }: {
-  initialDateTime: any;
+  initialDateTime: string;
   disabled: boolean;
-  setDateTime: any;
+  setDateTime: React.Dispatch<React.SetStateAction<string>>;
   step?: number;
 }) => {
   const { t } = useTranslation();
-  const handleChange = (event: any) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setDateTime(event.target.value);
   };
 

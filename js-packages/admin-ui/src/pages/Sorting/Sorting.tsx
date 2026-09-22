@@ -98,7 +98,7 @@ export function Sortings() {
             {
               label: t("common.edit"),
               action: (sorting) => {
-                sorting.id &&
+                sorting?.id &&
                   navigate(`/sorting/${sorting?.id}`, {
                     replace: true,
                   });
@@ -107,7 +107,7 @@ export function Sortings() {
             {
               label: t("common.delete"),
               action: (sorting) => {
-                sorting.id && setViewDeleteModal({ view: true, id: sorting.id });
+                sorting?.id && setViewDeleteModal({ view: true, id: sorting.id });
               },
             },
           ]}

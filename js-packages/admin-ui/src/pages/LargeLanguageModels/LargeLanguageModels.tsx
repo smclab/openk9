@@ -52,7 +52,7 @@ export function LargeLanguageModels() {
     },
   });
   const navigate = useNavigate();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
@@ -119,7 +119,7 @@ export function LargeLanguageModels() {
             {
               label: t("common.edit"),
               action: (largeLanguage) => {
-                largeLanguage.id &&
+                largeLanguage?.id &&
                   navigate(`/large-language-model/${largeLanguage?.id}`, {
                     replace: true,
                   });
@@ -128,7 +128,7 @@ export function LargeLanguageModels() {
             {
               label: t("common.delete"),
               action: (tab) => {
-                tab.id && setViewDeleteModal({ view: true, id: tab.id });
+                tab?.id && setViewDeleteModal({ view: true, id: tab.id });
               },
             },
           ]}

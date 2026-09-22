@@ -34,9 +34,9 @@ export function SuggestionCategories() {
   const { t } = useTranslation();
   const suggestionCategoriesQuery = useSuggestionCategoriesQuery();
   const navigate = useNavigate();
-  const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
-  const [isAddTranslation, setIsAddTranslation] = React.useState({ id: null, isVisible: false });
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [isAdd, setIsAdd] = React.useState<{ id: string | null | undefined; isVisible: boolean }>({ id: null, isVisible: false });
+  const [isAddTranslation, setIsAddTranslation] = React.useState<{ id: string | null | undefined; isVisible: boolean }>({ id: null, isVisible: false });
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
@@ -95,20 +95,20 @@ export function SuggestionCategories() {
           edgesPath="suggestionCategories.edges"
           pageInfoPath="suggestionCategories.pageInfo"
           onCreatePath="/suggestion-categories/new"
-          onDelete={(suggestionCategory: any) => {
+          onDelete={(suggestionCategory) => {
             suggestionCategory?.id && setViewDeleteModal({ view: true, id: suggestionCategory.id });
           }}
           rowActions={[
             {
               label: t("common.add"),
               action: (datasources) => {
-                setIsAdd({ id: datasources.id, isVisible: true });
+                setIsAdd({ id: datasources?.id, isVisible: true });
               },
             },
             {
               label: t("common.add-translation"),
               action: (datasources) => {
-                setIsAddTranslation({ id: datasources.id, isVisible: true });
+                setIsAddTranslation({ id: datasources?.id, isVisible: true });
               },
             },
             {
@@ -122,7 +122,7 @@ export function SuggestionCategories() {
             {
               label: t("common.edit"),
               action: (suggestionCategory) => {
-                suggestionCategory.id &&
+                suggestionCategory?.id &&
                   navigate(`/suggestion-category/${suggestionCategory?.id}`, {
                     replace: true,
                   });
@@ -131,7 +131,7 @@ export function SuggestionCategories() {
             {
               label: t("common.delete"),
               action: (suggestionCategory) => {
-                suggestionCategory.id && setViewDeleteModal({ view: true, id: suggestionCategory.id });
+                suggestionCategory?.id && setViewDeleteModal({ view: true, id: suggestionCategory.id });
               },
             },
           ]}

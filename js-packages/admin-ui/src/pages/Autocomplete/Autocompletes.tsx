@@ -93,7 +93,7 @@ export function Autocompletes() {
             {
               label: t("common.edit"),
               action: (autocomplete) => {
-                autocomplete.id &&
+                autocomplete?.id &&
                   navigate(`/autocomplete/${autocomplete?.id}`, {
                     replace: true,
                   });
@@ -102,7 +102,7 @@ export function Autocompletes() {
             {
               label: t("common.delete"),
               action: (autocomplete) => {
-                autocomplete.id && setViewDeleteModal({ view: true, id: autocomplete.id });
+                autocomplete?.id && setViewDeleteModal({ view: true, id: autocomplete.id });
               },
             },
           ]}

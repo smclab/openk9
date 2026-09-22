@@ -14,10 +14,12 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+import { SelectOption } from "utils/getOptions";
+
 export type DataFormCardProps = {
   isVisible: boolean;
   onCancel: () => void;
-  options: any;
+  options: SelectOption[];
   config: DataFormElementConfig;
   children: React.ReactNode;
   fields: FieldDocType[];

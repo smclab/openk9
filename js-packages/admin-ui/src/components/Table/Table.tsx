@@ -113,7 +113,7 @@ export function Table<
   onCreatePath: string;
   edgesPath?: string;
   pageInfoPath?: string;
-  rowActions: Array<{ label: string; action(suggestionCategory?: any): void; isDisabled?: (dat: any) => boolean }>;
+  rowActions: Array<{ label: string; action(row?: Row): void; isDisabled?: (row: Row | undefined) => boolean }>;
   maxVisibleActions?: number;
 }) {
   const { t } = useTranslation();
@@ -125,42 +125,33 @@ export function Table<
 
   const loadMoreResults = () => {
     const pageInfo = getByPath(data, pageInfoPath);
-    if (pageInfo?.hasNextPage) {
+    if (isRecord(pageInfo) && pageInfo.hasNextPage) {
       fetchMore({
         variables: {
           first: 20,
           after: pageInfo.endCursor,
         },
         updateQuery: (prev, { fetchMoreResult }) => {
-          const prevEdges = getByPath(prev, edgesPath) || [];
-          const newEdges = getByPath(fetchMoreResult, edgesPath) || [];
+          const prevEdges = toArray(getByPath(prev, edgesPath));
+          const newEdges = toArray(getByPath(fetchMoreResult, edgesPath));
           const newPageInfo = getByPath(fetchMoreResult, pageInfoPath);
           if (!newEdges.length) return prev;
-          const updated = { ...prev };
-          let ref: any = updated;
-          const keys = edgesPath.split(".");
-          for (let i = 0; i < keys.length - 1; i++) {
-            ref[keys[i]] = { ...ref[keys[i]] };
-            ref = ref[keys[i]];
-          }
-          ref[keys[keys.length - 1]] = [...prevEdges, ...newEdges];
 
-          let refPage: any = updated;
-          const pageKeys = pageInfoPath.split(".");
-          for (let i = 0; i < pageKeys.length - 1; i++) {
-            refPage[pageKeys[i]] = { ...refPage[pageKeys[i]] };
-            refPage = refPage[pageKeys[i]];
-          }
-          refPage[pageKeys[pageKeys.length - 1]] = newPageInfo;
+          // `edgesPath`/`pageInfoPath` sono percorsi dinamici passati dal chiamante:
+          // il risultato della query si attraversa come record generico e si
+          // riconsegna nel suo tipo originale.
+          const updated = { ...prev } as Record<string, unknown>;
+          setByPath(updated, edgesPath, [...prevEdges, ...newEdges]);
+          setByPath(updated, pageInfoPath, newPageInfo);
 
-          return updated;
+          return updated as typeof prev;
         },
       });
     }
   };
 
   React.useEffect(() => {
-    refetch({ searchText: searchTextDebounced } as any);
+    refetch({ searchText: searchTextDebounced } as Partial<Parameters>);
   }, [refetch, searchTextDebounced]);
   const theme = useTheme();
   const borderColor = theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)";
@@ -421,7 +412,28 @@ export function Table<
   );
 }
 
-export function getByPath(obj: any, path: string): any {
-  return path.split(".").reduce((acc, key) => acc?.[key], obj);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function toArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+export function getByPath(obj: unknown, path: string): unknown {
+  return path.split(".").reduce<unknown>((acc, key) => (isRecord(acc) ? acc[key] : undefined), obj);
+}
+
+/** Clona il percorso indicato dentro `target` e vi scrive `value`. */
+function setByPath(target: Record<string, unknown>, path: string, value: unknown) {
+  const keys = path.split(".");
+  let ref = target;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const next = ref[keys[i]];
+    const cloned: Record<string, unknown> = isRecord(next) ? { ...next } : {};
+    ref[keys[i]] = cloned;
+    ref = cloned;
+  }
+  ref[keys[keys.length - 1]] = value;
 }
 

@@ -20,6 +20,15 @@ import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { KeyValue } from "../utils";
 
+/** Il jsonConfig salvato e' testo libero: si accetta solo cio' che TemplateValue ammette. */
+function normalizeTemplateValue(value: unknown): TemplateValue["value"] {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string | number => typeof item === "string" || typeof item === "number");
+  }
+  return "";
+}
+
 const useTemplate = ({
   templateSelected,
   jsonConfig,
@@ -35,12 +44,12 @@ const useTemplate = ({
   React.useEffect(() => {
     if (type && jsonConfig && (typeSelected === null || typeSelected === type)) {
       const defaultValue = templateSelected.find((template) => template.title === type);
-      const jsonRecoveryData: KeyValue = jsonConfig ? JSON.parse(jsonConfig) : null;
+      const jsonRecoveryData: KeyValue = jsonConfig ? JSON.parse(jsonConfig) : {};
       const singleElement = defaultValue?.value;
       const constructValue: TemplateValue[] = singleElement
         ? singleElement.map((element) => ({
             name: element.name,
-            value: jsonRecoveryData[element.name],
+            value: normalizeTemplateValue(jsonRecoveryData[element.name]),
             type: element.type,
             description: element.description,
             options: element.options,

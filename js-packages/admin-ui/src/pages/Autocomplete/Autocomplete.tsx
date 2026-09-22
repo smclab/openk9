@@ -100,11 +100,13 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
           });
           navigate(`/autocompletes`);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error during onCompleted processing:", err);
         toast({
           title: t("pages.autocompletes.unexpected-error"),
-          content: t("pages.autocompletes.impossible-to-action", { action: err.message }),
+          content: t("pages.autocompletes.impossible-to-action", {
+            action: err instanceof Error ? err.message : String(err),
+          }),
           displayType: "error",
         });
       }
@@ -145,7 +147,7 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
           id: autocompletId !== "new" ? autocompletId : undefined,
           autocompleteDTO: {
             ...data,
-            fieldIds: (data.fieldIds || []).map((x: any) => Number(x?.id)).filter((id: number) => !Number.isNaN(id)),
+            fieldIds: (data.fieldIds || []).map((x) => Number(x?.id)).filter((id: number) => !Number.isNaN(id)),
           },
         },
       });
@@ -154,7 +156,7 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
   });
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [
@@ -251,7 +253,7 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
                         associated: (() => {
                           const raw = form.inputProps("fieldIds").value || [];
                           return (Array.isArray(raw) ? raw : [])
-                            .map((x: any) => {
+                            .map((x) => {
                               const id = Number(x?.id);
                               if (Number.isNaN(id)) return null;
                               const label =
@@ -265,13 +267,13 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
                                 "";
                               return { value: String(id), label };
                             })
-                            .filter((x: any): x is { value: string; label: any } => x !== null);
+                            .filter((x): x is NonNullable<typeof x> => x !== null);
                         })(),
                         unassociated: (() => {
                           const raw = form.inputProps("fieldIds").value || [];
                           const associatedIds = new Set(
                             (Array.isArray(raw) ? raw : [])
-                              .map((x: any) => Number(x?.id))
+                              .map((x) => Number(x?.id))
                               .filter((id: number) => !Number.isNaN(id)),
                           );
 
@@ -290,13 +292,13 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
                       onSelect={({ items, isAdd }) => {
                         const currentRaw = form.inputProps("fieldIds").value || [];
                         const current = (Array.isArray(currentRaw) ? currentRaw : [])
-                          .map((x: any) => {
+                          .map((x) => {
                             const id = Number(x?.id);
                             if (Number.isNaN(id)) return null;
                             const label = typeof x?.label === "string" ? x.label : "";
                             return { id, label };
                           })
-                          .filter((x: any) => x);
+                          .filter((x): x is NonNullable<typeof x> => !!x);
 
                         const incoming = (items || [])
                           .map((it) => {
@@ -304,19 +306,19 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
                             if (Number.isNaN(id)) return null;
                             return { id, label: it?.label ?? "" };
                           })
-                          .filter((x: any) => x);
+                          .filter((x): x is NonNullable<typeof x> => !!x);
 
                         if (isAdd) {
                           setLocalUnassociated((prev) =>
-                            prev.filter((x) => !incoming.some((inc: any) => String(inc.id) === x.value)),
+                            prev.filter((x) => !incoming.some((inc) => String(inc.id) === x.value)),
                           );
 
-                          const existing = new Set(current.map((x: any) => x.id));
+                          const existing = new Set(current.map((x) => x.id));
                           const next = [
                             ...current,
                             ...incoming
-                              .filter((x: any) => !existing.has(x.id))
-                              .map((x: any) => ({
+                              .filter((x) => !existing.has(x.id))
+                              .map((x) => ({
                                 id: x.id,
                                 label:
                                   x.label ||
@@ -329,19 +331,19 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
                                   "",
                               })),
                           ];
-                          form.inputProps("fieldIds").onChange(next as any);
+                          form.inputProps("fieldIds").onChange(next);
                           return;
                         }
 
-                        const removeIds = new Set(incoming.map((x: any) => x.id));
-                        const next = current.filter((x: any) => !removeIds.has(x.id));
-                        form.inputProps("fieldIds").onChange(next as any);
+                        const removeIds = new Set(incoming.map((x) => x.id));
+                        const next = current.filter((x) => !removeIds.has(x.id));
+                        form.inputProps("fieldIds").onChange(next);
 
                         setLocalUnassociated((prev) => {
                           const byId = new Map<string, { value: string; label: string }>();
                           [
                             ...prev,
-                            ...incoming.map((x: any) => ({ value: String(x.id), label: x.label || "" })),
+                            ...incoming.map((x) => ({ value: String(x.id), label: x.label || "" })),
                           ].forEach((x) => {
                             if (x.value) byId.set(x.value, x);
                           });

@@ -59,11 +59,11 @@ export function TokenTabs() {
       });
     },
   });
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
-  const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
+  const [isAdd, setIsAdd] = React.useState<{ id: string | null | undefined; isVisible: boolean }>({ id: null, isVisible: false });
   const [addTokenTabToTabMutate] = useAddTokenTabToTabMutation({
     refetchQueries: ["unassociatedTokenTabsInTab"],
   });
@@ -113,7 +113,7 @@ export function TokenTabs() {
             {
               label: t("common.add"),
               action: (datasources) => {
-                setIsAdd({ id: datasources.id, isVisible: true });
+                setIsAdd({ id: datasources?.id, isVisible: true });
               },
             },
             {
@@ -127,7 +127,7 @@ export function TokenTabs() {
             {
               label: t("common.edit"),
               action: (tabs) => {
-                tabs.id &&
+                tabs?.id &&
                   navigate(`/token-tab/${tabs?.id}`, {
                     replace: true,
                   });
@@ -136,7 +136,7 @@ export function TokenTabs() {
             {
               label: t("common.delete"),
               action: (tab) => {
-                tab.id && setViewDeleteModal({ view: true, id: tab.id });
+                tab?.id && setViewDeleteModal({ view: true, id: tab.id });
               },
             },
           ]}

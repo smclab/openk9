@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { ChunkType, PluginDriverType, Provisioning } from "../../graphql-generated";
+import { PluginDriverDto } from "openapi-generated";
 
 export interface FormValues {
   connectorName: string;
@@ -32,20 +33,33 @@ export interface FormValues {
   scheduling: string;
 }
 
-export type KeyValue = {
-  [key: string]: any;
+export type KeyValue = Record<string, unknown>;
+
+/**
+ * Corpo inviato all'endpoint health del plugin driver. I campi sono parziali
+ * perche' vengono costruiti da un form ancora incompleto; `jsonConfig` non e'
+ * modellato dal DTO OpenAPI ma il backend lo accetta.
+ */
+export type PluginDriverRequestBody = Partial<PluginDriverDto> & { jsonConfig?: string };
+
+/** Enrich item associato alla pipeline del datasource. */
+export type LinkedEnrichItem = {
+  id?: string | null;
+  name?: string | null;
+  description?: string | null;
+  weight?: number | null;
 };
 
 export interface ConnectionData {
   datasourceId: string;
   name?: string | null;
   description?: string | null;
-  dataIndices?: Array<{ id?: string | null; name?: string | null }>;
+  dataIndices?: Array<{ id?: string | null; name?: string | null }> | null;
   dataIndex?: {
     id?: string | null;
     name?: string | null;
     description?: string | null;
-  };
+  } | null;
   bodyTag: string;
   optionDataindex: Array<{ id: string; name: string }>;
   titleTag: string;
@@ -55,13 +69,16 @@ export interface ConnectionData {
   documentTypeExtension: string;
   enrichPipeline?: { id?: string | null; name?: string | null };
   jsonConfig?: string | null;
-  lastIngestionDate?: any;
+  lastIngestionDate?: string | null;
   enrichPipelineCustom:
-    | { id: string | null | undefined; name: string | null | undefined; linkedEnrichItems: any[] | null }
+    | { id: string | null | undefined; name: string | null | undefined; linkedEnrichItems: LinkedEnrichItem[] | null }
     | undefined
     | null;
   scheduling?: string | null;
   purging?: string | null;
+  schedulable?: boolean | null;
+  reindexing?: string | null;
+  purgeMaxAge?: string | null;
   isCronSectionscheduling?: boolean | null;
   isCronSectionreindex?: boolean | null;
   isCronSectionpurge?: boolean | null;
@@ -85,7 +102,7 @@ export interface ConnectionData {
   reindexDayOfWeek?: string | null;
   startAtCreation?: boolean;
   cronExpression?: string | null;
-  linkedEnrichItems?: any[] | null;
+  linkedEnrichItems?: LinkedEnrichItem[] | null;
   pipeline?: {
     id?: string | null;
     name?: string | null;
@@ -114,7 +131,6 @@ export interface ConnectionData {
     knnIndex?: boolean | null | undefined;
     docTypeIds?: number[] | null;
   } | null;
-  [key: string]: any;
 }
 
 export interface CustomForm {

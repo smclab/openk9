@@ -31,7 +31,7 @@ export function CharFilters() {
   const { t } = useTranslation();
   const charFiltersQuery = useCharfiltersQuery();
   const toast = useToast();
-  const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
+  const [isAdd, setIsAdd] = React.useState<{ id: string | null | undefined; isVisible: boolean }>({ id: null, isVisible: false });
   const [addMutate] = useAddCharFiltersToAnalyzerMutation();
   const unboundListAnalyzer = useUnboundAnalyzersByCharFilterQuery({
     variables: { charFilterId: Number(isAdd?.id) },
@@ -59,7 +59,7 @@ export function CharFilters() {
     },
   });
   const navigate = useNavigate();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
@@ -93,7 +93,7 @@ export function CharFilters() {
             {
               label: t("common.add"),
               action: (charFilters) => {
-                setIsAdd({ id: charFilters.id, isVisible: true });
+                setIsAdd({ id: charFilters?.id, isVisible: true });
               },
             },
             {
@@ -107,7 +107,7 @@ export function CharFilters() {
             {
               label: t("common.edit"),
               action: (charFilters) => {
-                charFilters.id &&
+                charFilters?.id &&
                   navigate(`/char-filter/${charFilters?.id}`, {
                     replace: true,
                   });

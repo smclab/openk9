@@ -26,6 +26,7 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { FormFieldReader } from "@components/Form/Form/useForm";
 import { RecapData } from "./RecapData";
 
 interface Option {
@@ -63,7 +64,7 @@ export function CreateDataEntity({
   page: number;
   id?: string;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  form: any;
+  form: FormFieldReader & { submit(): void };
   pathBack: string;
   preSubmit?: React.ReactNode;
   associations?: Array<{

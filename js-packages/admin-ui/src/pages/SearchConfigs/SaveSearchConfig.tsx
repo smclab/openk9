@@ -234,7 +234,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
       }));
       setTypes(mappedType);
 
-      const template = parsed?.map((pars: { form: any }) => ({ ...pars?.form }));
+      const template = parsed?.map((pars: { form: Template }) => ({ ...pars?.form }));
       if (jsonConfigs.length === 0 && Array.isArray(template)) {
         const mappedData = template.map((item: Template, idx: number) => {
           const jsonObj: Record<string, any> = {};
@@ -298,7 +298,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
   }, {} as Record<string, any>);
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [

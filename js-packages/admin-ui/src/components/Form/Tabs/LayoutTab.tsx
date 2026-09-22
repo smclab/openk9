@@ -31,7 +31,7 @@ export default function AssociationsLayout({
   tabs,
   setTabsId,
 }: {
-  children?: any;
+  children?: React.ReactNode;
   title?: string;
   tabs: Array<{ label: string; id: string; tooltip?: string }>;
   setTabsId: React.Dispatch<string>;
@@ -39,7 +39,7 @@ export default function AssociationsLayout({
   const { t } = useTranslation();
   const [value, setValue] = useState<string>(tabs[0]?.id || "");
 
-  const handleChange = (event: any, newValue: string) => {
+  const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
     setTabsId(newValue);
   };

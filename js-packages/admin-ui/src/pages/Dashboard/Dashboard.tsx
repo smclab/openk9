@@ -26,7 +26,7 @@ import { DataSourcesQuery } from "@pages/datasources/gql";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { useDataIndexInformationQuery } from "../../graphql-generated";
+import { Direction, useDataIndexInformationQuery, useDataSourcesQuery } from "../../graphql-generated";
 import DashboardCard from "./DashboardCard";
 import DashboardInfoRow from "./DashboardInfoRow";
 import { scheduler } from "./gql";
@@ -94,10 +94,10 @@ export function DashBoard() {
   const { t, i18n } = useTranslation();
   const dashboardQuery = useDataIndexInformationQuery();
   const theme = useTheme();
-  const { data: datasourcesFetched } = useQuery(DataSourcesQuery, {
+  const { data: datasourcesFetched } = useDataSourcesQuery({
     variables: {
       first: 5,
-      sortByList: [{ column: "modifiedDate", direction: "DESC" }],
+      sortByList: [{ column: "modifiedDate", direction: Direction.Desc }],
     },
   });
   const { data: schedulerError } = useQuery(scheduler, {
@@ -122,7 +122,10 @@ export function DashBoard() {
     origin: "FAILURE" as OriginType,
   }));
   const scheulerData = [...schedulerErrorWithOrigin, ...schedulerFailureWithOrigin];
-  const datasourcesData = datasourcesFetched?.datasources?.edges?.map((edge: any) => edge.node) || [];
+  const datasourcesData =
+    datasourcesFetched?.datasources?.edges
+      ?.map((edge) => edge?.node)
+      .filter((node): node is NonNullable<typeof node> => !!node) || [];
 
   const recoveryDocsDeleted = dashboardQuery.data?.buckets?.edges
     ?.map((edge) => edge?.node?.datasources?.edges?.map((datasource) => datasource?.node?.dataIndex?.cat?.docsDeleted))

@@ -54,12 +54,12 @@ export function Tabs() {
     },
   });
   const navigate = useNavigate();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
-  const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
-  const [isAddTranslation, setIsAddTranslation] = React.useState({ id: null, isVisible: false });
+  const [isAdd, setIsAdd] = React.useState<{ id: string | null | undefined; isVisible: boolean }>({ id: null, isVisible: false });
+  const [isAddTranslation, setIsAddTranslation] = React.useState<{ id: string | null | undefined; isVisible: boolean }>({ id: null, isVisible: false });
 
   const unboundListEnrichPipeline = useUnboundBucketsByTabQuery({
     variables: { id: Number(isAdd?.id) },
@@ -108,13 +108,13 @@ export function Tabs() {
             {
               label: t("common.add"),
               action: (bucket) => {
-                setIsAdd({ id: bucket.id, isVisible: true });
+                setIsAdd({ id: bucket?.id, isVisible: true });
               },
             },
             {
               label: t("common.add-translation"),
               action: (datasources) => {
-                setIsAddTranslation({ id: datasources.id, isVisible: true });
+                setIsAddTranslation({ id: datasources?.id, isVisible: true });
               },
             },
             {
@@ -128,7 +128,7 @@ export function Tabs() {
             {
               label: t("common.edit"),
               action: (tabs) => {
-                tabs.id &&
+                tabs?.id &&
                   navigate(`/tab/${tabs?.id}`, {
                     replace: true,
                   });
@@ -137,7 +137,7 @@ export function Tabs() {
             {
               label: t("common.delete"),
               action: (tab) => {
-                tab.id && setViewDeleteModal({ view: true, id: tab.id });
+                tab?.id && setViewDeleteModal({ view: true, id: tab.id });
               },
             },
           ]}

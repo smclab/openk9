@@ -57,17 +57,22 @@ import { useConfirmModal } from "../../../utils/useConfirmModal";
 type DatasourceType = "database" | "api" | "filesystem" | "web" | string;
 type DatasourceStatus = "active" | "syncing" | "error";
 
+type ChipColor = "primary" | "secondary" | "success" | "warning" | "error" | "info" | "default";
+
 interface Datasource {
-  id: number;
-  name: string;
-  type: string;
-  status: DatasourceStatus | string;
-  documentsCount: number;
-  lastSync: string;
-  schedulable?: boolean;
-  scheduling?: string;
-  reindexable?: boolean;
-  reindexing?: string;
+  // Campi effettivamente selezionati dalla query DataSources.
+  id?: string | null;
+  name?: string | null;
+  schedulable?: boolean | null;
+  scheduling?: string | null;
+  reindexable?: boolean | null;
+  reindexing?: string | null;
+  // NOTA: non presenti nella query DataSources. Sono valorizzati solo dalla
+  // creazione ottimistica lato client, quindi per i datasource reali restano vuoti.
+  type?: string;
+  status?: DatasourceStatus | string;
+  documentsCount?: number;
+  lastSync?: string;
 }
 
 interface NewDatasource {
@@ -99,11 +104,11 @@ const TypeAvatar = styled(Avatar)<{ bgcolor: string }>(({ theme, bgcolor }) => (
   backgroundColor: bgcolor,
 }));
 
-const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
+const DatasourcesSection = ({ datasourcesData }: { datasourcesData: Datasource[] | undefined }) => {
   const { t, i18n } = useTranslation();
   const [datasources, setDatasources] = useState<Datasource[]>([]);
   React.useEffect(() => {
-    if (datasourcesData?.length > 0) {
+    if (datasourcesData && datasourcesData.length > 0) {
       setDatasources(datasourcesData);
     }
   }, [datasourcesData]);
@@ -157,7 +162,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
   };
 
   const getTypeConfig = (type: DatasourceType) => {
-    const configs: Record<DatasourceType, { icon: React.ReactNode; color: any; bgcolor: string }> = {
+    const configs: Record<DatasourceType, { icon: React.ReactNode; color: ChipColor; bgcolor: string }> = {
       database: {
         icon: <DatabaseIcon />,
         color: "primary",
@@ -197,9 +202,9 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
 
   const handleCreateDatasource = () => {
     if (newDatasource.name.trim()) {
-      const newId = Math.max(...datasources.map((d) => d.id)) + 1;
+      const newId = Math.max(...datasources.map((d) => Number(d.id) || 0)) + 1;
       const newItem: Datasource = {
-        id: newId,
+        id: String(newId),
         name: newDatasource.name,
         type: newDatasource.type,
         status: "active",
@@ -231,7 +236,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode;
 
-  const DatasourceCard: React.FC<{ datasource: any }> = ({ datasource }) => {
+  const DatasourceCard: React.FC<{ datasource: Datasource }> = ({ datasource }) => {
     const typeConfig: {
       icon: React.ReactElement;
       color: "success" | "warning" | "error" | "default";
@@ -281,7 +286,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
             <Box sx={{ gridColumn: "3", gridRow: "1" }}>
               <IconButton
                 size="small"
-                onClick={() => handleEditOrCreateClick({ datasourceId: datasource.id, type: "Edit" })}
+                onClick={() => handleEditOrCreateClick({ datasourceId: String(datasource.id), type: "Edit" })}
               >
                 <SettingsIcon fontSize="small" />
               </IconButton>
@@ -328,7 +333,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
                     {datasource?.schedulable
                       ? t("datasource-cards.sync-schedule", {
-                          schedule: getReadableCronDescription(datasource?.scheduling),
+                          schedule: getReadableCronDescription(datasource?.scheduling ?? ""),
                         })
                       : t("datasource-cards.sync-not-scheduled")}
                   </Typography>

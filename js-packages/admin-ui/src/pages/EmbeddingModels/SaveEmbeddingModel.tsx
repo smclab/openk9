@@ -171,7 +171,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
   }, [view, embeddingModelsId, form.inputProps("apiKey").value]);
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [

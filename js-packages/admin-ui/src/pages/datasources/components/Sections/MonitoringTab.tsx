@@ -42,6 +42,7 @@ import { useNavigate } from "react-router-dom";
 import {
   SchedulerStatus,
   useDataSourceInformationQuery,
+  QDatasourceSchedulersQuery,
   useQDatasourceSchedulersQuery,
 } from "../../../../graphql-generated";
 import { formatOffsetDateTime } from "../../../../utils/formatOffsetDateTime";
@@ -49,14 +50,19 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@components/Form";
 
+
+type SchedulerConnection = NonNullable<NonNullable<QDatasourceSchedulersQuery["datasource"]>["schedulers"]>;
+type SchedulerEdge = NonNullable<SchedulerConnection["edges"]>[number];
+type SchedulerPageInfo = SchedulerConnection["pageInfo"];
+
 export function MonitoringTab({ id }: { id: string }) {
   const { t, i18n } = useTranslation();
   const [schedulingId, setSchedulingId] = React.useState<number>(-1);
   const [modalAction, setModalAction] = React.useState<string>("");
   const [open, setOpen] = React.useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = React.useState<boolean>(false);
-  const [schedulers, setSchedulers] = React.useState<any[]>([]);
-  const [pageInfo, setPageInfo] = React.useState<any>(null);
+  const [schedulers, setSchedulers] = React.useState<SchedulerEdge[]>([]);
+  const [pageInfo, setPageInfo] = React.useState<SchedulerPageInfo | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
@@ -99,7 +105,7 @@ export function MonitoringTab({ id }: { id: string }) {
 
   const observer = React.useRef<IntersectionObserver | null>(null);
   const lastElementRef = React.useCallback(
-    (node: any) => {
+    (node: HTMLElement | null) => {
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && pageInfo?.hasNextPage) {
@@ -170,25 +176,27 @@ export function MonitoringTab({ id }: { id: string }) {
     );
   };
 
-  const renderActions = (item: any) => {
+  const renderActions = (item: SchedulerEdge) => {
+    const node = item?.node;
+    const schedulerId = Number(node?.id);
     const handleViewInfoClick = () => {
-      navigate(`/notificationInfo/${item.node.id}`);
+      navigate(`/notificationInfo/${node?.id}`);
     };
 
-    if (item?.node?.status === SchedulerStatus.Running || item?.node?.status === SchedulerStatus.Stale) {
+    if (node?.status === SchedulerStatus.Running || node?.status === SchedulerStatus.Stale) {
       return (
         <>
-          <Button onClick={() => handleOpen("closeScheduling", item.node.id)}>{t("common.close")}</Button>
-          <Button onClick={() => handleOpen("cancelScheduling", item.node.id)}>{t("common.cancel")}</Button>
+          <Button onClick={() => handleOpen("closeScheduling", schedulerId)}>{t("common.close")}</Button>
+          <Button onClick={() => handleOpen("cancelScheduling", schedulerId)}>{t("common.cancel")}</Button>
           <Button onClick={handleViewInfoClick}>{t("pages.datasources.monitoring.view-info")}</Button>
         </>
       );
-    } else if (item?.node?.status === SchedulerStatus.Error) {
+    } else if (node?.status === SchedulerStatus.Error) {
       return (
         <>
-          <Button onClick={() => handleOpen("closeScheduling", item.node.id)}>{t("common.close")}</Button>
-          <Button onClick={() => handleOpen("cancelScheduling", item.node.id)}>{t("common.cancel")}</Button>
-          <Button onClick={() => handleOpen("rerouteScheduling", item.node.id)}>
+          <Button onClick={() => handleOpen("closeScheduling", schedulerId)}>{t("common.close")}</Button>
+          <Button onClick={() => handleOpen("cancelScheduling", schedulerId)}>{t("common.cancel")}</Button>
+          <Button onClick={() => handleOpen("rerouteScheduling", schedulerId)}>
             {t("pages.datasources.monitoring.reprocess-failed-messages")}
           </Button>
           <Button onClick={handleViewInfoClick}>{t("pages.datasources.monitoring.view-info")}</Button>

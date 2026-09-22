@@ -23,7 +23,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { Provisioning, useDataSourceQuery } from "../../graphql-generated";
 import { Section } from "./components/Sections/Connectors/ConfigureConnectors";
-import DynamicForm from "./components/Sections/DataSource/DynamicForm";
+import DynamicForm, { Field } from "./components/Sections/DataSource/DynamicForm";
+import { PluginDriverDto } from "openapi-generated";
+import { PluginDriverRequestBody } from "./types";
 import { defaultModal, useGenerateDocumentTypesMutation } from "./Function";
 import { useDatasourceForm } from "./hooks/useDatasourceForm";
 import { useDatasourceMutations } from "./hooks/useDatasourceMutations";
@@ -53,9 +55,9 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   const restClient = useRestClient();
   const pluginDriverId = formValues.pluginDriverSelect?.id;
 
-  const [requestBody, setRequestBody] = React.useState<any>({
-    name: formValues.pluginDriverSelect?.nameConnectors,
-    description: formValues.pluginDriverSelect?.description,
+  const [requestBody, setRequestBody] = React.useState<PluginDriverRequestBody>({
+    name: formValues.pluginDriverSelect?.nameConnectors ?? undefined,
+    description: formValues.pluginDriverSelect?.description ?? undefined,
     type: formValues.pluginDriverSelect?.pluginDriverType,
     provisioning: formValues.pluginDriverSelect?.provisioning,
   });
@@ -72,7 +74,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   const baseDisabled =
     (pluginDriverId === null || pluginDriverId === undefined || !formValues?.name) && areaEnabled !== "selectConnectos";
 
-  const hasMissingRequiredDynamic = !!dynamicTemplate?.fields?.some((f: any) => f?.required && isFieldEmpty(f));
+  const hasMissingRequiredDynamic = !!dynamicTemplate?.fields?.some((f) => f?.required && isFieldEmpty(f));
 
   const isDisabledNextStep = baseDisabled || hasMissingRequiredDynamic;
   const tabs = constructTabs({ datasourceId, isDisabledNextStep, mode, isRecap, t });
@@ -81,8 +83,8 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
 
   React.useEffect(() => {
     setRequestBody({
-      name: formValues.pluginDriverSelect?.nameConnectors,
-      description: formValues.pluginDriverSelect?.description,
+      name: formValues.pluginDriverSelect?.nameConnectors ?? undefined,
+      description: formValues.pluginDriverSelect?.description ?? undefined,
       type: formValues.pluginDriverSelect?.pluginDriverType,
       provisioning: formValues.pluginDriverSelect?.provisioning,
       jsonConfig: JSON.stringify({
@@ -151,7 +153,11 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
 
   const getHealthInfoWithoutId = async () => {
     try {
-      const response = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth(requestBody);
+      // Il DTO generato non dichiara `jsonConfig` e pretende name/type gia' valorizzati:
+      // unico adattamento fra il form parziale e il contratto REST.
+      const response = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth(
+        requestBody as PluginDriverDto,
+      );
       const ui = mapHealthStatus(response.status);
       if (ui === "success") {
         alert(t("pages.datasources.connection-successful"));
@@ -312,7 +318,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     originalValues: {},
     isLoading: datasourceQuery.loading,
 
-    onSubmit(updated: any) {
+    onSubmit(updated) {
       setFormValues((prev) => ({
         ...prev,
         ...updated,
@@ -398,7 +404,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   }
 
   const datasourceSection = mappingCardRecap({
-    form: form as any,
+    form,
     valueOverride: {
       dynamicFormJson: dynamicTemplate ? dynamicFormJson : formValues.jsonConfig,
     },
@@ -420,7 +426,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   });
 
   const dataIndexSection = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         label: t("pages.datasources.data-index"),
@@ -525,7 +531,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   );
 }
 
-function isFieldEmpty(field: any): boolean {
+function isFieldEmpty(field: Field): boolean {
   const type = field?.type;
   const required = !!field?.required;
 
@@ -540,15 +546,15 @@ function isFieldEmpty(field: any): boolean {
     }
 
     if (type === "list" || type === "multiselect") {
-      return values.filter((v: any) => v?.isDefault).map((v: any) => v?.value);
+      return values.filter((v) => v?.isDefault).map((v) => v?.value);
     }
 
     if (type === "checkbox" || type === "boolean") {
-      const v = values.find((x: any) => x?.isDefault);
+      const v = values.find((x) => x?.isDefault);
       return !!v?.value;
     }
 
-    const v = values.find((x: any) => x?.isDefault);
+    const v = values.find((x) => x?.isDefault);
     return v?.value ?? "";
   })();
 

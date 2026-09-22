@@ -49,7 +49,7 @@ export function Pipelines() {
     },
   });
 
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
@@ -97,8 +97,8 @@ export function Pipelines() {
             {
               label: t("common.view"),
               action: (pipelines) => {
-                pipelines.id &&
-                  navigate(`/pipeline/${pipelines.id}/mode/view`, {
+                pipelines?.id &&
+                  navigate(`/pipeline/${pipelines?.id}/mode/view`, {
                     replace: true,
                   });
               },
@@ -106,8 +106,8 @@ export function Pipelines() {
             {
               label: t("common.edit"),
               action: (pipelines) => {
-                pipelines.id &&
-                  navigate(`/pipeline/${pipelines.id}/mode/edit`, {
+                pipelines?.id &&
+                  navigate(`/pipeline/${pipelines?.id}/mode/edit`, {
                     replace: true,
                   });
               },
@@ -115,7 +115,7 @@ export function Pipelines() {
             {
               label: t("common.delete"),
               action: (pipeline) => {
-                pipeline.id && setViewDeleteModal({ view: true, id: pipeline.id });
+                pipeline?.id && setViewDeleteModal({ view: true, id: pipeline.id });
               },
             },
           ]}
@@ -134,6 +134,9 @@ export function Pipelines() {
             },
             {
               header: t("common.priority"),
+              // TODO: `priority` non esiste su EnrichPipeline nello schema GraphQL:
+              // questa colonna e' sempre vuota. Serve decidere se aggiungere il
+              // campo lato backend o rimuovere la colonna.
               content: (pipeline: any) => (
                 <Typography variant="body2" className="pipeline-title">
                   {pipeline?.priority}

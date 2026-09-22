@@ -143,7 +143,7 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
   const recapSections = React.useMemo(
     () =>
       mappingCardRecap({
-        form: form as any,
+        form,
         sections: [
           {
             label: t("pages.token-filters.recap-label"),

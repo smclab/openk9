@@ -17,14 +17,16 @@
 import { Autocomplete, TextField } from "@mui/material";
 import React from "react";
 
+type MultiSelectItem = { value: string; label?: string | null };
+
 export function MultiSelectSimple({
   keyofF, description, items, disabled, onItemchange,
 }: {
   keyofF: string;
   description: string;
   disabled?: boolean;
-  items: any[];
-  onItemchange(event: any): void;
+  items: MultiSelectItem[];
+  onItemchange(items: MultiSelectItem[]): void;
 }) {
   const [value, setValue] = React.useState<string | null>("");
 

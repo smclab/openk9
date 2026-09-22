@@ -213,7 +213,7 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   const recapSections = React.useMemo(
     () =>
       mappingCardRecap({
-        form: form as any,
+        form,
         sections: [
           {
             label: t("pages.highlights.recap-label"),

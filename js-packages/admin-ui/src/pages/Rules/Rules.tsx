@@ -15,8 +15,21 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React from "react";
-import ReactFlow, { Background, Controls, Edge, MiniMap, Node, applyNodeChanges } from "react-flow-renderer";
-import { useRulesQuery } from "../../graphql-generated";
+import ReactFlow, { Background, Controls, Edge, MiniMap, Node, NodeChange, applyNodeChanges } from "react-flow-renderer";
+import { RulesQuery, useRulesQuery } from "../../graphql-generated";
+
+type RuleEdges = NonNullable<NonNullable<RulesQuery["rules"]>["edges"]>;
+
+/** Payload trasportato da ogni nodo del grafo delle regole. */
+export type RuleNodeData = {
+  label: string;
+  id: string;
+  rulesQuery?: ReturnType<typeof useRulesQuery>;
+  rules: RuleEdges;
+  isDelete?: boolean;
+  idAssociation?: string;
+  fatherLabel?: string;
+};
 import NodeGraphRule from "./Function/NodeGraphRule";
 import NodeGraphRuleDouble from "./Function/NodeGraphRuleDouble";
 
@@ -30,7 +43,7 @@ function checkNodeType(entity: string) {
   return type;
 }
 
-export function BuildGraph({ node, edgesValue }: { node: Node<any>[]; edgesValue: Edge<any>[] }) {
+export function BuildGraph({ node, edgesValue }: { node: Node<RuleNodeData>[]; edgesValue: Edge[] }) {
   const [nodes, setNodes] = React.useState(node);
   const [edges, setEdges] = React.useState(edgesValue);
 
@@ -40,7 +53,7 @@ export function BuildGraph({ node, edgesValue }: { node: Node<any>[]; edgesValue
   }, [node, edgesValue]);
 
   const onNodesChange = React.useCallback(
-    (changes: any) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
     [setNodes],
   );
 
@@ -66,7 +79,7 @@ export function Rules() {
   const rulesQuery = useRulesQuery();
 
   if (rulesQuery.loading) return <div>caricamento</div>;
-  const elements: Node[] = [];
+  const elements: Node<RuleNodeData>[] = [];
   const rules = rulesQuery.data?.rules?.edges;
 
   const customDoubleRules: string[] = [];
@@ -138,7 +151,7 @@ export function Rules() {
       return "";
     });
   }
-  const edges: Edge<any>[] | undefined = [];
+  const edges: Edge[] = [];
 
   rules?.forEach((rule) => {
     const lhs = rule?.node?.lhs;
@@ -184,16 +197,17 @@ function recoveryValue({
   indexElement,
 }: {
   entity: string;
-  rules: any[];
+  rules: RuleEdges;
   position: { x: number; y: number };
   elmentOnRoW?: number;
   indexElement?: number;
-}): any[] {
-  const matchingRules: any[] = rules.filter(({ node: { lhs } }: { node: { lhs: string } }) => entity === lhs);
+}): Node<RuleNodeData>[] {
+  const matchingRules = rules.filter((rule) => entity === rule?.node?.lhs);
 
   const type = checkNodeType(entity);
 
-  const result: any[] = matchingRules.map(({ node: { id, lhs, rhs } }: any, index: number) => {
+  const result: Node<RuleNodeData>[] = matchingRules.map((rule, index) => {
+    const lhs = rule?.node?.lhs;
     return {
       id: lhs || "",
       type: type,
@@ -210,7 +224,8 @@ function recoveryValue({
     };
   });
 
-  matchingRules.forEach(({ node: { rhs } }: { node: { rhs: string } }, index) => {
+  matchingRules.forEach((rule, index) => {
+    const rhs = rule?.node?.rhs || "";
     const data = recoveryValue({
       entity: rhs,
       rules,
@@ -236,7 +251,7 @@ function recoveryValue({
   });
 
   if (matchingRules.length === 0) {
-    const data = rules.find(({ node: { rhs } }: { node: { rhs: string } }) => entity === rhs);
+    const match = rules.find((rule) => entity === rule?.node?.rhs);
     result.push({
       id: entity,
       type: type,
@@ -246,8 +261,8 @@ function recoveryValue({
         rulesQuery: undefined,
         rules: rules,
         isDelete: true,
-        idAssociation: data.node.id,
-        fatherLabel: data.node.lhs,
+        idAssociation: match?.node?.id ?? undefined,
+        fatherLabel: match?.node?.lhs ?? undefined,
       },
       position: {
         x: position.x + (indexElement ? (indexElement + 1) * 250 : 1),

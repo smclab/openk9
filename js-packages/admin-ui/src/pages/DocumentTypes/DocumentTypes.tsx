@@ -25,7 +25,7 @@ import { useDeleteDocumentTypeMutation, useDocumentTypesQuery } from "../../grap
 export default function DocumentTypes() {
   const { t } = useTranslation();
   const documentTypeQuery = useDocumentTypesQuery();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });

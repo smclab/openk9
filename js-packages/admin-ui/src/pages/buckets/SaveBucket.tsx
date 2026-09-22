@@ -301,7 +301,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
   if (bucketQuery.loading) return null;
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [

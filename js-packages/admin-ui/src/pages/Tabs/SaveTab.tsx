@@ -85,11 +85,11 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
           });
           navigate(`/tabs`);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error during onCompleted processing:", err);
         toast({
           title: t("pages.tabs.unexpected-error"),
-          content: t("pages.tabs.impossible-to-action", { action: err.message }),
+          content: t("pages.tabs.impossible-to-action", { action: err instanceof Error ? err.message : String(err) }),
           displayType: "error",
         });
       }
@@ -151,7 +151,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
     getValidationMessages: fromFieldValidators(createOrUpdateTabMutation.data?.tabWithTokenTabs?.fieldValidators),
   });
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [

@@ -45,7 +45,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEnrichItemsQuery } from "../../../../../graphql-generated";
 import { tabsType } from "../../../datasourceType";
-import { ConnectionData } from "../../../types";
+import { ConnectionData, PluginDriverRequestBody } from "../../../types";
 import { BoxArea } from "../../BoxArea";
 import { DateTimeSection } from "./DateTimeSection";
 import { ChangeValueKey, GenerateDynamicForm, Template } from "./DynamicForm";
@@ -80,7 +80,7 @@ export function ConfigureDatasource({
   isRecap: boolean;
   tabs: tabsType;
   setIsRecap: React.Dispatch<React.SetStateAction<boolean>>;
-  requestBody: any;
+  requestBody: PluginDriverRequestBody;
   formCustom: CustomForm[] | undefined;
   setFormCustom: React.Dispatch<React.SetStateAction<CustomForm[] | undefined>>;
   datasourceId: string;
@@ -216,7 +216,7 @@ export function EnrichItemsTable({
       updatedEnrichItems[index + 1].weight = currentWeight;
     }
 
-    updatedEnrichItems.sort((a, b) => a.weight - b.weight);
+    updatedEnrichItems.sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0));
 
     setConnectionData((prevData) => ({
       ...prevData,
@@ -229,7 +229,7 @@ export function EnrichItemsTable({
     }));
   };
 
-  const handleEnrichItemLink = (item: any) => {
+  const handleEnrichItemLink = (item: { node?: { id?: string | null; name?: string | null; description?: string | null } | null } | null) => {
     const weight = (connectionData?.enrichPipelineCustom?.linkedEnrichItems?.length || 0) + 1;
     const enrichItem = {
       id: item?.node?.id,
@@ -366,7 +366,7 @@ export function EnrichItemsTable({
             </TableHead>
             <TableBody>
               {connectionData?.enrichPipelineCustom?.linkedEnrichItems
-                ?.sort((a, b) => a.weight - b.weight)
+                ?.sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0))
                 .map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>
@@ -448,7 +448,7 @@ export type CustomForm = {
   size: number;
   type: string;
   validator: {};
-  values: any;
+  values: Array<{ value: unknown; isDefault?: boolean }>;
 };
 
 export type SchedulingRadioType = "present-scheduling" | "custom-scheduling";
@@ -495,9 +495,18 @@ type Option = {
   name: string;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+/** La query e' passata come prop: il risultato va verificato prima di leggerlo. */
+function isOption(value: unknown): value is Option {
+  return isRecord(value) && typeof value.id === "string" && typeof value.name === "string";
+}
+
 type InfiniteScrollSelectProps = {
-  connectionData: any;
-  setConnectionData: React.Dispatch<React.SetStateAction<any>>;
+  connectionData: ConnectionData;
+  setConnectionData: React.Dispatch<React.SetStateAction<ConnectionData>>;
   isView: boolean;
   isNew: boolean;
   query: DocumentNode;
@@ -522,11 +531,13 @@ const InfiniteScrollSelect: React.FC<InfiniteScrollSelectProps> = ({
   });
 
   React.useEffect(() => {
-    if (!data || !data[accessKey] || !data[accessKey].edges) return;
-    const newOptions = data[accessKey].edges.map((edge: any) => edge.node);
+    const connection = isRecord(data) ? data[accessKey] : undefined;
+    const edges = isRecord(connection) && Array.isArray(connection.edges) ? connection.edges : undefined;
+    if (!edges) return;
+    const newOptions = edges.map((edge) => (isRecord(edge) ? edge.node : undefined)).filter(isOption);
     setOptions((prev) => {
       const existingIds = new Set(prev.map((o) => o.id));
-      const uniqueOptions = newOptions.filter((o: Option) => !existingIds.has(o.id));
+      const uniqueOptions = newOptions.filter((o) => !existingIds.has(o.id));
       return [...prev, ...uniqueOptions];
     });
   }, [data]);
@@ -568,7 +579,7 @@ const InfiniteScrollSelect: React.FC<InfiniteScrollSelectProps> = ({
         onChange={(event) => {
           const id = event.target.value;
           const name = options.find((item) => item.id === id)?.name || "";
-          setConnectionData((prevData: any) => ({
+          setConnectionData((prevData) => ({
             ...prevData,
             dataIndex: { id, name },
           }));

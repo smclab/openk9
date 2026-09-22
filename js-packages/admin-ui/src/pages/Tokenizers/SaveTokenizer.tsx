@@ -144,7 +144,7 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   const recapSections = React.useMemo(
     () =>
       mappingCardRecap({
-        form: form as any,
+        form,
         sections: [
           {
             cell: [

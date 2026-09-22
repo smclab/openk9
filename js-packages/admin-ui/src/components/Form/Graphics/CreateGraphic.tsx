@@ -15,7 +15,10 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { Card, Box, Typography, CardContent, useTheme } from "@mui/material";
-import { LineChart, XAxis, YAxis, CartesianGrid, Line, Legend, Tooltip as TooltipRecharts } from "recharts";
+import { LineChart, XAxis, YAxis, CartesianGrid, Line, Legend, Tooltip as TooltipRecharts, TooltipProps } from "recharts";
+
+/** Punto della serie temporale disegnata dal grafico. */
+type GraphicPoint = { name: string; query: number };
 
 export function CreateGraphic({
   data,
@@ -24,14 +27,14 @@ export function CreateGraphic({
   labelInformationRigth,
   Information,
 }: {
-  data: any;
+  data: GraphicPoint[];
   width: number;
   height: number;
   labelInformationRigth: string;
   Information: string;
 }) {
   const theme = useTheme();
-  const renderCustomTooltip = (props: any) => {
+  const renderCustomTooltip = (props: TooltipProps<number, string>) => {
     const { active, payload, label } = props;
     if (active && payload && payload.length) {
       const { name, query } = payload[0].payload; // Dati da mostrare

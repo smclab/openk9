@@ -56,7 +56,7 @@ export function EnrichItems() {
     },
   });
 
-  const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
+  const [isAdd, setIsAdd] = React.useState<{ id: string | null | undefined; isVisible: boolean }>({ id: null, isVisible: false });
   const [viewDeleteModal, setViewDeleteModal] = React.useState<{
     view: boolean;
     id: string | undefined;
@@ -115,7 +115,7 @@ export function EnrichItems() {
             {
               label: t("common.edit"),
               action: (enrichItem) => {
-                enrichItem.id &&
+                enrichItem?.id &&
                   navigate(`/enrich-item/${enrichItem?.id}`, {
                     replace: true,
                   });
@@ -124,7 +124,7 @@ export function EnrichItems() {
             {
               label: t("common.delete"),
               action: (enrichItem) => {
-                enrichItem.id && setViewDeleteModal({ view: true, id: enrichItem.id });
+                enrichItem?.id && setViewDeleteModal({ view: true, id: enrichItem.id });
               },
             },
           ]}

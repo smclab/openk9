@@ -52,7 +52,7 @@ export function EmbeddingModels() {
     },
   });
   const navigate = useNavigate();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
@@ -109,7 +109,7 @@ export function EmbeddingModels() {
             {
               label: t("common.edit"),
               action: (embeddingModels) => {
-                embeddingModels.id &&
+                embeddingModels?.id &&
                   navigate(`/embedding-model/${embeddingModels?.id}`, {
                     replace: true,
                   });
@@ -118,7 +118,7 @@ export function EmbeddingModels() {
             {
               label: t("common.delete"),
               action: (tab) => {
-                tab.id && setViewDeleteModal({ view: true, id: tab.id });
+                tab?.id && setViewDeleteModal({ view: true, id: tab.id });
               },
             },
           ]}

@@ -25,7 +25,7 @@ import { useDeleteQueryAnalysisMutation, useQueryAnalysesQuery } from "../../gra
 export function QueryAnalyses() {
   const { t } = useTranslation();
   const queryAnalysesQuery = useQueryAnalysesQuery();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });
@@ -97,7 +97,7 @@ export function QueryAnalyses() {
             {
               label: t("common.edit"),
               action: (queryAnalyses) => {
-                queryAnalyses.id &&
+                queryAnalyses?.id &&
                   navigate(`/query-analysis/${queryAnalyses?.id}`, {
                     replace: true,
                   });

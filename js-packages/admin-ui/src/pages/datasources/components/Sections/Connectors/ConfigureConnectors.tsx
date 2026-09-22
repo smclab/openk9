@@ -61,7 +61,8 @@ function ButtonAddPluginDrivers({
   setExtraFab,
 }: {
   disabled: boolean;
-  pluginDriverRefetch: any;
+  // NOTA: prop ricevuta ma mai usata nel corpo del componente.
+  pluginDriverRefetch: unknown;
   setExtraFab: (fab: React.ReactNode | null) => void;
 }) {
   const { t } = useTranslation();

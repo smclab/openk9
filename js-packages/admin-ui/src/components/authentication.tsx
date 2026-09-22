@@ -164,7 +164,7 @@ type AuthenticationContextValue = {
   getAuthHeaders: () => Promise<Record<string, string>>;
 };
 
-const AuthenticationContext = createContext<AuthenticationContextValue>(null as any);
+const AuthenticationContext = createContext<AuthenticationContextValue | null>(null);
 
 function OidcAuthenticationProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -252,5 +252,9 @@ export function AuthenticationProvider({ children }: { children: React.ReactNode
 }
 
 export function useAuthentication() {
-  return useContext(AuthenticationContext);
+  const value = useContext(AuthenticationContext);
+  if (!value) {
+    throw new Error("useAuthentication must be used within an AuthenticationProvider");
+  }
+  return value;
 }

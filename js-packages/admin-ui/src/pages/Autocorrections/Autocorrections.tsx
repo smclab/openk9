@@ -25,7 +25,7 @@ import { Link, useNavigate } from "react-router-dom";
 export default function Autocorrections() {
   const { t } = useTranslation();
   const autocorrectionQuery = useAutocorrectionsOptionsQuery();
-  const [viewDeleteModal, setViewDeleteModal] = React.useState({
+  const [viewDeleteModal, setViewDeleteModal] = React.useState<{ view: boolean; id: string | undefined }>({
     view: false,
     id: undefined,
   });

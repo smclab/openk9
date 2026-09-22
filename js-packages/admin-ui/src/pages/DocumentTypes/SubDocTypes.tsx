@@ -70,6 +70,50 @@ type TreeNode = {
   children: TreeNode[];
 };
 
+/**
+ * Le edge e i node della query sono nullable: scarta quelli privi di id/name
+ * invece di dereferenziarli, e normalizza i campi opzionali su `undefined`.
+ */
+function toTreeNodes(
+  edges: ReadonlyArray<{
+    node?: {
+      id?: string | null;
+      name?: string | null;
+      description?: string | null;
+      fieldType?: FieldType | null;
+      boost?: number | null;
+      jsonConfig?: string | null;
+      fieldName?: string | null;
+      sortable?: boolean | null;
+      exclude?: boolean | null;
+      searchable?: boolean | null;
+    } | null;
+  } | null>,
+): TreeNode[] {
+  return edges.flatMap((edge) => {
+    const node = edge?.node;
+    if (!node?.id || !node.name) return [];
+    return [
+      {
+        id: node.id,
+        name: node.name,
+        description: node.description || "",
+        fieldType: node.fieldType ?? undefined,
+        boost: node.boost || 0,
+        jsonConfig: node.jsonConfig ?? undefined,
+        fieldName: node.fieldName || "",
+        chipProperties: {
+          sortable: node.sortable || false,
+          exclude: node.exclude || false,
+          searchable: node.searchable || false,
+        },
+        children: [],
+      },
+    ];
+  });
+}
+
+
 export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { t } = useTranslation();
   const { documentTypeId = "new" } = useParams();
@@ -160,21 +204,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
     if (loading || !documentTypesQuery.data) return;
 
     const edges = documentTypesQuery.data.docTypeFieldsFromDocTypeByParent?.edges || [];
-    const formattedData: TreeNode[] = edges.map((edge: any) => ({
-      id: edge.node.id,
-      name: edge.node.name,
-      description: edge.node.description || "",
-      fieldType: edge.node.fieldType || "",
-      boost: edge.node.boost || 0,
-      jsonConfig: edge.node.jsonConfig || null,
-      fieldName: edge.node.fieldName || "",
-      chipProperties: {
-        sortable: edge.node.sortable || false,
-        exclude: edge.node.exclude || false,
-        searchable: edge.node.searchable || false,
-      },
-      children: [],
-    }));
+    const formattedData: TreeNode[] = toTreeNodes(edges);
 
     setData((prevData) => {
       if (parentId === 0) return formattedData;
@@ -267,21 +297,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
         },
       });
       const newEdges = result.data?.docTypeFieldsFromDocTypeByParent?.edges || [];
-      const newNodes: TreeNode[] = newEdges.map((edge: any) => ({
-        id: edge.node.id,
-        name: edge.node.name,
-        description: edge.node.description || "",
-        fieldType: edge.node.fieldType || "",
-        boost: edge.node.boost || 0,
-        jsonConfig: edge.node.jsonConfig || null,
-        fieldName: edge.node.fieldName || "",
-        chipProperties: {
-          sortable: edge.node.sortable || false,
-          exclude: edge.node.exclude || false,
-          searchable: edge.node.searchable || false,
-        },
-        children: [],
-      }));
+      const newNodes: TreeNode[] = toTreeNodes(newEdges);
       setData((prev) => {
         if (parentId === 0) return [...prev, ...newNodes];
         const appendToParent = (nodes: TreeNode[]): TreeNode[] =>
@@ -551,7 +567,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                   </Typography>
                 </Box>
               )}
-              {children.map((child: any) => (
+              {children.map((child) => (
                 <Box
                   key={child.id}
                   display="flex"

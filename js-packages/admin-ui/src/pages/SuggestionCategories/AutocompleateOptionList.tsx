@@ -190,7 +190,7 @@ export function AutocompleteDropdown({
     }
 
     if (e.key === "Enter") {
-      if ((e.nativeEvent as any)?.isComposing || highlightedIndex < 0) return;
+      if (e.nativeEvent.isComposing || highlightedIndex < 0) return;
       const selected = visibleOptions[highlightedIndex];
       if (!selected) return;
 

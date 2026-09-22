@@ -18,10 +18,11 @@ import { useToast } from "@components/Form/Form/ToastProvider";
 import { Typography, useTheme } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Handle, Position } from "react-flow-renderer";
+import { Handle, NodeProps, Position } from "react-flow-renderer";
 import { useCreateOrUpdateRuleQueryMutation, useDeleteRulesMutation } from "../../../graphql-generated";
+import { RuleNodeData } from "../Rules";
 
-export default function NodeGraphRule(props: any) {
+export default function NodeGraphRule(props: NodeProps<RuleNodeData>) {
   const { t } = useTranslation();
   const { data } = props;
   const [inputText, setInputText] = React.useState("");
@@ -157,18 +158,7 @@ export default function NodeGraphRule(props: any) {
                 {data.isDelete && (
                   <button
                     onClick={() => {
-                      const removeRule = data?.rules?.find(
-                        (rules: {
-                          node: {
-                            id: string;
-                            name: string;
-                            lhs: string;
-                            rhs: string;
-                          };
-                        }) => {
-                          return rules.node.rhs === data.label;
-                        },
-                      );
+                      const removeRule = data?.rules?.find((rules) => rules?.node?.rhs === data.label);
                       deleteRuleMutate({
                         variables: { id: removeRule?.node?.id || "" },
                       });
@@ -199,7 +189,7 @@ export default function NodeGraphRule(props: any) {
                       variables: {
                         id: data.idAssociation,
                         name: data.fatherLabel + "_" + variableSymbol + modify,
-                        lhs: data.fatherLabel,
+                        lhs: data.fatherLabel ?? "",
                         rhs: modify,
                       },
                     });

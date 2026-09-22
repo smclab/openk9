@@ -260,7 +260,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
   };
 
   const recapSections = mappingCardRecap({
-    form: form as any,
+    form,
     sections: [
       {
         cell: [
