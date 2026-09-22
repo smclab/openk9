@@ -1,53 +1,55 @@
+(Chi legge deve capire il difetto in cinque minuti. Ogni sezione sta in un 
+paragrafo o in un elenco corto. Scrivi come racconteresti il problema a un 
+collega: linguaggio semplice, riferimenti al codice solo dove servono davvero. 
+La issue la leggono persone e agenti; se la bozza la scrive un agente, tiene 
+la voce di chi apre la issue, non la sua. Cancella le note fra parentesi.)
+
 ## Sommario
 
-(Riassunto conciso del difetto incontrato)
+(Cosa stavi facendo, cosa è successo e cosa ti aspettavi. Poche righe: 
+i dettagli stanno nello scenario qui sotto.)
 
-## Passi per riprodurlo
+## Come riprodurlo
 
-(Come si riproduce il problema?)
-
-## Ambiente di riferimento
-
-(Descrivi l'ambiente in cui il difetto è stato osservato: 
-versione di OpenK9, tipo di deploy (Docker Compose / Kubernetes), 
-sistema operativo, browser se pertinente, 
-e ogni dettaglio di configurazione rilevante)
-
-## Qual è il comportamento attuale?
-
-(Cosa accade a causa di questo difetto?)
-
-## Qual è il comportamento corretto atteso?
-
-(Cosa dovrebbe accadere invece)
-
-## Criteri di accettazione
-
-(La **Definition of Done** della correzione. Servono anche a guidare 
-l'implementazione in BDD/TDD e a diventare la checklist di UAT della merge 
-request che chiude la issue.
-
-Il **primo scenario è la riproduzione del difetto**, scritto in modo che 
-fallisca prima della correzione e passi dopo: è la sola prova che la causa è 
-stata toccata e non mascherata. In **Gherkin**, con le keyword in inglese e non 
-tradotte.
+(Uno scenario in Gherkin, con le keyword in inglese e non tradotte: 
+Given lo stato di partenza, When i passi, Then quello che dovrebbe accadere. 
+Sotto, in una riga, quello che accade oggi. Scritto così fallisce prima della 
+correzione e passa dopo: è il primo criterio di accettazione, e la sola prova 
+che la causa è stata toccata e non mascherata.
 
     Scenario: la cancellazione di un documento produce un solo esito
       Given un documento che la sorgente non ha più
       When la scheduling lo lavora
-      Then il work stage riceve un solo esito, e non un fallimento seguito da un successo
+      Then il work stage riceve un solo esito
 
-Gli altri criteri seguono la stessa forma. I vincoli che non hanno un innesco — 
-un valore di default, un limite, un formato — restano un elenco in linguaggio 
-naturale.)
+    Oggi: riceve un fallimento seguito da un successo.
+)
 
-## Log e screenshot rilevanti
+## Ambiente
 
-(Incolla i log che servono — usa i blocchi di codice (```) per formattare output
-di console, log e codice, altrimenti sono illeggibili.)
+(Versione di OpenK9, tipo di deploy (Docker Compose / Kubernetes), browser se 
+pertinente, e la configurazione che serve per arrivare allo scenario. 
+Dalla 2026.2 in poi, se l'ambiente lo permette, allega l'export della 
+configurazione del tenant (pannello di amministrazione, Import / Export, 
+oppure `GET /api/datasource/v1/config/export`): chi corregge lo importa e 
+parte dallo stesso punto.)
+
+## Criteri di accettazione
+
+(Lo scenario di riproduzione è il primo. Aggiungi solo quello che serve in più 
+perché la issue si possa chiudere: altri scenari in Gherkin per i casi vicini 
+che non devono rompersi, e i vincoli senza innesco (un default, un limite, un 
+formato) come elenco in linguaggio naturale. Diventano i casi di UAT della 
+merge request che chiude la issue.)
+
+## Log e screenshot
+
+(Solo quelli che servono, nei blocchi di codice (```). Se sono lunghi, 
+allegali.)
 
 ## Possibili correzioni
 
-(Se puoi, collega la riga di codice che potrebbe essere responsabile del problema)
+(Facoltativa. Se hai un'idea di dove sta la causa, dilla qui: è il posto 
+giusto per un riferimento al codice.)
 
 /label ~"Bug fix"

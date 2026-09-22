@@ -1,3 +1,7 @@
+(Chi legge deve capire in cinque minuti cosa si aggiorna e perché. Ogni 
+sezione sta in un paragrafo o in un elenco corto, con linguaggio semplice. 
+Cancella le note fra parentesi.)
+
 ## Sommario
 
 (Questa sezione descrive in breve lo scopo di questo aggiornamento. 
