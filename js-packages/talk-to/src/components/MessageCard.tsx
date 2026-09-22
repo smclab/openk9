@@ -5,11 +5,12 @@ import ErrorIcon from "@mui/icons-material/Error";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Box, ButtonBase, Chip, IconButton, Skeleton, Typography } from "@mui/material";
-import { useState } from "react";
+import { ComponentPropsWithoutRef, isValidElement, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Logo } from "../Svg/Logo";
+import type { Source } from "./useGenerateResponse";
 import { useDocumentPreview } from "./DocumentPreview";
 import { ArtifactCard, extractDocumentFromAnswer, richMarkdownComponents } from "./MarkdownRenderer";
 import { Message } from "./useGenerateResponse";
@@ -98,10 +99,13 @@ export function MessageCard({
 	const displayedSources = showAllSources ? visibleSources : visibleSources.slice(0, INITIAL_VISIBLE_SOURCES);
 	const canToggleSources = visibleSources.length > INITIAL_VISIBLE_SOURCES;
 
-	const copySource = async (source: any) => {
+	const copySource = async (source: Source) => {
+		// `url` e' opzionale sulla sorgente: senza non c'e' nulla da copiare.
+		if (!source.url) return;
+		const url = source.url;
 		try {
-			await navigator.clipboard.writeText(source.url);
-			setCopiedSource(source.url);
+			await navigator.clipboard.writeText(url);
+			setCopiedSource(url);
 			setTimeout(() => setCopiedSource(null), 2000);
 		} catch (err) {
 			console.error("Errore durante la copia:", err);
@@ -149,10 +153,10 @@ export function MessageCard({
 		};
 	};
 
-	const PreBlock = (props: any) => {
+	const PreBlock = (props: ComponentPropsWithoutRef<"pre">) => {
 		const [copied, setCopied] = useState(false);
-		const child: any = Array.isArray(props.children) ? props.children?.[0] : props.children;
-		const className: string = child?.props?.className || "";
+		const child = Array.isArray(props.children) ? props.children?.[0] : props.children;
+		const className: string = isValidElement<{ className?: string }>(child) ? child.props.className || "" : "";
 		const languageMatch = /language-([a-z0-9+#]+)/i.exec(className);
 		const language = languageMatch?.[1] || "txt";
 		const badgeFor = (lang: string) => {
@@ -371,8 +375,8 @@ export function MessageCard({
 								remarkPlugins={[remarkGfm]}
 								components={{
 									...richMarkdownComponents,
-									pre: (props: any) => <PreBlock {...props} />,
-									code: (props: any) => {
+									pre: (props) => <PreBlock {...props} />,
+									code: (props: ComponentPropsWithoutRef<"code"> & { inline?: boolean }) => {
 										const { inline, style, children, ...rest } = props || {};
 										return (
 											<code

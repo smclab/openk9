@@ -1,7 +1,8 @@
 import styled from "@emotion/styled";
 import { Box, Button } from "@mui/material";
+import { Theme } from "@mui/material/styles";
 
-export const SkeletonK9 = styled(Box)(({ theme, color }: { theme: any; color: "primary" | "secondary" }) => {
+export const SkeletonK9 = styled(Box)(({ theme, color }: { theme: Theme; color: "primary" | "secondary" }) => {
 	const boxK9 = {
 		backgroundColor: theme.palette.primary.main,
 	};

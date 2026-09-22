@@ -153,7 +153,7 @@ export const richMarkdownComponents: Components = {
 			sx={{
 				border: "1px solid rgba(0, 0, 0, 0.15)",
 				p: 1,
-				textAlign: (style?.textAlign as any) || "left",
+				textAlign: style?.textAlign || "left",
 				backgroundColor: "rgba(0, 0, 0, 0.04)",
 				fontWeight: 600,
 			}}
@@ -168,7 +168,7 @@ export const richMarkdownComponents: Components = {
 			sx={{
 				border: "1px solid rgba(0, 0, 0, 0.15)",
 				p: 1,
-				textAlign: (style?.textAlign as any) || "left",
+				textAlign: style?.textAlign || "left",
 				verticalAlign: "top",
 			}}
 		>

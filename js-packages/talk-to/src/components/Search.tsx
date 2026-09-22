@@ -132,8 +132,8 @@ export default function Search({
 				setUploadDone(true);
 				onSetRetrieveFromUploadedDocuments?.(true);
 				setLastUploaded(valid.map((f) => f.name));
-			} catch (e: any) {
-				setErrors([(e?.message as string) || "Upload error"]);
+			} catch (e) {
+				setErrors([e instanceof Error ? e.message : "Upload error"]);
 			} finally {
 				setUploading(false);
 			}

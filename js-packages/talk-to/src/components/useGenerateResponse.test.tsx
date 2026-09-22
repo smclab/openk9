@@ -3,8 +3,13 @@ import { TextDecoder, TextEncoder } from "util";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import useGenerateResponse from "./useGenerateResponse";
 
-(global as any).TextEncoder = (global as any).TextEncoder || TextEncoder;
-(global as any).TextDecoder = (global as any).TextDecoder || TextDecoder;
+// jsdom non espone TextEncoder/TextDecoder: qui si colma il buco.
+const globalWithEncoding = globalThis as typeof globalThis & {
+	TextEncoder?: typeof TextEncoder;
+	TextDecoder?: typeof TextDecoder;
+};
+globalWithEncoding.TextEncoder = globalWithEncoding.TextEncoder || TextEncoder;
+globalWithEncoding.TextDecoder = globalWithEncoding.TextDecoder || TextDecoder;
 
 let mockUuidCounter = 0;
 vi.mock("uuid", () => ({

@@ -17,7 +17,7 @@ export function supportsImageQuery(retrieveType?: RetrieveType): boolean {
 interface UserContextType {
 	userInfo: UserInfo | null;
 	loading: boolean;
-	error: any;
+	error: unknown;
 	language?: string;
 	setLanguage?: (language: string) => void;
 }

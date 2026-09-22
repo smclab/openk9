@@ -8,7 +8,7 @@ import { useChatContext } from "../context/HistoryChatContext";
 import { useTranslation } from "react-i18next";
 import { isAuthenticated } from "../auth/oauth2";
 
-type Source = { source?: string; title?: string; url?: string; filename?: string; file_extension?: string };
+export type Source = { source?: string; title?: string; url?: string; filename?: string; file_extension?: string };
 
 /** Holds the `File`, not the bytes: base64 is built (memoized on `attachmentId`) in the fetch
  * path, so it never enters React state or react-query keys. */

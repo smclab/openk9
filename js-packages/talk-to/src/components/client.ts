@@ -5,7 +5,7 @@ import { jsonObjPost } from "./utils";
 import { ChatHistory } from "../context/HistoryChatContext";
 import { resolveTenantUrl } from "../config/tenant";
 
-export const OpenK9ClientContext = React.createContext<ReturnType<typeof OpenK9Client>>(null as any);
+export const OpenK9ClientContext = React.createContext<ReturnType<typeof OpenK9Client> | null>(null);
 
 export function OpenK9Client() {
 	async function authFetch(route: string, init: RequestInit = {}) {
@@ -83,7 +83,7 @@ export function OpenK9Client() {
 			return response.json();
 		},
 
-		async GenerateResponse({ url, searchQuery, controller }: any) {
+		async GenerateResponse({ url, searchQuery, controller }: { url: string; searchQuery: unknown; controller: AbortController }) {
 			return authFetch(url, {
 				method: "POST",
 				headers: {

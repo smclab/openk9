@@ -5,7 +5,7 @@ export const authInit = initOAuth2();
 
 type AuthenticationContextValue = { isAuthenticated: boolean };
 
-const AuthenticationContext = React.createContext<AuthenticationContextValue>(null as any);
+const AuthenticationContext = React.createContext<AuthenticationContextValue | null>(null);
 
 export function AuthenticationProvider({ children }: { children: React.ReactNode }) {
 	const [value, setValue] = React.useState<AuthenticationContextValue>({ isAuthenticated: isAuthenticated() });
@@ -22,5 +22,9 @@ export async function getUserProfile() {
 }
 
 export function useAuthentication() {
-	return React.useContext(AuthenticationContext);
+	const value = React.useContext(AuthenticationContext);
+	if (!value) {
+		throw new Error("useAuthentication must be used within an AuthenticationProvider");
+	}
+	return value;
 }

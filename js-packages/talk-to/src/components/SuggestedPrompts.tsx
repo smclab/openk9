@@ -10,7 +10,7 @@ const SuggestedPrompts = ({
 }) => {
 	return (
 		<Grid container spacing={2} mt={6}>
-			{suggestedPrompts.map((prompt: any, index: any) => (
+			{suggestedPrompts.map((prompt, index) => (
 				<Grid item xs={12} md={6} key={index}>
 					<ButtonBase onClick={() => handleSuggestedPrompt(prompt)} sx={{ width: "100%", textAlign: "left" }}>
 						<Paper
