@@ -732,6 +732,52 @@ public class IndexService {
 	}
 
 	/**
+	 * Reads the settings declared in the index template of an index as
+	 * OpenSearch answers them, every key included, nested with everything
+	 * under {@code index} and every value as a string.
+	 * <p>
+	 * Unlike {@link #getIndexTemplateSettings}, which renders them for an
+	 * editor, this answers nothing for a template that does not exist, which
+	 * is a state a caller can act on.
+	 *
+	 * @param indexName the name of the index whose index template is read
+	 * @return a {@link Uni} emitting the settings the index template declares,
+	 * or {@code null} when the index template does not exist, and failing
+	 * with an {@link IndexMappingException} otherwise
+	 */
+	public Uni<JsonObject> readIndexTemplateSettings(IndexName indexName) {
+		var indexTemplateName = indexName + TEMPLATE_SUFFIX;
+
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				var response = sendRequest(
+					"GET", "/_index_template/" + indexTemplateName, null);
+
+				return new JsonObject(response)
+					.getJsonArray("index_templates", new JsonArray())
+					.stream()
+					.map(JsonObject.class::cast)
+					.filter(item -> indexTemplateName.equals(item.getString("name")))
+					.findFirst()
+					.map(item -> item
+						.getJsonObject("index_template", new JsonObject())
+						.getJsonObject("template", new JsonObject())
+						.getJsonObject("settings", new JsonObject()))
+					.orElse(null);
+			}
+			catch (Exception e) {
+				if (isIndexNotFound(e)) {
+					return null;
+				}
+
+				log.errorf(e, "Cannot read the index template of %s", indexName);
+
+				throw new IndexMappingException(e);
+			}
+		});
+	}
+
+	/**
 	 * Tells the one refusal a close can fix from every other one.
 	 * <p>
 	 * Unlike {@link #isIndexNotFound}, this reads the wording of the message,

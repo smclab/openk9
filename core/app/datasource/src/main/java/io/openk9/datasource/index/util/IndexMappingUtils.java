@@ -479,6 +479,117 @@ public final class IndexMappingUtils {
 		return remainder;
 	}
 
+	/**
+	 * Finds, in the settings an index template declares, the ones the docTypes
+	 * do not derive: what was asked for on top of the derived document, which
+	 * is what a dataIndex records as its settings.
+	 * <p>
+	 * A key the derived settings declare with the same value is theirs and is
+	 * left out. The analysis definitions the docTypes own are left out whatever
+	 * their value, because an index template takes them from the docTypes as
+	 * they are now and never from what is recorded, the same rule
+	 * {@link #derivedAnalysisNamesIn} enforces on a settings update. Everything
+	 * else is kept, a differing value on a derived key included, since nothing
+	 * but a request could have put it there. OpenSearch declares the analysis
+	 * under {@code index}, while the derived and the recorded settings keep it
+	 * at the top: the result follows the latter, so that it can be recorded
+	 * as it is.
+	 *
+	 * @param declaredSettings the settings an index template declares, as
+	 *                         OpenSearch answers them
+	 * @param derivedSettings the settings derived from the docTypes, as
+	 *                        {@link #docTypesToSettings} builds them
+	 * @return the settings to record, empty when the index template declares
+	 * nothing beyond the derived ones
+	 */
+	public static JsonObject customSettingsOf(
+		JsonObject declaredSettings, Map<String, Object> derivedSettings) {
+
+		var custom = liftAnalysis(declaredSettings);
+
+		var analysis = custom.getJsonObject(ANALYSIS);
+
+		if (analysis != null) {
+			for (var definition : derivedAnalysisNamesIn(derivedSettings, custom)) {
+				var segments = definition.split("\\.");
+
+				var category = analysis.getJsonObject(segments[0]);
+
+				if (category != null) {
+					category.remove(segments[1]);
+				}
+			}
+		}
+
+		dropDerived(custom, new JsonObject(Json.encode(derivedSettings)));
+
+		removeNulls(custom);
+
+		return custom;
+	}
+
+	/**
+	 * Copies a settings document moving the analysis OpenSearch nests under
+	 * {@code index} to the top, where the derived settings keep it.
+	 */
+	private static JsonObject liftAnalysis(JsonObject settings) {
+
+		var lifted = settings.copy();
+
+		var index = lifted.getJsonObject("index");
+
+		if (index != null && index.getValue(ANALYSIS) instanceof JsonObject nested) {
+			index.remove(ANALYSIS);
+
+			var analysis = lifted.getJsonObject(ANALYSIS);
+
+			if (analysis == null) {
+				lifted.put(ANALYSIS, nested);
+			}
+			else {
+				analysis.mergeIn(nested, true);
+			}
+		}
+
+		return lifted;
+	}
+
+	/**
+	 * Nulls out, in a declared document, every leaf the derived one declares
+	 * with the same value, so that {@link #removeNulls} then prunes them with
+	 * the branches they leave empty. Scalars are compared as text, because
+	 * OpenSearch answers every setting as a string while the derived document
+	 * keeps the types it was built with; arrays are compared whole.
+	 */
+	private static void dropDerived(JsonObject declared, JsonObject derived) {
+
+		var dropped = new LinkedList<String>();
+
+		for (var entry : declared) {
+			var derivedValue = derived.getValue(entry.getKey());
+
+			if (derivedValue == null) {
+				continue;
+			}
+
+			if (entry.getValue() instanceof JsonObject nested
+				&& derivedValue instanceof JsonObject derivedNested) {
+
+				dropDerived(nested, derivedNested);
+			}
+			else if (entry.getValue() instanceof JsonArray array) {
+				if (array.equals(derivedValue)) {
+					dropped.add(entry.getKey());
+				}
+			}
+			else if (String.valueOf(entry.getValue()).equals(String.valueOf(derivedValue))) {
+				dropped.add(entry.getKey());
+			}
+		}
+
+		dropped.forEach(key -> declared.put(key, (Object) null));
+	}
+
 	private static Map<String, String> flatten(JsonObject object) {
 
 		var flat = new LinkedHashMap<String, String>();
