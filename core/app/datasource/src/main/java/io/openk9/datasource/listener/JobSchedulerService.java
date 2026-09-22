@@ -196,7 +196,7 @@ public class JobSchedulerService {
 
 			// the dataIndex service owns the creation of every dataIndex, and
 			// it must happen in the session the Scheduler is persisted in
-			return dataIndexService.create(s, newDataIndex)
+			return dataIndexService.create(s, newDataIndex, scheduler.getOldDataIndex())
 				.invoke(scheduler::setNewDataIndex)
 				.call(() -> s.persist(scheduler))
 				.map(unused -> scheduler);

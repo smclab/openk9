@@ -29,6 +29,7 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -251,6 +252,79 @@ class IndexMappingUtilsTest {
 			descriptionDeKeyword,
 			emptyObject
 		)));
+	}
+
+	@Test
+	void should_find_no_custom_settings_in_a_template_the_doc_types_derive() {
+		// the index template declares exactly what the docTypes derive, in the
+		// shape OpenSearch answers it: the analysis under index, and numbers
+		// as they were sent
+		var declared = new JsonObject()
+			.put("index", new JsonObject()
+				.put("highlight", new JsonObject().put("max_analyzed_offset", 10000000))
+				.put("analysis", derivedSettings().getJsonObject("analysis")));
+
+		var custom = IndexMappingUtils.customSettingsOf(
+			declared, derivedSettings().getMap());
+
+		Assertions.assertTrue(custom.isEmpty(), custom.encode());
+	}
+
+	@Test
+	void should_keep_what_a_template_declares_beyond_the_doc_types() {
+		var analysis = derivedSettings().getJsonObject("analysis");
+
+		// the analyzer the docTypes own now has another type on the template
+		analysis.getJsonObject("analyzer")
+			.getJsonObject("cst_analyzer")
+			.put("type", "whitespace");
+
+		// and the template defines an analyzer of its own
+		analysis.getJsonObject("analyzer")
+			.put("cst_mine", new JsonObject().put("type", "keyword"));
+
+		var declared = new JsonObject()
+			.put("index", new JsonObject()
+				.put("number_of_replicas", "0")
+				.put("max_result_window", "12345")
+				.put("highlight", new JsonObject().put("max_analyzed_offset", "5000"))
+				.put("analysis", analysis));
+
+		var custom = IndexMappingUtils.customSettingsOf(
+			declared, derivedSettings().getMap());
+
+		// the requested keys and the analyzer of the template are recorded, at
+		// the top like the recorded settings; the derived analyzer is not,
+		// whatever the template says about it
+		Assertions.assertEquals(
+			new JsonObject()
+				.put("index", new JsonObject()
+					.put("number_of_replicas", "0")
+					.put("max_result_window", "12345")
+					.put("highlight", new JsonObject().put("max_analyzed_offset", "5000")))
+				.put("analysis", new JsonObject()
+					.put("analyzer", new JsonObject()
+						.put("cst_mine", new JsonObject().put("type", "keyword")))),
+			custom
+		);
+	}
+
+	/**
+	 * The settings {@link IndexMappingUtils#docTypesToSettings} derives from a
+	 * docType whose field carries one custom analyzer.
+	 */
+	private static JsonObject derivedSettings() {
+		return new JsonObject()
+			.put("analysis", new JsonObject()
+				.put("analyzer", new JsonObject()
+					.put("cst_analyzer", new JsonObject()
+						.put("type", "custom")
+						.put("tokenizer", "standard")
+						.put("filter", new JsonArray().add("lowercase"))))
+				.put("filter", new JsonObject()
+					.put("lowercase", new JsonObject().put("type", "lowercase"))))
+			.put("index", new JsonObject()
+				.put("highlight", new JsonObject().put("max_analyzed_offset", "10000000")));
 	}
 
 }

@@ -19,6 +19,7 @@ package io.openk9.datasource.listener;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletionException;
@@ -63,6 +64,8 @@ import org.junit.jupiter.api.Test;
 import org.opensearch.client.Request;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.cluster.metadata.ComposableIndexTemplate;
+import org.opensearch.cluster.metadata.Template;
+import org.opensearch.common.settings.Settings;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -93,6 +96,9 @@ class ReindexDataIndexTest {
 	private static final String DATA_INDEX = "rdit.data-index";
 	private static final String DATASOURCE = "rdit.datasource";
 	private static final String EMBEDDING_JSON_CONFIG = "{\"batch\": 8}";
+	private static final String MAX_ANALYZED_OFFSET_SETTING =
+		"index.highlight.max_analyzed_offset";
+	private static final String MAX_RESULT_WINDOW_SETTING = "index.max_result_window";
 	private static final String REPLICAS_SETTING = "index.number_of_replicas";
 	private static final String SECONDARY_EMBEDDING_MODEL =
 		"Test embedding model disabled";
@@ -381,6 +387,85 @@ class ReindexDataIndexTest {
 	}
 
 	@Test
+	@DisplayName("Should record the settings of a template created before they were recorded")
+	void should_record_the_settings_of_a_template_created_before_they_were_recorded() {
+		// a dataIndex that records no settings, whose index template declares
+		// some beyond the derived ones: the state of a dataIndex created before
+		// the settings were recorded, when a reindex copied the template whole
+		var datasourceId = createDatasource(knnDataIndex().settings(null));
+
+		assertNull(reload(DATA_INDEX).getSettings());
+
+		declareOnIndexTemplate(DATA_INDEX, Map.of(
+			REPLICAS_SETTING, "0",
+			MAX_RESULT_WINDOW_SETTING, "12345"
+		));
+
+		var scheduler = reindex(datasourceId);
+
+		// the new dataIndex records what the template declared beyond the
+		// docTypes, and nothing the docTypes derive
+		var newDataIndex = reload(scheduler.getNewDataIndex().getName());
+
+		assertEquals(
+			new JsonObject().put("index", new JsonObject()
+				.put("number_of_replicas", "0")
+				.put("max_result_window", "12345")),
+			new JsonObject(newDataIndex.getSettings())
+		);
+
+		// and its index template declares them next to the derived ones
+		var settings = indexTemplate(newDataIndex).template().settings();
+
+		assertEquals("0", settings.get(REPLICAS_SETTING));
+		assertEquals("12345", settings.get(MAX_RESULT_WINDOW_SETTING));
+		assertEquals("10000000", settings.get(MAX_ANALYZED_OFFSET_SETTING));
+	}
+
+	@Test
+	@DisplayName("Should record nothing from an index template the docTypes derive")
+	void should_record_nothing_from_a_template_the_doc_types_derive() {
+		// a dataIndex that records no settings and whose index template
+		// declares only what the docTypes derive
+		var datasourceId = createDatasource(knnDataIndex().settings(null));
+
+		var scheduler = reindex(datasourceId);
+
+		var newDataIndex = reload(scheduler.getNewDataIndex().getName());
+
+		// nothing is recorded, and the template is the derived one
+		assertNull(newDataIndex.getSettings());
+
+		var settings = indexTemplate(newDataIndex).template().settings();
+
+		assertNull(settings.get(REPLICAS_SETTING));
+		assertEquals("10000000", settings.get(MAX_ANALYZED_OFFSET_SETTING));
+	}
+
+	@Test
+	@DisplayName("Should not read the index template when the settings are recorded")
+	void should_not_read_the_template_when_the_settings_are_recorded() {
+		// a dataIndex that records its settings, whose index template was
+		// altered behind its back
+		var datasourceId = createDatasource(knnDataIndex());
+
+		declareOnIndexTemplate(DATA_INDEX, Map.of(MAX_RESULT_WINDOW_SETTING, "12345"));
+
+		var scheduler = reindex(datasourceId);
+
+		// the recorded settings win, and what the template declared is not
+		// carried over
+		var newDataIndex = reload(scheduler.getNewDataIndex().getName());
+
+		assertEquals(SETTINGS, newDataIndex.getSettings());
+
+		var settings = indexTemplate(newDataIndex).template().settings();
+
+		assertEquals("2", settings.get(REPLICAS_SETTING));
+		assertNull(settings.get(MAX_RESULT_WINDOW_SETTING));
+	}
+
+	@Test
 	@DisplayName("Should create the index template of a dataIndex without docTypes")
 	void should_create_the_index_template_without_doc_types() {
 		// the replaced dataIndex has no docTypes
@@ -561,6 +646,35 @@ class ReindexDataIndexTest {
 				existing.indexPatterns(),
 				existing.template(),
 				List.of(),
+				existing.priority(),
+				existing.version(),
+				existing.metadata()
+			)
+		);
+	}
+
+	/**
+	 * Adds settings to the index template of a dataIndex behind its back, the
+	 * way an operator could before the settings were recorded.
+	 */
+	private void declareOnIndexTemplate(String dataIndexName, Map<String, String> settings) {
+		var existing = IndexTemplateUtils.getIndexTemplate(
+			restHighLevelClient, TENANT_ID, dataIndexName);
+
+		var builder = Settings.builder().put(existing.template().settings());
+
+		settings.forEach(builder::put);
+
+		IndexTemplateUtils.putIndexTemplate(
+			restHighLevelClient, TENANT_ID, dataIndexName,
+			new ComposableIndexTemplate(
+				existing.indexPatterns(),
+				new Template(
+					builder.build(),
+					existing.template().mappings(),
+					existing.template().aliases()
+				),
+				existing.composedOf(),
 				existing.priority(),
 				existing.version(),
 				existing.metadata()

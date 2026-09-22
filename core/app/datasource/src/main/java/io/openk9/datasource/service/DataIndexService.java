@@ -43,6 +43,7 @@ import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.model.DataIndexTemplate;
 import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.index.response.CatResponse;
+import io.openk9.datasource.index.util.IndexMappingUtils;
 import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
@@ -243,9 +244,34 @@ public class DataIndexService
 	 */
 	@Override
 	public Uni<DataIndex> create(Mutiny.Session session, DataIndex dataIndex) {
+		return create(session, dataIndex, null);
+	}
+
+	/**
+	 * Creates a dataIndex that takes the place of another one, as the
+	 * scheduler does when a reindex starts.
+	 * <p>
+	 * The gate is the same as {@link #create(Mutiny.Session, DataIndex)}. On
+	 * top of it, when the new dataIndex records no settings, the ones the
+	 * index template of the replaced dataIndex declares beyond the derived
+	 * ones are recorded on it: the dataIndexes that were created before the
+	 * settings were recorded at all have them only there, and a reindex used
+	 * to copy that index template whole.
+	 *
+	 * @param session   the session the dataIndex is created in
+	 * @param dataIndex the dataIndex to create
+	 * @param replaced  the dataIndex being replaced, {@code null} when there
+	 *                  is none
+	 * @return the created dataIndex, or a failure carrying the reason it
+	 * cannot be created
+	 */
+	public Uni<DataIndex> create(
+		Mutiny.Session session, DataIndex dataIndex, DataIndex replaced) {
 
 		return resolveEmbeddingModel(session, dataIndex)
 			.flatMap(embeddingModel -> merge(session, dataIndex)
+				.call(merged -> inheritIndexTemplateSettings(
+					session, merged, replaced))
 				.call(merged -> createDataIndexTemplate(
 					session, merged, embeddingModel))
 			);
@@ -556,6 +582,64 @@ public class DataIndexService
 					)
 				))
 			);
+	}
+
+	/**
+	 * Records on a dataIndex the custom settings the index template of the
+	 * dataIndex it replaces declares, when it records none of its own.
+	 * <p>
+	 * The derived settings are computed from the docTypes as they are now, so
+	 * only what the docTypes do not derive is recorded, and the analysis the
+	 * index template regenerates is never frozen in the column. Nothing is
+	 * read when the dataIndex already records its settings, or when there is
+	 * nothing to replace.
+	 *
+	 * @param session   the session the dataIndex is created in
+	 * @param dataIndex the dataIndex being created, already managed
+	 * @param replaced  the dataIndex being replaced, may be {@code null}
+	 * @return an empty {@link Uni}
+	 */
+	private Uni<Void> inheritIndexTemplateSettings(
+		Mutiny.Session session, DataIndex dataIndex, DataIndex replaced) {
+
+		if (replaced == null || dataIndex.getSettings() != null) {
+			return Uni.createFrom().voidItem();
+		}
+
+		return getCurrentTenant(session)
+			.flatMap(tenant -> indexService.readIndexTemplateSettings(
+				IndexName.from(tenant, replaced)))
+			.flatMap(declared -> {
+
+				if (declared == null) {
+					return Uni.createFrom().voidItem();
+				}
+
+				return session.fetch(dataIndex.getDocTypes())
+					.flatMap(docTypes -> docTypeFieldService
+						.expandDocTypes(session, docTypes))
+					.invoke(docTypes -> {
+
+						var custom = IndexMappingUtils.customSettingsOf(
+							declared, IndexMappingUtils.docTypesToSettings(docTypes));
+
+						if (custom.isEmpty()) {
+							return;
+						}
+
+						log.warnf(
+							"The dataIndex %s records no settings: the ones the index "
+								+ "template of %s declares beyond the docTypes are "
+								+ "recorded on it, %s",
+							dataIndex.getName(),
+							replaced.getName(),
+							custom.encode()
+						);
+
+						dataIndex.setSettings(custom.encode());
+					})
+					.replaceWithVoid();
+			});
 	}
 
 	private Uni<DataIndex> createDataIndexTransient(

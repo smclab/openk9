@@ -19,6 +19,7 @@ package io.openk9.datasource.index;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -48,6 +49,7 @@ import org.opensearch.client.IndicesClient;
 import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.Response;
+import org.opensearch.client.ResponseException;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.core.CountRequest;
@@ -299,6 +301,55 @@ public class IndexService {
 				.map(indexTemplate -> indexTemplate.settings().toString())
 				.orElseThrow(() -> new IndexNotFoundException(indexTemplateName))
 			);
+	}
+
+	/**
+	 * Reads the settings declared in the index template of an index as
+	 * OpenSearch answers them, every key included.
+	 * <p>
+	 * The typed client parses the settings into its own model and drops
+	 * whatever the model does not cover, so the template is read raw: the
+	 * settings come back nested, with everything under {@code index}, the
+	 * analysis included, and every value as a string.
+	 *
+	 * @param indexName the name of the index whose index template is read
+	 * @return a {@link Uni} emitting the settings the index template declares,
+	 * or {@code null} when the index template does not exist
+	 */
+	public Uni<JsonObject> readIndexTemplateSettings(IndexName indexName) {
+		var indexTemplateName = indexName + TEMPLATE_SUFFIX;
+
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				var response = restHighLevelClient
+					.getLowLevelClient()
+					.performRequest(
+						new Request("GET", "/_index_template/" + indexTemplateName));
+
+				var body = new String(response.getEntity().getContent().readAllBytes());
+
+				return new JsonObject(body)
+					.getJsonArray("index_templates", new JsonArray())
+					.stream()
+					.map(JsonObject.class::cast)
+					.filter(item -> indexTemplateName.equals(item.getString("name")))
+					.findFirst()
+					.map(item -> item
+						.getJsonObject("index_template", new JsonObject())
+						.getJsonObject("template", new JsonObject())
+						.getJsonObject("settings", new JsonObject()))
+					.orElse(null);
+			}
+			catch (ResponseException e) {
+				if (e.getResponse().getStatusLine().getStatusCode()
+					== HttpURLConnection.HTTP_NOT_FOUND) {
+
+					return null;
+				}
+
+				throw e;
+			}
+		});
 	}
 
 	private void deleteIndexTemplate(IndexName indexName) {
