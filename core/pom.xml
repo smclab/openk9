@@ -104,6 +104,7 @@
 		<failsafe-plugin.version>3.5.2</failsafe-plugin.version>
 		<gpg-plugin.version>3.2.7</gpg-plugin.version>
 		<dependency-check-plugin.version>12.1.9</dependency-check-plugin.version>
+		<cyclonedx-plugin.version>2.9.3</cyclonedx-plugin.version>
 		<jandex-maven-plugin.version>3.0.5</jandex-maven-plugin.version>
 		<reactor-bom-version>2022.0.1</reactor-bom-version>
 		<pekko.version>1.1.5</pekko.version>
@@ -279,6 +280,17 @@
 					<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
 					<nvdApiDelay>6000</nvdApiDelay>
 					<suppressionFile>dependency-check-suppressions.xml</suppressionFile>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.cyclonedx</groupId>
+				<artifactId>cyclonedx-maven-plugin</artifactId>
+				<version>${cyclonedx-plugin.version}</version>
+				<configuration>
+					<outputFormat>json</outputFormat>
+					<outputName>bom</outputName>
+					<includeTestScope>false</includeTestScope>
+					<includeProvidedScope>false</includeProvidedScope>
 				</configuration>
 			</plugin>
 			<plugin>
