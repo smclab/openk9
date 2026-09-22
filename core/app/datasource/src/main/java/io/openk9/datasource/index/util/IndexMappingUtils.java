@@ -37,10 +37,15 @@ import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.searcher.util.Utils;
 
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
 public final class IndexMappingUtils {
+
+	private static final String ANALYSIS_PREFIX = "analysis.";
+	private static final String INDEX_PREFIX = "index.";
 
 	private IndexMappingUtils() {
 	}
@@ -314,6 +319,133 @@ public final class IndexMappingUtils {
 	private static Map<MappingsKey, Object> visit(MappingsKey nextKey, Map<MappingsKey, Object> current) {
 		return (Map<MappingsKey, Object>) current.computeIfAbsent(
 			nextKey, k -> new LinkedHashMap<>());
+	}
+
+
+	/**
+	 * Finds, in the settings an index template declares, the ones the docTypes
+	 * do not derive: what was asked for on top of the derived document, which
+	 * is what a dataIndex records as its settings.
+	 * <p>
+	 * A key the derived settings declare with the same value is theirs and is
+	 * left out. The analysis definitions the docTypes own are left out whatever
+	 * their value, because an index template takes them from the docTypes as
+	 * they are now and never from what is recorded. Everything else is kept, a
+	 * differing value on a derived key included, since nothing but a request
+	 * could have put it there. OpenSearch declares the analysis under {@code
+	 * index}, while the derived and the recorded settings keep it at the top:
+	 * the result follows the latter, so that it can be recorded as it is.
+	 *
+	 * @param declaredSettings the settings an index template declares, as
+	 *                         OpenSearch answers them
+	 * @param derivedSettings the settings derived from the docTypes, as
+	 *                        {@link #docTypesToSettings} builds them
+	 * @return the settings to record, empty when the index template declares
+	 * nothing beyond the derived ones
+	 */
+	public static JsonObject customSettingsOf(
+		JsonObject declaredSettings, Map<String, Object> derivedSettings) {
+
+		var derived = flatten(new JsonObject(Json.encode(derivedSettings)));
+
+		var derivedDefinitions = derived.keySet()
+			.stream()
+			.map(IndexMappingUtils::definitionOf)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+
+		var custom = new JsonObject();
+
+		flatten(declaredSettings).forEach((declaredKey, value) -> {
+
+			var key = declaredKey.startsWith(INDEX_PREFIX + ANALYSIS_PREFIX)
+				? declaredKey.substring(INDEX_PREFIX.length())
+				: declaredKey;
+
+			if (Objects.equals(value, derived.get(key))
+				|| derivedDefinitions.contains(definitionOf(key))) {
+
+				return;
+			}
+
+			put(custom, key, value);
+		});
+
+		return custom;
+	}
+
+	/**
+	 * Names the analysis definition a flattened key belongs to, which is its
+	 * category and its name, as in {@code analyzer.my_analyzer}; {@code null}
+	 * when the key is not an analysis one.
+	 */
+	private static String definitionOf(String key) {
+
+		if (!key.startsWith(ANALYSIS_PREFIX)) {
+			return null;
+		}
+
+		var segments = key.substring(ANALYSIS_PREFIX.length()).split("\\.");
+
+		return segments.length >= 2 ? segments[0] + "." + segments[1] : null;
+	}
+
+	/**
+	 * Flattens a settings document to dotted keys. Scalars are compared as
+	 * text, because OpenSearch answers every setting as a string while the
+	 * derived document keeps the types it was built with; arrays are leaves,
+	 * because that is how they are declared and recorded.
+	 */
+	private static Map<String, Object> flatten(JsonObject object) {
+
+		var flat = new LinkedHashMap<String, Object>();
+
+		if (object != null) {
+			flatten("", object, flat);
+		}
+
+		return flat;
+	}
+
+	private static void flatten(
+		String prefix, Object value, Map<String, Object> flat) {
+
+		if (value instanceof JsonObject object) {
+			object.forEach(entry -> flatten(
+				prefix.isEmpty()
+					? entry.getKey()
+					: prefix + "." + entry.getKey(),
+				entry.getValue(),
+				flat
+			));
+		}
+		else if (value instanceof JsonArray array) {
+			flat.put(prefix, array);
+		}
+		else {
+			flat.put(prefix, String.valueOf(value));
+		}
+	}
+
+	private static void put(JsonObject object, String key, Object value) {
+
+		var segments = key.split("\\.");
+
+		var target = object;
+
+		for (int i = 0; i < segments.length - 1; i++) {
+			var nested = target.getJsonObject(segments[i]);
+
+			if (nested == null) {
+				nested = new JsonObject();
+
+				target.put(segments[i], nested);
+			}
+
+			target = nested;
+		}
+
+		target.put(segments[segments.length - 1], value);
 	}
 
 }
