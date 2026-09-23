@@ -1,8 +1,8 @@
 ## Sommario e obiettivi
 
-(Questa sezione dà una visione d'insieme dell'obiettivo di lungo periodo che questa voce di roadmap sostiene. 
-Spiega come si allinea agli obiettivi aziendali o di prodotto e 
-quale valore strategico porta.)
+(Questa sezione dà una visione d'insieme dell'obiettivo di lungo periodo che 
+questa voce di roadmap sostiene. Spiega come si allinea agli obiettivi 
+aziendali o di prodotto e quale valore strategico porta.)
 
 ## Perimetro e milestone
 

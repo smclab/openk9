@@ -19,9 +19,12 @@ test non coprono. Tutto il resto va in un caso di UAT.)
 
 ## Dipendenze
 
-(Merge request da mergiare prima di questa o che dipendono da questa, e i 
-porting sulle altre linee. Esempio: "dipende da !142, da mergiare prima". 
-"Nessuna" è una risposta.)
+(Compila tutte le voci: "Nessuna" è una risposta.)
+
+- **Da mergiare prima:** (es. !142)
+- **Da mergiare dopo:** (le merge request che dipendono da questa)
+- **Porting:** (le merge request sulle altre linee, es. !143 su 3.0.x; oppure 
+  il perché non serve)
 
 ## UAT (guidata dall'agente)
 

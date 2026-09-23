@@ -9,6 +9,20 @@ la voce di chi apre la issue, non la sua. Cancella le note fra parentesi.)
 (Cosa stavi facendo, cosa è successo e cosa ti aspettavi. Poche righe: 
 i dettagli stanno nello scenario qui sotto.)
 
+## Domande aperte
+
+(Solo finché la issue non è definita del tutto: per esempio quando la bozza 
+l'apre un agente, o quando la definizione è ancora in corso. Una domanda per 
+voce; se sai chi può rispondere, taggalo, e se la risposta cambia i criteri 
+di accettazione, dillo. Finché resta almeno una domanda, aggiungi in fondo 
+`/label ~needs-triage`. Quando tutte hanno una risposta, riporta ogni risposta 
+nella sezione a cui appartiene, cancella questa sezione e togli la label.
+
+- succede anche con il connettore minio o solo con il web crawler?
+- il doppio esito arriva anche su 3.0.x? (decide su quali branch portare la 
+  correzione)
+)
+
 ## Come riprodurlo
 
 (Uno scenario in Gherkin, con le keyword in inglese e non tradotte: 
@@ -27,12 +41,21 @@ che la causa è stata toccata e non mascherata.
 
 ## Ambiente
 
-(Versione di OpenK9, tipo di deploy (Docker Compose / Kubernetes), browser se 
-pertinente, e la configurazione che serve per arrivare allo scenario. 
-Dalla 2026.2 in poi, se l'ambiente lo permette, allega l'export della 
-configurazione del tenant (pannello di amministrazione, Import / Export, 
+(Dove è avvenuto il difetto. Compila le voci che servono, cancella quelle che 
+non c'entrano. Dalla 2026.2 in poi, se l'ambiente lo permette, allega l'export 
+della configurazione del tenant (pannello di amministrazione, Import / Export, 
 oppure `GET /api/datasource/v1/config/export`): chi corregge lo importa e 
 parte dallo stesso punto.)
+
+- **Versione di OpenK9:** (tag, oppure branch e commit)
+- **Deploy:** (Docker Compose / Kubernetes con Helm)
+- **Componenti coinvolti:** (servizi, connettori, enricher, e la loro 
+  immagine se diversa da quella della versione)
+- **Servizi esterni:** (versione di OpenSearch; provider e modello di LLM o 
+  embedding, se pertinenti)
+- **Browser:** (solo se il difetto è nel frontend)
+- **Configurazione:** (export del tenant allegato, oppure i passi per 
+  arrivare allo scenario)
 
 ## Criteri di accettazione
 
