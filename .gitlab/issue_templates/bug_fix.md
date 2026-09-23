@@ -23,22 +23,6 @@ nella sezione a cui appartiene, cancella questa sezione e togli la label.
   correzione)
 )
 
-## Come riprodurlo
-
-(Uno scenario in Gherkin, con le keyword in inglese e non tradotte: 
-Given lo stato di partenza, When i passi, Then quello che dovrebbe accadere. 
-Sotto, in una riga, quello che accade oggi. Scritto così fallisce prima della 
-correzione e passa dopo: è il primo criterio di accettazione, e la sola prova 
-che la causa è stata toccata e non mascherata.
-
-    Scenario: la cancellazione di un documento produce un solo esito
-      Given un documento che la sorgente non ha più
-      When la scheduling lo lavora
-      Then il work stage riceve un solo esito
-
-    Oggi: riceve un fallimento seguito da un successo.
-)
-
 ## Ambiente
 
 (Dove è avvenuto il difetto. Compila le voci che servono, cancella quelle che 
@@ -56,6 +40,26 @@ parte dallo stesso punto.)
 - **Browser:** (solo se il difetto è nel frontend)
 - **Configurazione:** (export del tenant allegato, oppure i passi per 
   arrivare allo scenario)
+
+## Come riprodurlo
+
+(Uno scenario in Gherkin: 
+
+- Given: lo stato di partenza
+- When: i passi
+- Then: quello che dovrebbe accadere
+
+Sotto, in una riga, quello che accade oggi. Scritto così fallisce prima della 
+correzione e passa dopo: è il primo criterio di accettazione, e la sola prova 
+che la causa è stata toccata e non mascherata.
+
+    Scenario: la cancellazione di un documento produce un solo esito
+      Given un documento che la sorgente non ha più
+      When la scheduling lo lavora
+      Then il work stage riceve un solo esito
+
+    Oggi: riceve un fallimento seguito da un successo.
+)
 
 ## Criteri di accettazione
 
