@@ -32,6 +32,9 @@ def _graph(reformulate, *, classification="FOLLOW_UP", rag_type="CHAT_RAG"):
     rewrite step is a spy."""
     graph = RagGraph.__new__(RagGraph)
     graph.rag_type = rag_type
+    graph.tenant_id = None
+    graph.user_id = None
+    graph.chat_id = None
     graph.chat_sequence_number = 2
     graph.reformulate = reformulate
     graph.configuration = {}

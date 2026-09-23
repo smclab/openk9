@@ -36,6 +36,9 @@ def _graph(model_type, structured_response):
     so the method reaching `with_structured_output` can be asserted on."""
     graph = RagGraph.__new__(RagGraph)
     graph.rag_type = "CHAT_RAG"
+    graph.tenant_id = None
+    graph.user_id = None
+    graph.chat_id = None
     graph.chat_sequence_number = 2
     graph.reformulate = False
     graph.configuration = {
