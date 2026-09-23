@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.pipeline.service;
 
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import jakarta.annotation.PostConstruct;
@@ -30,6 +32,7 @@ import io.quarkus.runtime.Startup;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 /**
@@ -43,6 +46,10 @@ import org.jboss.logging.Logger;
  * in-process (a local SigV4 computation, no I/O); the blocking deletion is
  * dispatched over the Vert.x event bus and run on a worker thread, the pattern
  * used by the other pipeline stages.
+ *
+ * <p>The object storage is optional: a deployment serving only text-only
+ * datasources may leave {@code quarkus.minio.host} unset. The MinIO client is
+ * then never created, and the closing cleanup is skipped.
  */
 @Startup
 @ApplicationScoped
@@ -58,6 +65,9 @@ public class StagedBinaryService {
 
 	@Inject
 	BinaryObjectStore binaryObjectStore;
+
+	@ConfigProperty(name = "quarkus.minio.host")
+	Optional<String> objectStorageHost;
 
 	@PostConstruct
 	void init() {
@@ -84,6 +94,9 @@ public class StagedBinaryService {
 	 * Requests, over the event bus, the deletion of every binary staged under a
 	 * datasource.
 	 *
+	 * <p>It is a no-op when no object storage is configured: nothing can have
+	 * been staged, and reaching the storage would fail to create its client.
+	 *
 	 * @param tenantId the tenant owning the bucket
 	 * @param datasourceId the datasource whose staged binaries are removed
 	 * @return a stage completing when the deletion has been carried out, failing
@@ -91,6 +104,15 @@ public class StagedBinaryService {
 	 */
 	public static CompletionStage<Void> deleteByDatasource(
 		String tenantId, long datasourceId) {
+
+		if (instance.objectStorageHost.isEmpty()) {
+			log.debugf(
+				"Object storage not configured, skipping the cleanup of staged "
+				+ "binaries for datasource %s",
+				datasourceId);
+
+			return CompletableFuture.completedFuture(null);
+		}
 
 		return EventBusInstanceHolder
 			.request(
