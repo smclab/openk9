@@ -8,6 +8,7 @@ import json
 from fastapi import FastAPI, status
 from typing import List, Optional, Self
 from database_api.data_extraction import DataExtraction
+from pydantic import BaseModel
 
 app = FastAPI()
 
