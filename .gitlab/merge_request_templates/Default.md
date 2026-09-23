@@ -86,7 +86,7 @@ consegna il "Report".
 - Sei anche un secondo paio d'occhi. 
   Segnala al reviewer, con il testo del thread pronto da aprire sulla MR, 
   quando trovi: un esito inatteso in un caso; un criterio della issue che 
-  nessun caso copre, o un caso che non verifica il suo Then; una differenza 
+  nessun caso copre, o un caso che non verifica il suo Allora; una differenza 
   fra quello che la issue chiede e quello che il codice fa; un modo per 
   migliorare la modifica proposta. 
   Il reviewer decide cosa aprire.

@@ -50,16 +50,17 @@ In linguaggio naturale, nella forma che viene meglio: un elenco o due righe.
 In Gherkin: è la regola condivisa fra chi scrive la specifica e chi la 
 implementa, persona o agente che sia. 
 
-- Given: lo stato di partenza
-- When: i passi
-- Then: quello che dovrebbe accadere
+- Dato: lo stato di partenza (Data, Dati o Date, se il nome lo chiede)
+- Quando: i passi
+- Allora: quello che dovrebbe accadere
+- E: un'altra condizione o un altro esito, sotto quello di prima
 
 Uno scenario per comportamento; ognuno diventa un caso di UAT della MR.
 
     Scenario: un riferimento immagine è embeddato se il modello è multimodale
-      Given un modello di embedding marcato come multimodale
-      When si indicizza un documento che porta un riferimento a un'immagine
-      Then in indice c'è un chunk per quel riferimento, con il suo vettore
+      Dato un modello di embedding marcato come multimodale
+      Quando si indicizza un documento che porta un riferimento a un'immagine
+      Allora in indice c'è un chunk per quel riferimento, con il suo vettore
 
 )
 

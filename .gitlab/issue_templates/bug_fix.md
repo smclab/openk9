@@ -45,18 +45,19 @@ parte dallo stesso punto.)
 
 (Uno scenario in Gherkin: 
 
-- Given: lo stato di partenza
-- When: i passi
-- Then: quello che dovrebbe accadere
+- Dato: lo stato di partenza (Data, Dati o Date, se il nome lo chiede)
+- Quando: i passi
+- Allora: quello che dovrebbe accadere
+- E: un'altra condizione o un altro esito, sotto quello di prima
 
 Sotto, in una riga, quello che accade oggi. Scritto così fallisce prima della 
 correzione e passa dopo: è il primo criterio di accettazione, e la sola prova 
 che la causa è stata toccata e non mascherata.
 
     Scenario: la cancellazione di un documento produce un solo esito
-      Given un documento che la sorgente non ha più
-      When la scheduling lo lavora
-      Then il work stage riceve un solo esito
+      Dato un documento che la sorgente non ha più
+      Quando la scheduling lo lavora
+      Allora il work stage riceve un solo esito
 
     Oggi: riceve un fallimento seguito da un successo.
 )
@@ -70,9 +71,10 @@ aggiungono qualcosa perché la issue si possa chiudere.
 Un'alternativa allo scenario di riproduzione:
 
     Scenario: un documento ancora presente nella sorgente non è cancellato
-      Given un documento che la sorgente ha ancora
-      When la scheduling lo lavora
-      Then il documento resta in indice e il work stage riceve un solo esito
+      Dato un documento che la sorgente ha ancora
+      Quando la scheduling lo lavora
+      Allora il documento resta in indice
+      E il work stage riceve un solo esito
 
 I vincoli senza innesco (un default, un limite, un formato) vanno in un 
 elenco in linguaggio naturale. 
