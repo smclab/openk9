@@ -20,7 +20,8 @@ se sai chi può rispondere, taggalo;
 se la risposta cambia la Definition of Done, dillo. 
 Finché resta almeno una domanda, aggiungi in fondo `/label ~needs-triage`. 
 Quando tutte hanno una risposta, riporta ogni risposta 
-nella sezione a cui appartiene, cancella questa sezione e togli la label.
+nella sezione a cui appartiene, cancella questa sezione e togli la label. 
+Poi stima la issue (vedi la nota in fondo).
 
 - il flag `multimodal` si imposta per modello o per tenant? (cambia i 
   Requisiti)
@@ -82,5 +83,11 @@ Uno scenario per comportamento; ognuno diventa un caso di UAT della MR.
 ## Deprecazioni
 
 (Cosa questa issue rende deprecato, e cosa lo sostituisce.)
+
+(Stima: il tempo per chiudere la issue secondo la Definition of Done, 
+con l'agente che scrive il codice. 
+Si stima solo una issue senza Domande aperte. 
+Aggiungi in fondo `/estimate <tempo>` (es. `/estimate 1d 2h`), oppure 
+mettilo nel commento che toglie `needs-triage`.)
 
 /label ~enhancement 

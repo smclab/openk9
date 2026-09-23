@@ -16,7 +16,8 @@ l'apre un agente, o quando la definizione è ancora in corso. Una domanda per
 voce; se sai chi può rispondere, taggalo, e se la risposta cambia i criteri 
 di accettazione, dillo. Finché resta almeno una domanda, aggiungi in fondo 
 `/label ~needs-triage`. Quando tutte hanno una risposta, riporta ogni risposta 
-nella sezione a cui appartiene, cancella questa sezione e togli la label.
+nella sezione a cui appartiene, cancella questa sezione e togli la label. 
+Poi stima la issue (vedi la nota in fondo).
 
 - succede anche con il connettore minio o solo con il web crawler?
 - il doppio esito arriva anche su 3.0.x? (decide su quali branch portare la 
@@ -89,5 +90,11 @@ allegali.)
 
 (Facoltativa. Se hai un'idea di dove sta la causa, dilla qui: è il posto 
 giusto per un riferimento al codice.)
+
+(Stima: il tempo per chiudere la issue secondo i criteri di accettazione, 
+con l'agente che scrive il codice. 
+Si stima solo una issue senza Domande aperte. 
+Aggiungi in fondo `/estimate <tempo>` (es. `/estimate 1d 2h`), oppure 
+mettilo nel commento che toglie `needs-triage`.)
 
 /label ~"Bug fix"

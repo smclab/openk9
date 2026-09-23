@@ -152,3 +152,10 @@ Il reviewer la incolla come commento sulla MR e spunta qui:
 
 - [ ] C1 — Riprocessare non duplica
 )
+
+(Stima: tutto il tempo che serve per eseguire la UAT, dall'ambiente al 
+report: agente, script e passi del reviewer. 
+Falla calcolare all'agente dai casi. 
+È il numero che il reviewer vede nella lista delle MR per scegliere quale 
+prendere. 
+Aggiungi in fondo `/estimate <tempo>`, es. `/estimate 1h 30m`.)
