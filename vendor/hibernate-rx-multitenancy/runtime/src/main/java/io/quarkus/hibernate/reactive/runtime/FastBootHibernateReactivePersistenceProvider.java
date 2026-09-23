@@ -1,6 +1,7 @@
 package io.quarkus.hibernate.reactive.runtime;
 
 import static io.quarkus.hibernate.orm.runtime.FastBootHibernatePersistenceProvider.isPostgresOrDB2;
+import static io.quarkus.hibernate.orm.runtime.HibernateOrmRuntimeConfigPersistenceUnit.HibernateGenerationStrategy.getString;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -317,7 +318,7 @@ public final class FastBootHibernateReactivePersistenceProvider implements Persi
         }
 
         for (ProvidedService<?> providedService : recordedState.getProvidedServices()) {
-            if (!runtimeInitiatedServiceClasses.contains(providedService.getServiceRole())) {
+            if (!runtimeInitiatedServiceClasses.contains(providedService.serviceRole())) {
                 serviceRegistryBuilder.addService(providedService);
             }
         }
@@ -386,16 +387,25 @@ public final class FastBootHibernateReactivePersistenceProvider implements Persi
     private static void injectRuntimeConfiguration(HibernateOrmRuntimeConfigPersistenceUnit persistenceUnitConfig,
             Builder runtimeSettingsBuilder) {
 
-        String generationStrategy = persistenceUnitConfig.schemaManagement().strategy();
-        if (!"none".equals(generationStrategy) && persistenceUnitConfig.database().startOffline()) {
+        HibernateOrmRuntimeConfigPersistenceUnit.HibernateGenerationStrategy generationStrategy = persistenceUnitConfig
+                .schemaManagement().strategy();
+        if (!HibernateOrmRuntimeConfigPersistenceUnit.HibernateGenerationStrategy.NONE.equals(generationStrategy)
+                && persistenceUnitConfig.database().startOffline()) {
             throw new PersistenceException(
                     "When using offline mode with `quarkus.hibernate-orm.database.start-offline=true`, the schema management strategy `quarkus.hibernate-orm.schema-management.strategy` must be unset or set to `none`");
         }
 
+        // Pass extraPhysicalTableTypes configuration
+        Optional<String> extraPhysicalTableTypes = persistenceUnitConfig.schemaManagement().extraPhysicalTableTypes();
+        if (extraPhysicalTableTypes.isPresent()) {
+            String extraTableTypesStr = extraPhysicalTableTypes.get();
+            runtimeSettingsBuilder.put(AvailableSettings.EXTRA_PHYSICAL_TABLE_TYPES, extraTableTypesStr);
+        }
+
         // Database
         runtimeSettingsBuilder.put(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
-                persistenceUnitConfig.database().generation().generation()
-                        .orElse(generationStrategy));
+                getString(persistenceUnitConfig.database().generation().generation()
+                        .orElse(generationStrategy)));
 
         runtimeSettingsBuilder.put(AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS,
                 String.valueOf(persistenceUnitConfig.database().generation().createSchemas()
@@ -410,7 +420,7 @@ public final class FastBootHibernateReactivePersistenceProvider implements Persi
         runtimeSettingsBuilder.put(AvailableSettings.HBM2DDL_SCRIPTS_CREATE_APPEND, "false");
 
         runtimeSettingsBuilder.put(AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION,
-                persistenceUnitConfig.scripts().generation().generation());
+                getString(persistenceUnitConfig.scripts().generation().generation()));
 
         if (persistenceUnitConfig.scripts().generation().createTarget().isPresent()) {
             runtimeSettingsBuilder.put(AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET,
@@ -452,7 +462,7 @@ public final class FastBootHibernateReactivePersistenceProvider implements Persi
         }
 
         runtimeSettingsBuilder.put(HibernateHints.HINT_FLUSH_MODE,
-                persistenceUnitConfig.flush().mode());
+                persistenceUnitConfig.flush().mode().getHibernateFlushMode());
     }
 
     @Override

@@ -66,7 +66,7 @@
 		<product.name>OpenK9 Powered by SMC Treviso SRL</product.name>
 		<maven.compiler.release>21</maven.compiler.release>
 		<maven.compiler.target>21</maven.compiler.target>
-		<project.build.outputTimestamp>1771844968</project.build.outputTimestamp>
+		<project.build.outputTimestamp>2026-02-23T11:09:28Z</project.build.outputTimestamp>
 
 		<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
 		<scm.developerConnection>scm:git:https://github.com/smclab/openk9.git</scm.developerConnection>
@@ -90,11 +90,11 @@
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<quarkus-plugin.version>3.27.4</quarkus-plugin.version>
+		<quarkus-plugin.version>3.33.3.3</quarkus-plugin.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>3.27.4</quarkus.platform.version>
-		<quarkus.version>3.27.4</quarkus.version>
+		<quarkus.platform.version>3.33.3.3</quarkus.platform.version>
+		<quarkus.version>3.33.3.3</quarkus.version>
 		<quarkiverse.opensearch.version>2.2.0</quarkiverse.opensearch.version>
 		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
 		<quarkus-minio.version>3.8.6</quarkus-minio.version>
@@ -266,17 +266,6 @@
 				<version>${project.version}</version>
 			</dependency>
 
-			<!-- FIXME: fixes CVE-2024-7254, review during quarkus version update after 3.20.2 -->
-			<dependency>
-				<groupId>com.google.protobuf</groupId>
-				<artifactId>protobuf-java</artifactId>
-				<version>3.25.8</version>
-			</dependency>
-			<dependency>
-				<groupId>com.google.protobuf</groupId>
-				<artifactId>protobuf-java-util</artifactId>
-				<version>3.25.8</version>
-			</dependency>
 			<!-- FIXME: fixes CVE-2025-48924, review during quarkus version update after 3.20.2 -->
 			<dependency>
 				<groupId>org.apache.commons</groupId>
