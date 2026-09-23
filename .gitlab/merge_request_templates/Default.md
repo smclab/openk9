@@ -41,19 +41,27 @@ Il blocco "Per l'agente" non è una nota: lascialo com'è.)
 ### Per l'agente
 
 Questa sezione è il tuo prompt. 
-Seguila nell'ordine, un caso alla volta, con il reviewer accanto.
+Seguila con il reviewer accanto, in quest'ordine: prepara l'ambiente come 
+dice "Ambiente e configurazione", esegui i "Casi" uno alla volta, poi 
+consegna il "Report".
 
 - Lavora sul branch sorgente di questa MR. 
   Se non ci sei già, crea un worktree: 
   `git worktree add ../openk9-review-<iid> <branch>`.
 - Scarica gli allegati linkati nella descrizione (`/uploads/<secret>/<file>`) 
-  con `glab api "projects/openk9%2Fopenk9/uploads/<secret>/<file>" > <file>`.
-- Esegui tu i comandi. 
-  I passi marcati **[reviewer]** li fa il reviewer nel pannello: 
-  chiediglieli e aspetta. 
-  I comandi marcati **[con ok]** scrivono dati: mostrali e attendi un ok 
-  prima di lanciarli. 
-  L'import dell'export del tenant è sempre **[con ok]**.
+  in `../uat-<iid>/`, fuori dal repository, e scompatta gli zip. 
+  Da quella cartella: 
+  `glab api "projects/openk9%2Fopenk9/uploads/<secret>/<file>" > <file>`. 
+  "Ambiente e configurazione" dice a cosa serve ogni file: l'export del 
+  tenant lo importi, script e dati li usi nei passi che li citano.
+- I passi sono le voci di "Ambiente e configurazione" e i punti dei "Casi". 
+  Li esegui tu, tranne quelli che iniziano con uno di questi due marcatori:
+  - **[reviewer]**: lo fa il reviewer, di solito nel pannello. 
+    Chiediglielo e aspetta che ti dica com'è andata.
+  - **[con ok]**: il comando scrive dati. 
+    Mostralo e lancialo solo dopo un ok del reviewer. 
+    L'import dell'export del tenant è sempre **[con ok]**, anche se non è 
+    marcato.
 - Per ogni caso riporta osservato accanto ad atteso e il verdetto 
   **PASS**/**FAIL**. 
   Se un comando non risponde come atteso mostra l'output e chiedi: non 
@@ -66,36 +74,47 @@ Seguila nell'ordine, un caso alla volta, con il reviewer accanto.
   fra quello che la issue chiede e quello che il codice fa; un modo per 
   migliorare la modifica proposta. 
   Il reviewer decide cosa aprire.
-- Alla fine consegna il report descritto sotto.
 
 ### Ambiente e configurazione
 
 (Come arrivare al punto in cui i casi si possono eseguire. 
 Chi non ha mai configurato questa parte del prodotto deve potercela fare. 
-Compila le voci che servono, cancella quelle che non c'entrano.)
+Compila le voci che servono, cancella quelle che non c'entrano. 
+Marca i passi con **[reviewer]** o **[con ok]** come nei Casi.)
 
 - **Avvio:** (i comandi in ordine: `./k9.sh up ...`, build delle immagini 
   toccate)
-- **Export del tenant:** (dalla 2026.2 in poi: allegalo qui, oppure linka 
-  quello della issue. 
+- **Export del tenant:** (dalla 2026.2 in poi. 
+  Allega l'export fatto sul branch di questa MR, con quello che serve ai 
+  casi già configurato. 
+  Quello della issue basta solo se la MR non aggiunge configurazioni. 
+  Un enhancement potrebbe aggiungerne: un campo nuovo, un modello, una 
+  pipeline. 
   Si importa dal pannello di amministrazione, Import / Export, o con 
   `POST /api/datasource/v1/config/import?mode=OVERWRITE&dryRun=false`)
 - **Allegati:** (quello che hai usato per eseguire i casi: script di helper, 
   dati di prova, file di esempio. 
-  Più file, uno zip)
+  Più file, uno zip. 
+  Per ogni file scrivi a cosa serve e in quale passo si usa)
 - **Trappole:** (quello che hai incontrato tu e che fa perdere tempo)
 
 ### Casi
 
 (Uno per scenario Gherkin della issue, stesso titolo, nell'ordine in cui vanno 
-eseguiti; poi i casi in più emersi in sviluppo, marcati come tali. Per ogni 
-caso: cosa fare, cosa DEVE succedere, dove si osserva. Dichiarare l'attesa 
-prima di eseguire è quello che rende il caso capace di fallire.
+eseguiti; poi i casi in più emersi in sviluppo, marcati come tali. 
+Per ogni caso: i passi, cosa DEVE succedere, dove si osserva. 
+Dichiarare l'attesa prima di eseguire è quello che rende il caso capace di 
+fallire. 
+Un passo che fa il reviewer inizia con **[reviewer]**; un comando che scrive 
+dati inizia con **[con ok]**. 
+Gli altri li esegue l'agente senza chiedere.
 
 **C1 — Riprocessare non duplica.**
-- Ricarica lo stesso file e reindicizza.
+- Conta i chunk sull'indice, aggregati per `contentId`.
+- **[reviewer]** Ricarica lo stesso file dal pannello.
+- **[con ok]** Lancia il reindex del datasource.
 - Atteso: lo stesso numero di chunk di prima, e il file testimone intatto. 
-  Dove si osserva: aggregazione per `contentId` sull'indice, prima e dopo.
+  Dove si osserva: la stessa aggregazione, rifatta dopo il reindex.
 )
 
 ### Report
