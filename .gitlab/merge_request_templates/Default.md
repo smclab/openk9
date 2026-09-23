@@ -33,6 +33,8 @@ test non coprono. Tutto il resto va in un caso di UAT.)
 Scrivi questa sezione perché basti quello. 
 I casi derivano dagli scenari Gherkin della issue, uno per scenario e con lo 
 stesso titolo. 
+I requisiti e le osservazioni si verificano anche loro: in un caso, oppure 
+dicendo quale build o test li copre. 
 Un criterio della issue senza caso è un buco: o non è stato verificato, o non 
 era verificabile, e in entrambi i casi va detto. 
 Non elencare i test unitari: si verificano rifacendo la build. 
@@ -46,7 +48,9 @@ dice "Ambiente e configurazione", esegui i "Casi" uno alla volta, poi
 consegna il "Report".
 
 - Lavora sul branch sorgente di questa MR. 
-  Se non ci sei già, crea un worktree: 
+  Se è già estratto in un worktree (`git worktree list`), lavora lì. 
+  Altrimenti crea un worktree: 
+  `git fetch origin <branch>`, poi 
   `git worktree add ../openk9-review-<iid> <branch>`.
 - Scarica gli allegati linkati nella descrizione (`/uploads/<secret>/<file>`) 
   in `../uat-<iid>/`, fuori dal repository, e scompatta gli zip. 
