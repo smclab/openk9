@@ -973,9 +973,9 @@ class RagGraph:
         # it and opensearch_retriever_node reads it back as a domain filter.
         if not configured_domains:
             state.domain = None
-            logger.debug(
-                "[input_domain] no domain configured in domain-documents-index, "
-                "skipping domain detection"
+            logger.info(
+                f"[input_domain] domain=None source=not_configured "
+                f"{self._log_context()}"
             )
             return state
 
@@ -1004,7 +1004,7 @@ class RagGraph:
 
         if len(found_domains) > 0:
             state.domain = list(found_domains)
-            logger.debug(f"[input_domain] domains above threshold: {state.domain}")
+            source = "threshold"
         else:
             found_domains = set(configured_domains)
 
@@ -1014,7 +1014,12 @@ class RagGraph:
             )
             llm_domain = self._llm_input_domain(query, found_domains)
             state.domain = llm_domain.domain
-            logger.debug(f"[input_domain] LLM detected domain={state.domain}")
+            source = "llm"
+
+        logger.info(
+            f"[input_domain] domain={state.domain} source={source} "
+            f"{self._log_context()}"
+        )
 
         return state
 
@@ -1039,8 +1044,16 @@ class RagGraph:
     ) -> Literal["guardrail_violation_response", "history_handler"]:
         """Separate function for conditional routing decision"""
         if state.guardrail_check:
+            logger.info(
+                "[input_guardrail_route] guardrail_check=True -> "
+                f"guardrail_violation_response {self._log_context()}"
+            )
             return "guardrail_violation_response"
         else:
+            logger.info(
+                "[input_guardrail_route] guardrail_check=False -> history_handler "
+                f"{self._log_context()}"
+            )
             return "history_handler"
 
     def history_handler_node(self, state: GraphState) -> GraphState:
@@ -1147,10 +1160,11 @@ class RagGraph:
                 state.domain = ["NEW_QUESTION"]
                 return state
 
-            logger.debug(
-                f"[analyze_query] decision={decision.response.value} "
-                f"prompt={prompt_source}"
-            )
+            # What the node decided does not say what became of the query: a
+            # follow-up left unrewritten reaches the retriever as the user typed
+            # it, without the entity the previous turn carried. Decision and
+            # action travel on one record.
+            action = "none"
 
             if decision.response.value == "FOLLOW_UP":
                 previous_query = next(
@@ -1177,18 +1191,25 @@ class RagGraph:
                         )
                         state.original_query = query
                         state.current_query = rewrited_query
-                        logger.debug(
-                            f"[analyze_query] rewritten: {query!r} -> "
-                            f"{rewrited_query!r}"
-                        )
+                        action = "rewritten"
+                    else:
+                        action = "kept_reformulate_disabled"
                 else:
-                    logger.debug(
-                        "[analyze_query] FOLLOW_UP without a usable previous "
-                        "exchange -> NEW_QUESTION"
-                    )
+                    action = "downgraded_to_new_question"
                     state.domain = ["NEW_QUESTION"]
             else:
                 state.domain = ["NEW_QUESTION"]
+
+            extra = {"query": query}
+            if action == "rewritten":
+                extra["rewritten_query"] = state.current_query
+
+            logger.info(
+                f"[analyze_query] decision={decision.response.value} "
+                f"action={action} prompt={prompt_source} "
+                f"{content_fingerprint('query', state.current_query)} "
+                f"{self._log_context()}" + debug_extra(logger, **extra)
+            )
 
         return state
 

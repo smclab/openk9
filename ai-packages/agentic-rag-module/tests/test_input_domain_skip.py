@@ -35,6 +35,9 @@ from app.rag.agentic_rag import Domain, GraphState, RagGraph
 def _graph():
     """Bare RagGraph carrying only what input_domain_node reaches for."""
     graph = RagGraph.__new__(RagGraph)
+    graph.tenant_id = None
+    graph.user_id = None
+    graph.chat_id = None
     graph.opensearch_host = "http://localhost:9200"
     graph.utility_llm = MagicMock()
     graph.configuration = {
