@@ -49,6 +49,26 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<!-- Spring Boot still manages an amqp-client older than the one fixing the
+			     RabbitMQ client CVE block; the Quarkus services already resolve a fixed
+			     one through their own extension, so this stays scoped to the Spring line. -->
+			<dependency>
+				<groupId>com.rabbitmq</groupId>
+				<artifactId>amqp-client</artifactId>
+				<version>${amqp-client.version}</version>
+			</dependency>
+			<!-- r2dbc-postgresql pins a vulnerable SCRAM in every release published so
+			     far, so no bump of the driver itself lifts these two. -->
+			<dependency>
+				<groupId>com.ongres.scram</groupId>
+				<artifactId>scram-client</artifactId>
+				<version>${scram.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.ongres.scram</groupId>
+				<artifactId>scram-common</artifactId>
+				<version>${scram.version}</version>
+			</dependency>
 			<!-- Override quarkus-bom's docker-java version (3.4.2) which is
 			     inherited from core/pom.xml. Testcontainers 2.0 needs 3.7.1+. -->
 			<dependency>

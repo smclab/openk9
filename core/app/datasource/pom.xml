@@ -271,6 +271,19 @@
     <dependency>
       <groupId>org.apache.pekko</groupId>
       <artifactId>pekko-serialization-jackson_${scala.version}</artifactId>
+      <exclusions>
+        <!-- org.lz4:lz4-java is abandoned: its last release is affected by CVEs that
+             will never be fixed there. Replaced below by the maintained fork, which
+             ships the same net.jpountz packages. -->
+        <exclusion>
+          <groupId>org.lz4</groupId>
+          <artifactId>lz4-java</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>at.yawk.lz4</groupId>
+      <artifactId>lz4-java</artifactId>
     </dependency>
 
     <!-- pekko framework // -->
