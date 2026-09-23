@@ -105,7 +105,11 @@ public class StagedBinaryService {
 	public static CompletionStage<Void> deleteByDatasource(
 		String tenantId, long datasourceId) {
 
-		if (instance.objectStorageHost.isEmpty()) {
+		boolean objectStorageConfigured = instance.objectStorageHost
+			.filter(host -> !host.isBlank())
+			.isPresent();
+
+		if (!objectStorageConfigured) {
 			log.debugf(
 				"Object storage not configured, skipping the cleanup of staged "
 				+ "binaries for datasource %s",
