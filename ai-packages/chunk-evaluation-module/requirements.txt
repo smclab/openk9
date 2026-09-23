@@ -3,7 +3,7 @@ aiosqlite==0.22.1
 alembic==1.18.3
 annotated-doc==0.0.4
 annotated-types==0.7.0
-anyio==4.12.1
+anyio==4.14.2
 APScheduler==3.11.2
 arize-phoenix==12.35.0
 arize-phoenix-client==1.28.1
@@ -66,15 +66,15 @@ ply==3.11
 prometheus_client==0.24.1
 protobuf==6.33.5
 psutil==7.2.2
-pyarrow==23.0.0
-pyasn1==0.6.3
+pyarrow==23.0.1
+pyasn1==0.6.4
 pycparser==3.0
 pydantic==2.12.5
 pydantic_core==2.41.5
 Pygments==2.19.2
 pystache==0.6.8
 python-dateutil==2.9.0.post0
-python-multipart==0.0.27
+python-multipart==0.0.30
 PyYAML==6.0.3
 requests==2.32.5
 rich==14.3.2
