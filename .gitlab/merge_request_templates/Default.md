@@ -54,6 +54,14 @@ consegna il "Report".
   `glab api "projects/openk9%2Fopenk9/uploads/<secret>/<file>" > <file>`. 
   "Ambiente e configurazione" dice a cosa serve ogni file: l'export del 
   tenant lo importi, script e dati li usi nei passi che li citano.
+- Prima di preparare l'ambiente, passa in rassegna "Da fornire" con il 
+  reviewer. 
+  Se gli manca qualcosa, non cercarlo altrove e non inventare un valore: 
+  prepara un commento per l'assignee della MR (lo trovi con 
+  `glab mr view <iid>`) che dice cosa manca e per quali casi, e salta i casi 
+  che ne dipendono. 
+  Vale anche per quello che scopri strada facendo e che "Da fornire" non 
+  elenca: segnalalo, è un buco della descrizione.
 - I passi sono le voci di "Ambiente e configurazione" e i punti dei "Casi". 
   Li esegui tu, tranne quelli che iniziano con uno di questi due marcatori:
   - **[reviewer]**: lo fa il reviewer, di solito nel pannello. 
@@ -62,8 +70,12 @@ consegna il "Report".
     Mostralo e lancialo solo dopo un ok del reviewer. 
     L'import dell'export del tenant è sempre **[con ok]**, anche se non è 
     marcato.
+- Un segreto lo inserisce sempre il reviewer: il passo che imposta una 
+  chiave è **[reviewer]**, e il valore non finisce né nel report né nei 
+  thread.
 - Per ogni caso riporta osservato accanto ad atteso e il verdetto 
-  **PASS**/**FAIL**. 
+  **PASS**/**FAIL**, oppure **BLOCCATO** se gli manca un elemento di 
+  "Da fornire". 
   Se un comando non risponde come atteso mostra l'output e chiedi: non 
   dedurre. 
   Un FAIL non blocca i casi successivi.
@@ -92,6 +104,14 @@ Marca i passi con **[reviewer]** o **[con ok]** come nei Casi.)
   pipeline. 
   Si importa dal pannello di amministrazione, Import / Export, o con 
   `POST /api/datasource/v1/config/import?mode=OVERWRITE&dryRun=false`)
+- **Da fornire:** (quello che il reviewer deve metterci di suo: la API key 
+  di un provider LLM o di embedding, le credenziali di una sorgente esterna, 
+  un bucket, un account. 
+  Per ogni elemento: cosa serve, dove si imposta (variabile d'ambiente, 
+  pannello, campo dell'export) e in quali casi serve. 
+  L'export del tenant non porta i segreti: escono come segnaposto e vanno 
+  reimpostati dopo l'import. 
+  "Niente" è una risposta)
 - **Allegati:** (quello che hai usato per eseguire i casi: script di helper, 
   dati di prova, file di esempio. 
   Più file, uno zip. 
@@ -120,9 +140,11 @@ Gli altri li esegue l'agente senza chiedere.
 ### Report
 
 (L'agente consegna una tabella, una riga per caso, con il verdetto e i valori 
-osservati; sotto, i FAIL con l'output grezzo e le segnalazioni fatte durante 
-la UAT, ognuna con il thread aperto o la ragione per cui non lo è. Il reviewer 
-la incolla come commento sulla MR e spunta qui:
+osservati. 
+Sotto mette i FAIL con l'output grezzo, i BLOCCATI con quello che manca e il 
+commento preparato per l'assignee, e le segnalazioni fatte durante la UAT, 
+ognuna con il thread aperto o la ragione per cui non lo è. 
+Il reviewer la incolla come commento sulla MR e spunta qui:
 
 - [ ] C1 — Riprocessare non duplica
 )
