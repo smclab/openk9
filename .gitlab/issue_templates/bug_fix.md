@@ -61,13 +61,22 @@ che la causa è stata toccata e non mascherata.
     Oggi: riceve un fallimento seguito da un successo.
 )
 
-## Criteri di accettazione
+## Altri criteri di accettazione
 
-(Lo scenario di riproduzione è il primo. Aggiungi solo quello che serve in più 
-perché la issue si possa chiudere: altri scenari in Gherkin per i casi vicini 
-che non devono rompersi, e i vincoli senza innesco (un default, un limite, un 
-formato) come elenco in linguaggio naturale. Diventano i casi di UAT della 
-merge request che chiude la issue.)
+(Lo scenario di riproduzione è il primo. 
+Gli altri sono alternative ed estensioni di quello, e servono solo se 
+aggiungono qualcosa perché la issue si possa chiudere.
+
+Un'alternativa allo scenario di riproduzione:
+
+    Scenario: un documento ancora presente nella sorgente non è cancellato
+      Given un documento che la sorgente ha ancora
+      When la scheduling lo lavora
+      Then il documento resta in indice e il work stage riceve un solo esito
+
+I vincoli senza innesco (un default, un limite, un formato) vanno in un 
+elenco in linguaggio naturale. 
+Ogni scenario diventa un caso di UAT della merge request che chiude la issue.)
 
 ## Log e screenshot
 

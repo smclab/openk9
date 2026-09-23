@@ -49,6 +49,11 @@ In linguaggio naturale, nella forma che viene meglio: un elenco o due righe.
 (I comportamenti, cioè tutto quello che ha un innesco e un esito osservabile. 
 In Gherkin: è la regola condivisa fra chi scrive la specifica e chi la 
 implementa, persona o agente che sia. 
+
+- Given: lo stato di partenza
+- When: i passi
+- Then: quello che dovrebbe accadere
+
 Uno scenario per comportamento; ognuno diventa un caso di UAT della MR.
 
     Scenario: un riferimento immagine è embeddato se il modello è multimodale
@@ -56,7 +61,7 @@ Uno scenario per comportamento; ognuno diventa un caso di UAT della MR.
       When si indicizza un documento che porta un riferimento a un'immagine
       Then in indice c'è un chunk per quel riferimento, con il suo vettore
 
-Se a un criterio manca il When, è un requisito: spostalo sopra.)
+)
 
 ## Link / Riferimenti
 
