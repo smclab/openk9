@@ -28,58 +28,62 @@ test non coprono. Tutto il resto va in un caso di UAT.)
 
 ## UAT (guidata dall'agente)
 
-(La UAT la esegue un agente leggendo questa sezione, con il reviewer accanto: 
-l'agente lancia i comandi e legge gli esiti, il reviewer fa i passi nel 
-pannello e decide. I casi derivano dagli scenari Gherkin della issue, uno per 
-scenario e con lo stesso titolo. Un criterio della issue senza caso è un buco: 
-o non è stato verificato, o non era verificabile, e in entrambi i casi va 
-detto. Non elencare i test unitari: si verificano rifacendo la build.)
-
-### Per il reviewer
-
-(Cosa serve (Docker, `glab` autenticato, credenziali esterne se ce ne sono), 
-quanto dura, e il prompt da incollare nell'agente aperto sul checkout di 
-questo branch:
-
-> Esegui la UAT della MR !<iid> di openk9/openk9. Leggi la descrizione con 
-> `glab mr view <iid> -R openk9/openk9` e segui la sezione UAT nell'ordine, 
-> un caso alla volta. Io faccio i passi marcati [reviewer] quando me lo chiedi.
-)
+(La UAT la esegue un agente con il reviewer accanto: al reviewer basta dirgli 
+"esegui la UAT della MR !<iid> di openk9/openk9". 
+Scrivi questa sezione perché basti quello. 
+I casi derivano dagli scenari Gherkin della issue, uno per scenario e con lo 
+stesso titolo. 
+Un criterio della issue senza caso è un buco: o non è stato verificato, o non 
+era verificabile, e in entrambi i casi va detto. 
+Non elencare i test unitari: si verificano rifacendo la build. 
+Il blocco "Per l'agente" non è una nota: lascialo com'è.)
 
 ### Per l'agente
 
-(Le regole del gioco. Adattale se un caso lo richiede, non toglierle.
+Questa sezione è il tuo prompt. 
+Seguila nell'ordine, un caso alla volta, con il reviewer accanto.
 
-- Esegui tu i comandi. I passi marcati **[reviewer]** li fa il reviewer nel 
-  pannello: chiediglieli e aspetta. I comandi marcati **[con ok]** scrivono 
-  dati: mostrali e attendi un ok prima di lanciarli.
+- Lavora sul branch sorgente di questa MR. 
+  Se non ci sei già, crea un worktree: 
+  `git worktree add ../openk9-review-<iid> <branch>`.
+- Scarica gli allegati linkati nella descrizione (`/uploads/<secret>/<file>`) 
+  con `glab api "projects/openk9%2Fopenk9/uploads/<secret>/<file>" > <file>`.
+- Esegui tu i comandi. 
+  I passi marcati **[reviewer]** li fa il reviewer nel pannello: 
+  chiediglieli e aspetta. 
+  I comandi marcati **[con ok]** scrivono dati: mostrali e attendi un ok 
+  prima di lanciarli. 
+  L'import dell'export del tenant è sempre **[con ok]**.
 - Per ogni caso riporta osservato accanto ad atteso e il verdetto 
-  **PASS**/**FAIL**. Se un comando non risponde come atteso mostra l'output 
-  e chiedi: non dedurre. Un FAIL non blocca i casi successivi.
-- Sei anche un secondo paio d'occhi. Segnala al reviewer, con il testo del 
-  thread pronto da aprire sulla MR, quando trovi: un esito inatteso in un 
-  caso; un criterio della issue che nessun caso copre, o un caso che non 
-  verifica il suo Then; una differenza fra quello che la issue chiede e 
-  quello che il codice fa; un modo per migliorare la modifica proposta. 
+  **PASS**/**FAIL**. 
+  Se un comando non risponde come atteso mostra l'output e chiedi: non 
+  dedurre. 
+  Un FAIL non blocca i casi successivi.
+- Sei anche un secondo paio d'occhi. 
+  Segnala al reviewer, con il testo del thread pronto da aprire sulla MR, 
+  quando trovi: un esito inatteso in un caso; un criterio della issue che 
+  nessun caso copre, o un caso che non verifica il suo Then; una differenza 
+  fra quello che la issue chiede e quello che il codice fa; un modo per 
+  migliorare la modifica proposta. 
   Il reviewer decide cosa aprire.
 - Alla fine consegna il report descritto sotto.
-)
 
 ### Ambiente e configurazione
 
-(Come tirare su quello che serve (`./k9.sh up ...`, build delle immagini 
-toccate) e come arrivare al punto in cui i casi si possono eseguire. Chi non 
-ha mai configurato questa parte del prodotto deve potercela fare: metti le 
-trappole che hai incontrato.
+(Come arrivare al punto in cui i casi si possono eseguire. 
+Chi non ha mai configurato questa parte del prodotto deve potercela fare. 
+Compila le voci che servono, cancella quelle che non c'entrano.)
 
-Dalla 2026.2 in poi la strada più corta è l'export della configurazione del 
-tenant: se la issue lo porta usa quello, altrimenti allegalo qui. Si importa 
-dal pannello di amministrazione (Import / Export) o con 
-`POST /api/datasource/v1/config/import?mode=OVERWRITE&dryRun=false`.
-
-Allega anche quello che hai usato tu per eseguire i casi: script di helper, 
-dati di prova, file di esempio. Più file, uno zip. Chi rivede deve poter 
-rifare esattamente i tuoi passaggi.)
+- **Avvio:** (i comandi in ordine: `./k9.sh up ...`, build delle immagini 
+  toccate)
+- **Export del tenant:** (dalla 2026.2 in poi: allegalo qui, oppure linka 
+  quello della issue. 
+  Si importa dal pannello di amministrazione, Import / Export, o con 
+  `POST /api/datasource/v1/config/import?mode=OVERWRITE&dryRun=false`)
+- **Allegati:** (quello che hai usato per eseguire i casi: script di helper, 
+  dati di prova, file di esempio. 
+  Più file, uno zip)
+- **Trappole:** (quello che hai incontrato tu e che fa perdere tempo)
 
 ### Casi
 
