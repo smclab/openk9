@@ -67,16 +67,22 @@ consegna il "Report".
   Vale anche per quello che scopri strada facendo e che "Da fornire" non 
   elenca: segnalalo, è un buco della descrizione.
 - I passi sono le voci di "Ambiente e configurazione" e i punti dei "Casi". 
-  Li esegui tu, tranne quelli che iniziano con uno di questi due marcatori:
-  - **[reviewer]**: lo fa il reviewer, di solito nel pannello. 
+  Li esegui tu, tranne quelli che iniziano con uno di questi tre marcatori:
+  - **[azione-reviewer]**: lo fa il reviewer, di solito nel pannello. 
     Chiediglielo e aspetta che ti dica com'è andata.
-  - **[con ok]**: il comando scrive dati. 
+  - **[permesso-reviewer]**: il comando scrive dati. 
     Mostralo e lancialo solo dopo un ok del reviewer. 
-    L'import dell'export del tenant è sempre **[con ok]**, anche se non è 
-    marcato.
+    L'import dell'export del tenant è sempre **[permesso-reviewer]**, anche 
+    se non è marcato.
+  - **[lettura-reviewer]**: il reviewer legge un esito, nel pannello o nei 
+    log, e ti dice cosa vede. 
+    Chiediglielo senza anticipare l'atteso: "che stato vedi?", non 
+    "vedi FINISHED?". 
+    Il verdetto del caso lo dai sul valore che ti riferisce, non su un tuo 
+    comando.
 - Un segreto lo inserisce sempre il reviewer: il passo che imposta una 
-  chiave è **[reviewer]**, e il valore non finisce né nel report né nei 
-  thread.
+  chiave è **[azione-reviewer]**, e il valore non finisce né nel report né 
+  nei thread.
 - Per ogni caso riporta osservato accanto ad atteso e il verdetto 
   **PASS**/**FAIL**, oppure **BLOCCATO** se gli manca un elemento di 
   "Da fornire". 
@@ -86,9 +92,10 @@ consegna il "Report".
 - Sei anche un secondo paio d'occhi. 
   Segnala al reviewer, con il testo del thread pronto da aprire sulla MR, 
   quando trovi: un esito inatteso in un caso; un criterio della issue che 
-  nessun caso copre, o un caso che non verifica il suo Allora; una differenza 
-  fra quello che la issue chiede e quello che il codice fa; un modo per 
-  migliorare la modifica proposta. 
+  nessun caso copre, o un caso che non verifica il suo Allora; una UAT senza 
+  **[lettura-reviewer]** e senza il perché; una differenza fra quello che la 
+  issue chiede e quello che il codice fa; un modo per migliorare la modifica 
+  proposta. 
   Il reviewer decide cosa aprire.
 
 ### Ambiente e configurazione
@@ -96,7 +103,8 @@ consegna il "Report".
 (Come arrivare al punto in cui i casi si possono eseguire. 
 Chi non ha mai configurato questa parte del prodotto deve potercela fare. 
 Compila le voci che servono, cancella quelle che non c'entrano. 
-Marca i passi con **[reviewer]** o **[con ok]** come nei Casi.)
+Marca i passi con **[azione-reviewer]** o **[permesso-reviewer]** come nei 
+Casi.)
 
 - **Avvio:** (i comandi in ordine: `./k9.sh up ...`, build delle immagini 
   toccate)
@@ -129,22 +137,34 @@ eseguiti; poi i casi in più emersi in sviluppo, marcati come tali.
 Per ogni caso: i passi, cosa DEVE succedere, dove si osserva. 
 Dichiarare l'attesa prima di eseguire è quello che rende il caso capace di 
 fallire. 
-Un passo che fa il reviewer inizia con **[reviewer]**; un comando che scrive 
-dati inizia con **[con ok]**. 
-Gli altri li esegue l'agente senza chiedere.
+Un passo che fa il reviewer inizia con **[azione-reviewer]**; un comando che 
+scrive dati inizia con **[permesso-reviewer]**; un esito che legge il reviewer 
+inizia con **[lettura-reviewer]**. 
+Gli altri li esegue l'agente senza chiedere. 
+Almeno un caso ha un passo **[lettura-reviewer]** sull'Allora principale 
+della issue: almeno un esito il reviewer lo controlla con i suoi occhi. 
+Preferisci il pannello o il frontend di ricerca; i log solo se l'esito non si 
+vede altrove, con il comando, il filtro e la riga attesa. 
+Se non c'è niente da leggere, come in un refactor senza effetti visibili, 
+scrivi "Nessuna lettura del reviewer" e il perché.
 
 **C1 — Riprocessare non duplica.**
 - Conta i chunk sull'indice, aggregati per `contentId`.
-- **[reviewer]** Ricarica lo stesso file dal pannello.
-- **[con ok]** Lancia il reindex del datasource.
-- Atteso: lo stesso numero di chunk di prima, e il file testimone intatto. 
-  Dove si osserva: la stessa aggregazione, rifatta dopo il reindex.
+- **[azione-reviewer]** Ricarica lo stesso file dal pannello.
+- **[permesso-reviewer]** Lancia il reindex del datasource.
+- **[lettura-reviewer]** Cerca il titolo del file nel frontend di ricerca e 
+  conta i risultati.
+- Atteso: un solo risultato per il file, lo stesso numero di chunk di prima e 
+  il file testimone intatto. 
+  Dove si osserva: i risultati letti dal reviewer, e la stessa aggregazione 
+  rifatta dopo il reindex.
 )
 
 ### Report
 
 (L'agente consegna una tabella, una riga per caso, con il verdetto e i valori 
 osservati. 
+I valori letti dal reviewer sono segnati come tali. 
 Sotto mette i FAIL con l'output grezzo, i BLOCCATI con quello che manca e il 
 commento preparato per l'assignee, e le segnalazioni fatte durante la UAT, 
 ognuna con il thread aperto o la ragione per cui non lo è. 
