@@ -54,7 +54,7 @@ async def process_file(
     :type chat_id: str
     :param tenant_id: Name of the realm/namespace for data isolation
     :type tenant_id: str
-    :param upload_file_extensions: List of allowed file extensions (e.g., ['.pdf', '.docx'])
+    :param upload_file_extensions: List of allowed file extensions, case-insensitive (e.g., ['.pdf', '.docx'])
     :type upload_file_extensions: list
     :param upload_dir: Directory path where temporary files are stored
     :type upload_dir: str
@@ -117,7 +117,9 @@ async def process_file(
     unique_id = uuid.uuid4()
     filename, file_extension = os.path.splitext(file.filename or "unnamed")
 
-    if file_extension not in upload_file_extensions:
+    if file_extension.lower() not in {
+        extension.lower() for extension in upload_file_extensions
+    }:
         logger.error(f"File {filename}: invalid document type")
         return {
             "status": "error",
@@ -148,7 +150,7 @@ async def process_file(
         converter = None
         export_type = ExportType.MARKDOWN
 
-        if file_extension == ".pdf":
+        if file_extension.lower() == ".pdf":
             pipeline_options = PdfPipelineOptions(do_ocr=False)
             converter = DocumentConverter(
                 format_options={

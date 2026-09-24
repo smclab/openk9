@@ -17,6 +17,7 @@
 
 
 import importlib.util
+import os
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -25,6 +26,12 @@ MODULE_ROOT = Path(__file__).resolve().parent.parent
 
 if str(MODULE_ROOT) not in sys.path:
     sys.path.insert(0, str(MODULE_ROOT))
+
+# app.server parses the allowed upload extensions as a JSON array at import
+# time. Set the shipped default before any test module sets its own.
+os.environ.setdefault(
+    "UPLOAD_FILE_EXTENSIONS", '[".pdf",".md",".docx",".xlsx",".pptx",".csv"]'
+)
 
 # Stub heavy third-party dependencies so that app modules can be imported
 # without installing the full requirements (and without cloud credentials).
