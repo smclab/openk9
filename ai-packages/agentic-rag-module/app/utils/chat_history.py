@@ -25,6 +25,8 @@ from app.utils.opensearch_client import get_opensearch_client
 logger = get_logger(__name__)
 
 SEARCH_PIPELINE = "nlp-uploaded-documents-search-pipeline"
+# Threads fetched per page of the retention aggregation.
+THREADS_PAGE_SIZE = 100
 
 
 def delete_documents(opensearch_host, interval_in_days=180):
@@ -69,6 +71,8 @@ def delete_documents(opensearch_host, interval_in_days=180):
         and minimize the number of API calls.
     - The function identifies the latest document for each thread by sorting on the
         'metadata.step.keyword' field using a Painless script.
+    - Threads are paged with a composite aggregation, so every thread of an index is
+        evaluated in a single run whatever their number.
     - Documents are only considered for deletion if their index contains all required fields:
         'thread_id', 'checkpoint_id', and 'checkpoint'.
     - The checkpoint field is expected to contain a JSON string with a 'ts' (timestamp) field
@@ -93,7 +97,6 @@ def delete_documents(opensearch_host, interval_in_days=180):
     indices_to_process = []
 
     today = datetime.now(timezone.utc)
-    delete_actions = []
 
     for index in all_indices:
         index_mapping = open_search_client.indices.get_mapping(index=index)
@@ -105,13 +108,14 @@ def delete_documents(opensearch_host, interval_in_days=180):
 
     for index_to_process in indices_to_process:
         logger.info(f"Processing index: {index_to_process}")
+        delete_actions = []
 
         query = {
             "aggs": {
                 "threads": {
-                    "terms": {
-                        "field": "thread_id",
-                        "order": {"_key": "asc"},
+                    "composite": {
+                        "size": THREADS_PAGE_SIZE,
+                        "sources": [{"thread_id": {"terms": {"field": "thread_id"}}}],
                     },
                     "aggs": {
                         "max_step_doc": {
@@ -141,8 +145,15 @@ def delete_documents(opensearch_host, interval_in_days=180):
             },
         }
 
-        response = open_search_client.search(index=index_to_process, body=query)
-        documents = response.get("aggregations").get("threads").get("buckets")
+        documents = []
+        while True:
+            response = open_search_client.search(index=index_to_process, body=query)
+            threads = response.get("aggregations").get("threads")
+            documents.extend(threads.get("buckets"))
+            after_key = threads.get("after_key")
+            if not threads.get("buckets") or not after_key:
+                break
+            query["aggs"]["threads"]["composite"]["after"] = after_key
 
         for item in documents:
             hits = item.get("max_step_doc", {}).get("hits", {}).get("hits", [])
