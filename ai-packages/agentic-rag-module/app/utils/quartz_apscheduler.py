@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from datetime import datetime, timedelta
+import re
 
 from apscheduler.triggers.cron import CronTrigger
 
@@ -23,10 +23,18 @@ from apscheduler.triggers.cron import CronTrigger
 class QuartzExpressionParser:
     """Parser for converting Quartz CRON expressions to APScheduler kwargs.
 
-    This class takes into account the special characters used in Quartz ('L', 'W', and '#')
+    This class takes into account the special characters used in Quartz ('L' and '#')
     and translates them into the format that APScheduler understands.
     link: https://gist.github.com/mlamina/184c0f1f055ca8b4909022a1094826a5
+
+    Expressions it cannot translate faithfully are rejected with a ValueError
+    instead of being scheduled on the wrong dates: 'W' and 'L-n' in the
+    day-of-month, numeric lists and steps in the day-of-week, day-of-week
+    ranges crossing Sunday and a last day of the week not given as 'nL'.
     """
+
+    # Day-of-week order in APScheduler, where the week ends on Sunday.
+    APSCHEDULER_WEEK = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
     def __init__(self, quartz_cron):
         """Initialize the parser with a Quartz CRON expression."""
@@ -35,6 +43,40 @@ class QuartzExpressionParser:
 
         if len(self.parts) < 6 or len(self.parts) > 7:
             raise ValueError("Invalid Quartz CRON expression")
+
+        self._reject_unsupported()
+
+    def _reject_unsupported(self):
+        """Raise ValueError for the Quartz features this parser cannot translate."""
+        day_of_month = self.parts[3]
+        day_of_week = self.parts[5]
+
+        if "W" in day_of_month:
+            self._unsupported("nearest weekday ('W') in the day-of-month")
+        if "L" in day_of_month and day_of_month != "L":
+            self._unsupported("offset from the last day ('L-n') in the day-of-month")
+        if day_of_week.endswith("L") and not re.fullmatch(r"[1-7]L", day_of_week):
+            self._unsupported("last day of the week not given as 'nL' with n in 1-7")
+        if ("," in day_of_week or "/" in day_of_week) and any(
+            char.isdigit() for char in day_of_week
+        ):
+            self._unsupported("numeric list or step in the day-of-week")
+        if "-" in day_of_week:
+            start_day, end_day = map(
+                self._day_of_week_from_quartz, day_of_week.split("-", 1)
+            )
+            if (
+                start_day in self.APSCHEDULER_WEEK
+                and end_day in self.APSCHEDULER_WEEK
+                and self.APSCHEDULER_WEEK.index(start_day)
+                > self.APSCHEDULER_WEEK.index(end_day)
+            ):
+                self._unsupported("day-of-week range crossing Sunday")
+
+    def _unsupported(self, reason):
+        raise ValueError(
+            f"Unsupported Quartz CRON expression '{self.quartz_cron}': {reason}"
+        )
 
     def to_apscheduler_kwargs(self):
         """Convert the Quartz CRON expression to APScheduler kwargs."""
@@ -53,59 +95,14 @@ class QuartzExpressionParser:
 
         return kwargs
 
-    def _parse_weekday_nearest(self, day):
-        """Calculate the nearest weekday for a given day of the month or last weekday of the month."""
-        current_year = datetime.now().year
-        current_month = datetime.now().month
-
-        # If year or month are not specified, use current year and month
-        year = (
-            int(self.parts[6])
-            if len(self.parts) == 7 and self.parts[6].isdigit()
-            else current_year
-        )
-        month = int(self.parts[4]) if self.parts[4].isdigit() else current_month
-
-        if "LW" == day:
-            # Calculate the last day of the month
-            next_month = datetime(year, month % 12 + 1, 1)
-            last_day_of_month = (next_month - timedelta(days=1)).day
-            target_date = datetime(year, month, last_day_of_month)
-        elif "W" in day:
-            day_number = int(day.replace("W", ""))
-            target_date = datetime(year, month, day_number)
-        else:
-            return day
-
-        # Adjust if the target date falls on a weekend
-        weekday = target_date.weekday()
-        if weekday == 5:
-            # If it's Saturday, move to Friday
-            adjusted_date = target_date - timedelta(days=1)
-        elif weekday == 6:
-            # If it's Sunday, move to Monday (but check for month boundary)
-            adjusted_date = (
-                target_date + timedelta(days=1)
-                if target_date.day == 1
-                else target_date - timedelta(days=2)
-            )
-        else:
-            # It's already a weekday
-            adjusted_date = target_date
-
-        return adjusted_date.day
-
     def _parse_day(self):
         """Parse the day field to handle special Quartz characters."""
         # Handle 'L' and '#' in the day-of-month field
         day_of_month = self.parts[3]
         day_of_week = self.parts[5]
 
-        if "L" in day_of_month and "W" not in day_of_month:
+        if day_of_month == "L":
             return "last"
-        elif "W" in day_of_month:
-            # Handle 'LW' and 'xW' in the day-of-month field
-            return str(self._parse_weekday_nearest(day_of_month))
         elif day_of_week.endswith("L"):
             # The 'L' character is used to specify the last occurrence of a day in a month in Quartz.
             return "last " + self._day_of_week_from_quartz(day_of_week[0])
