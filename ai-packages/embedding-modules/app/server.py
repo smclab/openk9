@@ -257,11 +257,17 @@ def initialize_embedding_model(configuration):
 
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
     def GetMessages(self, request, context):
+        chunk_type = request.chunk.type
+        if chunk_type not in chunk_types:
+            context.abort(
+                grpc.StatusCode.INVALID_ARGUMENT,
+                f"Unsupported chunk type: {chunk_type}",
+            )
+
         try:
             start = time.time()
 
             chunk = request.chunk
-            chunk_type = chunk.type
             chunk_json_config = json_format.MessageToDict(chunk.jsonConfig)
             embedding_model = request.embeddingModel
             model_type = embedding_model.providerModel.provider
@@ -321,12 +327,6 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 "possible_arguments": signature,
             }
             logger.info(info_arguments)
-            if chunk_type not in chunk_types:
-                context.abort(
-                    grpc.StatusCode.INVALID_ARGUMENT,
-                    f"Unsupported chunk type: {chunk_type}",
-                )
-                return
 
             text_splitter = chunk_types[chunk_type](**arguments)
             text_splitted = [chunk.text for chunk in text_splitter.chunk(text)]
