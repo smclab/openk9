@@ -34,7 +34,9 @@ if str(MODULE_ROOT) not in sys.path:
 os.environ.setdefault("ORIGINS", "http://localhost")
 os.environ.setdefault("OPENSEARCH_HOST", "http://localhost:9200")
 os.environ.setdefault("UPLOAD_DIR", tempfile.mkdtemp())
-os.environ.setdefault("UPLOAD_FILE_EXTENSIONS", "")
+os.environ.setdefault(
+    "UPLOAD_FILE_EXTENSIONS", '[".pdf",".md",".docx",".xlsx",".pptx",".csv"]'
+)
 os.environ.setdefault("MAX_UPLOAD_FILE_SIZE", "10")
 os.environ.setdefault("MAX_UPLOAD_FILES_NUMBER", "5")
 
