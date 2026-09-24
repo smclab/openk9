@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 
@@ -20,6 +21,27 @@ from app.utils.embedding import documents_embedding
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def parse_upload_file_extensions(value: str) -> list:
+    """
+    Read the allowed upload extensions from their setting.
+
+    The value is either a JSON array, as shipped by the charts and the compose
+    file, or a comma-separated list. An empty value allows no extension.
+
+    :param value: The raw UPLOAD_FILE_EXTENSIONS setting
+    :type value: str
+
+    :return: The allowed extensions, e.g. ['.pdf', '.docx']
+    :rtype: list
+
+    :raises json.JSONDecodeError: If the value starts as a JSON array but is not one
+    """
+    value = value.strip()
+    if value.startswith("["):
+        return json.loads(value)
+    return [extension.strip() for extension in value.split(",") if extension.strip()]
 
 
 async def process_file(

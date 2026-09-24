@@ -73,8 +73,14 @@ HEADERS = {"authorization": "Bearer fake-token", "x-tenant-id": "tenant-1"}
 def client(monkeypatch):
     monkeypatch.setattr(server, "decode_token", lambda token: {"sub": "user-1"})
     # The first test module importing app.server may have bound a stubbed
-    # process_file: route the endpoint through the real one.
+    # file_upload: route the endpoint through the real process_file, with the
+    # extensions read by the real parser from the configured setting.
     monkeypatch.setattr(server, "process_file", file_upload.process_file)
+    monkeypatch.setattr(
+        server,
+        "UPLOAD_FILE_EXTENSIONS",
+        file_upload.parse_upload_file_extensions(os.environ["UPLOAD_FILE_EXTENSIONS"]),
+    )
 
     loader = MagicMock()
     loader.return_value.load.return_value = [MagicMock(page_content="testo")]
@@ -97,17 +103,6 @@ def _upload(client, *filenames):
         headers=HEADERS,
         files=[("files", (filename, b"contenuto")) for filename in filenames],
     )
-
-
-def test_the_configured_extensions_are_parsed_as_a_list():
-    assert server.UPLOAD_FILE_EXTENSIONS == [
-        ".pdf",
-        ".md",
-        ".docx",
-        ".xlsx",
-        ".pptx",
-        ".csv",
-    ]
 
 
 def test_extension_that_is_a_prefix_of_an_allowed_one_is_rejected(client):

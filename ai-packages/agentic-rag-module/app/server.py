@@ -53,7 +53,7 @@ from app.rag.evaluations import evaluations
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import decode_token, unauthorized_response
 from app.utils.embedding import documents_embedding
-from app.utils.file_upload import process_file
+from app.utils.file_upload import parse_upload_file_extensions, process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import debug_extra, get_logger
 from app.utils.opensearch_client import get_opensearch_client
@@ -90,7 +90,9 @@ USER_ID_KEY = "sub"
 TENANT_ID_KEY = "realm_name"
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR"))
 UPLOAD_DIR.mkdir(exist_ok=True)
-UPLOAD_FILE_EXTENSIONS = json.loads(os.getenv("UPLOAD_FILE_EXTENSIONS"))
+UPLOAD_FILE_EXTENSIONS = parse_upload_file_extensions(
+    os.getenv("UPLOAD_FILE_EXTENSIONS", "")
+)
 MAX_UPLOAD_FILE_SIZE = int(os.getenv("MAX_UPLOAD_FILE_SIZE")) * 1024 * 1024
 MAX_UPLOAD_FILES_NUMBER = int(os.getenv("MAX_UPLOAD_FILES_NUMBER"))
 OPENK9_SECURITY_ADMIN_USERNAME = "admin"
