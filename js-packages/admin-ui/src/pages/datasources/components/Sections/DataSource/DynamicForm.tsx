@@ -31,6 +31,7 @@ export default function DynamicForm({
 }) {
   const [dynamicTemplate, setDynamicTemplate] = React.useState<Template | null>(null);
   const [dynamicFormJson, setDynamicFormJson] = React.useState<string | null>(null);
+  const [initialFormJson, setInitialFormJson] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const filteredTemplate = template ? filterValidFields(template) : null;
@@ -42,9 +43,11 @@ export default function DynamicForm({
 
       setDynamicTemplate(dynamicTemplateUpdate);
       setDynamicFormJson(jsonDynamicTemplateUpdate);
+      setInitialFormJson(jsonDynamicTemplateUpdate);
     } else {
       setDynamicTemplate(null);
       setDynamicFormJson(null);
+      setInitialFormJson(null);
     }
   }, [template, jsonConfig]);
 
@@ -117,7 +120,11 @@ export default function DynamicForm({
     }
   };
 
-  return { dynamicTemplate, changeValueTemplate, dynamicFormJson };
+  // Compared with what was loaded rather than tracked in changeValueTemplate: the string map
+  // inputs report their entries as soon as they mount.
+  const isChanged = dynamicFormJson !== initialFormJson;
+
+  return { dynamicTemplate, changeValueTemplate, dynamicFormJson, isChanged };
 }
 
 function convertJsonToTemplate({ template, jsonConfig }: { template: Template; jsonConfig: string }): Template {
@@ -257,9 +264,12 @@ function getDefaultValue(field: Field): string | number | boolean | string[] | R
     }
   }
   if (field.type === "stringMap") {
+    // { key, value } from the string map input, { [key]: value } as read from a saved jsonConfig
     const val = (field.values as KeyValue[]).reduce((acc, curr) => {
       if (curr.key !== undefined && curr.value !== undefined) {
         acc[curr.key] = curr.value;
+      } else {
+        Object.assign(acc, curr);
       }
       return acc;
     }, {} as Record<string, string>);

@@ -66,7 +66,12 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     formValues,
     requestBody,
   );
-  const { dynamicFormJson, dynamicTemplate, changeValueTemplate } = DynamicForm({
+  const {
+    dynamicFormJson,
+    dynamicTemplate,
+    changeValueTemplate,
+    isChanged: isDynamicFormChanged,
+  } = DynamicForm({
     template: recoveryFormStandart,
     jsonConfig: formValues.jsonConfig,
   });
@@ -74,7 +79,17 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   const baseDisabled =
     (pluginDriverId === null || pluginDriverId === undefined || !formValues?.name) && areaEnabled !== "selectConnectos";
 
-  const hasMissingRequiredDynamic = !!dynamicTemplate?.fields?.some((f: any) => f?.required && isFieldEmpty(f));
+  // A saved datasource keeps its jsonConfig until the connector form is edited or the connector
+  // swapped: the form may not describe it (startUrls saved, a form asking for sitemapUrls).
+  const isConnectorConfigChanged =
+    datasourceId === "new" ||
+    isDynamicFormChanged ||
+    String(pluginDriverId) !== String(datasourceQuery.data?.datasource?.pluginDriver?.id);
+  const jsonConfig =
+    dynamicTemplate && isConnectorConfigChanged ? dynamicFormJson || formValues.jsonConfig : formValues.jsonConfig;
+
+  const hasMissingRequiredDynamic =
+    isConnectorConfigChanged && !!dynamicTemplate?.fields?.some((f: any) => f?.required && isFieldEmpty(f));
 
   const isDisabledNextStep = baseDisabled || hasMissingRequiredDynamic;
   const tabs = constructTabs({ datasourceId, isDisabledNextStep, mode, isRecap });
@@ -163,7 +178,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
       reindexable: formValues.isCronSectionreindex || false,
       reindexing: formValues.reindexing || "0 0 1 * * ?",
       scheduling: formValues.scheduling || "0 */30 * ? * * *",
-      jsonConfig: dynamicTemplate ? dynamicFormJson || formValues.jsonConfig : formValues.jsonConfig,
+      jsonConfig,
       description: formValues.description,
       pluginDriverId: Number(formValues.pluginDriverSelect?.id),
       pipelineId: formValues.enrichPipeline?.id || null,
@@ -390,7 +405,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   const datasourceSection = mappingCardRecap({
     form: form as any,
     valueOverride: {
-      dynamicFormJson: dynamicTemplate ? dynamicFormJson : formValues.jsonConfig,
+      dynamicFormJson: jsonConfig,
     },
     sections: [
       {
