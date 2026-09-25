@@ -16,9 +16,12 @@
 #
 
 import asyncio
+import importlib.util
 import threading
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
+
+import dotenv
 
 import app.server as server
 
@@ -66,15 +69,45 @@ def test_conversions_never_exceed_the_configured_concurrency():
 
     assert peak <= server.MAX_CONCURRENT_CONVERSIONS
     assert requests_mock.post.call_count == TASKS
+    # Each task answers the callback of its own token.
+    assert sorted(c.args[0] for c in requests_mock.post.call_args_list) == sorted(
+        f"{server.DATASOURCE_HOST}/api/datasource/pipeline/callback/tok-{i}"
+        for i in range(TASKS)
+    )
+
+
+# conftest raises the pool to 2 workers for the whole session, so the default
+# is read from a copy of the module loaded on its own, leaving app.server and
+# its executor as they are.
+def test_conversions_are_serial_by_default(monkeypatch):
+    monkeypatch.delenv("MAX_CONCURRENT_CONVERSIONS", raising=False)
+    # The module loads the .env on import: a developer's own must not stand in
+    # for the default.
+    monkeypatch.setattr(dotenv, "load_dotenv", lambda *args, **kwargs: False)
+    spec = importlib.util.spec_from_file_location("isolated_server", server.__file__)
+    isolated = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(isolated)
+
+    try:
+        assert isolated.MAX_CONCURRENT_CONVERSIONS == 1
+        assert isolated.EXECUTOR._max_workers == 1
+    finally:
+        isolated.EXECUTOR.shutdown()
 
 
 def test_start_task_hands_the_work_to_the_pool():
     input = SimpleNamespace(
-        payload=_payload(0), enrichItemConfig={}, replyTo="tok"
+        payload=_payload(0),
+        enrichItemConfig={"error_strategy": "fail-soft"},
+        replyTo="tok",
     )
 
     with patch.object(server, "EXECUTOR") as executor:
         asyncio.run(server.start_task(input))
 
-    assert executor.submit.call_args.args[0] is server.operation
-    assert executor.submit.call_args.kwargs["token"] == "tok"
+    executor.submit.assert_called_once_with(
+        server.operation,
+        payload=_payload(0),
+        configs={"error_strategy": "fail-soft"},
+        token="tok",
+    )

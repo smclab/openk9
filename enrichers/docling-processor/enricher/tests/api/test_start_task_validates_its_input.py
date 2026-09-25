@@ -30,12 +30,19 @@ VALID_INPUT = {
 
 
 def test_valid_input_starts_the_task():
+    body = {**VALID_INPUT, "enrichItemConfig": {"error_strategy": "fail-soft"}}
+
     with patch.object(server, "EXECUTOR") as executor:
-        response = TestClient(server.app).post("/start-task/", json=VALID_INPUT)
+        response = TestClient(server.app).post("/start-task/", json=body)
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
-    executor.submit.assert_called_once()
+    executor.submit.assert_called_once_with(
+        server.operation,
+        payload=VALID_INPUT["payload"],
+        configs={"error_strategy": "fail-soft"},
+        token="tok",
+    )
 
 
 @pytest.mark.parametrize(

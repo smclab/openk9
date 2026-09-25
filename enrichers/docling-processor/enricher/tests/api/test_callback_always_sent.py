@@ -15,9 +15,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import logging
 from unittest.mock import MagicMock, patch
 
 import app.server as server
+
+# Neither is the default conftest sets, so a host or a timeout hardcoded in
+# place of the configured ones cannot pass.
+DATASOURCE_HOST = "http://datasource.test:9999"
+CALLBACK_TIMEOUT_SECONDS = 7.5
+CALLBACK_URL = f"{DATASOURCE_HOST}/api/datasource/pipeline/callback/tok"
 
 
 def _binary(id):
@@ -30,18 +37,25 @@ def _run(payload, conversion=None, post=None):
     conversion = conversion or (lambda binary, configs: MagicMock())
     with patch.object(
         server, "conversion", side_effect=conversion
-    ), patch.object(server, "requests") as requests_mock:
+    ), patch.object(server, "requests") as requests_mock, patch.object(
+        server, "DATASOURCE_HOST", DATASOURCE_HOST
+    ), patch.object(
+        server, "CALLBACK_TIMEOUT_SECONDS", CALLBACK_TIMEOUT_SECONDS
+    ):
         if post is not None:
             requests_mock.post.side_effect = post
         server.operation(payload, {}, token="tok")
     return requests_mock.post
 
 
-def test_malformed_payload_is_reported_to_the_callback():
-    post = _run({"tenantId": "t"})
+def test_malformed_payload_is_reported_to_the_callback(caplog):
+    with caplog.at_level(logging.ERROR):
+        post = _run({"tenantId": "t"})
 
     assert post.call_count == 1
-    assert "error" in post.call_args.kwargs["json"]
+    assert post.call_args.args == (CALLBACK_URL,)
+    assert post.call_args.kwargs["json"] == {"error": "generic error: 'resources'"}
+    assert "generic error: 'resources'" in caplog.text
 
 
 def test_failed_single_binary_reports_the_error():
@@ -52,25 +66,32 @@ def test_failed_single_binary_reports_the_error():
         {"resources": {"binaries": [_binary(0)]}, "tenantId": "t"}, conversion
     )
 
+    assert post.call_count == 1
+    assert post.call_args.args == (CALLBACK_URL,)
     assert post.call_args.kwargs["json"] == {"error": "conversion failed"}
 
 
 def test_document_without_binaries_is_not_an_error():
     post = _run({"resources": {"binaries": []}, "tenantId": "t"})
 
+    assert post.call_count == 1
+    assert post.call_args.args == (CALLBACK_URL,)
     assert post.call_args.kwargs["json"] == {}
 
 
-def test_unreachable_callback_does_not_kill_the_worker():
+def test_unreachable_callback_does_not_kill_the_worker(caplog):
     def post(*args, **kwargs):
         raise ConnectionError("datasource is down")
 
     # The worker must survive: it is a pool thread, and an exception escaping
     # here would take it out of the pool.
-    _run({"resources": {"binaries": []}, "tenantId": "t"}, post=post)
+    with caplog.at_level(logging.ERROR):
+        _run({"resources": {"binaries": []}, "tenantId": "t"}, post=post)
+
+    assert "Callback failed: generic error: datasource is down" in caplog.text
 
 
 def test_callback_is_sent_with_a_timeout():
     post = _run({"resources": {"binaries": []}, "tenantId": "t"})
 
-    assert post.call_args.kwargs["timeout"] == server.CALLBACK_TIMEOUT_SECONDS
+    assert post.call_args.kwargs["timeout"] == CALLBACK_TIMEOUT_SECONDS

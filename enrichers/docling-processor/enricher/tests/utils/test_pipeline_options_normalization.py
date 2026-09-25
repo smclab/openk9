@@ -46,12 +46,18 @@ def test_unflatten_rebuilds_the_nested_dict():
     assert unflatten_dict(FLAT) == NESTED
 
 
+def test_flatten_joins_with_the_given_separator():
+    assert flatten({"ocr_options": {"lang": ["it"]}}, sep="/") == {
+        "ocr_options/lang": ["it"]
+    }
+
+
 def test_flatten_and_unflatten_round_trip():
     assert unflatten_dict(flatten(NESTED)) == NESTED
 
 
 def test_unflatten_rejects_a_key_nested_under_a_value():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Conflict at key: ocr_options.lang"):
         unflatten_dict({"ocr_options": "easyocr", "ocr_options.lang": ["it"]})
 
 
@@ -69,7 +75,16 @@ def test_normalize_dict_converts_the_string_values():
         "ocr_options": {"bitmap_area_threshold": 0.05, "lang": "it"},
         "artifacts_path": None,
     }
+    # 2 and 2.0 compare equal: the digits have to come out as an int.
+    assert type(normalize_dict(raw)["images_scale"]) is int
 
 
 def test_normalize_dict_unwraps_a_list_nested_in_a_single_list():
     assert normalize_dict({"lang": [["it", "en"]]}) == {"lang": ["it", "en"]}
+
+
+# Only a list holding a single list is unwrapped: a list of several lists, or
+# an empty one, is a value of its own.
+@pytest.mark.parametrize("value", [[["it"], ["en"]], []], ids=["lists", "empty"])
+def test_normalize_dict_keeps_the_other_lists(value):
+    assert normalize_dict({"lang": value}) == {"lang": value}

@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -52,6 +53,38 @@ def test_the_same_configuration_reuses_one_converter():
     converter_class, _ = _run({"do_ocr": "true"}, times=3)
 
     assert converter_class.call_count == 1
+
+
+# The cache key is the configuration's content, not the order its keys came in.
+def test_the_same_configuration_in_another_key_order_reuses_the_converter():
+    _run({"a": 1, "b": 2})
+    converter_class, _ = _run({"b": 2, "a": 1})
+
+    assert converter_class.call_count == 0
+
+
+# docling does not support concurrent conversions on the same pipeline, so a
+# converter built by one worker thread must never be handed to another.
+def test_each_worker_thread_builds_its_own_converter():
+    def convert_in_a_new_thread():
+        # A pool of its own per call: the two conversions cannot share a thread.
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            pool.submit(converter.conversion, BINARY, {}).result(timeout=30)
+
+    with patch.object(converter, "requests") as requests_mock, patch.object(
+        converter, "detect_format", return_value=InputFormat.PDF
+    ), patch.object(converter, "stream_name", return_value="doc.pdf"), patch.object(
+        converter, "get_format_options", return_value={}
+    ), patch.object(
+        converter, "DocumentConverter"
+    ) as converter_class:
+        requests_mock.get.return_value = MagicMock(content=b"%PDF-1.4")
+        convert_in_a_new_thread()
+        convert_in_a_new_thread()
+
+    assert converter_class.call_count == 2
+    # Neither of them touched the cache of the thread running the test.
+    assert converter._converters.cache == {}
 
 
 def test_a_different_format_gets_its_own_converter():

@@ -125,6 +125,9 @@ def test_nested_pipeline_options_are_normalized_and_applied():
     assert pipeline_options.do_ocr is False
     assert pipeline_options.images_scale == 2
     assert pipeline_options.accelerator_options.num_threads == 8
+    # docling does not validate on assignment, so the normalized value is what
+    # stays: a thread count must be an int, not the float 8.0.
+    assert type(pipeline_options.accelerator_options.num_threads) is int
     assert pipeline_options.document_timeout is None
 
 
@@ -215,6 +218,37 @@ def test_picture_description_api_options_are_built_from_the_configuration():
     assert options.timeout == 45
 
 
+# Building the options of a kind must not stop the keys that come after it.
+def test_keys_after_the_picture_description_options_are_still_applied():
+    configs = {
+        "pipeline_options.picture_description_options.kind": "api",
+        "pipeline_options.picture_description_options.prompt": "Descrivi",
+        "pipeline_options.do_ocr": "false",
+    }
+
+    pipeline_options = get_format_options(configs, InputFormat.PDF)[
+        InputFormat.PDF
+    ].pipeline_options
+
+    assert isinstance(
+        pipeline_options.picture_description_options, PictureDescriptionApiOptions
+    )
+    assert pipeline_options.do_ocr is False
+
+
+# The enrich item configuration also carries this enricher's own keys, such as
+# the error strategy: with no pipeline_options among them, docling's defaults
+# stand.
+def test_configuration_without_pipeline_options_keeps_the_defaults():
+    pipeline_options = get_format_options(
+        {"error_strategy": "fail-soft"}, InputFormat.PDF
+    )[InputFormat.PDF].pipeline_options
+
+    assert isinstance(pipeline_options, PdfPipelineOptions)
+    assert pipeline_options.do_ocr is True
+    assert isinstance(pipeline_options.ocr_options, EasyOcrOptions)
+
+
 def test_picture_description_vlm_options_are_built_from_the_configuration():
     configs = {
         "pipeline_options.picture_description_options.kind": "vlm",
@@ -252,6 +286,9 @@ def test_picture_description_without_a_kind_updates_the_default():
 def test_unknown_picture_description_kind_keeps_the_default(caplog):
     configs = {"pipeline_options.picture_description_options.kind": "telepatia"}
 
+    default = get_format_options({}, InputFormat.PDF)[
+        InputFormat.PDF
+    ].pipeline_options.picture_description_options
     with caplog.at_level(logging.WARNING):
         options = get_format_options(configs, InputFormat.PDF)[
             InputFormat.PDF
@@ -260,7 +297,9 @@ def test_unknown_picture_description_kind_keeps_the_default(caplog):
     assert not isinstance(
         options, (PictureDescriptionApiOptions, PictureDescriptionVlmOptions)
     )
+    assert type(options) is type(default)
     assert "telepatia" in caplog.text
+    assert "'picture_description_options'" in caplog.text
 
 
 # The docling options do not forbid extra fields, so a key that is not theirs
@@ -290,12 +329,16 @@ def test_unknown_key_in_the_picture_description_options_is_skipped_with_a_warnin
 def test_picture_description_options_that_do_not_validate_keep_the_default(caplog):
     configs = {"pipeline_options.picture_description_options.kind": "vlm"}
 
+    default = get_format_options({}, InputFormat.PDF)[
+        InputFormat.PDF
+    ].pipeline_options.picture_description_options
     with caplog.at_level(logging.WARNING):
         options = get_format_options(configs, InputFormat.PDF)[
             InputFormat.PDF
         ].pipeline_options.picture_description_options
 
     assert not isinstance(options, PictureDescriptionVlmOptions)
+    assert type(options) is type(default)
     assert "repo_id" in caplog.text
 
 

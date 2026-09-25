@@ -71,7 +71,7 @@ def test_url_shaped_name_is_reduced_to_its_file_name(name):
 
 
 def test_undetectable_content_raises_format_error():
-    with pytest.raises(FormatError):
+    with pytest.raises(FormatError, match="could not be detected"):
         detect_format(bytes(range(256)) * 8, "misterioso.xyz")
 
 
