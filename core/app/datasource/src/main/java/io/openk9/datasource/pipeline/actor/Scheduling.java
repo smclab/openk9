@@ -100,6 +100,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private boolean failureTracked = false;
 	private OffsetDateTime lastIngestionDate;
 	private boolean lastReceived = false;
+	private boolean passivating = false;
+	private boolean stopRequested = false;
 	private LocalDateTime lastRequest = LocalDateTime.now();
 	private int maxWorkers;
 	private int nodes = 0;
@@ -576,8 +578,21 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	}
 
 	private Behavior<Command> onStop() {
+		// a message delivered before the shard got the Passivate may have
+		// started work meanwhile: drain it, the shard buffers what arrives
+		if (passivating && !isIdle()) {
+			log.infof("%s drains its work before passivating", shardingKey);
+			stopRequested = true;
+
+			return Behaviors.same();
+		}
+
 		logBehavior(STOPPED_BEHAVIOR);
 		return Behaviors.stopped();
+	}
+
+	private boolean isIdle() {
+		return heldMessages.isEmpty() && lag.isEmpty();
 	}
 
 	private Behavior<Command> onStopInternalClock() {
@@ -588,6 +603,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	}
 
 	private Behavior<Command> onTick() {
+		if (stopRequested && isIdle()) {
+			logBehavior(STOPPED_BEHAVIOR);
+			return Behaviors.stopped();
+		}
+
 		var status = scheduler.getStatus();
 
 		switch (status) {
@@ -605,10 +625,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				// status is on the database, so the next message (Restart,
 				// WakeUp, a retry) recreates it; the shard buffers the messages
 				// arriving while it stops
-				if (heldMessages.isEmpty() && lag.isEmpty()) {
+				if (!passivating && isIdle()) {
 					log.infof("%s is idle in ERROR, passivating", shardingKey);
 
-					timers.cancel(Tick.INSTANCE);
+					passivating = true;
 					shard.tell(new ClusterSharding.Passivate<>(getContext().getSelf()));
 				}
 
@@ -940,7 +960,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		INSTANCE
 	}
 
-	private enum Stop implements Command {
+	/**
+	 * Stops the entity; also the message the shard sends on passivation and
+	 * rebalance.
+	 */
+	public enum Stop implements Command {
 		INSTANCE
 	}
 
