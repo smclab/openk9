@@ -23,6 +23,7 @@ chunks in the shared guardrails index, created on first use with a vector
 field as wide as the model's vectors.
 """
 
+import logging
 from unittest.mock import MagicMock
 
 import pytest
@@ -33,6 +34,20 @@ import app.server as server
 ADMIN = ("admin", "s3cret")
 HEADERS = {"x-tenant-id": "tenant-1"}
 INDEX = "guardrails-documents-index"
+HYBRID_SEARCH_PIPELINE = {
+    "description": "Post processor for hybrid search",
+    "phase_results_processors": [
+        {
+            "normalization-processor": {
+                "normalization": {"technique": "min_max"},
+                "combination": {
+                    "technique": "arithmetic_mean",
+                    "parameters": {"weights": [0.5, 0.5]},
+                },
+            }
+        }
+    ],
+}
 EMBEDDING_MODEL_CONFIGURATION = {"vector_size": 3, "model_name": "embedder"}
 
 
@@ -123,14 +138,14 @@ def test_embed_guardrails_without_tenant_is_refused(embedding):
     )
 
     assert response.status_code == 400
+    assert response.json()["detail"] == "Missing x_tenant_id header."
     documents_embedding.assert_not_called()
 
 
 def test_save_guardrails_creates_the_index_with_the_vector_size(monkeypatch):
     open_search_client = _opensearch_mock(index_exists=False)
-    monkeypatch.setattr(
-        server, "get_opensearch_client", lambda *a, **k: open_search_client
-    )
+    get_opensearch_client = MagicMock(return_value=open_search_client)
+    monkeypatch.setattr(server, "get_opensearch_client", get_opensearch_client)
 
     server.save_guardrails_documents("http://opensearch", [_chunk("a")], 3)
 
@@ -141,8 +156,13 @@ def test_save_guardrails_creates_the_index_with_the_vector_size(monkeypatch):
         "type": "knn_vector",
         "dimension": 3,
     }
-    method, path = open_search_client.transport.perform_request.call_args.args
-    assert (method, path) == ("PUT", f"/_search/pipeline/{server.SEARCH_PIPELINE}")
+    get_opensearch_client.assert_called_once_with("http://opensearch")
+    open_search_client.indices.exists.assert_called_once_with(index=INDEX)
+    open_search_client.transport.perform_request.assert_called_once_with(
+        "PUT",
+        f"/_search/pipeline/{server.SEARCH_PIPELINE}",
+        body=HYBRID_SEARCH_PIPELINE,
+    )
     open_search_client.indices.put_settings.assert_called_once_with(
         index=INDEX,
         body={"index": {"search": {"default_pipeline": server.SEARCH_PIPELINE}}},
@@ -192,3 +212,28 @@ def test_save_guardrails_reports_a_failed_bulk(monkeypatch):
     result = server.save_guardrails_documents("http://opensearch", [_chunk("a")], 3)
 
     assert result == "Bulk indexing failed: cluster down"
+
+
+def test_save_guardrails_logs_the_documents_that_failed_to_index(monkeypatch, caplog):
+    open_search_client = _opensearch_mock(index_exists=True)
+    open_search_client.bulk.return_value = {
+        "errors": True,
+        "items": [
+            {"index": {"status": 201}},
+            {"index": {"error": {"type": "mapper_parsing_exception"}}},
+        ],
+    }
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: open_search_client
+    )
+
+    with caplog.at_level(logging.ERROR, logger="app"):
+        server.save_guardrails_documents(
+            "http://opensearch", [_chunk("a"), _chunk("b")], 3
+        )
+
+    errors = [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR]
+    assert errors == [
+        "Some documents failed to index:",
+        "Failed to index document: {'type': 'mapper_parsing_exception'}",
+    ]

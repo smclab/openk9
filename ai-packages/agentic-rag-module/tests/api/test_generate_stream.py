@@ -92,11 +92,11 @@ def test_generate_streams_the_pipeline_events(client, pipeline):
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
-    assert [event["type"] for event in _sse_events(response)] == [
-        "START",
-        "CHUNK",
-        "CHUNK",
-        "END",
+    assert _sse_events(response) == [
+        {"chunk": "", "type": "START"},
+        {"chunk": "OpenK9 è", "type": "CHUNK"},
+        {"chunk": " un motore di ricerca", "type": "CHUNK"},
+        {"chunk": "", "type": "END"},
     ]
 
 

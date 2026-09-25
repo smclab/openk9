@@ -52,9 +52,10 @@ HISTORY = [
 ]
 
 # Positional slots of get_agentic_rag the handler fills.
-RAG_TYPE, SEARCH_QUERY, TOKEN, SEARCH_TEXT = 0, 1, 6, 11
+RAG_TYPE, SEARCH_QUERY, DATASOURCE_IDS, TOKEN, EXTRA, SEARCH_TEXT = 0, 1, 2, 6, 7, 11
 CHAT_ID, USER_ID, TENANT_ID, RETRIEVE_FROM_UPLOADED_DOCUMENTS = 12, 13, 14, 15
 CHAT_HISTORY, TIMESTAMP, CHAT_SEQUENCE_NUMBER = 16, 17, 18
+RAG_CONFIGURATION, LLM_CONFIGURATION, GUARDRAILS_CONFIGURATION = 19, 20, 21
 
 
 def _body(**overrides):
@@ -90,7 +91,10 @@ def pipeline(monkeypatch):
 
     get_agentic_rag = MagicMock(side_effect=fake_stream)
     get_configurations = MagicMock(
-        return_value={"rag_configuration": {}, "llm_configuration": {}}
+        return_value={
+            "rag_configuration": {"guardrails_configuration": {"enabled": True}},
+            "llm_configuration": {"model_name": "llm"},
+        }
     )
     monkeypatch.setattr(server, "get_agentic_rag", get_agentic_rag)
     monkeypatch.setattr(server, "get_configurations", get_configurations)
@@ -109,10 +113,10 @@ def test_chat_streams_the_pipeline_events(path, rag_type, client, pipeline):
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
-    assert [event["type"] for event in _sse_events(response)] == [
-        "START",
-        "CHUNK",
-        "END",
+    assert _sse_events(response) == [
+        {"chunk": "", "type": "START"},
+        {"chunk": "Con Helm.", "type": "CHUNK"},
+        {"chunk": "", "type": "END"},
     ]
 
 
@@ -122,10 +126,16 @@ def test_chat_runs_the_pipeline_of_its_rag_type(path, rag_type, client, pipeline
 
     client.post(path, json=_body(), headers=HEADERS)
 
-    assert get_configurations.call_args.kwargs["rag_type"] == rag_type
-    assert get_configurations.call_args.kwargs["tenant_id"] == "tenant-1"
+    get_configurations.assert_called_once_with(
+        rag_type=rag_type,
+        grpc_host=server.GRPC_DATASOURCE_HOST,
+        tenant_id="tenant-1",
+    )
     args = get_agentic_rag.call_args.args
     assert args[RAG_TYPE] == rag_type
+    assert args[RAG_CONFIGURATION] == {"guardrails_configuration": {"enabled": True}}
+    assert args[LLM_CONFIGURATION] == {"model_name": "llm"}
+    assert args[GUARDRAILS_CONFIGURATION] == {"enabled": True}
     assert args[SEARCH_QUERY] is None
     assert args[SEARCH_TEXT] == "E come si installa?"
     assert args[TENANT_ID] == "tenant-1"
@@ -185,6 +195,48 @@ def test_chat_forwards_the_history_as_sent(path, rag_type, client, pipeline):
     args = get_agentic_rag.call_args.args
     assert args[CHAT_HISTORY] == HISTORY
     assert args[RETRIEVE_FROM_UPLOADED_DOCUMENTS] is True
+
+
+@pytest.mark.parametrize("path, rag_type", CHAT_ENDPOINTS, ids=ENDPOINT_IDS)
+def test_chat_forwards_the_datasource_filter(path, rag_type, client, pipeline):
+    get_agentic_rag, _ = pipeline
+
+    client.post(path, json=_body(datasourceIds=[3, 7]), headers=HEADERS)
+
+    assert get_agentic_rag.call_args.args[DATASOURCE_IDS] == [3, 7]
+
+
+@pytest.mark.parametrize("path, rag_type", CHAT_ENDPOINTS, ids=ENDPOINT_IDS)
+def test_chat_adds_the_acl_header_to_the_extra_filters(
+    path, rag_type, client, pipeline
+):
+    get_agentic_rag, _ = pipeline
+
+    client.post(
+        path,
+        json=_body(extra={"filter": ["news"]}),
+        headers=[
+            *HEADERS.items(),
+            ("openk9-acl", "group:admins"),
+            ("openk9-acl", "project:openk9"),
+        ],
+    )
+
+    assert get_agentic_rag.call_args.args[EXTRA] == {
+        "filter": ["news"],
+        "OPENK9_ACL": ["group:admins", "project:openk9"],
+    }
+
+
+@pytest.mark.parametrize("path, rag_type", CHAT_ENDPOINTS, ids=ENDPOINT_IDS)
+def test_chat_without_acl_leaves_the_extra_filters_untouched(
+    path, rag_type, client, pipeline
+):
+    get_agentic_rag, _ = pipeline
+
+    client.post(path, json=_body(), headers=HEADERS)
+
+    assert get_agentic_rag.call_args.args[EXTRA] == {}
 
 
 @pytest.mark.parametrize("path, rag_type", CHAT_ENDPOINTS, ids=ENDPOINT_IDS)

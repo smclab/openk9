@@ -33,21 +33,18 @@ HEADERS = {"x-tenant-id": "tenant-1"}
 def evaluations(monkeypatch):
     evaluations = MagicMock(return_value=4)
     monkeypatch.setattr(server, "evaluations", evaluations)
-    monkeypatch.setattr(
-        server,
-        "get_configurations",
-        MagicMock(
-            return_value={
-                "rag_configuration": {"prompt": "rag"},
-                "llm_configuration": {"model": "llm"},
-            }
-        ),
+    get_configurations = MagicMock(
+        return_value={
+            "rag_configuration": {"prompt": "rag"},
+            "llm_configuration": {"model": "llm"},
+        }
     )
+    monkeypatch.setattr(server, "get_configurations", get_configurations)
     monkeypatch.setattr(
         server, "ARIZE_PHOENIX_ENDPOINT", "http://phoenix:6006/v1/traces"
     )
     monkeypatch.setattr(server, "ARIZE_PHOENIX_PROJECT_NAME", "openk9")
-    return evaluations
+    return evaluations, get_configurations
 
 
 def test_evaluate_reports_the_number_of_evaluated_spans(evaluations):
@@ -60,6 +57,8 @@ def test_evaluate_reports_the_number_of_evaluated_spans(evaluations):
 
 
 def test_evaluate_forwards_the_request_to_the_evaluations(evaluations):
+    evaluations, get_configurations = evaluations
+
     TestClient(server.app).post(
         "/api/rag/evaluate",
         json={
@@ -73,6 +72,11 @@ def test_evaluate_forwards_the_request_to_the_evaluations(evaluations):
         headers=HEADERS,
     )
 
+    get_configurations.assert_called_once_with(
+        rag_type="SIMPLE_GENERATE",
+        grpc_host=server.GRPC_DATASOURCE_HOST,
+        tenant_id="tenant-1",
+    )
     evaluations.assert_called_once_with(
         {"prompt": "rag"},
         {"model": "llm"},
@@ -88,6 +92,8 @@ def test_evaluate_forwards_the_request_to_the_evaluations(evaluations):
 
 
 def test_evaluate_defaults(evaluations):
+    evaluations, _ = evaluations
+
     TestClient(server.app).post("/api/rag/evaluate", json={}, headers=HEADERS)
 
     args = evaluations.call_args.args
@@ -95,7 +101,10 @@ def test_evaluate_defaults(evaluations):
 
 
 def test_evaluate_without_tenant_is_refused(evaluations):
+    evaluations, _ = evaluations
+
     response = TestClient(server.app).post("/api/rag/evaluate", json={})
 
     assert response.status_code == 400
+    assert response.json()["detail"] == "Missing x_tenant_id header."
     evaluations.assert_not_called()

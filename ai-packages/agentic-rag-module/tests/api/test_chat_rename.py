@@ -95,6 +95,7 @@ def test_rename_returns_404_when_the_user_has_no_index(client, monkeypatch):
     response = _rename(client)
 
     assert response.status_code == 404
+    assert response.json()["detail"] == "User index not found."
     open_search_client.search.assert_not_called()
 
 

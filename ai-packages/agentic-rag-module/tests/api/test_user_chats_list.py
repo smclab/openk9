@@ -143,3 +143,20 @@ def test_user_chats_pages_the_chats_as_requested(client, monkeypatch):
     body = open_search_client.search.call_args.kwargs["body"]
     bucket_sort = body["aggs"]["threads"]["aggs"]["bucket_sort"]["bucket_sort"]
     assert bucket_sort == {"from": 20, "size": 5}
+
+
+def test_user_chats_groups_the_checkpoints_by_chat(client, monkeypatch):
+    open_search_client = _opensearch_mock([])
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: open_search_client
+    )
+
+    client.post("/api/rag/user-chats", json={}, headers=HEADERS)
+
+    threads = open_search_client.search.call_args.kwargs["body"]["aggs"]["threads"]
+    assert threads["terms"]["field"] == "thread_id"
+    latest_step = threads["aggs"]["max_step_doc"]["top_hits"]
+    assert latest_step["size"] == 1
+    (sort,) = latest_step["sort"]
+    assert sort["_script"]["order"] == "desc"
+    assert "metadata.step.keyword" in sort["_script"]["script"]["source"]

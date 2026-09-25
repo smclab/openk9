@@ -107,6 +107,7 @@ def test_delete_returns_404_when_the_user_has_no_index(client, monkeypatch):
     response = client.delete(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
 
     assert response.status_code == 404
+    assert response.json()["detail"] == "Item not found."
     open_search_client.delete_by_query.assert_not_called()
 
 
@@ -121,4 +122,5 @@ def test_delete_returns_404_when_the_chat_has_no_messages(client, monkeypatch):
     response = client.delete(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
 
     assert response.status_code == 404
+    assert response.json()["detail"] == "Item not found."
     assert _deletes(open_search_client) == {USER_INDEX: MESSAGES_QUERY}

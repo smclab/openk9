@@ -43,6 +43,7 @@ def _outcome(file, *args):
 @pytest.fixture
 def process_file(monkeypatch):
     monkeypatch.setattr(server, "decode_token", lambda token: {"sub": "user-1"})
+    monkeypatch.setattr(server, "MAX_UPLOAD_FILES_NUMBER", 5)
     process_file = AsyncMock(side_effect=_outcome)
     monkeypatch.setattr(server, "process_file", process_file)
     return process_file

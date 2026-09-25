@@ -22,6 +22,7 @@ Each chunk carries the domain of the document it comes from, so the domain
 retriever can classify a query by its nearest chunks.
 """
 
+import logging
 from unittest.mock import MagicMock
 
 import pytest
@@ -32,6 +33,20 @@ import app.server as server
 ADMIN = ("admin", "s3cret")
 HEADERS = {"x-tenant-id": "tenant-1"}
 INDEX = "domain-documents-index"
+HYBRID_SEARCH_PIPELINE = {
+    "description": "Post processor for hybrid search",
+    "phase_results_processors": [
+        {
+            "normalization-processor": {
+                "normalization": {"technique": "min_max"},
+                "combination": {
+                    "technique": "arithmetic_mean",
+                    "parameters": {"weights": [0.5, 0.5]},
+                },
+            }
+        }
+    ],
+}
 EMBEDDING_MODEL_CONFIGURATION = {"vector_size": 4, "model_name": "embedder"}
 
 
@@ -50,14 +65,19 @@ def embedding(monkeypatch):
         ]
     )
     save_domains_documents = MagicMock(return_value="Successfully indexed 4 documents")
+    get_embedding_model_configuration = MagicMock(
+        return_value=EMBEDDING_MODEL_CONFIGURATION
+    )
     monkeypatch.setattr(
-        server,
-        "get_embedding_model_configuration",
-        MagicMock(return_value=EMBEDDING_MODEL_CONFIGURATION),
+        server, "get_embedding_model_configuration", get_embedding_model_configuration
     )
     monkeypatch.setattr(server, "documents_embedding", documents_embedding)
     monkeypatch.setattr(server, "save_domains_documents", save_domains_documents)
-    return documents_embedding, save_domains_documents
+    return (
+        documents_embedding,
+        save_domains_documents,
+        get_embedding_model_configuration,
+    )
 
 
 def _opensearch_mock(index_exists):
@@ -68,7 +88,7 @@ def _opensearch_mock(index_exists):
 
 
 def test_embed_domains_tags_every_chunk_with_its_domain(embedding):
-    documents_embedding, save = embedding
+    documents_embedding, save, get_configuration = embedding
 
     response = TestClient(server.app).post(
         "/api/rag/embed-domains",
@@ -82,6 +102,9 @@ def test_embed_domains_tags_every_chunk_with_its_domain(embedding):
 
     assert response.status_code == 200
     assert response.json() == "Successfully indexed 4 documents"
+    get_configuration.assert_called_once_with(
+        grpc_host=server.GRPC_DATASOURCE_HOST, tenant_id="tenant-1"
+    )
     assert [c.kwargs["document"] for c in documents_embedding.call_args_list] == [
         {"text": "polizza auto"},
         {"text": "ricetta della carbonara"},
@@ -103,7 +126,7 @@ def test_embed_domains_tags_every_chunk_with_its_domain(embedding):
     ids=["wrong_password", "wrong_username", "no_credentials"],
 )
 def test_embed_domains_refuses_anyone_but_the_admin(auth, embedding):
-    documents_embedding, save = embedding
+    documents_embedding, save, _ = embedding
 
     response = TestClient(server.app).post(
         "/api/rag/embed-domains",
@@ -119,21 +142,21 @@ def test_embed_domains_refuses_anyone_but_the_admin(auth, embedding):
 
 
 def test_embed_domains_without_tenant_is_refused(embedding):
-    documents_embedding, _ = embedding
+    documents_embedding, _, _ = embedding
 
     response = TestClient(server.app).post(
         "/api/rag/embed-domains", json=[{"text": "testo"}], auth=ADMIN
     )
 
     assert response.status_code == 400
+    assert response.json()["detail"] == "Missing x_tenant_id header."
     documents_embedding.assert_not_called()
 
 
 def test_save_domains_creates_the_index_with_the_vector_size(monkeypatch):
     open_search_client = _opensearch_mock(index_exists=False)
-    monkeypatch.setattr(
-        server, "get_opensearch_client", lambda *a, **k: open_search_client
-    )
+    get_opensearch_client = MagicMock(return_value=open_search_client)
+    monkeypatch.setattr(server, "get_opensearch_client", get_opensearch_client)
 
     server.save_domains_documents("http://opensearch", [_chunk("a")], 4)
 
@@ -146,8 +169,13 @@ def test_save_domains_creates_the_index_with_the_vector_size(monkeypatch):
         "domain": {"type": "keyword"},
         "vector": {"type": "knn_vector", "dimension": 4},
     }
-    method, path = open_search_client.transport.perform_request.call_args.args
-    assert (method, path) == ("PUT", f"/_search/pipeline/{server.SEARCH_PIPELINE}")
+    get_opensearch_client.assert_called_once_with("http://opensearch")
+    open_search_client.indices.exists.assert_called_once_with(index=INDEX)
+    open_search_client.transport.perform_request.assert_called_once_with(
+        "PUT",
+        f"/_search/pipeline/{server.SEARCH_PIPELINE}",
+        body=HYBRID_SEARCH_PIPELINE,
+    )
     open_search_client.indices.put_settings.assert_called_once_with(
         index=INDEX,
         body={"index": {"search": {"default_pipeline": server.SEARCH_PIPELINE}}},
@@ -197,3 +225,28 @@ def test_save_domains_reports_a_failed_bulk(monkeypatch):
     result = server.save_domains_documents("http://opensearch", [_chunk("a")], 4)
 
     assert result == "Bulk indexing failed: cluster down"
+
+
+def test_save_domains_logs_the_documents_that_failed_to_index(monkeypatch, caplog):
+    open_search_client = _opensearch_mock(index_exists=True)
+    open_search_client.bulk.return_value = {
+        "errors": True,
+        "items": [
+            {"index": {"status": 201}},
+            {"index": {"error": {"type": "mapper_parsing_exception"}}},
+        ],
+    }
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: open_search_client
+    )
+
+    with caplog.at_level(logging.ERROR, logger="app"):
+        server.save_domains_documents(
+            "http://opensearch", [_chunk("a"), _chunk("b")], 3
+        )
+
+    errors = [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR]
+    assert errors == [
+        "Some documents failed to index:",
+        "Failed to index document: {'type': 'mapper_parsing_exception'}",
+    ]
