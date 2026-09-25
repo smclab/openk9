@@ -16,6 +16,8 @@
 #
 
 import json
+import os
+import tempfile
 import threading
 from io import BytesIO
 
@@ -66,13 +68,47 @@ def _get_converter(file_format, configs):
     return converter
 
 
-def conversion(bin, configs):
+def fetch_to_file(url):
+    """
+    Downloads a binary from its pre-signed GET URL into a temporary file.
+
+    The URL is a short-lived bearer credential, so it is consumed as soon as
+    the task arrives and never logged: a failure reports the HTTP status only.
+
+    Args:
+        url (str): the pre-signed GET URL of the binary.
+
+    Returns:
+        str: the path of the temporary file, which the caller has to remove.
+    """
+    with requests.get(url, timeout=FETCH_TIMEOUT_SECONDS, stream=True) as response:
+        _check_status(response)
+        with tempfile.NamedTemporaryFile(prefix="docling-", delete=False) as file:
+            try:
+                for chunk in response.iter_content(chunk_size=1024 * 1024):
+                    file.write(chunk)
+            except Exception:
+                file.close()
+                os.remove(file.name)
+                raise
+            return file.name
+
+
+def _check_status(response):
+    if response.status_code >= 400:
+        raise requests.HTTPError(
+            f"Binary fetch failed with HTTP {response.status_code}"
+        )
+
+
+def conversion(bin, configs, local_path=None):
     """
     Converts a binary resource into a document object.
 
-    This function fetches the binary from the pre-signed GET URL carried in the
-    payload, determines the document extension from its bytes, and converts it
-    into an internal document representation using the configured document
+    This function reads the binary from the file it was fetched into when the
+    task arrived or, when there is none, from the pre-signed GET URL carried in
+    the payload, determines the document extension from its bytes, and converts
+    it into an internal document representation using the configured document
     converter.
 
     Args:
@@ -82,6 +118,7 @@ def conversion(bin, configs):
             hint to tell text-based formats apart.
         configs (dict): The enrich item configuration, applied to the docling
             format options.
+        local_path (str | None): The file the binary was fetched into, if any.
 
     Returns:
         Any: The result of the document conversion process. The returned object
@@ -89,10 +126,13 @@ def conversion(bin, configs):
         (e.g. `export_to_markdown()`).
 
     """
-    url = bin.get("url")
-    response = requests.get(url, timeout=FETCH_TIMEOUT_SECONDS)
-    response.raise_for_status()
-    content = response.content
+    if local_path is not None:
+        with open(local_path, "rb") as file:
+            content = file.read()
+    else:
+        response = requests.get(bin.get("url"), timeout=FETCH_TIMEOUT_SECONDS)
+        _check_status(response)
+        content = response.content
     bites = BytesIO(content)
     name = bin.get("name", "")
     file_format = detect_format(content, name)

@@ -44,7 +44,7 @@ def test_conversions_never_exceed_the_configured_concurrency():
     running = 0
     peak = 0
 
-    def conversion(binary, configs):
+    def conversion(binary, configs, local_path=None):
         nonlocal running, peak
         with lock:
             running += 1
@@ -95,18 +95,18 @@ def test_conversions_are_serial_by_default(monkeypatch):
         isolated.EXECUTOR.shutdown()
 
 
-def test_start_task_hands_the_work_to_the_pool():
+def test_start_task_hands_the_work_to_the_fetch_pool():
     input = SimpleNamespace(
         payload=_payload(0),
         enrichItemConfig={"error_strategy": "fail-soft"},
         replyTo="tok",
     )
 
-    with patch.object(server, "EXECUTOR") as executor:
+    with patch.object(server, "FETCH_EXECUTOR") as executor:
         asyncio.run(server.start_task(input))
 
     executor.submit.assert_called_once_with(
-        server.operation,
+        server.enqueue,
         payload=_payload(0),
         configs={"error_strategy": "fail-soft"},
         token="tok",

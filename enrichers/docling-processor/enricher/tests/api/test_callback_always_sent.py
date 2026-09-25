@@ -34,7 +34,7 @@ def _binary(id):
 # Run operation() with the given payload and conversion behaviour, and return
 # the call the enrich callback received.
 def _run(payload, conversion=None, post=None):
-    conversion = conversion or (lambda binary, configs: MagicMock())
+    conversion = conversion or (lambda binary, configs, local_path=None: MagicMock())
     with patch.object(
         server, "conversion", side_effect=conversion
     ), patch.object(server, "requests") as requests_mock, patch.object(
@@ -59,7 +59,7 @@ def test_malformed_payload_is_reported_to_the_callback(caplog):
 
 
 def test_failed_single_binary_reports_the_error():
-    def conversion(binary, configs):
+    def conversion(binary, configs, local_path=None):
         raise ValueError("conversion boom")
 
     post = _run(

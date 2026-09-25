@@ -68,18 +68,22 @@ openk9:
 ## conversion pays that cost again and competes for the same CPU, so raising
 ## the concurrency needs the memory multiplied by it and slows every single
 ## conversion down: prefer more replicas.
-## Conversions also run against two deadlines counted from the dispatch of the
-## enrich item: its `requestTimeout`, and the lifetime of the binary's
-## pre-signed URL (`openk9.binaries.presign-expiry-seconds`, 300s by default).
-## At about 20s per page a document of some fifteen pages exhausts a 300s budget
-## on its own, and a queued one spends part of its budget waiting for a free
+## Binaries are fetched as soon as a task arrives, ahead of the conversion
+## queue, so the lifetime of their pre-signed URL
+## (`openk9.binaries.presign-expiry-seconds`, 300s by default) only has to
+## cover the fetch; a queued binary waits on the pod's disk. Conversions still
+## run against the enrich item's `requestTimeout`, counted from its dispatch:
+## at about 20s per page a document of some fifteen pages exhausts a 300s
+## budget on its own, and a queued one spends part of it waiting for a free
 ## worker.
 ## @param processing.maxConcurrentConversions Conversions running at the same time in a single pod
+## @param processing.maxConcurrentFetches Binaries fetched at the same time in a single pod, as tasks arrive
 ## @param processing.fetchTimeoutSeconds Timeout, in seconds, when fetching a binary from its pre-signed URL
 ## @param processing.callbackTimeoutSeconds Timeout, in seconds, when answering the enrich callback
 ##
 processing:
   maxConcurrentConversions: 1
+  maxConcurrentFetches: 4
   fetchTimeoutSeconds: 30
   callbackTimeoutSeconds: 30
 ## Docling Processor pods ServiceAccount

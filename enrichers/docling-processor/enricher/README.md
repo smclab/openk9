@@ -194,8 +194,10 @@ Starts the background document-processing task.
 **Behavior**
 
 * Extracts binary resources from the Openk9 payload
-* Downloads each binary from the pre-signed `url` in the payload
-* Converts them into Markdown with Docling
+* Downloads each binary from the pre-signed `url` in the payload as soon as the
+  task arrives, into a temporary file, while the URL is still valid
+* Queues the conversion and, when a worker is free, converts the binaries into
+  Markdown with Docling; the temporary files are removed afterwards
 * Sends results to:
 
     `POST {DATASOURCE_HOST}/api/datasource/pipeline/callback/{replyTo}`
@@ -373,6 +375,7 @@ Environment variables expected:
 ```
 DATASOURCE_HOST=http://localhost:8001   # Openk9 datasource/callback host
 MAX_CONCURRENT_CONVERSIONS=1            # conversions running at the same time
+MAX_CONCURRENT_FETCHES=4                # binaries fetched at the same time, as tasks arrive
 FETCH_TIMEOUT_SECONDS=30                # timeout when fetching a binary
 CALLBACK_TIMEOUT_SECONDS=30             # timeout when answering the callback
 ```
@@ -398,14 +401,16 @@ Every concurrent conversion pays that cost again and competes for the same CPU,
 so raising `MAX_CONCURRENT_CONVERSIONS` needs the memory multiplied by it and
 makes every single conversion slower: scale out with replicas instead.
 
-Two deadlines bound how long a conversion may take, both of them counted from
-the moment the datasource dispatches the enrich item:
+The binary's pre-signed URL (`openk9.binaries.presign-expiry-seconds`, 300 s by
+default) is consumed when the task arrives, not when its conversion starts: a
+task waiting in the queue keeps its binaries in temporary files, so the disk of
+the container has to hold the binaries of every queued task. A binary that
+cannot be fetched on arrival is fetched again from its URL at conversion time,
+and a failure there is reported through the callback.
 
-- the enrich item's own `requestTimeout`, after which the enrich pipeline stops
-  waiting for the callback;
-- the lifetime of the binary's pre-signed URL
-  (`openk9.binaries.presign-expiry-seconds`, 300 s by default), after which the
-  binary can no longer be fetched.
+The enrich item's own `requestTimeout`, after which the enrich pipeline stops
+waiting for the callback, still bounds how long a conversion may take, counted
+from the moment the datasource dispatches the enrich item.
 
 At about 20 s per page a document of some fifteen pages exhausts a 300 s budget
 on its own. A queued document spends its budget waiting, too: the datasource

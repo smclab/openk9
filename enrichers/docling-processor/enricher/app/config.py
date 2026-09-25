@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     max_concurrent_conversions: int = Field(1, gt=0)
     callback_timeout_seconds: float = Field(30, gt=0)
     fetch_timeout_seconds: float = Field(30, gt=0)
+    max_concurrent_fetches: int = Field(4, gt=0)
 
 
 settings = Settings()

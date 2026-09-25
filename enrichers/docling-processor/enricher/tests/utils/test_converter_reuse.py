@@ -43,7 +43,9 @@ def _run(configs, file_format=InputFormat.PDF, times=1):
     ), patch.object(
         converter, "DocumentConverter"
     ) as converter_class:
-        requests_mock.get.return_value = MagicMock(content=b"%PDF-1.4")
+        requests_mock.get.return_value = MagicMock(
+            content=b"%PDF-1.4", status_code=200
+        )
         for _ in range(times):
             converter.conversion(BINARY, configs)
         return converter_class, requests_mock
@@ -78,7 +80,9 @@ def test_each_worker_thread_builds_its_own_converter():
     ), patch.object(
         converter, "DocumentConverter"
     ) as converter_class:
-        requests_mock.get.return_value = MagicMock(content=b"%PDF-1.4")
+        requests_mock.get.return_value = MagicMock(
+            content=b"%PDF-1.4", status_code=200
+        )
         convert_in_a_new_thread()
         convert_in_a_new_thread()
 

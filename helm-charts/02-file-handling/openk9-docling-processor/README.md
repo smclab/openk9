@@ -65,6 +65,7 @@ processor waits on the network following parameters are available:
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `processing.maxConcurrentConversions`    | Conversions running at the same time in a single pod                         | `1`            |
+| `processing.maxConcurrentFetches`    | Binaries fetched at the same time in a single pod, as tasks arrive                         | `4`            |
 | `processing.fetchTimeoutSeconds`    | Timeout, in seconds, when fetching a binary from its pre-signed URL                         | `30`            |
 | `processing.callbackTimeoutSeconds`    | Timeout, in seconds, when answering the enrich callback                         | `30`            |
 
@@ -76,12 +77,14 @@ was carrying, and those enrich items never get their callback. Every concurrent
 conversion pays that cost again, so prefer more replicas over a higher
 `maxConcurrentConversions`.
 
-Conversions also run against two deadlines, both counted from the moment the
-datasource dispatches the enrich item: the enrich item's `requestTimeout`, and
-the lifetime of the binary's pre-signed URL
-(`openk9.binaries.presign-expiry-seconds`, 300s by default). At about 20s per
-page a document of some fifteen pages exhausts a 300s budget on its own. A
-document queued behind another spends part of its budget waiting: the datasource
+Binaries are fetched as soon as a task arrives, ahead of the conversion queue:
+the lifetime of their pre-signed URL (`openk9.binaries.presign-expiry-seconds`,
+300s by default) only has to cover the fetch, and a queued binary waits in a
+temporary file on the pod's disk until its conversion. Conversions still run
+against the enrich item's `requestTimeout`, counted from the moment the
+datasource dispatches the enrich item. At about 20s per page a document of some
+fifteen pages exhausts a 300s budget on its own. A document queued behind
+another spends part of its budget waiting: the datasource
 keeps `io.openk9.scheduling.workers-per-node` enrich items in flight (2 by
 default), so with a single conversion worker the budget left to each document is
 half the timeout, some seven pages.

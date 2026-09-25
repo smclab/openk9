@@ -32,13 +32,13 @@ VALID_INPUT = {
 def test_valid_input_starts_the_task():
     body = {**VALID_INPUT, "enrichItemConfig": {"error_strategy": "fail-soft"}}
 
-    with patch.object(server, "EXECUTOR") as executor:
+    with patch.object(server, "FETCH_EXECUTOR") as executor:
         response = TestClient(server.app).post("/start-task/", json=body)
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     executor.submit.assert_called_once_with(
-        server.operation,
+        server.enqueue,
         payload=VALID_INPUT["payload"],
         configs={"error_strategy": "fail-soft"},
         token="tok",
@@ -56,7 +56,7 @@ def test_valid_input_starts_the_task():
     ids=["no-reply-to", "no-payload", "payload-not-a-dict", "config-not-a-dict"],
 )
 def test_invalid_input_is_rejected_without_starting_the_task(body):
-    with patch.object(server, "EXECUTOR") as executor:
+    with patch.object(server, "FETCH_EXECUTOR") as executor:
         response = TestClient(server.app).post("/start-task/", json=body)
 
     assert response.status_code == 422

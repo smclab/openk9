@@ -49,7 +49,7 @@ def _result(markdown):
 def _operate(configs, failing_id, payload=None):
     calls = []
 
-    def conversion(binary, configs):
+    def conversion(binary, configs, local_path=None):
         calls.append((binary["id"], configs))
         if binary["id"] == failing_id:
             raise ValueError("conversion boom")

@@ -49,18 +49,21 @@ def test_variables_fall_back_to_their_defaults():
     assert settings.max_concurrent_conversions == 1
     assert settings.callback_timeout_seconds == 30.0
     assert settings.fetch_timeout_seconds == 30.0
+    assert settings.max_concurrent_fetches == 4
 
 
 def test_numeric_variables_are_numbers(monkeypatch):
     monkeypatch.setenv("MAX_CONCURRENT_CONVERSIONS", "3")
     monkeypatch.setenv("CALLBACK_TIMEOUT_SECONDS", "7.5")
     monkeypatch.setenv("FETCH_TIMEOUT_SECONDS", "12")
+    monkeypatch.setenv("MAX_CONCURRENT_FETCHES", "8")
 
     settings = _settings()
 
     assert settings.max_concurrent_conversions == 3
     assert settings.callback_timeout_seconds == 7.5
     assert settings.fetch_timeout_seconds == 12.0
+    assert settings.max_concurrent_fetches == 8
 
 
 @pytest.mark.parametrize(
@@ -69,6 +72,7 @@ def test_numeric_variables_are_numbers(monkeypatch):
         "MAX_CONCURRENT_CONVERSIONS",
         "CALLBACK_TIMEOUT_SECONDS",
         "FETCH_TIMEOUT_SECONDS",
+        "MAX_CONCURRENT_FETCHES",
     ],
 )
 def test_non_numeric_value_is_refused_naming_the_variable(monkeypatch, variable):
@@ -131,6 +135,7 @@ def test_variable_of_the_env_file_without_a_field_is_ignored(tmp_path):
         "MAX_CONCURRENT_CONVERSIONS",
         "CALLBACK_TIMEOUT_SECONDS",
         "FETCH_TIMEOUT_SECONDS",
+        "MAX_CONCURRENT_FETCHES",
     ],
 )
 @pytest.mark.parametrize("value", ["0", "-1"])

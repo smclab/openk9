@@ -56,7 +56,8 @@ def _stubbed():
         ) as get_format_options,
         patch.object(converter, "DocumentConverter") as converter_class,
     ):
-        requests_mock.get.return_value = MagicMock(content=CONTENT)
+        requests_mock.get.return_value = MagicMock(content=CONTENT, status_code=200)
+        requests_mock.HTTPError = requests.HTTPError
         yield SimpleNamespace(
             requests=requests_mock,
             detect_format=detect_format,
@@ -74,7 +75,6 @@ def test_the_downloaded_binary_is_what_docling_converts():
     stubs.requests.get.assert_called_once_with(
         URL, timeout=converter.FETCH_TIMEOUT_SECONDS
     )
-    stubs.requests.get.return_value.raise_for_status.assert_called_once_with()
     stubs.detect_format.assert_called_once_with(CONTENT, NAME)
     stubs.stream_name.assert_called_once_with(NAME, InputFormat.PDF)
     stubs.get_format_options.assert_called_once_with(CONFIGS, InputFormat.PDF)
@@ -99,14 +99,15 @@ def test_a_binary_without_a_name_is_detected_from_its_bytes():
 
 
 # An expired pre-signed URL answers with an error page: converting it would
-# index the error page in place of the document.
+# index the error page in place of the document. The URL is a credential, so
+# the error carries the status only.
 def test_a_failed_download_is_raised_without_converting():
     with _stubbed() as stubs:
-        stubs.requests.get.return_value.raise_for_status.side_effect = (
-            requests.HTTPError("403 Forbidden")
-        )
-        with pytest.raises(requests.HTTPError, match="403 Forbidden"):
+        stubs.requests.get.return_value.status_code = 403
+        with pytest.raises(requests.HTTPError, match="HTTP 403") as raised:
             converter.conversion({"url": URL, "name": NAME}, CONFIGS)
+
+    assert URL not in str(raised.value)
 
     stubs.detect_format.assert_not_called()
     stubs.converter_class.assert_not_called()
