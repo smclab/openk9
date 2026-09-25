@@ -46,19 +46,53 @@ class _RpcError(grpc.RpcError):
         return "boom"
 
 
+EMBEDDING_MODEL = {
+    "apiKey": "sk-embed",
+    "providerModel": {"provider": "openai", "model": "text-embedding-3-small"},
+    "apiUrl": "http://embedder:8080",
+    "multimodal": False,
+}
+
+
 def _generate_query_embedding(embed_query):
     stub = MagicMock()
     stub.EmbedQuery = embed_query
 
-    with patch.object(grpc_client.grpc, "insecure_channel"), patch.object(
+    with patch.object(grpc_client.grpc, "insecure_channel") as channel, patch.object(
         grpc_client.embedding_pb2_grpc, "EmbeddingStub", return_value=stub
-    ):
-        return grpc_client.generate_query_embedding(
+    ) as stub_class:
+        vector = grpc_client.generate_query_embedding(
             grpc_host="localhost:50053",
             tenant_id="mew",
-            embedding_model={},
+            embedding_model=EMBEDDING_MODEL,
             text="un gatto",
         )
+
+    channel.assert_called_once_with("localhost:50053")
+    stub_class.assert_called_once_with(channel.return_value.__enter__.return_value)
+    return vector
+
+
+def test_the_request_carries_the_text_and_the_embedding_setup():
+    embed_query = MagicMock(return_value=embedding_pb2.EmbeddedVector())
+
+    _generate_query_embedding(embed_query)
+
+    embed_query.assert_called_once_with(
+        embedding_pb2.EmbedQueryRequest(
+            tenantId="mew",
+            embeddingModel=embedding_pb2.EmbeddingModel(
+                apiKey="sk-embed",
+                providerModel=embedding_pb2.ProviderModel(
+                    provider="openai", model="text-embedding-3-small"
+                ),
+                apiUrl="http://embedder:8080",
+                multimodal=False,
+            ),
+            vectorDataType=embedding_pb2.VECTOR_DATA_TYPE_FLOAT32,
+            text="un gatto",
+        )
+    )
 
 
 def test_vector_comes_from_the_float_payload():
@@ -84,3 +118,4 @@ def test_any_other_failure_still_surfaces():
         _generate_query_embedding(embed_query)
 
     assert error.value.status_code == 500
+    assert error.value.detail == grpc_client.UNEXPECTED_ERROR_MESSAGE

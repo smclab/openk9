@@ -28,6 +28,7 @@ from app.external_services.grpc.grpc_client import (
     UNEXPECTED_ERROR_MESSAGE,
     query_parser,
 )
+from app.external_services.grpc.searcher import searcher_pb2
 from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest
 
 IMAGE_BYTES = b"\x89PNG\r\n\x1a\nfake"
@@ -83,6 +84,77 @@ def test_media_survives_the_proto_conversion():
     assert token.HasField("media")
     assert token.media.data == IMAGE_BYTES
     assert token.media.contentType == "image/png"
+
+
+def test_the_request_carries_every_argument_and_the_media():
+    # The conversion above is only worth something if query_parser hands the
+    # converted tokens, media included, to the datasource untouched.
+    response = searcher_pb2.QueryParserResponse(
+        query=b'{"query": {}}',
+        indexName=["tenant-1-idx"],
+        queryParameters={"k": "3"},
+    )
+
+    with patch(
+        "app.external_services.grpc.grpc_client.grpc.insecure_channel"
+    ) as mock_channel, patch(
+        "app.external_services.grpc.grpc_client.searcher_pb2_grpc.SearcherStub"
+    ) as mock_stub:
+        mock_stub.return_value.QueryParser.return_value = response
+
+        configuration = _query_parser(
+            search_query=[
+                {
+                    "tokenType": "KNN",
+                    "values": ["un gatto"],
+                    "filter": True,
+                    "media": {"data": IMAGE_DATA, "contentType": "image/png"},
+                }
+            ],
+            after_key="after-1",
+            suggest_keyword="gat",
+            suggestion_category_id=7,
+            jwt="jwt-token",
+            extra={"lang": ["it"]},
+            sort=[{"field": "date", "extras": {"order": "desc"}}],
+            sort_after_key="sort-1",
+            language="it_IT",
+        )
+
+    mock_channel.assert_called_once_with("localhost:50051")
+    mock_stub.assert_called_once_with(mock_channel.return_value.__enter__.return_value)
+    mock_stub.return_value.QueryParser.assert_called_once_with(
+        ParseDict(
+            {
+                "searchQuery": [
+                    {
+                        "tokenType": "KNN",
+                        "values": ["un gatto"],
+                        "filter": True,
+                        "media": {"data": IMAGE_DATA, "contentType": "image/png"},
+                    }
+                ],
+                "range": [0, 5],
+                "afterKey": "after-1",
+                "suggestKeyword": "gat",
+                "suggestionCategoryId": 7,
+                "tenantId": "tenant-1",
+                "jwt": "jwt-token",
+                "extra": {"lang": {"value": ["it"]}},
+                "sort": [{"field": "date", "extras": {"order": "desc"}}],
+                "sortAfterKey": "sort-1",
+                "language": "it_IT",
+            },
+            searcher_pb2.QueryParserRequest(),
+        )
+    )
+    request = mock_stub.return_value.QueryParser.call_args.args[0]
+    assert request.searchQuery[0].media.data == IMAGE_BYTES
+    assert configuration == {
+        "query": b'{"query": {}}',
+        "query_parameters": {"k": "3"},
+        "index_name": ["tenant-1-idx"],
+    }
 
 
 def test_token_without_media_leaves_the_field_unset():

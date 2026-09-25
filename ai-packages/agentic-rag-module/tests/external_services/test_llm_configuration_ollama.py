@@ -19,21 +19,27 @@
 were written. Absent keys stay absent: the defaults belong to the client
 construction, so every path through the module gets the same ones."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+from google.protobuf.struct_pb2 import Struct
 
 from app.external_services.grpc import grpc_client
+from app.external_services.grpc.searcher import searcher_pb2
 
 
 def _get_llm_configuration(json_config):
-    """Call get_llm_configuration with the gRPC layer mocked away, so only the
-    jsonConfig decoding is exercised."""
+    """Call get_llm_configuration against a stub answering json_config as the
+    response jsonConfig, so the real Struct decoding is exercised."""
+    struct = Struct()
+    struct.update(json_config)
+    stub = MagicMock()
+    stub.GetLLMConfigurations.return_value = (
+        searcher_pb2.GetLLMConfigurationsResponse(jsonConfig=struct)
+    )
+
     with (
-        patch.object(grpc_client, "grpc"),
-        patch.object(grpc_client, "searcher_pb2_grpc"),
-        patch.object(grpc_client, "searcher_pb2"),
-        patch.object(
-            grpc_client.json_format, "MessageToDict", return_value=json_config
-        ),
+        patch.object(grpc_client.grpc, "insecure_channel"),
+        patch.object(grpc_client.searcher_pb2_grpc, "SearcherStub", return_value=stub),
     ):
         return grpc_client.get_llm_configuration(
             grpc_host="localhost:50051",
