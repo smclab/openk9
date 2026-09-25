@@ -54,7 +54,7 @@ curl --location --request POST 'http://localhost:5000/getData' \
 }'
 ```
 
-Every object is sent with `document.url`, the public URL of the source object (no signature), and with `rawContent` set to the object text when its content type is `text/*`; for the other formats the text is extracted by the enrichers.
+Every object is sent with `document.url`, the public URL of the source object (no signature); its text is extracted by the enrichers.
 
 ### Health check endpoint
 

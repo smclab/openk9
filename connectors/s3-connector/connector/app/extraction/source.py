@@ -10,16 +10,3 @@ def object_url(base_url, bucket_name, object_name):
     return "%s/%s/%s" % (
         base_url.rstrip("/"), quote(bucket_name, safe=""), quote(object_name))
 
-
-def text_content(content_type, data):
-    """
-    Text of a textual object, to be sent as rawContent; an empty string for
-    the other formats, whose text is extracted by the enrichers.
-    """
-    if not content_type or not content_type.split(";")[0].strip().lower().startswith("text/"):
-        return ""
-
-    try:
-        return data.decode("utf-8")
-    except UnicodeDecodeError:
-        return ""

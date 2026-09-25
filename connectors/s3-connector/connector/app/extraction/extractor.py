@@ -5,7 +5,7 @@ from logging.config import dictConfig
 
 from .base_extractor import BaseMinioExtractor
 from .log_config import LogConfig
-from .source import object_url, text_content
+from .source import object_url
 from .utility import get_as_base64, IngestionHandler
 
 dictConfig(LogConfig().dict())
@@ -85,7 +85,7 @@ class MinioExtractor(BaseMinioExtractor):
             "datasourceId": self.datasource_id,
             "contentId": content_id,
             "parsingDate": int(end_timestamp),
-            "rawContent": text_content(metadata.content_type, data.data),
+            "rawContent": "",
             "datasourcePayload": datasource_payload,
             "resources": {
                 "binaries": binaries
