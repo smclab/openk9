@@ -17,6 +17,8 @@
 package io.openk9.datasource.pipeline.resource;
 
 import java.time.Duration;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeoutException;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -51,7 +53,8 @@ public class PipelineResource {
 	 * @param tokenId the token the enricher received as {@code replyTo}
 	 * @param body the enricher result
 	 * @return 202 when the callback was awaited, 404 when no pipeline awaits
-	 * it, 400 when the token is malformed
+	 * it, 400 when the token is malformed, 503 when the pipeline did not
+	 * answer in time
 	 */
 	@POST
 	@Path("/callback/{token-id}")
@@ -63,6 +66,10 @@ public class PipelineResource {
 	@APIResponse(responseCode = "202", description = "Callback delivered")
 	@APIResponse(responseCode = "400", description = "Malformed token")
 	@APIResponse(responseCode = "404", description = "No pipeline awaits this token")
+	@APIResponse(
+		responseCode = "503",
+		description = "The pipeline did not answer in time, the callback can be retried"
+	)
 	public Uni<Response> callback(
 		@PathParam("token-id") String tokenId, JsonObject body) {
 
@@ -96,7 +103,22 @@ public class PipelineResource {
 			.map(response -> switch (response) {
 				case ACCEPTED -> Response.accepted().build();
 				case UNKNOWN -> Response.status(Response.Status.NOT_FOUND).build();
-			});
+			})
+			.onFailure(PipelineResource::isTimeout)
+			.recoverWithItem(() -> Response
+				.status(Response.Status.SERVICE_UNAVAILABLE)
+				.build());
+	}
+
+	// no answer within the ask timeout, e.g. a node unreachable or the
+	// shards rebalancing: the entity may still exist, so not a 404
+	static boolean isTimeout(Throwable throwable) {
+		var cause = throwable instanceof CompletionException
+					&& throwable.getCause() != null
+			? throwable.getCause()
+			: throwable;
+
+		return cause instanceof TimeoutException;
 	}
 
 	@POST
