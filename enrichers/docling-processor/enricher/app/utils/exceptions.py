@@ -23,8 +23,12 @@ class FormatError(Exception):
 
 
 def handle_exception(e: Exception):
-    if isinstance(e, (base64.binascii.Error, ValueError)):
+    # binascii.Error subclasses ValueError, so it must be matched first.
+    if isinstance(e, base64.binascii.Error):
         return f"base64 error: {e}"
+
+    elif isinstance(e, ValueError):
+        return f"value error: {e}"
 
     elif isinstance(e, AttributeError):
         return f"export error: {e}"

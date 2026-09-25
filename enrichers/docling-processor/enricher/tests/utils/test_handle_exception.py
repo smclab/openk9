@@ -26,7 +26,7 @@ from app.utils.exceptions import FormatError, handle_exception
     "error, prefix",
     [
         (binascii.Error("Incorrect padding"), "base64 error"),
-        (ValueError("bad value"), "base64 error"),
+        (ValueError("Unsupported format: xyz"), "value error"),
         (AttributeError("no export"), "export error"),
         (FormatError("unknown format"), "format error"),
         (RuntimeError("boom"), "generic error"),
