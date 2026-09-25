@@ -95,7 +95,9 @@ public class ActorSystemConfig {
 					String entityId = entityCtx.getEntityId();
 					var schedulingKey = ShardingKey.fromString(entityId);
 					return Scheduling.create(schedulingKey, entityCtx.getShard());
-				}).withSettings(noPassivation));
+				})
+				.withStopMessage(Scheduling.Stop.INSTANCE)
+				.withSettings(noPassivation));
 
 			sharding.init(Entity.of(
 				EnrichPipeline.ENTITY_TYPE_KEY, entityCtx -> {
