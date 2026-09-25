@@ -52,6 +52,7 @@ def test_inline_image_on_text_only_model_is_precondition(make_stub):
         stub.EmbedQuery(request)
 
     assert error.value.code() == grpc.StatusCode.FAILED_PRECONDITION
+    assert error.value.details() == "the configured model has no image input"
 
 
 def test_text_and_inline_without_native_mixed_is_precondition(make_stub):
@@ -66,3 +67,6 @@ def test_text_and_inline_without_native_mixed_is_precondition(make_stub):
         stub.EmbedQuery(request)
 
     assert error.value.code() == grpc.StatusCode.FAILED_PRECONDITION
+    assert error.value.details() == (
+        "the configured model has no native text+image input"
+    )

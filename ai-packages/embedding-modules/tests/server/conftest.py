@@ -66,14 +66,16 @@ def fake_build_query_capabilities(configuration):
 @pytest.fixture
 def make_stub(monkeypatch):
     """Starts an in-process Embedding server and returns a stub. Accepts
-    build_pipelines / build_query_capabilities overrides (e.g. a text-only
-    model, or an embedder that raises)."""
+    build_pipelines / build_query_capabilities / build_chunker overrides
+    (e.g. a text-only model, an embedder that raises, or a chunker factory
+    that records what it is given)."""
     channels = []
     servers = []
 
     def _make(
         build_pipelines=fake_build_pipelines,
         build_query_capabilities=fake_build_query_capabilities,
+        build_chunker=lambda chunk_type, config: None,
     ):
         monkeypatch.setattr(server_module, "build_pipelines", build_pipelines)
         monkeypatch.setattr(
@@ -81,9 +83,7 @@ def make_stub(monkeypatch):
             "build_query_capabilities",
             build_query_capabilities,
         )
-        monkeypatch.setattr(
-            server_module.chunking, "build_chunker", lambda chunk_type, config: None
-        )
+        monkeypatch.setattr(server_module.chunking, "build_chunker", build_chunker)
 
         grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
         embedding_pb2_grpc.add_EmbeddingServicer_to_server(

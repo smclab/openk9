@@ -16,9 +16,27 @@
 #
 
 """When a MediaRef carries no contentType, the server routes it using the
-Content-Type returned by the fetch (image/png in the fake store)."""
+Content-Type returned by the fetch (image/png in the fake store). When it
+carries one, that is authoritative and the fetched type is ignored."""
 
+from app.embedding.router import Pipelines
 from app.external_services.grpc.embedding import embedding_pb2
+
+
+def _pipelines_fetching_as(response_content_type, embedded):
+    """Pipelines whose fetch answers the given Content-Type, recording the
+    content type the image embedder is called with."""
+
+    def embed_image(data, content_type):
+        embedded.append(content_type)
+        return [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    return lambda configuration, chunker: Pipelines(
+        embed_texts=lambda texts: [],
+        chunk=lambda text: [],
+        fetch=lambda url: (b"png", response_content_type),
+        embed_image=embed_image,
+    )
 
 
 def test_ref_without_content_type_uses_fetched_type(stub):
@@ -36,3 +54,43 @@ def test_ref_without_content_type_uses_fetched_type(stub):
     assert chunks[0].fileId == "img-1"
     # routed as an image: empty text, image vector
     assert chunks[0].text == ""
+
+
+def test_ref_content_type_wins_over_a_generic_fetched_type(make_stub):
+    embedded = []
+    stub = make_stub(_pipelines_fetching_as("application/octet-stream", embedded))
+    request = embedding_pb2.EmbedContentRequest(
+        tenantId="mew",
+        refs=[
+            embedding_pb2.MediaRef(
+                url="https://signed/img", fileId="img", contentType="image/png"
+            )
+        ],
+    )
+
+    chunks = list(stub.EmbedContent(request))
+
+    # routed and embedded as the image the ref declares
+    assert [chunk.fileId for chunk in chunks] == ["img"]
+    assert embedded == ["image/png"]
+
+
+def test_ref_content_type_wins_over_a_fetched_image_type(make_stub):
+    embedded = []
+    stub = make_stub(_pipelines_fetching_as("image/png", embedded))
+    request = embedding_pb2.EmbedContentRequest(
+        tenantId="mew",
+        refs=[
+            embedding_pb2.MediaRef(
+                url="https://signed/blob",
+                fileId="blob",
+                contentType="application/octet-stream",
+            )
+        ],
+    )
+
+    chunks = list(stub.EmbedContent(request))
+
+    # the ref says it is no image: skipped, whatever the fetch answers
+    assert chunks == []
+    assert embedded == []

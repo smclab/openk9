@@ -30,3 +30,4 @@ def test_empty_source_is_invalid_argument(stub):
         list(stub.EmbedContent(request))
 
     assert error.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert error.value.details() == "neither text nor refs provided"

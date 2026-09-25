@@ -23,6 +23,7 @@ INVALID_ARGUMENT, not FAILED_PRECONDITION)."""
 import grpc
 import pytest
 
+from app.embedding.query import QueryCapabilities
 from app.external_services.grpc.embedding import embedding_pb2
 
 
@@ -33,9 +34,32 @@ def test_empty_request_is_invalid_argument(stub):
         stub.EmbedQuery(request)
 
     assert error.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert error.value.details() == "neither text nor inline provided"
 
 
 def test_inline_non_image_is_invalid_argument(stub):
+    request = embedding_pb2.EmbedQueryRequest(
+        tenantId="mew",
+        inline=embedding_pb2.InlineMedia(data=b"wav", contentType="audio/wav"),
+    )
+
+    with pytest.raises(grpc.RpcError) as error:
+        stub.EmbedQuery(request)
+
+    assert error.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert error.value.details() == (
+        "inline media is not an image (contentType='audio/wav')"
+    )
+
+
+def test_inline_non_image_on_text_only_model_is_invalid_argument(make_stub):
+    # the model lacks the image input too: the malformed request is still
+    # what gets reported
+    stub = make_stub(
+        build_query_capabilities=lambda configuration: QueryCapabilities(
+            embed_text=lambda text: [1.0]
+        )
+    )
     request = embedding_pb2.EmbedQueryRequest(
         tenantId="mew",
         inline=embedding_pb2.InlineMedia(data=b"wav", contentType="audio/wav"),
@@ -56,6 +80,7 @@ def test_text_empty_once_cleaned_is_invalid_argument(stub):
         stub.EmbedQuery(request)
 
     assert error.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert error.value.details() == "neither text nor inline provided"
 
 
 def test_text_empty_once_cleaned_leaves_the_inline_alone(stub):

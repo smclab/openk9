@@ -55,21 +55,20 @@ def test_openai_without_api_url_uses_the_default_endpoint():
     ) == ("OpenAIEmbeddings", {"model": "m"})
 
 
-def test_watsonx_gets_the_project_and_the_embed_params():
-    name, kwargs = server_module.initialize_embedding_model(
+def test_watsonx_gets_the_project_and_the_provider_defaults():
+    # no embed params: the chunks reach the model whole, with the defaults of
+    # the provider
+    assert server_module.initialize_embedding_model(
         {
             "model_type": "watsonx",
             "model": "m",
             "api_url": "http://watsonx",
             "watsonx_project_id": "project-id",
         }
+    ) == (
+        "WatsonxEmbeddings",
+        {"model_id": "m", "url": "http://watsonx", "project_id": "project-id"},
     )
-
-    assert name == "WatsonxEmbeddings"
-    assert kwargs["model_id"] == "m"
-    assert kwargs["url"] == "http://watsonx"
-    assert kwargs["project_id"] == "project-id"
-    assert kwargs["params"]
 
 
 def test_vertex_takes_the_project_from_the_credentials():
@@ -104,6 +103,12 @@ def test_an_unknown_provider_falls_back_to_openai():
     assert server_module.initialize_embedding_model(
         {"model_type": "unknown", "model": "m", "api_url": ""}
     ) == ("OpenAIEmbeddings", {"model": "m"})
+
+
+def test_an_unknown_provider_keeps_the_api_url():
+    assert server_module.initialize_embedding_model(
+        {"model_type": "unknown", "model": "m", "api_url": "http://proxy"}
+    ) == ("OpenAIEmbeddings", {"model": "m", "base_url": "http://proxy"})
 
 
 def test_a_missing_provider_and_model_use_the_openai_default():

@@ -15,35 +15,37 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""An embedding error on the text path is fail-fast: the RPC ends with
-gRPC status INTERNAL (v1 parity), unlike the per-ref skip."""
+"""Any failure building the model or embedding the query that is neither a
+malformed request nor a missing capability ends the RPC with INTERNAL,
+carrying the message of the error."""
 
 import grpc
 import pytest
 
-from app.embedding.router import Pipelines
+from app.embedding.query import QueryCapabilities
 from app.external_services.grpc.embedding import embedding_pb2
 
 
-def _raise(texts):
-    raise RuntimeError("embedding backend down")
+def _raise(*args):
+    raise RuntimeError("provider down")
 
 
-def _failing_pipelines(configuration, chunker):
-    return Pipelines(
-        embed_texts=_raise,
-        chunk=lambda text: text.split(),
-        fetch=lambda url: (b"", None),
-        embed_image=None,
-    )
+def _failing_embedder(configuration):
+    return QueryCapabilities(embed_text=_raise)
 
 
-def test_text_embedding_error_aborts_with_internal(make_stub):
-    stub = make_stub(_failing_pipelines)
-    request = embedding_pb2.EmbedContentRequest(tenantId="mew", text="boom")
+@pytest.mark.parametrize(
+    "build_query_capabilities",
+    [
+        pytest.param(_failing_embedder, id="embedding"),
+        pytest.param(_raise, id="model setup"),
+    ],
+)
+def test_a_provider_error_is_internal(make_stub, build_query_capabilities):
+    stub = make_stub(build_query_capabilities=build_query_capabilities)
 
     with pytest.raises(grpc.RpcError) as error:
-        list(stub.EmbedContent(request))
+        stub.EmbedQuery(embedding_pb2.EmbedQueryRequest(tenantId="mew", text="gatto"))
 
     assert error.value.code() == grpc.StatusCode.INTERNAL
-    assert error.value.details() == "embedding backend down"
+    assert error.value.details() == "provider down"

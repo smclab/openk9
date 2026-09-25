@@ -20,6 +20,8 @@ keep_alive keeps the embedder resident between two runs of the indexing, and
 num_gpu=0 runs it on CPU so it stops fighting the generator for the VRAM of a
 single Ollama."""
 
+import os
+
 from app import server as server_module
 from app.embedding.router import Pipelines
 from app.external_services.grpc.embedding import embedding_pb2
@@ -93,6 +95,8 @@ def test_ollama_keys_absent_from_json_config(make_stub):
 def test_ollama_parameters_from_configuration():
     embeddings = _initialize(keep_alive=60, num_gpu=0)
 
+    assert embeddings.model == "qwen3-embedding:0.6b"
+    assert embeddings.base_url == "http://localhost:11434"
     assert embeddings.keep_alive == 60
     assert embeddings.num_gpu == 0
 
@@ -120,8 +124,13 @@ def test_json_config_numbers_reach_ollama_as_integers():
     assert type(embeddings.num_gpu) is int
 
 
-def test_other_providers_ignore_the_ollama_keys():
-    embeddings = server_module.initialize_embedding_model(
+def test_other_providers_ignore_the_ollama_keys(monkeypatch):
+    # the class answers the keyword arguments it received; the environment
+    # variable is recorded first, so the key written for OpenAI is undone
+    monkeypatch.setattr(server_module, "OpenAIEmbeddings", lambda **kwargs: kwargs)
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+
+    kwargs = server_module.initialize_embedding_model(
         {
             "model_type": "openai",
             "model": "text-embedding-3-small",
@@ -132,5 +141,5 @@ def test_other_providers_ignore_the_ollama_keys():
         }
     )
 
-    assert not hasattr(embeddings, "keep_alive")
-    assert not hasattr(embeddings, "num_gpu")
+    assert kwargs == {"model": "text-embedding-3-small"}
+    assert os.environ["OPENAI_API_KEY"] == "key"

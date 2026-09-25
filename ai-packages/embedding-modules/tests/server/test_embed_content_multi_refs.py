@@ -38,3 +38,21 @@ def test_each_ref_chunk_carries_its_file_id_in_order(stub):
 
     assert [chunk.number for chunk in chunks] == [1, 2]
     assert [chunk.fileId for chunk in chunks] == ["img-1", "img-2"]
+
+
+def test_numbers_keep_growing_over_many_refs(stub):
+    # past the second ref, a counter that stopped growing would repeat
+    request = embedding_pb2.EmbedContentRequest(
+        tenantId="mew",
+        refs=[
+            embedding_pb2.MediaRef(
+                url="https://signed/img-1", fileId=file_id, contentType="image/png"
+            )
+            for file_id in ("img-a", "img-b", "img-c")
+        ],
+    )
+
+    chunks = list(stub.EmbedContent(request))
+
+    assert [chunk.number for chunk in chunks] == [1, 2, 3]
+    assert [chunk.fileId for chunk in chunks] == ["img-a", "img-b", "img-c"]

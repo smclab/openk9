@@ -16,7 +16,11 @@
 #
 
 """A ref that fails (fetch error) or has no phase-1 handler (audio) emits
-no chunk; the stream continues with the remaining refs."""
+no chunk; the stream continues with the remaining refs. A ref the module
+cannot embed is logged as a warning with its reason; an unexpected error is
+logged with its traceback."""
+
+import logging
 
 from app.embedding.router import Pipelines
 from app.external_services.grpc.embedding import embedding_pb2
@@ -113,3 +117,55 @@ def test_ref_encoding_error_is_skipped_not_fatal(make_stub):
     # the text chunk survives; the bad image ref is skipped, stream completes
     assert len(chunks) == 1
     assert not chunks[0].HasField("fileId")
+
+
+def _skip_records(caplog):
+    return [
+        record
+        for record in caplog.records
+        if record.name == "app.server" and "EmbedContent skip" in record.message
+    ]
+
+
+def test_a_ref_without_handler_is_logged_with_its_reason(stub, caplog):
+    request = embedding_pb2.EmbedContentRequest(
+        tenantId="mew",
+        refs=[
+            embedding_pb2.MediaRef(
+                url="https://signed/clip-1", fileId="clip-1", contentType="audio/wav"
+            )
+        ],
+    )
+
+    with caplog.at_level(logging.WARNING, logger="app.server"):
+        list(stub.EmbedContent(request))
+
+    [record] = _skip_records(caplog)
+    assert record.levelno == logging.WARNING
+    assert record.exc_info is None
+    assert record.message == (
+        "EmbedContent skip: tenantId=mew fileId=clip-1 contentType=audio/wav "
+        "reason=no handler for modality 'audio' (audio/wav)"
+    )
+
+
+def test_an_unexpected_ref_error_is_logged_with_its_traceback(stub, caplog):
+    request = embedding_pb2.EmbedContentRequest(
+        tenantId="mew",
+        refs=[
+            # not in the fake store -> fetch raises KeyError, not a SkipRef
+            embedding_pb2.MediaRef(
+                url="https://signed/missing", fileId="gone", contentType="image/png"
+            )
+        ],
+    )
+
+    with caplog.at_level(logging.WARNING, logger="app.server"):
+        list(stub.EmbedContent(request))
+
+    [record] = _skip_records(caplog)
+    assert record.levelno == logging.ERROR
+    assert record.exc_info[0] is KeyError
+    assert record.message == (
+        "EmbedContent skip (unexpected): tenantId=mew fileId=gone contentType=image/png"
+    )
