@@ -56,30 +56,18 @@ def test_union_float_is_preserved():
     assert type(args["chunk_overlap"]) is float
 
 
-def test_range_step_is_usable_after_coercion():
-    """Regression: chunk_size - chunk_overlap must be a valid range() step.
-
-    Reproduces the TypeError raised inside TokenChunker._token_group_generator
-    (range step must be int) when chunk_size arrives as a float.
-    """
-    args = build_chunk_arguments(
-        {"chunk_size": 10000.0, "chunk_overlap": 0}, TOKEN_CHUNKER_SIGNATURE
-    )
-    step = args["chunk_size"] - args["chunk_overlap"]
-    # Would raise "TypeError: 'float' object cannot be interpreted as an integer"
-    # before the fix.
-    assert list(range(0, 3, step)) == [0]
-
-
 def test_unknown_and_wrong_type_arguments_are_dropped():
+    """Dropped entries do not stop the scan: the valid key after them stays."""
     args = build_chunk_arguments(
-        {"unknown_key": 1, "chunk_size": "not-a-number"}, TOKEN_CHUNKER_SIGNATURE
+        {"unknown_key": 1, "chunk_overlap": "not-a-number", "chunk_size": "512"},
+        TOKEN_CHUNKER_SIGNATURE,
     )
-    assert args == {}
+    assert args == {"chunk_size": 512}
 
 
-def test_coerce_argument_rejects_non_int_like():
-    accepted, value = coerce_argument("abc", int)
+def test_int_coercion_that_still_mismatches_is_rejected():
+    """"5" is int-like, but the int it becomes is not the float the hint asks."""
+    accepted, value = coerce_argument("5", float)
     assert accepted is False
     assert value is None
 

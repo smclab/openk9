@@ -26,7 +26,9 @@ from app.embedding import bedrock, multimodal, vertex
 
 
 def test_unknown_provider_has_no_multimodal_embedder():
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="no multimodal embedder registered for provider 'openai'"
+    ):
         multimodal.build_multimodal_embedder({"model_type": "openai", "model": "x"})
 
 
@@ -100,3 +102,55 @@ def test_vertex_provider_maps_to_vertex_embedder(monkeypatch):
         "location": "europe-west1",
         "dimension": 1408,
     }
+
+
+def test_bedrock_without_its_block_gets_no_region_nor_dimension(monkeypatch):
+    captured = {}
+
+    class _Fake:
+        def __init__(self, model_id, region_name, dimension=None, client=None):
+            captured.update(
+                model_id=model_id, region_name=region_name, dimension=dimension
+            )
+
+    monkeypatch.setattr(bedrock, "BedrockMultimodalEmbedder", _Fake)
+
+    multimodal.build_multimodal_embedder(
+        {"model_type": "aws_bedrock", "model": "cohere.embed-v4:0"}
+    )
+
+    assert captured == {
+        "model_id": "cohere.embed-v4:0",
+        "region_name": None,
+        "dimension": None,
+    }
+
+
+def test_vertex_project_falls_back_to_the_adc_quota_project(monkeypatch):
+    captured = {}
+
+    class _Fake:
+        def __init__(
+            self,
+            model_id,
+            project=None,
+            location=None,
+            dimension=None,
+            client=None,
+            image_factory=None,
+        ):
+            captured.update(project=project)
+
+    monkeypatch.setattr(vertex, "VertexMultimodalEmbedder", _Fake)
+
+    configuration = {
+        "model_type": "chat_vertex_ai",
+        "model": "multimodalembedding@001",
+        "chat_vertex_ai_model_garden": {
+            "credentials": {"quota_project_id": "adc-proj"},
+        },
+    }
+
+    multimodal.build_multimodal_embedder(configuration)
+
+    assert captured == {"project": "adc-proj"}

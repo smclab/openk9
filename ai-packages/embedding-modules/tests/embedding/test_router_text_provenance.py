@@ -25,6 +25,12 @@ def test_inline_text_chunks_have_no_file_id(make_pipelines):
     pieces = text_pieces("uno|due|tre", make_pipelines())
 
     assert [piece.text for piece in pieces] == ["uno", "due", "tre"]
+    # each chunk is paired with its own vector
+    assert [piece.vector for piece in pieces] == [
+        ["text", "uno"],
+        ["text", "due"],
+        ["text", "tre"],
+    ]
     assert all(piece.file_id is None for piece in pieces)
 
 
@@ -39,4 +45,5 @@ def test_text_ref_chunks_carry_the_file_id(make_pipelines):
     pieces = ref_pieces(ref, make_pipelines(storage=storage))
 
     assert [piece.text for piece in pieces] == ["alfa", "beta"]
+    assert [piece.vector for piece in pieces] == [["text", "alfa"], ["text", "beta"]]
     assert all(piece.file_id == "note-1" for piece in pieces)

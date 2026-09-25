@@ -55,6 +55,13 @@ def test_the_overlap_keeps_only_the_words_that_fit():
     ]
 
 
+def test_a_one_character_overlap_still_applies():
+    splitter = DerivedTextSplitter(chunk_size=4, chunk_overlap=1)
+
+    # the next chunk is the one-letter word "b", which fits exactly
+    assert _texts(splitter, "alfa b") == ["alfa b", "b"]
+
+
 def test_a_text_shorter_than_chunk_size_is_one_chunk():
     splitter = DerivedTextSplitter(chunk_size=100, chunk_overlap=20)
 

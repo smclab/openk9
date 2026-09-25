@@ -16,10 +16,19 @@
 #
 
 """chunk_text flattens a chunker's output to plain strings; build_chunker
-selects and coerces only the config entries matching the chunker
-signature. Fakes stand in for the real chonkie chunkers."""
+maps the ChunkType onto its chunker class and passes only the config
+entries matching that class's signature, coerced. The light chunkers are
+built for real; the heavyweight ones (torch, model downloads) are only
+resolved against a stand-in chonkie module."""
+
+import sys
+import types
+
+import chonkie
+import pytest
 
 from app.embedding import chunking
+from app.text_splitters.derived_text_splitter import DerivedTextSplitter
 
 
 class _FakeChunk:
@@ -40,17 +49,39 @@ def test_chunk_text_returns_plain_strings():
     ]
 
 
-def test_build_chunker_coerces_and_filters_via_signature(monkeypatch):
-    class _TypedChunker:
-        def __init__(self, chunk_size: int = 0):
-            self.chunk_size = chunk_size
-
-        def chunk(self, text):
-            return []
-
-    monkeypatch.setattr(chunking, "_chunker_class", lambda chunk_type: _TypedChunker)
-
+@pytest.mark.parametrize(
+    "chunk_type, chunker_class, size_attribute",
+    [
+        (0, chonkie.RecursiveChunker, "chunk_size"),
+        (1, DerivedTextSplitter, "_chunk_size"),
+        (2, chonkie.TokenChunker, "chunk_size"),
+        (3, chonkie.TokenChunker, "chunk_size"),
+        (5, chonkie.SentenceChunker, "chunk_size"),
+        (6, chonkie.RecursiveChunker, "chunk_size"),
+        (7, chonkie.TableChunker, "chunk_size"),
+    ],
+)
+def test_build_chunker_selects_the_class_and_coerces_via_signature(
+    chunk_type, chunker_class, size_attribute
+):
     # "512" is coerced to int, "unknown" is dropped (not in the signature)
-    chunker = chunking.build_chunker(0, {"chunk_size": "512", "unknown": 1})
+    chunker = chunking.build_chunker(chunk_type, {"chunk_size": "512", "unknown": 1})
 
-    assert chunker.chunk_size == 512
+    assert type(chunker) is chunker_class
+    assert getattr(chunker, size_attribute) == 512
+
+
+@pytest.mark.parametrize(
+    "chunk_type, class_name",
+    [(4, "SemanticChunker"), (8, "LateChunker"), (9, "NeuralChunker")],
+)
+def test_heavyweight_chunk_types_resolve_their_class(
+    monkeypatch, chunk_type, class_name
+):
+    # a stand-in chonkie: resolving the class must not load any model
+    fake_chonkie = types.ModuleType("chonkie")
+    for name in ("SemanticChunker", "LateChunker", "NeuralChunker"):
+        setattr(fake_chonkie, name, type(name, (), {}))
+    monkeypatch.setitem(sys.modules, "chonkie", fake_chonkie)
+
+    assert chunking._chunker_class(chunk_type) is getattr(fake_chonkie, class_name)

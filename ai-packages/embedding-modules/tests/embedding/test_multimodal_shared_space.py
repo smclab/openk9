@@ -16,9 +16,11 @@
 #
 
 """Each multimodal embedder sends text and images through the same
-injected client, so both come back with the same dimension: one shared
-vector space. Fake clients stand in for boto3 / the Vertex SDK."""
+injected client and model, so both land in one shared vector space. Fake
+clients record the exact requests and stand in for boto3 / the Vertex
+SDK."""
 
+import base64
 import io
 import json
 
@@ -33,9 +35,10 @@ class _FakeBedrockClient:
 
     def invoke_model(self, modelId, body):
         request = json.loads(body)
-        self.calls.append(request)
+        self.calls.append((modelId, request))
         count = len(request.get("texts") or request.get("images"))
-        vectors = [[0.1] * self.dimension for _ in range(count)]
+        # a distinct vector per entry, so the pairing with the input shows
+        vectors = [[float(index)] * self.dimension for index in range(count)]
         payload = {"embeddings": {"float": vectors}}
 
         return {"body": io.BytesIO(json.dumps(payload).encode())}
@@ -69,13 +72,42 @@ def test_bedrock_text_and_image_share_model_and_space():
     )
 
     text_vectors = embedder.embed_texts(["alfa", "beta"])
-    image_vector = embedder.embed_image(b"png-bytes", "image/png")
+    image_vector = embedder.embed_image(b"jpeg-bytes", "image/jpeg")
 
-    assert len(text_vectors) == 2
-    # same model -> same dimension for text and image: one vector space
-    assert len(text_vectors[0]) == len(image_vector) == 8
-    assert client.calls[0]["input_type"] == "search_document"
-    assert client.calls[-1]["input_type"] == "image"
+    assert text_vectors == [[0.0] * 8, [1.0] * 8]
+    assert image_vector == [0.0] * 8
+    # same model for text and image: one vector space; the data URI carries
+    # the image's own content type
+    data_uri = "data:image/jpeg;base64," + base64.b64encode(b"jpeg-bytes").decode()
+    assert client.calls == [
+        (
+            "cohere.embed-v4:0",
+            {
+                "texts": ["alfa", "beta"],
+                "input_type": "search_document",
+                "embedding_types": ["float"],
+            },
+        ),
+        (
+            "cohere.embed-v4:0",
+            {
+                "images": [data_uri],
+                "input_type": "image",
+                "embedding_types": ["float"],
+            },
+        ),
+    ]
+
+
+def test_bedrock_embed_texts_forwards_the_input_type():
+    client = _FakeBedrockClient(dimension=8)
+    embedder = BedrockMultimodalEmbedder(
+        "cohere.embed-v4:0", region_name="us-east-1", client=client
+    )
+
+    embedder.embed_texts(["alfa"], input_type="search_query")
+
+    assert client.calls[-1][1]["input_type"] == "search_query"
 
 
 def test_bedrock_coerces_float_output_dimension_to_int():
@@ -90,14 +122,24 @@ def test_bedrock_coerces_float_output_dimension_to_int():
 
 def test_vertex_text_and_image_share_model_and_space():
     client = _FakeVertexClient(dimension=8)
+    # a float dimension, as decoded from the gRPC Struct
     embedder = VertexMultimodalEmbedder(
-        "multimodalembedding@001", client=client, image_factory=lambda data: data
+        "multimodalembedding@001",
+        dimension=8.0,
+        client=client,
+        image_factory=lambda data: ("wrapped", data),
     )
 
     text_vectors = embedder.embed_texts(["alfa", "beta"])
     image_vector = embedder.embed_image(b"png-bytes", "image/png")
 
-    assert len(text_vectors) == 2
-    assert len(text_vectors[0]) == len(image_vector) == 8
-    assert "contextual_text" in client.calls[0]
-    assert "image" in client.calls[-1]
+    assert text_vectors == [[0.2] * 8, [0.2] * 8]
+    assert image_vector == [0.2] * 8
+    # one call per text, then the wrapped image; the configured dimension
+    # reaches every call, as an int
+    assert client.calls == [
+        {"contextual_text": "alfa", "dimension": 8},
+        {"contextual_text": "beta", "dimension": 8},
+        {"image": ("wrapped", b"png-bytes"), "dimension": 8},
+    ]
+    assert all(type(call["dimension"]) is int for call in client.calls)

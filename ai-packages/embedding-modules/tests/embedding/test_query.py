@@ -36,9 +36,13 @@ MIXED_VECTOR = [0.5, 0.6]
 def _full_capabilities(calls):
     return QueryCapabilities(
         embed_text=lambda text: calls.append(("text", text)) or TEXT_VECTOR,
-        embed_image=lambda data, content_type: calls.append(("image", content_type))
+        embed_image=lambda data, content_type: calls.append(
+            ("image", data, content_type)
+        )
         or IMAGE_VECTOR,
-        embed_mixed=lambda text, data, content_type: calls.append(("mixed", text))
+        embed_mixed=lambda text, data, content_type: calls.append(
+            ("mixed", text, data, content_type)
+        )
         or MIXED_VECTOR,
     )
 
@@ -56,7 +60,7 @@ def test_inline_image_uses_image_path():
     vector = query_vector(None, (b"png", "image/png"), _full_capabilities(calls))
 
     assert vector == IMAGE_VECTOR
-    assert calls == [("image", "image/png")]
+    assert calls == [("image", b"png", "image/png")]
 
 
 def test_text_and_inline_uses_mixed_path_when_supported():
@@ -65,7 +69,7 @@ def test_text_and_inline_uses_mixed_path_when_supported():
 
     # a single vector from the model's native mixed input, not a fusion
     assert vector == MIXED_VECTOR
-    assert calls == [("mixed", "un gatto")]
+    assert calls == [("mixed", "un gatto", b"png", "image/png")]
 
 
 def test_text_and_inline_without_mixed_capability_is_precondition():
@@ -75,28 +79,32 @@ def test_text_and_inline_without_mixed_capability_is_precondition():
         embed_mixed=None,
     )
 
-    with pytest.raises(QueryPrecondition):
+    with pytest.raises(QueryPrecondition, match=r"no native text\+image input"):
         query_vector("un gatto", (b"png", "image/png"), capabilities)
 
 
 def test_inline_non_image_is_invalid_argument():
-    with pytest.raises(QueryInvalid):
+    with pytest.raises(
+        QueryInvalid, match=r"inline media is not an image \(contentType='audio/wav'\)"
+    ):
         query_vector(None, (b"wav", "audio/wav"), _full_capabilities([]))
 
 
 def test_inline_image_on_text_only_model_is_precondition():
     text_only = QueryCapabilities(embed_text=lambda text: TEXT_VECTOR)
 
-    with pytest.raises(QueryPrecondition):
+    with pytest.raises(
+        QueryPrecondition, match="the configured model has no image input"
+    ):
         query_vector(None, (b"png", "image/png"), text_only)
 
 
 def test_empty_request_is_invalid_argument():
-    with pytest.raises(QueryInvalid):
+    with pytest.raises(QueryInvalid, match="neither text nor inline provided"):
         query_vector(None, None, _full_capabilities([]))
 
 
 def test_non_image_inline_is_invalid_even_with_text():
     # malformed request (non-image) beats the model-capability check
-    with pytest.raises(QueryInvalid):
+    with pytest.raises(QueryInvalid, match="inline media is not an image"):
         query_vector("un gatto", (b"wav", "audio/wav"), _full_capabilities([]))

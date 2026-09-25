@@ -32,11 +32,16 @@ def test_missing_ref_content_type_falls_back_to_http(make_pipelines):
 
     assert len(pieces) == 1
     assert pieces[0].file_id == "blob-1"
+    # the image embedder receives the HTTP content type, not the empty one
+    assert pieces[0].vector == ["image", b"png-bytes", "image/png"]
 
 
 def test_fallback_to_unknown_content_type_is_skipped(make_pipelines):
     storage = {"https://signed/blob": (b"data", "application/octet-stream")}
     ref = {"url": "https://signed/blob", "fileId": "blob-2", "contentType": None}
 
-    with pytest.raises(SkipRef):
+    with pytest.raises(
+        SkipRef,
+        match=r"no handler for modality 'unknown' \(application/octet-stream\)",
+    ):
         ref_pieces(ref, make_pipelines(storage=storage))

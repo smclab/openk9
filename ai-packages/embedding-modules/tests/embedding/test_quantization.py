@@ -50,6 +50,11 @@ def test_l2_normalization_is_idempotent():
     np.testing.assert_allclose(once, twice, rtol=1e-6)
 
 
+def test_l2_normalization_returns_float32():
+    # a plain list of Python floats would otherwise come back as float64
+    assert l2_normalize([3.0, 4.0]).dtype == np.float32
+
+
 def test_l2_normalization_of_zero_vector_is_safe():
     vector = np.zeros(8, dtype=np.float32)
 
@@ -124,23 +129,28 @@ def test_int8_maps_unit_component_to_symmetric_max():
 
 
 @pytest.mark.parametrize(
-    "vector",
+    "vector, expected",
     [
-        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],        # one-hot, max component
-        [1e30, -1e30, 1e30, -1e30, 0.0, 0.0, 0.0, 0.0],  # huge magnitudes
-        [1e-30, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],      # near-degenerate norm
-        [1.0, 1e-7, -1e-7, 0.0, 0.0, 0.0, 0.0, 0.0],     # single dominant axis
+        # one-hot, max component
+        ([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [127, 0, 0, 0, 0, 0, 0, 0]),
+        # norm 5: 0.6 and 0.8 of the unit vector
+        ([3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [76, 102, 0, 0, 0, 0, 0, 0]),
+        # a negative component beyond -1 before normalization
+        ([0.0, -2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0, -127, 0, 0, 0, 0, 0, 0]),
+        # single dominant axis
+        ([1.0, 1e-7, -1e-7, 0.0, 0.0, 0.0, 0.0, 0.0], [127, 0, 0, 0, 0, 0, 0, 0]),
     ],
 )
-def test_int8_output_stays_in_symmetric_range(vector):
+def test_int8_output_stays_in_symmetric_range(vector, expected):
     # quantize_int8 relies on L2-normalization to keep every component in
-    # [-1, 1], so rint(c * 127) always lands in [-127, 127]. This is the
-    # tripwire for that invariant: whatever the input magnitude, the
-    # encoded bytes must never hit -128 (int8's extra negative value, which
-    # the symmetric mapping deliberately never uses). If a change ever
-    # weakened normalization, an out-of-range component would surface here.
+    # [-1, 1], so rint(c * 127) always lands in [-127, 127]. Inputs whose
+    # components exceed 1 in magnitude would wrap around int8 without it,
+    # so the exact bytes pin the normalization, and they must never hit
+    # -128 (int8's extra negative value, which the symmetric mapping
+    # deliberately never uses).
     decoded = np.frombuffer(quantize_int8(vector), dtype=np.int8)
 
+    assert decoded.tolist() == expected
     assert decoded.min() >= -127  # -128 would mean the invariant broke
 
 
@@ -156,6 +166,13 @@ def test_binary_packs_signs_msb_first():
     assert packed == bytes([0b10100001])
 
 
+def test_binary_zero_component_is_a_zero_bit():
+    # only a strictly positive component sets its bit
+    vector = np.array([0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5])
+
+    assert quantize_binary(vector) == bytes([0b01000000])
+
+
 def test_binary_requires_dimension_multiple_of_8():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="multiple of 8, got 10"):
         quantize_binary(np.ones(10))

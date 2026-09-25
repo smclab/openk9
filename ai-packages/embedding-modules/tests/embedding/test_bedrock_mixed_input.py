@@ -19,6 +19,7 @@
 returns a single fused vector, produced by the model (no module-side
 fusion). A fake boto3 client stands in for the network."""
 
+import base64
 import io
 import json
 
@@ -32,7 +33,7 @@ class _FakeMixedClient:
 
     def invoke_model(self, modelId, body):
         request = json.loads(body)
-        self.calls.append(request)
+        self.calls.append((modelId, request))
         # one vector per input: the mixed call sends exactly one input
         vectors = [[0.3] * self.dimension for _ in request["inputs"]]
         payload = {"embeddings": {"float": vectors}}
@@ -48,9 +49,8 @@ def test_embed_mixed_returns_single_vector_from_one_input():
 
     vector = embedder.embed_mixed("un gatto", b"png-bytes", "image/png")
 
-    # a single vector, not a list of two
-    assert len(vector) == 8
-    assert all(isinstance(component, float) for component in vector)
+    # a single vector (the first and only one), not the list of vectors
+    assert vector == [0.3] * 8
 
 
 def test_embed_mixed_packs_text_and_image_in_one_input():
@@ -61,12 +61,18 @@ def test_embed_mixed_packs_text_and_image_in_one_input():
 
     embedder.embed_mixed("un gatto", b"png-bytes", "image/png")
 
-    request = client.calls[-1]
+    model_id, request = client.calls[-1]
+    assert model_id == "cohere.embed-v4:0"
     # text and image travel together in a single input's content array
-    assert len(request["inputs"]) == 1
-    content = request["inputs"][0]["content"]
-    kinds = {part["type"] for part in content}
-    assert kinds == {"text", "image_url"}
+    data_uri = "data:image/png;base64," + base64.b64encode(b"png-bytes").decode()
+    assert request["inputs"] == [
+        {
+            "content": [
+                {"type": "text", "text": "un gatto"},
+                {"type": "image_url", "image_url": {"url": data_uri}},
+            ]
+        }
+    ]
     # query-time input_type (asymmetric models such as Cohere Embed v4)
     assert request["input_type"] == "search_query"
 
@@ -79,4 +85,4 @@ def test_embed_mixed_applies_output_dimension():
 
     embedder.embed_mixed("un gatto", b"png-bytes", "image/png")
 
-    assert client.calls[-1]["output_dimension"] == 8
+    assert client.calls[-1][1]["output_dimension"] == 8

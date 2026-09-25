@@ -70,14 +70,18 @@ def test_preserves_newline_between_list_items():
 def test_collapses_horizontal_runs_and_excess_blank_lines():
     cleaned = clean_text("prima\t  voce\n\n\n\nseconda voce")
 
-    assert "prima voce" in cleaned
-    assert "\n\n\n" not in cleaned
+    assert cleaned == "prima voce\n\nseconda voce"
 
 
 def test_keeps_currency_symbols_and_signs():
     """An ASCII-only keep-list dropped every euro sign, so "140€" became
     indistinguishable from any other number in an insurance corpus."""
     assert clean_text("Costo: 1.500 € (+20%)") == "Costo: 1.500 € (+20%)"
+
+
+def test_keeps_underscores_and_sentence_punctuation():
+    """Dropping the underscore glues snake_case identifiers into one word."""
+    assert clean_text("usa snake_case? sì!") == "usa snake_case? sì!"
 
 
 def test_keeps_typographic_quotes():
@@ -140,6 +144,12 @@ def test_drops_the_content_of_script_and_style():
 
     assert "testo" in cleaned
     assert "var x" not in cleaned
+
+
+def test_adjacent_elements_stay_separate_words():
+    """Without a separator "<p>a</p><p>b</p>" became "ab"; the style body
+    goes the same way as the script one."""
+    assert clean_text("<p>a</p><p>b</p><style>x{}</style>") == "a b"
 
 
 def test_decodes_html_entities():

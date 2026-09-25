@@ -26,6 +26,7 @@ from app.embedding.router import SkipRef, classify, ref_pieces
 
 def test_classify_maps_modalities():
     assert classify("image/png") == "image"
+    assert classify("Image/PNG") == "image"
     assert classify("text/markdown; charset=utf-8") == "text"
     assert classify("audio/mpeg") == "audio"
     assert classify("video/mp4") == "video"
@@ -42,7 +43,9 @@ def test_audio_ref_is_skipped_before_fetching(make_pipelines):
         "contentType": "audio/wav",
     }
 
-    with pytest.raises(SkipRef):
+    with pytest.raises(
+        SkipRef, match=r"no handler for modality 'audio' \(audio/wav\)"
+    ):
         ref_pieces(ref, make_pipelines())
 
 
@@ -54,7 +57,9 @@ def test_image_ref_on_text_only_model_is_skipped(make_pipelines):
         "contentType": "image/png",
     }
 
-    with pytest.raises(SkipRef):
+    with pytest.raises(
+        SkipRef, match="the configured embedding model has no image input"
+    ):
         ref_pieces(ref, make_pipelines(storage=storage, embed_image=None))
 
 
@@ -66,5 +71,5 @@ def test_non_utf8_text_ref_is_skipped(make_pipelines):
         "contentType": "text/plain",
     }
 
-    with pytest.raises(SkipRef):
+    with pytest.raises(SkipRef, match="binary not decodable as utf-8 text"):
         ref_pieces(ref, make_pipelines(storage=storage))

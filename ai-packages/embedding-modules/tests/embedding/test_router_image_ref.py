@@ -34,4 +34,4 @@ def test_image_ref_is_fetched_and_embedded(make_pipelines):
     assert len(pieces) == 1
     assert pieces[0].file_id == "img-1"
     assert pieces[0].text == ""
-    assert pieces[0].vector == [0.0, 1.0, 0.0, 0.0]
+    assert pieces[0].vector == ["image", b"png-bytes", "image/png"]

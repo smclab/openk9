@@ -17,26 +17,29 @@
 
 """Shared doubles for the router tests.
 
-Every capability is faked: chunk splits on '|', text/image embedders
-return fixed vectors, fetch reads from an in-memory {url: (bytes,
-content_type)} map. No network, no models.
+Every capability is faked: chunk splits on '|', fetch reads from an
+in-memory {url: (bytes, content_type)} map. The embedders return a
+"vector" that echoes their input — ["text", chunk] and ["image", data,
+content_type] — so a test sees which bytes, content type and chunk each
+piece was actually embedded from. No network, no models.
 """
 
 import pytest
 
 from app.embedding.router import Pipelines
 
-TEXT_VECTOR = [1.0, 0.0, 0.0, 0.0]
-IMAGE_VECTOR = [0.0, 1.0, 0.0, 0.0]
+
+def _echo_image(data, content_type):
+    return ["image", data, content_type]
 
 
 @pytest.fixture
 def make_pipelines():
-    def _make(storage=None, embed_image=lambda data, content_type: IMAGE_VECTOR):
+    def _make(storage=None, embed_image=_echo_image):
         store = storage or {}
 
         return Pipelines(
-            embed_texts=lambda texts: [TEXT_VECTOR for _ in texts],
+            embed_texts=lambda texts: [["text", text] for text in texts],
             chunk=lambda text: text.split("|"),
             fetch=lambda url: store[url],
             embed_image=embed_image,

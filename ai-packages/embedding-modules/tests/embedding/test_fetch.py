@@ -22,6 +22,7 @@ caller side). An httpx.MockTransport stands in for the network."""
 import httpx
 import pytest
 
+from app.embedding import fetch
 from app.embedding.fetch import fetch_url
 
 
@@ -46,3 +47,31 @@ def test_fetch_raises_on_error_status():
 
     with pytest.raises(httpx.HTTPError):
         fetch_url("https://signed/missing", client=client)
+
+
+def test_fetch_without_client_follows_redirects_with_a_timeout(monkeypatch):
+    calls = []
+
+    def fake_get(url, **kwargs):
+        calls.append((url, kwargs))
+        return httpx.Response(
+            200,
+            content=b"blob",
+            # a header with parameters but no media type
+            headers={"content-type": "; charset=x"},
+            request=httpx.Request("GET", url),
+        )
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+
+    data, content_type = fetch_url("https://signed/blob")
+
+    assert calls == [
+        (
+            "https://signed/blob",
+            {"timeout": fetch.FETCH_TIMEOUT_SECONDS, "follow_redirects": True},
+        )
+    ]
+    assert data == b"blob"
+    # an empty media type is no content type at all, not ""
+    assert content_type is None
