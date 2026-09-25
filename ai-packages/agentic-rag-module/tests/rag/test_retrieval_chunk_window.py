@@ -153,3 +153,24 @@ def test_chunks_are_not_merged_when_the_window_is_disabled():
     assert documents[0].metadata["chunk_idx"] == 0
     assert documents[0].metadata["next"] == ["content-1"]
     assert documents[0].metadata["prev"] == []
+    assert documents[1].metadata["prev"] == ["content-0"]
+
+
+def test_window_size_is_the_configured_chunk_window():
+    # a window of 1 takes a single neighbour on each side, not the default 2
+    documents = _retrieve(
+        [
+            _hit(
+                "doc-1",
+                5,
+                "content",
+                previous_chunks=[{"chunkText": "prev-2"}, {"chunkText": "prev-1"}],
+                next_chunks=[{"chunkText": "next-1"}, {"chunkText": "next-2"}],
+            )
+        ],
+        chunk_window=1,
+    )
+
+    assert [document.page_content for document in documents] == [
+        "prev-1contentnext-1"
+    ]

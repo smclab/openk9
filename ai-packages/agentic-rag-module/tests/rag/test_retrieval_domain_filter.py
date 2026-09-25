@@ -26,6 +26,7 @@ from unittest.mock import patch
 
 from langchain_core.documents import Document
 
+from app.models import models
 from app.rag.agentic_rag import GraphState, RagGraph
 
 QUERY = "Che copertura ho per la grandine?"
@@ -56,10 +57,17 @@ def test_detected_domain_becomes_a_filter_token():
 
     search_query = mock_retriever.call_args.kwargs["search_query"]
     domain_tokens = [token for token in search_query if token.keywordKey == "domain"]
-    assert len(domain_tokens) == 1
-    assert domain_tokens[0].tokenType == "TEXT"
-    assert domain_tokens[0].values == ["insurance"]
-    assert domain_tokens[0].filter is True
+    assert domain_tokens == [
+        models.SearchToken(
+            tokenType="TEXT",
+            keywordKey="domain",
+            values=["insurance"],
+            filter=True,
+            entityType="",
+            entityName="",
+            extra={},
+        )
+    ]
     assert search_query[0].values == [QUERY]
 
 

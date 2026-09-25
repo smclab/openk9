@@ -41,7 +41,7 @@ def _retriever(retrieve_type="HYBRID"):
     return OpenSearchDomainDocumentsRetriever(
         opensearch_host="http://localhost:9200",
         grpc_host_embedding="localhost:50052",
-        embedding_model_configuration={},
+        embedding_model_configuration={"model": "an-embedding-model"},
         uploaded_documents_index=INDEX,
         retrieve_type=retrieve_type,
         search_text=QUERY,
@@ -75,10 +75,20 @@ def test_vectorial_retrieval_runs_a_hybrid_query(retrieve_type):
 
     _invoke(_retriever(retrieve_type), client)
 
-    queries = _query_of(client)["hybrid"]["queries"]
-    assert queries[0] == {"knn": {"vector": {"vector": VECTOR, "k": 10}}}
-    assert queries[1]["match"]["chunkText"]["query"] == QUERY
-    assert client.search.call_args.kwargs["index"] == INDEX
+    client.indices.exists.assert_called_once_with(index=INDEX)
+    client.search.assert_called_once_with(
+        body={
+            "query": {
+                "hybrid": {
+                    "queries": [
+                        {"knn": {"vector": {"vector": VECTOR, "k": 10}}},
+                        {"match": {"chunkText": {"query": QUERY, "boost": 0.5}}},
+                    ]
+                }
+            }
+        },
+        index=INDEX,
+    )
 
 
 def test_text_retrieval_runs_a_match_query():
@@ -120,6 +130,24 @@ def test_hits_carry_domain_and_score():
     assert documents[1].metadata["score"] == 0
 
 
+def test_text_is_embedded_with_the_configured_model():
+    client = _client()
+
+    with patch.object(
+        retriever_module, "get_opensearch_client", return_value=client
+    ) as mock_get_client, patch.object(
+        retriever_module, "query_embedding", return_value=VECTOR
+    ) as mock_embedding:
+        _retriever().invoke(QUERY)
+
+    mock_get_client.assert_called_once_with("http://localhost:9200")
+    mock_embedding.assert_called_once_with(
+        grpc_host_embedding="localhost:50052",
+        embedding_model_configuration={"model": "an-embedding-model"},
+        text=QUERY,
+    )
+
+
 def test_missing_index_returns_nothing():
     client = _client(index_exists=False)
 
@@ -141,16 +169,21 @@ def test_nothing_to_embed_skips_the_search():
 def test_get_domains_lists_the_distinct_domains():
     client = _client(buckets=[{"key": "insurance"}, {"key": "claims"}])
 
-    with patch.object(retriever_module, "get_opensearch_client", return_value=client):
+    with patch.object(
+        retriever_module, "get_opensearch_client", return_value=client
+    ) as mock_get_client:
         domains = _retriever().get_domains()
 
     assert domains == ["insurance", "claims"]
-    body = client.search.call_args.kwargs["body"]
-    assert body["size"] == 0
-    assert body["aggs"]["distinct_domains"]["terms"] == {
-        "field": "domain",
-        "size": 1000,
-    }
+    mock_get_client.assert_called_once_with("http://localhost:9200")
+    client.indices.exists.assert_called_once_with(index=INDEX)
+    client.search.assert_called_once_with(
+        index=INDEX,
+        body={
+            "size": 0,
+            "aggs": {"distinct_domains": {"terms": {"field": "domain", "size": 1000}}},
+        },
+    )
 
 
 def test_get_domains_without_index_is_empty():

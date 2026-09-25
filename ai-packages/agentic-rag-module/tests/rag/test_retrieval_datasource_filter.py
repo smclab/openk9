@@ -60,8 +60,17 @@ def test_datasource_filter_token_added_when_ids_present():
 
     # a single DATASOURCE token is appended, with the ids stringified
     datasource_tokens = [t for t in search_query if t.tokenType == "DATASOURCE"]
-    assert len(datasource_tokens) == 1
-    assert datasource_tokens[0].values == ["1", "2"]
+    assert datasource_tokens == [
+        models.SearchToken(
+            tokenType="DATASOURCE",
+            keywordKey="",
+            values=["1", "2"],
+            filter=True,
+            entityType="",
+            entityName="",
+            extra={},
+        )
+    ]
 
 
 def test_no_datasource_filter_when_ids_absent():

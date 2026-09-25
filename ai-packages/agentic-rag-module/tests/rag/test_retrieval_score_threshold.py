@@ -131,3 +131,13 @@ def test_null_score_is_treated_as_zero_alongside_scored_hits():
     document_ids = _run(retriever, [10.0, None])
 
     assert document_ids == ["doc-0"]
+
+
+def test_no_cutoff_when_no_hit_is_scored():
+    # A field sort leaves every score null: there is no top score to be
+    # relative to, so the threshold cannot drop anything.
+    retriever = _build_retriever(0.3)
+
+    document_ids = _run(retriever, [None, None])
+
+    assert document_ids == ["doc-0", "doc-1"]

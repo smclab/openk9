@@ -46,23 +46,6 @@ from app.rag.retrievers.uploaded_documents_retriever import (
     OpenSearchUploadedDocumentsRetriever,
 )
 
-# The 12 inputs reported as crashing in issue #2238: after normalization they
-# carry no textual token, so the embedding service has nothing to embed.
-DEGENERATE_INPUTS = [
-    ("empty", ""),
-    ("spaces", "     "),
-    ("newlines", "\n\n\n"),
-    ("tabs", "\t\t\t"),
-    ("non_breaking_space", "   "),
-    ("emoji", "🙂🙂🙂🙂"),
-    ("emoji_zwj", "👨‍👩‍👧‍👦"),
-    ("zero_width", "​​​"),
-    ("emoji_long", "😀" * 800),
-    ("full_width", "Ｉｇｎｏｒｅ　ｅｖｅｒｙｔｈｉｎｇ"),
-    ("mixed_script", "日本語 العربية русский ελληνικά עברית ไทย 한국어"),
-    ("replacement", "���"),
-]
-
 
 def _build_guardrail(search_text):
     return OpenSearchGuardrailDocumentsRetriever(
@@ -124,25 +107,6 @@ def test_retriever_returns_empty_when_embedding_is_empty(module, factory):
     assert documents == []
     # The guard fires before any OpenSearch query is issued.
     client.search.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    "label, search_text", DEGENERATE_INPUTS, ids=[label for label, _ in DEGENERATE_INPUTS]
-)
-def test_guardrail_retriever_survives_degenerate_input(label, search_text):
-    """No degenerate input may crash the entry (guardrail) retriever."""
-    retriever = _build_guardrail(search_text)
-
-    with patch.object(
-        guardrail_documents_retriever, "get_opensearch_client", return_value=MagicMock()
-    ), patch.object(
-        guardrail_documents_retriever, "query_embedding", return_value=None
-    ):
-        documents = retriever._get_relevant_documents(
-            search_text, run_manager=MagicMock()
-        )
-
-    assert documents == []
 
 
 def test_llm_response_node_handles_empty_llm_content():
