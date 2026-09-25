@@ -181,12 +181,10 @@ public class SchedulingService {
 		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
 				s, scheduleId)
 				.flatMap(entity -> {
-					var recorded = entity.getErrorDescription();
-
-					entity.setErrorDescription(
-						request.append() && recorded != null && !recorded.isBlank()
-							? recorded + "\n" + description
-							: description);
+					entity.setErrorDescription(request.append()
+						? SchedulerUtil.appendErrorDescription(
+							entity.getErrorDescription(), description)
+						: description);
 
 					return s.merge(entity);
 				})

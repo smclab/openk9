@@ -692,11 +692,22 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		// the status alone would leave a red scheduling with no explanation:
 		// persist the cause first, then the status. A description recorded
 		// earlier (e.g. why the payload was refused) is kept, the cause of
-		// the discard goes after it
+		// the discard goes after it. The status is written even when the
+		// description cannot be: ERROR is what stops the scheduling from
+		// closing as FINISHED
 		var startWrapper = getStartWrapper(trackError.replyTo());
 
 		getContext().pipeToSelf(
 			SchedulingService.appendErrorDescription(shardingKey, trackError.cause())
+				.handle((ignore, throwable) -> {
+					if (throwable != null) {
+						log.warnf(
+							throwable,
+							"Scheduling %s: cannot record the error description",
+							shardingKey.asString());
+					}
+					return null;
+				})
 				.thenCompose(ignore -> SchedulingService.persistStatus(
 					shardingKey, Scheduler.SchedulerStatus.ERROR)),
 			(scheduler, throwable) -> new UpdateScheduler(
