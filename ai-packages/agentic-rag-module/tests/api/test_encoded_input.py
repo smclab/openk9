@@ -174,6 +174,8 @@ def test_plain_text_reaches_pipeline(path, body_for, client, spies):
 
     assert response.status_code == 200
     get_agentic_rag.assert_called_once()
+    # Slot 11 of get_agentic_rag is the search text.
+    assert get_agentic_rag.call_args.args[11] == "Quali sono gli orari degli uffici?"
     types = [event["type"] for event in _sse_events(response)]
     assert "GUARDRAIL" not in types
     assert "ERROR" not in types

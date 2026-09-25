@@ -138,4 +138,7 @@ def test_generate_ignores_a_media(client, spies):
     )
 
     assert response.status_code == 200
-    assert "media" not in spies.call_args.kwargs
+    # generate passes everything positionally: a media must be neither a
+    # keyword nor one of the positional arguments.
+    assert spies.call_args.kwargs == {}
+    assert not any(isinstance(arg, models.Media) for arg in spies.call_args.args)

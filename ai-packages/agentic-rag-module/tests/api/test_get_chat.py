@@ -28,7 +28,7 @@ CHAT_ID = "chat-123"
 HEADERS = {"authorization": "Bearer fake-token", "x-tenant-id": "tenant-1"}
 
 
-def _checkpoint(seq, retrieve):
+def _checkpoint(seq, retrieve, step=1, answer=None, context=()):
     """A single OpenSearch hit as get_chat expects to parse it."""
     return {
         "_source": {
@@ -37,14 +37,30 @@ def _checkpoint(seq, retrieve):
                     "ts": f"2026-01-01T00:0{seq}:00",
                     "channel_values": {
                         "current_query": f"question {seq}",
-                        "response": f"answer {seq}",
+                        "response": answer or f"answer {seq}",
                         "chat_sequence_number": seq,
                         "retrieve_from_uploaded_documents": retrieve,
-                        "context": [],
+                        "context": list(context),
                     },
                 }
             ),
-            "metadata": {"step": 1},
+            "metadata": {"step": step},
+        }
+    }
+
+
+def _context_document(document_id, score, title, url):
+    """A retrieved document as the checkpoint serializes it."""
+    return {
+        "kwargs": {
+            "page_content": "...",
+            "metadata": {
+                "document_id": document_id,
+                "score": score,
+                "title": title,
+                "url": url,
+                "chunk_number": 3,
+            },
         }
     }
 
@@ -148,7 +164,7 @@ def test_get_chat_falls_back_to_current_query_when_not_rewritten(client, monkeyp
     assert response.json()["messages"][0]["question"] == "question 1"
 
 
-def test_get_chat_returns_404_when_chat_missing(client, monkeypatch):
+def test_get_chat_returns_404_when_the_user_has_no_index(client, monkeypatch):
     empty = MagicMock()
     empty.indices.exists.return_value = False
     monkeypatch.setattr(server, "get_opensearch_client", lambda *a, **k: empty)
@@ -156,3 +172,91 @@ def test_get_chat_returns_404_when_chat_missing(client, monkeypatch):
     response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
 
     assert response.status_code == 404
+
+
+def test_get_chat_searches_the_chat_in_the_user_index(client, monkeypatch):
+    open_search_client = _opensearch_mock([_checkpoint(1, retrieve=False)])
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: open_search_client
+    )
+
+    client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    open_search_client.search.assert_called_once_with(
+        body={"size": 1000, "query": {"match": {"thread_id": CHAT_ID}}},
+        index="tenant-1-user-1",
+    )
+
+
+def test_get_chat_keeps_the_latest_step_of_each_turn(client, monkeypatch):
+    # Every step of the graph leaves a checkpoint of the same turn: only the
+    # one with the highest step holds the final answer, wherever it is listed.
+    hits = [
+        _checkpoint(1, retrieve=False, step=2, answer="partial"),
+        _checkpoint(1, retrieve=False, step=5, answer="final"),
+        _checkpoint(1, retrieve=False, step=3, answer="stale"),
+    ]
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits)
+    )
+
+    response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    messages = response.json()["messages"]
+    assert [(m["answer"], m["step"]) for m in messages] == [("final", 5)]
+
+
+@pytest.mark.parametrize("step", [0, -1])
+def test_get_chat_skips_the_checkpoints_before_the_first_step(
+    step, client, monkeypatch
+):
+    hits = [
+        _checkpoint(1, retrieve=False),
+        _checkpoint(2, retrieve=False, step=step),
+    ]
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits)
+    )
+
+    response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    assert [m["chat_sequence_number"] for m in response.json()["messages"]] == [1]
+
+
+def test_get_chat_lists_the_sources_of_each_answer(client, monkeypatch):
+    context = [
+        _context_document("doc-1", 0.91, "Guida", "https://example.com/guida"),
+        _context_document("doc-2", None, "FAQ", "https://example.com/faq"),
+    ]
+    hits = [_checkpoint(1, retrieve=False, context=context)]
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits)
+    )
+
+    response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    assert response.json()["messages"][0]["sources"] == [
+        {
+            "document_id": "doc-1",
+            "score": 0.91,
+            "title": "Guida",
+            "url": "https://example.com/guida",
+        },
+        {
+            "document_id": "doc-2",
+            "score": None,
+            "title": "FAQ",
+            "url": "https://example.com/faq",
+        },
+    ]
+
+
+def test_get_chat_returns_404_when_the_chat_has_no_messages(client, monkeypatch):
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: _opensearch_mock([])
+    )
+
+    response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Item not found."

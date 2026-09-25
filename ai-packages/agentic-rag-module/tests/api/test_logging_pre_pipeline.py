@@ -68,7 +68,7 @@ def _messages(caplog, level):
 
 @pytest.mark.parametrize("path, body_for", ENDPOINTS, ids=ENDPOINT_IDS)
 def test_blank_query_is_reported_at_info(path, body_for, client, caplog):
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         response = client.post(path, json=body_for("   "), headers=HEADERS)
 
     assert _sse_types(response) == ["START", "CHUNK", "END"]
@@ -85,7 +85,7 @@ def test_blank_query_is_reported_at_info(path, body_for, client, caplog):
 def test_encoded_blob_is_reported_as_a_warning(
     path, body_for, blob_type, blob, client, caplog
 ):
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         response = client.post(path, json=body_for(blob), headers=HEADERS)
 
     assert _sse_types(response) == ["GUARDRAIL", "END"]
@@ -98,12 +98,11 @@ def test_encoded_blob_is_reported_as_a_warning(
 
 @pytest.mark.parametrize("path, body_for", ENDPOINTS, ids=ENDPOINT_IDS)
 def test_the_rejected_input_never_appears_at_info(path, body_for, client, caplog):
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         client.post(path, json=body_for(BASE64_BLOB), headers=HEADERS)
 
-    assert all(
-        BASE64_BLOB not in message for message in _messages(caplog, logging.WARNING)
-    )
+    assert caplog.records
+    assert all(BASE64_BLOB not in record.getMessage() for record in caplog.records)
 
 
 @pytest.mark.parametrize("path, body_for", ENDPOINTS, ids=ENDPOINT_IDS)
