@@ -24,21 +24,21 @@ vulnerabilities:
       contested — GitHub 5.3 MEDIUM vs Red Hat 7.5 HIGH (availability:H); under
       the Red Hat score this becomes a Phase 2 blocking finding, so re-evaluate
       as soon as a Quarkus release ships OTel >= 1.62.0.
-    expired_at: 2026-10-22
+    expired_at: 2026-10-30
 
   - id: CVE-2025-46548
     # pekko-management 1.1.1 (_2.13)
     statement: >-
       Severity Medium->Low: applies to the Pekko Management port, exposed only
       inside the k8s cluster network, not from the public internet. Low-priority tech debt.
-    expired_at: 2026-09-23
+    expired_at: 2026-10-30
 
   - id: CVE-2025-67735
     # netty-transport / -codec / -native-epoll 4.1.128.Final (and variants)
     statement: >-
       Not applicable: no public Netty-based HTTP endpoints, only headless/internal ones.
       No attacker-controlled URIs reach HttpRequestEncoder, so CRLF/request smuggling is infeasible.
-    expired_at: 2026-09-23
+    expired_at: 2026-10-30
 
   # --- Permanent suppressions (false positives / not applicable, no expiry) ---
 
