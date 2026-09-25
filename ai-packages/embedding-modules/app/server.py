@@ -40,7 +40,6 @@ from google.protobuf import json_format
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
 from grpc_reflection.v1alpha import reflection
-from ibm_watsonx_ai.metanames import EmbedTextParamsMetaNames
 from langchain_aws import BedrockEmbeddings
 from langchain_google_vertexai import VertexAIEmbeddings
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
@@ -233,15 +232,10 @@ def initialize_embedding_model(configuration):
             )
         case ModelType.IBM_WATSONX.value:
             watsonx_project_id = configuration.get("watsonx_project_id")
-            embed_params = {
-                EmbedTextParamsMetaNames.TRUNCATE_INPUT_TOKENS: 3,
-                EmbedTextParamsMetaNames.RETURN_OPTIONS: {"input_text": True},
-            }
             embeddings = WatsonxEmbeddings(
                 model_id=model,
                 url=api_url,
                 project_id=watsonx_project_id,
-                params=embed_params,
             )
         case ModelType.CHAT_VERTEX_AI.value:
             chat_vertex_ai_model_garden = configuration.get(
