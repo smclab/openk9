@@ -45,6 +45,18 @@ class StagedBinaryServiceWithoutMinioTest {
 			.get(10, TimeUnit.SECONDS);
 	}
 
+	@Test
+	void should_skip_the_content_cleanup_when_the_object_storage_is_not_configured()
+		throws Exception {
+
+		// dropping the binaries of an indexed content completes without
+		// reaching MinIO
+		StagedBinaryService
+			.deleteByContent("nostoragetenant", 1L, "content-1")
+			.toCompletableFuture()
+			.get(10, TimeUnit.SECONDS);
+	}
+
 	public static class WithoutObjectStorage implements QuarkusTestProfile {
 
 		@Override

@@ -76,4 +76,17 @@ public final class BinaryKeys {
 		return datasourceId + "/";
 	}
 
+	/**
+	 * Builds the key prefix that lists every binary of a content, used to
+	 * drop the binaries of a document once it has been indexed.
+	 *
+	 * @param datasourceId the datasource owning the content
+	 * @param contentId the content the binaries belong to
+	 * @return the prefix {@code {datasourceId}/{contentId}/}, matching every
+	 * key of the content
+	 */
+	public static String contentPrefix(long datasourceId, String contentId) {
+		return datasourceId + "/" + contentId + "/";
+	}
+
 }

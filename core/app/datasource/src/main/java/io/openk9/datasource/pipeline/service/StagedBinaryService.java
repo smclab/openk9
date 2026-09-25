@@ -38,8 +38,8 @@ import org.jboss.logging.Logger;
 /**
  * Single entry point the indexing pipeline uses to reach the binaries staged on
  * the object storage: it mints the pre-signed GET URLs the enrichers read them
- * with, and drops the whole working copy of a datasource when a scheduling
- * closes.
+ * with, drops the binaries of a content once it has been indexed, and the
+ * whole working copy of a datasource when a scheduling closes.
  *
  * <p>The pipeline actors are not CDI beans, so both operations are exposed as
  * static methods backed by this eagerly-started bean. URL signing is served
@@ -60,6 +60,9 @@ public class StagedBinaryService {
 
 	private static final String DELETE_BY_DATASOURCE =
 		"StagedBinaryService#deleteByDatasource";
+
+	private static final String DELETE_BY_CONTENT =
+		"StagedBinaryService#deleteByContent";
 
 	private static volatile StagedBinaryService instance;
 
@@ -105,11 +108,7 @@ public class StagedBinaryService {
 	public static CompletionStage<Void> deleteByDatasource(
 		String tenantId, long datasourceId) {
 
-		boolean objectStorageConfigured = instance.objectStorageHost
-			.filter(host -> !host.isBlank())
-			.isPresent();
-
-		if (!objectStorageConfigured) {
+		if (!objectStorageConfigured()) {
 			log.debugf(
 				"Object storage not configured, skipping the cleanup of staged "
 				+ "binaries for datasource %s",
@@ -124,6 +123,39 @@ public class StagedBinaryService {
 				new DeleteByDatasourceRequest(tenantId, datasourceId))
 			.replaceWithVoid()
 			.subscribeAsCompletionStage();
+	}
+
+	/**
+	 * Requests, over the event bus, the deletion of the binaries staged under
+	 * a content, once the content has been written to the index.
+	 *
+	 * <p>It is a no-op when no object storage is configured.
+	 *
+	 * @param tenantId the tenant owning the bucket
+	 * @param datasourceId the datasource owning the content
+	 * @param contentId the content whose staged binaries are removed
+	 * @return a stage completing when the deletion has been carried out, failing
+	 * if the storage could not be cleaned
+	 */
+	public static CompletionStage<Void> deleteByContent(
+		String tenantId, long datasourceId, String contentId) {
+
+		if (!objectStorageConfigured()) {
+			return CompletableFuture.completedFuture(null);
+		}
+
+		return EventBusInstanceHolder
+			.request(
+				DELETE_BY_CONTENT,
+				new DeleteByContentRequest(tenantId, datasourceId, contentId))
+			.replaceWithVoid()
+			.subscribeAsCompletionStage();
+	}
+
+	private static boolean objectStorageConfigured() {
+		return instance.objectStorageHost
+			.filter(host -> !host.isBlank())
+			.isPresent();
 	}
 
 	@ConsumeEvent(DELETE_BY_DATASOURCE)
@@ -143,9 +175,34 @@ public class StagedBinaryService {
 			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 	}
 
+	@ConsumeEvent(DELETE_BY_CONTENT)
+	Uni<Void> deleteByContent(DeleteByContentRequest request) {
+
+		log.debugf(
+			"Deleting staged binaries for content %s of datasource %s",
+			request.contentId(), request.datasourceId());
+
+		return Uni.createFrom()
+			.<Void>item(() -> {
+				binaryObjectStore.deleteByContent(
+					request.tenantId(),
+					request.datasourceId(),
+					request.contentId());
+
+				return null;
+			})
+			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+	}
+
 	private record DeleteByDatasourceRequest(
 		String tenantId,
 		long datasourceId
+	) {}
+
+	private record DeleteByContentRequest(
+		String tenantId,
+		long datasourceId,
+		String contentId
 	) {}
 
 }

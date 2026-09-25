@@ -50,9 +50,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * pipeline uses to reach the binaries staged on the object storage, against a
  * real S3 storage (SeaweedFS, started by {@link SeaweedFsTestResource}). It
  * exercises the real datasource paths end to end, not only with mocks: minting
- * the pre-signed GET URL the enrichers read a binary with, and dropping the
- * whole working copy of a datasource when a scheduling closes (dispatched over
- * the event bus).
+ * the pre-signed GET URL the enrichers read a binary with, dropping the
+ * binaries of a content once it is indexed, and the whole working copy of a
+ * datasource when a scheduling closes (both dispatched over the event bus).
  */
 @QuarkusTest
 @QuarkusTestResource(SeaweedFsTestResource.class)
@@ -143,6 +143,40 @@ class StagedBinaryServiceS3Test {
 
 		// deletion is a no-op, not a failure
 		delete(tenantId, 1L);
+	}
+
+	@Test
+	void should_delete_only_the_staged_objects_of_a_content() throws Exception {
+		// two binaries of content c1, one of a sibling content c10 sharing its
+		// leading characters, one of the same content id in datasource 99
+		String tenantId = "contenttenant";
+		String bucket = bucketOf(tenantId);
+
+		stage(tenantId, BinaryKeys.key(42L, "c1", "f1"));
+		stage(tenantId, BinaryKeys.key(42L, "c1", "f2"));
+		stage(tenantId, BinaryKeys.key(42L, "c10", "f1"));
+		stage(tenantId, BinaryKeys.key(99L, "c1", "f1"));
+
+		deleteContent(tenantId, 42L, "c1");
+
+		assertEquals(
+			List.of(BinaryKeys.key(42L, "c10", "f1")),
+			objectNames(bucket, BinaryKeys.datasourcePrefix(42L)));
+		assertEquals(
+			List.of(BinaryKeys.key(99L, "c1", "f1")),
+			objectNames(bucket, BinaryKeys.datasourcePrefix(99L)));
+
+		// a second deletion, as on a redelivery, is a no-op
+		deleteContent(tenantId, 42L, "c1");
+	}
+
+	private void deleteContent(
+		String tenantId, long datasourceId, String contentId) throws Exception {
+
+		StagedBinaryService
+			.deleteByContent(tenantId, datasourceId, contentId)
+			.toCompletableFuture()
+			.get(10, TimeUnit.SECONDS);
 	}
 
 	private String bucketOf(String tenantId) {

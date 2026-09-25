@@ -57,4 +57,19 @@ class BinaryKeysTest {
 				.startsWith(BinaryKeys.datasourcePrefix(42L)));
 	}
 
+	@Test
+	void contentPrefixMatchesEveryKeyOfTheContentOnly() {
+		assertEquals("42/content-1/", BinaryKeys.contentPrefix(42L, "content-1"));
+
+		assertTrue(
+			BinaryKeys.key(42L, "content-1", "file-1")
+				.startsWith(BinaryKeys.contentPrefix(42L, "content-1")));
+
+		// the trailing separator keeps a sibling content sharing the same
+		// leading characters out of the prefix
+		assertTrue(
+			!BinaryKeys.key(42L, "content-10", "file-1")
+				.startsWith(BinaryKeys.contentPrefix(42L, "content-1")));
+	}
+
 }

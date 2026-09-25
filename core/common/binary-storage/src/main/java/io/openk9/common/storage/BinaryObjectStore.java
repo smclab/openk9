@@ -38,8 +38,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * Object-storage gateway for the binaries staged during indexing: it mints the
- * short-lived pre-signed GET URLs the enrichers read them with, and drops the
- * whole working copy of a datasource once its scheduling has closed.
+ * short-lived pre-signed GET URLs the enrichers read them with, drops the
+ * binaries of a content once it has been indexed, and the whole working copy
+ * of a datasource once its scheduling has closed.
  *
  * <p>URL signing is a local SigV4 computation (no call to the storage), so a
  * fresh URL can be minted on every enricher invocation and retry without I/O;
@@ -127,9 +128,33 @@ public class BinaryObjectStore {
 	 * object cannot be deleted
 	 */
 	public void deleteByDatasource(String tenantId, long datasourceId) {
+		deleteByPrefix(tenantId, BinaryKeys.datasourcePrefix(datasourceId));
+	}
+
+	/**
+	 * Deletes the binaries of a single content from the tenant bucket.
+	 *
+	 * <p>Called once the content has been written to the index, when its
+	 * binaries have been read by every enricher. It is a no-op when the bucket
+	 * does not exist or holds no object under the prefix, so a repeated call
+	 * does no harm.
+	 *
+	 * @param tenantId the tenant owning the bucket
+	 * @param datasourceId the datasource owning the content
+	 * @param contentId the content whose staged binaries are removed
+	 * @throws IllegalStateException if the storage cannot be listed or an
+	 * object cannot be deleted
+	 */
+	public void deleteByContent(
+		String tenantId, long datasourceId, String contentId) {
+
+		deleteByPrefix(
+			tenantId, BinaryKeys.contentPrefix(datasourceId, contentId));
+	}
+
+	private void deleteByPrefix(String tenantId, String prefix) {
 
 		String bucket = BinaryKeys.bucket(tenantId, bucketTemplate);
-		String prefix = BinaryKeys.datasourcePrefix(datasourceId);
 
 		try {
 			boolean exists = minioClient.bucketExists(
