@@ -80,7 +80,6 @@ public class BucketDatasourcesResourceTest {
 		addDatasource(bucketId, DATASOURCE_TWO_NAME);
 
 		// 3. Bind the bucket to the tenant so it becomes the active bucket
-		//    resolved by virtual host test.openk9.local
 		bucketService.enableTenant(bucketId)
 			.await()
 			.indefinitely();
@@ -107,6 +106,23 @@ public class BucketDatasourcesResourceTest {
 
 	@Test
 	@Order(3)
+	void should_resolve_the_active_bucket_whatever_the_host() {
+		// the active bucket is the one bound to the tenant: the Host header
+		// takes no part in resolving it
+		given()
+			.header("Host", "another.host.example")
+			.accept(ContentType.JSON)
+			.when()
+			.get("current/datasources")
+			.then()
+			.statusCode(200)
+			.body("size()", is(2))
+			.body("name", containsInAnyOrder(
+				DATASOURCE_ONE_NAME, DATASOURCE_TWO_NAME));
+	}
+
+	@Test
+	@Order(4)
 	void tearDown() {
 		var bucketId = getBucket().getId();
 

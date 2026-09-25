@@ -40,7 +40,6 @@ import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Context;
 
 import io.openk9.datasource.mapper.BucketResourceMapper;
 import io.openk9.datasource.model.Bucket;
@@ -59,8 +58,6 @@ import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Sorting_;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
-import io.openk9.datasource.model.TenantBinding;
-import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.TranslationService;
@@ -69,7 +66,7 @@ import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.http.HttpServerRequest;
+import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
@@ -85,8 +82,8 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 @Path("/buckets")
 public class BucketResource {
 
-	@Context
-	HttpServerRequest request;
+	@Inject
+	RoutingContext routingContext;
 
 	@APIResponses(value = {
 		@APIResponse(
@@ -107,8 +104,8 @@ public class BucketResource {
 	@GET
 	public Uni<List<TemplateResponseDTO>> getTemplates() {
 		return cache.getAsync(
-			new CompositeCacheKey(request.host(), "getTemplates"),
-			key -> getDocTypeTemplateList(request.host())
+			cacheKey("getTemplates"),
+			key -> getDocTypeTemplateList()
 		);
 	}
 
@@ -134,8 +131,8 @@ public class BucketResource {
 			@QueryParam("translated") @DefaultValue("true") boolean translated) {
 
 		return cache.getAsync(
-			new CompositeCacheKey(request.host(), "getTabs", translated),
-			key -> bucketService.getTabList(request.host(), translated)
+			cacheKey("getTabs", translated),
+			key -> bucketService.getTabList(translated)
 		);
 	}
 
@@ -161,8 +158,8 @@ public class BucketResource {
 			@QueryParam("translated") @DefaultValue("true") boolean translated) {
 
 		return cache.getAsync(
-			new CompositeCacheKey(request.host(), "getSuggestionCategories", translated),
-			key -> getSuggestionCategoryList(request.host(), translated)
+			cacheKey("getSuggestionCategories", translated),
+			key -> getSuggestionCategoryList(translated)
 		);
 	}
 
@@ -187,8 +184,8 @@ public class BucketResource {
 			@Parameter(description = "If return translations")
 			@QueryParam("translated") @DefaultValue("true") boolean translated){
 		return cache.getAsync(
-			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable", translated),
-			key -> getDocTypeFieldsSortableList(request.host(), translated)
+			cacheKey("getDocTypeFieldsSortable", translated),
+			key -> getDocTypeFieldsSortableList(translated)
 		);
 	}
 
@@ -213,8 +210,8 @@ public class BucketResource {
 			@Parameter(description = "If return translations")
 			@QueryParam("translated") @DefaultValue("true") boolean translated){
 		return cache.getAsync(
-			new CompositeCacheKey(request.host(), "getSortings", translated),
-			key -> getSortingList(request.host(), translated)
+			cacheKey("getSortings", translated),
+			key -> getSortingList(translated)
 		);
 	}
 
@@ -237,8 +234,8 @@ public class BucketResource {
 	@GET
 	public Uni<List<DatasourceResponseDTO>> getDatasources() {
 		return cache.getAsync(
-			new CompositeCacheKey(request.host(), "getDatasources"),
-			key -> getDatasourceList(request.host())
+			cacheKey("getDatasources"),
+			key -> getDatasourceList()
 		);
 	}
 
@@ -262,8 +259,8 @@ public class BucketResource {
 	@GET
 	public Uni<Language> getDefaultLanguage(){
 		return cache.getAsync(
-			new CompositeCacheKey(request.host(), "getDefaultLanguage"),
-			key -> getDefaultLanguage(request.host())
+			cacheKey("getDefaultLanguage"),
+			key -> findDefaultLanguage()
 		);
 	}
 
@@ -287,8 +284,8 @@ public class BucketResource {
 	@GET
 	public Uni<List<Language>> getAvailableLanguage(){
 		return cache.getAsync(
-			new CompositeCacheKey(request.host(), "getAvailableLanguage"),
-			key -> getAvailableLanguageList(request.host())
+			cacheKey("getAvailableLanguage"),
+			key -> getAvailableLanguageList()
 		);
 	}
 
@@ -312,9 +309,21 @@ public class BucketResource {
 	@GET
 	public Uni<CurrentBucket> getCurrentBucket() {
 		return cache.getAsync(
-			new CompositeCacheKey(request.host(), "getCurrentBucket"),
+			cacheKey("getCurrentBucket"),
 			key -> _getCurrentBucket()
 		);
+	}
+
+	/**
+	 * The current bucket is the one of the tenant the request is routed to,
+	 * so the tenant scopes every cached response.
+	 */
+	private CompositeCacheKey cacheKey(Object... keyElements) {
+		var elements = new Object[keyElements.length + 1];
+		elements[0] = String.valueOf((Object) routingContext.get("_tenantId"));
+		System.arraycopy(keyElements, 0, elements, 1, keyElements.length);
+
+		return new CompositeCacheKey(elements);
 	}
 
 	private Uni<CurrentBucket> _getCurrentBucket() {
@@ -323,7 +332,7 @@ public class BucketResource {
 			.map(mapper::toCurrentBucket);
 	}
 
-	private Uni<List<DocTypeFieldResponseDTO>> getDocTypeFieldsSortableList(String virtualhost, boolean translated) {
+	private Uni<List<DocTypeFieldResponseDTO>> getDocTypeFieldsSortableList(boolean translated) {
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -332,8 +341,9 @@ public class BucketResource {
 
 			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Bucket, TenantBinding> tenantBindingFetch =
-				from.join(Bucket_.tenantBinding);
+			// the inner join keeps only the current bucket, the one bound to
+			// the tenant
+			from.join(Bucket_.tenantBinding);
 
 			Join<DocType, DocTypeField> parentDocTypeFieldJoin =
 				from.join(Bucket_.datasources)
@@ -347,19 +357,12 @@ public class BucketResource {
 			query.multiselect(parentDocTypeFieldJoin, subDocTypeFieldJoin);
 
 			query.where(
-				cb.and(
-					cb.equal(
-						tenantBindingFetch.get(
-							TenantBinding_.virtualHost),
-						virtualhost
+				cb.or(
+					cb.isTrue(
+						parentDocTypeFieldJoin.get(DocTypeField_.sortable)
 					),
-					cb.or(
-						cb.isTrue(
-							parentDocTypeFieldJoin.get(DocTypeField_.sortable)
-						),
-						cb.isTrue(
-							subDocTypeFieldJoin.get(DocTypeField_.sortable)
-						)
+					cb.isTrue(
+						subDocTypeFieldJoin.get(DocTypeField_.sortable)
 					)
 				)
 			);
@@ -412,7 +415,7 @@ public class BucketResource {
 
 	}
 
-	private Uni<List<SortingResponseDTO>> getSortingList(String virtualhost, boolean translated) {
+	private Uni<List<SortingResponseDTO>> getSortingList(boolean translated) {
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -421,8 +424,9 @@ public class BucketResource {
 
 			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Bucket, TenantBinding> tenantBindingJoin =
-				from.join(Bucket_.tenantBinding);
+			// the inner join keeps only the current bucket, the one bound to
+			// the tenant
+			from.join(Bucket_.tenantBinding);
 
 			Join<Bucket, Sorting> sortingsJoin = from.join(Bucket_.sortings);
 
@@ -430,12 +434,6 @@ public class BucketResource {
 
 			query.select(sortingsJoin);
 
-			query.where(
-				cb.equal(
-					tenantBindingJoin.get(TenantBinding_.virtualHost),
-					virtualhost
-				)
-			);
 
 			query.orderBy(cb.desc(sortingsJoin.get(Sorting_.priority)));
 
@@ -464,7 +462,7 @@ public class BucketResource {
 
 	}
 
-	private Uni<List<DatasourceResponseDTO>> getDatasourceList(String virtualhost) {
+	private Uni<List<DatasourceResponseDTO>> getDatasourceList() {
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -473,20 +471,15 @@ public class BucketResource {
 
 			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Bucket, TenantBinding> tenantBindingJoin =
-				from.join(Bucket_.tenantBinding);
+			// the inner join keeps only the current bucket, the one bound to
+			// the tenant
+			from.join(Bucket_.tenantBinding);
 
 			Join<Bucket, Datasource> datasourcesJoin =
 				from.join(Bucket_.datasources);
 
 			query.select(datasourcesJoin);
 
-			query.where(
-				cb.equal(
-					tenantBindingJoin.get(TenantBinding_.virtualHost),
-					virtualhost
-				)
-			);
 
 			query.orderBy(cb.asc(datasourcesJoin.get(Datasource_.name)));
 
@@ -500,7 +493,7 @@ public class BucketResource {
 
 	}
 
-	private Uni<List<TemplateResponseDTO>> getDocTypeTemplateList(String virtualhost) {
+	private Uni<List<TemplateResponseDTO>> getDocTypeTemplateList() {
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -509,8 +502,9 @@ public class BucketResource {
 
 			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Bucket, TenantBinding> tenantBindingJoin =
-				from.join(Bucket_.tenantBinding);
+			// the inner join keeps only the current bucket, the one bound to
+			// the tenant
+			from.join(Bucket_.tenantBinding);
 
 			Join<DocType, DocTypeTemplate> fetch =
 				from.join(Bucket_.datasources)
@@ -520,12 +514,6 @@ public class BucketResource {
 
 			query.select(fetch);
 
-			query.where(
-				cb.equal(
-					tenantBindingJoin.get(TenantBinding_.virtualHost),
-					virtualhost
-				)
-			);
 
 			return session
 				.createQuery(query)
@@ -537,7 +525,7 @@ public class BucketResource {
 	}
 
 	private Uni<List<? extends SuggestionCategory>> getSuggestionCategoryList(
-		String virtualhost, boolean translated) {
+		boolean translated) {
 
 		return sessionFactory.withTransaction(session -> {
 
@@ -547,19 +535,14 @@ public class BucketResource {
 
 			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Bucket, TenantBinding> tenantBindingJoin =
-				from.join(Bucket_.tenantBinding);
+			// the inner join keeps only the current bucket, the one bound to
+			// the tenant
+			from.join(Bucket_.tenantBinding);
 
 			Join<Bucket, SuggestionCategory> fetch = from.join(Bucket_.suggestionCategories);
 
 			query.select(fetch);
 
-			query.where(
-				cb.equal(
-					tenantBindingJoin.get(TenantBinding_.virtualHost),
-					virtualhost
-				)
-			);
 
 			query.orderBy(cb.desc(fetch.get(SuggestionCategory_.priority)));
 
@@ -585,7 +568,7 @@ public class BucketResource {
 
 	}
 
-	private Uni<Language> getDefaultLanguage(String virtualhost) {
+	private Uni<Language> findDefaultLanguage() {
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -594,19 +577,14 @@ public class BucketResource {
 
 			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Bucket, TenantBinding> tenantBindingJoin =
-				from.join(Bucket_.tenantBinding);
+			// the inner join keeps only the current bucket, the one bound to
+			// the tenant
+			from.join(Bucket_.tenantBinding);
 
 			Join<Bucket, Language> fetch = from.join(Bucket_.defaultLanguage);
 
 			query.select(fetch);
 
-			query.where(
-				cb.equal(
-					tenantBindingJoin.get(TenantBinding_.virtualHost),
-					virtualhost
-				)
-			);
 
 			return session
 				.createQuery(query)
@@ -615,7 +593,7 @@ public class BucketResource {
 
 	}
 
-	private Uni<List<Language>> getAvailableLanguageList(String virtualhost) {
+	private Uni<List<Language>> getAvailableLanguageList() {
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -624,19 +602,14 @@ public class BucketResource {
 
 			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Bucket, TenantBinding> tenantBindingJoin =
-				from.join(Bucket_.tenantBinding);
+			// the inner join keeps only the current bucket, the one bound to
+			// the tenant
+			from.join(Bucket_.tenantBinding);
 
 			Join<Bucket, Language> fetch = from.join(Bucket_.availableLanguages);
 
 			query.select(fetch);
 
-			query.where(
-				cb.equal(
-					tenantBindingJoin.get(TenantBinding_.virtualHost),
-					virtualhost
-				)
-			);
 
 			return session
 				.createQuery(query)

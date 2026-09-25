@@ -26,7 +26,6 @@ import java.util.function.Function;
 import io.openk9.datasource.mapper.BucketResourceMapper;
 import io.openk9.datasource.model.Highlight;
 import io.openk9.datasource.model.Sorting_;
-import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.util.K9Entity;
@@ -886,7 +885,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			bucketId, l -> consumeExistedIndexNames(indexService::get_catIndices, List.of(), l));
 	}
 
-	public Uni<List<TabResponseDTO>> getTabList(String virtualhost, boolean translated) {
+	public Uni<List<TabResponseDTO>> getTabList(boolean translated) {
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -895,8 +894,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Bucket, TenantBinding> tenantBindingJoin =
-				from.join(Bucket_.tenantBinding);
+			// the inner join keeps only the current bucket, the one bound to
+			// the tenant
+			from.join(Bucket_.tenantBinding);
 
 			Join<Bucket, Tab> tabsJoin = from.join(Bucket_.tabs);
 
@@ -909,13 +909,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			sortingFetch.fetch(Sorting_.docTypeField, JoinType.LEFT);
 
 			query.select(tabsJoin);
-
-			query.where(
-				cb.equal(
-					tenantBindingJoin.get(TenantBinding_.virtualHost),
-					virtualhost
-				)
-			);
 
 			query.orderBy(cb.desc(tabsJoin.get(Tab_.priority)));
 
