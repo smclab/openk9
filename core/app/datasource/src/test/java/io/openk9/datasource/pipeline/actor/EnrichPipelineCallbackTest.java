@@ -116,6 +116,37 @@ class EnrichPipelineCallbackTest {
 	}
 
 	@Test
+	void should_deliver_a_callback_arriving_before_the_http_ok() {
+		// 1. an HTTP actor that holds the 200: the test decides when it arrives
+		var posts = TEST_KIT.<Http.POST>createTestProbe();
+		Supplier<Behavior<Http.Command>> silentHttp = () -> Behaviors
+			.receive(Http.Command.class)
+			.onMessage(Http.POST.class, post -> {
+				posts.ref().tell(post);
+				return Behaviors.same();
+			})
+			.build();
+		var pipeline = TEST_KIT.spawn(EnrichPipeline.create(PROCESS_KEY, silentHttp));
+		var scheduling = TEST_KIT.<Processor.Response>createTestProbe();
+		var callbacks = TEST_KIT.<EnrichPipeline.CallbackResponse>createTestProbe();
+
+		pipeline.tell(start(scheduler(3_000L), scheduling.ref()));
+		var post = posts.receiveMessage();
+		var token = CallbackToken.decode(post.enricherInputDTO().getReplyTo());
+
+		// 2. the enricher calls back before its 200 reaches the datasource
+		pipeline.tell(new EnrichPipeline.Callback(token.nonce(), CALLBACK_BODY, callbacks.ref()));
+		callbacks.expectMessage(EnrichPipeline.CallbackResponse.ACCEPTED);
+		post.replyTo().tell(new Http.OK(new byte[0]));
+
+		// 3. the step completes with the callback body
+		var success = scheduling.expectMessageClass(
+			Processor.Success.class, Duration.ofSeconds(6));
+		var payload = new String(success.payload(), StandardCharsets.UTF_8);
+		Assertions.assertTrue(payload.contains("\"stub\""), payload);
+	}
+
+	@Test
 	void should_fail_when_the_callback_never_comes() {
 		// a short requestTimeout and an enricher that never calls back
 		var posts = TEST_KIT.<Http.POST>createTestProbe();
