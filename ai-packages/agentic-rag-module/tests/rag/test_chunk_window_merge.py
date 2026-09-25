@@ -137,6 +137,74 @@ def test_distant_chunks_of_same_page_fill_the_gap_from_both_sides():
     assert documents[0]["content"] == "content-0chunk-1chunk-2chunk-3content-4"
 
 
+def test_gap_equal_to_the_window_is_filled_from_the_earlier_chunk_only():
+    # gap == window_size: the next of the earlier chunk covers the whole hole
+    chunks = [
+        _chunk("doc-1", 0, "content-0", next_texts=["chunk-1", "chunk-2"]),
+        _chunk("doc-1", 3, "content-3", prev_texts=["chunk-1", "chunk-2"]),
+    ]
+
+    documents = get_context_window_merged(chunks, window_size=2)
+
+    assert len(documents) == 1
+    assert documents[0]["content"] == "content-0chunk-1chunk-2content-3"
+
+
+def test_gap_equal_to_twice_the_window_is_still_merged():
+    # gap == 2 * window_size: the two windows just touch, the chunks stay in
+    # one document
+    chunks = [
+        _chunk("doc-1", 0, "content-0", next_texts=["chunk-1", "chunk-2"]),
+        _chunk("doc-1", 5, "content-5", prev_texts=["chunk-3", "chunk-4"]),
+    ]
+
+    documents = get_context_window_merged(chunks, window_size=2)
+
+    assert len(documents) == 1
+    assert documents[0]["content"] == "content-0chunk-1chunk-2chunk-3chunk-4content-5"
+
+
+def test_gap_one_past_twice_the_window_splits_the_document():
+    chunks = [
+        _chunk("doc-1", 0, "content-0", next_texts=["chunk-1", "chunk-2"]),
+        _chunk("doc-1", 6, "content-6", prev_texts=["chunk-4", "chunk-5"]),
+    ]
+
+    documents = get_context_window_merged(chunks, window_size=2)
+
+    assert [document["content"] for document in documents] == [
+        "content-0chunk-1chunk-2",
+        "chunk-4chunk-5content-6",
+    ]
+
+
+def test_chunks_are_merged_in_page_order_whatever_the_retrieval_order():
+    chunks = [
+        _chunk("doc-1", 2, "content-2", prev_texts=["content-1"]),
+        _chunk("doc-1", 1, "content-1", next_texts=["content-2"]),
+    ]
+
+    documents = get_context_window_merged(chunks, window_size=2)
+
+    assert documents[0]["content"] == "content-1content-2"
+
+
+def test_window_keeps_only_the_neighbours_closest_to_the_chunk():
+    chunks = [
+        _chunk(
+            "doc-1",
+            5,
+            "content",
+            prev_texts=["far-prev", "prev-1", "prev-2"],
+            next_texts=["next-1", "next-2", "far-next"],
+        )
+    ]
+
+    documents = get_context_window_merged(chunks, window_size=2)
+
+    assert documents[0]["content"] == "prev-1prev-2contentnext-1next-2"
+
+
 def test_chunks_farther_than_the_window_become_separate_documents():
     # gap > 2 * window_size: the context is closed and a new one is started
     chunks = [
