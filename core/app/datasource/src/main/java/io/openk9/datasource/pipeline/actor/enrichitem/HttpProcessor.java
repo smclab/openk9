@@ -48,6 +48,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 	private final ShardingKey processKey;
 	private final ActorRef<Processor.Command> pipeline;
 	private final Supplier<Behavior<Http.Command>> httpFactory;
+	private byte[] earlyCallback;
 
 	public HttpProcessor(
 		ActorContext<Command> context,
@@ -122,8 +123,15 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
 		commandActorRef.tell(new Http.POST(responseActorRef, url, body));
 
+		// the 200 and the callback travel on different connections: an
+		// enricher that calls back at once can beat its own 200, so the
+		// callback is kept until the response arrives
 		return newReceiveBuilder()
 			.onMessage(ResponseWrapper.class, this::onResponseWrapper)
+			.onMessage(Callback.class, callback -> {
+				earlyCallback = callback.body();
+				return Behaviors.same();
+			})
 			.build();
 	}
 
@@ -138,6 +146,11 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 		}
 
 		if (async) {
+			if (earlyCallback != null) {
+				replyTo.tell(new Body(earlyCallback));
+				return Behaviors.stopped();
+			}
+
 			return newReceiveBuilder()
 				.onMessage(Callback.class, callback -> {
 					replyTo.tell(new Body(callback.body()));
