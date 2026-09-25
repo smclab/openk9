@@ -157,6 +157,79 @@ class ChunkWindowBufferTest {
 		buffer.flush();
 	}
 
+	@Test
+	void should_not_cross_segment_boundaries() {
+
+		// segments of 3, 1 and 4 chunks, numbered 1..8 across the stream: each
+		// segment must be windowed as if it were a stream of its own.
+		int[] segmentLengths = {3, 1, 4};
+
+		for (int windowSize : new int[] {0, 1, 2, 3, 5}) {
+
+			var chunks = entries(8);
+			var buffer = ChunkWindowBuffer.of(
+				windowSize, IDENTITY, entry -> segmentOf(entry, segmentLengths));
+			List<Windowed<WindowEntry>> streamed = new ArrayList<>();
+
+			for (WindowEntry chunk : chunks) {
+				streamed.addAll(buffer.offer(chunk));
+			}
+			streamed.addAll(buffer.flush());
+
+			Assertions.assertEquals(chunks.size(), streamed.size());
+
+			int start = 0;
+			for (int segmentLength : segmentLengths) {
+
+				var segment = chunks.subList(start, start + segmentLength);
+
+				for (int index = 0; index < segmentLength; index++) {
+
+					int number = index + 1;
+					var windowed = streamed.get(start + index);
+
+					Assertions.assertEquals(segment.get(index), windowed.chunk());
+					Assertions.assertEquals(
+						EmbeddingService.getPreviousWindow(
+							windowSize, number, segment),
+						windowed.previous(),
+						"previous windowSize=" + windowSize
+						+ " chunk=" + windowed.chunk().number());
+					Assertions.assertEquals(
+						EmbeddingService.getNextWindow(
+							windowSize, number, segmentLength, segment),
+						windowed.next(),
+						"next windowSize=" + windowSize
+						+ " chunk=" + windowed.chunk().number());
+				}
+
+				start += segmentLength;
+			}
+		}
+	}
+
+	@Test
+	void should_finalize_the_previous_segment_when_a_new_one_starts() {
+
+		// with a lookahead of 5 nothing matures inside a 2-chunk segment: the
+		// first chunk of the next segment closes it.
+		var buffer = ChunkWindowBuffer.of(
+			5, IDENTITY, entry -> entry.number() <= 2 ? "a" : "b");
+		var chunks = entries(3);
+
+		Assertions.assertTrue(buffer.offer(chunks.get(0)).isEmpty());
+		Assertions.assertTrue(buffer.offer(chunks.get(1)).isEmpty());
+
+		var closed = buffer.offer(chunks.get(2));
+		Assertions.assertEquals(2, closed.size());
+		Assertions.assertEquals(List.of(chunks.get(1)), closed.get(0).next());
+		Assertions.assertTrue(closed.get(1).next().isEmpty());
+
+		var tail = buffer.flush();
+		Assertions.assertEquals(1, tail.size());
+		Assertions.assertTrue(tail.get(0).previous().isEmpty());
+	}
+
 	/**
 	 * Drives the streaming buffer with a synthetic stream of {@code length}
 	 * chunks and asserts, for every chunk, that the previous/next windows match
@@ -204,6 +277,21 @@ class ChunkWindowBufferTest {
 				"next mismatch windowSize=" + windowSize
 				+ " length=" + length + " number=" + number);
 		}
+	}
+
+	private static int segmentOf(WindowEntry entry, int[] segmentLengths) {
+
+		int end = 0;
+
+		for (int segment = 0; segment < segmentLengths.length; segment++) {
+			end += segmentLengths[segment];
+
+			if (entry.number() <= end) {
+				return segment;
+			}
+		}
+
+		throw new IllegalArgumentException("chunk out of range: " + entry);
 	}
 
 	private static List<WindowEntry> entries(int length) {

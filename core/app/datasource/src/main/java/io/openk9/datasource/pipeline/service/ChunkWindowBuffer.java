@@ -19,6 +19,7 @@ package io.openk9.datasource.pipeline.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -39,6 +40,12 @@ import java.util.function.Function;
  * Window entries expose only {@code number} and {@code text}, derived from the
  * caller's chunk type through the mapper passed at construction.
  *
+ * <p>A stream may carry several contents one after the other (the text of a
+ * document, then each of its binaries). The optional segment key tells them
+ * apart: when it changes, the chunks of the previous content are finalized as
+ * at end of stream, and the windows of the new one start empty. Windows never
+ * cross a segment boundary, while {@code number} stays progressive.
+ *
  * <p>Not thread-safe: a single stream must be driven from one thread at a time.
  *
  * @param <T> the caller's chunk type
@@ -47,6 +54,7 @@ public final class ChunkWindowBuffer<T> {
 
 	private final int windowSize;
 	private final Function<? super T, WindowEntry> entryMapper;
+	private final Function<? super T, ?> segmentKey;
 
 	/**
 	 * Sliding buffer of the chunks still needed to build windows. The element
@@ -57,9 +65,13 @@ public final class ChunkWindowBuffer<T> {
 	private int baseIndex = 0;
 	private int received = 0;
 	private int nextToFinalize = 0;
+	private int segmentStart = 0;
+	private Object currentSegment;
 
 	private ChunkWindowBuffer(
-		int windowSize, Function<? super T, WindowEntry> entryMapper) {
+		int windowSize,
+		Function<? super T, WindowEntry> entryMapper,
+		Function<? super T, ?> segmentKey) {
 
 		if (windowSize < 0) {
 			throw new IllegalArgumentException(
@@ -68,6 +80,7 @@ public final class ChunkWindowBuffer<T> {
 
 		this.windowSize = windowSize;
 		this.entryMapper = entryMapper;
+		this.segmentKey = segmentKey;
 	}
 
 	/**
@@ -84,7 +97,29 @@ public final class ChunkWindowBuffer<T> {
 	public static <T> ChunkWindowBuffer<T> of(
 		int windowSize, Function<? super T, WindowEntry> entryMapper) {
 
-		return new ChunkWindowBuffer<>(windowSize, entryMapper);
+		return new ChunkWindowBuffer<>(windowSize, entryMapper, chunk -> null);
+	}
+
+	/**
+	 * Creates a buffer whose windows do not cross the boundaries between
+	 * consecutive chunks with different segment keys.
+	 *
+	 * @param windowSize  number of neighbours on each side; {@code 0} means
+	 *                    pure incremental emission with empty windows
+	 * @param entryMapper extracts the window-relevant view ({@code number},
+	 *                    {@code text}) from a chunk
+	 * @param segmentKey  identifies the content a chunk belongs to; compared
+	 *                    with {@link Objects#equals}, {@code null} included
+	 * @param <T>         the caller's chunk type
+	 * @return a new, empty buffer
+	 * @throws IllegalArgumentException if {@code windowSize} is negative
+	 */
+	public static <T> ChunkWindowBuffer<T> of(
+		int windowSize,
+		Function<? super T, WindowEntry> entryMapper,
+		Function<? super T, ?> segmentKey) {
+
+		return new ChunkWindowBuffer<>(windowSize, entryMapper, segmentKey);
 	}
 
 	/**
@@ -92,15 +127,29 @@ public final class ChunkWindowBuffer<T> {
 	 *
 	 * @param chunk the chunk that just arrived
 	 * @return the chunks finalized by this arrival, in order; usually zero or
-	 *         one, always empty until the lookahead has been reached
+	 *         one, always empty until the lookahead has been reached, and the
+	 *         whole tail of the previous segment when this chunk opens a new one
 	 */
 	public List<Windowed<T>> offer(T chunk) {
+
+		List<Windowed<T>> finalized = new ArrayList<>();
+
+		Object segment = segmentKey.apply(chunk);
+
+		// A new content starts: close the previous one as at end of stream,
+		// so that neither side sees the other among its neighbours.
+		if (received > 0 && !Objects.equals(segment, currentSegment)) {
+			finalized.addAll(flush());
+			window.clear();
+			baseIndex = received;
+			segmentStart = received;
+		}
+
+		currentSegment = segment;
 
 		window.add(chunk);
 		int arrivedPos = received;
 		received++;
-
-		List<Windowed<T>> finalized = new ArrayList<>();
 
 		// A chunk can be finalized once its whole next-window is available,
 		// i.e. once a chunk windowSize positions ahead of it has arrived.
@@ -146,7 +195,7 @@ public final class ChunkWindowBuffer<T> {
 	private Windowed<T> finalizeAt(int position, int lastAvailablePosition) {
 
 		var previous = collect(
-			Math.max(position - windowSize, 0),
+			Math.max(position - windowSize, segmentStart),
 			position - 1
 		);
 

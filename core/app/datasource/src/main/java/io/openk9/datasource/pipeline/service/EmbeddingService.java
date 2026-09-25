@@ -366,8 +366,9 @@ public class EmbeddingService {
 
 	/**
 	 * The pure stream transform: window each {@code EmbeddedChunk} exactly as
-	 * {@link #mapToPayload} does (via {@link ChunkWindowBuffer}) and encode
-	 * every finalized chunk as one chunk-doc. Free of gRPC, OpenSearch and CDI,
+	 * {@link #mapToPayload} does (via {@link ChunkWindowBuffer}), within the
+	 * text or the ref it belongs to, and encode every finalized chunk as one
+	 * chunk-doc. Free of gRPC, OpenSearch and CDI,
 	 * so it is testable in isolation. There is no timer and no grouping here:
 	 * every emission is driven by downstream demand.
 	 *
@@ -382,10 +383,13 @@ public class EmbeddingService {
 		Map<String, String> contentTypeByFileId,
 		int windowSize) {
 
+		// Text chunks come first, then those of each ref: the fileId (absent
+		// for text) marks where one content ends and the next begins.
 		var buffer = ChunkWindowBuffer.<EmbeddingOuterClass.EmbeddedChunk>of(
 			windowSize,
 			chunk -> new ChunkWindowBuffer.WindowEntry(
-				chunk.getNumber(), chunk.getText()));
+				chunk.getNumber(), chunk.getText()),
+			chunk -> chunk.hasFileId() ? chunk.getFileId() : null);
 
 		return chunks
 			.onItem().transformToMultiAndConcatenate(chunk ->

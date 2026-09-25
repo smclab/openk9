@@ -197,6 +197,64 @@ class EmbedContentStreamTest {
 	}
 
 	@Test
+	void should_not_window_text_chunks_with_binary_chunks() {
+
+		var docs = runToDocs(
+			List.of(
+				textChunk(1, 3, "text 1"),
+				textChunk(2, 3, "text 2"),
+				textChunk(3, 3, "text 3"),
+				binaryChunk(4, "image-a")),
+			1);
+
+		Assertions.assertEquals(
+			new JsonArray().add(windowEntry(2, "text 2")),
+			docs.get(2).getJsonArray("previous"));
+		Assertions.assertTrue(docs.get(2).getJsonArray("next").isEmpty());
+
+		Assertions.assertTrue(docs.get(3).getJsonArray("previous").isEmpty());
+		Assertions.assertTrue(docs.get(3).getJsonArray("next").isEmpty());
+	}
+
+	@Test
+	void should_window_each_binary_on_its_own() {
+
+		// text, then two binaries of 2 and 3 chunks: every window stays inside
+		// the content its chunk belongs to, numbers stay progressive.
+		var docs = runToDocs(
+			List.of(
+				textChunk(1, 1, "text 1"),
+				binaryChunk(2, "sub-it"),
+				binaryChunk(3, "sub-it"),
+				binaryChunk(4, "sub-en"),
+				binaryChunk(5, "sub-en"),
+				binaryChunk(6, "sub-en")),
+			2);
+
+		Assertions.assertEquals(6, docs.size());
+
+		var text = docs.get(0);
+		Assertions.assertTrue(text.getJsonArray("previous").isEmpty());
+		Assertions.assertTrue(text.getJsonArray("next").isEmpty());
+
+		var lastItalian = docs.get(2);
+		Assertions.assertEquals(3, lastItalian.getInteger("number"));
+		Assertions.assertEquals(
+			new JsonArray().add(windowEntry(2, "binary-chunk-2")),
+			lastItalian.getJsonArray("previous"));
+		Assertions.assertTrue(lastItalian.getJsonArray("next").isEmpty());
+
+		var firstEnglish = docs.get(3);
+		Assertions.assertEquals(4, firstEnglish.getInteger("number"));
+		Assertions.assertTrue(firstEnglish.getJsonArray("previous").isEmpty());
+		Assertions.assertEquals(
+			new JsonArray()
+				.add(windowEntry(5, "binary-chunk-5"))
+				.add(windowEntry(6, "binary-chunk-6")),
+			firstEnglish.getJsonArray("next"));
+	}
+
+	@Test
 	void should_default_media_type_when_content_type_is_unknown() {
 
 		// a binary ref whose contentType was not provided (not in the map):
@@ -480,6 +538,11 @@ class EmbedContentStreamTest {
 		}
 
 		return array;
+	}
+
+	private static JsonObject windowEntry(int number, String text) {
+
+		return new JsonObject().put("number", number).put("chunkText", text);
 	}
 
 	private static List<EmbeddedChunk> textChunks(int count) {
