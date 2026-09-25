@@ -61,19 +61,21 @@ RAG_CONFIGURATION = {
 
 
 def _run_chain(monkeypatch):
-    """Run the chat over a graph that yields nothing and return the
-    configuration it built for its LLM."""
-    captured = {}
+    """Run the chat over a graph that yields nothing; return the calls that
+    built its LLMs, as (configuration, keyword arguments, model built), and
+    the spy standing in for RagGraph."""
+    calls = []
 
-    def initialize_language_model(configuration, temperature=None):
-        captured.update(configuration)
-        return MagicMock()
+    def initialize_language_model(configuration, **kwargs):
+        model = MagicMock()
+        calls.append((configuration, kwargs, model))
+        return model
 
-    graph = MagicMock()
-    graph.stream.return_value = []
+    rag_graph = MagicMock()
+    rag_graph.return_value.stream.return_value = []
 
     monkeypatch.setattr(chain, "initialize_language_model", initialize_language_model)
-    monkeypatch.setattr(chain, "RagGraph", lambda *args, **kwargs: graph)
+    monkeypatch.setattr(chain, "RagGraph", rag_graph)
 
     list(
         chain.get_agentic_rag(
@@ -105,23 +107,71 @@ def _run_chain(monkeypatch):
         )
     )
 
-    return captured
+    return calls, rag_graph
 
 
 def test_chat_llm_keeps_every_provider_key(monkeypatch):
-    configuration = _run_chain(monkeypatch)
+    calls, _ = _run_chain(monkeypatch)
 
-    for key, value in LLM_CONFIGURATION.items():
-        assert configuration[key] == value
+    for configuration, _kwargs, _model in calls:
+        for key, value in LLM_CONFIGURATION.items():
+            assert configuration[key] == value
 
 
 def test_chat_llm_takes_the_prompts_from_the_rag_configuration(monkeypatch):
-    configuration = _run_chain(monkeypatch)
+    calls, _ = _run_chain(monkeypatch)
 
-    assert configuration["prompt_template"] == RAG_CONFIGURATION["prompt"]
-    assert (
-        configuration["rephrase_prompt_template"]
-        == RAG_CONFIGURATION["rephrase_prompt"]
-    )
-    assert configuration["chunk_window"] == RAG_CONFIGURATION["chunk_window"]
-    assert configuration["metadata"] == RAG_CONFIGURATION["metadata"]
+    for configuration, _kwargs, _model in calls:
+        assert configuration["prompt_template"] == RAG_CONFIGURATION["prompt"]
+        assert (
+            configuration["rephrase_prompt_template"]
+            == RAG_CONFIGURATION["rephrase_prompt"]
+        )
+        assert configuration["rerank"] == RAG_CONFIGURATION["rerank"]
+        assert configuration["chunk_window"] == RAG_CONFIGURATION["chunk_window"]
+        assert configuration["metadata"] == RAG_CONFIGURATION["metadata"]
+
+
+def test_utility_llm_is_the_same_model_at_temperature_zero(monkeypatch):
+    calls, rag_graph = _run_chain(monkeypatch)
+
+    chat_configuration, chat_kwargs, llm = calls[0]
+    utility_configuration, utility_kwargs, utility_llm = calls[1]
+    assert len(calls) == 2
+    assert chat_kwargs == {}
+    assert utility_kwargs == {"temperature": 0}
+    assert utility_configuration == chat_configuration
+    assert rag_graph.call_args.args[0] is llm
+    assert rag_graph.call_args.kwargs == {"utility_llm": utility_llm}
+
+
+def test_graph_receives_the_tenant_configuration_and_streams_the_question(
+    monkeypatch,
+):
+    _, rag_graph = _run_chain(monkeypatch)
+
+    graph_configuration = rag_graph.call_args.args[1]
+    expected = {
+        "prompt_template": RAG_CONFIGURATION["prompt"],
+        "prompt_no_rag": RAG_CONFIGURATION["prompt_no_rag"],
+        "rephrase_prompt_template": RAG_CONFIGURATION["rephrase_prompt"],
+        "analyze_query_prompt_template": RAG_CONFIGURATION["analyze_query_prompt"],
+        "rag_tool_description": RAG_CONFIGURATION["rag_tool_description"],
+        "reformulate": RAG_CONFIGURATION["reformulate"],
+        "rerank": RAG_CONFIGURATION["rerank"],
+        "chunk_window": RAG_CONFIGURATION["chunk_window"],
+        "enable_conversation_title": RAG_CONFIGURATION["enable_conversation_title"],
+        "metadata": RAG_CONFIGURATION["metadata"],
+        "range_values": RAG_CONFIGURATION["range_values"],
+        "enable_real_time_evaluation": RAG_CONFIGURATION["enable_real_time_evaluation"],
+        "bypass_rag": RAG_CONFIGURATION["bypass_rag"],
+        "answer_only_with_context": RAG_CONFIGURATION["answer_only_with_context"],
+        "score_threshold": RAG_CONFIGURATION["score_threshold"],
+        "domain_threshold": RAG_CONFIGURATION["domain_threshold"],
+        "model_type": LLM_CONFIGURATION["model_type"],
+        "context_window": LLM_CONFIGURATION["context_window"],
+        "retrieve_type": LLM_CONFIGURATION["retrieve_type"],
+    }
+    for key, value in expected.items():
+        assert graph_configuration[key] == value, key
+    rag_graph.return_value.stream.assert_called_once_with("pikachu")

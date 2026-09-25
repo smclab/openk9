@@ -49,6 +49,14 @@ def test_streamed_body_is_relayed_chunk_by_chunk():
     assert [chunk.message.content for chunk in chunks] == ["Buon", "giorno", ""]
 
 
+def test_relayed_chunks_carry_the_time_they_were_received():
+    with patch("time.time", return_value=1700000000.5):
+        chunks, _ = _stream([HumanMessage(content="Ciao")], [b"Buongiorno"])
+
+    assert chunks[0].message.response_metadata == {"time_in_sec": "1700000000.5"}
+    assert "time_in_sec" in chunks[-1].message.response_metadata
+
+
 def test_only_the_last_message_is_sent_to_the_backend():
     _, post = _stream(
         [SystemMessage(content="system prompt"), HumanMessage(content="Ciao")],

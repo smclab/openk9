@@ -20,7 +20,12 @@ import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from app.rag.evaluations import response_evaluation, retriever_evaluation
+from app.rag.evaluations import (
+    ClassificationResponse,
+    RetrieverEvaluationResponseList,
+    response_evaluation,
+    retriever_evaluation,
+)
 
 QUERY = "Quali sono i massimali della polizza?"
 RESPONSE = "Il massimale è di 100.000 euro."
@@ -33,8 +38,16 @@ CONTEXT = [
 
 
 def _llm(structured_response):
+    """Judge LLM returning a fixed structured object and recording the prompts
+    it read."""
     llm = MagicMock()
-    llm.with_structured_output.return_value = lambda _prompt_value: structured_response
+    llm.prompts = []
+
+    def structured(prompt_value):
+        llm.prompts.append(prompt_value.to_string())
+        return structured_response
+
+    llm.with_structured_output.return_value = structured
     return llm
 
 
@@ -97,6 +110,51 @@ def test_both_evaluation_chains_follow_the_provider_of_their_own_llm():
     assert _method_of(ollama_retriever) == "json_schema"
     assert _method_of(openai_response) == "function_calling"
     assert _method_of(openai_retriever) == "function_calling"
+
+
+def test_response_verdict_is_stored_as_a_span_annotation():
+    llm = _llm(_clarity_verdict())
+    client = MagicMock()
+
+    response_evaluation(llm, client, "span-1", QUERY, RESPONSE, "ollama")
+
+    llm.with_structured_output.assert_called_once_with(
+        schema=ClassificationResponse, include_raw=False, method="json_schema"
+    )
+    assert f"Domanda: {QUERY}" in llm.prompts[0]
+    assert f"Risposta: {RESPONSE}" in llm.prompts[0]
+    client.annotations.add_span_annotation.assert_called_once_with(
+        annotation_name="evaluate_response",
+        annotator_kind="HUMAN",
+        span_id="span-1",
+        label="CLEAR",
+        score=9,
+        explanation="La risposta indica il massimale.",
+    )
+
+
+def test_retriever_verdicts_are_stored_one_annotation_per_chunk():
+    llm = _llm(_relevance_verdicts())
+    client = MagicMock()
+
+    retriever_evaluation(llm, client, "span-1", QUERY, CONTEXT, "ollama")
+
+    llm.with_structured_output.assert_called_once_with(
+        schema=RetrieverEvaluationResponseList,
+        include_raw=False,
+        method="json_schema",
+    )
+    # The judge reads each chunk numbered from 1, with its id and its text.
+    assert f"[Domanda]: {QUERY}" in llm.prompts[0]
+    chunks = [{"chunk_number": 1, "chunk_id": "chunk-1", "chunk_content": RESPONSE}]
+    assert f"Testo di riferimento - {chunks}" in llm.prompts[0]
+    client.annotations.add_span_annotation.assert_called_once_with(
+        annotation_name="evaluation for chunk chunk-1",
+        span_id="span-1",
+        label="RELEVANT",
+        score=9,
+        explanation="Il testo riporta il massimale richiesto.",
+    )
 
 
 def test_response_evaluation_reports_the_failure_instead_of_annotating(caplog):

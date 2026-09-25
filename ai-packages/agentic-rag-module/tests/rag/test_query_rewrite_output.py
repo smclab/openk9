@@ -25,13 +25,30 @@ PREVIOUS_QUERY = "Che cos'è la garanzia Infortuni del Conducente?"
 PREVIOUS_RESPONSE = "È una copertura assicurativa per il conducente."
 
 
-def _graph(chain_output):
+def _graph(chain_output, configuration=None):
     """Build a RagGraph stub exercising the real _rewrite_query: only the
-    rewriting chain is replaced, by a runnable returning a fixed string."""
+    rewriting LLM is replaced, by a runnable returning a fixed string and
+    recording the prompt it read."""
     graph = RagGraph.__new__(RagGraph)
-    graph.configuration = {}
-    graph.utility_llm = RunnableLambda(lambda _prompt_value: chain_output)
+    graph.configuration = configuration or {}
+    graph.sent_prompts = []
+
+    def rewrite(prompt_value):
+        graph.sent_prompts.append(prompt_value.to_string())
+        return chain_output
+
+    graph.utility_llm = RunnableLambda(rewrite)
     return graph
+
+
+def _sections(prompt, headings):
+    """Split the prompt at the given headings, in order, and return the text
+    under each one."""
+    sections = []
+    for heading, next_heading in zip(headings, headings[1:]):
+        body = prompt.split(heading, 1)[1].split(next_heading, 1)[0]
+        sections.append(body.strip())
+    return sections
 
 
 def test_rewrite_returns_the_chain_output_verbatim():
@@ -47,10 +64,40 @@ def test_rewrite_returns_the_chain_output_verbatim():
     assert PREVIOUS_QUERY not in rewritten
 
 
-def test_rewrite_keeping_the_subject_is_returned_untouched():
-    resolved = "Che cos'è la garanzia Infortuni del Conducente nel dettaglio?"
-    graph = _graph(resolved)
+def test_default_prompt_puts_each_turn_in_its_own_section():
+    graph = _graph("riscritta")
 
-    rewritten = graph._rewrite_query(QUERY, PREVIOUS_QUERY, PREVIOUS_RESPONSE)
+    graph._rewrite_query(QUERY, PREVIOUS_QUERY, PREVIOUS_RESPONSE)
 
-    assert rewritten == resolved
+    prompt = graph.sent_prompts[0]
+    assert "FOLLOW-UP REWRITING GUIDELINES" in prompt
+    assert _sections(
+        prompt,
+        [
+            "**ORIGINAL QUERY:**",
+            "**PREVIOUS QUERY:**",
+            "**PREVIOUS RESPONSE:**",
+            "Reply ONLY with the rewritten query.",
+        ],
+    ) == [f'"{QUERY}"', f'"{PREVIOUS_QUERY}"', PREVIOUS_RESPONSE]
+
+
+def test_tenant_prompt_replaces_the_default_guidelines():
+    # Braces in the tenant text are literal, not template variables.
+    tenant_prompt = "Riscrivi la domanda {come richiesto} dal tenant."
+    graph = _graph("riscritta", {"rephrase_prompt_template": tenant_prompt})
+
+    graph._rewrite_query(QUERY, PREVIOUS_QUERY, PREVIOUS_RESPONSE)
+
+    prompt = graph.sent_prompts[0]
+    assert prompt.startswith(tenant_prompt)
+    assert "FOLLOW-UP REWRITING GUIDELINES" not in prompt
+    assert _sections(
+        prompt,
+        [
+            "**QUERY ORIGINALE:**",
+            "**QUERY PRECEDENTE:**",
+            "**RISPOSTA PRECEDENTE:**",
+            "Rispondi ESCLUSIVAMENTE con la query riscritta.",
+        ],
+    ) == [f'"{QUERY}"', f'"{PREVIOUS_QUERY}"', PREVIOUS_RESPONSE]

@@ -102,3 +102,17 @@ def test_real_time_router_evaluation_is_kept_in_the_state():
 
     assert state.rag_router_evaluation == "incorrect"
     assert QUERY in prompts[0]
+    assert TOOL_DESCRIPTION in prompts[0]
+    assert "rag_tool" in prompts[0].replace(TOOL_DESCRIPTION, "")
+
+
+def test_real_time_evaluation_without_retrieval_has_no_tool_call():
+    llm, prompts = _judge()
+    graph = RagGraph.__new__(RagGraph)
+    graph.llm = llm
+    graph.configuration = {"rag_tool_description": TOOL_DESCRIPTION}
+
+    graph.rag_router_evaluation_node(GraphState(current_query=QUERY, use_rag=False))
+
+    assert TOOL_DESCRIPTION in prompts[0]
+    assert "rag_tool" not in prompts[0].replace(TOOL_DESCRIPTION, "")

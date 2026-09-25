@@ -98,5 +98,6 @@ def test_evaluation_llm_takes_the_prompts_from_the_rag_configuration(monkeypatch
         configuration["rephrase_prompt_template"]
         == RAG_CONFIGURATION["rephrase_prompt"]
     )
+    assert configuration["rerank"] == RAG_CONFIGURATION["rerank"]
     assert configuration["chunk_window"] == RAG_CONFIGURATION["chunk_window"]
     assert configuration["metadata"] == RAG_CONFIGURATION["metadata"]

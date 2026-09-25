@@ -24,6 +24,8 @@ from langchain_core.messages import AIMessage, HumanMessage
 from app.rag.agentic_rag import GraphState, RagGraph
 
 ORIGINAL_QUERY = "dimmi di più"
+PREVIOUS_QUERY = "Che cos'è la garanzia infortuni del conducente?"
+PREVIOUS_RESPONSE = "È una copertura assicurativa..."
 
 
 def _graph(reformulate, *, classification="FOLLOW_UP", rag_type="CHAT_RAG"):
@@ -52,8 +54,8 @@ def _followup_state():
     return GraphState(
         current_query=ORIGINAL_QUERY,
         messages=[
-            HumanMessage(content="Che cos'è la garanzia infortuni del conducente?"),
-            AIMessage(content="È una copertura assicurativa..."),
+            HumanMessage(content=PREVIOUS_QUERY),
+            AIMessage(content=PREVIOUS_RESPONSE),
         ],
     )
 
@@ -63,8 +65,11 @@ def test_followup_is_rewritten_when_reformulate_enabled():
 
     state = graph.analyze_and_rewrite_query_node(_followup_state())
 
-    graph._rewrite_query.assert_called_once()
+    graph._rewrite_query.assert_called_once_with(
+        ORIGINAL_QUERY, PREVIOUS_QUERY, PREVIOUS_RESPONSE
+    )
     assert state.current_query == "REWRITTEN QUERY"
+    assert state.original_query == ORIGINAL_QUERY
 
 
 def test_followup_keeps_original_query_when_reformulate_disabled():
@@ -97,3 +102,39 @@ def test_simple_generate_bypasses_the_node():
     # The outer gate short-circuits: no analysis, no rewrite, query untouched.
     graph._rewrite_query.assert_not_called()
     assert state.current_query == ORIGINAL_QUERY
+
+
+def test_first_turn_is_not_analysed():
+    graph = _graph(reformulate=True)
+    graph.chat_sequence_number = 1
+
+    state = graph.analyze_and_rewrite_query_node(_followup_state())
+
+    graph.utility_llm.with_structured_output.assert_not_called()
+    graph._rewrite_query.assert_not_called()
+    assert state.current_query == ORIGINAL_QUERY
+    assert state.domain is None
+
+
+def test_followup_without_a_previous_answer_becomes_a_new_question():
+    # Nothing to rewrite against: the turn is treated as self-contained.
+    graph = _graph(reformulate=True)
+    state = GraphState(
+        current_query=ORIGINAL_QUERY, messages=[HumanMessage(content=PREVIOUS_QUERY)]
+    )
+
+    state = graph.analyze_and_rewrite_query_node(state)
+
+    graph._rewrite_query.assert_not_called()
+    assert state.current_query == ORIGINAL_QUERY
+    assert state.domain == ["NEW_QUESTION"]
+
+
+def test_text_query_with_media_is_still_analysed():
+    graph = _graph(reformulate=True)
+    graph.configuration = {"media": [{"type": "image"}]}
+
+    state = graph.analyze_and_rewrite_query_node(_followup_state())
+
+    graph._rewrite_query.assert_called_once()
+    assert state.current_query == "REWRITTEN QUERY"

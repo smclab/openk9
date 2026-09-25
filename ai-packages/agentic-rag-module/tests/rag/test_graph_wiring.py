@@ -187,3 +187,71 @@ def test_utility_llm_defaults_to_the_chat_llm():
         graph = RagGraph(llm, _configuration())
 
     assert graph.utility_llm is llm
+
+
+def test_guardrail_category_without_name_or_description_renders_empty():
+    configuration = _configuration()
+    configuration["guardrails_configuration"]["guardrail_categories"] = [
+        {"name": "VIOLENCE"},
+        {"description": "hate speech"},
+    ]
+
+    graph, _ = _build(configuration)
+
+    assert graph.guardrail_categories == "1. VIOLENCE - \n2.  - hate speech"
+
+
+def test_tenant_configuration_is_read_into_the_graph():
+    llm = MagicMock()
+    utility_llm = MagicMock()
+    configuration = _configuration(
+        chat_sequence_number=3,
+        chat_history=[{"question": "q", "answer": "a"}],
+        reformulate=True,
+        retrieve_from_uploaded_documents=True,
+        answer_only_with_context=False,
+    )
+    configuration["guardrails_configuration"] = {
+        "input_guardrail": {"input_guardrail_provider": "MODEL_ARMOR"},
+        "output_guardrail": {
+            "output_guardrail_type": 3,
+            "output_guardrail_chunk_interval": 5,
+            "output_guardrail_provider": "LLM",
+            "scope_gate_prefix_chars": 600,
+            "scope_gate_domain_description": "polizze auto",
+            "scope_gate_redirect_message": "Solo polizze auto.",
+        },
+    }
+
+    with patch.object(agentic_rag, "get_opensearch_client") as client:
+        graph = RagGraph(llm, configuration, utility_llm=utility_llm)
+
+    client.assert_called_once_with("http://localhost:9200")
+    assert graph.open_search_client is client.return_value
+    assert graph.llm is llm
+    assert graph.utility_llm is utility_llm
+    assert graph.rag_type == "CHAT_RAG"
+    assert graph.opensearch_host == "http://localhost:9200"
+    assert graph.chat_sequence_number == 3
+    assert graph.chat_history == [{"question": "q", "answer": "a"}]
+    assert graph.reformulate is True
+    assert graph.retrieve_from_uploaded_documents is True
+    assert graph.answer_only_with_context is False
+    assert graph.input_guardrail_provider == "MODEL_ARMOR"
+    assert graph.output_guardrail_type == 3
+    assert graph.output_guardrail_chunk_interval == 5
+    assert graph.output_guardrail_provider == "LLM"
+    assert graph.scope_gate_prefix_chars == 600
+    assert graph.scope_gate_domain_description == "polizze auto"
+    assert graph.scope_gate_redirect_message == "Solo polizze auto."
+
+
+def test_defaults_of_the_optional_settings():
+    graph, _ = _build(_configuration())
+
+    assert graph.answer_only_with_context is True
+    assert graph.scope_gate_prefix_chars == 250
+    assert graph.scope_gate_domain_description == ""
+    assert graph.scope_gate_redirect_message == (
+        "Posso aiutarti solo su temi di questo dominio."
+    )

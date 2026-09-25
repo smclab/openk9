@@ -32,6 +32,8 @@ from app.rag import evaluations
 
 LLM_CONFIGURATION = {"model_type": "openai"}
 RAG_CONFIGURATION = {"rag_tool_description": "tool description"}
+START_TIME = "2026-01-01T00:00:00"
+END_TIME = "2026-01-02T00:00:00"
 
 TURN = {
     "current_query": "Quali sono i massimali?",
@@ -60,7 +62,11 @@ def judges(monkeypatch):
     client = MagicMock()
 
     monkeypatch.setattr(evaluations, "initialize_language_model", lambda _c: "llm")
-    monkeypatch.setattr(evaluations, "Client", lambda base_url: client)
+    monkeypatch.setattr(
+        evaluations,
+        "Client",
+        lambda base_url: client if base_url == "http://localhost:6006" else None,
+    )
     monkeypatch.setattr(evaluations, "response_evaluation", spies["response"])
     monkeypatch.setattr(evaluations, "retriever_evaluation", spies["retriever"])
     monkeypatch.setattr(evaluations, "rag_router_evaluation", spies["rag_router"])
@@ -83,8 +89,8 @@ def _run(judges, spans, **flags):
         "project",
         "http://localhost:6006",
         10,
-        None,
-        None,
+        START_TIME,
+        END_TIME,
         **requested,
     )
 
@@ -117,6 +123,29 @@ def test_root_span_is_judged_by_every_requested_evaluation(judges):
         "tool description",
     )
     assert evaluated == {"root"}
+
+
+def test_spans_are_read_from_the_requested_project_and_window(judges):
+    _run(judges, [])
+
+    judges["client"].spans.get_spans.assert_called_once_with(
+        project_identifier="project",
+        limit=10,
+        start_time=START_TIME,
+        end_time=END_TIME,
+    )
+
+
+def test_turn_without_query_and_routing_is_judged_as_empty_and_direct(judges):
+    # An output missing the keys reads as an empty question that did not
+    # retrieve, not as None.
+    _run(judges, [_span("root", json.dumps({}))])
+
+    judges["rag_router"].assert_called_once_with(
+        "llm", judges["client"], "root", "", False, "tool description"
+    )
+    judges["response"].assert_not_called()
+    judges["retriever"].assert_not_called()
 
 
 def test_child_spans_and_incorrect_outputs_are_skipped(judges):

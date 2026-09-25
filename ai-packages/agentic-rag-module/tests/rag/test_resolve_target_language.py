@@ -37,20 +37,25 @@ def test_returns_language_from_string_content():
     assert graph._resolve_target_language("Bonjour, parlez-moi de DGS") == "French"
 
 
+def test_prompt_carries_the_query_and_the_format_instructions():
+    # Which language wins (an explicit request over the one the query is
+    # written in) is left to the LLM, so the query must reach it whole.
+    graph = _graph_with_llm_returning('{"language": "English"}')
+
+    graph._resolve_target_language("Parlami di DGS, answer in English")
+
+    prompt = graph.utility_llm.call_args.args[0].to_string()
+    user_query = prompt.split("USER QUERY:", 1)[1].split("---", 1)[0]
+    assert user_query.strip() == "Parlami di DGS, answer in English"
+    assert "The output should be formatted as a JSON instance" in prompt
+    assert '"language"' in prompt.split("---")[-1]
+
+
 def test_returns_language_from_list_content():
     # Some chat models return content as a list of {"text": ...} blocks.
     graph = _graph_with_llm_returning([{"text": '{"language": "German"}'}])
 
     assert graph._resolve_target_language("Erzaehl mir von DGS") == "German"
-
-
-def test_explicit_request_language_is_propagated():
-    # The explicit-request precedence ("answer in English" inside an Italian
-    # query) is decided by the utility LLM; the resolver must faithfully return
-    # whatever language it reports.
-    graph = _graph_with_llm_returning('{"language": "English"}')
-
-    assert graph._resolve_target_language("Parlami di DGS, answer in English") == "English"
 
 
 def test_falls_back_to_italian_on_unparseable_output():

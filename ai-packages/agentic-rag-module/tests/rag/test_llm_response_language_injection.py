@@ -20,10 +20,16 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from langchain_core.documents import Document
+from langchain_core.messages import AIMessage, HumanMessage
 
 from app.rag.agentic_rag import GraphState, RagGraph
 
 DIRECTIVE = "Write your entire answer in"
+HISTORY = [
+    HumanMessage(content="Che cos'è DGS?"),
+    AIMessage(content="Una societa di consulenza."),
+]
+RENDERED_HISTORY = "User: Che cos'è DGS?\nAssistant: Una societa di consulenza."
 
 
 def _graph():
@@ -87,21 +93,89 @@ def test_falls_back_to_italian_when_target_lang_missing():
     assert "None" not in rendered.split(DIRECTIVE, 1)[1].splitlines()[0]
 
 
-def test_italian_query_has_no_regression():
+def test_rag_prompt_carries_history_context_query_and_language():
     graph = _graph()
 
     state = graph.llm_response_node(
         GraphState(
             current_query="Parlami di DGS",
-            target_lang="Italian",
+            target_lang="English",
             use_rag=True,
+            messages=HISTORY,
+            context=[
+                Document(page_content="DGS e una societa di consulenza."),
+                Document(page_content="Ha sede a Roma."),
+            ],
+        )
+    )
+
+    rendered = _rendered_prompt(graph)
+    assert rendered.startswith("Human: SYSTEM")
+    assert f"Previous conversation: {RENDERED_HISTORY}\n" in rendered
+    assert (
+        "Context: DGS e una societa di consulenza.\n\nHa sede a Roma.\n"
+    ) in rendered
+    assert "Question: Parlami di DGS\n" in rendered
+    assert f"{DIRECTIVE} English," in rendered
+    assert state.response == "ANSWER"
+
+
+def test_direct_prompt_carries_the_tenant_prompt_history_and_query():
+    graph = _graph()
+    graph.configuration = {"prompt_no_rag": "DIRECT SYSTEM"}
+
+    graph.llm_response_node(
+        GraphState(
+            current_query="Parlami di DGS",
+            target_lang="English",
+            use_rag=False,
+            messages=HISTORY,
+        )
+    )
+
+    rendered = _rendered_prompt(graph)
+    assert rendered.startswith("Human: DIRECT SYSTEM")
+    assert f"{RENDERED_HISTORY}\n" in rendered.split("Previous conversation", 1)[1]
+    assert "Current question: Parlami di DGS\n" in rendered
+    assert f"{DIRECTIVE} English," in rendered
+
+
+def test_context_without_rag_decision_is_not_used():
+    # The router chose DIRECT: a context left in the state is not the answer's.
+    graph = _graph()
+
+    graph.llm_response_node(
+        GraphState(
+            current_query="Parlami di DGS",
+            use_rag=False,
             context=[Document(page_content="DGS e una societa di consulenza.")],
         )
     )
 
-    graph.llm.assert_called()
-    assert "Italian" in _rendered_prompt(graph)
-    assert state.target_lang == "Italian"
+    rendered = _rendered_prompt(graph)
+    assert "Current question: Parlami di DGS" in rendered
+    assert "DGS e una societa di consulenza." not in rendered
+
+
+def test_answer_is_read_from_the_first_content_block():
+    # Some chat models return content as a list of {"text": ...} blocks.
+    graph = _graph()
+    graph.llm.return_value = SimpleNamespace(content=[{"text": "ANSWER"}])
+
+    state = graph.llm_response_node(
+        GraphState(current_query="Parlami di DGS", use_rag=False)
+    )
+
+    assert state.response == "ANSWER"
+
+
+def test_text_query_with_media_is_answered_as_written():
+    graph = _graph()
+    graph.configuration["media"] = [{"type": "image"}]
+
+    graph.llm_response_node(GraphState(current_query="Parlami di DGS", use_rag=False))
+
+    assert "Current question: Parlami di DGS\n" in _rendered_prompt(graph)
 
 
 def test_invoke_seeds_resolved_target_language():

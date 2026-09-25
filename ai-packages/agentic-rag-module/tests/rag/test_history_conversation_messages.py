@@ -87,6 +87,17 @@ def test_anonymous_follow_up_reads_the_history_sent_by_the_frontend():
     assert state.messages == ["frontend"]
 
 
+def test_handler_restores_the_domain_from_the_checkpoint():
+    graph = _graph(user_id="user-1", chat_id="chat-1")
+    graph.graph.get_state_history.return_value = [
+        SimpleNamespace(values={"domain": ["insurance"]})
+    ]
+
+    state, _, _ = _run_handler(graph)
+
+    assert state.domain == ["insurance"]
+
+
 def test_first_turn_starts_without_history():
     graph = _graph(sequence_number=1, user_id="user-1", chat_id="chat-1")
 
@@ -189,11 +200,14 @@ def test_history_saver_skips_simple_generate():
 
 
 def test_first_turn_without_chat_uses_the_query_as_title():
-    # No chat to save the title against: no LLM call, the query is the title.
+    # No chat to save the title against: even with titles enabled there is no
+    # LLM call, the query is the title.
     graph = _graph(sequence_number=1, user_id="user-1")
+    graph.configuration = {"enable_conversation_title": True}
     state = GraphState(current_query='"Garanzia legale"', response="...", messages=[])
 
-    result = graph.history_saver_node(state)
+    with patch.object(agentic_rag, "generate_conversation_title") as generate:
+        result = graph.history_saver_node(state)
 
-    graph.llm.invoke.assert_not_called()
+    generate.assert_not_called()
     assert result.conversation_title == "Garanzia legale"

@@ -22,11 +22,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.rag import agentic_rag
 from app.rag.agentic_rag import GraphState, RagGraph
 
 
-def _fake_self(*, sequence_number, generated_title="GENERATED TITLE"):
-    """Build a minimal RagGraph-like object for history_saver_node."""
+def _fake_self(monkeypatch, *, sequence_number, generated_title="GENERATED TITLE"):
+    """Build a minimal RagGraph-like object for history_saver_node; returns it
+    with the spy standing in for generate_conversation_title."""
     fake = SimpleNamespace(
         rag_type="AGENTIC",
         configuration={"enable_conversation_title": True},
@@ -37,46 +39,37 @@ def _fake_self(*, sequence_number, generated_title="GENERATED TITLE"):
     )
     # generate_conversation_title is imported into the agentic_rag namespace;
     # patch it there so turn-1 generation is deterministic.
-    import app.rag.agentic_rag as mod
+    generate = MagicMock(return_value=generated_title)
+    monkeypatch.setattr(agentic_rag, "generate_conversation_title", generate)
+    return fake, generate
 
-    mod.generate_conversation_title = lambda llm, q, r: generated_title
-    return fake
 
-
-def test_title_is_generated_on_first_turn():
+def test_title_is_generated_on_first_turn(monkeypatch):
     state = GraphState(current_query="Che cos'e' la garanzia?", response="...")
-    fake = _fake_self(sequence_number=1, generated_title='"Garanzia legale"')
+    fake, generate = _fake_self(
+        monkeypatch, sequence_number=1, generated_title='"Garanzia legale"'
+    )
 
     result = RagGraph.history_saver_node(fake, state)
 
+    generate.assert_called_once_with(fake.llm, "Che cos'e' la garanzia?", "...")
     assert result.conversation_title == "Garanzia legale"
 
 
-def test_title_is_preserved_on_later_turns():
+def test_title_is_preserved_on_later_turns(monkeypatch):
     # Turn 2: the channel was restored from the checkpoint with the turn-1 title.
     state = GraphState(
         current_query="E per i prodotti usati?",
         response="...",
         conversation_title="Garanzia legale",
     )
-    fake = _fake_self(sequence_number=2)
+    fake, generate = _fake_self(monkeypatch, sequence_number=2)
 
     result = RagGraph.history_saver_node(fake, state)
 
-    # Must NOT be reset to "" — this is the bug from issue 2173.
+    # Must NOT be reset to "" on a later turn.
+    generate.assert_not_called()
     assert result.conversation_title == "Garanzia legale"
-
-
-def test_title_stays_preserved_across_three_turns():
-    title = "Garanzia legale"
-    for seq in (2, 3):
-        state = GraphState(
-            current_query=f"domanda turno {seq}",
-            response="...",
-            conversation_title=title,
-        )
-        result = RagGraph.history_saver_node(_fake_self(sequence_number=seq), state)
-        assert result.conversation_title == title
 
 
 if __name__ == "__main__":

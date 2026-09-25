@@ -232,3 +232,40 @@ def test_document_metadata_is_carried_over_to_the_merged_document():
     documents = get_context_window_merged(chunks, window_size=2)
 
     assert documents[0]["metadata"] == metadata
+
+
+def test_closed_context_keeps_only_the_window_of_next_neighbours():
+    chunks = [
+        _chunk("doc-1", 0, "content-0", next_texts=["chunk-1", "chunk-2", "chunk-3"]),
+        _chunk("doc-1", 10, "content-10"),
+    ]
+
+    documents = get_context_window_merged(chunks, window_size=2)
+
+    assert documents[0]["content"] == "content-0chunk-1chunk-2"
+
+
+def test_split_documents_carry_the_metadata_of_the_first_chunk():
+    first = {"document_id": "doc-1", "score": 2.0}
+    chunks = [
+        _chunk("doc-1", 0, "content-0", metadata=first),
+        _chunk("doc-1", 10, "content-10", metadata={"document_id": "doc-1"}),
+    ]
+
+    documents = get_context_window_merged(chunks, window_size=2)
+
+    assert documents[0]["metadata"] == first
+
+
+def test_three_chunks_of_same_page_are_merged_pairwise():
+    # Each gap is measured from the chunk before it, not from the first one.
+    chunks = [
+        _chunk("doc-1", 0, "content-0", next_texts=["content-1"]),
+        _chunk("doc-1", 1, "content-1", next_texts=["content-2"]),
+        _chunk("doc-1", 2, "content-2"),
+    ]
+
+    documents = get_context_window_merged(chunks, window_size=2)
+
+    assert len(documents) == 1
+    assert documents[0]["content"] == "content-0content-1content-2"

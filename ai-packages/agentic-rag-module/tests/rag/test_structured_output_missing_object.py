@@ -17,6 +17,7 @@
 
 
 import logging
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from langchain_core.documents import Document
@@ -102,7 +103,7 @@ def test_retriever_evaluation_reports_the_failure_and_leaves_no_verdict(caplog):
         )
 
     assert state.retriever_evaluation is None
-    assert "schema=RetrieverEvaluationResponse" in _errors(caplog)[0]
+    assert "schema=RetrieverEvaluationResponse," in _errors(caplog)[0]
     assert "method=json_schema" in _errors(caplog)[0]
 
 
@@ -129,8 +130,34 @@ def test_per_chunk_evaluation_reports_the_failure_and_skips_the_chunk(caplog):
 
     assert state.retriever_chunks_evaluation == []
     assert "chunk-1" in _errors(caplog)[0]
-    assert "schema=RetrieverEvaluationResponse" in _errors(caplog)[0]
+    assert "schema=RetrieverEvaluationResponse," in _errors(caplog)[0]
     assert "method=json_schema" in _errors(caplog)[0]
+
+
+def test_per_chunk_evaluation_goes_on_with_the_next_chunk():
+    graph = _graph()
+    verdict = SimpleNamespace(
+        chunk_id="chunk-2",
+        judgment=SimpleNamespace(value="RELEVANT"),
+        explanation="Il testo riporta il massimale richiesto.",
+        vote=8,
+    )
+    verdicts = iter([None, verdict])
+    graph.llm.with_structured_output.return_value = lambda _prompt: next(verdicts)
+    second = Document(page_content="Franchigia", metadata={"document_id": "chunk-2"})
+
+    state = graph.opensearch_retriever_chunks_evaluation_for_node(
+        GraphState(current_query=QUERY, context=[DOCUMENT, second])
+    )
+
+    assert state.retriever_chunks_evaluation == [
+        {
+            "chunk_id": "chunk-2",
+            "judgment": "RELEVANT",
+            "explanation": "Il testo riporta il massimale richiesto.",
+            "vote": 8,
+        }
+    ]
 
 
 def test_response_evaluation_reports_the_failure_and_leaves_no_verdict(caplog):
