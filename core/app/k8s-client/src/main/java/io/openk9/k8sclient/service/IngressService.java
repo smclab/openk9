@@ -19,6 +19,7 @@ package io.openk9.k8sclient.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -49,10 +50,10 @@ public final class IngressService {
 	String namespace;
 
 	@ConfigProperty(name = "quarkus.kubernetes.ingress.secretName")
-	String secretName;
+	Optional<String> secretName;
 
 	@ConfigProperty(name = "quarkus.kubernetes.ingress.ingressClassName")
-	String ingressClassName;
+	Optional<String> ingressClassName;
 
 	public Uni<HasMetadata> create(IngressDef ingressDef) {
 		return VertxContextSupport.executeBlocking(() -> {
@@ -71,7 +72,7 @@ public final class IngressService {
 		});
 	}
 
-	private Ingress getIngress(IngressDef ingressDef) {
+	Ingress getIngress(IngressDef ingressDef) {
 		List<HTTPIngressPath> ingressPaths = new ArrayList<>();
 		for (IngressDef.Route route : ingressDef.routes()) {
 			var ingressPath = new HTTPIngressPathBuilder()
@@ -87,27 +88,33 @@ public final class IngressService {
 			ingressPaths.add(ingressPath);
 		}
 
-		return new IngressBuilder()
+		var spec = new IngressBuilder()
 			.withNewMetadata()
 			.withName(ingressDef.ingressName())
 			.withNamespace(namespace)
 			.endMetadata()
 			.withNewSpec()
-			.withTls(new IngressTLSBuilder()
-				.withSecretName(secretName)
-				.withHosts(ingressDef.virtualHost())
-				.build()
-			)
-			.withIngressClassName(ingressClassName)
 			.withRules(new IngressRuleBuilder()
 				.withHost(ingressDef.virtualHost())
 				.withNewHttp()
 				.withPaths(ingressPaths)
 				.endHttp()
 				.build()
-			)
-			.endSpec()
-			.build();
+			);
+
+		secretName
+			.filter(name -> !name.isBlank())
+			.ifPresent(name -> spec.withTls(new IngressTLSBuilder()
+				.withSecretName(name)
+				.withHosts(ingressDef.virtualHost())
+				.build()
+			));
+
+		ingressClassName
+			.filter(name -> !name.isBlank())
+			.ifPresent(spec::withIngressClassName);
+
+		return spec.endSpec().build();
 	}
 
 	private static ServiceBackendPort servicePort(IngressDef.Route route) {
