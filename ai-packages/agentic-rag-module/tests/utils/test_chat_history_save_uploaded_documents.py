@@ -23,6 +23,7 @@ only add documents. Indexing failures are logged, never raised, so a failed
 upload does not break the request that triggered it.
 """
 
+import logging
 from unittest.mock import MagicMock
 
 import pytest
@@ -55,19 +56,48 @@ def test_first_upload_creates_the_index_and_its_pipeline(client):
 
     _save()
 
-    client.indices.create.assert_called_once()
-    create = client.indices.create.call_args.kwargs
-    assert create["index"] == INDEX
-    assert create["body"]["settings"] == {"index": {"knn": True}}
-    assert create["body"]["mappings"]["properties"]["vector"] == {
-        "type": "knn_vector",
-        "dimension": 3,
-    }
+    client.indices.exists.assert_called_once_with(index=INDEX)
+    client.indices.create.assert_called_once_with(
+        index=INDEX,
+        body={
+            "settings": {"index": {"knn": True}},
+            "mappings": {
+                "properties": {
+                    "timestamp": {"type": "date"},
+                    # Filtered on by exact value: the keyword subfield is what
+                    # keeps a user from retrieving another user's documents.
+                    "user_id": {
+                        "type": "text",
+                        "fields": {"keyword": {"type": "keyword"}},
+                    },
+                    "chat_id": {
+                        "type": "text",
+                        "fields": {"keyword": {"type": "keyword"}},
+                    },
+                    "vector": {"type": "knn_vector", "dimension": 3},
+                }
+            },
+        },
+    )
 
-    method, path = client.transport.perform_request.call_args.args
-    assert (method, path) == (
+    # Text and vector scores are normalised and weighted equally.
+    client.transport.perform_request.assert_called_once_with(
         "PUT",
         f"/_search/pipeline/{chat_history.SEARCH_PIPELINE}",
+        body={
+            "description": "Post processor for hybrid search",
+            "phase_results_processors": [
+                {
+                    "normalization-processor": {
+                        "normalization": {"technique": "min_max"},
+                        "combination": {
+                            "technique": "arithmetic_mean",
+                            "parameters": {"weights": [0.5, 0.5]},
+                        },
+                    }
+                }
+            ],
+        },
     )
     client.indices.put_settings.assert_called_once_with(
         index=INDEX,
@@ -107,18 +137,34 @@ def test_no_documents_means_no_bulk(client):
     client.bulk.assert_not_called()
 
 
-def test_partial_indexing_errors_are_not_raised(client):
+def test_partial_indexing_errors_are_logged(client, caplog):
     client.indices.exists.return_value = True
     client.bulk.return_value = {
         "errors": True,
-        "items": [{"index": {"error": {"type": "mapper_parsing_exception"}}}],
+        "items": [
+            {"index": {"_id": "1", "result": "created"}},
+            {"index": {"error": {"type": "mapper_parsing_exception"}}},
+        ],
     }
 
-    _save()
+    with caplog.at_level(logging.ERROR, logger="app"):
+        _save()
+
+    # One record for the batch, one for each failed document only.
+    assert [record.getMessage() for record in caplog.records] == [
+        "Some documents failed to index:",
+        "Failed to index document: {'type': 'mapper_parsing_exception'}",
+    ]
+    assert all(record.levelno == logging.ERROR for record in caplog.records)
 
 
-def test_bulk_failure_is_not_raised(client):
+def test_bulk_failure_is_logged_not_raised(client, caplog):
     client.indices.exists.return_value = True
     client.bulk.side_effect = ConnectionError("opensearch down")
 
-    _save()
+    with caplog.at_level(logging.ERROR, logger="app"):
+        _save()
+
+    assert [(record.levelno, record.getMessage()) for record in caplog.records] == [
+        (logging.ERROR, "Bulk indexing failed: opensearch down")
+    ]

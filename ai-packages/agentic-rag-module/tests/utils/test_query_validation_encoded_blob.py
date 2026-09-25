@@ -53,6 +53,34 @@ def test_base64_signals_are_recognised(token):
 @pytest.mark.parametrize(
     "token",
     [
+        # Each signal is enough on its own, even on a single-case run that
+        # would otherwise be taken for a word.
+        "abcdefghijkl+mnopqrstuvwx",  # "+" alone
+        "abcdefghijkl/mnopqrstuvwx",  # "/" alone, no padding
+        "abcdefghijklmnopqrstuvwx=",  # "=" padding alone
+    ],
+)
+def test_a_single_base64_signal_is_enough(token):
+    assert _looks_base64(token) is True
+
+
+@pytest.mark.parametrize(
+    "token, expected",
+    [
+        ("aB3" * 8, True),  # 24 characters, the minimum length
+        ("aB3" * 7 + "aB", False),  # 23 characters
+        ("aB3" * 8 + "==", True),  # 24 characters plus padding
+        ("aB3" * 7 + "aB=", False),  # 23 characters plus padding
+        ("aB3" * 7 + "aB==", False),
+    ],
+)
+def test_base64_minimum_length_excludes_the_padding(token, expected):
+    assert _looks_base64(token) is expected
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
         "questaeunastringamoltolungadaverosenzacifre",  # single-case word
         "QUESTAEUNASTRINGAMOLTOLUNGA",  # upper case only
         "abcdefghijklmnop12345678",  # no upper case
@@ -71,6 +99,17 @@ def test_hex_needs_a_letter():
 
 def test_lowercase_hex_digest_is_classified_as_hex():
     assert encoded_blob_type("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3") == "hex"
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("a94a8fe5ccb19ba61c4c0873d391e987", "hex"),  # 32 characters
+        ("a94a8fe5ccb19ba61c4c0873d391e98", None),  # 31 characters
+    ],
+)
+def test_hex_minimum_length(text, expected):
+    assert encoded_blob_type(text) == expected
 
 
 def test_base64_takes_precedence_over_hex():

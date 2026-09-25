@@ -60,8 +60,9 @@ def test_the_query_path_forwards_the_flag_and_the_tenant():
             text="un gatto",
         )
 
-    _, tenant_id, embedding_model, text = generate.call_args.args
+    host, tenant_id, embedding_model, text = generate.call_args.args
 
+    assert host == "localhost:50053"
     assert tenant_id == "mew"
     assert embedding_model["multimodal"] is True
     assert text == "un gatto"

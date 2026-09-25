@@ -16,6 +16,7 @@
 #
 
 
+import pytest
 from fastapi import HTTPException
 
 from app.utils.error_events import error_event
@@ -43,7 +44,6 @@ def test_internal_error_detail_is_withheld():
     )
 
     assert event == {"chunk": "Unexpected error", "type": "ERROR"}
-    assert "message" not in event
 
 
 def test_plain_exception_carries_no_message():
@@ -52,10 +52,21 @@ def test_plain_exception_carries_no_message():
     assert event == {"chunk": "boom", "type": "ERROR"}
 
 
-def test_event_type_and_chunk_are_untouched():
+@pytest.mark.parametrize("status_code", [400, 404, 499])
+def test_every_client_error_forwards_its_detail(status_code):
     # The event, its type and its position in the stream do not change:
     # `message` is an extra field, ignored by clients that do not read it.
-    event = error_event(HTTPException(status_code=404, detail="nope"), "chunk text")
+    event = error_event(
+        HTTPException(status_code=status_code, detail="nope"), "chunk text"
+    )
 
-    assert event["type"] == "ERROR"
-    assert event["chunk"] == "chunk text"
+    assert event == {"chunk": "chunk text", "type": "ERROR", "message": "nope"}
+
+
+@pytest.mark.parametrize("status_code", [500, 502, 503])
+def test_every_server_error_withholds_its_detail(status_code):
+    event = error_event(
+        HTTPException(status_code=status_code, detail="nope"), "chunk text"
+    )
+
+    assert event == {"chunk": "chunk text", "type": "ERROR"}

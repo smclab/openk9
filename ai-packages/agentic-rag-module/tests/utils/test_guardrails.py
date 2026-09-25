@@ -89,13 +89,16 @@ def test_google_model_armor_response_without_guardrail_type_key():
         patch(
             "app.utils.guardrails.ModelArmorSanitizeResponseRunnable"
         ) as sanitize_response,
-        patch("app.utils.guardrails.save_google_application_credentials"),
+        patch(
+            "app.utils.guardrails.save_google_application_credentials"
+        ) as save_credentials,
     ):
         guardrail = initialize_guardrail(
             GOOGLE_MODEL_ARMOR_CONFIGURATION,
             guardrail_type=GuardrailType.GOOGLE_MODEL_ARMOR_RESPONSE.value,
         )
 
+    save_credentials.assert_called_once_with({"client_id": "client-id"})
     sanitize_response.assert_called_once_with(
         project="project-id",
         location="europe-west1",

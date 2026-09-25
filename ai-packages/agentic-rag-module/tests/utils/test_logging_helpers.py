@@ -40,7 +40,7 @@ def test_each_module_gets_its_own_logger():
 def test_debug_extra_is_empty_above_debug(caplog):
     logger = get_logger("app.test.debug_extra")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         assert debug_extra(logger, query=QUERY) == ""
 
 

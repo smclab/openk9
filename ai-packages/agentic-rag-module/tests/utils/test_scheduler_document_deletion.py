@@ -102,6 +102,7 @@ def test_disabling_removes_the_job_and_shuts_down(background):
 
     _start(False)
 
+    background.get_job.assert_called_once_with(scheduler.JOB_ID)
     background.remove_job.assert_called_once_with(scheduler.JOB_ID)
     background.shutdown.assert_called_once_with(wait=False)
 

@@ -57,14 +57,23 @@ print(json.dumps({{
 
 def _levels(**environment):
     """Effective level of each logger in a process configured with the given
-    environment."""
+    environment.
+
+    The module's .env is kept out: load_dotenv() would otherwise fill in the
+    variables a case leaves unset with whatever the developer has configured.
+    """
     completed = subprocess.run(
         [sys.executable, "-c", PROBE],
         capture_output=True,
         text=True,
         check=True,
         cwd=MODULE_ROOT,
-        env={"PATH": "/usr/bin:/bin", "HOME": str(Path.home()), **environment},
+        env={
+            "PATH": "/usr/bin:/bin",
+            "HOME": str(Path.home()),
+            "PYTHON_DOTENV_DISABLED": "1",
+            **environment,
+        },
     )
     return json.loads(completed.stdout)
 
@@ -77,11 +86,6 @@ def pipeline_debug():
 def test_debug_of_the_pipeline_leaves_the_dependencies_alone(pipeline_debug):
     assert pipeline_debug[APPLICATION] == "DEBUG"
     assert pipeline_debug[DEPENDENCY] == "INFO"
-
-
-def test_dependencies_keep_reporting_what_matters(pipeline_debug):
-    # Quietening them must not hide an OpenSearch or provider failure.
-    assert pipeline_debug[DEPENDENCY] != "CRITICAL"
 
 
 def test_the_dependencies_can_still_be_turned_on():

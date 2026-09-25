@@ -23,10 +23,14 @@ and a file above the size limit is refused before it reaches the disk. Whatever 
 
 import asyncio
 import io
+import uuid
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from docling.document_converter import InputFormat
 from fastapi import UploadFile
+from langchain_docling.loader import ExportType
 
 from app.utils import file_upload
 
@@ -56,7 +60,7 @@ def pipeline(monkeypatch):
     return mocks
 
 
-def _process(filename, upload_dir, content=b"contenuto"):
+def _process(filename, upload_dir, content=b"contenuto", max_size=MAX_SIZE):
     upload = UploadFile(file=io.BytesIO(content), filename=filename)
 
     return asyncio.run(
@@ -67,7 +71,7 @@ def _process(filename, upload_dir, content=b"contenuto"):
             tenant_id="tenant-1",
             upload_file_extensions=ALLOWED_EXTENSIONS,
             upload_dir=str(upload_dir),
-            max_upload_file_size=MAX_SIZE,
+            max_upload_file_size=max_size,
             opensearch_host="http://localhost:9200",
             grpc_datasource_host="localhost:50051",
             grpc_embedding_module_host="localhost:50053",
@@ -104,8 +108,36 @@ def test_configured_extension_is_accepted(tmp_path, pipeline):
     result = _process("report.pdf", tmp_path)
 
     assert result == {"status": "success", "filename": "report.pdf"}
+    pipeline.get_embedding_model_configuration.assert_called_once_with(
+        grpc_host="localhost:50051", tenant_id="tenant-1"
+    )
     pipeline.save_uploaded_documents.assert_called_once_with(
         "http://localhost:9200", "tenant-1", [{"vector": [0.1, 0.2, 0.3]}], 3
+    )
+
+
+def test_converted_text_is_embedded_with_its_owner(tmp_path, pipeline):
+    _process("report.pdf", tmp_path)
+
+    # The document is stored under the id the temporary copy was named after.
+    loaded_path = Path(pipeline.DoclingLoader.call_args.kwargs["file_path"])
+    assert loaded_path.parent == tmp_path
+    assert loaded_path.suffix == ".pdf"
+    document_id = uuid.UUID(loaded_path.stem)
+
+    # user_id and chat_id are what the retrieval filters on: swapped or lost,
+    # the document would reach another user's chat.
+    pipeline.documents_embedding.assert_called_once_with(
+        grpc_host_embedding="localhost:50053",
+        embedding_model_configuration={"vector_size": 3},
+        document={
+            "document_id": document_id,
+            "filename": "report",
+            "file_extension": ".pdf",
+            "user_id": "user-1",
+            "chat_id": "chat-1",
+            "text": "un gatto e un topo",
+        },
     )
 
 
@@ -113,17 +145,36 @@ def test_pdf_uses_the_pdf_pipeline(tmp_path, pipeline):
     _process("scan.pdf", tmp_path)
 
     pipeline.DocumentConverter.assert_called_once()
-    assert (
-        pipeline.DoclingLoader.call_args.kwargs["converter"]
-        is pipeline.DocumentConverter.return_value
-    )
+    format_options = pipeline.DocumentConverter.call_args.kwargs["format_options"]
+    assert list(format_options) == [InputFormat.PDF]
+    # The text layer of the PDF is read as is: no OCR on uploads.
+    assert format_options[InputFormat.PDF].pipeline_options.do_ocr is False
+    loader = pipeline.DoclingLoader.call_args.kwargs
+    assert loader["converter"] is pipeline.DocumentConverter.return_value
+    assert loader["export_type"] == ExportType.MARKDOWN
+
+
+def test_other_formats_use_the_default_converter(tmp_path, pipeline):
+    _process("notes.md", tmp_path)
+
+    pipeline.DocumentConverter.assert_not_called()
+    loader = pipeline.DoclingLoader.call_args.kwargs
+    assert loader["converter"] is None
+    assert loader["export_type"] == ExportType.MARKDOWN
 
 
 def test_file_above_the_size_limit_is_rejected(tmp_path, pipeline):
-    result = _process("big.pdf", tmp_path, content=b"x" * (MAX_SIZE + 1))
+    max_size = 10 * 1024 * 1024
 
-    assert result["status"] == "error"
-    assert result["error"].startswith("File too large.")
+    result = _process(
+        "big.pdf", tmp_path, content=b"x" * (max_size + 1), max_size=max_size
+    )
+
+    assert result == {
+        "status": "error",
+        "filename": "big.pdf",
+        "error": "File too large. Max size is 10.00 MB",
+    }
     assert list(tmp_path.iterdir()) == []
     pipeline.DoclingLoader.assert_not_called()
 
