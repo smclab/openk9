@@ -42,6 +42,34 @@ public class SchedulingServiceTest {
 
 	}
 
+	@Test
+	void should_append_the_cause_on_a_new_line() {
+		Assertions.assertEquals(
+			"refused\ndiscarded", SchedulerUtil.appendErrorDescription("refused", "discarded"));
+		Assertions.assertEquals(
+			"discarded", SchedulerUtil.appendErrorDescription(null, "discarded"));
+		Assertions.assertEquals(
+			"discarded", SchedulerUtil.appendErrorDescription(" ", "discarded"));
+	}
+
+	@Test
+	void should_shorten_the_recorded_part_to_fit_the_column() {
+		var recorded = "r".repeat(4000);
+		var cause = "discarded after 3 delivery attempts";
+
+		var description = SchedulerUtil.appendErrorDescription(recorded, cause);
+
+		Assertions.assertEquals(4000, description.length());
+		Assertions.assertTrue(description.endsWith("r\n" + cause), description);
+	}
+
+	@Test
+	void should_truncate_a_cause_longer_than_the_column() {
+		var description = SchedulerUtil.appendErrorDescription("refused", "c".repeat(5000));
+
+		Assertions.assertEquals("c".repeat(4000), description);
+	}
+
 	private void throwsVeryLongStackTrace(int count) throws TestException {
 
 		if (count < 4200) {

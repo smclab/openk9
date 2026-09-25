@@ -28,6 +28,33 @@ import java.util.stream.Collectors;
 
 public class SchedulerUtil {
 
+	// the error_description column is VARCHAR2(4000) on Oracle and
+	// VARCHAR(4096) on PostgreSQL
+	private static final int ERROR_DESCRIPTION_MAX_LENGTH = 4000;
+
+	/**
+	 * Appends a cause to a recorded error description, on a new line, keeping
+	 * the result within the column size. When the two do not fit, the
+	 * recorded part is shortened: the cause, being the latest, stays whole.
+	 *
+	 * @param recorded the description already recorded, may be null
+	 * @param cause the text to append
+	 * @return the description to record, at most 4000 characters
+	 */
+	public static String appendErrorDescription(String recorded, String cause) {
+		if (recorded == null || recorded.isBlank()) {
+			return truncate(cause);
+		}
+
+		var room = ERROR_DESCRIPTION_MAX_LENGTH - cause.length() - 1;
+
+		if (room <= 0) {
+			return truncate(cause);
+		}
+
+		return recorded.substring(0, Math.min(recorded.length(), room)) + "\n" + cause;
+	}
+
 	/**
 	 * Extracts a concise error description from a throwable by removing unnecessary stack trace details.
 	 * The method retrieves the full stack trace, prioritizes the root cause, and filters out less relevant lines,
@@ -50,7 +77,12 @@ public class SchedulerUtil {
 			.filter(line -> !line.startsWith("\t..."))
 			.collect(Collectors.joining("\n"));
 
-		return collapsed.substring(0, Math.min(collapsed.length(), 4000));
+		return truncate(collapsed);
+	}
+
+	private static String truncate(String description) {
+		return description.substring(
+			0, Math.min(description.length(), ERROR_DESCRIPTION_MAX_LENGTH));
 	}
 
 	/**
