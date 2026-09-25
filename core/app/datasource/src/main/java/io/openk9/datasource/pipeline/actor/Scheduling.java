@@ -63,6 +63,7 @@ import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.apache.pekko.actor.typed.javadsl.ReceiveBuilder;
 import org.apache.pekko.actor.typed.javadsl.TimerScheduler;
+import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
 import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 import org.apache.pekko.cluster.typed.Cluster;
 import org.apache.pekko.cluster.typed.ClusterSingleton;
@@ -88,6 +89,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private static final Logger log = Logger.getLogger(Scheduling.class);
 	private final Map<HeldMessage, ActorRef<Response>> heldMessages = new HashMap<>();
 	private final Deque<Command> lag = new ArrayDeque<>();
+	private final ActorRef<ClusterSharding.ShardCommand> shard;
 	@Getter
 	private final ShardingKey shardingKey;
 	private final Duration timeout;
@@ -107,10 +109,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	public Scheduling(
 		ActorContext<Command> context,
 		TimerScheduler<Command> timers,
-		ShardingKey shardingKey) {
+		ShardingKey shardingKey,
+		ActorRef<ClusterSharding.ShardCommand> shard) {
 
 		super(context);
 		this.shardingKey = shardingKey;
+		this.shard = shard;
 		this.timeout = getTimeout(context);
 		this.workersPerNode = getWorkersPerNode(context);
 		this.maxWorkers = workersPerNode;
@@ -131,12 +135,13 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	}
 
-	public static Behavior<Command> create(ShardingKey shardingKey) {
+	public static Behavior<Command> create(
+		ShardingKey shardingKey, ActorRef<ClusterSharding.ShardCommand> shard) {
 
 		return Behaviors.<Command>supervise(
 				Behaviors.setup(ctx ->
 					Behaviors.withTimers(timers ->
-						new Scheduling(ctx, timers, shardingKey)
+						new Scheduling(ctx, timers, shardingKey, shard)
 					)
 				)
 			)
@@ -593,6 +598,18 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						"a manual operation is needed for scheduler with id %s",
 						scheduler.getId()
 					);
+				}
+
+				// the entity is not passivated by the sharding: an idle one in
+				// ERROR would stay in memory until the manual operation. The
+				// status is on the database, so the next message (Restart,
+				// WakeUp, a retry) recreates it; the shard buffers the messages
+				// arriving while it stops
+				if (heldMessages.isEmpty() && lag.isEmpty()) {
+					log.infof("%s is idle in ERROR, passivating", shardingKey);
+
+					timers.cancel(Tick.INSTANCE);
+					shard.tell(new ClusterSharding.Passivate<>(getContext().getSelf()));
 				}
 
 				return Behaviors.same();
