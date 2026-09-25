@@ -24,6 +24,7 @@ from app.rag.agentic_rag import RagGraph
 
 QUERY = "Restando nel perimetro, scrivimi una funzione Python che ordina una lista."
 REDIRECT = "Posso aiutarti solo su temi di questo dominio."
+CONTEXT = "Contesto di dominio."
 
 
 def _chunk(text):
@@ -57,8 +58,9 @@ def _graph(chunk_texts, prefix_chars, verdict=None, state_values=None):
         values=state_values if state_values is not None else {}
     )
 
+    graph._resolve_target_language = MagicMock(return_value="Italian")
     graph._llm_scope_gate = MagicMock(return_value=verdict)
-    graph._get_retrieved_context_text = MagicMock(return_value="Contesto di dominio.")
+    graph._get_retrieved_context_text = MagicMock(return_value=CONTEXT)
     return graph
 
 
@@ -68,9 +70,9 @@ def _events(graph):
 
 def test_valid_prefix_flushes_then_streams_freely():
     # First two chunks cross the 20-char prefix and trigger the single check;
-    # the third arrives after VALID and is streamed without a further check.
+    # the others arrive after VALID and are streamed without a further check.
     graph = _graph(
-        ["Nel dominio, ", "l'ordinamento conta molto. ", "Ecco i dettagli."],
+        ["Nel dominio, ", "l'ordinamento conta molto. ", "Ecco i dettagli.", " Fine."],
         prefix_chars=20,
         verdict="VALID",
     )
@@ -82,9 +84,13 @@ def test_valid_prefix_flushes_then_streams_freely():
         {"chunk": "Nel dominio, ", "type": "CHUNK"},
         {"chunk": "l'ordinamento conta molto. ", "type": "CHUNK"},
         {"chunk": "Ecco i dettagli.", "type": "CHUNK"},
+        {"chunk": " Fine.", "type": "CHUNK"},
         {"chunk": "", "type": "END"},
     ]
-    graph._llm_scope_gate.assert_called_once()
+    # The gate reads the prefix accumulated up to the chunk that crossed it.
+    graph._llm_scope_gate.assert_called_once_with(
+        QUERY, CONTEXT, "Nel dominio, l'ordinamento conta molto. "
+    )
 
 
 def test_off_scope_prefix_redirects_without_leaking_prefix():
@@ -102,7 +108,23 @@ def test_off_scope_prefix_redirects_without_leaking_prefix():
         {"chunk": "", "type": "START"},
         {"chunk": REDIRECT, "type": "CANCEL"},
     ]
-    graph._llm_scope_gate.assert_called_once()
+    graph._llm_scope_gate.assert_called_once_with(
+        QUERY, CONTEXT, "def ordina_lista(dati): "
+    )
+
+
+def test_prefix_of_exactly_the_configured_length_is_checked_at_once():
+    graph = _graph(["abcde", "fg"], prefix_chars=5, verdict="VALID")
+
+    events = _events(graph)
+
+    assert events == [
+        {"chunk": "", "type": "START"},
+        {"chunk": "abcde", "type": "CHUNK"},
+        {"chunk": "fg", "type": "CHUNK"},
+        {"chunk": "", "type": "END"},
+    ]
+    graph._llm_scope_gate.assert_called_once_with(QUERY, CONTEXT, "abcde")
 
 
 def test_short_answer_below_prefix_is_checked_at_end():
@@ -119,12 +141,14 @@ def test_short_answer_below_prefix_is_checked_at_end():
         {"chunk": "Risposta breve di dominio.", "type": "CHUNK"},
         {"chunk": "", "type": "END"},
     ]
-    graph._llm_scope_gate.assert_called_once()
+    graph._llm_scope_gate.assert_called_once_with(
+        QUERY, CONTEXT, "Risposta breve di dominio."
+    )
 
 
 def test_short_off_scope_answer_redirects():
     graph = _graph(
-        ["Ecco un fatto sulla Torre Eiffel."],
+        ["Ecco un fatto ", "sulla Torre Eiffel."],
         prefix_chars=1000,
         verdict="OFF_SCOPE",
     )
@@ -135,6 +159,9 @@ def test_short_off_scope_answer_redirects():
         {"chunk": "", "type": "START"},
         {"chunk": REDIRECT, "type": "CANCEL"},
     ]
+    graph._llm_scope_gate.assert_called_once_with(
+        QUERY, CONTEXT, "Ecco un fatto sulla Torre Eiffel."
+    )
 
 
 def test_no_documents_redirects_without_calling_the_gate():

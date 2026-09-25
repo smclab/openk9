@@ -67,7 +67,7 @@ def test_no_domain_configured_skips_retrieval_and_llm():
 
     retriever.get_domains.assert_called_once_with()
     retriever.invoke.assert_not_called()
-    graph.utility_llm.invoke.assert_not_called()
+    graph.utility_llm.assert_not_called()
     assert result.domain is None
 
 
@@ -102,7 +102,7 @@ def test_domain_configured_runs_detection():
         result = graph.input_domain_node(state)
 
     retriever.invoke.assert_called_once_with("Che copertura ho?")
-    graph.utility_llm.invoke.assert_not_called()
+    graph.utility_llm.assert_not_called()
     assert result.domain == ["insurance"]
 
 

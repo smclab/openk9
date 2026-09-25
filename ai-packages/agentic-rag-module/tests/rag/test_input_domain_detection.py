@@ -29,6 +29,7 @@ from unittest.mock import patch
 from langchain_core.documents import Document
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import AIMessage
+from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.runnables import RunnableLambda
 
 from app.rag.agentic_rag import Domain, GraphState, RagGraph
@@ -66,6 +67,36 @@ def _run_node(graph, retrieved_docs, configured_domains):
 
 def _domain_document(domain, score):
     return Document("chunk", metadata={"domain": domain, "score": score})
+
+
+def test_the_domain_index_is_searched_with_the_query():
+    graph = _graph()
+    embedding_configuration = {"model": "embedder"}
+
+    with patch(
+        "app.rag.agentic_rag.get_embedding_model_configuration",
+        return_value=embedding_configuration,
+    ) as mock_configuration, patch(
+        "app.rag.agentic_rag.OpenSearchDomainDocumentsRetriever"
+    ) as mock_class:
+        retriever = mock_class.return_value
+        retriever.get_domains.return_value = ["insurance"]
+        retriever.invoke.return_value = [_domain_document("insurance", 0.9)]
+
+        graph.input_domain_node(GraphState(current_query=QUERY))
+
+    mock_configuration.assert_called_once_with(
+        grpc_host="localhost:50051", tenant_id="tenant-1"
+    )
+    mock_class.assert_called_once_with(
+        opensearch_host="http://localhost:9200",
+        grpc_host_embedding="localhost:50052",
+        embedding_model_configuration=embedding_configuration,
+        uploaded_documents_index="domain-documents-index",
+        retrieve_type="HYBRID",
+        search_text=QUERY,
+    )
+    retriever.invoke.assert_called_once_with(QUERY)
 
 
 def test_only_domains_above_threshold_are_kept():
@@ -181,3 +212,8 @@ def test_llm_input_domain_offers_the_candidates_to_the_model():
 
     assert "{'claims'}" in prompts[0]
     assert QUERY in prompts[0]
+    # The model is told the JSON shape the parser expects back.
+    format_instructions = PydanticOutputParser(
+        pydantic_object=Domain
+    ).get_format_instructions()
+    assert format_instructions in prompts[0]

@@ -52,7 +52,7 @@ def _info(caplog, marker):
 def test_blocked_input_reports_where_it_is_routed(caplog):
     graph = _graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         destination = graph.input_guardrail_route_decision(
             GraphState(current_query="q", guardrail_check=True)
         )
@@ -66,7 +66,7 @@ def test_blocked_input_reports_where_it_is_routed(caplog):
 def test_clean_input_reports_where_it_is_routed(caplog):
     graph = _graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         destination = graph.input_guardrail_route_decision(
             GraphState(current_query="q", guardrail_check=False)
         )
@@ -110,7 +110,7 @@ def _document(domain, score):
 def test_domain_resolved_by_threshold_is_reported(caplog):
     graph = _domain_graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = _run_domain_node(graph, [_document("corsi", 0.8)], ["corsi", "news"])
 
     assert state.domain == ["corsi"]
@@ -123,7 +123,7 @@ def test_domain_resolved_by_the_model_is_reported(caplog):
     graph = _domain_graph()
     graph._llm_input_domain = MagicMock(return_value=MagicMock(domain=["news"]))
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = _run_domain_node(graph, [_document("corsi", 0.1)], ["corsi", "news"])
 
     assert state.domain == ["news"]
@@ -135,7 +135,7 @@ def test_domain_resolved_by_the_model_is_reported(caplog):
 def test_no_configured_domain_is_reported(caplog):
     graph = _domain_graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = _run_domain_node(graph, [], [])
 
     assert state.domain is None

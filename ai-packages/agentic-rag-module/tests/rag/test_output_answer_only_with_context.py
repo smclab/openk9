@@ -16,6 +16,8 @@
 #
 
 
+import json
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from langchain_core.documents import Document
@@ -94,3 +96,32 @@ def test_present_context_uses_rag_path():
     # Documents retrieved: normal grounded RAG answer, no regression.
     graph.llm.assert_called()
     assert state.no_context_answer is False
+
+
+def test_stream_relays_the_no_context_message():
+    # The short-circuit produces no llm_response chunk, so stream() reads the
+    # message back from the final state. Only the scope gate replaces it with
+    # its redirect message.
+    graph = RagGraph.__new__(RagGraph)
+    graph.output_guardrail = {}
+    graph.output_guardrail_type = 0
+    graph.config = {}
+    graph.chat_sequence_number = 1
+    graph.tenant_id = None
+    graph.user_id = None
+    graph.chat_id = None
+    graph.rag_type = "SIMPLE_GENERATE"
+    graph._resolve_target_language = MagicMock(return_value="Italian")
+    graph.graph = MagicMock()
+    graph.graph.stream.return_value = []
+    graph.graph.get_state.return_value = SimpleNamespace(
+        values={"no_context_answer": True, "response": NO_CONTEXT_MESSAGE}
+    )
+
+    events = [json.loads(event) for event in graph.stream(QUERY)]
+
+    assert events == [
+        {"chunk": "", "type": "START"},
+        {"chunk": NO_CONTEXT_MESSAGE, "type": "CHUNK"},
+        {"chunk": "", "type": "END"},
+    ]

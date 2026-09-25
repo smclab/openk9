@@ -35,6 +35,8 @@ from app.rag.agentic_rag import GraphState, RagGraph
 
 ORIGINAL_QUERY = "e per il secondo anno?"
 REWRITTEN_QUERY = "Qual è il massimale della garanzia infortuni per il secondo anno?"
+PREVIOUS_QUERY = "Qual è il massimale della garanzia infortuni?"
+PREVIOUS_RESPONSE = "Il massimale è di 100.000 euro."
 
 
 def _graph(reformulate=True, classification="FOLLOW_UP"):
@@ -57,8 +59,8 @@ def _graph(reformulate=True, classification="FOLLOW_UP"):
 def _state(with_previous_exchange=True):
     messages = (
         [
-            HumanMessage(content="Qual è il massimale della garanzia infortuni?"),
-            AIMessage(content="Il massimale è di 100.000 euro."),
+            HumanMessage(content=PREVIOUS_QUERY),
+            AIMessage(content=PREVIOUS_RESPONSE),
         ]
         if with_previous_exchange
         else []
@@ -79,10 +81,14 @@ def _analyze_record(caplog):
 def test_rewritten_followup_says_so(caplog):
     graph = _graph(reformulate=True)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = graph.analyze_and_rewrite_query_node(_state())
 
     assert state.current_query == REWRITTEN_QUERY
+    assert state.original_query == ORIGINAL_QUERY
+    graph._rewrite_query.assert_called_once_with(
+        ORIGINAL_QUERY, PREVIOUS_QUERY, PREVIOUS_RESPONSE
+    )
     record = _analyze_record(caplog)
     assert "decision=FOLLOW_UP" in record
     assert "action=rewritten" in record
@@ -95,7 +101,7 @@ def test_followup_left_untouched_says_so(caplog):
     # retriever as typed. Until now this branch wrote nothing at any level.
     graph = _graph(reformulate=False)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = graph.analyze_and_rewrite_query_node(_state())
 
     assert state.current_query == ORIGINAL_QUERY
@@ -107,7 +113,7 @@ def test_followup_left_untouched_says_so(caplog):
 def test_followup_without_previous_exchange_says_it_was_downgraded(caplog):
     graph = _graph(reformulate=True)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = graph.analyze_and_rewrite_query_node(
             _state(with_previous_exchange=False)
         )
@@ -121,7 +127,7 @@ def test_followup_without_previous_exchange_says_it_was_downgraded(caplog):
 def test_new_question_is_reported_too(caplog):
     graph = _graph(classification="NEW_QUESTION")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = graph.analyze_and_rewrite_query_node(_state())
 
     assert state.domain == ["NEW_QUESTION"]
@@ -133,12 +139,12 @@ def test_new_question_is_reported_too(caplog):
 def test_no_query_appears_at_info(caplog):
     graph = _graph(reformulate=True)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         graph.analyze_and_rewrite_query_node(_state())
 
     record = _analyze_record(caplog)
-    assert ORIGINAL_QUERY not in record
-    assert REWRITTEN_QUERY not in record
+    assert all(ORIGINAL_QUERY not in r.getMessage() for r in caplog.records)
+    assert all(REWRITTEN_QUERY not in r.getMessage() for r in caplog.records)
     # The fingerprint is of the query that will actually be retrieved on.
     assert f"query_chars={len(REWRITTEN_QUERY)}" in record
 

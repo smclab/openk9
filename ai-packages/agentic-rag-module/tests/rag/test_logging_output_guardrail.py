@@ -78,7 +78,7 @@ def _messages(caplog, level):
 def test_block_during_the_stream_names_the_chunk_interval(caplog):
     graph = _output_guardrail_graph("VIOLENCE/WEAPONS")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         verdict = _run(graph, "chunk_interval")
 
     assert verdict == "VIOLENCE/WEAPONS"
@@ -95,7 +95,7 @@ def test_block_during_the_stream_names_the_chunk_interval(caplog):
 def test_block_on_the_leftover_tail_names_the_final_tail(caplog):
     graph = _output_guardrail_graph("SEXUAL_CONTENT")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         verdict = _run(graph, "final_tail")
 
     assert verdict == "SEXUAL_CONTENT"
@@ -105,20 +105,34 @@ def test_block_on_the_leftover_tail_names_the_final_tail(caplog):
 def test_a_clean_answer_produces_no_warning(caplog):
     graph = _output_guardrail_graph("NONE")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         verdict = _run(graph, "chunk_interval")
 
     assert verdict == "NONE"
     assert _messages(caplog, logging.WARNING) == []
 
 
+def test_an_answer_below_the_threshold_is_not_classified(caplog):
+    # Nothing in the guardrail index is close enough to the answer: the
+    # classifier is not consulted, whatever it would have said.
+    graph = _output_guardrail_graph("VIOLENCE/WEAPONS")
+
+    with caplog.at_level(logging.INFO, logger="app"):
+        verdict = _run(graph, "chunk_interval", score=0.69)
+
+    assert verdict == "NONE"
+    graph.llm.assert_not_called()
+    assert _messages(caplog, logging.WARNING) == []
+
+
 def test_the_answer_never_appears_at_info(caplog):
     graph = _output_guardrail_graph("VIOLENCE/WEAPONS")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         _run(graph, "chunk_interval")
 
-    assert all(ANSWER not in message for message in _messages(caplog, logging.WARNING))
+    assert caplog.records
+    assert all(ANSWER not in record.getMessage() for record in caplog.records)
 
 
 def test_the_answer_rides_on_the_same_record_at_debug(caplog):
@@ -144,7 +158,7 @@ def test_provider_invocation_failure_is_reported_as_an_error(caplog):
         patch("app.rag.agentic_rag.get_embedding_model_configuration"),
         patch("app.rag.agentic_rag.OpenSearchGuardrailDocumentsRetriever") as retriever,
         patch("app.rag.agentic_rag.initialize_guardrail") as initialize,
-        caplog.at_level(logging.INFO),
+        caplog.at_level(logging.INFO, logger="app"),
     ):
         retriever.return_value.invoke.return_value = [document]
         initialize.return_value.invoke.side_effect = RuntimeError("quota exceeded")

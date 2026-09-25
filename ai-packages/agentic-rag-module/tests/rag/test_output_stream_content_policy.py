@@ -19,6 +19,8 @@
 import json
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.rag.agentic_rag import RagGraph
 
 QUERY = "Qual è la copertura per i danni da grandine?"
@@ -48,6 +50,7 @@ def _graph(stream_exception):
     graph.user_id = None
     graph.chat_id = None
     graph.rag_type = "SIMPLE_GENERATE"
+    graph._resolve_target_language = MagicMock(return_value="Italian")
     graph.graph = MagicMock()
     graph.graph.stream.side_effect = stream_exception
     return graph
@@ -69,6 +72,26 @@ def test_content_policy_block_emits_guardrail_and_end():
         {"chunk": "", "type": "END"},
     ]
     assert not any(event["type"] == "ERROR" for event in events)
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Azure OpenAI content_filter triggered",
+        "litellm.ContentPolicyViolationError: blocked",
+        "innererror code: ResponsibleAIPolicyViolation",
+        "The prompt triggered Azure OpenAI's Content Management Policy.",
+    ],
+)
+def test_each_content_policy_marker_is_enough_on_its_own(message):
+    # Providers surface the block in different shapes: any one marker, in any
+    # casing, is a block.
+    events = _events(_graph(Exception(message)))
+
+    assert events == [
+        {"chunk": "Guardrail violation", "type": "GUARDRAIL"},
+        {"chunk": "", "type": "END"},
+    ]
 
 
 def test_rate_limit_still_reported_as_error():

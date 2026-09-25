@@ -51,6 +51,7 @@ def _graph(stream_exception):
     graph.user_id = None
     graph.chat_id = None
     graph.rag_type = "SIMPLE_GENERATE"
+    graph._resolve_target_language = MagicMock(return_value="Italian")
     graph.graph = MagicMock()
     graph.graph.stream.side_effect = stream_exception
     return graph

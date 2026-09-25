@@ -81,7 +81,7 @@ def _record(caplog, marker):
 def test_request_start_is_reported_without_the_query(caplog):
     graph = _graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         _events(graph)
 
     start = _record(caplog, "[request] start")
@@ -95,7 +95,7 @@ def test_request_start_is_reported_without_the_query(caplog):
 def test_completed_request_reports_its_duration(caplog):
     graph = _graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         events = _events(graph)
 
     assert events[-1] == {"chunk": "", "type": "END"}
@@ -110,7 +110,7 @@ def test_input_block_is_reported_as_blocked_input(caplog):
         state_values={"guardrail_check": True, "response": "Guardrail violation"}
     )
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         events = _events(graph)
 
     assert any(event["type"] == "GUARDRAIL" for event in events)
@@ -126,7 +126,7 @@ def test_scope_gate_block_is_reported_as_off_scope(caplog):
     graph._llm_scope_gate = MagicMock(return_value="OFF_SCOPE")
     graph._get_retrieved_context_text = MagicMock(return_value="Contesto.")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         events = _events(graph)
 
     assert events[-1] == {"chunk": REDIRECT, "type": "CANCEL"}
@@ -140,7 +140,7 @@ def test_output_block_is_reported_as_blocked_output(caplog):
     graph.output_guardrail_chunk_interval = 1
     graph._llm_output_guardrail = MagicMock(return_value="VIOLENCE/WEAPONS")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         events = _events(graph)
 
     assert events[-1] == {"chunk": "Inappropriate content", "type": "CANCEL"}
@@ -150,7 +150,7 @@ def test_output_block_is_reported_as_blocked_output(caplog):
 def test_failure_is_reported_as_error(caplog):
     graph = _graph(stream_exception=RuntimeError("opensearch unavailable"))
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         _events(graph)
 
     assert "outcome=ERROR" in _record(caplog, "[request] end")
@@ -161,7 +161,7 @@ def test_provider_content_policy_is_reported_as_a_block(caplog):
     # failure of the service.
     graph = _graph(stream_exception=Exception("azure content_filter triggered"))
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         events = _events(graph)
 
     assert [event["type"] for event in events] == ["GUARDRAIL", "END"]
@@ -175,10 +175,11 @@ def test_provider_content_policy_is_reported_as_a_block(caplog):
 def test_the_answer_never_appears_at_info(caplog):
     graph = _graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         _events(graph)
 
-    assert all(ANSWER not in message for message in _messages(caplog, logging.INFO))
+    assert caplog.records
+    assert all(ANSWER not in record.getMessage() for record in caplog.records)
 
 
 def test_the_answer_rides_on_the_end_record_at_debug(caplog):

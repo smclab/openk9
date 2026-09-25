@@ -27,10 +27,14 @@ import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.rag.agentic_rag import RagGraph
 
 QUERY = "Scrivimi una funzione Python che ordina una lista"
 PREFIX = "Certo, ecco una funzione che ordina una lista in Python: def sort"
+CONTEXT = "Il corso Liferay DXP dura tre giorni."
+DOMAIN_DESCRIPTION = "Assistenza sui corsi di formazione."
 
 
 def _scope_gate_graph(verdict):
@@ -38,7 +42,7 @@ def _scope_gate_graph(verdict):
     graph.tenant_id = "litwick"
     graph.user_id = None
     graph.chat_id = "def456"
-    graph.scope_gate_domain_description = "Assistenza sui corsi di formazione."
+    graph.scope_gate_domain_description = DOMAIN_DESCRIPTION
     graph.scope_gate_prefix_chars = 250
     graph.llm = MagicMock(return_value=SimpleNamespace(content=verdict))
     return graph
@@ -51,7 +55,7 @@ def _messages(caplog, level):
 def test_off_scope_verdict_is_reported_as_a_warning(caplog):
     graph = _scope_gate_graph("OFF_SCOPE")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         verdict = graph._llm_scope_gate(QUERY, "Contesto di dominio.", PREFIX)
 
     assert verdict == "OFF_SCOPE"
@@ -66,7 +70,7 @@ def test_off_scope_verdict_is_reported_as_a_warning(caplog):
 def test_in_scope_verdict_is_reported_at_info(caplog):
     graph = _scope_gate_graph("VALID")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         verdict = graph._llm_scope_gate(QUERY, "Contesto di dominio.", PREFIX)
 
     assert verdict == "VALID"
@@ -77,12 +81,12 @@ def test_in_scope_verdict_is_reported_at_info(caplog):
 def test_neither_the_query_nor_the_prefix_appear_at_info(caplog):
     graph = _scope_gate_graph("OFF_SCOPE")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         graph._llm_scope_gate(QUERY, "Contesto di dominio.", PREFIX)
 
-    off_scope = _messages(caplog, logging.WARNING)[0]
-    assert QUERY not in off_scope
-    assert PREFIX not in off_scope
+    assert caplog.records
+    assert all(QUERY not in record.getMessage() for record in caplog.records)
+    assert all(PREFIX not in record.getMessage() for record in caplog.records)
 
 
 def test_query_and_prefix_ride_on_the_same_record_at_debug(caplog):
@@ -95,3 +99,35 @@ def test_query_and_prefix_ride_on_the_same_record_at_debug(caplog):
     assert len(off_scope) == 1
     assert QUERY in off_scope[0]
     assert PREFIX in off_scope[0]
+
+
+def test_the_gate_prompt_carries_domain_context_query_and_prefix():
+    # The verdict is only as good as what the model is shown: the allowed
+    # domain, the retrieved context and the prefix must all reach the prompt.
+    graph = _scope_gate_graph("VALID")
+
+    graph._llm_scope_gate(QUERY, CONTEXT, PREFIX)
+
+    prompt = graph.llm.call_args.args[0].to_string()
+    assert f"ALLOWED DOMAIN:\n            {DOMAIN_DESCRIPTION}\n" in prompt
+    assert f"USER QUESTION:\n            {QUERY}\n" in prompt
+    assert f"RETRIEVED CONTEXT:\n            {CONTEXT}\n" in prompt
+    assert f"ANSWER PREFIX TO CLASSIFY:\n            {PREFIX}\n" in prompt
+
+
+@pytest.mark.parametrize(
+    "content",
+    ["off_scope.", " OFF_SCOPE\n", "Verdict: Off_Scope", [{"text": "OFF_SCOPE"}]],
+)
+def test_an_off_scope_verdict_is_recognised_in_any_casing(content):
+    # Models do not always honour "one word in UPPERCASE, no punctuation".
+    graph = _scope_gate_graph(content)
+
+    assert graph._llm_scope_gate(QUERY, CONTEXT, PREFIX) == "OFF_SCOPE"
+
+
+@pytest.mark.parametrize("content", ["valid", "VALID.", "", None])
+def test_anything_else_is_valid(content):
+    graph = _scope_gate_graph(content)
+
+    assert graph._llm_scope_gate(QUERY, CONTEXT, PREFIX) == "VALID"

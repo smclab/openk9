@@ -82,7 +82,7 @@ def _messages(caplog, level):
 def test_blocked_query_is_reported_as_a_warning(caplog):
     graph = _guardrail_graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = _run_node(
             graph, [_document(42, 0.82)], classifier_outcome="SYSTEM_PROMPT_LEAKAGE"
         )
@@ -104,7 +104,7 @@ def test_blocked_query_is_reported_as_a_warning(caplog):
 def test_legitimate_query_is_reported_without_any_warning(caplog):
     graph = _guardrail_graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = _run_node(graph, [_document(7, 0.12)])
 
     assert state.guardrail_check is False
@@ -120,7 +120,7 @@ def test_query_evaluated_by_the_classifier_without_a_block(caplog):
     # Above the threshold, so the classifier does run, and clears the query.
     graph = _guardrail_graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = _run_node(graph, [_document(9, 0.91)], classifier_outcome="NONE")
 
     assert state.guardrail_check is False
@@ -131,7 +131,7 @@ def test_query_evaluated_by_the_classifier_without_a_block(caplog):
 def test_disabled_guardrail_is_reported_and_the_pipeline_goes_on(caplog):
     graph = _guardrail_graph(enabled=False)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         state = _run_node(graph, [])
 
     assert state.guardrail_check is False
@@ -143,11 +143,10 @@ def test_disabled_guardrail_is_reported_and_the_pipeline_goes_on(caplog):
 def test_the_query_never_appears_at_info(caplog):
     graph = _guardrail_graph()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="app"):
         _run_node(graph, [_document(42, 0.82)], classifier_outcome="JAILBREAK")
 
-    assert all(QUERY not in message for message in _messages(caplog, logging.INFO))
-    assert all(QUERY not in message for message in _messages(caplog, logging.WARNING))
+    assert all(QUERY not in record.getMessage() for record in caplog.records)
     # What is left is enough to recognise the same query across requests.
     enabled = [m for m in _messages(caplog, logging.INFO) if "enabled" in m][0]
     assert f"query_chars={len(QUERY)}" in enabled
@@ -179,7 +178,7 @@ def test_provider_invocation_failure_is_reported_as_an_error(caplog):
 
     with (
         patch("app.rag.agentic_rag.initialize_guardrail") as initialize,
-        caplog.at_level(logging.INFO),
+        caplog.at_level(logging.INFO, logger="app"),
     ):
         initialize.return_value.invoke.side_effect = RuntimeError("quota exceeded")
 
@@ -204,7 +203,7 @@ def test_a_flagged_query_is_not_reported_as_an_error(caplog):
 
     with (
         patch("app.rag.agentic_rag.initialize_guardrail") as initialize,
-        caplog.at_level(logging.INFO),
+        caplog.at_level(logging.INFO, logger="app"),
     ):
         initialize.return_value.invoke.side_effect = RuntimeError(
             "prompt flagged as unsafe"
