@@ -30,11 +30,3 @@ CVE-2025-47273
 CVE-2023-30861
 CVE-2023-25577
 CVE-2024-34069
-
-# Twisted==25.5.0 (CVE-2026-42304, DoS via crafted DNS packets in twisted.names) is
-# only fixed in 26.4.0rc2 -- a release candidate, no stable release exists yet.
-# Twisted is pulled in transitively by Scrapy/scrapyd, not pinned directly.
-#
-# TODO: bump Twisted once a stable 26.x release ships. Do not pin to an RC in
-# production without explicit sign-off.
-CVE-2026-42304
