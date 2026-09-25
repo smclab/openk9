@@ -85,7 +85,7 @@ public class ActorSystemConfig {
 			// these entities keep in-flight state (held messages, awaited
 			// callbacks) in memory and look idle while an enricher works, so
 			// the sharding must not passivate them: they stop by themselves
-			// once their work is done
+			// once their work is done, or when a Scheduling is idle in ERROR
 			var noPassivation = ClusterShardingSettings
 				.create(actorSystem)
 				.withNoPassivationStrategy();
@@ -94,7 +94,7 @@ public class ActorSystemConfig {
 				Scheduling.ENTITY_TYPE_KEY, entityCtx -> {
 					String entityId = entityCtx.getEntityId();
 					var schedulingKey = ShardingKey.fromString(entityId);
-					return Scheduling.create(schedulingKey);
+					return Scheduling.create(schedulingKey, entityCtx.getShard());
 				}).withSettings(noPassivation));
 
 			sharding.init(Entity.of(
