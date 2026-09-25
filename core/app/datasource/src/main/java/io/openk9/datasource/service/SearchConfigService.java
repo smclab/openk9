@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -45,11 +46,13 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.Tuple2;
 
+import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.generic.Bodies;
+import org.opensearch.client.opensearch.generic.Request;
 import org.opensearch.client.opensearch.generic.Requests;
 
 
@@ -68,7 +71,23 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 		 this.mapper = mapper;
 	}
 
+	/**
+	 * Renders the search pipeline body. The fields left {@code null}, as a
+	 * JSON body that omits them does, take the values of
+	 * {@link HybridSearchPipelineDTO#DEFAULT}.
+	 */
 	protected static JsonObject getJsonBody(HybridSearchPipelineDTO pipelineDTO) {
+		var defaults = HybridSearchPipelineDTO.DEFAULT;
+
+		var normalizationTechnique = Objects.requireNonNullElse(
+			pipelineDTO.getNormalizationTechnique(),
+			defaults.getNormalizationTechnique());
+		var combinationTechnique = Objects.requireNonNullElse(
+			pipelineDTO.getCombinationTechnique(),
+			defaults.getCombinationTechnique());
+		var weights = Objects.requireNonNullElse(
+			pipelineDTO.getWeights(), defaults.getWeights());
+
 		return Json.createObjectBuilder()
 			.add("description", "Post processor for hybrid search")
 			.add("phase_results_processors", Json.createArrayBuilder()
@@ -77,20 +96,18 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 						.add("normalization", Json.createObjectBuilder()
 							.add(
 								"technique",
-								pipelineDTO.getNormalizationTechnique().getValue()
+								normalizationTechnique.getValue()
 							)
 						)
 						.add("combination", Json.createObjectBuilder()
 							.add(
 								"technique",
-								pipelineDTO.getCombinationTechnique().getValue()
+								combinationTechnique.getValue()
 							)
 							.add("parameters", Json.createObjectBuilder()
 								.add(
 									"weights",
-									Json.createArrayBuilder(
-										pipelineDTO.getWeights()
-									)
+									Json.createArrayBuilder(weights)
 
 								)
 							)
@@ -120,28 +137,138 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 				})));
 	}
 
+	/**
+	 * Writes the hybrid search pipeline of a {@link SearchConfig} with the
+	 * given techniques and weights, replacing the current one. The pipeline
+	 * is provisioned with the defaults when the SearchConfig is created: this
+	 * is the tuning tool, and the way to provision the SearchConfigs created
+	 * before that.
+	 */
 	public Uni<SearchPipelineResponseDTO> configureHybridSearch(
 		long id, @NotNull HybridSearchPipelineDTO pipelineDTO) {
 
 		return sessionFactory.withTransaction(s -> findById(s, id))
-			.flatMap(searchConfig -> Uni.createFrom()
-				.completionStage(openSearchClient
-					.generic()
-					.executeAsync(Requests.builder()
-						.method("PUT")
-						.endpoint(
-							"_search/pipeline/" + Strings.retainsAlnum(searchConfig.getName()))
-						.json(getJsonBody(pipelineDTO)
-						)
-						.build()
-					)
-				)
-			)
-			.map(response -> new SearchPipelineResponseDTO(
-				response.getStatus(),
-				response.getBody().orElse(Bodies.json("{}")).bodyAsString(),
-				response.getReason()
-			));
+			.flatMap(searchConfig -> putSearchPipeline(
+				searchConfig.getName(), pipelineDTO));
+	}
+
+	@Override
+	public Uni<SearchConfig> deleteById(Mutiny.Session s, long entityId) {
+
+		// flushed first: a SearchConfig still referenced fails here, before
+		// its pipeline is gone
+		return super.deleteById(s, entityId)
+			.call(s::flush)
+			.call(searchConfig -> deleteSearchPipeline(searchConfig.getName()));
+	}
+
+	/**
+	 * Creates the hybrid search pipeline of a new {@link SearchConfig} with
+	 * the default body. A pipeline already there under the same name is left
+	 * as it is, so a tuning done through {@link #configureHybridSearch} is
+	 * never overwritten. Any failure fails the creation.
+	 */
+	Uni<Void> provisionSearchPipeline(SearchConfig searchConfig) {
+
+		var name = searchConfig.getName();
+
+		return executeOnPipeline("GET", name)
+			.flatMap(existing -> {
+				if (existing.status() == 200) {
+					return Uni.createFrom().voidItem();
+				}
+
+				if (existing.status() != 404) {
+					return Uni.createFrom().failure(
+						pipelineFailure("read", name, existing));
+				}
+
+				return putSearchPipeline(name, HybridSearchPipelineDTO.DEFAULT)
+					.flatMap(created -> isSuccessful(created)
+						? Uni.createFrom().voidItem()
+						: Uni.createFrom().failure(
+							pipelineFailure("create", name, created)));
+			});
+	}
+
+	/**
+	 * Deletes the hybrid search pipeline of a deleted {@link SearchConfig}.
+	 * Best effort: the SearchConfig is gone either way, a pipeline left on
+	 * the cluster is logged and does no harm.
+	 */
+	private Uni<Void> deleteSearchPipeline(String name) {
+
+		return executeOnPipeline("DELETE", name)
+			.invoke(response -> {
+				if (!isSuccessful(response) && response.status() != 404) {
+					log.warn(pipelineFailure("delete", name, response).getMessage());
+				}
+			})
+			.onFailure()
+			.recoverWithItem(failure -> {
+				log.warnf(
+					failure, "Cannot delete the search pipeline %s", pipelineName(name));
+				return null;
+			})
+			.replaceWithVoid();
+	}
+
+	private Uni<SearchPipelineResponseDTO> putSearchPipeline(
+		String name, HybridSearchPipelineDTO pipelineDTO) {
+
+		return execute(Requests.builder()
+			.method("PUT")
+			.endpoint(pipelineEndpoint(name))
+			.json(getJsonBody(pipelineDTO))
+			.build()
+		);
+	}
+
+	private Uni<SearchPipelineResponseDTO> executeOnPipeline(
+		String method, String name) {
+
+		return execute(Requests.builder()
+			.method(method)
+			.endpoint(pipelineEndpoint(name))
+			.build()
+		);
+	}
+
+	private Uni<SearchPipelineResponseDTO> execute(Request request) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+			try (var response = openSearchClient.generic().execute(request)) {
+				return new SearchPipelineResponseDTO(
+					response.getStatus(),
+					response.getBody().orElse(Bodies.json("{}")).bodyAsString(),
+					response.getReason()
+				);
+			}
+		});
+	}
+
+	private static String pipelineName(String searchConfigName) {
+		return Strings.retainsAlnum(searchConfigName);
+	}
+
+	private static String pipelineEndpoint(String searchConfigName) {
+		return "_search/pipeline/" + pipelineName(searchConfigName);
+	}
+
+	private static boolean isSuccessful(SearchPipelineResponseDTO response) {
+		return response.status() >= 200 && response.status() < 300;
+	}
+
+	private static IllegalStateException pipelineFailure(
+		String action, String name, SearchPipelineResponseDTO response) {
+
+		return new IllegalStateException(String.format(
+			"Cannot %s the search pipeline %s: %d %s",
+			action,
+			pipelineName(name),
+			response.status(),
+			response.body()
+		));
 	}
 
 	@Override
@@ -183,11 +310,15 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 							.discardItems()
 							.onFailure()
 							.invoke(log::error)
-							.flatMap(ignored -> s.merge(searchConfig));
+							.flatMap(ignored -> s.merge(searchConfig))
+							.call(s::flush)
+							.call(this::provisionSearchPipeline);
 					})
 			);
 		}
-		return super.create(dto);
+		return sessionFactory.withTransaction((s, tr) -> super.create(s, dto)
+			.call(s::flush)
+			.call(this::provisionSearchPipeline));
 	}
 
 	@Override
