@@ -3566,6 +3566,9 @@ paths:
           description: Bad Request, malformed token
         "404":
           description: Not Found, no pipeline is awaiting this token
+        "503":
+          description: "Service Unavailable, the pipeline did not answer in time,\
+            \ the callback can be retried"
       summary: Callback
       tags:
       - Pipeline Resource
