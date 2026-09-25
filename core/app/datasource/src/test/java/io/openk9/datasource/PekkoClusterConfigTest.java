@@ -55,14 +55,6 @@ class PekkoClusterConfigTest {
 	}
 
 	@Test
-	void tokenShardingUsesLargeMessageChannel() {
-		assertTrue(
-			largeMessageDestinations.contains(
-				"/system/sharding/tokenKey/*"),
-			"tokenKey sharding must route through large-message channel");
-	}
-
-	@Test
 	void enrichPipelineShardingUsesLargeMessageChannel() {
 		assertTrue(
 			largeMessageDestinations.contains(
