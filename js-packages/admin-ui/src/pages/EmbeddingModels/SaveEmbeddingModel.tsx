@@ -41,6 +41,7 @@ const PROVIDER_OPTIONS = [
   { value: "watsonx", label: "IBM WatsonX" },
   { value: "chat_vertex_ai", label: "Chat Vertex AI" },
   { value: "aws_bedrock", label: "AWS Bedrock" },
+  { value: "hugging_face", label: "Hugging Face" },
 ];
 
 export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
@@ -132,6 +133,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
           id: embeddingModelsId !== "new" ? embeddingModelsId : undefined,
           providerModel: { provider: providerModel.provider || "", model: providerModel.model || "" },
           ...data,
+          name: data.name.trim(),
         },
       });
     },
@@ -232,6 +234,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       id="modelId"
                       onChange={(s) => {
                         setProviderModel((value) => ({ ...value, model: s }));
+                        form.inputProps("model").onChange(s);
                       }}
                       validationMessages={[]}
                       value={providerModel.model || ""}
