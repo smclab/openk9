@@ -28,7 +28,7 @@ from typing import get_type_hints
 from app.utils.chunk_arguments import build_chunk_arguments
 
 
-SUPPORTED_CHUNK_TYPES = frozenset(range(10))
+SUPPORTED_CHUNK_TYPES = frozenset(range(11))
 
 # Defaults of chonkie 1.4 that 1.7 changed, kept so a jsonConfig that does
 # not set them chunks as before; a value in the jsonConfig wins.
@@ -75,6 +75,10 @@ def _chunker_class(chunk_type):
         from chonkie import NeuralChunker
 
         return NeuralChunker
+    if chunk_type == 10:
+        from chonkie import FastChunker
+
+        return FastChunker
     if chunk_type in (0, 6):
         from chonkie import RecursiveChunker
 

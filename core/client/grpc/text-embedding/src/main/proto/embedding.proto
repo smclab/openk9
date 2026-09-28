@@ -45,6 +45,7 @@ enum ChunkType {
     CHUNK_TYPE_TABLE_CHUNKER = 7;
     CHUNK_TYPE_LATE_CHUNKER = 8;
     CHUNK_TYPE_NEURAL_CHUNKER = 9;
+    CHUNK_TYPE_FAST_CHUNKER = 10;
 }
 
 message RequestChunk {

@@ -150,3 +150,22 @@ def test_heavyweight_chunk_types_resolve_their_class(
     monkeypatch.setitem(sys.modules, "chonkie", fake_chonkie)
 
     assert chunking._chunker_class(chunk_type) is getattr(fake_chonkie, class_name)
+
+
+def test_fast_chunker_splits_within_the_byte_budget():
+    text = "Prima frase. Seconda frase!\nTerza riga? " * 50
+
+    pieces = chunking.chunk_text(chunking.build_chunker(10, {"chunk_size": 100}), text)
+
+    assert len(pieces) > 1
+    assert all(len(piece.encode("utf-8")) <= 100 for piece in pieces)
+    assert "".join(pieces) == text
+
+
+def test_fast_chunker_arguments_come_from_the_json_config():
+    chunker = chunking.build_chunker(
+        10, {"chunk_size": "100", "delimiters": "\n", "unknown": 1}
+    )
+
+    assert chunker.chunk_size == 100
+    assert chunker.delimiters == "\n"

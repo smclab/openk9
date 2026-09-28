@@ -360,6 +360,12 @@ print(vector.dimension, vector.WhichOneof("vector"))
 | TABLE_CHUNKER       | 7      |
 | LATE_CHUNKER        | 8      |
 | NEURAL_CHUNKER      | 9      |
+| FAST_CHUNKER        | 10     |
+
+`FAST_CHUNKER` splits on byte size rather than tokens and needs no model.
+Its `jsonConfig` keys are `chunk_size` (bytes, default `4096`), `delimiters`
+(default `"\n.?"`), `pattern`, `prefix`, `consecutive` and `forward_fallback`.
+An unknown chunk type is refused with `INVALID_ARGUMENT`.
 
 
 
