@@ -162,7 +162,10 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         variables: {
           id: enrichItemId !== "new" ? enrichItemId : undefined,
           ...data,
-          jsonConfig: dynamicFormJson || data.jsonConfig || undefined,
+          jsonConfig:
+            data.type === EnrichItemType.GroovyScript
+              ? data.jsonConfig || undefined
+              : dynamicFormJson || data.jsonConfig || undefined,
           resourceUri: {
             baseUri: data.baseUri,
             path: data.path,
@@ -196,7 +199,15 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
 
   React.useEffect(() => {
     setDynamicTemplateState(null);
+    setTestResult(null);
+    setTestError(null);
   }, [baseUriValue, pathValue]);
+
+  const isGroovy = form.inputProps("type").value === EnrichItemType.GroovyScript;
+  const nameValue = form.inputProps("name").value;
+  const connectionVerified = testResult === "success";
+  const canProceed = !!nameValue && (isGroovy || !!view || (!!baseUriValue && !!pathValue && connectionVerified));
+  const showTestRequiredHint = !isGroovy && !view && !connectionVerified;
 
   const { dynamicTemplate, changeValueTemplate, dynamicFormJson } = useDynamicForm({
     template: dynamicTemplateState,
@@ -217,6 +228,11 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
       return;
     }
 
+    if (isGroovy) {
+      setStep("configureDynamic");
+      return;
+    }
+
     if (!baseUri || !path) {
       toast({
         title: t("pages.enrich-items.missing-data"),
@@ -224,15 +240,6 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         displayType: "error",
       });
       return;
-    }
-
-    const connectionNotVerified = testResult !== "success";
-    if (connectionNotVerified) {
-      toast({
-        title: t("pages.enrich-items.connection-not-verified"),
-        content: t("pages.enrich-items.please-test-the-connection-before-proceeding-or"),
-        displayType: "warning",
-      });
     }
 
     try {
@@ -246,13 +253,11 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
       }
       setStep("configureDynamic");
     } catch (e) {
-      if (!connectionNotVerified) {
-        toast({
-          title: t("common.error"),
-          content: t("pages.enrich-items.impossible-to-fetch-dynamic-form-check-connection"),
-          displayType: "warning",
-        });
-      }
+      toast({
+        title: t("common.error"),
+        content: t("pages.enrich-items.impossible-to-fetch-dynamic-form-check-connection"),
+        displayType: "warning",
+      });
       setStep("configureDynamic");
     } finally {
       setLoadingForm(false);
@@ -273,7 +278,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
           { key: "requestTimeout", label: t("pages.enrich-items.request-timeout") },
           { key: "behaviorMergeType", label: t("fields.behavior-merge-type") },
           { key: "behaviorOnError", label: t("fields.behavior-on-error") },
-          ...(form.inputProps("type").value === EnrichItemType.GroovyScript
+          ...(isGroovy
             ? [
                 {
                   key: "script",
@@ -281,12 +286,13 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                   jsonView: true,
                 },
               ]
-            : []),
-          {
-            key: "jsonConfig",
-            label: t("fields.configuration"),
-            jsonView: true,
-          },
+            : [
+                {
+                  key: "jsonConfig",
+                  label: t("fields.configuration"),
+                  jsonView: true,
+                },
+              ]),
         ],
         label: t("pages.enrich-items.recap-label"),
       },
@@ -327,6 +333,12 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                     <ContainerFluid flexColumn>
                       <TextInput label={t("common.name")} {...form.inputProps("name")} />
                       <TextArea label={t("common.description")} {...form.inputProps("description")} />
+                      <CustomSelect
+                        label={t("fields.type")}
+                        dict={EnrichItemType}
+                        {...form.inputProps("type")}
+                        description={t("pages.enrich-items.type-description")}
+                      />
                       <TextInput
                         label={t("fields.base-uri")}
                         {...form.inputProps("baseUri")}
@@ -379,12 +391,6 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                         description={t("pages.enrich-items.json-path-description")}
                       />
                       <CustomSelect
-                        label={t("fields.type")}
-                        dict={EnrichItemType}
-                        {...form.inputProps("type")}
-                        description={t("pages.enrich-items.type-description")}
-                      />
-                      <CustomSelect
                         label={t("fields.behavior-merge-type")}
                         dict={BehaviorMergeType}
                         {...form.inputProps("behaviorMergeType")}
@@ -416,39 +422,25 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
               {t("pages.enrich-items.dynamic-configuration")}
             </Typography>
             {!loadingForm ? (
-              dynamicTemplate ? (
+              isGroovy ? (
+                <CodeInput
+                  language="groovy"
+                  label={t("fields.script")}
+                  disabled={!!view}
+                  id="code-input-enricher-script"
+                  onChange={(e) => {
+                    form.inputProps("script").onChange(e);
+                  }}
+                  validationMessages={[]}
+                  value={form.inputProps("script").value || ""}
+                  description={t("pages.enrich-items.groovy-script-executed-during-enrich-step")}
+                />
+              ) : dynamicTemplate ? (
                 <GenerateDynamicForm
                   templates={dynamicTemplate}
                   changeValueKey={changeValueTemplate}
                   disabled={!!view}
                 />
-              ) : form.inputProps("type").value === EnrichItemType.GroovyScript ? (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <CodeInput
-                    language="groovy"
-                    label={t("fields.script")}
-                    disabled={!!view}
-                    id="code-input-enricher-script"
-                    onChange={(e) => {
-                      form.inputProps("script").onChange(e);
-                    }}
-                    validationMessages={[]}
-                    value={form.inputProps("script").value || ""}
-                    description={t("pages.enrich-items.groovy-script-executed-during-enrich-step")}
-                  />
-                  <CodeInput
-                    language="json"
-                    label={t("fields.json-config")}
-                    disabled={!!view}
-                    id="code-input-enricher-json-config"
-                    onChange={(e) => {
-                      form.inputProps("jsonConfig").onChange(e);
-                    }}
-                    validationMessages={[]}
-                    value={form.inputProps("jsonConfig").value || ""}
-                    description={t("pages.enrich-items.json-configuration-sended-to-corresponding-external-parser")}
-                  />
-                </Box>
               ) : (
                 <CodeInput
                   language="json"
@@ -477,13 +469,21 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                 <Button variant="outlined" onClick={() => navigate("/enrich-items/")}>
                   {t("common.back")}
                 </Button>
-                <Button
-                  variant="contained"
-                  onClick={handleNextStep}
-                  disabled={loadingForm || !form.inputProps("name").value}
-                >
-                  {t("common.next-step")}
-                </Button>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  {showTestRequiredHint && (
+                    <Typography id="enrich-item-next-step-hint" variant="body2" color="text.secondary">
+                      {t("pages.enrich-items.successful-connection-test-required")}
+                    </Typography>
+                  )}
+                  <Button
+                    variant="contained"
+                    onClick={handleNextStep}
+                    disabled={loadingForm || !canProceed}
+                    aria-describedby={showTestRequiredHint ? "enrich-item-next-step-hint" : undefined}
+                  >
+                    {t("common.next-step")}
+                  </Button>
+                </Box>
               </>
             ) : (
               <>
