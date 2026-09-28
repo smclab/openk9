@@ -101,9 +101,9 @@ rabbitmq:
 
 ## MinIO (object storage) configuration
 minio:
-  host: "http://minio:9000"
+  host: "http://seaweedfs-all-in-one:8333"
   secure: false
-  passwordSecretName: "minio-secret"
+  passwordSecretName: "s3-secret"
   keyUserSecret: "user"
   keyUserEnvName: "QUARKUS_MINIO_ACCESS_KEY"
   keyPasswordSecret: "password"

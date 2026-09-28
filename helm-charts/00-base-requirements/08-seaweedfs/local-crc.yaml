@@ -1,0 +1,47 @@
+# SeaweedFS - Configurazione Semplificata per OpenK9
+# Chart: https://seaweedfs.github.io/seaweedfs/helm (seaweedfs 4.47.0, richiede Helm >= 3.17)
+
+## Deployment all-in-one: master, volume, filer e gateway S3 in un solo pod
+master:
+  enabled: false
+volume:
+  enabled: false
+filer:
+  enabled: false
+
+allInOne:
+  enabled: true
+  replicas: 1
+
+  ## Gateway S3 (porta 8333) con autenticazione
+  s3:
+    enabled: true
+    enableAuth: true
+
+  ## Storage
+  data:
+    type: persistentVolumeClaim
+    storageClass: "ibmc-vpc-block-general-purpose"
+    size: 10Gi
+    accessModes:
+    - ReadWriteOnce
+
+  ## Risorse
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+  ## Security Context: su OpenShift UID e fsGroup sono assegnati dalla SCC
+
+## Credenziali S3 - USA SECRET
+## Lo stesso secret è letto dalle chart openk9-ingestion e openk9-datasource
+s3:
+  credentials:
+    admin:
+      existingSecret: "s3-secret"
+      accessKeyKey: "user"
+      secretKeyKey: "password"
