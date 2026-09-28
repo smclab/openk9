@@ -42,7 +42,7 @@ proxy). Additional capabilities are available as optional profiles:
 
 | Profile | Compose file | What it adds |
 |---|---|---|
-| `file-handling` | `compose-with-file-handling.yaml` | MinIO, File Manager, Tika, MinIO Connector |
+| `file-handling` | `compose-with-file-handling.yaml` | SeaweedFS, Tika, Docling Processor, S3 Connector |
 | `gen-ai` | `compose-with-gen-ai.yaml` | RAG module, Embedding module, Talk-To chat |
 | `oauth2` | `compose-with-oauth2-server.yaml` | Keycloak identity provider |
 
@@ -112,7 +112,7 @@ Profiles are additive. Core services are always included.
 | Profile | Services added |
 |---|---|
 | `core` (default) | PostgreSQL, OpenSearch, RabbitMQ, API Gateway, Datasource, Tenant Manager, Ingestion, Searcher, frontends, Caddy |
-| `file-handling` | MinIO, File Manager, Tika, MinIO Connector |
+| `file-handling` | SeaweedFS, Tika, Docling Processor, S3 Connector |
 | `gen-ai` | RAG module, Embedding module, Talk-To |
 | `oauth2` | Keycloak OAuth2/OIDC identity provider |
 

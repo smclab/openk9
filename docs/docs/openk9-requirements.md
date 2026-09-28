@@ -65,9 +65,9 @@ The storage needed for a single OpenSearch node can be calculated as follows:
 **Total storage for an OpenSearch node:**  
 `(Average document size) × (Initial number of indexed documents) + (Average document size) × (Monthly growth factor of total documents)`
 
-### MinIO
+### SeaweedFS
 
-To size the storage for MinIO, consider the **full size of the original data source**. This is particularly important during the initial data ingestion phase when all data is being processed at once.
+To size the storage for SeaweedFS, consider the **full size of the original data source**. This is particularly important during the initial data ingestion phase when all data is being processed at once.
 
 ### RabbitMQ
 

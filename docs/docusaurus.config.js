@@ -83,12 +83,6 @@ const config = {
           },
           {
             // Redocusaurus will automatically bundle your spec into a single file during the build
-            id: 'api-file-manager',
-            spec: 'openapi-yaml/file-manager-openapi.yaml',
-            route: '/api/file-manager'
-          },
-          {
-            // Redocusaurus will automatically bundle your spec into a single file during the build
             id: 'api-ingestion',
             spec: 'openapi-yaml/ingestion-openapi.yaml',
             route: '/api/ingestion'

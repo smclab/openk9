@@ -1,13 +1,13 @@
 # Tika
 
-Apache Tika-based document parser, packaged as an OpenK9 enrich item. It extracts plain text and metadata from binary files (PDF, Office, ODF, ePub, email, images, archives, ...) fetched from the OpenK9 file-manager, and writes the result back onto the enrichment payload.
+Apache Tika-based document parser, packaged as an OpenK9 enrich item. It extracts plain text and metadata from binary files (PDF, Office, ODF, ePub, email, images, archives, ...) downloaded from the object storage through a pre-signed URL, and writes the result back onto the enrichment payload.
 
 ## Role in the enrichment pipeline
 
 The service runs as a Quarkus application with a single processing endpoint, `POST /process`, consumed by the OpenK9 datasource pipeline. For each message:
 
-1. Reads `payload.resources.binaries[0]` (the binary descriptor produced upstream by a connector / file-manager step).
-2. Downloads the binary from file-manager by `resourceId`, scoped to the tenant schema taken from `payload.tenantId`.
+1. Reads `payload.resources.binaries[0]` (the binary descriptor produced upstream by a connector).
+2. Downloads the binary from its pre-signed object-storage URL (`url`), injected by the datasource.
 3. Detects the MIME type via the Tika `Detector` chain configured in `src/main/resources/tika-config.xml`.
 4. If the detected MIME type is present in `type_mapping`, parses the file, cleans the extracted text, and enriches the payload:
    - appends the mapped alias to `payload.documentTypes`;
@@ -40,7 +40,7 @@ The canonical schema lives in [`src/main/resources/form/form.json`](src/main/res
 
 ## Runtime dependencies
 
-- **File-manager** — binaries are downloaded through it (`fileManagerClient.download(resourceId, schemaName)`).
+- **Object storage (S3)** — binaries are downloaded from the pre-signed URL the datasource sets in `payload.resources.binaries[0].url`.
 - **RabbitMQ / message broker** — the enrichment pipeline delivers messages and consumes the `replyTo` queue.
 - **Tika parsers** — the active parser set is defined in `src/main/resources/tika-config.xml`. Anything not listed there will not be parsed even if mapped in `type_mapping`.
 
@@ -50,7 +50,7 @@ The canonical schema lives in [`src/main/resources/form/form.json`](src/main/res
 |---|---|---|
 | `tika.pool.size` | `4` | Size of the thread pool that executes `TikaProcessor.process()` concurrently (see `ProcessEndpoint`). |
 
-Standard Quarkus properties (`quarkus.http.port`, logging, file-manager REST client URL, etc.) are defined in `src/main/resources/application.properties`.
+Standard Quarkus properties (`quarkus.http.port`, logging, datasource REST client URL, etc.) are defined in `src/main/resources/application.properties`.
 
 ## Running locally
 
@@ -60,7 +60,7 @@ From the `openk9` repository root:
 # Build just this module (shared core deps are built automatically)
 ./k9.sh build tika
 
-# Start the stack (file-handling overlay brings up file-manager + MinIO)
+# Start the stack (file-handling overlay brings up SeaweedFS as object storage)
 ./k9.sh up --with=file-handling
 
 # Restart only this service after a rebuild

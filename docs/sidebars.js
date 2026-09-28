@@ -46,7 +46,7 @@ const sidebars = {
     			"configuration/tune-search-config", "configuration/create-filters", "configuration/create-tabs"]}],
 "Create your own connector": ["plugins/connector-requirements", "plugins/archetype-project"],
    "Openk9 Ui": ["standalone-apps", "openk9-ui-library", "openk9-ui-example-project", "openk9-ui-faqs"],
-   "APIs": ['api/api-searcher', 'api/api-rag','api/api-datasource', 'api/api-tenant-manager', 'api/api-file-manager', 'api/api-ingestion'],
+   "APIs": ['api/api-searcher', 'api/api-rag','api/api-datasource', 'api/api-tenant-manager', 'api/api-ingestion'],
     "Artificial Intelligence": ["ai/ai-overview", "ai/data-enrichment", "ai/semantic-search", "ai/gen-ai-search", "ai/gen-ai-features"],
     "Monitoring and Troubleshooting": [
     "monitoring/monitoring-overview", "monitoring/troubleshooting"]

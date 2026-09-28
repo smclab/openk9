@@ -94,7 +94,7 @@ pass to parameters resources, building object like following:
 }
 ```
 
-When Openk9 get message, extracts binaries from message and stored them to S3 Minio storage. Then binaries are available inside Openk9 System to perform any sort of processing.
+When Openk9 get message, extracts binaries from message and stored them to the S3-compatible object storage (SeaweedFS). Then binaries are available inside Openk9 System to perform any sort of processing.
 
 Validating this parameter is not mandatory. If you don't set it, Openk9 interprets message haven't any binaries associated.
 

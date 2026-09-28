@@ -64,7 +64,7 @@ old name as an alias for `mode=full_page`.
 
 The enricher runs as part of the OpenK9 stack. Bring it up with the
 `file-handling` profile, which provides the full pre-signed-URL chain
-(MinIO, ingestion, datasource, Docling, and Tika):
+(SeaweedFS, ingestion, datasource, Docling, and Tika):
 
 ```bash
 ./k9.sh up --with=file-handling

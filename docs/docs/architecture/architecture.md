@@ -13,7 +13,7 @@ custom components.
 - [**Opensearch**](https://opensearch.org/): open source search and analytics engine.
 - [**RabbitMQ**](https://www.rabbitmq.com/): open source message broker.
 - [**Keycloak**](https://www.keycloak.org/): open source identity and access management.
-- [**MinIo**](https://min.io/): high-performance, S3 compatible object storage.
+- [**SeaweedFS**](https://github.com/seaweedfs/seaweedfs): distributed, S3 compatible object storage.
 
 ### Custom components
 
@@ -37,7 +37,6 @@ Gen Ai components are:
 
 File handlign components are:
 
-- [**File Manager**](file-manager): is the component that handles binary files management logic.
 - [**Tika**](tika): is the component that performs data parsing.
 
 <br />

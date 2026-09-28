@@ -39,7 +39,7 @@ Read more about compatibility matrix on Github.
     - [Talk To](#talk-to)
     - [Chunk Evaluation Module](#chunk-evaluation-module)
 6. [Openk9 File Handling components installation](#file-handling-components)
-    - [Minio](#minio)
+    - [SeaweedFS](#seaweedfs)
     - [Tika](#tika)
     - [Docling Processor](#docling-processor)
 
@@ -51,12 +51,12 @@ To install Openk9 following this installation guide, you need to have locally in
 For Kubernetes:
 
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
-- [helm](https://helm.sh/docs/intro/install/)
+- [helm](https://helm.sh/docs/intro/install/) >= 3.17
 
 For Openshift:
 
 - [oc](https://docs.openshift.com/container-platform/4.8/cli_reference/openshift_cli/getting-started-cli.html)
-- [helm](https://helm.sh/docs/intro/install/)
+- [helm](https://helm.sh/docs/intro/install/) >= 3.17
 
 ### Namespace
 
@@ -1346,60 +1346,65 @@ Inside every chart folder, there is a README file with chart documentation. Expl
 
 For every charts, there is also a scenarios folder, with files to install components in different platforms (Kubernetes/Openshift).
 
-### Minio
+### SeaweedFS
 
-[MinIO](https://min.io/) is used as S3 storage to support data processing.
+[SeaweedFS](https://github.com/seaweedfs/seaweedfs) is used as S3 storage to support data processing: Ingestion stores the binaries there and the Datasource hands pre-signed URLs to the enrichers.
 
-To install Minio we use the Helm Chart created by [Cloud Pirates](https://github.com/CloudPirates-io/helm-charts/tree/main/charts/minio).
+To install SeaweedFS we use the official [SeaweedFS Helm Chart](https://github.com/seaweedfs/seaweedfs/tree/master/k8s/charts/seaweedfs) in all-in-one mode. The chart needs Helm >= 3.17.
 
-Create a secret with credentials for Minio:
+Create a secret with the S3 credentials. The same secret is read by SeaweedFS, Ingestion and Datasource:
 
 For Kubernetes execute:
 
 ```bash
-kubectl -n openk9 create secret generic minio-secret \
-  --from-literal=user=minio \
-  --from-literal=password=minio123
+kubectl -n openk9 create secret generic s3-secret \
+  --from-literal=user=openk9 \
+  --from-literal=password=openk9-secret
 ```
 
 Per OpenShift execute:
 
 ```bash
-oc -n openk9 create secret generic minio-secret \
-  --from-literal=user=minio \
-  --from-literal=password=minio123
+oc -n openk9 create secret generic s3-secret \
+  --from-literal=user=openk9 \
+  --from-literal=password=openk9-secret
 ```
 
-Install Minio
-
-For kubernetes/OpenShift execute:
-
-```yaml
-helm install minio oci://registry-1.docker.io/cloudpirates/minio \
-  -n openk9 \
-  --version 0.10.3 \
-  -f 00-base-requirements/08-minio/local-runtime.yaml
-```
-
-To customize Minio installation follow [chart documentation](https://github.com/bitnami/charts/tree/main/bitnami/minio)
-
-#### Verify Installation
-
-As suggested by the installation notes, expose the Management interface on the host PC.
+Install SeaweedFS
 
 For Kubernetes execute:
 
 ```bash
-kubectl port-forward -n openk9 svc/minio 9001:9001
+helm repo add seaweedfs https://seaweedfs.github.io/seaweedfs/helm
+helm install seaweedfs seaweedfs/seaweedfs \
+  -n openk9 \
+  --version 4.47.0 \
+  -f 00-base-requirements/08-seaweedfs/local-runtime.yaml
+```
+
+For OpenShift use `00-base-requirements/08-seaweedfs/local-crc.yaml` instead.
+
+The S3 endpoint is then available inside the cluster at `http://seaweedfs-all-in-one:8333`, the default host of the Ingestion and Datasource charts.
+
+To customize SeaweedFS installation follow [chart documentation](https://github.com/seaweedfs/seaweedfs/tree/master/k8s/charts/seaweedfs)
+
+#### Verify Installation
+
+Expose the Filer UI on the host PC to browse buckets and objects (buckets are under `/buckets/`).
+
+For Kubernetes execute:
+
+```bash
+kubectl port-forward -n openk9 svc/seaweedfs-all-in-one 8888:8888
 ```
 
 For Openshift execute:
 
 ```bash
-oc port-forward -n openk9 svc/minio 9001
+oc port-forward -n openk9 svc/seaweedfs-all-in-one 8888
 ```
 
-Open browser on [http://localhost:9001](http://localhost:9001) and log in with the credentials entered in the previously created secret.
+Open browser on [http://localhost:8888](http://localhost:8888).
 
 ### Tika
 
@@ -1457,7 +1462,7 @@ Access to console using url "http://localhost:8080/q/health". If status is UP se
 
 ### Docling Processor
 
-Docling Processor is the component delegated to convert binaries coming from external data sources into Markdown. It is developed wrapping [Docling](https://github.com/docling-project/docling) and depends on the Datasource. It fetches binaries via the pre-signed URL from object storage (MinIO).
+Docling Processor is the component delegated to convert binaries coming from external data sources into Markdown. It is developed wrapping [Docling](https://github.com/docling-project/docling) and depends on the Datasource. It fetches binaries via the pre-signed URL from object storage (SeaweedFS).
 
 #### Main Configurations
 
