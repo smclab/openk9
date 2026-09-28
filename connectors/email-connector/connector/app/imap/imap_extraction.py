@@ -78,26 +78,49 @@ class AsyncEmailExtraction(threading.Thread):
 
         post_message(ingestion_url, payload)
 
+    def post_halt(self, error, end_timestamp=None):
+
+        end_timestamp = end_timestamp if end_timestamp else datetime.utcnow().timestamp()*1000
+
+        payload = {
+            "datasourceId": self.datasource_id,
+            "scheduleId": self.schedule_id,
+            "tenantId": self.tenant_id,
+            "contentId": -1,
+            "parsingDate": int(end_timestamp),
+            "rawContent": str(error),
+            "datasourcePayload": {},
+            "resources": {
+                "binaries": []
+            },
+            "type": "HALT"
+        }
+
+        post_message(ingestion_url, payload)
+
     def extract(self):
 
         try:
             self.imap = ImapClient(self.mail_server, self.port, self.username, self.password, self.use_ssl)
-        except Exception:
+        except Exception as error:
             self.status_logger.error("Connection error: check if mail server and port are correct")
-            raise
+            self.post_halt(error)
+            return
 
         try:
             self.imap.login()
-        except Exception:
+        except Exception as error:
             self.status_logger.error("Problem during login: check credentials")
+            self.post_halt(error)
             return
 
         try:
             start_datetime = datetime.fromtimestamp(self.timestamp/1000)
         except ValueError as error:
             self.status_logger.error("Valuer error:  " + str(error) + " at line " + str(sys.exc_info()[-1].tb_lineno))
+            self.post_halt(error)
             return
-            
+
         start_date = datetime.strftime(start_datetime, "%d-%b-%Y")
         # retrieve messages from a given sender
 
@@ -107,6 +130,7 @@ class AsyncEmailExtraction(threading.Thread):
         if resp != 'OK':
             self.status_logger.error(f"ERROR: Unable to open {self.folder} folder")
             self.imap.logout()
+            self.post_halt(f"Unable to open {self.folder} folder", end_timestamp)
             return
 
         email_posted = 0
@@ -180,7 +204,10 @@ class AsyncEmailExtraction(threading.Thread):
                         
         else:
             self.status_logger.error(f"ERROR: Unable to search email in folder: check if query is well done")
-        
+            self.imap.logout()
+            self.post_halt("Unable to search email in folder: check if query is well done", end_timestamp)
+            return
+
         # when done, you should log out
         self.imap.close()
         self.imap.logout()
