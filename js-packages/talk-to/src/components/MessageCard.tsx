@@ -13,7 +13,7 @@ import { Logo } from "../Svg/Logo";
 import { useDocumentPreview } from "./DocumentPreview";
 import { ArtifactCard, extractDocumentFromAnswer, richMarkdownComponents } from "./MarkdownRenderer";
 import { Message } from "./useGenerateResponse";
-import { isSafeExternalUrl } from "./utils/safeExternalUrl";
+import { isSafeExternalUrl } from "../../../shared/safe-external-url/safeExternalUrl";
 
 type Theme = "light" | "dark";
 

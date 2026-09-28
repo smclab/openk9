@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { buildCreateTenantRequest } from "../payload";
 import { deriveVirtualHost, isStep1Valid } from "../Step1Form";
 import { SecurityConfigurationKey, WizardState } from "../types";

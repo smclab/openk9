@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 

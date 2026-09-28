@@ -7,7 +7,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import type { Components } from "react-markdown";
 import { downloadTextFile, fileNameFromUrl, isImageUrl, useDocumentPreview } from "./DocumentPreview";
-import { isSafeExternalUrl } from "./utils/safeExternalUrl";
+import { isSafeExternalUrl } from "../../../shared/safe-external-url/safeExternalUrl";
 
 const DOCUMENT_EXT = /\.(pdf|docx?|xlsx?|pptx?|csv|txt|md|json|xml|rtf|odt|ods|odp)$/i;
 const DOC_FENCE_EXT = /\.(md|markdown|txt|csv|json|xml|ya?ml|html?)$/i;

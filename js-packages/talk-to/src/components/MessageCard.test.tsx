@@ -1,29 +1,30 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MessageCard } from "./MessageCard";
 import { Message } from "./useGenerateResponse";
 
-// Virtual mocks: react-markdown 9 is ESM-only and unresolvable under Jest 27.
-jest.mock("react-markdown", () => ({ __esModule: true, default: () => null }), { virtual: true });
-jest.mock("remark-gfm", () => ({ __esModule: true, default: () => undefined }), { virtual: true });
+// markdown stubbed: these tests cover the question image
+vi.mock("react-markdown", () => ({ default: () => null }));
+vi.mock("remark-gfm", () => ({ default: () => undefined }));
 
-const mockOpenPreview = jest.fn();
+const mockOpenPreview = vi.fn();
 
-jest.mock("./DocumentPreview", () => ({
+vi.mock("./DocumentPreview", () => ({
 	useDocumentPreview: () => ({
 		openPreview: mockOpenPreview,
-		showArtifactLive: jest.fn(),
-		closePreview: jest.fn(),
+		showArtifactLive: vi.fn(),
+		closePreview: vi.fn(),
 		activeArtifactId: null,
 	}),
 }));
 
-jest.mock("./MarkdownRenderer", () => ({
+vi.mock("./MarkdownRenderer", () => ({
 	ArtifactCard: () => null,
 	extractDocumentFromAnswer: () => null,
 	richMarkdownComponents: {},
 }));
 
-jest.mock("react-i18next", () => ({
+vi.mock("react-i18next", () => ({
 	useTranslation: () => ({
 		t: (key: string, options?: Record<string, unknown>) =>
 			options && "filename" in options ? `${key}:${options.filename}` : key,

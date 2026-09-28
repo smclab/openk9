@@ -6,9 +6,11 @@ bundler compiles them.
 
 ```
 js-packages/shared/
-└── image-query/        immagine come query per la ricerca vettoriale (#2276, #2337)
-    ├── imageQuery.ts
-    └── imageQuery.test.ts
+├── image-query/        immagine come query per la ricerca vettoriale
+│   ├── imageQuery.ts
+│   └── imageQuery.test.ts
+└── safe-external-url/  protocolli ammessi per i link esterni
+    └── safeExternalUrl.ts
 ```
 
 Yarn ignores this folder even though the workspace glob is `js-packages/*`,
@@ -23,39 +25,27 @@ source folder, not a workspace member.
 - **No JSX, no React.** Pure logic only. Anything that renders belongs to the app
   that renders it.
 - **Mind the TypeScript version spread.** Each app compiles these sources with
-  its own compiler, and they are not aligned: `talk-to` is on 4.9, `admin-ui` on
+  its own compiler, and they are not aligned: `talk-to` and `admin-ui` are on
   5.6, `search-frontend` on 5.9. Anything relying on a newer DOM lib breaks the
   oldest consumer. `imageQuery.ts` hits exactly this with `imageOrientation:
   "from-image"`, which only entered the DOM lib in TypeScript 5 — see the
   `FROM_IMAGE` constant and its comment. Typecheck against the **oldest**
   consumer before assuming a change is safe.
-- **Tests live next to the module** and run inside whichever app consumes it.
+- **Tests live next to the module** and run inside whichever app consumes it:
+  today that is `talk-to`, whose `vitest.config.ts` includes `../shared/**`.
+  They import `describe`, `it` and `expect` from `vitest` like any other test.
 
 ## How each frontend consumes it
 
 | App | Bundler | What it needs |
 |---|---|---|
-| `talk-to` | Create React App | `craco.config.js` + `COPY ./js-packages/shared` in its Dockerfile |
-| `search-frontend` | Vite | relative import + `COPY ./js-packages/shared` in its Dockerfile |
+| `talk-to` | Vite | relative import + `COPY ./js-packages/shared` in its Dockerfile |
+| `search-frontend` | Vite | same |
 | `admin-ui` | Vite | same |
-| `tenant-ui` | craco | same as talk-to |
+| `tenant-ui` | Vite | same |
 
-Vite-based apps need no special configuration: a relative import is enough, and
-the sources get compiled and bundled like any other file.
-
-Create React App is the awkward one, and it is worth knowing why before touching
-this. It refuses imports from outside `src/` **twice over**:
-
-1. `ModuleScopePlugin` rejects the request outright — *"Relative imports outside
-   of src/ are not supported"*.
-2. Even past that (for instance through a symlink), `babel-loader`'s `include` is
-   anchored to `src/`, so the file arrives untranspiled and webpack dies on the
-   first type annotation — *"Module parse failed: Unexpected token"*.
-
-`js-packages/talk-to/craco.config.js` opens both doors for this directory only,
-and also extends Jest's `roots` **and** `testMatch` so the tests here actually
-run. Extending only `roots` makes them silently never execute. All of this
-disappears if `talk-to` moves to Vite.
+Vite needs no special configuration: a relative import is enough, and the
+sources get compiled and bundled like any other file.
 
 ## Docker
 

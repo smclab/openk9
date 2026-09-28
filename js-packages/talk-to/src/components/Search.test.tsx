@@ -1,28 +1,29 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Search from "./Search";
 
-jest.mock("./DatasourceSelect", () => ({
+vi.mock("./DatasourceSelect", () => ({
 	DatasourceSelectMemo: () => null,
 }));
 
 let mockRetrieveType: string | undefined = "KNN";
 
-jest.mock("./ChatInfoContext", () => ({
+vi.mock("./ChatInfoContext", () => ({
 	useUser: () => ({ userInfo: { retrieveType: mockRetrieveType }, loading: false, language: "en" }),
 	supportsImageQuery: (retrieveType?: string) => retrieveType === "KNN",
 }));
 
-jest.mock("react-i18next", () => ({
+vi.mock("react-i18next", () => ({
 	useTranslation: () => ({
 		t: (key: string, options?: Record<string, unknown>) =>
 			options && "filename" in options ? `${key}:${options.filename}` : key,
 	}),
 }));
 
-const mockPrepareQueryImageCached = jest.fn();
-const mockForgetQueryImage = jest.fn();
+const mockPrepareQueryImageCached = vi.fn();
+const mockForgetQueryImage = vi.fn();
 
-jest.mock("../../../shared/image-query/imageQuery", () => ({
+vi.mock("../../../shared/image-query/imageQuery", () => ({
 	ALLOWED_CONTENT_TYPES: ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"],
 	MAX_INPUT_BYTES: 25 * 1024 * 1024,
 	ImageQueryError: class extends Error {
@@ -39,15 +40,15 @@ jest.mock("../../../shared/image-query/imageQuery", () => ({
 const prepared = { data: "BASE64", contentType: "image/jpeg", width: 1568, height: 1176, bytes: 421_000 };
 
 function renderSearch(props: Partial<React.ComponentProps<typeof Search>> = {}) {
-	const handleSearch = jest.fn();
+	const handleSearch = vi.fn();
 	const utils = render(
 		<Search
 			handleSearch={handleSearch}
-			cancelAllResponses={jest.fn()}
+			cancelAllResponses={vi.fn()}
 			isChatting={false}
 			isAuthenticated
 			selectedDatasourceIds={[]}
-			onSetSelectedDatasourceIds={jest.fn()}
+			onSetSelectedDatasourceIds={vi.fn()}
 			{...props}
 		/>,
 	);
@@ -102,7 +103,7 @@ describe("Search — icone del composer", () => {
 	test("un clic sull'icona apre subito l'input, senza menu intermedi", () => {
 		const { container } = renderSearch();
 		const input = imageInput(container);
-		const click = jest.spyOn(input, "click");
+		const click = vi.spyOn(input, "click");
 		fireEvent.click(screen.getByLabelText("search-by-image"));
 		expect(click).toHaveBeenCalled();
 		expect(screen.queryByRole("menu")).not.toBeInTheDocument();
@@ -264,7 +265,7 @@ describe("Search — invio", () => {
 
 	test("l'object URL di un'immagine inviata non viene revocato: lo usa la miniatura", async () => {
 		mockPrepareQueryImageCached.mockResolvedValue(prepared);
-		const revoke = jest.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+		const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
 
 		const { container } = renderSearch();
 		pick(container, pngFile());
@@ -279,7 +280,7 @@ describe("Search — invio", () => {
 
 	test("l'object URL di un'immagine rimossa viene revocato", async () => {
 		mockPrepareQueryImageCached.mockResolvedValue(prepared);
-		const revoke = jest.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+		const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
 
 		const { container } = renderSearch();
 		pick(container, pngFile());
@@ -292,7 +293,7 @@ describe("Search — invio", () => {
 	});
 
 	test("mentre lo streaming e' in corso il pulsante interrompe e non e' disabilitato", () => {
-		const cancelAllResponses = jest.fn();
+		const cancelAllResponses = vi.fn();
 		renderSearch({ isChatting: true, cancelAllResponses });
 
 		const stop = screen.getByLabelText("stop-generating");

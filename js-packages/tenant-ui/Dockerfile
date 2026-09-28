@@ -19,7 +19,7 @@ WORKDIR /app/js-packages/tenant-ui
 # Dev mode exposes development-only options (e.g. NO_GATEWAY_AUTH) in the UI.
 # Off by default; k9.sh enables it for dev image tags.
 ARG DEV_MODE=false
-ENV REACT_APP_DEV_MODE=$DEV_MODE
+ENV VITE_DEV_MODE=$DEV_MODE
 
 # Build
 # CI=false prevents warnings (like outdated babel plugins) from being treated as errors

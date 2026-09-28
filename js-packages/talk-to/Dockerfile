@@ -14,7 +14,7 @@ RUN yarn config set registry https://registry.npmjs.org/ && \
 
 # Copy source code
 COPY ./js-packages/talk-to ./js-packages/talk-to
-# Shared modules live in a sibling folder (see craco.config.js): without this
+# Shared modules live in a sibling folder (see ../shared/README.md): without this
 # the build fails resolving ../shared/**, because the context here is only
 # whatever we copy explicitly.
 COPY ./js-packages/shared ./js-packages/shared

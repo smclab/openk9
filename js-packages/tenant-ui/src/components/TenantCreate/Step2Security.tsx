@@ -29,7 +29,7 @@ import {
 type Preconfig = NonNullable<NonNullable<PreconfigurationsQuery["preconfigurations"]>[number]>;
 
 // Development-only configurations: hidden from the wizard unless the image
-// is built in dev mode (REACT_APP_DEV_MODE, set from the build tag).
+// is built in dev mode (VITE_DEV_MODE, set from the build tag).
 const HIDDEN_SECURITY_CONFIGURATIONS = ["NO_GATEWAY_AUTH"];
 
 export function selectablePresets<T extends { name?: unknown }>(presets: T[], devMode: boolean): T[] {
@@ -63,7 +63,7 @@ export function Step2Security({ values, onChange }: Props) {
     fetchPolicy: "cache-first",
     nextFetchPolicy: "cache-only",
   });
-  const devMode = process.env.REACT_APP_DEV_MODE === "true";
+  const devMode = import.meta.env.VITE_DEV_MODE === "true";
   const presets = sortPresets(selectablePresets((data?.preconfigurations ?? []).filter((p): p is Preconfig => !!p), devMode));
   const selected = presets.find((p) => p.name === values.securityConfiguration);
 

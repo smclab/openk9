@@ -57,7 +57,7 @@ const TAB_KEY = 9;
 
 export function useFocusTrap(
   isActive: boolean
-): [React.RefObject<HTMLDivElement>] {
+): [React.RefObject<HTMLDivElement | null>] {
   const trapRef = useRef<HTMLDivElement>(null);
 
   const selectNextFocusableElem = useCallback(

@@ -423,7 +423,7 @@ const MessageList: React.FC<{
   icon: IconProps;
   initialMessage: string;
   isGenerateMessage: { id: string; isLoading: boolean } | null;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
+  messagesEndRef: React.Ref<HTMLDivElement>;
   nameChatbot?: string;
   welcomeMessageTime?: string;
   numberOfSources?: number;

@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { TextDecoder, TextEncoder } from "util";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import useGenerateResponse from "./useGenerateResponse";
@@ -6,11 +7,11 @@ import useGenerateResponse from "./useGenerateResponse";
 (global as any).TextDecoder = (global as any).TextDecoder || TextDecoder;
 
 let mockUuidCounter = 0;
-jest.mock("uuid", () => ({
+vi.mock("uuid", () => ({
 	v4: () => `test-uuid-${++mockUuidCounter}`,
 }));
 
-jest.mock("./ChatInfoContext", () => ({
+vi.mock("./ChatInfoContext", () => ({
 	useUser: () => ({
 		userInfo: { name: "test-user" },
 		loading: false,
@@ -18,29 +19,29 @@ jest.mock("./ChatInfoContext", () => ({
 	}),
 }));
 
-jest.mock("../context/HistoryChatContext", () => ({
-	useChatContext: () => ({ dispatch: jest.fn() }),
+vi.mock("../context/HistoryChatContext", () => ({
+	useChatContext: () => ({ dispatch: vi.fn() }),
 }));
 
 // Reads the variable on every call, not a fixed value: the authenticated body has a different shape.
-jest.mock("../auth/oauth2", () => ({
+vi.mock("../auth/oauth2", () => ({
 	isAuthenticated: () => mockAuthenticated,
 }));
 let mockAuthenticated = false;
 
-jest.mock("react-i18next", () => ({
+vi.mock("react-i18next", () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-const mockPrepareQueryImageCached = jest.fn();
+const mockPrepareQueryImageCached = vi.fn();
 
-jest.mock("../../../shared/image-query/imageQuery", () => ({
+vi.mock("../../../shared/image-query/imageQuery", () => ({
 	prepareQueryImageCached: (...args: unknown[]) => mockPrepareQueryImageCached(...args),
 }));
 
-const mockGenerateResponse = jest.fn();
+const mockGenerateResponse = vi.fn();
 
-jest.mock("./client", () => ({
+vi.mock("./client", () => ({
 	OpenK9Client: () => ({
 		GenerateResponse: (...args: unknown[]) => mockGenerateResponse(...args),
 	}),
