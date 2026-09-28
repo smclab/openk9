@@ -453,6 +453,7 @@ export type CharFilterDtoInput = {
 export enum ChunkType {
   ChunkTypeCharacterTextSplitter = 'CHUNK_TYPE_CHARACTER_TEXT_SPLITTER',
   ChunkTypeDefault = 'CHUNK_TYPE_DEFAULT',
+  ChunkTypeFastChunker = 'CHUNK_TYPE_FAST_CHUNKER',
   ChunkTypeLateChunker = 'CHUNK_TYPE_LATE_CHUNKER',
   ChunkTypeNeuralChunker = 'CHUNK_TYPE_NEURAL_CHUNKER',
   ChunkTypeRecursiveSplitter = 'CHUNK_TYPE_RECURSIVE_SPLITTER',
