@@ -945,6 +945,7 @@
       "ibm-watsonx": "IBM WatsonX",
       "chat-vertex-ai": "Chat Vertex AI",
       "aws-bedrock": "AWS Bedrock",
+      "hugging-face": "Hugging Face",
       "float32-full-precision-default": "Float32 (precisione piena, predefinito)",
       "byte-int8-quantized": "Byte (quantizzato int8)",
       "binary-packed-vector-size-multiple-of-8": "Binary (compresso, dimensione vettore multipla di 8)",

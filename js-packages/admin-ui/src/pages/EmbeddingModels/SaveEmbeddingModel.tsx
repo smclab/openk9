@@ -45,6 +45,7 @@ const getProviderOptions = (t: TFunction) => [
   { value: "watsonx", label: t("pages.embedding-models.ibm-watsonx") },
   { value: "chat_vertex_ai", label: t("pages.embedding-models.chat-vertex-ai") },
   { value: "aws_bedrock", label: t("pages.embedding-models.aws-bedrock") },
+  { value: "hugging_face", label: t("pages.embedding-models.hugging-face") },
 ];
 
 const getVectorDataTypeOptions = (t: TFunction) => [
@@ -153,6 +154,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
           id: embeddingModelsId !== "new" ? embeddingModelsId : undefined,
           providerModel: { provider: providerModel.provider || "", model: providerModel.model || "" },
           ...data,
+          name: data.name.trim(),
           vectorDataType: data.vectorDataType as VectorDataType,
         },
       });
@@ -276,6 +278,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       id="modelId"
                       onChange={(s) => {
                         setProviderModel((value) => ({ ...value, model: s }));
+                        form.inputProps("model").onChange(s);
                       }}
                       validationMessages={[]}
                       value={providerModel.model || ""}
