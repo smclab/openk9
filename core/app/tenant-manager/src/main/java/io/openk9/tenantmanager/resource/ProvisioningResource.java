@@ -108,7 +108,7 @@ public class ProvisioningResource {
 			+ "connector for the target tenant and registers the "
 			+ "corresponding plugin driver. The preset is selected "
 			+ "from the supported values (YOUTUBE, CRAWLER, EMAIL, "
-			+ "GITLAB, SITEMAP, DATABASE, MINIO). The saga runs "
+			+ "GITLAB, SITEMAP, DATABASE, S3). The saga runs "
 			+ "asynchronously and the endpoint always returns HTTP "
 			+ "200: the response's `result` field carries either the "
 			+ "saga outcome (SUCCESS, ERROR, COMPENSATION, "

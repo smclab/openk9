@@ -7,8 +7,8 @@
       "size": 4,
       "required": true,
       "values": [],
-      "placeholder": "minio",
-      "info": "Host of Minio server",
+      "placeholder": "seaweedfs",
+      "info": "Host of the S3-compatible endpoint, without http:// (e.g. seaweedfs)",
       "validator": {
         "regex": "/[[:alnum:]]+/"
       }
@@ -20,8 +20,8 @@
       "size": 4,
       "required": true,
       "values": [],
-      "placeholder": "minio",
-      "info": "Port of Minio server",
+      "placeholder": "8333",
+      "info": "S3 port of the endpoint (e.g. 8333 for SeaweedFS, 9000 for MinIO)",
       "validator": {
         "regex": "/[[:alnum:]]+/"
       }
@@ -33,8 +33,8 @@
       "size": 4,
       "required": true,
       "values": [],
-      "placeholder": "minio",
-      "info": "Access Key for Minio server",
+      "placeholder": "",
+      "info": "Access Key for the S3-compatible endpoint",
       "validator": {
         "regex": "/[[:alnum:]]+/"
       }
@@ -46,8 +46,8 @@
       "size": 4,
       "required": true,
       "values": [],
-      "placeholder": "minio",
-      "info": "Secret Key for Minio server",
+      "placeholder": "",
+      "info": "Secret Key for the S3-compatible endpoint",
       "validator": {
         "regex": "/[[:alnum:]]+/"
       }
@@ -59,7 +59,7 @@
       "size": 4,
       "required": true,
       "values": [],
-      "placeholder": "minio",
+      "placeholder": "",
       "info": "Bucket where extracts files",
       "validator": {
         "regex": "/[[:alnum:]]+/"
@@ -72,7 +72,7 @@
       "size": 4,
       "required": false,
       "values": [],
-      "placeholder": "minio",
+      "placeholder": "",
       "info": "Prefix of folder in the bucket",
       "validator": {
         "regex": "/[[:alnum:]]+/"
@@ -85,7 +85,7 @@
       "size": 4,
       "required": false,
       "values": [],
-      "placeholder": "minio",
+      "placeholder": "",
       "info": "List of columns in case of extracting excel file",
       "validator": {
         "regex": "/[[:alnum:]]+/"

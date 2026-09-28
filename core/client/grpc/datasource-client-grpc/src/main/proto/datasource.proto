@@ -94,5 +94,5 @@ enum Preset {
   GITLAB = 3;
   SITEMAP = 4;
   DATABASE = 5;
-  MINIO = 6;
+  S3 = 6;
 }

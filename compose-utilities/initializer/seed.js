@@ -580,9 +580,9 @@ async function main() {
       resourceUri: { baseUri: 'http://openk9-web-connector:5000', path: '/startSitemapCrawling' }
     },
     {
-      name: 'Minio Connector',
-      description: 'Docker Compose Minio Connector',
-      resourceUri: { baseUri: 'http://openk9-minio-connector:5000' }
+      name: 'S3 Connector',
+      description: 'Docker Compose S3 Connector',
+      resourceUri: { baseUri: 'http://openk9-s3-connector:5000' }
     }
   ];
 

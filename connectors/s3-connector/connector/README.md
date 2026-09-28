@@ -1,25 +1,26 @@
-# Minio Connector
+# S3 Connector
 
-Minio connector is a service for extracting data from specific minio buckets.\
+S3 connector is a service for extracting data from buckets of any S3-compatible object storage
+(for example SeaweedFS, MinIO or AWS S3). It connects to the endpoint over plain HTTP.\
 Run container from built image and configure appropriate plugin to call it.
 
 The container takes via environment variable INGESTION_URL, which must match the url of the Ingestion Api.
 
-## Minio Api
+## S3 Api
 
 This Rest service exposes one endpoint:
 
 
-### Execute Minio endpoint
+### Execute endpoint
 
-Call this endpoint to execute a crawler that extract buckets starting from minio domain
+Call this endpoint to execute a crawler that extracts objects from a bucket of the S3 endpoint
 
 This endpoint takes different arguments in JSON raw body:
 
-- **host**: Minio domain host name to extract from (required)
-- **port**: Minio domain port to extract from (required)
-- **accessKey**: access key connecting to Minio domain (required)
-- **secretKey**: secret key connecting to Minio domain (required)
+- **host**: host name of the S3 endpoint, without `http://` (required)
+- **port**: S3 port of the endpoint, e.g. `8333` for SeaweedFS or `9000` for MinIO (required)
+- **accessKey**: access key of the S3 endpoint (required)
+- **secretKey**: secret key of the S3 endpoint (required)
 - **bucketName**: bucket name to extract from (required)
 - **datasourcePayloadKey**: key used for datasource payload (optional, default None)
 - **prefix**: bucket object prefix (optional, default None)
@@ -37,7 +38,7 @@ curl --location --request POST 'http://localhost:5000/getData' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "host": "localhost",
-    "port": "9000",
+    "port": "8333",
     "accessKey": "my_access_key",
     "secretKey": "my_secret_key",
     "bucketName": "bucket_name",
@@ -82,7 +83,7 @@ curl --location --request POST 'http://localhost:5000/sample'
 
 Build the Docker file:
 ```
-docker build -t minio-connector .
+docker build -t s3-connector .
 ```
 
 **Command parameters**:
@@ -91,7 +92,7 @@ docker build -t minio-connector .
 
 Run the built Docker image:
 ```
-docker run -p 5000:5000 --name minio-connector minio-connector 
+docker run -p 5000:5000 --name s3-connector s3-connector 
 ```
 
 **Command parameters**:

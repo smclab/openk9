@@ -250,17 +250,17 @@ Trivy FS gitlab-connector:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: [ "connectors/gitlab-connector/connector/**/*" ]
 
-Trivy FS minio-connector:
+Trivy FS s3-connector:
   extends: .trivy-fs-scan
   variables:
-    SCAN_DIR: "connectors/minio-connector/connector"
+    SCAN_DIR: "connectors/s3-connector/connector"
     IGNOREFILE: "connectors/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
-      changes: [ "connectors/minio-connector/connector/**/*" ]
+      changes: [ "connectors/s3-connector/connector/**/*" ]
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: [ "connectors/minio-connector/connector/**/*" ]
+      changes: [ "connectors/s3-connector/connector/**/*" ]
 
 Trivy FS openk9-crawler:
   extends: .trivy-fs-scan

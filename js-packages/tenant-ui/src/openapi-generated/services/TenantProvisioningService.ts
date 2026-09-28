@@ -20,7 +20,7 @@ export class TenantProvisioningService {
 
     /**
      * Create a preset connector plugin driver for a tenant
-     * Deploys the Helm chart of the selected preset connector for the target tenant and registers the corresponding plugin driver. The preset is selected from the supported values (YOUTUBE, CRAWLER, EMAIL, GITLAB, SITEMAP, DATABASE, MINIO). The saga runs asynchronously and the endpoint always returns HTTP 200: the response's `result` field carries either the saga outcome (SUCCESS, ERROR, COMPENSATION, COMPENSATION_ERROR) or, when the orchestrator itself fails (e.g. ask timeout), the failure message. Callers must inspect `result` to determine the actual outcome.
+     * Deploys the Helm chart of the selected preset connector for the target tenant and registers the corresponding plugin driver. The preset is selected from the supported values (YOUTUBE, CRAWLER, EMAIL, GITLAB, SITEMAP, DATABASE, S3). The saga runs asynchronously and the endpoint always returns HTTP 200: the response's `result` field carries either the saga outcome (SUCCESS, ERROR, COMPENSATION, COMPENSATION_ERROR) or, when the orchestrator itself fails (e.g. ask timeout), the failure message. Callers must inspect `result` to determine the actual outcome.
      * @param requestBody
      * @returns CreateConnectorResponse Connector creation saga completed
      * @throws ApiError

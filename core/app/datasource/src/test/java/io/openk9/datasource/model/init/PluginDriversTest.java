@@ -106,4 +106,20 @@ class PluginDriversTest {
 		Assertions.assertNotEquals(crawlerBaseUri, sitemapBaseUri);
 	}
 
+	// The S3 preset is the generic object-storage connector, deployed as the
+	// openk9-s3-connector chart and registered as the "S3" plugin driver.
+	@Test
+	void s3Preset_mapsToS3Connector() {
+		var dto = PluginDrivers.getPluginDriverDTO("luxio", Preset.S3);
+
+		Assertions.assertEquals(
+			"openk9-s3-connector", PresetPluginDrivers.getPluginDriver(Preset.S3));
+		Assertions.assertEquals("S3", dto.getName());
+		Assertions.assertTrue(
+			dto.getResourceUri().getBaseUri()
+				.startsWith("http://openk9-s3-connector-luxio:5000"),
+			"Unexpected S3 base uri: " + dto.getResourceUri().getBaseUri()
+		);
+	}
+
 }

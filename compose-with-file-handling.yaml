@@ -32,10 +32,10 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-  minio-connector:
-    image: ${IMAGE_GROUP:-openk9}/openk9-minio-connector:${IMAGE_TAG:-2026.3.0-SNAPSHOT}
-    container_name: openk9-minio-connector
-    hostname: openk9-minio-connector
+  s3-connector:
+    image: ${IMAGE_GROUP:-openk9}/openk9-s3-connector:${IMAGE_TAG:-2026.3.0-SNAPSHOT}
+    container_name: openk9-s3-connector
+    hostname: openk9-s3-connector
     ports:
       - "5002:5000"
   docling-processor:

@@ -309,22 +309,22 @@ Build GitLab Connector image:
   - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
 
 ###############################################################
-#                  BUILD MINIO CONNECTOR                      #
+#                  BUILD S3 CONNECTOR                         #
 ###############################################################
-Build Minio Connector image:
+Build S3 Connector image:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [ "" ]
   variables:
     DOCKER_CONFIG: "/kaniko/.docker"
-    COMPONENT: "minio-connector"
+    COMPONENT: "s3-connector"
   needs:
   - job: Fetch config
     artifacts: true
   script:
   - |
-    echo "=== Building Minio Connector ==="
+    echo "=== Building S3 Connector ==="
     source $CI_PROJECT_DIR/config.env
 
     echo "=== Configuring Kaniko ==="
@@ -334,33 +334,33 @@ Build Minio Connector image:
 
     echo "=== Building Docker image with Kaniko ==="
     KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/minio-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/minio-connector/connector/Dockerfile"
+    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/s3-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/s3-connector/connector/Dockerfile"
 
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
        { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
       echo "MR: build only, no push"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push --skip-push-permission-check
     elif [ -n "$CI_COMMIT_TAG" ]; then
-      # Strip the leading 'v': images are versioned without it (openk9-minio-connector:2026.1.0).
+      # Strip the leading 'v': images are versioned without it (openk9-s3-connector:2026.1.0).
       # The 'v' is only the pipeline-trigger convention, never part of the image tag.
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:${CI_COMMIT_TAG#v}"
+        --destination "$CI_REGISTRY_NAME/openk9/openk9-s3-connector:${CI_COMMIT_TAG#v}"
     else
       echo "main: push :$VERSION"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION"
+        --destination "$CI_REGISTRY_NAME/openk9/openk9-s3-connector:$VERSION"
     fi
   # Solo modifiche al codice del connector, non al chart Helm
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/minio-connector/connector/**/*
+    - connectors/s3-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
   # Release branch (N.N.x) — same convention as backend/AI/FE: push :<version>-SNAPSHOT
   # to the internal registry (OPENK9_VERSION already carries -SNAPSHOT on the branch).
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
-    - connectors/minio-connector/connector/**/*
+    - connectors/s3-connector/connector/**/*
   # MR: detection child-side, vedi commento su "Build Web Connector image" (#2160)
   - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
 
@@ -476,25 +476,25 @@ Container Scanning GitLab Connector:
   - if: '$CI_COMMIT_TAG'
 
 ###############################################################
-#             CONTAINER SCANNING MINIO CONNECTOR             #
+#             CONTAINER SCANNING S3 CONNECTOR                #
 ###############################################################
-Container Scanning Minio Connector:
+Container Scanning S3 Connector:
   extends: .trivy-image-scan-connectors
   needs:
   - job: Fetch config
     artifacts: true
-  - "Build Minio Connector image"
+  - "Build S3 Connector image"
   variables:
-    REGISTRY_COMPONENT_NAME: "openk9-minio-connector"
+    REGISTRY_COMPONENT_NAME: "openk9-s3-connector"
     IGNOREFILE: "connectors/.trivyignore.yaml"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/minio-connector/connector/**/*
+    - connectors/s3-connector/connector/**/*
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
-    - connectors/minio-connector/connector/**/*
+    - connectors/s3-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
 
 ######################## COPY TO DOCKER HUB ########################
@@ -594,20 +594,20 @@ Copy GitLab Connector to DockerHub:
         - connectors/gitlab-connector/connector/**/*
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
-Copy Minio Connector to DockerHub:
+Copy S3 Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
-    REGISTRY_COMPONENT_NAME: "openk9-minio-connector"
+    REGISTRY_COMPONENT_NAME: "openk9-s3-connector"
   needs:
     - job: Fetch config
       artifacts: true
-    - job: Build Minio Connector image
+    - job: Build S3 Connector image
       artifacts: false
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - connectors/minio-connector/connector/**/*
+        - connectors/s3-connector/connector/**/*
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
-        - connectors/minio-connector/connector/**/*
+        - connectors/s3-connector/connector/**/*
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'

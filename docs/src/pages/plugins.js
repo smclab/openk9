@@ -49,11 +49,11 @@ const plugins = [
       },
             {
         iconSrc: "img/plugins/database.svg",
-        title: "Minio",
+        title: "S3",
         pluginHref: "/docs/plugins/minio-plugin",
         description: (
           <>
-            Extract and handle data coming from S3 Minio storage
+            Extract and handle data coming from S3-compatible object storage
           </>
         ),
       },

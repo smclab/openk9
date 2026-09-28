@@ -1,0 +1,29 @@
+version: "3.5"
+services:
+    s3-connector:
+        build:
+            context: .
+        image: s3-connector:latest
+        container_name: s3-connector
+        ports:
+            - "5000:5000"
+        environment:
+            - INPUT_LOG_LEVEL=INFO
+        healthcheck:
+            test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=5)"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+    seaweedfs:
+        image: chrislusf/seaweedfs:4.47
+        hostname: s3-connector-data
+        # No -s3.config: the S3 gateway runs without authentication, which is
+        # enough to try the connector locally.
+        command: server -dir=/data -s3
+        ports:
+            - "8333:8333"
+        volumes:
+            - s3-connector-data:/data
+
+volumes:
+    s3-connector-data:

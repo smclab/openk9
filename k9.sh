@@ -112,7 +112,7 @@ CORE_SERVICES=(
     search-frontend admin-ui tenant-ui web-connector
 )
 GEN_AI_SERVICES=(embedding-module talk-to agentic-rag-module evaluator evaluator-offline)
-FILE_HANDLING_SERVICES=(tika minio-connector docling-processor)
+FILE_HANDLING_SERVICES=(tika s3-connector docling-processor)
 
 VALID_SERVICES=(
     "${CORE_SERVICES[@]}" "${GEN_AI_SERVICES[@]}" "${FILE_HANDLING_SERVICES[@]}"
@@ -336,7 +336,7 @@ build_gen_ai() {
 
 build_file_handling() {
     echo "--- Building File Services ---"
-    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-s3-connector:$TAG" -f connectors/s3-connector/connector/Dockerfile connectors/s3-connector/connector
     # docling-processor: build for the host platform like the other services.
     # The Dockerfile picks CPU wheels by TARGETARCH (auto-set from --platform):
     # amd64 uses the +cpu wheels, arm64 the default-PyPI aarch64 wheels, so on
@@ -421,8 +421,8 @@ build_single() {
         web-connector)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
             ;;
-        minio-connector)
-            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
+        s3-connector)
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-s3-connector:$TAG" -f connectors/s3-connector/connector/Dockerfile connectors/s3-connector/connector
             ;;
         docling-processor)
             # Build for the host platform; the Dockerfile picks CPU wheels by
@@ -675,7 +675,7 @@ Services (for targeted build/restart):
   api-gateway  tenant-manager  datasource  ingestion  searcher
   search-frontend  admin-ui  tenant-ui  web-connector
   agentic-rag-module  embedding-module  talk-to
-  tika  minio-connector
+  tika  s3-connector
 
 Build details:
   Core images are always built. Additional profiles add extra
@@ -697,7 +697,7 @@ Startup behavior:
   On every start, the initializer container is rebuilt and runs
   seed.js, which idempotently provisions:
     - A demo tenant (demo.openk9.localhost)
-    - Plugin drivers (Sitemap Crawler, Minio Connector)
+    - Plugin drivers (Sitemap Crawler, S3 Connector)
     - A sample datasource (SMC Website)
     - Links the datasource to the Default Bucket
 

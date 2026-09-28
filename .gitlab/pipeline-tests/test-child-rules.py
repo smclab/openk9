@@ -209,7 +209,7 @@ def run(verbose=False, kfilter=None):
     f = ".gitlab-ci-connectors.yaml"
     if want(f):
         section("Connectors")
-        connectors = ["Web", "Email", "Database", "YouTube", "GitLab", "Minio"]
+        connectors = ["Web", "Email", "Database", "YouTube", "GitLab", "S3"]
 
         copy_jobs  = [f"Copy {n} Connector to DockerHub" for n in connectors]
         build_jobs = [f"Build {n} Connector image" for n in connectors]

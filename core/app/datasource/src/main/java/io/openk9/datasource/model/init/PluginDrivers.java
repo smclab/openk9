@@ -125,14 +125,14 @@ public class PluginDrivers {
 				.build()
 		);
 		CONFIGURATION_MAP.put(
-			Preset.MINIO,
+			Preset.S3,
 			PresetConfiguration.builder()
-				.name("Minio")
-				.description("Plugin Driver for Minio.")
+				.name("S3")
+				.description("Plugin Driver for S3-compatible object storage.")
 				.type(PluginDriver.PluginDriverType.HTTP)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
 				.resourceUri(ResourceUri.builder()
-					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.MINIO))
+					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.S3))
 					.path("/execute")
 					.build()
 				)

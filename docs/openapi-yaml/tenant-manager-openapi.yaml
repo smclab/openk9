@@ -135,7 +135,7 @@ components:
       - GITLAB
       - SITEMAP
       - DATABASE
-      - MINIO
+      - S3
       - UNRECOGNIZED
     SecurityConfiguration:
       type: string
@@ -173,7 +173,7 @@ info:
     name: GNU Affero General Public License v3.0
     url: https://github.com/smclab/openk9/blob/main/LICENSE
   title: Tenant Manager Service
-  version: 2026.1.0-SNAPSHOT
+  version: 2026.3.0-SNAPSHOT
 tags:
 - name: Tenant Provisioning
   description: "Endpoints that create new tenants, request deletion, and bootstrap\
@@ -189,10 +189,10 @@ paths:
       description: "Deploys the Helm chart of the selected preset connector for the\
         \ target tenant and registers the corresponding plugin driver. The preset\
         \ is selected from the supported values (YOUTUBE, CRAWLER, EMAIL, GITLAB,\
-        \ SITEMAP, DATABASE, MINIO). The saga runs asynchronously and the endpoint\
-        \ always returns HTTP 200: the response's `result` field carries either the\
-        \ saga outcome (SUCCESS, ERROR, COMPENSATION, COMPENSATION_ERROR) or, when\
-        \ the orchestrator itself fails (e.g. ask timeout), the failure message. Callers\
+        \ SITEMAP, DATABASE, S3). The saga runs asynchronously and the endpoint always\
+        \ returns HTTP 200: the response's `result` field carries either the saga\
+        \ outcome (SUCCESS, ERROR, COMPENSATION, COMPENSATION_ERROR) or, when the\
+        \ orchestrator itself fails (e.g. ask timeout), the failure message. Callers\
         \ must inspect `result` to determine the actual outcome."
       operationId: createConnector
       tags:
