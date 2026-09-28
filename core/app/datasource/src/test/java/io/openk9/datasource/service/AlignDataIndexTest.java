@@ -522,6 +522,54 @@ public class AlignDataIndexTest {
 		);
 	}
 
+	@Test
+	void should_record_on_alignment_what_only_the_template_declares()
+		throws IOException {
+
+		var indexName = IndexName.from(SCHEMA_NAME, dataIndex);
+
+		// a dataIndex created before the settings were recorded: nothing in
+		// the column, and what the operator asked only in its index template
+		Assertions.assertNull(getRecordedSettings());
+
+		declareOnTemplate(indexName, JsonObject.of("max_result_window", "12345"));
+
+		Assertions.assertEquals(IndexAlignment.Status.TEMPLATE_ONLY, align().status());
+
+		Assertions.assertEquals(
+			JsonObject.of("index", JsonObject.of("max_result_window", "12345")),
+			new JsonObject(getRecordedSettings()),
+			"the alignment must record what only the template declared");
+		Assertions.assertTrue(
+			getTemplate(indexName).contains("12345"),
+			"and the template it regenerates must still declare it");
+	}
+
+	@Test
+	void should_record_on_a_settings_update_what_only_the_template_declares()
+		throws IOException {
+
+		var indexName = IndexName.from(SCHEMA_NAME, dataIndex);
+
+		declareOnTemplate(indexName, JsonObject.of("max_result_window", "12345"));
+
+		updateSettings(JsonObject.of(
+			"index", JsonObject.of("refresh_interval", "30s")));
+
+		// what the template declared is recorded before the request is
+		// merged, so that the column does not lose it
+		Assertions.assertEquals(
+			JsonObject.of("index", JsonObject.of(
+				"max_result_window", "12345", "refresh_interval", "30s")),
+			new JsonObject(getRecordedSettings())
+		);
+
+		var template = getTemplate(indexName);
+
+		Assertions.assertTrue(template.contains("12345"), template);
+		Assertions.assertTrue(template.contains("30s"), template);
+	}
+
 	private IndexAlignment align() {
 		return align(true);
 	}
@@ -565,6 +613,39 @@ public class AlignDataIndexTest {
 		).await().indefinitely().getEntity();
 	}
 
+	/**
+	 * Adds settings under {@code index} to the index template of a dataIndex
+	 * behind its back, the way an operator could before the settings were
+	 * recorded.
+	 */
+	private void declareOnTemplate(IndexName indexName, JsonObject settings)
+		throws IOException {
+
+		var endpoint = String.format(
+			"/_index_template/%s%s", indexName, IndexService.TEMPLATE_SUFFIX);
+
+		var indexTemplate = new JsonObject(send(endpoint))
+			.getJsonArray("index_templates")
+			.getJsonObject(0)
+			.getJsonObject("index_template");
+
+		indexTemplate
+			.getJsonObject("template")
+			.getJsonObject("settings")
+			.getJsonObject("index")
+			.mergeIn(settings);
+
+		var request = Requests.builder()
+			.endpoint(endpoint)
+			.method("PUT")
+			.json(indexTemplate.encode())
+			.build();
+
+		try (var response = openSearchClient.generic().execute(request)) {
+			Assertions.assertEquals(200, response.getStatus());
+		}
+	}
+
 	private Scheduler createRunningScheduler() {
 		var scheduler = new Scheduler();
 
@@ -603,6 +684,15 @@ public class AlignDataIndexTest {
 
 	private String getLiveSettings(IndexName indexName) throws IOException {
 		return send(String.format("/%s/_settings", indexName));
+	}
+
+	private String getRecordedSettings() {
+		return sessionFactory.withTransaction(session -> dataIndexService
+				.findById(session, dataIndex.getId())
+				.map(DataIndex::getSettings)
+			)
+			.await()
+			.indefinitely();
 	}
 
 	private String getTemplate(IndexName indexName) throws IOException {

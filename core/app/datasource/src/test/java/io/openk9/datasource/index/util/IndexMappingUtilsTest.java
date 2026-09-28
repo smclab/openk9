@@ -261,8 +261,6 @@ public class IndexMappingUtilsTest {
 			.stream().findFirst().orElseThrow();
 	}
 
-	// -- Static test data for the docTypesToMappings pure unit test --
-
 	@Test
 	void should_find_no_custom_settings_in_a_template_the_doc_types_derive() {
 		// the index template declares exactly what the docTypes derive, in the
@@ -335,6 +333,8 @@ public class IndexMappingUtilsTest {
 			.put("index", new JsonObject()
 				.put("highlight", new JsonObject().put("max_analyzed_offset", "10000000")));
 	}
+
+	// -- Static test data for the docTypesToMappings pure unit test --
 
 	private static final Object expectedJson = TestUtils.getResourceAsJsonObject(
 		"es/mappings_request.json");

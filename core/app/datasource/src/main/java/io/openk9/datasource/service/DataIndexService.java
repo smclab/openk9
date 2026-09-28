@@ -235,12 +235,14 @@ public class DataIndexService
 	}
 
 	/**
-	 * Creates a dataIndex, whoever the caller is: an operator through the
-	 * creation request, or the scheduler when a reindex starts.
+	 * Creates a dataIndex that takes the place of no other one, as an operator
+	 * does through the creation request.
 	 * <p>
-	 * This is the single gate every dataIndex goes through, so it is where the
-	 * rules about what a valid dataIndex is live, and where its index template
-	 * is generated from the embedding model in force.
+	 * This is the single gate every dataIndex goes through, the scheduler
+	 * included through {@link #create(Mutiny.Session, DataIndex, DataIndex)}
+	 * when a reindex starts, so it is where the rules about what a valid
+	 * dataIndex is live, and where its index template is generated from the
+	 * embedding model in force.
 	 *
 	 * @param session   the session the dataIndex is created in
 	 * @param dataIndex the dataIndex to create
@@ -275,7 +277,7 @@ public class DataIndexService
 
 		return resolveEmbeddingModel(session, dataIndex)
 			.flatMap(embeddingModel -> merge(session, dataIndex)
-				.call(merged -> inheritIndexTemplateSettings(
+				.call(merged -> recoverIndexTemplateSettings(
 					session, merged, replaced))
 				.call(merged -> createDataIndexTemplate(
 					session, merged, embeddingModel))
@@ -653,7 +655,9 @@ public class DataIndexService
 					IndexMappingUtils.docTypesToMappings(docTypes),
 					closeIfNeeded
 				))
-				.flatMap(alignment -> resolveEmbeddingModel(session, dataIndex)
+				.flatMap(alignment -> recoverIndexTemplateSettings(
+						session, dataIndex, dataIndex)
+					.flatMap(unused -> resolveEmbeddingModel(session, dataIndex))
 					.flatMap(embeddingModel -> createDataIndexTemplate(
 						session, dataIndex, embeddingModel))
 					.replaceWith(alignment)
@@ -815,13 +819,15 @@ public class DataIndexService
 			return Uni.createFrom().item(alignment);
 		}
 
-		dataIndex.setSettings(IndexMappingUtils
-			.mergeSettings(
-				new JsonObject(getSettingsMap(dataIndex.getSettings())), requested)
-			.encode()
-		);
-
-		return resolveEmbeddingModel(session, dataIndex)
+		// what the index template alone declares has to be recorded before the
+		// request is merged, or the column stops being NULL without it
+		return recoverIndexTemplateSettings(session, dataIndex, dataIndex)
+			.invoke(() -> dataIndex.setSettings(IndexMappingUtils
+				.mergeSettings(
+					new JsonObject(getSettingsMap(dataIndex.getSettings())), requested)
+				.encode()
+			))
+			.flatMap(unused -> resolveEmbeddingModel(session, dataIndex))
 			.flatMap(embeddingModel -> createDataIndexTemplate(
 				session, dataIndex, embeddingModel))
 			.replaceWith(alignment);
@@ -1072,30 +1078,37 @@ public class DataIndexService
 	}
 
 	/**
-	 * Records on a dataIndex the custom settings the index template of the
-	 * dataIndex it replaces declares, when it records none of its own.
+	 * Records on a dataIndex the custom settings an index template declares,
+	 * when it records none of its own.
+	 * <p>
+	 * The dataIndexes created before the settings were recorded at all have
+	 * them only in their index template, so every path that regenerates it
+	 * from what is recorded comes here first: a reindex reads the template of
+	 * the dataIndex it replaces, an alignment or a settings update the one of
+	 * the dataIndex itself.
 	 * <p>
 	 * The derived settings are computed from the docTypes as they are now, so
 	 * only what the docTypes do not derive is recorded, and the analysis the
 	 * index template regenerates is never frozen in the column. Nothing is
 	 * read when the dataIndex already records its settings, or when there is
-	 * nothing to replace.
+	 * no template to read.
 	 *
-	 * @param session   the session the dataIndex is created in
-	 * @param dataIndex the dataIndex being created, already managed
-	 * @param replaced  the dataIndex being replaced, may be {@code null}
+	 * @param session       the session the dataIndex is managed in
+	 * @param dataIndex     the dataIndex the settings are recorded on, managed
+	 * @param templateOwner the dataIndex whose index template is read, may be
+	 *                      {@code null}
 	 * @return an empty {@link Uni}
 	 */
-	private Uni<Void> inheritIndexTemplateSettings(
-		Mutiny.Session session, DataIndex dataIndex, DataIndex replaced) {
+	private Uni<Void> recoverIndexTemplateSettings(
+		Mutiny.Session session, DataIndex dataIndex, DataIndex templateOwner) {
 
-		if (replaced == null || dataIndex.getSettings() != null) {
+		if (templateOwner == null || dataIndex.getSettings() != null) {
 			return Uni.createFrom().voidItem();
 		}
 
 		return getCurrentTenant(session)
 			.flatMap(tenantId -> indexService.readIndexTemplateSettings(
-				IndexName.from(tenantId, replaced)))
+				IndexName.from(tenantId, templateOwner)))
 			.flatMap(declared -> {
 
 				if (declared == null) {
@@ -1119,7 +1132,7 @@ public class DataIndexService
 								+ "template of %s declares beyond the docTypes are "
 								+ "recorded on it, %s",
 							dataIndex.getName(),
-							replaced.getName(),
+							templateOwner.getName(),
 							custom.encode()
 						);
 
