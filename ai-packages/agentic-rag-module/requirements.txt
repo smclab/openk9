@@ -9,6 +9,7 @@ authlib==1.6.9
 cryptography==50.0.0
 fastapi==0.137.0
 filelock==3.20.1
+graphql-core==3.2.7
 grpcio-tools==1.78.0
 grpcio==1.78.0
 h11==0.16.0
