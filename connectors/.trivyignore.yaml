@@ -13,4 +13,47 @@
 #     - id: CVE-YYYY-NNNNN
 #       statement: "<why not exploitable / why no fix yet> (<module>)"
 #       expired_at: YYYY-MM-DD   # omit for permanent false positives
-vulnerabilities: []
+vulnerabilities:
+  - id: GHSA-6v7p-g79w-8964
+    # msgpack 1.1.2 — database-connector, email-connector, gitlab-connector,
+    # minio-connector, openk9-crawler, rest-api-connector, youtube-connector
+    statement: >-
+      False positive: the flagged version comes from pip's own internal
+      vendor.txt manifest (site-packages/pip/_vendor/vendor.txt), which just
+      records what pip vendors for its own bundled/internal use. Not an
+      installed application package, not reachable via connector code or any
+      untrusted external input. Verified in the built images: the
+      application-facing msgpack resolves to a current, non-vulnerable version
+      via normal pip install. Re-evaluate if pip bumps its vendored copy, or if
+      a future finding shows a real installed-package occurrence (not
+      pip/_vendor).
+  - id: CVE-2025-47273
+    # setuptools 70.3.0 — same connectors and same pip/_vendor cause as
+    # GHSA-6v7p-g79w-8964
+    statement: >-
+      False positive: same pip/_vendor.txt cause as GHSA-6v7p-g79w-8964 above
+      (not an installed application package, not reachable via connector code
+      or untrusted input). Re-evaluate under the same conditions.
+  - id: CVE-2023-30861
+    # Flask 2.0.0 — openk9-crawler (scrapydweb)
+    statement: >-
+      Flask==2.0.0 is hard-pinned by scrapydweb==1.6.0's own requirements
+      (Requires-Dist: Flask==2.0.0). Bumping this project's requirements.txt
+      has no effect: scrapydweb's own exact pin wins during its separate pip
+      install step and reinstalls the old version. scrapydweb is an
+      internal-network admin UI, not internet-facing, in the current
+      deployment. Re-evaluate if scrapydweb publishes a release with newer
+      Flask/Werkzeug pins.
+    expired_at: 2026-10-28
+  - id: CVE-2023-25577
+    # Werkzeug 2.0.0 — openk9-crawler (scrapydweb)
+    statement: >-
+      Werkzeug==2.0.0 hard-pinned by scrapydweb==1.6.0, same cause and
+      mitigation as CVE-2023-30861.
+    expired_at: 2026-10-28
+  - id: CVE-2024-34069
+    # Werkzeug 2.0.0 — openk9-crawler (scrapydweb)
+    statement: >-
+      Werkzeug==2.0.0 hard-pinned by scrapydweb==1.6.0, same cause and
+      mitigation as CVE-2023-30861.
+    expired_at: 2026-10-28
