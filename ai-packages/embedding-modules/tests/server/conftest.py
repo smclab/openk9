@@ -75,7 +75,7 @@ def make_stub(monkeypatch):
     def _make(
         build_pipelines=fake_build_pipelines,
         build_query_capabilities=fake_build_query_capabilities,
-        build_chunker=lambda chunk_type, config: None,
+        build_chunker=None,
     ):
         monkeypatch.setattr(server_module, "build_pipelines", build_pipelines)
         monkeypatch.setattr(
@@ -83,7 +83,8 @@ def make_stub(monkeypatch):
             "build_query_capabilities",
             build_query_capabilities,
         )
-        monkeypatch.setattr(server_module.chunking, "build_chunker", build_chunker)
+        if build_chunker is not None:
+            monkeypatch.setattr(server_module.chunking, "build_chunker", build_chunker)
 
         grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
         embedding_pb2_grpc.add_EmbeddingServicer_to_server(

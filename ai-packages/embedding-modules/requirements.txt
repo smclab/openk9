@@ -1,6 +1,6 @@
 beautifulsoup4==4.15.0
 boto3==1.43.99
-chonkie[st, neural, semantic]==1.4.0
+chonkie[st, neural, semantic]==1.7.0
 grpcio-health-checking==1.71.0
 grpcio-reflection==1.71.0
 grpcio-tools==1.71.0

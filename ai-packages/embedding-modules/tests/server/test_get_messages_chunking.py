@@ -15,25 +15,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""The v1 GetMessages path picks its chunker from its own ChunkType map,
-which has to agree with the one of the v2 RPCs, builds it from the
-jsonConfig of the request, and chunks the text cleaned of its markup."""
+"""The v1 GetMessages path builds its chunker through chunking.py, like
+the v2 RPCs, from the jsonConfig of the request, and chunks the text
+cleaned of its markup."""
 
 from types import SimpleNamespace
 
 from app import server as server_module
 from app.embedding import chunking
 from app.external_services.grpc.embedding import embedding_pb2
-
-
-def test_every_chunk_type_maps_to_the_chunker_of_the_v2_rpcs():
-    chunk_type_values = set(embedding_pb2.ChunkType.values())
-
-    assert set(server_module.chunk_types) == chunk_type_values
-    for chunk_type in chunk_type_values:
-        assert server_module.chunk_types[chunk_type] is chunking._chunker_class(
-            chunk_type
-        ), embedding_pb2.ChunkType.Name(chunk_type)
 
 
 def _recording_splitter(instances):
@@ -65,11 +55,8 @@ def test_the_request_builds_the_chunker_and_the_text_is_cleaned(stub, monkeypatc
         return embed_texts
 
     monkeypatch.setattr(server_module, "build_text_embed_texts", build_text_embed_texts)
-    monkeypatch.setitem(
-        server_module.chunk_types,
-        embedding_pb2.CHUNK_TYPE_SENTENCE_SPLITTER,
-        _recording_splitter(instances),
-    )
+    recording_splitter = _recording_splitter(instances)
+    monkeypatch.setattr(chunking, "_chunker_class", lambda chunk_type: recording_splitter)
     chunk = embedding_pb2.RequestChunk(type=embedding_pb2.CHUNK_TYPE_SENTENCE_SPLITTER)
     chunk.jsonConfig.update({"chunk_size": 10, "not_an_argument": True})
 

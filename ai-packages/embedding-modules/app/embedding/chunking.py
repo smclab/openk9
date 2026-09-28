@@ -20,12 +20,30 @@
 Imports are lazy: the heavyweight chunkers (semantic, neural, late) pull
 in torch, and this module must stay importable in tests and in
 deployments that only use the light splitters. Argument selection reuses
-build_chunk_arguments, exactly as the GetMessages v1 path does.
+build_chunk_arguments; GetMessages (v1) and EmbedContent share it.
 """
 
 from typing import get_type_hints
 
 from app.utils.chunk_arguments import build_chunk_arguments
+
+
+SUPPORTED_CHUNK_TYPES = frozenset(range(10))
+
+# Defaults of chonkie 1.4 that 1.7 changed, kept so a jsonConfig that does
+# not set them chunks as before; a value in the jsonConfig wins.
+LEGACY_DEFAULTS = {
+    7: {"tokenizer": "character", "chunk_size": 2048},
+    8: {"embedding_model": "sentence-transformers/all-MiniLM-L6-v2"},
+}
+
+
+class UnsupportedChunkType(ValueError):
+    pass
+
+
+def is_supported(chunk_type):
+    return chunk_type in SUPPORTED_CHUNK_TYPES
 
 
 def _chunker_class(chunk_type):
@@ -57,16 +75,18 @@ def _chunker_class(chunk_type):
         from chonkie import NeuralChunker
 
         return NeuralChunker
+    if chunk_type in (0, 6):
+        from chonkie import RecursiveChunker
 
-    # 0 and 6 (and anything unknown) fall back to the recursive chunker
-    from chonkie import RecursiveChunker
+        return RecursiveChunker
 
-    return RecursiveChunker
+    raise UnsupportedChunkType(f"Unsupported chunk type: {chunk_type}")
 
 
-def build_chunker(chunk_type, json_config):
-    """Instantiates the configured chunker, keeping only the json_config
-    entries that match its constructor signature (same rule as v1)."""
+def chunker_arguments(chunk_type, json_config):
+    """Returns (arguments, signature): the json_config entries, over the
+    legacy defaults of the chunk type, that match the constructor
+    signature of its chunker."""
     chunker_class = _chunker_class(chunk_type)
 
     signature = {
@@ -74,8 +94,17 @@ def build_chunker(chunk_type, json_config):
         for name, hint in get_type_hints(chunker_class.__init__).items()
         if name != "return"
     }
+    config = {**LEGACY_DEFAULTS.get(chunk_type, {}), **json_config}
 
-    return chunker_class(**build_chunk_arguments(json_config, signature))
+    return build_chunk_arguments(config, signature), signature
+
+
+def build_chunker(chunk_type, json_config):
+    """Instantiates the configured chunker with chunker_arguments; raises
+    UnsupportedChunkType for a type outside SUPPORTED_CHUNK_TYPES."""
+    arguments, _ = chunker_arguments(chunk_type, json_config)
+
+    return _chunker_class(chunk_type)(**arguments)
 
 
 def chunk_text(chunker, text):

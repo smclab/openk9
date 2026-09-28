@@ -22,19 +22,9 @@ import time
 from concurrent import futures
 from enum import Enum
 from logging.handlers import TimedRotatingFileHandler
-from typing import get_type_hints
 
 import grpc
 import pika
-from chonkie import (
-    LateChunker,
-    NeuralChunker,
-    RecursiveChunker,
-    SemanticChunker,
-    SentenceChunker,
-    TableChunker,
-    TokenChunker,
-)
 from dotenv import load_dotenv
 from google.protobuf import json_format
 from grpc_health.v1 import health_pb2, health_pb2_grpc
@@ -53,8 +43,6 @@ from app.embedding.multimodal import build_multimodal_embedder
 from app.embedding.quantization import l2_normalize, quantize_binary, quantize_int8
 from app.embedding.router import Pipelines
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
-from app.text_splitters.derived_text_splitter import DerivedTextSplitter
-from app.utils.chunk_arguments import build_chunk_arguments
 from app.utils.text_cleaner import clean_text
 
 load_dotenv()
@@ -85,20 +73,6 @@ DEFAULT_MODEL = "text-embedding-3-small"
 # of the embedding model overrides this, in seconds (0 unloads at once, -1
 # keeps it resident).
 DEFAULT_KEEP_ALIVE = 1800
-
-chunk_types = {
-    0: RecursiveChunker,
-    1: DerivedTextSplitter,
-    2: TokenChunker,
-    3: TokenChunker,
-    4: SemanticChunker,
-    5: SentenceChunker,
-    6: RecursiveChunker,
-    7: TableChunker,
-    8: LateChunker,
-    9: NeuralChunker,
-}
-
 
 class BatchedVertexAIEmbeddings(VertexAIEmbeddings):
     """VertexAIEmbeddings that sends the documents in request batches
@@ -554,8 +528,10 @@ def _build_configuration(embedding_model):
 
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
     def GetMessages(self, request, context):
-        chunk_type = request.chunk.type
-        if chunk_type not in chunk_types:
+        chunk = request.chunk
+        chunk_type = chunk.type
+
+        if not chunking.is_supported(chunk_type):
             context.abort(
                 grpc.StatusCode.INVALID_ARGUMENT,
                 f"Unsupported chunk type: {chunk_type}",
@@ -564,7 +540,6 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         try:
             start = time.time()
 
-            chunk = request.chunk
             chunk_json_config = json_format.MessageToDict(chunk.jsonConfig)
             embedding_model = request.embeddingModel
 
@@ -575,15 +550,9 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = []
             chunks = []
 
-            signature = {
-                name: hint
-                for name, hint in get_type_hints(
-                    chunk_types[chunk_type].__init__
-                ).items()
-                if name != "return"
-            }
-
-            arguments = build_chunk_arguments(chunk_json_config, signature)
+            arguments, signature = chunking.chunker_arguments(
+                chunk_type, chunk_json_config
+            )
 
             info_arguments = {
                 "using_arguments": arguments,
@@ -594,8 +563,8 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             }
             logger.info(info_arguments)
 
-            text_splitter = chunk_types[chunk_type](**arguments)
-            text_splitted = [chunk.text for chunk in text_splitter.chunk(text)]
+            text_splitter = chunking.build_chunker(chunk_type, chunk_json_config)
+            text_splitted = chunking.chunk_text(text_splitter, text)
 
             total_chunks = len(text_splitted)
 
@@ -683,6 +652,12 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         if not has_text and not refs:
             context.abort(
                 grpc.StatusCode.INVALID_ARGUMENT, "neither text nor refs provided"
+            )
+
+        if not chunking.is_supported(request.chunk.type):
+            context.abort(
+                grpc.StatusCode.INVALID_ARGUMENT,
+                f"Unsupported chunk type: {request.chunk.type}",
             )
 
         tenant_id = request.tenantId

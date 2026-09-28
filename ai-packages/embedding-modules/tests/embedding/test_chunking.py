@@ -16,17 +16,15 @@
 #
 
 """chunk_text flattens a chunker's output to plain strings; build_chunker
-maps the ChunkType onto its chunker class and passes only the config
-entries matching that class's signature, coerced. The light chunkers are
-built for real; the heavyweight ones (torch, model downloads) are only
-resolved against a stand-in chonkie module."""
+selects and coerces only the config entries matching the chunker
+signature, over the chonkie 1.4 defaults the 1.7 upgrade changed. Fakes
+stand in for the chunkers, except where the real split is checked."""
 
 import sys
 import types
 
 import chonkie
 import pytest
-
 from app.embedding import chunking
 from app.text_splitters.derived_text_splitter import DerivedTextSplitter
 
@@ -69,6 +67,73 @@ def test_build_chunker_selects_the_class_and_coerces_via_signature(
 
     assert type(chunker) is chunker_class
     assert getattr(chunker, size_attribute) == 512
+
+
+class _RecordingChunker:
+    def __init__(
+        self, tokenizer: str = "", chunk_size: int = 0, embedding_model: str = ""
+    ):
+        self.arguments = {
+            "tokenizer": tokenizer,
+            "chunk_size": chunk_size,
+            "embedding_model": embedding_model,
+        }
+
+
+def test_table_chunker_keeps_the_chonkie_1_4_defaults(monkeypatch):
+    monkeypatch.setattr(
+        chunking, "_chunker_class", lambda chunk_type: _RecordingChunker
+    )
+
+    chunker = chunking.build_chunker(7, {})
+
+    assert chunker.arguments["tokenizer"] == "character"
+    assert chunker.arguments["chunk_size"] == 2048
+
+
+def test_late_chunker_keeps_the_chonkie_1_4_model(monkeypatch):
+    monkeypatch.setattr(
+        chunking, "_chunker_class", lambda chunk_type: _RecordingChunker
+    )
+
+    chunker = chunking.build_chunker(8, {})
+
+    assert (
+        chunker.arguments["embedding_model"] == "sentence-transformers/all-MiniLM-L6-v2"
+    )
+
+
+def test_json_config_overrides_the_legacy_defaults(monkeypatch):
+    monkeypatch.setattr(
+        chunking, "_chunker_class", lambda chunk_type: _RecordingChunker
+    )
+
+    chunker = chunking.build_chunker(7, {"tokenizer": "row", "chunk_size": 3})
+
+    assert chunker.arguments["tokenizer"] == "row"
+    assert chunker.arguments["chunk_size"] == 3
+
+
+def test_small_table_stays_in_one_chunk_as_in_chonkie_1_4():
+    table = "| a | b |\n|---|---|\n" + "".join(f"| {i} | x |\n" for i in range(10))
+
+    assert len(chunking.chunk_text(chunking.build_chunker(7, {}), table)) == 1
+
+
+def test_recursive_chunker_splits_as_before():
+    text = "Prima frase. Seconda frase!\nTerza riga? " * 50
+
+    pieces = chunking.chunk_text(chunking.build_chunker(6, {"chunk_size": 64}), text)
+
+    assert len(pieces) > 1
+    assert "".join(pieces) == text
+
+
+def test_unknown_chunk_type_is_refused():
+    assert not chunking.is_supported(99)
+
+    with pytest.raises(chunking.UnsupportedChunkType):
+        chunking.build_chunker(99, {})
 
 
 @pytest.mark.parametrize(
