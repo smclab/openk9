@@ -18,20 +18,31 @@
 package io.openk9.datasource.web;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import jakarta.inject.Inject;
 
+import io.openk9.common.util.web.InternalHeaders;
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.web.dto.DatasourceResponseDTO;
 
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
+import io.quarkus.cache.CaffeineCache;
+import io.quarkus.cache.CompositeCacheKey;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -55,6 +66,12 @@ public class BucketDatasourcesResourceTest {
 	// virtual host seeded on the singleton TenantBinding (see init.sql)
 	private static final String VIRTUAL_HOST = "test.openk9.local";
 
+	// two tenants served by the same instance: the test tenant resolver maps
+	// both on the same schema, so only the cache can tell them apart
+	private static final String TENANT_A = "tenant-a";
+	private static final String TENANT_B = "tenant-b";
+	private static final String SEEDED_NAME = PREFIX + "Seeded for tenant B";
+
 	@Inject
 	BucketService bucketService;
 
@@ -63,6 +80,10 @@ public class BucketDatasourcesResourceTest {
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
+
+	@Inject
+	@CacheName("bucket-resource")
+	Cache cache;
 
 	@Test
 	@Order(1)
@@ -123,6 +144,48 @@ public class BucketDatasourcesResourceTest {
 
 	@Test
 	@Order(4)
+	void should_keep_the_cached_responses_of_each_tenant_apart() {
+		var caffeineCache = cache.as(CaffeineCache.class);
+		var keyOfTenantA = new CompositeCacheKey(TENANT_A, "getDatasources");
+		var keyOfTenantB = new CompositeCacheKey(TENANT_B, "getDatasources");
+
+		// 1. Seed the cache of tenant B with a response it never computed
+		caffeineCache.put(
+			keyOfTenantB,
+			CompletableFuture.completedFuture(
+				List.of(new DatasourceResponseDTO(-1L, SEEDED_NAME))));
+
+		// 2. Tenant A computes and caches its own response
+		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_A)
+			.accept(ContentType.JSON)
+			.when()
+			.get("current/datasources")
+			.then()
+			.statusCode(200)
+			.body("name", containsInAnyOrder(
+				DATASOURCE_ONE_NAME, DATASOURCE_TWO_NAME));
+
+		// 3. Tenant B gets its own entry, not the response of tenant A
+		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_B)
+			.accept(ContentType.JSON)
+			.when()
+			.get("current/datasources")
+			.then()
+			.statusCode(200)
+			.body("name", contains(SEEDED_NAME));
+
+		// each tenant has its own entry in the cache
+		assertTrue(caffeineCache.keySet().contains(keyOfTenantA));
+		assertTrue(caffeineCache.keySet().contains(keyOfTenantB));
+
+		// drop the seeded entry, so no other test reads it
+		cache.invalidateAll().await().indefinitely();
+	}
+
+	@Test
+	@Order(5)
 	void tearDown() {
 		var bucketId = getBucket().getId();
 
