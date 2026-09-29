@@ -6,6 +6,7 @@ services:
     command: server -dir=/data -s3 -s3.config=/etc/seaweedfs/s3.json
     ports:
       - "8333:8333"
+      - "8888:8888"
     volumes:
       - ./compose-utilities/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
       - seaweedfs-data:/data
