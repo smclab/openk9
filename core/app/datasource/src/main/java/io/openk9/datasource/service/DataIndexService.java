@@ -260,27 +260,25 @@ public class DataIndexService
 	 * <p>
 	 * The gate is the same as {@link #create(Mutiny.Session, DataIndex)}. On
 	 * top of it, when the new dataIndex records no settings, the ones the
-	 * index template of the replaced dataIndex declares beyond the derived
+	 * index template of the old dataIndex declares beyond the derived
 	 * ones are recorded on it: the dataIndexes that were created before the
 	 * settings were recorded at all have them only there, and a reindex used
 	 * to copy that index template whole.
 	 *
-	 * @param session   the session the dataIndex is created in
-	 * @param dataIndex the dataIndex to create
-	 * @param replaced  the dataIndex being replaced, {@code null} when there
-	 *                  is none
+	 * @param session      the session the dataIndex is created in
+	 * @param dataIndex    the dataIndex to create
+	 * @param oldDataIndex the dataIndex the new one takes the place of,
+	 *                     {@code null} when there is none
 	 * @return the created dataIndex, or a failure carrying the reason it
 	 * cannot be created
 	 */
 	public Uni<DataIndex> create(
-		Mutiny.Session session, DataIndex dataIndex, DataIndex replaced) {
+		Mutiny.Session session, DataIndex dataIndex, DataIndex oldDataIndex) {
 
 		return resolveEmbeddingModel(session, dataIndex)
 			.flatMap(embeddingModel -> merge(session, dataIndex)
-				.call(merged -> recoverIndexTemplateSettings(
-					session, merged, replaced))
 				.call(merged -> createDataIndexTemplate(
-					session, merged, embeddingModel))
+					session, merged, oldDataIndex, embeddingModel))
 			);
 	}
 
@@ -655,11 +653,9 @@ public class DataIndexService
 					IndexMappingUtils.docTypesToMappings(docTypes),
 					closeIfNeeded
 				))
-				.flatMap(alignment -> recoverIndexTemplateSettings(
-						session, dataIndex, dataIndex)
-					.flatMap(unused -> resolveEmbeddingModel(session, dataIndex))
+				.flatMap(alignment -> resolveEmbeddingModel(session, dataIndex)
 					.flatMap(embeddingModel -> createDataIndexTemplate(
-						session, dataIndex, embeddingModel))
+						session, dataIndex, dataIndex, embeddingModel))
 					.replaceWith(alignment)
 				)
 				.onFailure(IndexMappingException.class)
@@ -829,7 +825,7 @@ public class DataIndexService
 			))
 			.flatMap(unused -> resolveEmbeddingModel(session, dataIndex))
 			.flatMap(embeddingModel -> createDataIndexTemplate(
-				session, dataIndex, embeddingModel))
+				session, dataIndex, dataIndex, embeddingModel))
 			.replaceWith(alignment);
 	}
 
@@ -1049,18 +1045,31 @@ public class DataIndexService
 	/**
 	 * Generates the index template of a dataIndex from the docTypes it is
 	 * composed of, the settings it recorded and the embedding model in force.
+	 * <p>
+	 * When the dataIndex records no settings, the custom ones the index
+	 * template of {@code recoverFrom} declares are recorded first, so that
+	 * regenerating the template never drops them. The caller names that
+	 * dataIndex explicitly: nothing is read when it passes {@code null}, as a
+	 * dataIndex created from scratch does, since an index template left behind
+	 * under the same name belongs to nobody.
 	 *
 	 * @param session        the session the docTypes are expanded in
 	 * @param dataIndex      the dataIndex the index template belongs to
+	 * @param recoverFrom    the dataIndex whose index template holds the
+	 *                       settings to recover, {@code null} for none
 	 * @param embeddingModel the model the vector field comes from,
 	 *                       {@code null} for a plain dataIndex
 	 * @return an empty {@link Uni}, failing when the index template cannot be
 	 * created
 	 */
 	private Uni<Void> createDataIndexTemplate(
-		Mutiny.Session session, DataIndex dataIndex, EmbeddingModel embeddingModel) {
+		Mutiny.Session session,
+		DataIndex dataIndex,
+		DataIndex recoverFrom,
+		EmbeddingModel embeddingModel) {
 
-		return getCurrentTenant(session)
+		return recoverIndexTemplateSettings(session, dataIndex, recoverFrom)
+			.flatMap(unused -> getCurrentTenant(session))
 			.flatMap(tenantId -> session.fetch(dataIndex.getDocTypes())
 				// the mappings are built from the docTypeFields, so the
 				// docTypes have to be expanded whoever handed them over
@@ -1082,10 +1091,11 @@ public class DataIndexService
 	 * when it records none of its own.
 	 * <p>
 	 * The dataIndexes created before the settings were recorded at all have
-	 * them only in their index template, so every path that regenerates it
-	 * from what is recorded comes here first: a reindex reads the template of
-	 * the dataIndex it replaces, an alignment or a settings update the one of
-	 * the dataIndex itself.
+	 * them only in their index template, so generating it from what is
+	 * recorded comes here first: a reindex reads the template of the dataIndex
+	 * it replaces, an alignment or a settings update the one of the dataIndex
+	 * itself. A settings update calls it directly too, before merging the
+	 * request, since the column is no longer empty afterwards.
 	 * <p>
 	 * The derived settings are computed from the docTypes as they are now, so
 	 * only what the docTypes do not derive is recorded, and the analysis the
@@ -1093,22 +1103,22 @@ public class DataIndexService
 	 * read when the dataIndex already records its settings, or when there is
 	 * no template to read.
 	 *
-	 * @param session       the session the dataIndex is managed in
-	 * @param dataIndex     the dataIndex the settings are recorded on, managed
-	 * @param templateOwner the dataIndex whose index template is read, may be
-	 *                      {@code null}
+	 * @param session     the session the dataIndex is managed in
+	 * @param dataIndex   the dataIndex the settings are recorded on, managed
+	 * @param recoverFrom the dataIndex whose index template is read, may be
+	 *                    {@code null}
 	 * @return an empty {@link Uni}
 	 */
 	private Uni<Void> recoverIndexTemplateSettings(
-		Mutiny.Session session, DataIndex dataIndex, DataIndex templateOwner) {
+		Mutiny.Session session, DataIndex dataIndex, DataIndex recoverFrom) {
 
-		if (templateOwner == null || dataIndex.getSettings() != null) {
+		if (recoverFrom == null || dataIndex.getSettings() != null) {
 			return Uni.createFrom().voidItem();
 		}
 
 		return getCurrentTenant(session)
 			.flatMap(tenantId -> indexService.readIndexTemplateSettings(
-				IndexName.from(tenantId, templateOwner)))
+				IndexName.from(tenantId, recoverFrom)))
 			.flatMap(declared -> {
 
 				if (declared == null) {
@@ -1132,7 +1142,7 @@ public class DataIndexService
 								+ "template of %s declares beyond the docTypes are "
 								+ "recorded on it, %s",
 							dataIndex.getName(),
-							templateOwner.getName(),
+							recoverFrom.getName(),
 							custom.encode()
 						);
 

@@ -44,6 +44,7 @@ import io.openk9.datasource.model.dto.request.DocTypeFieldWithAnalyzerDTO;
 import io.openk9.datasource.service.DataIndexService.IndexAlignment;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
@@ -570,6 +571,33 @@ public class AlignDataIndexTest {
 		Assertions.assertTrue(template.contains("30s"), template);
 	}
 
+	@Test
+	void should_not_inherit_a_template_left_behind_under_the_same_name()
+		throws IOException {
+
+		var name = ENTITY_NAME_PREFIX + "reborn";
+		var indexName = IndexName.from(SCHEMA_NAME, name);
+
+		// the index template a deleted dataIndex left behind under this name
+		copyTemplate(
+			IndexName.from(SCHEMA_NAME, dataIndex),
+			indexName,
+			JsonObject.of("max_result_window", "12345")
+		);
+
+		var reborn = createDataIndex(name);
+
+		try {
+			// a dataIndex created from scratch replaces nobody: nothing is
+			// recorded, and the template it gets is its own
+			Assertions.assertNull(getRecordedSettings(reborn.getId()));
+			Assertions.assertFalse(getTemplate(indexName).contains("12345"));
+		}
+		finally {
+			dataIndexService.deleteById(reborn.getId()).await().indefinitely();
+		}
+	}
+
 	private IndexAlignment align() {
 		return align(true);
 	}
@@ -621,13 +649,22 @@ public class AlignDataIndexTest {
 	private void declareOnTemplate(IndexName indexName, JsonObject settings)
 		throws IOException {
 
-		var endpoint = String.format(
-			"/_index_template/%s%s", indexName, IndexService.TEMPLATE_SUFFIX);
+		copyTemplate(indexName, indexName, settings);
+	}
 
-		var indexTemplate = new JsonObject(send(endpoint))
+	/**
+	 * Writes the index template of {@code source} under the name and pattern
+	 * of {@code target}, with settings added under {@code index}.
+	 */
+	private void copyTemplate(
+		IndexName source, IndexName target, JsonObject settings)
+		throws IOException {
+
+		var indexTemplate = new JsonObject(send(templateEndpoint(source)))
 			.getJsonArray("index_templates")
 			.getJsonObject(0)
-			.getJsonObject("index_template");
+			.getJsonObject("index_template")
+			.put("index_patterns", new JsonArray().add(target.toString()));
 
 		indexTemplate
 			.getJsonObject("template")
@@ -636,7 +673,7 @@ public class AlignDataIndexTest {
 			.mergeIn(settings);
 
 		var request = Requests.builder()
-			.endpoint(endpoint)
+			.endpoint(templateEndpoint(target))
 			.method("PUT")
 			.json(indexTemplate.encode())
 			.build();
@@ -687,8 +724,12 @@ public class AlignDataIndexTest {
 	}
 
 	private String getRecordedSettings() {
+		return getRecordedSettings(dataIndex.getId());
+	}
+
+	private String getRecordedSettings(long dataIndexId) {
 		return sessionFactory.withTransaction(session -> dataIndexService
-				.findById(session, dataIndex.getId())
+				.findById(session, dataIndexId)
 				.map(DataIndex::getSettings)
 			)
 			.await()
@@ -696,8 +737,7 @@ public class AlignDataIndexTest {
 	}
 
 	private String getTemplate(IndexName indexName) throws IOException {
-		return send(String.format(
-			"/_index_template/%s%s", indexName, IndexService.TEMPLATE_SUFFIX));
+		return send(templateEndpoint(indexName));
 	}
 
 	private void indexDocument(IndexName indexName, String title) {
@@ -727,6 +767,11 @@ public class AlignDataIndexTest {
 				.map(content -> content.bodyAsString())
 				.orElse("");
 		}
+	}
+
+	private static String templateEndpoint(IndexName indexName) {
+		return String.format(
+			"/_index_template/%s%s", indexName, IndexService.TEMPLATE_SUFFIX);
 	}
 
 	private IndexAlignment updateSettings(JsonObject settings) {
