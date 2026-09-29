@@ -11,6 +11,7 @@ RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" N
 
 # Stage 2 - the production environment
 FROM nginx:stable-alpine3.23-slim
+RUN apk upgrade --no-cache
 
 # Usiamo path custom per evitare che nginx processi automaticamente il template
 COPY ./js-packages/tenant-ui/nginx.conf.template /etc/nginx/nginx.conf.template
