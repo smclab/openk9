@@ -23,8 +23,9 @@ sole authority on embeddability: a ref whose modality has no handler in
 phase 1 (audio, video, unknown), or that the configured model cannot
 embed (image on a text-only model, binary not decodable), raises SkipRef
 so the caller skips it — no chunk for that fileId, structured log, the
-stream continues. New modalities plug in by registering a handler, with
-no change to the control flow. All capabilities (chunking, embedding,
+stream continues. A model failing on content it can embed is not a skip:
+it raises EmbedFailed and the caller fails the request. New modalities
+plug in by registering a handler, with no change to the control flow. All capabilities (chunking, embedding,
 HTTP fetch) are injected via Pipelines, so the routing is testable
 without network or models.
 """
@@ -35,6 +36,12 @@ from dataclasses import dataclass
 
 class SkipRef(Exception):
     """A ref that cannot be embedded; the message is the skip reason."""
+
+
+class EmbedFailed(Exception):
+    """The model failed on the content of a ref. Unlike SkipRef it says
+    nothing about the ref, so the caller fails the request instead of
+    skipping it."""
 
 
 @dataclass
@@ -111,14 +118,20 @@ def _text_ref_pieces(data, content_type, pipelines, file_id):
     except UnicodeDecodeError as error:
         raise SkipRef(f"binary not decodable as utf-8 text: {error}") from error
 
-    return text_pieces(text, pipelines, file_id=file_id)
+    try:
+        return text_pieces(text, pipelines, file_id=file_id)
+    except Exception as error:
+        raise EmbedFailed(str(error)) from error
 
 
 def _image_ref_pieces(data, content_type, pipelines, file_id):
     if pipelines.embed_image is None:
         raise SkipRef("the configured embedding model has no image input")
 
-    vector = pipelines.embed_image(data, content_type)
+    try:
+        vector = pipelines.embed_image(data, content_type)
+    except Exception as error:
+        raise EmbedFailed(str(error)) from error
 
     return [Piece(vector=vector, file_id=file_id)]
 
@@ -135,7 +148,7 @@ def ref_pieces(ref, pipelines) -> list[Piece]:
     The authoritative content type comes from the ref (connector
     metadata); the HTTP response Content-Type is only a fallback when the
     ref carries none. Raises SkipRef when the modality has no handler or
-    the model cannot embed it.
+    the model cannot embed it, EmbedFailed when the model fails on it.
     """
     content_type = ref.get("contentType")
     modality = classify(content_type)

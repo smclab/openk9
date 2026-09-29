@@ -695,6 +695,8 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         # Then the refs in list order: an error on one ref is a skip (no chunk
         # for that fileId, structured log), the stream continues with the rest.
+        # The model failing on a ref's content is not: like on the text, it
+        # ends the RPC with INTERNAL, or the content would vanish unreported.
         # The chunk messages are built inside the try so a quantization/encoding
         # error skips the whole ref too, instead of breaking the stream after a
         # partial emission; nothing is yielded until the ref is fully built.
@@ -712,6 +714,14 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                     to_chunk_message(piece, number + offset, None, vector_data_type)
                     for offset, piece in enumerate(pieces, start=1)
                 ]
+            except router.EmbedFailed as error:
+                logger.exception(
+                    "EmbedContent ref error: tenantId=%s fileId=%s contentType=%s",
+                    tenant_id,
+                    ref.fileId,
+                    ref.contentType,
+                )
+                context.abort(grpc.StatusCode.INTERNAL, str(error))
             except router.SkipRef as skip:
                 logger.warning(
                     "EmbedContent skip: tenantId=%s fileId=%s contentType=%s reason=%s",
