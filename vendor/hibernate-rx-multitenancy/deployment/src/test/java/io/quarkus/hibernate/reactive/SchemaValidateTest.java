@@ -1,43 +1,33 @@
-/*
- * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package io.quarkus.hibernate.reactive;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import io.quarkus.test.QuarkusUnitTest;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import io.quarkus.test.QuarkusUnitTest;
+
 public class SchemaValidateTest {
 
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
-		.withApplicationRoot((jar) -> jar
-			.addClass(Hero.class))
-		.withConfigurationResource("application.properties")
-		.assertException(SchemaValidateTest::isSchemaValidationException)
-		.overrideConfigKey("quarkus.hibernate-orm.database.generation", "validate");
+            .withApplicationRoot((jar) -> jar
+                    .addClass(Hero.class))
+            .withConfigurationResource("application.properties")
+            .assertException(SchemaValidateTest::isSchemaValidationException)
+            .overrideConfigKey("quarkus.hibernate-orm.schema-management.strategy", "validate");
 
     @Inject
     Mutiny.SessionFactory sessionFactory;
@@ -48,16 +38,15 @@ public class SchemaValidateTest {
     }
 
     private static void isSchemaValidationException(Throwable t) {
-        Throwable cause = t;
-		while (cause != null &&
-			   !cause.getClass().getName().equals(SchemaManagementException.class.getName())) {
-            cause = cause.getCause();
-        }
-        String causeName = cause != null ? cause.getClass().getName() : null;
-        Assertions.assertEquals(SchemaManagementException.class.getName(), causeName);
-		Assertions.assertTrue(cause
-			.getMessage()
-			.contains("Schema-validation: missing table [" + Hero.TABLE + "]"));
+        assertThat(t)
+                .extracting(SchemaValidateTest::getSelfAndCauses, InstanceOfAssertFactories.stream(Throwable.class))
+                .anySatisfy(e -> assertThat(e)
+                        .hasMessageContaining("Schema validation: missing table [" + Hero.TABLE + "]")
+                        .extracting(e2 -> e2.getClass().getName()).isEqualTo(SchemaManagementException.class.getName()));
+    }
+
+    private static Stream<Throwable> getSelfAndCauses(Throwable e) {
+        return Stream.iterate(e, Objects::nonNull, Throwable::getCause);
     }
 
     @Entity(name = "Hero")

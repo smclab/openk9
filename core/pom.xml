@@ -67,7 +67,7 @@
 		<product.name>OpenK9 Powered by SMC Treviso SRL</product.name>
 		<maven.compiler.release>21</maven.compiler.release>
 		<maven.compiler.target>21</maven.compiler.target>
-		<project.build.outputTimestamp>1778575111</project.build.outputTimestamp>
+		<project.build.outputTimestamp>2026-05-12T08:38:31Z</project.build.outputTimestamp>
 
 		<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
 		<scm.developerConnection>scm:git:https://github.com/smclab/openk9.git</scm.developerConnection>
@@ -91,54 +91,36 @@
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<quarkus-plugin.version>3.20.5</quarkus-plugin.version>
+		<quarkus-plugin.version>3.33.3.3</quarkus-plugin.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>3.20.5</quarkus.platform.version>
-		<quarkus.version>3.20.5</quarkus.version>
-		<quarkiverse.opensearch.version>1.17.2</quarkiverse.opensearch.version>
+		<quarkus.platform.version>3.33.3.3</quarkus.platform.version>
+		<quarkus.version>3.33.3.3</quarkus.version>
+		<quarkiverse.opensearch.version>2.2.0</quarkiverse.opensearch.version>
 		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
-		<quarkus-minio.version>3.7.7</quarkus-minio.version>
+		<quarkus-minio.version>3.8.6</quarkus-minio.version>
 		<quarkus-tika.version>2.2.1</quarkus-tika.version>
-		<hibernate.version>6.6.23.Final</hibernate.version>
+		<hibernate.version>7.2.25.Final</hibernate.version>
 		<surefire-plugin.version>3.5.2</surefire-plugin.version>
 		<failsafe-plugin.version>3.5.2</failsafe-plugin.version>
 		<gpg-plugin.version>3.2.7</gpg-plugin.version>
 		<dependency-check-plugin.version>12.1.9</dependency-check-plugin.version>
 		<jandex-maven-plugin.version>3.0.5</jandex-maven-plugin.version>
 		<reactor-bom-version>2022.0.1</reactor-bom-version>
-		<testcontainers.version>1.21.4</testcontainers.version>
 		<pekko.version>1.1.5</pekko.version>
 		<scala.version>2.13</scala.version>
 		<quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
 		<pekko.management.version>1.1.1</pekko.management.version>
-		<lucene.version>9.12.1</lucene.version>
+		<lucene.version>9.12.3</lucene.version>
 		<zstd-jni.version>1.5.6-3</zstd-jni.version>
-		<netty.groupd-id>io.netty</netty.groupd-id>
-		<netty.artifact-id>netty-bom</netty.artifact-id>
-		<netty.version>4.1.132.Final</netty.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>org.testcontainers</groupId>
-				<artifactId>testcontainers-bom</artifactId>
-				<version>${testcontainers.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
 				<groupId>org.apache.pekko</groupId>
 				<artifactId>pekko-bom_${scala.version}</artifactId>
 				<version>${pekko.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>${netty.groupd-id}</groupId>
-				<artifactId>${netty.artifact-id}</artifactId>
-				<version>${netty.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -157,6 +139,12 @@
 			<dependency>
 				<groupId>io.quarkiverse.opensearch</groupId>
 				<artifactId>quarkus-opensearch-java-client</artifactId>
+				<version>${quarkiverse.opensearch.version}</version>
+			</dependency>
+			<!-- Transport provider -->
+			<dependency>
+				<groupId>io.quarkiverse.opensearch</groupId>
+				<artifactId>quarkus-opensearch-transport-apache</artifactId>
 				<version>${quarkiverse.opensearch.version}</version>
 			</dependency>
 			<dependency>
@@ -261,17 +249,6 @@
 				<artifactId>datasource-model</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<!-- FIXME: fixes CVE-2024-7254, review during quarkus version update after 3.20.2 -->
-			<dependency>
-				<groupId>com.google.protobuf</groupId>
-				<artifactId>protobuf-java</artifactId>
-				<version>3.25.8</version>
-			</dependency>
-			<dependency>
-				<groupId>com.google.protobuf</groupId>
-				<artifactId>protobuf-java-util</artifactId>
-				<version>3.25.8</version>
-			</dependency>
 			<!-- FIXME: fixes CVE-2025-48924, review during quarkus version update after 3.20.2 -->
 			<dependency>
 				<groupId>org.apache.commons</groupId>
@@ -349,7 +326,7 @@
 							</path>
 							<path>
 								<groupId>org.hibernate.orm</groupId>
-								<artifactId>hibernate-jpamodelgen</artifactId>
+								<artifactId>hibernate-processor</artifactId>
 								<version>${hibernate.version}</version>
 							</path>
 							<path>

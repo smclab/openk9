@@ -1,31 +1,33 @@
-/*
- * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package io.quarkus.hibernate.reactive.runtime;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.reactive.mutiny.Mutiny;
+
+import io.quarkus.arc.ActiveResult;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.hibernate.orm.runtime.HibernateOrmRuntimeConfig;
+import io.quarkus.hibernate.orm.runtime.JPAConfig;
+import io.quarkus.hibernate.orm.runtime.PersistenceUnitUtil;
 import io.quarkus.hibernate.orm.runtime.integration.HibernateOrmIntegrationRuntimeDescriptor;
+import io.quarkus.reactive.datasource.runtime.ReactiveDataSourceUtil;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class HibernateReactiveRecorder {
+    private final RuntimeValue<HibernateOrmRuntimeConfig> runtimeConfig;
+
+    public HibernateReactiveRecorder(final RuntimeValue<HibernateOrmRuntimeConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
 
     /**
      * The feature needs to be initialized, even if it's not enabled.
@@ -36,13 +38,56 @@ public class HibernateReactiveRecorder {
         HibernateReactive.featureInit(enabled);
     }
 
-	public void initializePersistenceProvider(
-		HibernateOrmRuntimeConfig hibernateOrmRuntimeConfig,
-		Map<String, List<HibernateOrmIntegrationRuntimeDescriptor>> integrationRuntimeDescriptors) {
-		ReactivePersistenceProviderSetup.registerRuntimePersistenceProvider(
-			hibernateOrmRuntimeConfig,
-			integrationRuntimeDescriptors
-		);
+    public void initializePersistenceProvider(
+            Map<String, List<HibernateOrmIntegrationRuntimeDescriptor>> integrationRuntimeDescriptors) {
+        ReactivePersistenceProviderSetup.registerRuntimePersistenceProvider(runtimeConfig.getValue(),
+                integrationRuntimeDescriptors);
+    }
+
+    public Supplier<ActiveResult> checkActiveSupplier(String puName, Optional<String> dataSourceName,
+            Set<String> entityClassNames) {
+        return new Supplier<>() {
+            @Override
+            public ActiveResult get() {
+                Optional<Boolean> active = runtimeConfig.getValue().persistenceUnits().get(puName).active();
+                if (active.isPresent() && !active.get()) {
+                    return ActiveResult.inactive(
+                            PersistenceUnitUtil.persistenceUnitInactiveReasonDeactivated(puName, dataSourceName));
+                }
+
+                if (entityClassNames.isEmpty() && dataSourceName.isPresent()) {
+                    // Persistence units are inactive when the corresponding datasource is inactive.
+                    var dataSourceBean = ReactiveDataSourceUtil.dataSourceInstance(dataSourceName.get()).getHandle().getBean();
+                    var dataSourceActive = dataSourceBean.checkActive();
+                    if (!dataSourceActive.value()) {
+                        return ActiveResult.inactive(
+                                String.format(Locale.ROOT,
+                                        "Persistence unit '%s' was deactivated automatically because it doesn't include any entity type and its datasource '%s' was deactivated.",
+                                        puName,
+                                        dataSourceName.get()),
+                                dataSourceActive);
+                    }
+                }
+
+                return ActiveResult.active();
+            }
+        };
+    }
+
+    public Function<SyntheticCreationalContext<Mutiny.SessionFactory>, Mutiny.SessionFactory> mutinySessionFactory(
+            String persistenceUnitName) {
+        return new Function<SyntheticCreationalContext<Mutiny.SessionFactory>, Mutiny.SessionFactory>() {
+            @Override
+            public Mutiny.SessionFactory apply(SyntheticCreationalContext<Mutiny.SessionFactory> context) {
+                JPAConfig jpaConfig = context.getInjectedReference(JPAConfig.class);
+
+                SessionFactory sessionFactory = jpaConfig
+                        .getEntityManagerFactory(persistenceUnitName, true)
+                        .unwrap(SessionFactory.class);
+
+                return sessionFactory.unwrap(Mutiny.SessionFactory.class);
+            }
+        };
     }
 
 }

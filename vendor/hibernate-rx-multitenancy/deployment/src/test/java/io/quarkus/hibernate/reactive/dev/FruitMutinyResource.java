@@ -1,20 +1,3 @@
-/*
- * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package io.quarkus.hibernate.reactive.dev;
 
 import static jakarta.ws.rs.core.Response.Status.CREATED;
@@ -22,6 +5,7 @@ import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 
 import java.util.List;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -36,12 +20,14 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestPath;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.smallrye.mutiny.Uni;
 
 @Path("fruits")
 @ApplicationScoped
@@ -56,8 +42,8 @@ public class FruitMutinyResource {
     @GET
     public Uni<List<Fruit>> get() {
         return sf.withTransaction((s, t) -> s
-			.createNamedQuery("Fruits.findAll", Fruit.class)
-			.getResultList());
+                .createNamedQuery("Fruits.findAll", Fruit.class)
+                .getResultList());
     }
 
     @GET
@@ -73,7 +59,7 @@ public class FruitMutinyResource {
         }
 
         return sf.withTransaction((s, t) -> s.persist(fruit))
-			.replaceWith(() -> Response.ok(fruit).status(CREATED).build());
+                .replaceWith(() -> Response.ok(fruit).status(CREATED).build());
     }
 
     @PUT
@@ -84,29 +70,29 @@ public class FruitMutinyResource {
         }
 
         return sf.withTransaction((s, t) -> s.find(Fruit.class, id)
-			// If entity exists then update it
-			.onItem().ifNotNull().invoke(entity -> entity.setName(fruit.getName()))
-			.onItem().ifNotNull().transform(entity -> Response.ok(entity).build())
-			// If entity not found return the appropriate response
-			.onItem().ifNull()
-			.continueWith(() -> Response.ok().status(NOT_FOUND).build()));
+                // If entity exists then update it
+                .onItem().ifNotNull().invoke(entity -> entity.setName(fruit.getName()))
+                .onItem().ifNotNull().transform(entity -> Response.ok(entity).build())
+                // If entity not found return the appropriate response
+                .onItem().ifNull()
+                .continueWith(() -> Response.ok().status(NOT_FOUND).build()));
     }
 
     @DELETE
     @Path("{id}")
     public Uni<Response> delete(@RestPath Integer id) {
         return sf.withTransaction((s, t) -> s.find(Fruit.class, id)
-			// If entity exists then delete it
-			.onItem().ifNotNull()
-			.transformToUni(entity -> s.remove(entity)
-				.replaceWith(() -> Response.ok().status(NO_CONTENT).build()))
-			// If entity not found return the appropriate response
-			.onItem().ifNull().continueWith(() -> Response.ok().status(NOT_FOUND).build()));
+                // If entity exists then delete it
+                .onItem().ifNotNull()
+                .transformToUni(entity -> s.remove(entity)
+                        .replaceWith(() -> Response.ok().status(NO_CONTENT).build()))
+                // If entity not found return the appropriate response
+                .onItem().ifNull().continueWith(() -> Response.ok().status(NOT_FOUND).build()));
     }
 
     /**
      * Create a HTTP response from an exception.
-	 *
+     *
      * Response Example:
      *
      * <pre>
@@ -145,8 +131,8 @@ public class FruitMutinyResource {
             }
 
             return Response.status(code)
-				.entity(exceptionJson)
-				.build();
+                    .entity(exceptionJson)
+                    .build();
         }
 
     }
