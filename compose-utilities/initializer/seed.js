@@ -582,7 +582,7 @@ async function main() {
     {
       name: 'S3 Connector',
       description: 'Docker Compose S3 Connector',
-      resourceUri: { baseUri: 'http://openk9-s3-connector:5000' }
+      resourceUri: { baseUri: 'http://openk9-s3-connector:5000', path: '/execute' }
     }
   ];
 
