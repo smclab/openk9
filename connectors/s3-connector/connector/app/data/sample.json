@@ -7,7 +7,7 @@
       "file":{
          "name":"metadata.object_name",
          "contentType":"metadata.content_type",
-         "size":"metadata.size",
+         "size":1024,
          "type":"file_type"
       },
       "document":{
