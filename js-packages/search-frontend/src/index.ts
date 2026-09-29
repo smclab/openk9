@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+import { OpenK9 as OpenK9Class } from "./embeddable/entry";
+
 export { OpenK9 } from "./embeddable/entry";
 export { rendererComponents } from "./embeddable/entry";
 export { getCachedAccessToken } from "./components/client";
@@ -28,5 +30,4 @@ export type {
 } from "./components/client";
 export type { Message } from "./components/useGenerateResponse";
 
-import { OpenK9 as OpenK9Class } from "./embeddable/entry";
 export default OpenK9Class;

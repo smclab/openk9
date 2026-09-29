@@ -659,7 +659,7 @@ export function useInfiniteResults<E>(
   const hasSortData = sort && sort.length > 0;
   const sortData = hasSortData ? sort[0] : undefined;
 
-  return useInfiniteQuery(
+  const query = useInfiniteQuery(
     [
       "results",
       searchQuery,
@@ -680,7 +680,6 @@ export function useInfiniteResults<E>(
                 : token,
             )
           : searchQuery;
-      setRange(RangePage);
       const data = client.doSearch<E>({
         range: RangePage,
         language,
@@ -712,6 +711,17 @@ export function useInfiniteResults<E>(
       notifyOnChangeProps: ["isFetching"],
     },
   );
+
+  // the range follows the last page loaded; a new search starts from page 0
+  const lastPage = query.isPreviousData
+    ? 0
+    : (query.data?.pages.length ?? 1) - 1;
+  const rangeStart = !(sortData && sortAfterKey) ? lastPage * pageSize : 0;
+  React.useEffect(() => {
+    setRange([rangeStart, pageSize]);
+  }, [rangeStart, pageSize, setRange]);
+
+  return query;
 }
 
 export function recoverySearchQueryAndSort(searchQuery: SearchToken[]) {

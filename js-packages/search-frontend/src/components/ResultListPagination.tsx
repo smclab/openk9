@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useInfiniteQuery } from "react-query";
@@ -84,8 +84,6 @@ function ResultsPagination<E>({
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
-  if (!renderers) return null;
-
   const bootstrappedRef = React.useRef(false);
   React.useEffect(() => {
     if (bootstrappedRef.current) return;
@@ -94,6 +92,8 @@ function ResultsPagination<E>({
     dispatch({ type: "set-range", range: [page * size, size] });
     bootstrappedRef.current = true;
   }, [initialPage, pageSize, dispatch, state.range]);
+
+  if (!renderers) return null;
 
   return (
     <React.Suspense
@@ -284,6 +284,8 @@ export function useInfiniteResults<E>(
         )
       : searchQuery;
 
+  // TODO: hook after an early return (a disabled query would suspend the filters)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const data = useInfiniteQuery(
     [
       "results",
@@ -379,4 +381,3 @@ export function SkeletonResult({
     </>
   );
 }
-

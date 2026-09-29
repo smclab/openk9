@@ -159,6 +159,8 @@ export class OpenK9 {
    * instance by default.
    */
   useCopilotChat = (options: Parameters<typeof useCopilotChatHook>[0] = {}) =>
+    // this field is itself a hook, called from the embedder's component
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useCopilotChatHook({ client: this.client, ...options });
 
   private listeners: {

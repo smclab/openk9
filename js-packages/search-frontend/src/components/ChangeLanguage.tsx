@@ -34,7 +34,7 @@ export type LanguageItem = {
 type Option = {
   value: string;
   name: string;
-  icon: JSX.Element;
+  icon: React.JSX.Element;
 };
 
 export function ChangeLanguage({

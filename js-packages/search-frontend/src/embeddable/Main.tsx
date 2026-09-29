@@ -188,7 +188,7 @@ export function Main({
     whoIsDynamicResponse,
     languages,
     retrieveType,
-  } = recoveryDataBackEnd();
+  } = useRecoveryDataBackEnd();
 
   const { searchQuery, spans, isQueryAnalysisComplete, completelySort } =
     useSearch({
@@ -1470,15 +1470,19 @@ function useSearch({
   const infoSort = tabTokens?.sort?.sort;
   const { numberOfResults } = useRange();
 
+  const queryAnalysisSuggestionsQuery = useQueryAnalysis(
+    {
+      searchText: debouncedOnChange.textOnChange,
+      tokens: debouncedOnChange.selection.flatMap(
+        ({ text, start, end, token }) =>
+          token ? [{ text, start, end, token }] : [],
+      ),
+    },
+    Boolean(configuration.useQueryAnalysis),
+  );
   const queryAnalysisSuggestions = !configuration.useQueryAnalysis
     ? { data: undefined, isPreviousData: false }
-    : useQueryAnalysis({
-        searchText: debouncedOnChange.textOnChange,
-        tokens: debouncedOnChange.selection.flatMap(
-          ({ text, start, end, token }) =>
-            token ? [{ text, start, end, token }] : [],
-        ),
-      });
+    : queryAnalysisSuggestionsQuery;
 
   const spansSuggestions = React.useMemo(
     () =>
@@ -1489,15 +1493,18 @@ function useSearch({
     [selectionsState.textOnChange, queryAnalysisSuggestions.data?.analysis],
   );
 
+  const queryAnalysisSearchQuery = useQueryAnalysis(
+    {
+      searchText: selectionsState.text,
+      tokens: selectionsState.selection.flatMap(({ text, start, end, token }) =>
+        token ? [{ text, start, end, token }] : [],
+      ),
+    },
+    Boolean(configuration.useQueryAnalysis),
+  );
   const queryAnalysisSearch = !configuration.useQueryAnalysis
     ? { data: undefined, isPreviousData: false }
-    : useQueryAnalysis({
-        searchText: selectionsState.text,
-        tokens: selectionsState.selection.flatMap(
-          ({ text, start, end, token }) =>
-            token ? [{ text, start, end, token }] : [],
-        ),
-      });
+    : queryAnalysisSearchQuery;
 
   const spansSearch = React.useMemo(
     () =>
@@ -1732,14 +1739,18 @@ function useQueryAnalysisWithoutSearch({
   selectionsState: SelectionsState;
 }) {
   const debounced = useDebounce(selectionsState, debounceTimeSearch);
+  const queryAnalysisQuery = useQueryAnalysis(
+    {
+      searchText: debounced.textOnChange,
+      tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
+        token ? [{ text, start, end, token }] : [],
+      ),
+    },
+    Boolean(configuration.useQueryAnalysis),
+  );
   const queryAnalysis = !configuration.useQueryAnalysis
     ? { data: undefined }
-    : useQueryAnalysis({
-        searchText: debounced.textOnChange,
-        tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
-          token ? [{ text, start, end, token }] : [],
-        ),
-      });
+    : queryAnalysisQuery;
   const spans = React.useMemo(
     () =>
       calculateSpans(
@@ -1835,7 +1846,7 @@ function useTabs(
   };
 }
 
-function recoveryDataBackEnd() {
+function useRecoveryDataBackEnd() {
   const client = useOpenK9Client();
   const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
     return await client.handle_dynamic_filters();
@@ -2188,12 +2199,13 @@ function calculateSpans(
   return spans.filter((span) => span.text);
 }
 
-function useQueryAnalysis(request: AnalysisRequest) {
+function useQueryAnalysis(request: AnalysisRequest, enabled: boolean) {
   const client = useOpenK9Client();
   return useQuery(
     ["query-anaylis", request] as const,
     async ({ queryKey: [, request] }) =>
       fixQueryAnalysisResult(await client.fetchQueryAnalysis(request)),
+    { enabled },
   );
 }
 
