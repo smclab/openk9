@@ -4,15 +4,15 @@
 	"homepage": "chat",
 	"private": true,
 	"dependencies": {
-		"@emotion/react": "^11.11.4",
-		"@emotion/styled": "^11.11.5",
-		"@mui/icons-material": "^5.16.4",
-		"@mui/material": "^5.16.4",
+		"@emotion/react": "^11.14.0",
+		"@emotion/styled": "^11.14.0",
+		"@mui/icons-material": "^6.1.6",
+		"@mui/material": "^6.1.6",
 		"@testing-library/dom": "^10.4.2",
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/react": "^16.3.3",
-		"@testing-library/user-event": "^13.5.0",
-		"@types/node": "^16.18.102",
+		"@testing-library/user-event": "^14.3.0",
+		"@types/node": "^24.7.0",
 		"@types/react": "^19.2.5",
 		"@types/react-dom": "^19.2.3",
 		"i18next": "^22.5.1",
@@ -23,8 +23,8 @@
 		"react-markdown": "^9.0.1",
 		"react-query": "^3.39.3",
 		"remark-gfm": "^4.0.0",
-		"typescript": "^5.6.2",
-		"uuid": "^10.0.0",
+		"typescript": "^5.9.3",
+		"uuid": "^11.0.2",
 		"web-vitals": "^2.1.4"
 	},
 	"scripts": {
@@ -51,8 +51,7 @@
 		]
 	},
 	"devDependencies": {
-		"@types/uuid": "^10.0.0",
-		"@vitejs/plugin-react": "^4.3.4",
+		"@vitejs/plugin-react": "^5.0.4",
 		"jsdom": "^29.1.1",
 		"vite": "^7.2.2",
 		"vite-plugin-compression": "^0.5.1",
