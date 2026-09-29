@@ -1,6 +1,12 @@
 # SeaweedFS - Configurazione Semplificata per OpenK9
 # Chart: https://seaweedfs.github.io/seaweedfs/helm (seaweedfs 4.47.0, richiede Helm >= 3.17)
 
+## Nessuna ClusterRole: serve solo alla migrazione dei master in modalità
+## distribuita e richiederebbe permessi a livello di cluster per l'install
+global:
+  seaweedfs:
+    createClusterRole: false
+
 ## Deployment all-in-one: master, volume, filer e gateway S3 in un solo pod
 master:
   enabled: false
