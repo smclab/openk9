@@ -1062,6 +1062,10 @@ public class SearchResource {
 		QueryParserRequest queryParserRequest =
 			getQueryParserRequest(searchRequest);
 
+		// the datasource writes search_after only when the request carries a
+		// user sort, so the cursor is worth returning only then
+		boolean withUserSort = queryParserRequest.getSortCount() > 0;
+
 		Uni<QueryParserResponse> queryParserResponseUni =
 			searcherClient.queryParser(queryParserRequest);
 
@@ -1117,7 +1121,8 @@ public class SearchResource {
 								}
 							}
 						}))
-					.map(this::toSearchResponse);
+					.map(searchResponse -> toSearchResponse(
+						searchResponse, withUserSort));
 			})
 			.onFailure()
 			.transform(throwable -> new WebApplicationException(
@@ -1916,7 +1921,8 @@ public class SearchResource {
 
 	}
 
-	private Response toSearchResponse(SearchResponse searchResponse) {
+	private Response toSearchResponse(
+		SearchResponse searchResponse, boolean withUserSort) {
 		printShardFailures(searchResponse);
 
 		SearchHits hits = searchResponse.getHits();
@@ -1960,7 +1966,7 @@ public class SearchResource {
 
 			Object[] sortValues = hit.getSortValues();
 
-			if (sortValues != null && sortValues.length > 0) {
+			if (withUserSort && sortValues != null && sortValues.length > 0) {
 				hitMap.put(
 					"sortAfterKey",
 					Base64.getEncoder().encodeToString(
