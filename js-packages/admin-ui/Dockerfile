@@ -24,6 +24,7 @@ RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" y
 
 # Stage 2 - Production
 FROM nginx:stable-alpine3.23-slim
+RUN apk upgrade --no-cache
 RUN mkdir -p /usr/share/nginx/html/admin/
 COPY --from=builder /app/js-packages/admin-ui/build /usr/share/nginx/html/admin/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
