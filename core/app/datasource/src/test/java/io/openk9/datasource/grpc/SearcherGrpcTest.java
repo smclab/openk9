@@ -24,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import io.openk9.searcher.grpc.QueryParserRequest;
+import io.openk9.searcher.grpc.SearchTokenRequest;
 import jakarta.inject.Inject;
 
 import io.openk9.client.grpc.common.StructUtils;
@@ -850,12 +853,11 @@ public class SearcherGrpcTest {
 
 		// 1. the query vector of the knn branch comes from the mock
 		Mockito
-			.when(embeddingService.embedQuery(
+			.when(embeddingService.getEmbeddedText(
 				ArgumentMatchers.anyString(),
-				ArgumentMatchers.anyString(),
-				ArgumentMatchers.any()))
+				ArgumentMatchers.anyString()))
 			.thenReturn(Uni.createFrom().item(
-				new EmbeddingService.QueryVector(List.of(0.1f, 0.2f))));
+				new EmbeddingService.EmbeddedText(List.of(0.1f, 0.2f))));
 
 		var token = SearchTokenRequest.newBuilder()
 			.setTokenType("HYBRID")
