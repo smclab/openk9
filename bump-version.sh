@@ -89,16 +89,17 @@ done < <(find "$ROOT/helm-charts" "$ROOT/connectors" "$ROOT/enrichers" \
           -name values.yaml -print0 2>/dev/null)
 
 # ---------------------------------------------------------------------------
-# 4) JS package.json — aligns every OpenK9 JS package to the new version,
-#    including search-frontend which currently diverges.
+# 4) JS package.json + lerna.json — aligns every OpenK9 JS package to the new version.
 # ---------------------------------------------------------------------------
-echo "==> [4/9] JS package.json"
+echo "==> [4/9] JS package.json + lerna.json"
 for f in \
   "$ROOT/js-packages/admin-ui/package.json" \
   "$ROOT/js-packages/openk9-chatbot/package.json" \
   "$ROOT/js-packages/search-frontend/package.json" \
+  "$ROOT/js-packages/search-frontend/package.json.conf" \
   "$ROOT/js-packages/talk-to/package.json" \
-  "$ROOT/js-packages/tenant-ui/package.json"; do
+  "$ROOT/js-packages/tenant-ui/package.json" \
+  "$ROOT/lerna.json"; do
   [[ -f "$f" ]] || continue
   sed -i -E "0,/\"version\"[[:space:]]*:/ s/(\"version\"[[:space:]]*:[[:space:]]*\")[^\"]+(\")/\1$NEW\2/" "$f"
   echo "    $f"

@@ -1,6 +1,5 @@
 {
-  "packages": ["js-packages/*", "plugins/**/js", "!js-packages/openk9-chatbot"],
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "npmClient": "yarn",
-  "version": "independent",
-  "linkWorkspacePackages": false
+  "version": "2026.3.0-SNAPSHOT"
 }

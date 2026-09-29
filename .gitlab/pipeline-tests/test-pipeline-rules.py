@@ -71,6 +71,8 @@ AI_TRIGGERS = [
 ENRICHER_TRIGGERS = [
     "Trigger Docling Processor",
 ]
+# Parent quality job (quality.yaml), not a trigger: syncpack lint on the frontends.
+JS_VERSIONS_CHECK = ["JS Dependency Versions"]
 
 # On release branch all triggers must fire (release rules are now uniform across all modules).
 
@@ -427,6 +429,32 @@ def run_tests(verbose=False, user_filter=None):
       mr_target_branch=release_branch,
       should_fire=CONNECTOR_TRIGGER,
       should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS + ENRICHER_TRIGGERS)
+
+    # ── JS DEPENDENCY VERSIONS (quality.yaml) ─────────────────────────────────
+    # syncpack lint: blocking on MR, main and N.N.x when the frontend files
+    # change; silent on feature-branch pushes and on non-JS changes.
+    js_user = "other.user"
+
+    t("MR | frontend files → JS Dependency Versions runs",
+      js_user, "merge_request_event", "frontend",
+      should_fire=JS_VERSIONS_CHECK,
+      sec="JS Dependency Versions (quality)")
+
+    t("main | frontend files → JS Dependency Versions runs",
+      js_user, "push", "frontend", branch="main",
+      should_fire=JS_VERSIONS_CHECK)
+
+    t(f"release branch {release_branch} | frontend files → JS Dependency Versions runs",
+      js_user, "push", "frontend", branch=release_branch,
+      should_fire=JS_VERSIONS_CHECK)
+
+    t("feature branch | frontend files → JS Dependency Versions silent (MR only)",
+      js_user, "push", "frontend", branch="1234-fix-something",
+      should_not_fire=JS_VERSIONS_CHECK)
+
+    t("MR | backend files → JS Dependency Versions silent",
+      js_user, "merge_request_event", "backend",
+      should_not_fire=JS_VERSIONS_CHECK)
 
     # ── RELEASE TAG (2026.1.0) ─────────────────────────────────────────────────
     # On tag push GitLab ignores `changes:` filters, so every domain trigger

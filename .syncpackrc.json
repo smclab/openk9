@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/syncpack/schema.json",
+  "strict": true,
+  "versionGroups": [
+    {
+      "label": "Package versions are the project version (X.Y.Z-SNAPSHOT, a prerelease syncpack reads as unsupported): bump-version.sh sets them, Lerna fixed mode keeps them in lockstep",
+      "dependencyTypes": ["local"],
+      "isIgnored": true
+    },
+    {
+      "label": "search-frontend embeds the published @openk9ui/openk9-chatbot through an npm alias, on purpose not the workspace copy",
+      "packages": ["@openk9ui/search-frontend"],
+      "dependencies": ["@openk9ui/openk9-chatbot"],
+      "isIgnored": true
+    },
+    {
+      "label": "lodash: the root resolution is an exact security pin, every declared range must still include it",
+      "dependencies": ["lodash"],
+      "policy": "sameRange"
+    }
+  ]
+}

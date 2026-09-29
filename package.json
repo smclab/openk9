@@ -7,14 +7,16 @@
     "lerna": "^8.2.4",
     "patch-package": "^6.2.2",
     "postinstall-postinstall": "^2.1.0",
-    "prettier": "^2.5.1"
+    "prettier": "^2.7.1",
+    "syncpack": "15.3.3"
   },
   "scripts": {
-    "build": "lerna run build && lerna run --stream build",
+    "build": "lerna run --stream build",
     "docker-build": "lerna run --stream docker-build",
     "publish": "lerna publish",
     "format": "lerna run --stream format",
     "lint": "lerna run --stream lint",
+    "lint:versions": "syncpack lint",
     "test": "lerna run --stream test",
     "postinstall": "patch-package"
   },
@@ -25,18 +27,20 @@
   },
   "resolutions": {
     "lodash": "4.18.1",
-    "@emotion/react": "11.14.0",
-    "@emotion/styled": "11.14.0",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "@types/react": "18.3.1",
-    "@types/react-dom": "18.3.0"
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3"
   },
   "workspaces": {
     "packages": [
-      "js-packages/*",
-      "plugins/**/js",
-      "!js-packages/openk9-chatbot"
+      "js-packages/admin-ui",
+      "js-packages/openk9-chatbot",
+      "js-packages/search-frontend",
+      "js-packages/talk-to",
+      "js-packages/tenant-ui"
     ]
   }
 }

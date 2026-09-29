@@ -13,39 +13,35 @@ js-packages/shared/
     └── safeExternalUrl.ts
 ```
 
-Yarn ignores this folder even though the workspace glob is `js-packages/*`,
-because there is no `package.json` here. That is deliberate: it stays a plain
+This folder is not a Yarn workspace: the root `package.json` lists the packages
+one by one, and this is not one of them. That is deliberate: it stays a plain
 source folder, not a workspace member.
 
 ## Rules for anything added here
 
-- **Zero dependencies**, runtime or peer. These modules are compiled into several
-  apps that do not share a dependency tree; one of them (the embeddable chatbot)
-  also ships inside customer pages, where a strict CSP applies.
+- **Zero dependencies**, runtime or peer. These modules are compiled into the app
+  that imports them and have no `package.json` to declare anything in, so an
+  import would silently rely on whatever that app installs. The embeddable
+  chatbot, should it ever import them, ships inside customer pages, where a
+  strict CSP applies.
 - **No JSX, no React.** Pure logic only. Anything that renders belongs to the app
   that renders it.
-- **Mind the TypeScript version spread.** Each app compiles these sources with
-  its own compiler, and they are not aligned: `talk-to` and `admin-ui` are on
-  5.6, `search-frontend` on 5.9. Anything relying on a newer DOM lib breaks the
-  oldest consumer. `imageQuery.ts` hits exactly this with `imageOrientation:
-  "from-image"`, which only entered the DOM lib in TypeScript 5 — see the
-  `FROM_IMAGE` constant and its comment. Typecheck against the **oldest**
-  consumer before assuming a change is safe.
+- **One TypeScript range for every consumer.** Each app compiles these sources
+  with its own compiler, but `typescript` has the same range in all of them
+  (syncpack keeps it that way, see `../README.md`), so a DOM lib feature reaches
+  every consumer or none. The `FROM_IMAGE` cast in `imageQuery.ts` is a leftover
+  from when the versions were spread out: `imageOrientation: "from-image"` only
+  entered the DOM lib in TypeScript 5.
 - **Tests live next to the module** and run inside whichever app consumes it:
   today that is `talk-to`, whose `vitest.config.ts` includes `../shared/**`.
   They import `describe`, `it` and `expect` from `vitest` like any other test.
 
-## How each frontend consumes it
+## How a frontend consumes it
 
-| App | Bundler | What it needs |
-|---|---|---|
-| `talk-to` | Vite | relative import + `COPY ./js-packages/shared` in its Dockerfile |
-| `search-frontend` | Vite | same |
-| `admin-ui` | Vite | same |
-| `tenant-ui` | Vite | same |
-
-Vite needs no special configuration: a relative import is enough, and the
-sources get compiled and bundled like any other file.
+Today only `talk-to` imports these modules (`image-query` and
+`safe-external-url`). Every frontend builds with Vite, so another one needs just
+a relative import, plus `COPY ./js-packages/shared` in its Dockerfile (see
+below): the sources get compiled and bundled like any other file.
 
 ## Docker
 

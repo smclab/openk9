@@ -69,6 +69,12 @@ La release line legacy `3.0.x` non è testata qui: vive su un branch separato co
 - MR verso `2026.1.x` con file backend/frontend/AI/enricher → tutti i trigger release del dominio scattano (simulando `CI_MERGE_REQUEST_TARGET_BRANCH_NAME=2026.1.x`)
 - MR verso `2026.1.x` con file connector → `Trigger Connectors Build` scatta (#2133)
 
+### Job di qualità `JS Dependency Versions`
+
+- MR, push su `main` e push su release branch con file frontend → il job (syncpack lint) parte
+- Push su branch feature con file frontend → il job non parte (sui branch gira solo nella MR)
+- MR con soli file backend → il job non parte
+
 ### Release tag (`2026.1.0`)
 
 - Tag push → ogni trigger di dominio scatta (GitLab ignora `changes:` sui tag, quindi tutti i moduli vengono ricostruiti per garantire artefatti coerenti).

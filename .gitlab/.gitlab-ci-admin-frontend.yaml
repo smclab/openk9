@@ -248,7 +248,7 @@ Trigger Restart Admin Frontend Release:
 
 ####################### DEPENDENCY CHECK #######################
 # Moved to the parent pipeline (.gitlab/ci/quality.yaml → "Trivy FS JS").
-# trivy fs scans the whole js-packages/ tree statically (no yarn install),
+# trivy fs reads the workspace manifests statically (no yarn install),
 # so the old per-component npm-audit jobs + the DS_PROJECT_DIR segfault
 # workaround are gone (Issue #2004).
 

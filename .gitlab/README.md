@@ -60,7 +60,7 @@ OpenK9 uses a **Parent-Child CI/CD pipeline** on GitLab. The parent pipeline act
 │   ├── enrichers.yaml                 ← enricher change detection triggers
 │   ├── common.yaml                    ← connectors + Helm chart triggers
 │   ├── child-rules.yaml               ← shared job rules (MR, main, tag, feature, release)
-│   └── quality.yaml                   ← SonarQube, Trivy FS dependency scans (Java/Python/JS)
+│   └── quality.yaml                   ← SonarQube, Trivy FS dependency scans (Java/Python/JS), JS dependency versions
 ├── pipeline-tests/                    ← local test suites for parent + child rules
 │   ├── test-pipeline-rules.py         ← parent triggers (which domain fires)
 │   ├── test-child-rules.py            ← child job rules (Build vs Build Release vs Copy)
@@ -425,7 +425,7 @@ Suppressions live in **5 area-level `.trivyignore.yaml` files** (`core/`, `js-pa
 
 - **Java** dep scan: one job (`Trivy FS Java`) over the `core/`+`vendor/` reactor. `--offline-scan` is mandatory — the reactor leaves versions to the remote quarkus-bom, so without it Trivy fires hundreds of pom fetches at Maven Central from an empty `.m2` → HTTP 429 + a ~30 min runner IP ban.
 - **Python** dep scan: one job per module (`ai-packages/*`, `enrichers/docling-processor`, `connectors/*`), each scanning its own dir so a CVE is attributed to the right module. Connectors now have a dep scan (they had none before).
-- **JS** dep scan: one job over `js-packages/` (the frontends share the root yarn.lock).
+- **JS** dep scan: one job over the root `yarn.lock`, the single lockfile of the five frontend workspaces. It scans a copy of that lockfile next to the root and workspace `package.json` files: that is how Trivy tells devDependencies apart, and it keeps the Java/Python manifests elsewhere in the repository out of the JS scan.
 
 ### Gate (Phase 1 → Phase 2)
 
@@ -439,6 +439,15 @@ Each scan ends with a gate step (`--exit-code 1` on **fixable** CRITICAL/HIGH, `
 - Blocked on new branch creation (anti-spam)
 - `sonar.qualitygate.wait=true` — waits for the quality gate result
 - `allow_failure: true`
+
+### JS Dependency Versions
+
+`JS Dependency Versions` in `quality.yaml` runs `syncpack lint` with the root `.syncpackrc.json`: a library shared by the frontends must have the same range in every package, and the root `resolutions` must match the declared ranges. It reads only the `package.json` files (no `yarn install`), with the syncpack version pinned in the root `devDependencies`; `yarn lint:versions` runs the same check locally. See `js-packages/README.md`.
+
+- Runs on: `main`, MR and push `N.N.x`, when `js-packages/`, the root `package.json`, `yarn.lock` or `.syncpackrc.json` change
+- Blocked on new branch creation (anti-spam)
+- `needs: []`: it does not wait for the frontend child pipelines
+- Blocking (no `allow_failure`)
 
 ---
 

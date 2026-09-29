@@ -52,7 +52,7 @@ Build Verifier:
   - cd js-packages/openk9-chatbot
   # Set Node memory limit to 8GB to prevent OOM
   - export NODE_OPTIONS="--max-old-space-size=8192"
-  # Yarn configuration for resilience (standalone module)
+  # Yarn configuration for resilience
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
   - yarn config set cache-folder ../../.yarn-cache
@@ -157,5 +157,4 @@ Publish OpenK9-Chatbot Release:
 
 ####################### DEPENDENCY CHECK #######################
 # Moved to the parent pipeline (.gitlab/ci/quality.yaml → "Trivy FS JS"). The
-# parent scan covers js-packages/openk9-chatbot/ too (package.json — chatbot has
-# no lockfile and is outside the yarn workspace). Issue #2004.
+# parent scan covers js-packages/openk9-chatbot/ too (root yarn.lock). Issue #2004.

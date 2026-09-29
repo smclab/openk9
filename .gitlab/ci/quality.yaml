@@ -28,6 +28,26 @@
 # Define Anchor for JS/frontend files list (Issue #2004 — Trivy FS JS dep scan)
 .js_files_list: &js_files_list
   - js-packages/**/*
+  - package.json
+  - yarn.lock
+  - .syncpackrc.json
+
+# JS Dependency Versions (Issue #2454): syncpack, the same check as `yarn lint:versions`
+JS Dependency Versions:
+  stage: quality
+  image: node:22.15.0-alpine
+  needs: []
+  script:
+    - SYNCPACK_VERSION=$(node -p "require('./package.json').devDependencies.syncpack")
+    - npx --yes "syncpack@${SYNCPACK_VERSION}" lint --no-ansi
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: *js_files_list
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *js_files_list
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *js_files_list
 
 # Trivy Ignore Expiry Check (Issue #2004)
 # Trivy enforces `expired_at` natively (expired entries are pruned, the CVE
@@ -301,17 +321,22 @@ Trivy FS youtube-connector:
 # Trivy FS — JS/frontend dependency scan (Issue #2004, replaces npm-audit analyzer)
 # Reads yarn.lock statically — no `yarn install`, so the npm-audit segfault on the
 # workspace root (the reason for the old DS_PROJECT_DIR workaround) is gone.
-# One job scans the whole js-packages/ tree (root yarn.lock covers admin-ui/
-# search-frontend/tenant-ui; talk-to has its own lockfile; chatbot via package.json).
+# One job scans a copy of yarn.lock + workspace package.json files (no Java/Python).
 # Moved from the frontend child pipelines to the parent, consistent with Java/Python.
 Trivy FS JS:
   extends: .trivy-fs-scan
   variables:
-    SCAN_DIR: "js-packages"
+    SCAN_DIR: "/tmp/js-workspace"
     # Single JS ignore file: the frontends share the root yarn.lock, so this one
     # job scans the whole tree and this one file backs it (per-component split is
     # not possible here — see js-packages/.trivyignore header).
     IGNOREFILE: "js-packages/.trivyignore.yaml"
+  before_script:
+    - mkdir -p "$SCAN_DIR"
+    - cp package.json yarn.lock "$SCAN_DIR/"
+    - for f in js-packages/*/package.json; do
+        mkdir -p "$SCAN_DIR/$(dirname "$f")"; cp "$f" "$SCAN_DIR/$f";
+      done
   rules:
     # Block on new branch creation
     - !reference [.rules:antispam-new-branch, rules]
