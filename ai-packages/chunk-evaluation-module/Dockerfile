@@ -1,5 +1,5 @@
 ARG PYTHON_BASE_DOCKER_IMAGE=3.12-slim
-FROM python:${PYTHON_BASE_DOCKER_IMAGE}
+FROM python:${PYTHON_BASE_DOCKER_IMAGE} AS builder
 
 WORKDIR /app
 
@@ -19,6 +19,23 @@ RUN apt-get update && \
 
 # Copy application code
 COPY app/ ./
+
+# Run the unit tests in a dedicated stage: pytest and the tests never reach the
+# runtime image. A failing test aborts the build because the runtime stage below
+# depends on this stage's output.
+FROM builder AS test
+
+COPY tests/ ./tests/
+
+RUN pip install --no-cache-dir pytest==9.1.0 && \
+    python -m pytest tests && \
+    touch /tmp/tests.passed
+
+FROM builder AS runtime
+
+# Gate the build on the tests: this COPY forces the `test` stage to be built and
+# to succeed before the runtime image can be assembled.
+COPY --from=test /tmp/tests.passed /tmp/tests.passed
 
 # Run as non-root user for security
 RUN useradd -m -u 1001 appuser && \
