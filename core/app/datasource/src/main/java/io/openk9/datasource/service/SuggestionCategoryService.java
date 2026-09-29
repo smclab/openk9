@@ -151,14 +151,6 @@ public class SuggestionCategoryService extends
 		);
 	}
 
-	public Uni<DocTypeField> getDocTypeField(long suggestionCategoryId) {
-		return sessionFactory.withTransaction(s ->
-			findById(s, suggestionCategoryId)
-				.flatMap(suggestionCategory ->
-					s.fetch(suggestionCategory.getDocTypeField()))
-		);
-	}
-
 	public Uni<Page<DocTypeField>> getDocTypeFields(
 		long suggestionCategoryId, Pageable pageable) {
 		 return getDocTypeFields(

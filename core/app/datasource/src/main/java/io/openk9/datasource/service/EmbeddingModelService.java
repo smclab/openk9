@@ -106,6 +106,7 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 					return s
 						.createQuery(query)
 						.getSingleResultOrNull()
+						.call(tb -> Mutiny.fetch(tb.getEmbeddingModel()))
 						.flatMap(tb -> {
 
 							if (tb == null) {

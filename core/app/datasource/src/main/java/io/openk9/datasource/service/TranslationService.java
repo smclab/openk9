@@ -78,7 +78,7 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 
 		String className = entityClass.getName();
 
-		return sessionFactory.withStatelessTransaction(session -> session
+		return sessionFactory.withTransaction(session -> session
 			.createQuery(
 				"select t " +
 				"from io.openk9.datasource.model.Translation t " +
@@ -123,7 +123,7 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 
 		String className = entityClass.getName();
 
-		return sessionFactory.withStatelessTransaction(session -> session
+		return sessionFactory.withTransaction(session -> session
 			.createQuery(
 				"select t " +
 					"from io.openk9.datasource.model.Translation t " +
