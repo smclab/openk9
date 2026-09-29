@@ -32,6 +32,7 @@ public class TenantWithBucket {
 	private final TenantManager.Tenant tenant;
 	private final Bucket bucket;
 	private final String[] indexNames;
+	private final boolean chunked;
 
 	public TenantWithBucket(TenantManager.Tenant tenant, Bucket bucket) {
 
@@ -42,13 +43,18 @@ public class TenantWithBucket {
 		var datasources = this.bucket.getDatasources();
 
 		var indexNameSet = new HashSet<String>();
+		var chunked = false;
 		for (Datasource datasource : datasources) {
 			var dataIndex = datasource.getDataIndex();
 
 			indexNameSet.add(IndexName.from(tenantId, dataIndex).toString());
+
+			chunked |= Boolean.TRUE.equals(dataIndex.getKnnIndex());
+
 		}
 
 		this.indexNames = indexNameSet.toArray(String[]::new);
+		this.chunked = chunked;
 
 	}
 
