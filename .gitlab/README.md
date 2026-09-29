@@ -326,15 +326,16 @@ All Kaniko jobs use a pinned image (`gcr.io/kaniko-project/executor:v1.23.2-debu
   --context "..." \
   --dockerfile "..." \
   --destination "registry.smc.it:49083/openk9/<component>:<tag>"
-  # MR / generic user: --no-push instead of --destination
+  # MR / generic user: --no-push --skip-push-permission-check instead of --destination
 ```
 
 | Flag | Why |
 |---|---|
-| `--cache=true` + `--cache-repo` | Reuses cached Docker layers from MinIO-backed registry |
+| `--cache=true` + `--cache-repo` | Reuses cached Docker layers from the SeaweedFS-backed registry |
 | `--snapshot-mode=redo` | Uses mtime instead of sha256 — reduces full-filesystem snapshots from ~900s to ~5s |
 | `--compressed-caching=false` | Prevents OOM (exit 137) on large layers (PyTorch, node_modules) |
 | `--no-push` | Used on MR and generic-user feature branches — builds the image locally to validate the Dockerfile, does not push |
+| `--skip-push-permission-check` | Always paired with `--no-push`. With `--no-push` the only upfront check is a write to the cache repo: if the cache is down the job would fail in 1s. Skipped, a broken cache only logs `WARN Error uploading layer to cache` and the build goes on uncached |
 
 **Version extraction per component type:**
 
@@ -360,7 +361,7 @@ Each component has its own key (`datasource-mvn`, `searcher-mvn`, etc.) to avoid
 
 ### Docker Layer Cache (Kaniko)
 
-A dedicated `registry:2` pod runs in the `k9-requirements` namespace, backed by MinIO with a 7-day lifecycle TTL.
+A dedicated `registry:2` pod runs in the `k9-requirements` namespace, backed by SeaweedFS (`seaweed-pipeline-cache`).
 
 ```
 Kaniko (CI runner)
@@ -369,7 +370,13 @@ Kaniko (CI runner)
 kaniko-cache-registry.openk9.io   ← Ingress → registry:2 (k9-requirements)
       │ S3 API
       ▼
-MinIO  ←→  bucket: kaniko-cache  (7-day auto-cleanup)
+SeaweedFS (seaweed-pipeline-cache)  ←→  bucket: kaniko-cache
+```
+
+Kaniko never deletes cache entries (`--cache-ttl` only filters reads), so the bucket grows until the `kaniko-cache-gc` CronJob flushes it (hourly check, flush by deleting and recreating the bucket). Manifests, thresholds and troubleshooting live in the devops repo `openk9-helm-local`, folder `K9-requirements/local_value/00-base-requirements/09-minio-runner-cache/` (`kaniko-cache-gc.yaml`, `kaniko-cache-registry.yaml`, `README.md`).
+
+```bash
+kubectl logs -n k9-requirements -l app=kaniko-cache-gc --tail=20   # last GC runs
 ```
 
 **Inspecting the cache:**

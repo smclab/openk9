@@ -70,7 +70,7 @@ Build Docling Image:
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
          { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
       echo "[DOCLING] MR: build only, no push"
-      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG --no-push
+      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG --no-push --skip-push-permission-check
 
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       if [ "$USER_TYPE" = "designated" ]; then
@@ -79,7 +79,7 @@ Build Docling Image:
           --destination "${CI_REGISTRY_NAME}/openk9/openk9-docling-processor:997-SNAPSHOT"
       else
         echo "[DOCLING] Feature (generic) => build only, no push"
-        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG --no-push
+        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG --no-push --skip-push-permission-check
       fi
     fi
   rules:

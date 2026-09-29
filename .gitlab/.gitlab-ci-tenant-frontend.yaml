@@ -67,7 +67,7 @@ Build Tenant Frontend:
         KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:996-SNAPSHOT"
         echo "=== Building Tenant Frontend with VERSION=996-SNAPSHOT for frontend developer ==="
       else
-        KANIKO_PUSH="--no-push"
+        KANIKO_PUSH="--no-push --skip-push-permission-check"
         echo "=== Building Tenant Frontend (no push) for generic user ==="
       fi
     fi
@@ -114,7 +114,7 @@ Build Verifier:
       --compressed-caching=false \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/tenant-ui/Dockerfile" \
-      --no-push \
+      --no-push --skip-push-permission-check \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
     # Run only on MR — Kaniko --no-push avoids yarn install on runner disk (prevents ENOSPC)
@@ -188,7 +188,7 @@ Build Tenant Frontend Release:
       KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:$VERSION"
       echo "=== Release branch: push $VERSION ==="
     else
-      KANIKO_PUSH="--no-push"
+      KANIKO_PUSH="--no-push --skip-push-permission-check"
       echo "=== Release MR: build only, no push ==="
     fi
   - |
