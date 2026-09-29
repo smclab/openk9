@@ -18,6 +18,10 @@
 import base64
 import json
 
+# Cohere Embed on Bedrock rejects a request carrying more texts than this
+# ("Invalid parameter combination"), whatever their length.
+MAX_TEXTS_PER_REQUEST = 96
+
 
 class BedrockMultimodalEmbedder:
     """Direct Bedrock client for a multimodal embedding model.
@@ -54,14 +58,23 @@ class BedrockMultimodalEmbedder:
         return payload["embeddings"]["float"]
 
     def embed_texts(self, texts, input_type="search_document"):
-        """Embeds a batch of texts; returns one float vector per text."""
-        return self._invoke(
-            {
-                "texts": list(texts),
-                "input_type": input_type,
-                "embedding_types": ["float"],
-            }
-        )
+        """Embeds a batch of texts; returns one float vector per text, in
+        order. The texts go in requests of at most MAX_TEXTS_PER_REQUEST."""
+        texts = list(texts)
+        vectors = []
+
+        for start in range(0, len(texts), MAX_TEXTS_PER_REQUEST):
+            vectors.extend(
+                self._invoke(
+                    {
+                        "texts": texts[start : start + MAX_TEXTS_PER_REQUEST],
+                        "input_type": input_type,
+                        "embedding_types": ["float"],
+                    }
+                )
+            )
+
+        return vectors
 
     def embed_image(self, data, content_type):
         """Embeds a single image (raw bytes); returns its float vector."""
