@@ -84,8 +84,10 @@ public class ActorSystemConfig {
 
 			// these entities keep in-flight state (held messages, awaited
 			// callbacks) in memory and look idle while an enricher works, so
-			// the sharding must not passivate them: they stop by themselves
-			// once their work is done
+			// the sharding must not passivate them. They stop by themselves
+			// once their work is done, with two exceptions on this line: a
+			// Scheduling in ERROR waits for a Restart, and an
+			// EmbeddingProcessor waits for a model call that has no deadline
 			var noPassivation = ClusterShardingSettings
 				.create(actorSystem)
 				.withNoPassivationStrategy();
