@@ -76,7 +76,7 @@ Fetch config:
     > /kaniko/.docker/config.json
     KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
     KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/${CONNECTOR_DIR}/connector --dockerfile ${CI_PROJECT_DIR}/connectors/${CONNECTOR_DIR}/connector/Dockerfile"
-    /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+    /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push --skip-push-permission-check
 
 ###############################################################
 #                       WEB CONNECTOR                         #

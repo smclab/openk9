@@ -330,7 +330,7 @@ Stessa struttura, in più:
 Stessa struttura, in più:
 - `Fetch config` (sempre, come AI)
 - 6 Build Release / Container Scanning / Skopeo, uno per connector
-- Build Verifier = Kaniko `--no-push`
+- Build Verifier = Kaniko `--no-push --skip-push-permission-check` (una cache guasta non fa fallire la build)
 
 ### `openk9-chatbot` (eccezione)
 

@@ -100,7 +100,7 @@ Build Verifier Search Frontend:
       --compressed-caching=false \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
-      --no-push \
+      --no-push --skip-push-permission-check \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
     - !reference [.rules:child-verify-release-mr, rules]

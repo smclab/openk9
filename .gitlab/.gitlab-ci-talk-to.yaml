@@ -97,7 +97,7 @@ Build Verifier Talk-To:
       --compressed-caching=false \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/talk-to/Dockerfile" \
-      --no-push \
+      --no-push --skip-push-permission-check \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
