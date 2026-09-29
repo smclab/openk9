@@ -75,7 +75,8 @@ export function SingleMessage({
     : visibleSources.slice(0, INITIAL_VISIBLE_SOURCES);
   const canToggleSources = visibleSources.length > INITIAL_VISIBLE_SOURCES;
 
-  const copySource = async (source: any) => {
+  const copySource = async (source: Source) => {
+    if (!source.url) return;
     try {
       await navigator.clipboard.writeText(source.url);
       setCopiedSource(source.url);

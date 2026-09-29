@@ -18,7 +18,10 @@ import React from "react";
 
 export const OpenK9ClientContext = React.createContext<
   ReturnType<typeof OpenK9Client>
->(null as any /* must break app if not provided */);
+>(
+  // must break app if not provided
+  null as unknown as ReturnType<typeof OpenK9Client>,
+);
 
 export default function Client() {
   return null;
@@ -120,7 +123,7 @@ export function OpenK9Client({
           question: string;
           answer: string;
           title: string;
-          sources: Array<any>;
+          sources: Array<unknown>;
           chat_id: string;
           timestamp: string;
           chat_sequence_number: number;
