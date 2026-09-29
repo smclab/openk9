@@ -101,6 +101,16 @@ To configure Route for Openshift use:
 | `route.tls.enabled`  | If enable tls on Route                                     | `` |
 | `route.tls.secretName`  | Secret with tls certificate to associate to Route                                       | `` |
 
+### Authentication
+
+The Admin Ui container serves its assets through nginx with a strict Content-Security-Policy. When the identity provider is hosted on a different origin than the Admin Ui itself, that origin must be declared here: it is substituted into the `connect-src` and `frame-src` directives at container start.
+
+If `authOrigin` is left empty the `AUTH_ORIGIN` environment variable is not set on the container and both directives stay on `'self'`, so the browser blocks every request towards an external identity provider and login does not complete. The value must be a full origin, scheme included.
+
+| Name         | Description                                                                                                          | Value |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- | ----- |
+| `authOrigin` | Identity provider origin allowed by the Content-Security-Policy, scheme included (e.g. `https://keycloak.example.com`) | `""`  |
+
 ### Resource requests and limits
 
 Openk9 Admin Ui chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.
