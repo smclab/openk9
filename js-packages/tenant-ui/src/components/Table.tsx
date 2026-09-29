@@ -162,20 +162,24 @@ export function Table<
             TableBody: TableBody,
             TableHead: TableHead,
             TableRow: TableRow,
+            // Virtuoso renders the placeholder straight under <table>
             EmptyPlaceholder: () => (
-              <TableRow>
-                <TableCell colSpan={columns.length + 1 + (isItemsSelectable ? 1 : 0)}>
-                  <EmptySpace
-                    description="There are no matching unassociated entities"
-                    title="No entities"
-                    extraClass="c-empty-state-animation"
-                  />
-                </TableCell>
-              </TableRow>
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={columns.length + 1 + (isItemsSelectable ? 1 : 0)}>
+                    <EmptySpace
+                      description="There are no matching unassociated entities"
+                      title="No entities"
+                      extraClass="c-empty-state-animation"
+                    />
+                  </TableCell>
+                </TableRow>
+              </TableBody>
             ),
           }}
+          // Virtuoso renders this straight under <thead>
           fixedHeaderContent={() => (
-            <>
+            <TableRow>
               {isItemsSelectable && <TableCell style={{ width: "40px" }} />}
               {columns.map((column, index) => (
                 <TableCell key={index}>
@@ -185,7 +189,7 @@ export function Table<
               <TableCell>
                 <Typography variant="subtitle2">Actions</Typography>
               </TableCell>
-            </>
+            </TableRow>
           )}
           itemContent={(index) => {
             const row = field(data)?.edges?.[index]?.node ?? undefined;
