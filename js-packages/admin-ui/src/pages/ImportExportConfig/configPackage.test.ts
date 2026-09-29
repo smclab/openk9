@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+import { describe, expect, test } from "vitest";
 import type { ConfigPackage } from "openapi-generated";
 import { configFileName, parseConfigPackage, redactedEntities } from "./configPackage";
 
@@ -36,7 +37,10 @@ describe("parseConfigPackage", () => {
   });
 
   test("refuses a file that is not JSON", () => {
-    expect(parseConfigPackage("not json at all")).toEqual({ ok: false, error: "The file is not valid JSON." });
+    expect(parseConfigPackage("not json at all")).toEqual({
+      ok: false,
+      errorKey: "pages.admin-settings.import-export.parse-error.invalid-json",
+    });
   });
 
   test("refuses valid JSON that is not a package", () => {
