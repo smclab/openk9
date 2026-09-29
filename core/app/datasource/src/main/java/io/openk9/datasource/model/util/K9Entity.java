@@ -52,6 +52,7 @@ public abstract class K9Entity implements GraphqlId {
 	)
 	@SequenceGenerator(
 		name = "hibernate_sequence",
+		sequenceName = "hibernate_sequence",
 		allocationSize = 1
 	)
 	@org.eclipse.microprofile.graphql.Id
