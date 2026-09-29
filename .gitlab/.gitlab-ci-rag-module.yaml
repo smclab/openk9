@@ -79,7 +79,7 @@ Build Rag Image:
          { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
       # MR: build only, no push
       echo "[RAG] MR: build only, no push"
-      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT --no-push
+      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT --no-push --skip-push-permission-check
 
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       if [ "$USER_TYPE" = "designated" ]; then
@@ -88,7 +88,7 @@ Build Rag Image:
           --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:997-SNAPSHOT"
       else
         echo "[RAG] Feature (generic) => build only, no push"
-        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT --no-push
+        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT --no-push --skip-push-permission-check
       fi
     fi
   rules:

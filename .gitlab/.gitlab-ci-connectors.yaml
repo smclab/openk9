@@ -54,7 +54,7 @@ Build Web Connector image:
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
        { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
       echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push --skip-push-permission-check
     elif [ -n "$CI_COMMIT_TAG" ]; then
       # Strip the leading 'v': images are versioned without it (openk9-web-connector:2026.1.0).
       # The 'v' is only the pipeline-trigger convention, never part of the image tag.
@@ -115,7 +115,7 @@ Build Email Connector image:
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
        { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
       echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push --skip-push-permission-check
     elif [ -n "$CI_COMMIT_TAG" ]; then
       # Strip the leading 'v': images are versioned without it (openk9-email-connector:2026.1.0).
       # The 'v' is only the pipeline-trigger convention, never part of the image tag.
@@ -171,7 +171,7 @@ Build Database Connector image:
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
        { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
       echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push --skip-push-permission-check
     elif [ -n "$CI_COMMIT_TAG" ]; then
       # Strip the leading 'v': images are versioned without it (openk9-database-connector:2026.1.0).
       # The 'v' is only the pipeline-trigger convention, never part of the image tag.
@@ -227,7 +227,7 @@ Build YouTube Connector image:
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
        { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
       echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push --skip-push-permission-check
     elif [ -n "$CI_COMMIT_TAG" ]; then
       # Strip the leading 'v': images are versioned without it (openk9-youtube-connector:2026.1.0).
       # The 'v' is only the pipeline-trigger convention, never part of the image tag.
@@ -283,7 +283,7 @@ Build GitLab Connector image:
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
        { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
       echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push --skip-push-permission-check
     elif [ -n "$CI_COMMIT_TAG" ]; then
       # Strip the leading 'v': images are versioned without it (openk9-gitlab-connector:2026.1.0).
       # The 'v' is only the pipeline-trigger convention, never part of the image tag.
@@ -339,7 +339,7 @@ Build Minio Connector image:
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
        { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
       echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push --skip-push-permission-check
     elif [ -n "$CI_COMMIT_TAG" ]; then
       # Strip the leading 'v': images are versioned without it (openk9-minio-connector:2026.1.0).
       # The 'v' is only the pipeline-trigger convention, never part of the image tag.
