@@ -24,6 +24,7 @@ import io.openk9.common.storage.BinaryKeys;
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectResponse;
 import io.minio.MinioClient;
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
@@ -31,12 +32,13 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 /**
  * Integration test of the binary write path ({@link BinaryStorageService})
- * against a real MinIO instance provided by Quarkus DevServices, verifying that
- * a stored binary lands under its deterministic key and reads back unchanged,
- * not only with mocks.
+ * against a real S3 storage (SeaweedFS, started by
+ * {@link SeaweedFsTestResource}), verifying that a stored binary lands under
+ * its deterministic key and reads back unchanged, not only with mocks.
  */
 @QuarkusTest
-class BinaryStorageMinioTest {
+@QuarkusTestResource(SeaweedFsTestResource.class)
+class BinaryStorageS3Test {
 
 	@Inject
 	MinioClient minioClient;

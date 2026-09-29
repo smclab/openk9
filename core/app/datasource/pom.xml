@@ -353,6 +353,11 @@
 		  <artifactId>pekko-actor-testkit-typed_${scala.version}</artifactId>
 		  <scope>test</scope>
 	  </dependency>
+	  <dependency>
+		  <groupId>org.testcontainers</groupId>
+		  <artifactId>testcontainers</artifactId>
+		  <scope>test</scope>
+	  </dependency>
 
     <!-- Test dependencies // -->
 

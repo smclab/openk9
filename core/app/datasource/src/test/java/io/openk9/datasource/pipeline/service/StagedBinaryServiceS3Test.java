@@ -37,6 +37,7 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.Result;
 import io.minio.messages.Item;
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
@@ -47,13 +48,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Integration test of {@link StagedBinaryService}, the entry point the indexing
  * pipeline uses to reach the binaries staged on the object storage, against a
- * real MinIO instance provided by Quarkus DevServices. It exercises the real
- * datasource paths end to end, not only with mocks: minting the pre-signed GET
- * URL the enrichers read a binary with, and dropping the whole working copy of
- * a datasource when a scheduling closes (dispatched over the event bus).
+ * real S3 storage (SeaweedFS, started by {@link SeaweedFsTestResource}). It
+ * exercises the real datasource paths end to end, not only with mocks: minting
+ * the pre-signed GET URL the enrichers read a binary with, and dropping the
+ * whole working copy of a datasource when a scheduling closes (dispatched over
+ * the event bus).
  */
 @QuarkusTest
-class StagedBinaryServiceMinioTest {
+@QuarkusTestResource(SeaweedFsTestResource.class)
+class StagedBinaryServiceS3Test {
 
 	private static final byte[] PAYLOAD = "staged-bytes".getBytes();
 
