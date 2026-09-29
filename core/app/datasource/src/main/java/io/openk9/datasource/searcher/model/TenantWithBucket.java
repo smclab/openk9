@@ -33,6 +33,7 @@ public class TenantWithBucket {
 	private final Bucket bucket;
 	private final String[] indexNames;
 	private final AclMapping[] aclMappings;
+	private final boolean chunked;
 
 	public TenantWithBucket(String tenantId, Bucket bucket) {
 
@@ -43,10 +44,13 @@ public class TenantWithBucket {
 
 		var indexNameSet = new HashSet<String>();
 		var aclMappingSet = new HashSet<AclMapping>();
+		var chunked = false;
 		for (Datasource datasource : datasources) {
 			var dataIndex = datasource.getDataIndex();
 
 			indexNameSet.add(IndexName.from(tenantId, dataIndex).toString());
+
+			chunked |= Boolean.TRUE.equals(dataIndex.getKnnIndex());
 
 			var pluginDriverAclMappings = datasource.getPluginDriver().getAclMappings();
 			aclMappingSet.addAll(pluginDriverAclMappings);
@@ -54,6 +58,7 @@ public class TenantWithBucket {
 
 		this.indexNames = indexNameSet.toArray(String[]::new);
 		this.aclMappings = aclMappingSet.toArray(AclMapping[]::new);
+		this.chunked = chunked;
 	}
 
 }

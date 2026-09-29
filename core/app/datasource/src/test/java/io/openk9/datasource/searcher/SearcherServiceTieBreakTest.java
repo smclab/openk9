@@ -38,12 +38,14 @@ class SearcherServiceTieBreakTest {
 	private static final String NUMBER = "number";
 	private static final boolean HYBRID = true;
 	private static final boolean NOT_HYBRID = false;
+	private static final boolean CHUNKED = true;
+	private static final boolean NOT_CHUNKED = false;
 
 	@Test
 	void should_sort_by_score_then_tie_break_when_no_sort_was_requested() {
 		var searchSourceBuilder = new SearchSourceBuilder();
 
-		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID);
+		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, CHUNKED);
 
 		// writing a sort clause switches that implicit order off, so _score
 		// has to become the first criterion for relevance to survive
@@ -68,7 +70,7 @@ class SearcherServiceTieBreakTest {
 			.fieldSort("title.keyword")
 			.order(SortOrder.ASC));
 
-		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID);
+		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, CHUNKED);
 
 		// the criteria are evaluated in sequence, so the tie-break only breaks
 		// ties the requested ones left open: it has to stay last
@@ -89,7 +91,7 @@ class SearcherServiceTieBreakTest {
 		// run on indices without chunks
 		var searchSourceBuilder = new SearchSourceBuilder();
 
-		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID);
+		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, CHUNKED);
 
 		// without unmappedType the search fails with "No mapping found for
 		// [number]" instead of ignoring the criterion
@@ -110,7 +112,7 @@ class SearcherServiceTieBreakTest {
 	void should_leave_a_hybrid_query_unsorted_to_keep_its_relevance_order() {
 		var searchSourceBuilder = new SearchSourceBuilder();
 
-		SearcherService.applyTieBreak(searchSourceBuilder, HYBRID);
+		SearcherService.applyTieBreak(searchSourceBuilder, HYBRID, CHUNKED);
 
 		// OpenSearch rejects _score next to any other criterion on a hybrid
 		// query, because the final score only exists once the normalization
@@ -126,7 +128,7 @@ class SearcherServiceTieBreakTest {
 			.fieldSort("web.title.keyword")
 			.order(SortOrder.ASC));
 
-		SearcherService.applyTieBreak(searchSourceBuilder, HYBRID);
+		SearcherService.applyTieBreak(searchSourceBuilder, HYBRID, CHUNKED);
 
 		// no _score is involved, so the hybrid query accepts the criteria and
 		// its ties become deterministic like everywhere else
@@ -139,11 +141,22 @@ class SearcherServiceTieBreakTest {
 	}
 
 	@Test
+	void should_close_with_the_content_id_alone_when_no_index_is_chunked() {
+		var searchSourceBuilder = new SearchSourceBuilder();
+
+		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, NOT_CHUNKED);
+
+		// number is not ours outside chunked indices: an index that maps it as
+		// text would fail the sort and lose all its documents from the results
+		assertEquals(List.of(CONTENT_ID), fieldSortNames(searchSourceBuilder.sorts()));
+	}
+
+	@Test
 	void should_not_stack_criteria_when_applied_twice() {
 		var searchSourceBuilder = new SearchSourceBuilder();
 
-		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID);
-		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID);
+		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, CHUNKED);
+		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, CHUNKED);
 
 		assertEquals(3, searchSourceBuilder.sorts().size());
 	}
