@@ -114,6 +114,9 @@
 		<pekko.management.version>1.1.1</pekko.management.version>
 		<lucene.version>9.12.3</lucene.version>
 		<zstd-jni.version>1.5.6-3</zstd-jni.version>
+		<bouncycastle.version>1.86</bouncycastle.version>
+		<httpcore5.version>5.4.3</httpcore5.version>
+		<lz4.version>1.11.3</lz4.version>
 	</properties>
 
 	<dependencyManagement>
@@ -131,6 +134,49 @@
 				<version>${quarkus.platform.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+			<!-- Bouncy Castle arrives through MinIO and Tika, neither of which is
+			     governed by a BOM we import. Kept on one version so the four
+			     artifacts never drift apart. -->
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcprov-jdk18on</artifactId>
+				<version>${bouncycastle.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcpkix-jdk18on</artifactId>
+				<version>${bouncycastle.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcutil-jdk18on</artifactId>
+				<version>${bouncycastle.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcjmail-jdk18on</artifactId>
+				<version>${bouncycastle.version}</version>
+			</dependency>
+			<!-- Pulled by the OpenSearch Apache transport, which is pinned to an
+			     extension release that still resolves a vulnerable HttpCore5. -->
+			<dependency>
+				<groupId>org.apache.httpcomponents.core5</groupId>
+				<artifactId>httpcore5</artifactId>
+				<version>${httpcore5.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents.core5</groupId>
+				<artifactId>httpcore5-h2</artifactId>
+				<version>${httpcore5.version}</version>
+			</dependency>
+			<!-- Replaces the abandoned org.lz4:lz4-java that Pekko serialization pulls in;
+			     see the exclusion in app/datasource. Same net.jpountz packages, still
+			     maintained. The platform pins an older one that is not yet fixed. -->
+			<dependency>
+				<groupId>at.yawk.lz4</groupId>
+				<artifactId>lz4-java</artifactId>
+				<version>${lz4.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.quarkiverse.opensearch</groupId>
