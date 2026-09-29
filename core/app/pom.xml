@@ -105,10 +105,10 @@
 							<version>${surefire-plugin.version}</version>
 							<configuration>
 								<excludedGroups>io.quarkus.test.junit.QuarkusTest</excludedGroups>
-								<systemProperties>
+								<systemPropertyVariables>
 									<java.util.logging.manager>org.jboss.logmanager.LogManager
 									</java.util.logging.manager>
-								</systemProperties>
+								</systemPropertyVariables>
 							</configuration>
 						</plugin>
 					</plugins>
