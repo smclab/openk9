@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
@@ -50,6 +51,7 @@ import io.openk9.datasource.model.dto.base.ProviderModelDTO;
 import io.openk9.datasource.model.dto.base.RangeDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.model.util.Fuzziness;
+import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.service.AutocompleteService;
 import io.openk9.datasource.service.AutocorrectionService;
 import io.openk9.datasource.service.BucketService;
@@ -74,15 +76,20 @@ import com.google.protobuf.Struct;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.quarkus.grpc.GrpcClient;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 
 @QuarkusTest
 public class SearcherGrpcTest {
@@ -164,6 +171,9 @@ public class SearcherGrpcTest {
 
 	@GrpcClient
 	Searcher searcher;
+
+	@InjectMock
+	EmbeddingService embeddingService;
 
 	@Inject
 	AutocompleteService autocompleteService;
@@ -892,6 +902,43 @@ public class SearcherGrpcTest {
 				Assertions.assertEquals(
 					Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
 			});
+	}
+
+	// The tie-break is left out of a hybrid query, so the flag has to travel
+	// from the token type to the search source builder: this is the only test
+	// that goes through queryParser and not through applyTieBreak alone.
+
+	@Test
+	@RunOnVertxContext
+	void should_leave_the_sort_out_of_a_hybrid_query(UniAsserter asserter) {
+
+		// 1. the query vector of the knn branch comes from the mock
+		Mockito
+			.when(embeddingService.embedQuery(
+				ArgumentMatchers.anyString(),
+				ArgumentMatchers.anyString(),
+				ArgumentMatchers.any()))
+			.thenReturn(Uni.createFrom().item(
+				new EmbeddingService.QueryVector(List.of(0.1f, 0.2f))));
+
+		var token = SearchTokenRequest.newBuilder()
+			.setTokenType("HYBRID")
+			.addValues("smc")
+			.build();
+
+		// 2. OpenSearch rejects _score next to any other criterion on a hybrid
+		// query, so the emitted query must carry no sort clause at all
+		asserter.assertThat(
+			() -> searcher.queryParser(
+				QueryParserRequest.newBuilder()
+					.setTenantId(SCHEMA_NAME)
+					.addSearchQuery(token)
+					.build()
+			),
+			response -> Assertions.assertFalse(
+				new JsonObject(response.getQuery().toStringUtf8())
+					.containsKey("sort"))
+		);
 	}
 
 	@AfterEach
