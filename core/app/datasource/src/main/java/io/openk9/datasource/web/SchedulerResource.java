@@ -53,9 +53,6 @@ public class SchedulerResource {
 
 	@Operation(operationId = "getDeletedContentIds")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "List of deleted content ids returned",
@@ -79,9 +76,6 @@ public class SchedulerResource {
 
 	@Operation(operationId = "closeScheduling")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "204", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "204",
 					description = "Scheduling closed",
@@ -107,9 +101,6 @@ public class SchedulerResource {
 
 	@Operation(operationId = "cancelScheduling")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "204", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "204",
 					description = "Scheduling cancelled",
@@ -135,9 +126,6 @@ public class SchedulerResource {
 
 	@Operation(operationId = "rerouteScheduling")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "204", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "204",
 					description = "Scheduling rerouted successfully",

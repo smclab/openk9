@@ -75,9 +75,6 @@ public class TriggerWithDateResource {
 	 */
 	@Operation(operationId = "v2-trigger")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Auto Generate successful",

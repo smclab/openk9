@@ -85,9 +85,6 @@ public class DataIndexResource {
 
 	@Operation(operationId = "auto-generate-doc-types")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "204", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "204",
 					description = "Auto Generate successful",
@@ -127,9 +124,6 @@ public class DataIndexResource {
 
 	@Operation(operationId = "get-mappings-from-doc-types")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Get mapping successfully",
@@ -169,9 +163,6 @@ public class DataIndexResource {
 
 	@Operation(operationId = "get-settings-from-doc-types")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Get setting successfully",

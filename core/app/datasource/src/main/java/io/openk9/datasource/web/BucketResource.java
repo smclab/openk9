@@ -86,9 +86,6 @@ public class BucketResource {
 
 	@Operation(operationId = "templates")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "List of templates returned",
@@ -115,9 +112,6 @@ public class BucketResource {
 
 	@Operation(operationId = "tabs")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Tabs returned",
@@ -147,9 +141,6 @@ public class BucketResource {
 
 	@Operation(operationId = "suggestion-categories")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Tabs returned",
@@ -179,9 +170,6 @@ public class BucketResource {
 
 	@Operation(operationId = "doc-type-fields-sortable")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Tabs returned",
@@ -210,9 +198,6 @@ public class BucketResource {
 
 	@Operation(operationId = "sortings")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Tabs returned",
@@ -241,9 +226,6 @@ public class BucketResource {
 
 	@Operation(operationId = "default-language")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Tabs returned",
@@ -270,9 +252,6 @@ public class BucketResource {
 
 	@Operation(operationId = "available-languages")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Tabs returned",
@@ -299,9 +278,6 @@ public class BucketResource {
 
 	@Operation(operationId = "current")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Current bucket configuration returned",

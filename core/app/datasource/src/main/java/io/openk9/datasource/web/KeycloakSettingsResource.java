@@ -48,9 +48,6 @@ public class KeycloakSettingsResource {
 
 	@Operation(operationId = "settings")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Keycloak Settings returned",
@@ -76,9 +73,6 @@ public class KeycloakSettingsResource {
 
 	@Operation(operationId = "settings.js")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Keycloak Settings returned",

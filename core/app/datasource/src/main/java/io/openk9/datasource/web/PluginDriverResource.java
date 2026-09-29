@@ -67,9 +67,6 @@ public class PluginDriverResource {
 
 	@Operation(operationId = "document-types-plugin-driver")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "List of templates returned",
@@ -100,9 +97,6 @@ public class PluginDriverResource {
 	 */
 	@Operation(operationId = "form")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Form returned",
@@ -152,9 +146,6 @@ public class PluginDriverResource {
 
 	@Operation(operationId = "health")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Health Check Ok",
@@ -178,9 +169,6 @@ public class PluginDriverResource {
 
 	@Operation(operationId = "health-dto")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
 					responseCode = "200",
 					description = "Health Check Ok",
