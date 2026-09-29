@@ -439,9 +439,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	 *
 	 * @param searchSourceBuilder the request the tie-break is appended to
 	 * @param hybrid whether the request carries a hybrid query
+	 * @param chunked whether some index of the bucket holds chunks, the only
+	 * documents that carry {@code number}
 	 */
 	static void applyTieBreak(
-		SearchSourceBuilder searchSourceBuilder, boolean hybrid) {
+		SearchSourceBuilder searchSourceBuilder, boolean hybrid,
+		boolean chunked) {
 
 		var sorts = searchSourceBuilder.sorts();
 
@@ -471,13 +474,15 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			);
 		}
 
-		if (!hasFieldSort(searchSourceBuilder, TIE_BREAK_CHUNK_FIELD)) {
+		// Outside chunked indices the field is not ours: sorting on a number
+		// mapped as text would fail the shard and drop its documents.
+		if (chunked && !hasFieldSort(searchSourceBuilder, TIE_BREAK_CHUNK_FIELD)) {
 			searchSourceBuilder.sort(
 				SortBuilders
 					.fieldSort(TIE_BREAK_CHUNK_FIELD)
 					.order(SortOrder.ASC)
-					// Only chunk documents carry it: everywhere else the
-					// criterion is inert and contentId already discriminates.
+					// Within chunked indices the documents that are not chunks
+					// carry no number and go after the chunks.
 					.missing("_last")
 					.unmappedType("integer")
 			);
@@ -1104,7 +1109,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					var hybrid = tokenGroup.containsKey(QueryParserType.HYBRID);
 
 					var searchSourceBuilder = _getSearchSourceBuilder(
-						request, bucket, language, hybrid);
+						request, bucket, language, hybrid,
+						tenantWithBucket.isChunked());
 
 					Map<String, String> queryParams;
 
@@ -1553,7 +1559,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	private SearchSourceBuilder _getSearchSourceBuilder(
 		QueryParserRequest request, Bucket bucket, String language,
-		boolean hybrid) {
+		boolean hybrid, boolean chunked) {
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -1585,7 +1591,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			searchSourceBuilder
 		);
 
-		applyTieBreak(searchSourceBuilder, hybrid);
+		applyTieBreak(searchSourceBuilder, hybrid, chunked);
 
 		applyHighlightAndIncludeExclude(
 			searchSourceBuilder,
