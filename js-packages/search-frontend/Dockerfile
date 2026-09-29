@@ -56,6 +56,7 @@ RUN if [ -n "$CHATBOT_ENABLED" ] || [ -n "$GENERATIVE_ENABLED" ]; then \
 
 # Stage 2 - the production environment
 FROM nginx:stable-alpine3.23-slim
+RUN apk upgrade --no-cache
 RUN mkdir -p /usr/share/nginx/html/
 COPY --from=react-build /app/js-packages/search-frontend/dist /usr/share/nginx/html/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \

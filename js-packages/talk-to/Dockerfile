@@ -31,6 +31,7 @@ RUN CI=false NODE_ENV=production yarn build
 
 # Stage 3 - Production
 FROM nginx:stable-alpine3.23-slim
+RUN apk upgrade --no-cache
 RUN mkdir -p /usr/share/nginx/html/chat/
 COPY --from=builder /app/js-packages/talk-to/build /usr/share/nginx/html/chat/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
