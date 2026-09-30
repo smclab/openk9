@@ -80,10 +80,16 @@ public class EmbeddingModel extends K9Entity {
 	@Column(name = "vector_data_type", nullable = false)
 	private VectorDataType vectorDataType = VectorDataType.FLOAT32;
 
+	/**
+	 * @deprecated ignored by the embedding module, which tells a multimodal
+	 * model from its provider and model; still sent to embedding modules that
+	 * predate that choice, until the field is removed.
+	 */
+	@Deprecated
 	@Description(
-		"Marks the model as multimodal: routes image refs to the multimodal "
-		+ "embedder and requires the same model to serve text too. "
-		+ "Absent/false = text-only path. Independent from the provider.")
+		"Deprecated and ignored: the embedding module tells a multimodal model "
+		+ "from its provider and model (Cohere Embed v4 on AWS Bedrock, "
+		+ "multimodalembedding on Vertex AI). It will be removed.")
 	@Column(name = "multimodal", nullable = false)
 	private boolean multimodal = false;
 

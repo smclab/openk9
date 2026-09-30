@@ -272,5 +272,7 @@ message GetEmbeddingModelConfigurationsResponse {
   .google.protobuf.Struct jsonConfig = 3;
   ProviderModel providerModel = 4;
   int32 vectorSize = 5;
-  bool multimodal = 6;
+  // Deprecated and ignored: the embedding module tells a multimodal model
+  // from its provider and model. It will be removed.
+  bool multimodal = 6 [deprecated = true];
 }
