@@ -1,6 +1,6 @@
 {
 	"name": "talk-to",
-	"version": "3.0.7-SNAPSHOT",
+	"version": "3.0.7",
 	"homepage": "chat",
 	"private": true,
 	"dependencies": {
