@@ -1695,7 +1695,7 @@ export type EmbeddingModel = {
   jsonConfig?: Maybe<Scalars['String']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
-  /** Marks the model as multimodal: routes image refs to the multimodal embedder and requires the same model to serve text too. Absent/false = text-only path. Independent from the provider. */
+  /** Deprecated and ignored: the embedding module tells a multimodal model from its provider and model (Cohere Embed v4 on AWS Bedrock, multimodalembedding on Vertex AI). It will be removed. */
   multimodal: Scalars['Boolean'];
   name?: Maybe<Scalars['String']>;
   providerModel?: Maybe<ProviderModel>;
@@ -1720,10 +1720,9 @@ export type EmbeddingModelDtoInput = {
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
   jsonConfig?: InputMaybe<Scalars['String']>;
   /**
-   * Marks the model as multimodal: routes image references to the
-   * multimodal embedder and requires the same model to serve text too.
-   * When omitted it defaults to false (text-only path).
-   * Independent from the provider.
+   * Deprecated and ignored: the embedding module tells a multimodal
+   * model from its provider and model (Cohere Embed v4 on AWS Bedrock,
+   * multimodalembedding on Vertex AI). It will be removed.
    */
   multimodal?: InputMaybe<Scalars['Boolean']>;
   name: Scalars['String'];
@@ -6245,7 +6244,7 @@ export type EmbeddingModelQueryVariables = Exact<{
 }>;
 
 
-export type EmbeddingModelQuery = { __typename?: 'Query', embeddingModel?: { __typename?: 'EmbeddingModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null, vectorSize?: number | null, vectorDataType?: VectorDataType | null, multimodal: boolean, jsonConfig?: string | null, providerModel?: { __typename?: 'ProviderModel', provider?: string | null, model?: string | null } | null } | null };
+export type EmbeddingModelQuery = { __typename?: 'Query', embeddingModel?: { __typename?: 'EmbeddingModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null, vectorSize?: number | null, vectorDataType?: VectorDataType | null, jsonConfig?: string | null, providerModel?: { __typename?: 'ProviderModel', provider?: string | null, model?: string | null } | null } | null };
 
 export type CreateOrUpdateEmbeddingModelMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -6255,7 +6254,6 @@ export type CreateOrUpdateEmbeddingModelMutationVariables = Exact<{
   name: Scalars['String'];
   vectorSize: Scalars['Int'];
   vectorDataType?: InputMaybe<VectorDataType>;
-  multimodal: Scalars['Boolean'];
   providerModel: ProviderModelDtoInput;
   jsonConfig?: InputMaybe<Scalars['String']>;
 }>;
@@ -10020,7 +10018,6 @@ export const EmbeddingModelDocument = gql`
     apiKey
     vectorSize
     vectorDataType
-    multimodal
     jsonConfig
     providerModel {
       provider
@@ -10058,10 +10055,10 @@ export type EmbeddingModelQueryHookResult = ReturnType<typeof useEmbeddingModelQ
 export type EmbeddingModelLazyQueryHookResult = ReturnType<typeof useEmbeddingModelLazyQuery>;
 export type EmbeddingModelQueryResult = Apollo.QueryResult<EmbeddingModelQuery, EmbeddingModelQueryVariables>;
 export const CreateOrUpdateEmbeddingModelDocument = gql`
-    mutation CreateOrUpdateEmbeddingModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $vectorSize: Int!, $vectorDataType: VectorDataType, $multimodal: Boolean!, $providerModel: ProviderModelDTOInput!, $jsonConfig: String) {
+    mutation CreateOrUpdateEmbeddingModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $vectorSize: Int!, $vectorDataType: VectorDataType, $providerModel: ProviderModelDTOInput!, $jsonConfig: String) {
   embeddingModel(
     id: $id
-    embeddingModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description, vectorSize: $vectorSize, vectorDataType: $vectorDataType, multimodal: $multimodal, providerModel: $providerModel, jsonConfig: $jsonConfig}
+    embeddingModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description, vectorSize: $vectorSize, vectorDataType: $vectorDataType, providerModel: $providerModel, jsonConfig: $jsonConfig}
   ) {
     entity {
       id
@@ -10096,7 +10093,6 @@ export type CreateOrUpdateEmbeddingModelMutationFn = Apollo.MutationFunction<Cre
  *      name: // value for 'name'
  *      vectorSize: // value for 'vectorSize'
  *      vectorDataType: // value for 'vectorDataType'
- *      multimodal: // value for 'multimodal'
  *      providerModel: // value for 'providerModel'
  *      jsonConfig: // value for 'jsonConfig'
  *   },
@@ -17239,4 +17235,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-09-18T10:19:35+02:00
+// Generated on 2026-09-30T11:50:26+02:00

@@ -15,7 +15,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import {
-  BooleanInput,
   combineErrorMessages,
   ContainerFluid,
   CreateDataEntity,
@@ -131,7 +130,6 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
         provider: "openai",
         vectorSize: 1,
         vectorDataType: "FLOAT32",
-        multimodal: false,
         model: "",
         jsonConfig: "{}",
       }),
@@ -181,7 +179,6 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
           { key: "description" },
           { key: "vectorSize", label: t("fields.vector-size") },
           { key: "vectorDataType", label: t("fields.vector-data-type") },
-          { key: "multimodal", label: t("fields.multimodal") },
           { key: "provider" },
           { key: "model" },
           { key: "apiKey", label: t("fields.api-key") },
@@ -235,12 +232,6 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       {...form.inputProps("vectorSize")}
                       isNumber={false}
                       description={t("pages.embedding-models.dimensionality-of-the-embedding-vectors-produced-by")}
-                    />
-                    <BooleanInput
-                      label={t("fields.multimodal")}
-                      {...form.inputProps("multimodal")}
-                      disabled={view ? true : false}
-                      description={t("pages.embedding-models.marks-the-model-as-multimodal-image-refs")}
                     />
                     <AutocompleteDropdownWithOptions
                       label={t("fields.vector-data-type")}
