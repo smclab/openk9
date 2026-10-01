@@ -425,17 +425,19 @@ function SourcesColumn({
   // una sezione per domanda, la piu' recente in cima: le fonti di un turno
   // restano consultabili anche dopo che il follow-up ha generato le sue.
   // Dentro la sezione la stessa lista del pannello copilot: titoli reali,
-  // niente duplicati, solo voci che si possono davvero aprire
+  // niente duplicati, solo voci che si possono davvero aprire. Una domanda
+  // senza fonti resta comunque in elenco, con il suo contatore a 0
   const groups = turns
     .map((turn) => ({
       id: turn.id,
       question: turn.question,
+      // la risposta e' ancora in streaming: altre fonti possono arrivare
+      isStreaming: turn.status === "CHUNK",
       citations: toCitations(turn.sources).filter(
         (citation, index, all) =>
           all.findIndex((other) => other.url === citation.url) === index,
       ),
     }))
-    .filter((group) => group.citations.length > 0)
     .reverse();
 
   // accordion stretto: aperta solo la sezione del turno a schermo. Chiuso e'
@@ -776,9 +778,22 @@ function SourcesColumn({
                     color: ${MUTED};
                   `}
                 >
-                  {group.citations.length}
+                  {group.isStreaming ? <TypingDots /> : group.citations.length}
                 </span>
               </button>
+              {open && group.citations.length === 0 && (
+                <p
+                  css={css`
+                    margin: 0;
+                    font-size: 12px;
+                    color: ${MUTED};
+                  `}
+                >
+                  {group.isStreaming
+                    ? "Sto cercando le fonti…"
+                    : "Nessuna fonte per questa domanda"}
+                </p>
+              )}
               {open &&
                 group.citations.map((citation) => (
                   <SourceCard key={citation.url} citation={citation} />
