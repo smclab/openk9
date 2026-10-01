@@ -73,6 +73,11 @@ DEFAULT_MODEL = "text-embedding-3-small"
 # of the embedding model overrides this, in seconds (0 unloads at once, -1
 # keeps it resident).
 DEFAULT_KEEP_ALIVE = 1800
+# EmbedContent embeds the inline text this many chunks at a time and emits each
+# batch before embedding the next, so the first chunks reach the caller after
+# one batch instead of after the whole document. The per-request limits of the
+# providers are enforced by the embedders themselves, not by this value.
+EMBED_CONTENT_BATCH_SIZE = int(os.getenv("EMBED_CONTENT_BATCH_SIZE", "256"))
 
 class BatchedVertexAIEmbeddings(VertexAIEmbeddings):
     """VertexAIEmbeddings that sends the documents in request batches
@@ -615,7 +620,8 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         # Text first, fail-fast: an error building the model/chunker or
         # embedding the text ends the whole RPC with INTERNAL, the same as
-        # the v1 GetMessages path.
+        # the v1 GetMessages path. The text is emitted batch by batch, so an
+        # error on a later batch ends the RPC after the earlier chunks.
         try:
             chunk = request.chunk
             chunker = chunking.build_chunker(
@@ -624,12 +630,15 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             pipelines = build_pipelines(configuration, chunker)
 
             if has_text:
-                text_pieces = router.text_pieces(clean_text(request.text), pipelines)
+                chunks = pipelines.chunk(clean_text(request.text))
                 # total is known only for a text-only request
-                total = len(text_pieces) if not refs else None
-                for piece in text_pieces:
-                    number += 1
-                    yield to_chunk_message(piece, number, total, vector_data_type)
+                total = len(chunks) if not refs else None
+                for pieces in router.text_piece_batches(
+                    chunks, pipelines, EMBED_CONTENT_BATCH_SIZE
+                ):
+                    for piece in pieces:
+                        number += 1
+                        yield to_chunk_message(piece, number, total, vector_data_type)
         except Exception as error:
             logger.exception("EmbedContent text error")
             context.abort(grpc.StatusCode.INTERNAL, str(error))

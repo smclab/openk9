@@ -88,6 +88,20 @@ def text_pieces(text, pipelines, file_id=None) -> list[Piece]:
     ]
 
 
+def text_piece_batches(chunks, pipelines, batch_size, file_id=None):
+    """Embeds the chunks batch_size at a time, yielding the Pieces of each
+    batch in order, so the caller can emit a batch before the next is
+    embedded."""
+    for start in range(0, len(chunks), batch_size):
+        batch = chunks[start : start + batch_size]
+        vectors = pipelines.embed_texts(batch)
+
+        yield [
+            Piece(vector=vector, text=chunk, file_id=file_id)
+            for chunk, vector in zip(batch, vectors)
+        ]
+
+
 def _text_ref_pieces(data, content_type, pipelines, file_id):
     # Textual refs are embedded as-is: unlike the inline text, they are NOT run
     # through clean_text (which strips markup), to preserve the
