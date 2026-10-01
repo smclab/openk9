@@ -291,3 +291,46 @@ def test_a_text_query_keeps_its_input_type(stub, calls, provider_model, expected
     _query(stub, _model(provider_model), text="pikachu")
 
     assert calls[1] == expected
+
+
+def _served_lines(caplog, rpc):
+    return [
+        record.getMessage()
+        for record in caplog.records
+        if record.levelno == logging.INFO
+        and record.getMessage().startswith(f"{rpc} served:")
+    ]
+
+
+def test_a_query_logs_the_client_that_served_it(stub, calls, caplog):
+    model = _model(COHERE_V4)
+    model.apiKey = "secret-key"
+
+    with caplog.at_level(logging.INFO, logger=server_module.logger.name):
+        _query(stub, model, text="pikachu")
+
+    [line] = _served_lines(caplog, "EmbedQuery")
+    assert "tenantId=mew" in line
+    assert "provider=aws_bedrock model=cohere.embed-v4:0" in line
+    assert "client=bedrock-cohere-v4" in line
+    assert "inputType=search_query" in line
+    assert "vectorDataType=VECTOR_DATA_TYPE_FLOAT32 vectors=1" in line
+    assert "secret-key" not in line
+
+
+def test_an_indexing_logs_the_client_and_the_chunks(stub, calls, caplog):
+    with caplog.at_level(logging.INFO, logger=server_module.logger.name):
+        _index(stub, _model(TITAN_V2), refs=())
+
+    [line] = _served_lines(caplog, "EmbedContent")
+    assert "client=langchain" in line
+    assert "inputType=search_document" in line
+    assert "vectors=2" in line
+
+
+def test_a_failed_query_logs_no_served_line(stub, calls, caplog):
+    with caplog.at_level(logging.INFO, logger=server_module.logger.name):
+        with pytest.raises(grpc.RpcError):
+            _query(stub, _model(TITAN_V2), image=b"png-1")
+
+    assert _served_lines(caplog, "EmbedQuery") == []

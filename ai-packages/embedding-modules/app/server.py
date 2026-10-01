@@ -269,6 +269,10 @@ def _apply_credentials(configuration):
                 save_google_application_credentials(credentials)
 
 
+# the client name of the models outside the multimodal registry
+LANGCHAIN_CLIENT = "langchain"
+
+
 def resolve_embedder(configuration):
     """Picks the client that serves the configured model, for every RPC.
 
@@ -283,11 +287,37 @@ def resolve_embedder(configuration):
     entry = find_multimodal_embedder(configuration)
 
     if entry is None:
-        return "langchain", None
+        return LANGCHAIN_CLIENT, None
 
     _apply_credentials(configuration)
 
     return entry.name, entry.factory(configuration)
+
+
+def client_name(configuration):
+    """The name of the client resolve_embedder picks for the model, without
+    building it: what the logs report."""
+    entry = find_multimodal_embedder(configuration)
+
+    return LANGCHAIN_CLIENT if entry is None else entry.name
+
+
+def _log_served(rpc, request, configuration, input_type, count, start):
+    """One INFO line per successful RPC: who asked, which model, which
+    client served it and how long it took. Never the credentials."""
+    logger.info(
+        "%s served: tenantId=%s provider=%s model=%s client=%s inputType=%s "
+        "vectorDataType=%s vectors=%s seconds=%s",
+        rpc,
+        request.tenantId,
+        configuration.get("model_type"),
+        configuration.get("model"),
+        client_name(configuration),
+        input_type,
+        embedding_pb2.VectorDataType.Name(request.vectorDataType),
+        count,
+        round(time.time() - start, 2),
+    )
 
 
 def _text_embedding(configuration, embedder, input_type):
@@ -555,6 +585,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             context.abort(grpc.StatusCode.INTERNAL, str(e))
 
     def EmbedContent(self, request, context):
+        start = time.time()
         embedding_model = request.embeddingModel
         configuration = _build_configuration(embedding_model)
 
@@ -641,7 +672,12 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 number += 1
                 yield message
 
+        _log_served(
+            "EmbedContent", request, configuration, "search_document", number, start
+        )
+
     def EmbedQuery(self, request, context):
+        start = time.time()
         embedding_model = request.embeddingModel
         configuration = _build_configuration(embedding_model)
 
@@ -669,6 +705,8 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         except Exception as error:
             logger.exception("EmbedQuery error")
             context.abort(grpc.StatusCode.INTERNAL, str(error))
+
+        _log_served("EmbedQuery", request, configuration, "search_query", 1, start)
 
         return to_vector_message(vector, request.vectorDataType)
 
