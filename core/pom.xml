@@ -90,11 +90,11 @@
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<quarkus-plugin.version>3.33.3.2</quarkus-plugin.version>
+		<quarkus-plugin.version>3.40.1</quarkus-plugin.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>3.33.3.2</quarkus.platform.version>
-		<quarkus.version>3.33.3.2</quarkus.version>
+		<quarkus.platform.version>3.40.1</quarkus.platform.version>
+		<quarkus.version>3.40.1</quarkus.version>
 		<quarkiverse.opensearch.version>2.2.0</quarkiverse.opensearch.version>
 		<quarkiverse.rabbitmq.version>3.4.0</quarkiverse.rabbitmq.version>
 		<quarkus-minio.version>3.8.6</quarkus-minio.version>
@@ -127,6 +127,7 @@
 		<bouncycastle.version>1.86</bouncycastle.version>
 		<httpcore5.version>5.4.3</httpcore5.version>
 		<log4j.version>2.25.5</log4j.version>
+		<httpclient5.version>5.4.4</httpclient5.version>
 		<lz4.version>1.11.3</lz4.version>
 		<amqp-client.version>5.36.0</amqp-client.version>
 		<scram.version>3.3</scram.version>
@@ -197,6 +198,16 @@
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-api</artifactId>
 				<version>${log4j.version}</version>
+			</dependency>
+			<!-- Held below the platform, which manages the 5.6.x line: from 5.6 the async
+			     client inflates gzip responses by itself, so the OpenSearch Apache transport
+			     decodes them twice, the Java client can no longer parse a response and the
+			     datasource and searcher readiness checks stay DOWN. 5.4.4 is the version
+			     the OpenSearch client line in use resolves on its own. -->
+			<dependency>
+				<groupId>org.apache.httpcomponents.client5</groupId>
+				<artifactId>httpclient5</artifactId>
+				<version>${httpclient5.version}</version>
 			</dependency>
 			<!-- Replaces the abandoned org.lz4:lz4-java that Pekko serialization pulls in;
 			     see the exclusion in app/datasource. Same net.jpountz packages, still

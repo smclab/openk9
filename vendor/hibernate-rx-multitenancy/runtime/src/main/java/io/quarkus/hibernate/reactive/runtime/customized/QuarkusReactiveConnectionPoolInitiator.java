@@ -27,7 +27,7 @@ public final class QuarkusReactiveConnectionPoolInitiator
             Map configurationValues,
             ServiceRegistryImplementor registry) {
 
-        return new MultiSchemaSqlClientPool(pool);
+        return new MultiSchemaSqlClientPool(new io.quarkus.reactive.transaction.runtime.pool.TransactionalContextPool(pool));
     }
 
 }

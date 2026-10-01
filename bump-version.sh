@@ -50,7 +50,7 @@ echo "==> [1/9] Maven: core reactor (excluding vendor/)"
 
 # versions:set processes the whole reactor (vendor/ is wired in as a module of
 # core/pom.xml). Restore the vendor POMs from git so its independent version
-# line (forked Quarkus extension, currently 3.33.3.2) is preserved.
+# line (forked Quarkus extension, currently 3.40.1) is preserved.
 if [[ -d "$ROOT/vendor/hibernate-rx-multitenancy" ]]; then
   git -C "$ROOT" checkout -- vendor/hibernate-rx-multitenancy
   echo "    restored vendor/hibernate-rx-multitenancy from git"

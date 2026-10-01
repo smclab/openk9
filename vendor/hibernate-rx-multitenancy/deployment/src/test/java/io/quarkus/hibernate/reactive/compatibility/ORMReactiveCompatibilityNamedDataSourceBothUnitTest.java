@@ -1,26 +1,27 @@
 package io.quarkus.hibernate.reactive.compatibility;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import jakarta.inject.Inject;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import io.quarkus.builder.Version;
 import io.quarkus.hibernate.reactive.entities.Hero;
-import io.quarkus.reactive.datasource.ReactiveDataSource;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.maven.dependency.Dependency;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
-import io.vertx.sqlclient.Pool;
 
-public class ORMReactiveCompatbilityNamedDataSourceReactiveUnitTest extends CompatibilityUnitTestBase {
+public class ORMReactiveCompatibilityNamedDataSourceBothUnitTest extends CompatibilityUnitTestBase {
 
     @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest()
+    static final QuarkusExtensionTest config = new QuarkusExtensionTest()
             .withApplicationRoot((jar) -> jar
                     .addClasses(Hero.class)
                     .addAsResource("complexMultilineImports.sql", "import.sql"))
+            .setForcedDependencies(List.of(
+                    Dependency.of("io.quarkus", "quarkus-jdbc-postgresql-deployment", Version.getVersion()) // this triggers Agroal
+            ))
             .overrideConfigKey("quarkus.hibernate-orm.schema-management.strategy", SCHEMA_MANAGEMENT_STRATEGY)
             .overrideConfigKey("quarkus.hibernate-orm.datasource", "named-datasource")
             .overrideConfigKey("quarkus.datasource.\"named-datasource\".reactive", "true")
@@ -28,15 +29,14 @@ public class ORMReactiveCompatbilityNamedDataSourceReactiveUnitTest extends Comp
             .overrideConfigKey("quarkus.datasource.\"named-datasource\".username", USERNAME_PWD)
             .overrideConfigKey("quarkus.datasource.\"named-datasource\".password", USERNAME_PWD);
 
-    @Inject
-    @ReactiveDataSource("named-datasource")
-    Pool pool;
-
     @Test
     @RunOnVertxContext
     public void test(UniAsserter uniAsserter) {
         testReactiveWorks(uniAsserter);
-        assertThat(pool).isNotNull();
     }
 
+    @Test
+    public void testBlocking() {
+        testBlockingWorks();
+    }
 }
