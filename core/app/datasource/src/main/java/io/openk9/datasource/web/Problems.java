@@ -61,6 +61,17 @@ public final class Problems {
 		return problem;
 	}
 
+	public static Problem malformedTenantId(String tenantId) {
+		var problem = new Problem();
+		problem.setStatus(400);
+		problem.setTitle("Malformed tenantId");
+		problem.setDetail(
+			"'" + tenantId + "' is not a valid " + InternalHeaders.TENANT_ID
+			+ ": it must be the tenant schema name (a lowercase letter followed"
+			+ " by lowercase letters or digits), not its virtual host");
+		return problem;
+	}
+
 	public static Problem invalidTenantId(String tenantId) {
 		var problem = new Problem();
 		problem.setStatus(404);

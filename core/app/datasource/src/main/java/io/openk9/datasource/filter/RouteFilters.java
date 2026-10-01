@@ -35,6 +35,8 @@ import org.jboss.logging.Logger;
 public class RouteFilters {
 
 	private static final Logger log = Logger.getLogger(RouteFilters.class);
+	// same regex as TenantNameValidator in tenant-manager: keep them aligned
+	private static final String TENANT_ID_PATTERN = "^[a-z][a-z0-9]{0,62}$";
 
 	@Inject
 	TenantRegistry tenantRegistry;
@@ -47,6 +49,11 @@ public class RouteFilters {
 
 		if (tenantId == null || tenantId.isBlank()) {
 			endsWithProblem(rc, Problems.missingTenantId());
+			return;
+		}
+
+		if (!tenantId.matches(TENANT_ID_PATTERN)) {
+			endsWithProblem(rc, Problems.malformedTenantId(tenantId));
 			return;
 		}
 
