@@ -68,7 +68,6 @@ COMPLETE_CONFIGURATION = {
     "aws_bedrock": {"region_name": "eu-west-1"},
     "keep_alive": 60.0,
     "num_gpu": 0.0,
-    "multimodal": True,
 }
 
 
@@ -89,7 +88,6 @@ def test_an_empty_embedding_model_maps_to_the_proto_defaults():
         "aws_bedrock": None,
         "keep_alive": None,
         "num_gpu": None,
-        "multimodal": False,
     }
 
 

@@ -247,8 +247,8 @@ def _apply_credentials(configuration):
     """Sets provider credentials (env vars, or the ADC file for Vertex).
 
     Shared by the text-only langchain path (initialize_embedding_model)
-    and the direct multimodal clients (build_pipelines,
-    build_query_capabilities), so the credential wiring lives in one place.
+    and the registry embedders (resolve_embedder), so the credential wiring
+    lives in one place.
     """
     provider = configuration.get("model_type", DEFAULT_MODEL_TYPE)
     api_key = configuration.get("api_key")
@@ -275,7 +275,7 @@ def resolve_embedder(configuration):
     A model in the multimodal registry is served by its own embedder for
     every modality; any other model goes to langchain and embeds text only.
     The choice depends on provider and model alone: the deprecated
-    `multimodal` flag of the request plays no part in it.
+    `multimodal` flag of the request is not even read.
 
     Returns the name of the client and the registry embedder, or None when
     langchain serves the model.
@@ -418,8 +418,8 @@ def to_vector_message(vector, vector_data_type):
 
 def _build_configuration(embedding_model):
     """Maps an EmbeddingModel wire message onto the configuration dict
-    shared by the RPCs. The multimodal flag is always present; the
-    text-only path (initialize_embedding_model) ignores it.
+    shared by the RPCs. The deprecated multimodal flag is left out: the
+    registry of models decides which client serves a model.
     """
     embedding_model_json_config = json_format.MessageToDict(embedding_model.jsonConfig)
 
@@ -435,7 +435,6 @@ def _build_configuration(embedding_model):
         "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
         "keep_alive": embedding_model_json_config.get("keep_alive"),
         "num_gpu": embedding_model_json_config.get("num_gpu"),
-        "multimodal": embedding_model.multimodal,
     }
 
 

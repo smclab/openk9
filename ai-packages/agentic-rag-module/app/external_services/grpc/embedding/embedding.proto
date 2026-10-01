@@ -61,9 +61,10 @@ message EmbeddingModel {
     ProviderModel providerModel = 2;
     .google.protobuf.Struct jsonConfig = 3;
     optional string apiUrl = 4;
-    // True when the model embeds images too (routed to the multimodal
-    // embedder); absent/false keeps the text-only path.
-    bool multimodal = 5;
+    // Deprecated and ignored by the embedding module: whether a model
+    // embeds images is decided by the module's registry of models, from
+    // provider and model. Kept for older modules; removed in a later release.
+    bool multimodal = 5 [deprecated = true];
 }
 
 message ResponseChunk {

@@ -106,7 +106,6 @@ def vertex_model():
     )
 
     return embedding_pb2.EmbeddingModel(
-        multimodal=True,
         providerModel=embedding_pb2.ProviderModel(
             provider="chat_vertex_ai",
             model=os.getenv("VERTEX_MODEL", "multimodalembedding@001"),
@@ -128,7 +127,6 @@ def bedrock_model():
     )
 
     return embedding_pb2.EmbeddingModel(
-        multimodal=True,
         apiKey=os.getenv("BEDROCK_API_KEY", ""),
         providerModel=embedding_pb2.ProviderModel(
             provider="aws_bedrock",

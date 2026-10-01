@@ -193,6 +193,31 @@ with grpc.insecure_channel("localhost:5000") as channel:
 
 - Embeddings are returned in order with metadata
 
+### Multimodal models
+
+Whether a model embeds images is decided by the model, from provider and model
+id: the registry in `app/embedding/multimodal.py` lists the models that do,
+each with the embedder that serves it. A model in the registry is served by its
+embedder for every modality (text, images, mixed query), so its index and its
+queries share one vector space; any other model is served by langchain and
+embeds text only.
+
+| Name                         | Provider         | Model id                                                         |
+| ---------------------------- | ---------------- | ---------------------------------------------------------------- |
+| `bedrock-cohere-v4`          | `aws_bedrock`    | contains `cohere.embed-v4`, inference profiles included (`eu.cohere.embed-v4:0`) |
+| `vertex-multimodalembedding` | `chat_vertex_ai` | starts with `multimodalembedding`                                |
+
+Limits:
+
+- images, at indexing and in a query, only with a model in the registry;
+- a mixed query (text and image together) only with Cohere Embed v4;
+- custom providers (served as OpenAI-compatible endpoints) and models outside
+  the registry embed text only.
+
+The `multimodal` field of `EmbeddingModel` is deprecated and ignored: it no
+longer selects the embedder. A model enters the registry, or leaves it for
+langchain, with a measure on that model.
+
 ### EmbedContent (v2)
 
 Indexes text and/or binaries into the same vector space and streams one
@@ -204,7 +229,7 @@ Indexes text and/or binaries into the same vector space and streams one
 | ---------------- | ------------------- | ------------------------------------------------------------------- |
 | `tenantId`       | `string`            | Tenant that owns the request (used in the structured logs)          |
 | `chunk`          | `RequestChunk`      | Text chunking configuration (see Configuration)                     |
-| `embeddingModel` | `EmbeddingModel`    | Provider/model settings; `multimodal=true` enables image embedding  |
+| `embeddingModel` | `EmbeddingModel`    | Provider/model settings; the model decides image support (see Multimodal models) |
 | `vectorDataType` | `VectorDataType`    | Output encoding: `FLOAT32` (0), `BYTE` (1), `BINARY` (2)            |
 | `text`           | `string` (optional) | Inline text to embed                                                |
 | `refs`           | `MediaRef` repeated | Binaries to fetch and embed                                         |
@@ -244,9 +269,8 @@ a fallback when absent).
 - An error while embedding the inline `text` is fail-fast: the RPC ends with the
   gRPC `INTERNAL` status (same as `GetMessages`).
 
-- Image embedding requires a multimodal model (`embeddingModel.multimodal=true`)
-  on a provider with a multimodal embedder (AWS Bedrock, Google Vertex AI); other
-  models keep the text-only path and skip image refs.
+- Image refs are embedded only by a model in the multimodal registry (see
+  Multimodal models); any other model embeds the text and skips its image refs.
 
 #### Client Example
 
@@ -258,7 +282,6 @@ request = embedding_pb2.EmbedContentRequest(
     tenantId="mew",
     chunk=embedding_pb2.RequestChunk(type=1, jsonConfig=chunk_json_config),
     embeddingModel=embedding_pb2.EmbeddingModel(
-        multimodal=True,
         providerModel=embedding_pb2.ProviderModel(
             provider="chat_vertex_ai", model="multimodalembedding@001"
         ),
@@ -288,7 +311,7 @@ storage I/O. `text` and `inline` are combinable.
 | Field            | Type                  | Description                                                         |
 | ---------------- | --------------------- | ------------------------------------------------------------------- |
 | `tenantId`       | `string`              | Tenant that owns the request (used in the structured logs)          |
-| `embeddingModel` | `EmbeddingModel`      | Provider/model settings; `multimodal=true` enables image embedding  |
+| `embeddingModel` | `EmbeddingModel`      | Provider/model settings; the model decides image support (see Multimodal models) |
 | `vectorDataType` | `VectorDataType`      | Output encoding: `FLOAT32` (0), `BYTE` (1), `BINARY` (2)            |
 | `text`           | `string` (optional)   | Query text                                                          |
 | `inline`         | `InlineMedia` (optional) | Query image sent inline (`data` bytes + `contentType`, images only) |
@@ -331,7 +354,6 @@ vector = stub.EmbedQuery(
     embedding_pb2.EmbedQueryRequest(
         tenantId="mew",
         embeddingModel=embedding_pb2.EmbeddingModel(
-            multimodal=True,
             providerModel=embedding_pb2.ProviderModel(
                 provider="aws_bedrock", model="cohere.embed-v4:0"
             ),
