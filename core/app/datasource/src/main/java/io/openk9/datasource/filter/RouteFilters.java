@@ -17,15 +17,27 @@
 
 package io.openk9.datasource.filter;
 
+import io.openk9.common.model.dto.Problem;
 import io.openk9.common.util.web.InternalHeaders;
+import io.openk9.datasource.service.TenantRegistry;
+import io.openk9.datasource.web.Problems;
 
 import io.quarkus.vertx.web.RouteFilter;
 import io.vertx.core.MultiMap;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.MediaType;
 import org.jboss.logging.Logger;
 
 public class RouteFilters {
+
+	private static final Logger log = Logger.getLogger(RouteFilters.class);
+
+	@Inject
+	TenantRegistry tenantRegistry;
 
 	@RouteFilter(Integer.MAX_VALUE - 100)
 	void tenantIdRouteFilter(RoutingContext rc) {
@@ -33,25 +45,39 @@ public class RouteFilters {
 		MultiMap headers = request.headers();
 		String tenantId = headers.get(InternalHeaders.TENANT_ID);
 
-		if (tenantId != null) {
-			if (log.isDebugEnabled()) {
-				log.debugf("Setting '_tenantId' to %s in routingContext", tenantId);
-			}
-
-			rc.put("_tenantId", tenantId);
-		}
-		else {
-			if (log.isDebugEnabled()) {
-				log.warnf(
-					"No '%s' identified in request headers.",
-					InternalHeaders.TENANT_ID);
-			}
+		if (tenantId == null || tenantId.isBlank()) {
+			endsWithProblem(rc, Problems.missingTenantId());
+			return;
 		}
 
-		rc.next();
+		tenantRegistry
+			.getTenantIdList()
+			.subscribe()
+			.with(tenantList -> {
+					if (!tenantList.contains(tenantId)) {
+						endsWithProblem(rc, Problems.invalidTenantId(tenantId));
+						return;
+					}
+
+					if (log.isDebugEnabled()) {
+						log.debugf("Setting '_tenantId' to %s in routingContext", tenantId);
+					}
+
+					rc.put("_tenantId", tenantId);
+					rc.next();
+
+				},
+				rc::fail
+			);
+
 
 	}
 
-	private static final Logger log = Logger.getLogger(RouteFilters.class);
+	private static void endsWithProblem(RoutingContext rc, Problem problem) {
+		rc.response()
+			.setStatusCode(problem.getStatus())
+			.putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+			.end(Json.encode(problem));
+	}
 
 }

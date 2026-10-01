@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.sql;
 
+import io.openk9.datasource.searcher.InvalidTenantException;
+
 import io.quarkus.arc.Unremovable;
 import io.quarkus.hibernate.orm.PersistenceUnitExtension;
 import io.quarkus.hibernate.orm.runtime.tenant.TenantResolver;
@@ -47,7 +49,11 @@ public class DynamicSchemaTenantResolver implements TenantResolver {
 		try {
 			RoutingContext context = routingContextInstance.get();
 
-			String tenantId = context.get("_tenantId", getDefaultTenantId());
+			String tenantId = context.get("_tenantId");
+			if (tenantId == null || tenantId.isBlank()) {
+				throw new InvalidTenantException("tenant is null or empty");
+			}
+
 			if (LOG.isDebugEnabled()) {
 				LOG.debug(String.format("tenant resolved: %s", tenantId));
 			}

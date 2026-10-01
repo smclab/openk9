@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.openk9.common.util.web.InternalHeaders;
+
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -47,6 +49,10 @@ class AdminEndpointsSecurityTest {
 
 	private static final String ADMIN_USER = "admin";
 	private static final String ADMIN_PASSWORD = "test-admin-password";
+
+	// the tenant guard runs before the authorization policy: every call names
+	// a registered tenant, so that it is the policy that answers.
+	private static final String TENANT_ID = "public";
 
 	// no datasource, scheduler or search config has this id: an authorized
 	// call fails on the lookup instead of writing anything.
@@ -86,6 +92,7 @@ class AdminEndpointsSecurityTest {
 		// the schema endpoint is a sub-path of graphql and serves the whole
 		// admin API definition
 		RestAssured.given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
 			.get("/graphql/schema.graphql")
 			.then()
 			.statusCode(401);
@@ -95,6 +102,7 @@ class AdminEndpointsSecurityTest {
 	void should_keep_serving_the_public_bucket_endpoints() {
 		// the search frontend calls this one anonymously
 		var statusCode = RestAssured.given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
 			.get("/buckets/current")
 			.statusCode();
 
@@ -111,6 +119,8 @@ class AdminEndpointsSecurityTest {
 		WebEndpoints.Endpoint endpoint, RequestSpecification request) {
 
 		var path = endpoint.path().replaceAll("\\{[^}]+}", UNKNOWN_ID);
+
+		request = request.header(InternalHeaders.TENANT_ID, TENANT_ID);
 
 		// an empty JSON body keeps content negotiation from answering 415
 		// before the authorization check on the resources that consume one.
