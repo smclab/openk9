@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.nullable;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 
+import io.openk9.common.util.web.InternalHeaders;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.service.SchedulerService;
 
@@ -72,6 +73,7 @@ public class TriggerWithDateResourceTest {
 		var date = OffsetDateTime.parse(TESTING_DATE);
 
 		given()
+			.header(InternalHeaders.TENANT_ID, "public")
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.body("{\n" +

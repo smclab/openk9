@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import jakarta.inject.Inject;
 
+import io.openk9.common.util.web.InternalHeaders;
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.client.HttpDatasourceServiceClient;
 import io.openk9.datasource.plugindriver.InjectWireMock;
@@ -66,6 +67,7 @@ class PluginDriverResourceGetFormTest {
 	void should_return_form_when_connector_exposes_it() {
 		// action + verify: 200 with form fields
 		given()
+			.header(InternalHeaders.TENANT_ID, "public")
 			.accept(ContentType.JSON)
 			.get("/form/{id}", pluginDriverId)
 			.then()
@@ -87,6 +89,7 @@ class PluginDriverResourceGetFormTest {
 
 		// action + verify: 502 with Problem body
 		given()
+			.header(InternalHeaders.TENANT_ID, "public")
 			.accept(ContentType.JSON)
 			.get("/form/{id}", pluginDriverId)
 			.then()
@@ -111,6 +114,7 @@ class PluginDriverResourceGetFormTest {
 
 		// action + verify: 502 with validation Problem detail
 		given()
+			.header(InternalHeaders.TENANT_ID, "public")
 			.accept(ContentType.JSON)
 			.get("/form/{id}", pluginDriverId)
 			.then()

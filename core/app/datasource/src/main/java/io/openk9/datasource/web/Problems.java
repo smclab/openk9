@@ -17,15 +17,15 @@
 
 package io.openk9.datasource.web;
 
-import jakarta.validation.ValidationException;
-
 import io.openk9.common.model.dto.Problem;
+import io.openk9.common.util.web.InternalHeaders;
 import io.openk9.datasource.client.exception.InvalidUriException;
 import io.openk9.datasource.client.exception.HealthEndpointException;
 import io.openk9.datasource.client.exception.FormEndpointException;
 import io.openk9.datasource.config.model.SchemaVersion;
-import jakarta.ws.rs.core.Response;
 
+import jakarta.ws.rs.core.Response;
+import jakarta.validation.ValidationException;
 import java.net.ConnectException;
 
 /**
@@ -50,6 +50,24 @@ public final class Problems {
 		problem.setStatus(502);
 		problem.setTitle("Form not available");
 		problem.setDetail(formEndpointErrorDetail(exception));
+		return problem;
+	}
+
+	public static Problem missingTenantId() {
+		var problem = new Problem();
+		problem.setStatus(400);
+		problem.setTitle("Missing tenantId");
+		problem.setDetail(InternalHeaders.TENANT_ID + " header is missing or empty");
+		return problem;
+	}
+
+	public static Problem invalidTenantId(String tenantId) {
+		var problem = new Problem();
+		problem.setStatus(404);
+		problem.setTitle("Invalid tenantId");
+		problem.setDetail(
+			"No tenant exists for the " + InternalHeaders.TENANT_ID
+			+ " value '" + tenantId + "'");
 		return problem;
 	}
 

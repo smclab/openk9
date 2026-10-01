@@ -21,6 +21,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
+import io.openk9.common.util.web.InternalHeaders;
 import io.openk9.datasource.client.HttpDatasourceServiceClient;
 import io.openk9.datasource.enricher.InjectWireMock;
 import io.openk9.datasource.enricher.WireMockEnricher;
@@ -50,6 +51,7 @@ class EnricherResourceGetFormTest {
 	void should_return_form_when_enricher_exposes_it() {
 		// action + verify: 200 with form fields
 		given()
+			.header(InternalHeaders.TENANT_ID, "public")
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.body(ENRICHER_URI)
@@ -73,6 +75,7 @@ class EnricherResourceGetFormTest {
 
 		// action + verify: 502 with Problem body
 		given()
+			.header(InternalHeaders.TENANT_ID, "public")
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.body(ENRICHER_URI)
@@ -99,6 +102,7 @@ class EnricherResourceGetFormTest {
 
 		// action + verify: 502 with validation Problem detail
 		given()
+			.header(InternalHeaders.TENANT_ID, "public")
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.body(ENRICHER_URI)

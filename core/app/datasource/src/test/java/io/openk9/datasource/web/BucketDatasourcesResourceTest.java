@@ -111,6 +111,7 @@ public class BucketDatasourcesResourceTest {
 	void should_return_only_active_bucket_datasources() {
 		// call the endpoint resolving the active bucket by the Host header
 		given()
+			.header(InternalHeaders.TENANT_ID, "public")
 			.header("Host", VIRTUAL_HOST)
 			.accept(ContentType.JSON)
 			.when()

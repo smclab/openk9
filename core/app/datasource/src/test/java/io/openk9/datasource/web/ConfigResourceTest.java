@@ -115,6 +115,7 @@ public class ConfigResourceTest {
 		// every registered type, and mark as not selectable the two composite-key
 		// join entities the exporter adds on its own.
 		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
 			.accept(ContentType.JSON)
 			.when()
 			.get("/entity-types")
