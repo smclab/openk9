@@ -38,7 +38,7 @@ import static org.hamcrest.Matchers.nullValue;
 
 /**
  * Checks the tenant guard the way a client sees it: on every REST endpoint of
- * the module, and on GraphQL, a missing, blank or unknown
+ * the module, and on GraphQL, a missing, blank, malformed or unknown
  * {@code X-TENANT-ID} is rejected with a Problem body before any database
  * work, while a known tenant goes through unchanged.
  */
@@ -48,6 +48,7 @@ class TenantHeaderValidationTest {
 	// MockTenantRegistry knows this tenant only
 	private static final String KNOWN_TENANT = "public";
 	private static final String UNKNOWN_TENANT = "nonexistent";
+	private static final String MALFORMED_TENANT = "demo.openk9.localhost";
 
 	// no entity has this id: a call that passes the guard fails on the lookup
 	// instead of writing anything.
@@ -76,6 +77,18 @@ class TenantHeaderValidationTest {
 			.statusCode(400)
 			.body("status", equalTo(400))
 			.body("detail", containsString(InternalHeaders.TENANT_ID));
+	}
+
+	@ParameterizedTest
+	@MethodSource("endpoints")
+	void should_reject_malformed_tenant_header(WebEndpoints.Endpoint endpoint) {
+		// a virtual host instead of a schema name: 400 with a Problem that
+		// explains what the header expects
+		call(endpoint, given().header(InternalHeaders.TENANT_ID, MALFORMED_TENANT))
+			.then()
+			.statusCode(400)
+			.body("status", equalTo(400))
+			.body("detail", containsString("schema name"));
 	}
 
 	@ParameterizedTest
