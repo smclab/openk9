@@ -24,6 +24,8 @@ import { CustomVirtualScrollbar } from "./CustomScrollbar";
 import { Logo } from "./Logo";
 import { ResultMemo } from "./Result";
 import { Options, setSortResultsType } from "./SortResults";
+import { useSearchImage } from "./QueryImageContext";
+import { resolveQueryImage } from "./queryImage";
 import {
   GenericResultItem,
   SearchToken,
@@ -658,6 +660,7 @@ export function useInfiniteResults<E>(
   const pageSize = numberOfResults;
   const client = useOpenK9Client();
   const { setRange } = useRange();
+  const image = useSearchImage();
   const hasSortData = sort && sort.length > 0;
   const sortData = hasSortData ? sort[0] : undefined;
 
@@ -665,11 +668,12 @@ export function useInfiniteResults<E>(
     [
       "results",
       searchQuery,
+      image?.attachmentId ?? null,
       sortData,
       language,
       overrideSearchWithCorrection?.renderingCorrection,
     ] as const,
-    async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
+    async ({ queryKey: [, searchQuery, , sort], pageParam = 0 }) => {
       const RangePage: [number, number] = !(sortData && sortAfterKey)
         ? [pageParam * pageSize, pageSize]
         : [0, pageSize];
@@ -685,7 +689,7 @@ export function useInfiniteResults<E>(
       const data = client.doSearch<E>({
         range: RangePage,
         language,
-        searchQuery: remappingSearchQuery,
+        searchQuery: await resolveQueryImage(remappingSearchQuery, image),
         sort: sortData ? [sortData] : [],
         sortAfterKey: (sortData && pageParam > 0 && sortAfterKey) || "",
       });

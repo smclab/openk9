@@ -30,6 +30,7 @@ const openk9 = new OpenK9();
 - **initialSearchTerm** *(string, default: "")*: Default initial search term.
 - **searchAutoselect** *(boolean)*: Activates automatic recognition of search terms.
 - **searchReplaceText** *(boolean)*: Enables automatic correction of the searched text.
+- **queryImageEnabled** *(boolean, default: true)*: Shows the search-by-image button; it appears only when the current bucket retrieve type is `KNN`.
 - **useKeycloak** *(boolean)*: Activates authentication via Keycloak.
 - **useGenerativeApi** *(boolean, default: true)*: Enables automatic content generation via AI.
 - **buttonDetailBackToCards** *(boolean, default: false)*: Displays a button to return to the previous card.

@@ -1,5 +1,12 @@
 {
   "translation": {
+    "search-by-image": "Cerca per immagine",
+    "remove-image": "Rimuovi immagine",
+    "preparing-image": "Preparazione dell'immagine",
+    "attached-image": "Immagine allegata: {{filename}}",
+    "unsupported-file-type": "Formato non supportato",
+    "image-too-large": "Immagine troppo grande (max {{size}} MB)",
+    "image-not-readable": "Immagine non leggibile",
     "copilot-title": "K9 IA",
     "copilot-toggle": "K9 IA",
     "copilot-empty-hint": "Fai una domanda a K9 IA.",

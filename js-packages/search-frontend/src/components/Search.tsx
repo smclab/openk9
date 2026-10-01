@@ -24,6 +24,8 @@ import { characterControlType, Configuration } from "../embeddable/entry";
 import Autocomplete from "./Autocomplete";
 import { AnalysisResponseEntry, AnalysisToken } from "./client";
 import { DeleteLogo } from "./DeleteLogo";
+import { useQueryImage } from "./QueryImageContext";
+import { QueryImageButton, QueryImagePreview } from "./QueryImageControl";
 import { useAutocomplete } from "./useAutocomplete";
 import { useClickAway } from "./useClickAway";
 import { SelectionsAction, SelectionsState } from "./useSelections";
@@ -90,6 +92,8 @@ export function Search({
     setIsAutocompleteOpen(false);
   });
   const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const imageButtonRef = React.useRef<HTMLButtonElement | null>(null);
+  const { enabled: isImageQueryEnabled } = useQueryImage();
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
     selectionEnd: number;
@@ -155,15 +159,19 @@ export function Search({
             }
           `}
         >
-          <FontAwesomeIcon
-            className="openk9--search-icon"
-            icon={faSearch}
-            css={css`
-              padding-left: var(--openk9-embeddable-search--spacing-lg, 16px);
-              opacity: 0.5;
-              color: var(--openk9-embeddable-search--secondary-text-color);
-            `}
-          />
+          {isImageQueryEnabled ? (
+            <QueryImageButton buttonRef={imageButtonRef} />
+          ) : (
+            <FontAwesomeIcon
+              className="openk9--search-icon"
+              icon={faSearch}
+              css={css`
+                padding-left: var(--openk9-embeddable-search--spacing-lg, 16px);
+                opacity: 0.5;
+                color: var(--openk9-embeddable-search--secondary-text-color);
+              `}
+            />
+          )}
           {isAutocompleteOpen &&
             suggestions.length > 0 &&
             selectionsState.textOnChange &&
@@ -563,6 +571,7 @@ export function Search({
           </div>
         )}
       </div>
+      <QueryImagePreview returnFocusRef={imageButtonRef} />
     </React.Fragment>
   );
 }

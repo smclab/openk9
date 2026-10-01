@@ -35,6 +35,7 @@ import { css } from "styled-components";
 import { ArrowLeftSvg } from "../svgElement/ArrowLeftSvg";
 import { SearchSvg } from "../svgElement/SearchSvg";
 import { DeleteLogo } from "./DeleteLogo";
+import { QueryImageButton, QueryImagePreview } from "./QueryImageControl";
 
 type SearchMobileProps = {
   configuration: Configuration;
@@ -90,6 +91,7 @@ export function SearchMobile({
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
 
   const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const imageButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -175,6 +177,7 @@ export function SearchMobile({
             >
               <ArrowLeftSvg size="20" />
             </button>
+            <QueryImageButton buttonRef={imageButtonRef} />
 
             <div
               className="openk9--search-container-show-syntax"
@@ -424,6 +427,7 @@ export function SearchMobile({
             </div>
           </div>
         </div>
+        <QueryImagePreview returnFocusRef={imageButtonRef} />
         <div>
           {spans.map((span, index) => {
             const isOpen =

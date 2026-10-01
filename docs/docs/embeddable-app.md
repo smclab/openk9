@@ -120,6 +120,7 @@ You can configure these fields, all the fields are optional.
 | login               | `Element` or `string` | `null` | Target element where the login button will be rendered | `#login-div` or `document.getElementById("login-div")` |
 | searchAutoselect    | `boolean` | `true` | Whether or not to automatically select most meaningful semantic entity asociated to the search text | `true` |
 | searchReplaceText   | `boolean` | `true` | Whether or not to automaticallly replaced typed text with that of the manually chosen semantic entity | `true` |
+| queryImageEnabled   | `boolean` | `true` | Whether or not to show the search-by-image button. It is shown only when the current bucket retrieve type is `KNN` | `false` |
 | defaultTokens        | `Array<SearchToken>` | `[]` | Search tokens that will be used in the search queries, they are **not displayed** anywhere | `[{ tokenType: "DATASOURCE", values: ["human-resources"], filter: false }]` |
 | filterTokens        | `Array<SearchToken>` | `[]` | Search tokens that will be used in the search queries, displayed in the **filters** section | `[{ tokenType: "TEXT", values: ["hello"], filter: true }]` |
 

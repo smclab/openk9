@@ -26,6 +26,7 @@ import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChan
 import GenerateResponse from "../components/GenerateResponse";
 import ListPaginations from "../components/ListPaginations";
 import { LoginInfoComponentMemo } from "../components/LoginInfo";
+import { QueryImageProvider } from "../components/QueryImageContext";
 import { RemoveFilters } from "../components/RemoveFilters";
 import { ResultsMemo } from "../components/ResultList";
 import {
@@ -283,7 +284,10 @@ export function Main({
     isLoadingTab;
 
   return (
-    <React.Fragment>
+    <QueryImageProvider
+      retrieveType={retrieveType}
+      queryImageEnabled={configuration.queryImageEnabled}
+    >
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <Search
@@ -1384,7 +1388,7 @@ export function Main({
           ? configuration.searchMobile?.search
           : null,
       )}
-    </React.Fragment>
+    </QueryImageProvider>
   );
 }
 

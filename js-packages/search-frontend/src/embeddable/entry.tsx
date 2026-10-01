@@ -533,6 +533,8 @@ type allFiltersConfigurableProps = {
 export type Configuration = {
   // simple types
   autocompleteEnabled: boolean;
+  /** Search by image; the button still shows only on a KNN bucket. */
+  queryImageEnabled: boolean;
   autoselectTab?: boolean | null | undefined;
   debounceTimeSearch: number | null | undefined;
   defaultTokens: Array<SearchToken>;
@@ -647,6 +649,7 @@ export type Configuration = {
 
 const defaultConfiguration: Configuration = {
   autocompleteEnabled: false,
+  queryImageEnabled: true,
   activeFilters: null,
   activeFiltersConfigurable: null,
   allFilters: null,

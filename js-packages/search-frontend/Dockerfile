@@ -32,6 +32,8 @@ RUN yarn config set registry https://registry.npmjs.org/ && \
 
 
 COPY ./js-packages/search-frontend /app/js-packages/search-frontend
+# The image-query module is imported from outside the package folder.
+COPY ./js-packages/shared /app/js-packages/shared
 WORKDIR /app/js-packages/search-frontend
 
 # Conditional building - BUILD_ENV

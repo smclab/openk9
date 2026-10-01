@@ -874,7 +874,25 @@ export type SearchToken =
       isTab?: boolean;
       isFilter?: boolean;
       search?: boolean;
+    }
+  | {
+      tokenType: "KNN";
+      keywordKey?: string;
+      values: string[];
+      filter: boolean;
+      media?: QueryMedia;
+      suggestionCategoryId?: number;
+      count?: string;
+      isTab?: boolean;
+      isFilter?: boolean;
+      search?: boolean;
     };
+
+/** Inline image sent with a KNN token: base64 without the data: prefix. */
+export type QueryMedia = {
+  data: string;
+  contentType: string;
+};
 
 export type SortField = {
   [key: string]: {

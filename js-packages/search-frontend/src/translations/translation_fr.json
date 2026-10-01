@@ -1,5 +1,12 @@
 {
   "translation": {
+    "search-by-image": "Rechercher par image",
+    "remove-image": "Retirer l'image",
+    "preparing-image": "Préparation de l'image",
+    "attached-image": "Image jointe : {{filename}}",
+    "unsupported-file-type": "Type de fichier non pris en charge",
+    "image-too-large": "Image trop volumineuse (max {{size}} Mo)",
+    "image-not-readable": "Image illisible",
     "copilot-title": "K9 IA",
     "copilot-toggle": "K9 IA",
     "copilot-empty-hint": "Posez une question à K9 IA.",

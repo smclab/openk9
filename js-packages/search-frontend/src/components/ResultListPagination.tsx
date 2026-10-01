@@ -23,6 +23,8 @@ import { Logo } from "./Logo";
 import { ResultMemo } from "./Result";
 import CustomSkeleton from "./Skeleton";
 import { setSortResultsType } from "./SortResults";
+import { useSearchImage } from "./QueryImageContext";
+import { resolveQueryImage } from "./queryImage";
 import {
   GenericResultItem,
   SearchToken,
@@ -270,6 +272,7 @@ export function useInfiniteResults<E>(
   dynamicFilters: boolean = true,
 ) {
   const client = useOpenK9Client();
+  const image = useSearchImage();
   const suppressIntermediate = React.useMemo(
     () => state.text.trim().length > 0 && searchQuery.length === 0,
     [state.text, searchQuery],
@@ -290,6 +293,7 @@ export function useInfiniteResults<E>(
     [
       "results",
       searchQuery,
+      image?.attachmentId ?? null,
       sort,
       language,
       sortAfterKey,
@@ -301,6 +305,7 @@ export function useInfiniteResults<E>(
       const [
         ,
         qSearchQuery,
+        ,
         qSort,
         qLanguage,
         qSortAfterKey,
@@ -316,7 +321,7 @@ export function useInfiniteResults<E>(
       return client.doSearch<E>({
         range,
         language: qLanguage,
-        searchQuery: remappingSearchQuery,
+        searchQuery: await resolveQueryImage(remappingSearchQuery, image),
         sort: qSort,
         sortAfterKey: qSortAfterKey || "",
       });

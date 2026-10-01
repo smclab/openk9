@@ -42,10 +42,10 @@
   "homepage": "https://openk9.io/",
   "scripts": {
     "dev": "vite --config vite/standalone.dev.ts ",
-    "build": "tsc && yarn build:standalone && yarn build:embeddable && yarn build:importable",
+    "build": "tsc --noEmit && yarn build:standalone && yarn build:embeddable && yarn build:importable",
     "build:standalone": "vite build --config vite/standalone.prod.ts && cp public/* dist/",
     "build:embeddable": "vite build --config vite/embeddable.prod.ts",
-    "build:importable": "vite build --config vite/importable.dev.ts && rollup -c",
+    "build:importable": "vite build --config vite/importable.dev.ts && rollup -c && rollup -c vite/rollup.dts.config.mjs",
     "build:embeddable:dev": "vite build --config vite/embeddable.dev.ts",
     "build:oauth2": "vite build --config vite/embeddable.prod.ts && cross-env VITE_CHATBOT_ENABLED=false VITE_GENERATIVE_ENABLED=false vite build --config vite/standalone.prod.ts --mode production && rollup -c && cp public/* dist/",
     "build:chatbot": "vite build --config vite/embeddable.prod.ts && cross-env VITE_CHATBOT_ENABLED=true VITE_GENERATIVE_ENABLED=true vite build --config vite/standalone.prod.ts --mode production && rollup -c && cp public/* dist/",
