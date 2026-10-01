@@ -59,15 +59,6 @@ def _use_langchain(monkeypatch, calls):
         "initialize_embedding_model",
         lambda configuration: _FakeLangchainEmbeddings(calls),
     )
-    monkeypatch.setattr(
-        server_module,
-        "build_multimodal_embedder",
-        lambda configuration: _unexpected("build_multimodal_embedder"),
-    )
-
-
-def _unexpected(name):
-    raise AssertionError(f"{name} must not be reached on this path")
 
 
 def test_a_multi_chunk_document_is_one_request(stub, monkeypatch):

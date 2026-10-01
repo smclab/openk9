@@ -15,21 +15,51 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""The registry selects the concrete embedder from the provider and maps
-the jsonConfig onto its constructor. An unregistered provider (e.g. a
-text-only one marked multimodal by mistake) raises. Concrete classes are
-faked so the test needs no cloud SDK."""
+"""The registry selects the concrete embedder from provider and model and
+maps the jsonConfig onto its constructor. A model that is not registered is
+text-only: the registry has nothing for it. Concrete classes are faked so the
+test needs no cloud SDK."""
 
 import pytest
 
 from app.embedding import bedrock, multimodal, vertex
 
 
-def test_unknown_provider_has_no_multimodal_embedder():
-    with pytest.raises(
-        ValueError, match="no multimodal embedder registered for provider 'openai'"
-    ):
-        multimodal.build_multimodal_embedder({"model_type": "openai", "model": "x"})
+@pytest.mark.parametrize(
+    ("provider", "model"),
+    [
+        pytest.param("openai", "text-embedding-3-small", id="text-only provider"),
+        pytest.param("aws_bedrock", "amazon.titan-embed-text-v2:0", id="bedrock titan"),
+        pytest.param("aws_bedrock", "cohere.embed-english-v3", id="bedrock cohere v3"),
+        pytest.param("chat_vertex_ai", "text-embedding-005", id="vertex text"),
+        pytest.param("my-gateway", "cohere.embed-v4:0", id="custom provider"),
+    ],
+)
+def test_a_model_outside_the_registry_has_no_embedder(provider, model):
+    assert (
+        multimodal.find_multimodal_embedder({"model_type": provider, "model": model})
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    ("provider", "model", "name"),
+    [
+        pytest.param("aws_bedrock", "cohere.embed-v4:0", "bedrock-cohere-v4", id="model id"),
+        pytest.param("aws_bedrock", "eu.cohere.embed-v4:0", "bedrock-cohere-v4", id="eu profile"),
+        pytest.param("aws_bedrock", "global.cohere.embed-v4:0", "bedrock-cohere-v4", id="global profile"),
+        pytest.param(
+            "chat_vertex_ai",
+            "multimodalembedding@001",
+            "vertex-multimodalembedding",
+            id="vertex",
+        ),
+    ],
+)
+def test_a_registered_model_is_found_by_provider_and_model(provider, model, name):
+    entry = multimodal.find_multimodal_embedder({"model_type": provider, "model": model})
+
+    assert entry.name == name
 
 
 def test_bedrock_provider_maps_to_bedrock_embedder(monkeypatch):
@@ -49,7 +79,7 @@ def test_bedrock_provider_maps_to_bedrock_embedder(monkeypatch):
         "aws_bedrock": {"region_name": "us-east-1", "output_dimension": 1024},
     }
 
-    embedder = multimodal.build_multimodal_embedder(configuration)
+    embedder = multimodal.find_multimodal_embedder(configuration).factory(configuration)
 
     assert isinstance(embedder, _Fake)
     assert captured == {
@@ -92,7 +122,7 @@ def test_vertex_provider_maps_to_vertex_embedder(monkeypatch):
         },
     }
 
-    embedder = multimodal.build_multimodal_embedder(configuration)
+    embedder = multimodal.find_multimodal_embedder(configuration).factory(configuration)
 
     assert isinstance(embedder, _Fake)
     # explicit project wins over the ADC quota_project_id; location flows through
@@ -115,9 +145,9 @@ def test_bedrock_without_its_block_gets_no_region_nor_dimension(monkeypatch):
 
     monkeypatch.setattr(bedrock, "BedrockMultimodalEmbedder", _Fake)
 
-    multimodal.build_multimodal_embedder(
-        {"model_type": "aws_bedrock", "model": "cohere.embed-v4:0"}
-    )
+    configuration = {"model_type": "aws_bedrock", "model": "cohere.embed-v4:0"}
+
+    multimodal.find_multimodal_embedder(configuration).factory(configuration)
 
     assert captured == {
         "model_id": "cohere.embed-v4:0",
@@ -151,6 +181,6 @@ def test_vertex_project_falls_back_to_the_adc_quota_project(monkeypatch):
         },
     }
 
-    multimodal.build_multimodal_embedder(configuration)
+    multimodal.find_multimodal_embedder(configuration).factory(configuration)
 
     assert captured == {"project": "adc-proj"}

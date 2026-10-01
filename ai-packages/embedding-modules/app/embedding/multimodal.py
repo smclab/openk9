@@ -15,22 +15,27 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""Multimodal embedders and their provider registry.
+"""Multimodal embedders and the registry of the models they serve.
 
 A multimodal embedder embeds text and images through the SAME model, so
-both land in one coherent vector space. The model is selected explicitly
-by the EmbeddingModel.multimodal proto field; the provider then picks the
-concrete embedder from the registry below. Adding a new multimodal model
-means registering a factory here — no change to the routing.
+both land in one coherent vector space. Whether a model is multimodal is
+decided by the model itself: the registry below lists the models that can
+embed images, each with the factory of the embedder that serves it. A model
+that is not listed goes to langchain and embeds text only.
+
+A listed model is served by its embedder for every modality (text, images,
+mixed query), so its index and its queries stay in one vector space. A model
+enters the registry, or leaves it for langchain, with a measure on that model.
 
 Every embedder exposes the same interface, so the router treats them
 interchangeably:
 
     embed_texts(texts, input_type) -> list[list[float]]
     embed_image(data, content_type) -> list[float]
+    embed_mixed(text, data, content_type) -> list[float]   (optional)
 """
 
-from typing import Protocol, runtime_checkable
+from typing import Callable, NamedTuple, Protocol, runtime_checkable
 
 
 @runtime_checkable
@@ -66,26 +71,42 @@ def _build_vertex(configuration):
     )
 
 
-# provider -> factory(configuration) -> MultimodalEmbedder
-MULTIMODAL_EMBEDDERS = {
-    "aws_bedrock": _build_bedrock,
-    "chat_vertex_ai": _build_vertex,
-}
+class RegisteredModel(NamedTuple):
+    """A model that embeds images, and the embedder that serves it."""
+
+    name: str
+    provider: str
+    matches: Callable[[str], bool]
+    factory: Callable
 
 
-def build_multimodal_embedder(configuration):
-    """Selects the multimodal embedder for the configured provider.
+# The direct Bedrock client speaks the Cohere Embed v4 schema only, and the
+# Vertex one the multimodalembedding family only. The Cohere v4 match is a
+# substring so the inference profile ids (eu.cohere.embed-v4:0, ...) match too.
+MULTIMODAL_EMBEDDERS = [
+    RegisteredModel(
+        "bedrock-cohere-v4",
+        "aws_bedrock",
+        lambda model: "cohere.embed-v4" in model,
+        _build_bedrock,
+    ),
+    RegisteredModel(
+        "vertex-multimodalembedding",
+        "chat_vertex_ai",
+        lambda model: model.startswith("multimodalembedding"),
+        _build_vertex,
+    ),
+]
 
-    Raises ValueError when the provider has no multimodal embedder
-    registered (e.g. a text-only provider marked multimodal by mistake).
-    """
+
+def find_multimodal_embedder(configuration):
+    """The registry entry of the configured model, or None for a model that
+    embeds text only."""
     provider = configuration.get("model_type")
-    factory = MULTIMODAL_EMBEDDERS.get(provider)
+    model = configuration.get("model") or ""
 
-    if factory is None:
-        raise ValueError(
-            f"no multimodal embedder registered for provider {provider!r}; "
-            f"available: {sorted(MULTIMODAL_EMBEDDERS)}"
-        )
+    for entry in MULTIMODAL_EMBEDDERS:
+        if entry.provider == provider and entry.matches(model):
+            return entry
 
-    return factory(configuration)
+    return None

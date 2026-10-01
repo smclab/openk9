@@ -26,6 +26,7 @@ from types import SimpleNamespace
 import pytest
 
 from app import server as server_module
+from app.embedding import multimodal
 
 MULTIMODAL_CONFIGURATION = {
     "model_type": "aws_bedrock",
@@ -87,7 +88,12 @@ def calls(monkeypatch):
 
     monkeypatch.setattr(server_module, "_apply_credentials", apply_credentials)
     monkeypatch.setattr(
-        server_module, "build_multimodal_embedder", build_multimodal_embedder
+        multimodal,
+        "MULTIMODAL_EMBEDDERS",
+        [
+            entry._replace(factory=build_multimodal_embedder)
+            for entry in multimodal.MULTIMODAL_EMBEDDERS
+        ],
     )
     monkeypatch.setattr(
         server_module, "initialize_embedding_model", initialize_embedding_model

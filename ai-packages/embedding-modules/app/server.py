@@ -39,7 +39,7 @@ from langchain_openai import OpenAIEmbeddings
 
 from app.embedding import chunking, query, router, vertex_batching
 from app.embedding.fetch import fetch_url
-from app.embedding.multimodal import build_multimodal_embedder
+from app.embedding.multimodal import find_multimodal_embedder
 from app.embedding.quantization import l2_normalize, quantize_binary, quantize_int8
 from app.embedding.router import Pipelines
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
@@ -269,36 +269,63 @@ def _apply_credentials(configuration):
                 save_google_application_credentials(credentials)
 
 
+def resolve_embedder(configuration):
+    """Picks the client that serves the configured model, for every RPC.
+
+    A model in the multimodal registry is served by its own embedder for
+    every modality; any other model goes to langchain and embeds text only.
+    The choice depends on provider and model alone: the deprecated
+    `multimodal` flag of the request plays no part in it.
+
+    Returns the name of the client and the registry embedder, or None when
+    langchain serves the model.
+    """
+    entry = find_multimodal_embedder(configuration)
+
+    if entry is None:
+        return "langchain", None
+
+    _apply_credentials(configuration)
+
+    return entry.name, entry.factory(configuration)
+
+
+def _text_embedding(configuration, embedder, input_type):
+    """The text side of the chosen client, as a batch function: a list of
+    texts in, one vector per text out.
+
+    langchain keeps `embed_query` for queries, which some classes serve with
+    a task type of their own, and `embed_documents` for everything else.
+    """
+    if embedder is not None:
+        return lambda texts: embedder.embed_texts(texts, input_type)
+
+    embeddings = initialize_embedding_model(configuration)
+
+    if input_type == "search_query":
+        return lambda texts: [embeddings.embed_query(text) for text in texts]
+
+    return embeddings.embed_documents
+
+
 def build_pipelines(configuration, chunker):
     """Builds the injected capabilities (router.Pipelines) for a request.
 
-    A model with multimodal=True embeds text and images through the same
-    model (one vector space); every other model keeps the langchain
-    text-only path and cannot embed images (they are skipped).
+    A registry model embeds text and images through the same model (one
+    vector space); every other model embeds text only, and its images are
+    skipped.
 
     Indexing always uses the "search_document" input_type; query-time
     ("search_query") goes through build_query_capabilities instead.
     """
-    if configuration.get("multimodal"):
-        _apply_credentials(configuration)
-        embedder = build_multimodal_embedder(configuration)
-
-        return Pipelines(
-            embed_texts=lambda texts: embedder.embed_texts(texts, "search_document"),
-            chunk=lambda text: chunking.chunk_text(chunker, text),
-            fetch=fetch_url,
-            embed_image=embedder.embed_image,
-        )
-
-    embeddings = initialize_embedding_model(configuration)
+    _, embedder = resolve_embedder(configuration)
 
     return Pipelines(
-        # the whole chunk list in one request: embed_documents is part of the
-        # langchain Embeddings interface, so every provider serves it
-        embed_texts=embeddings.embed_documents,
+        # the whole chunk list in one request
+        embed_texts=_text_embedding(configuration, embedder, "search_document"),
         chunk=lambda text: chunking.chunk_text(chunker, text),
         fetch=fetch_url,
-        embed_image=None,
+        embed_image=embedder.embed_image if embedder is not None else None,
     )
 
 
@@ -340,14 +367,6 @@ def to_chunk_message(piece, number, total, vector_data_type):
     return message
 
 
-# How a langchain text class fails when it cannot read the answer of the model
-# it was given: it indexes or keys something that is not there. Credential,
-# network and throttling failures are deliberately out of this set — changing
-# client does not fix them, and retrying would only hide them behind a second,
-# less informative error.
-UNREADABLE_RESPONSE_ERRORS = (KeyError, IndexError, TypeError)
-
-
 def build_text_embed_texts(configuration):
     """Builds the text embedding function used by the v1 GetMessages path.
 
@@ -356,138 +375,32 @@ def build_text_embed_texts(configuration):
     instead of one per chunk: against a remote model the round-trip
     dominates, and it has nothing to do with the text being vectorized.
 
-    Where a langchain text class cannot serve the configured model, the direct
-    client of the v2 RPCs takes over. Without this, a tenant on a multimodal
-    model breaks every v1 caller at once: input and output guardrails, domain
-    detection, uploaded documents.
-
-    The `multimodal` flag alone cannot decide it, even though it is the
-    declared source of truth: `GetEmbeddingModelConfigurationsResponse` in
-    searcher.proto does not carry the field, so the RAG callers of this RPC
-    have no way to forward it and it always arrives false. When it does arrive
-    the direct client is used straight away; otherwise langchain is tried and
-    the answer it cannot read is what triggers the fallback. Nothing here has
-    to know which models those are.
-    """
-    if configuration.get("multimodal"):
-        return _direct_embed_texts(configuration)
-
-    return _langchain_embed_texts_with_fallback(configuration)
-
-
-def _direct_embed_texts(configuration):
-    """The embedder of the v2 RPCs, as a batch function.
-
     The input type is `search_document`, the one the v2 indexing path
     sends: what this RPC embeds are the chunks of a document.
     """
-    _apply_credentials(configuration)
-    embedder = build_multimodal_embedder(configuration)
+    _, embedder = resolve_embedder(configuration)
 
-    return lambda texts: embedder.embed_texts(texts, "search_document")
-
-
-def _langchain_embed_texts_with_fallback(configuration):
-    """langchain first, the direct client once its answer cannot be read.
-
-    The whole document goes in one call, so the failed call is paid once
-    per request by construction.
-    """
-    langchain_embed_documents = initialize_embedding_model(
-        configuration
-    ).embed_documents
-
-    def embed_texts(texts):
-        try:
-            vectors = langchain_embed_documents(texts)
-        except UNREADABLE_RESPONSE_ERRORS as error:
-            return _fallback_embed_texts(configuration, error)(texts)
-
-        if _is_one_vector_per_text(vectors, texts):
-            return vectors
-
-        return _fallback_embed_texts(configuration, _not_vectors(vectors, texts))(
-            texts
-        )
-
-    return embed_texts
-
-
-def _is_one_vector_per_text(vectors, texts):
-    """Whether the langchain class answered one vector per text.
-
-    The batch call has a way of not reading the answer without raising:
-    it returns something that is not a vector. `BedrockEmbeddings` did
-    exactly that on a `cohere.embed-v4` answer until langchain-aws 1.x,
-    walking an `embeddings` keyed by embedding type as if it were a list
-    and returning its keys; langchain-aws reads that schema now, but the
-    multimodal models that reach this path are not only its own. Only
-    what cannot be a vector is rejected, so a provider answering with
-    something list-like other than a list stays on langchain.
-    """
-    return len(vectors) == len(texts) and not any(
-        isinstance(vector, str) for vector in vectors
-    )
-
-
-def _not_vectors(vectors, texts):
-    """The error for an answer that was not one vector per text. Only the
-    shape goes in the message: the answer itself may be a full document
-    worth of vectors."""
-    types = sorted({type(vector).__name__ for vector in vectors})
-
-    return TypeError(
-        f"{len(texts)} texts embedded as {len(vectors)} {', '.join(types)}"
-    )
-
-
-def _fallback_embed_texts(configuration, error):
-    """The direct client for a model langchain could not read.
-
-    Re-raises the original failure when the provider has no direct embedder:
-    that error describes the actual problem, while the missing registration
-    would only describe this function's inability to work around it.
-    """
-    logger.warning(
-        "The langchain class could not read the answer of model %r on %r (%s); "
-        "falling back to the direct client.",
-        configuration.get("model"),
-        configuration.get("model_type"),
-        error,
-    )
-
-    try:
-        return _direct_embed_texts(configuration)
-    except ValueError as missing_embedder:
-        logger.error(
-            "No direct client for provider %r either: %s",
-            configuration.get("model_type"),
-            missing_embedder,
-        )
-        raise error from None
+    return _text_embedding(configuration, embedder, "search_document")
 
 
 def build_query_capabilities(configuration):
     """Builds the query-time embedding capabilities (query.QueryCapabilities).
 
-    A multimodal model embeds query text and images through the same
-    model and may also support native text+image input (embed_mixed,
-    detected on the concrete embedder); a text-only model can embed
-    query text only.
+    A registry model embeds query text and images through the same model
+    and may also support native text+image input (embed_mixed, detected on
+    the concrete embedder); any other model can embed query text only.
     """
-    if configuration.get("multimodal"):
-        _apply_credentials(configuration)
-        embedder = build_multimodal_embedder(configuration)
+    _, embedder = resolve_embedder(configuration)
+    embed_texts = _text_embedding(configuration, embedder, "search_query")
 
-        return query.QueryCapabilities(
-            embed_text=lambda text: embedder.embed_texts([text], "search_query")[0],
-            embed_image=embedder.embed_image,
-            embed_mixed=getattr(embedder, "embed_mixed", None),
-        )
+    if embedder is None:
+        return query.QueryCapabilities(embed_text=lambda text: embed_texts([text])[0])
 
-    embeddings = initialize_embedding_model(configuration)
-
-    return query.QueryCapabilities(embed_text=embeddings.embed_query)
+    return query.QueryCapabilities(
+        embed_text=lambda text: embed_texts([text])[0],
+        embed_image=embedder.embed_image,
+        embed_mixed=getattr(embedder, "embed_mixed", None),
+    )
 
 
 def to_vector_message(vector, vector_data_type):
