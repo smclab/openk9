@@ -48,7 +48,7 @@ from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
-from app.embedding import chunking, query, router
+from app.embedding import chunking, query, router, vertex_batching
 from app.embedding.fetch import fetch_url
 from app.embedding.multimodal import build_multimodal_embedder
 from app.embedding.quantization import l2_normalize, quantize_binary, quantize_int8
@@ -99,6 +99,19 @@ chunk_types = {
     8: LateChunker,
     9: NeuralChunker,
 }
+
+
+class BatchedVertexAIEmbeddings(VertexAIEmbeddings):
+    """VertexAIEmbeddings that sends the documents in request batches
+    within the provider limits (vertex_batching), in order."""
+
+    def embed_documents(self, texts, **kwargs):
+        vectors = []
+
+        for batch in vertex_batching.batches(texts):
+            vectors.extend(super().embed_documents(batch, **kwargs))
+
+        return vectors
 
 
 class ModelType(Enum):
@@ -238,7 +251,7 @@ def initialize_embedding_model(configuration):
             project_id = google_credentials.get("quota_project_id")
             model = configuration.get("model")
 
-            embeddings = VertexAIEmbeddings(model_name=model, project=project_id)
+            embeddings = BatchedVertexAIEmbeddings(model_name=model, project=project_id)
         case ModelType.HUGGING_FACE.value:
             embeddings = HuggingFaceEmbeddings(model_name=model)
             logger.info(
