@@ -102,13 +102,16 @@ def test_bedrock_gets_the_region():
 def test_an_unknown_provider_falls_back_to_openai():
     assert server_module.initialize_embedding_model(
         {"model_type": "unknown", "model": "m", "api_url": ""}
-    ) == ("OpenAIEmbeddings", {"model": "m"})
+    ) == ("OpenAIEmbeddings", {"model": "m", "api_key": None})
 
 
 def test_an_unknown_provider_keeps_the_api_url():
     assert server_module.initialize_embedding_model(
         {"model_type": "unknown", "model": "m", "api_url": "http://proxy"}
-    ) == ("OpenAIEmbeddings", {"model": "m", "base_url": "http://proxy"})
+    ) == (
+        "OpenAIEmbeddings",
+        {"model": "m", "base_url": "http://proxy", "api_key": None},
+    )
 
 
 def test_a_missing_provider_and_model_use_the_openai_default():

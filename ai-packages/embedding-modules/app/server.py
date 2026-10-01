@@ -235,10 +235,16 @@ def initialize_embedding_model(configuration):
                 region_name=region_name,
             )
         case _:
+            # a custom provider is an OpenAI-compatible endpoint with a key of
+            # its own: handed to the client, not to the process environment,
+            # where it would outlive the request
+            api_key = configuration.get("api_key") or None
             if api_url:
-                embeddings = OpenAIEmbeddings(model=model, base_url=api_url)
+                embeddings = OpenAIEmbeddings(
+                    model=model, base_url=api_url, api_key=api_key
+                )
             else:
-                embeddings = OpenAIEmbeddings(model=model)
+                embeddings = OpenAIEmbeddings(model=model, api_key=api_key)
 
     return embeddings
 
