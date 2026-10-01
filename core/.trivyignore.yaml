@@ -23,21 +23,24 @@ vulnerabilities:
   # --- Temporary suppressions (carry expired_at, re-evaluated before next release) ---
 
   - id: CVE-2026-45292
-    # io.opentelemetry:opentelemetry-api / -extension-trace-propagators (1.55.0 and 1.57.0)
+    # io.opentelemetry:opentelemetry-api / -extension-trace-propagators 1.55.0 (api-gateway)
     statement: >-
-      Unbounded memory/CPU on oversized W3C baggage headers (DoS). Fixed upstream
-      in OpenTelemetry 1.62.0. Quarkus 3.33 LTS resolves 1.55.0 and 1.57.0, and
-      the first platform release carrying 1.62.0 is on the 3.39 line, outside this
-      LTS: no fix is reachable without pulling OpenTelemetry out of step with the
-      platform. Not applicable in practice: baggage propagation headers reach only
-      headless/internal services, with no attacker-controlled baggage from the
-      public internet. NB severity is contested — GitHub 5.3 MEDIUM vs Red Hat 7.5
-      HIGH (availability:H); under the Red Hat score this becomes a blocking
-      finding, so re-evaluate as soon as a release on our line ships >= 1.62.0.
+      Unbounded memory/CPU when parsing oversized W3C baggage (DoS), fixed in
+      OpenTelemetry 1.62.0. The Quarkus services already resolve 1.62.0 on 3.40
+      LTS; what remains is api-gateway, which takes 1.55.0 from Spring Boot 4.0.8
+      through the Micrometer tracing bridge, and only the 4.1 line of Spring Boot
+      manages 1.62.0. The gateway faces the internet and extracts W3C baggage, but
+      its Reactor Netty server keeps the default 8 KiB request-header limit: a
+      10 KiB baggage header is answered 431 before the application sees it. That
+      is the 8192-byte cap the fix itself introduces, and the bound the advisory
+      names as limiting what an external attacker can deliver. NB severity is
+      contested — GitHub 5.3 MEDIUM vs Red Hat 7.5 HIGH (availability:H); under
+      the Red Hat score this becomes a blocking finding. Re-evaluate with the
+      Spring Boot upgrade, or sooner if the gateway's header limit is raised.
     expired_at: 2026-12-22
 
   - id: CVE-2025-14969
-    # org.hibernate.reactive:hibernate-reactive-core 3.2.13.Final
+    # org.hibernate.reactive:hibernate-reactive-core 3.4.2.Final
     statement: >-
       Denial of service through database connection pool exhaustion: a remote
       client closing an HTTP connection early leaks the pooled connection behind
@@ -46,12 +49,12 @@ vulnerabilities:
       earlier "fixed in Quarkus 3.27.2" wording was wrong. The fix (hibernate-reactive
       commit cd7f104, "Roll back open transactions on close") is contained in tag
       4.2.1 and in no 3.x tag: 3.2.13 and 3.4.2 are diverged from it by 272
-      commits. Waiting for the platform does not help either, since Quarkus ships
-      3.2.13 on 3.33 and still 3.4.2 on 3.39. Forcing the 4.2.x line under this
-      LTS was evaluated — the ORM requirement fits and the pool SPI is unchanged —
-      and declined: it would run a Hibernate Reactive major the platform does not
-      ship, under the module that already needs a vendored extension. Re-evaluate
-      when a Quarkus line ships Hibernate Reactive 4.x.
+      commits. Waiting for the platform does not help either: Quarkus 3.40 LTS
+      ships 3.4.2. Forcing the 4.2.x line was evaluated on the previous LTS — the
+      ORM requirement fitted and the pool SPI is unchanged — and declined: it
+      would run a Hibernate Reactive major the platform does not ship, under the
+      module that already needs a vendored extension, and that still holds.
+      Re-evaluate when a Quarkus line ships Hibernate Reactive 4.x.
     expired_at: 2026-12-22
 
   # --- Permanent suppressions (not applicable, no expiry) ---
@@ -67,5 +70,7 @@ vulnerabilities:
       package zero times; no OpenK9 source imports org.apache.hc at all. Re-check
       this the day the OpenSearch extension changes transport, since the exclusion
       rests on that choice. Unrelated but worth recording: 5.6.x, the first line
-      carrying the fix, turns on transparent gzip inflation that double-decodes
-      responses for this transport and stops the datasource from booting.
+      carrying the fix and the one Quarkus 3.40 manages, turns on transparent gzip
+      inflation that double-decodes responses for this transport. The OpenSearch
+      Java client can then no longer parse a response and the datasource and
+      searcher readiness checks stay DOWN, so core/pom.xml holds 5.4.4.
