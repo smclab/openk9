@@ -35,7 +35,7 @@ llama-index==0.14.18
 openinference-instrumentation-langchain==0.1.61
 opensearch-py==3.1.0
 protobuf==6.33.5
-pyjwt==2.13.0
+pyjwt==2.14.0
 python-dotenv==1.2.2
 python-multipart==0.0.30
 requests==2.34.2
