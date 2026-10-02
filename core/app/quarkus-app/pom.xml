@@ -57,6 +57,19 @@
 		<module>../k8s-client</module>
 	</modules>
 
+	<dependencyManagement>
+		<dependencies>
+			<!-- Reaches the tree through the JBoss log manager bridge, which the
+			     platform still resolves at a version with an open advisory. Kept on the
+			     Quarkus line: Spring Boot manages its own Log4j, already fixed. -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-api</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>io.openk9.common</groupId>
