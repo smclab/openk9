@@ -42,6 +42,15 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<!-- Override the Jackson 3 version to fix the jackson-databind DoS block;
+			     Spring Boot still manages an older patch of the same 3.1.x line. -->
+			<dependency>
+				<groupId>tools.jackson</groupId>
+				<artifactId>jackson-bom</artifactId>
+				<version>${jackson-springboot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
