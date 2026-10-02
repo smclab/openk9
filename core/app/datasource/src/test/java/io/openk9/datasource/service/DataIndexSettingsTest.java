@@ -25,12 +25,14 @@ import io.openk9.datasource.Initializer;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.RestHighLevelClient;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -103,6 +105,46 @@ class DataIndexSettingsTest {
 		assertNotNull(indexTemplate);
 		assertEquals(
 			"2", indexTemplate.template().settings().get(REPLICAS_SETTING));
+	}
+
+	@Test
+	@DisplayName("Should answer the settings of the index template as JSON")
+	void should_answer_the_template_settings_as_json() {
+		// a dataIndex is created with custom settings
+		var datasource = EntitiesUtils.getEntity(
+			Initializer.INIT_DATASOURCE_CONNECTION, datasourceService, sessionFactory);
+
+		sessionFactory.withTransaction((s, t) -> dataIndexService.create(
+				s,
+				datasource.getId(),
+				DataIndexDTO.builder()
+					.name(DATA_INDEX)
+					.knnIndex(false)
+					.settings(CUSTOM_SETTINGS)
+					.build()
+			))
+			.await()
+			.indefinitely();
+
+		var dataIndex =
+			EntitiesUtils.getEntity(DATA_INDEX, dataIndexService, sessionFactory);
+
+		// the settings of its index template are read back
+		var settings = dataIndexService
+			.getIndexTemplateSettings(dataIndex.getId())
+			.await()
+			.indefinitely();
+
+		// the admin shows them in a JSON editor: printing the map the client
+		// returns would give {index={...}}, which no JSON parser takes
+		var decoded = assertDoesNotThrow(
+			() -> new JsonObject(settings),
+			"the settings of a template must be JSON: " + settings);
+
+		assertEquals(
+			"2",
+			decoded.getJsonObject("index").getString("number_of_replicas"),
+			"and must carry the custom settings: " + settings);
 	}
 
 }
