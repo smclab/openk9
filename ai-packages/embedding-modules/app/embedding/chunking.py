@@ -76,9 +76,9 @@ def _chunker_class(chunk_type):
 
         return NeuralChunker
     if chunk_type == 10:
-        from chonkie import FastChunker
+        from app.text_splitters.fast_text_splitter import Utf8FastChunker
 
-        return FastChunker
+        return Utf8FastChunker
     if chunk_type in (0, 6):
         from chonkie import RecursiveChunker
 

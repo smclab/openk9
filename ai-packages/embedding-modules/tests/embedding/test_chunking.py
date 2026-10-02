@@ -162,6 +162,36 @@ def test_fast_chunker_splits_within_the_byte_budget():
     assert "".join(pieces) == text
 
 
+@pytest.mark.parametrize(
+    "text, chunk_size",
+    [
+        ("voce uno; voce due: città, perché, così — " * 30, 300),
+        ("日本語のテキストです。" * 600, 4096),
+    ],
+    ids=["accented", "cjk"],
+)
+def test_fast_chunker_never_cuts_a_multibyte_character(text, chunk_size):
+    pieces = chunking.chunk_text(
+        chunking.build_chunker(10, {"chunk_size": chunk_size}), text
+    )
+
+    assert len(pieces) > 1
+    assert all(len(piece.encode("utf-8")) <= chunk_size for piece in pieces)
+    assert "".join(pieces) == text
+
+
+@pytest.mark.parametrize("forward_fallback", [False, True])
+def test_fast_chunker_keeps_chonkie_cuts_on_ascii_text(forward_fallback):
+    from chonkie import FastChunker
+
+    text = "a" * 150 + ". " + "Prima frase. Seconda frase!\nTerza riga? " * 20
+    config = {"chunk_size": 100, "forward_fallback": forward_fallback}
+
+    pieces = chunking.chunk_text(chunking.build_chunker(10, config), text)
+
+    assert pieces == chunking.chunk_text(FastChunker(**config), text)
+
+
 def test_fast_chunker_arguments_come_from_the_json_config():
     chunker = chunking.build_chunker(
         10, {"chunk_size": "100", "delimiters": "\n", "unknown": 1}
