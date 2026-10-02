@@ -27,7 +27,7 @@ from app import server as server_module
 LANGCHAIN_CLASSES = (
     "OpenAIEmbeddings",
     "WatsonxEmbeddings",
-    "VertexAIEmbeddings",
+    "BatchedVertexAIEmbeddings",
     "HuggingFaceEmbeddings",
     "BedrockEmbeddings",
 )
@@ -80,7 +80,7 @@ def test_vertex_takes_the_project_from_the_credentials():
                 "credentials": {"quota_project_id": "project-id"}
             },
         }
-    ) == ("VertexAIEmbeddings", {"model_name": "m", "project": "project-id"})
+    ) == ("BatchedVertexAIEmbeddings", {"model_name": "m", "project": "project-id"})
 
 
 def test_hugging_face_loads_the_model_by_name():
