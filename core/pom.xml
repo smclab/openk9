@@ -89,6 +89,9 @@
 		<dependency.version.mapstruct>1.5.5.Final</dependency.version.mapstruct>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
 		<failsafe.useModulePath>false</failsafe.useModulePath>
+		<!-- Set by the Quarkus Maven extension only in modules that declare
+			quarkus-maven-plugin; empty elsewhere, so @{argLine} still resolves -->
+		<argLine />
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<quarkus-plugin.version>3.33.3.3</quarkus-plugin.version>
@@ -356,7 +359,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+					<argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -421,6 +424,7 @@
 					<groupId>io.quarkus</groupId>
 					<artifactId>quarkus-maven-plugin</artifactId>
 					<version>${quarkus-plugin.version}</version>
+					<extensions>true</extensions>
 					<executions>
 						<execution>
 							<goals>
