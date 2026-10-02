@@ -262,6 +262,11 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             borderRadius: { xs: "unset", sm: theme.shape.borderRadius * 2 },
             backgroundColor: theme.palette.primary.contrastText,
             height: { xs: "100vh", sm: "460px" },
+            // 100vh on mobile ignores the browser bars and pushes the input off screen;
+            // sm is repeated so this block, emitted after the one above, keeps the desktop size
+            "@supports (height: 100dvh)": {
+              height: { xs: "100dvh", sm: "460px" },
+            },
             width: { xs: "100vw", sm: "365px" },
             boxShadow: theme.shadows[3],
             zIndex: 2,
