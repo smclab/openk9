@@ -139,6 +139,12 @@
 				<artifactId>jib-maven-plugin</artifactId>
 				<configuration>
 					<from>
+						<!-- Same Temurin JRE as the Jib default, on UBI 9 minimal instead of
+						     Ubuntu, so the JDK, its TLS settings and its trust store do not change.
+						     Pinned by digest because Temurin rebuilds every tag in place; the tag
+						     only labels the version. To bump, take the multi-arch index digest of
+						     the tag (docker buildx imagetools inspect), not a per-platform one. -->
+						<image>eclipse-temurin:21.0.12.1_1-jre-ubi9-minimal@sha256:23eaa405eb81abb72d2ccddf407ba8896ea7d336a9102c7bd9edbefaa6675958</image>
 						<platforms>
 							<platform>
 								<architecture>${jib.platform.architecture}</architecture>
