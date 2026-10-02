@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.searcher;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,7 @@ import org.opensearch.search.sort.SortBuilder;
 import org.opensearch.search.sort.SortBuilders;
 import org.opensearch.search.sort.SortOrder;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -159,6 +162,45 @@ class SearcherServiceTieBreakTest {
 		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, CHUNKED);
 
 		assertEquals(3, searchSourceBuilder.sorts().size());
+	}
+
+	@Test
+	void should_resume_after_the_cursor_when_the_requested_sort_was_discarded() {
+		// the requested sort was not sortable, so only the tie-break is left:
+		// the cursor still has to be applied, or the next page repeats the first
+		var searchSourceBuilder = new SearchSourceBuilder();
+		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, NOT_CHUNKED);
+
+		SearcherService.applySearchAfter(searchSourceBuilder, cursor("[1.5,\"abc\"]"));
+
+		assertArrayEquals(new Object[] {1.5, "abc"}, searchSourceBuilder.searchAfter());
+	}
+
+	@Test
+	void should_not_resume_without_a_cursor() {
+		var searchSourceBuilder = new SearchSourceBuilder();
+		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, CHUNKED);
+
+		SearcherService.applySearchAfter(searchSourceBuilder, null);
+		SearcherService.applySearchAfter(searchSourceBuilder, "");
+
+		assertNull(searchSourceBuilder.searchAfter());
+	}
+
+	@Test
+	void should_not_resume_when_there_is_no_sort_clause() {
+		// a hybrid query without a requested sort has no clause, and OpenSearch
+		// rejects search_after without one
+		var searchSourceBuilder = new SearchSourceBuilder();
+		SearcherService.applyTieBreak(searchSourceBuilder, HYBRID, CHUNKED);
+
+		SearcherService.applySearchAfter(searchSourceBuilder, cursor("[\"abc\"]"));
+
+		assertNull(searchSourceBuilder.searchAfter());
+	}
+
+	private String cursor(String json) {
+		return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
 	}
 
 	/**
