@@ -334,7 +334,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	private static void applySort(
 		List<DocTypeField> docTypeFieldList, List<Sort> sortList,
-		String sortAfterKey, SearchSourceBuilder searchSourceBuilder) {
+		SearchSourceBuilder searchSourceBuilder) {
 
 		if (sortList == null || sortList.isEmpty()) {
 			return;
@@ -379,15 +379,34 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 			searchSourceBuilder.sort(fieldSortBuilder);
 
-			if (sortAfterKey != null && !sortAfterKey.isBlank()) {
-				byte[] decode = Base64.getDecoder().decode(sortAfterKey);
-				JsonArray objects = new JsonArray(Buffer.buffer(decode));
-				Object[] array = objects.getList().toArray();
-				searchSourceBuilder.searchAfter(array);
-			}
-
 		}
 
+	}
+
+	/**
+	 * Resumes the search after the given cursor. It is applied once the whole
+	 * sort clause is known, tie-break included: the cursor always comes from a
+	 * response built with the same clause, so it carries one value per
+	 * criterion even when a requested sort was discarded as not sortable.
+	 */
+	static void applySearchAfter(
+		SearchSourceBuilder searchSourceBuilder, String sortAfterKey) {
+
+		if (sortAfterKey == null || sortAfterKey.isBlank()) {
+			return;
+		}
+
+		// search_after needs a sort clause to resume from
+		var sorts = searchSourceBuilder.sorts();
+
+		if (sorts == null || sorts.isEmpty()) {
+			return;
+		}
+
+		byte[] decode = Base64.getDecoder().decode(sortAfterKey);
+		JsonArray objects = new JsonArray(Buffer.buffer(decode));
+		Object[] array = objects.getList().toArray();
+		searchSourceBuilder.searchAfter(array);
 	}
 
 	/**
@@ -1316,12 +1335,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			.filter(docTypeField -> !docTypeField.isI18N())
 			.toList();
 
-		applySort(
-			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
-			searchSourceBuilder
-		);
+		applySort(docTypeFieldList, request.getSortList(), searchSourceBuilder);
 
 		applyTieBreak(searchSourceBuilder, hybrid, chunked);
+
+		applySearchAfter(searchSourceBuilder, request.getSortAfterKey());
 
 		applyHighlightAndIncludeExclude(
 			searchSourceBuilder,
