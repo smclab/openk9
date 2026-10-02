@@ -550,7 +550,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = []
             chunks = []
 
-            arguments, signature = chunking.chunker_arguments(
+            chunker_class, arguments, signature = chunking.chunker_arguments(
                 chunk_type, chunk_json_config
             )
 
@@ -563,7 +563,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             }
             logger.info(info_arguments)
 
-            text_splitter = chunking.build_chunker(chunk_type, chunk_json_config)
+            text_splitter = chunker_class(**arguments)
             text_splitted = chunking.chunk_text(text_splitter, text)
 
             total_chunks = len(text_splitted)

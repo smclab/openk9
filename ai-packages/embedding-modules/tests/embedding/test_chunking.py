@@ -152,6 +152,11 @@ def test_heavyweight_chunk_types_resolve_their_class(
     assert chunking._chunker_class(chunk_type) is getattr(fake_chonkie, class_name)
 
 
+@pytest.mark.parametrize("chunk_type", sorted(chunking.SUPPORTED_CHUNK_TYPES))
+def test_every_supported_chunk_type_has_a_chunker(chunk_type):
+    assert chunking._chunker_class(chunk_type)
+
+
 def test_fast_chunker_splits_within_the_byte_budget():
     text = "Prima frase. Seconda frase!\nTerza riga? " * 50
 

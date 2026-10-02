@@ -88,9 +88,9 @@ def _chunker_class(chunk_type):
 
 
 def chunker_arguments(chunk_type, json_config):
-    """Returns (arguments, signature): the json_config entries, over the
-    legacy defaults of the chunk type, that match the constructor
-    signature of its chunker."""
+    """Returns (chunker_class, arguments, signature): the chunker of the
+    chunk type and the json_config entries, over its legacy defaults,
+    that match the constructor signature of that chunker."""
     chunker_class = _chunker_class(chunk_type)
 
     signature = {
@@ -100,15 +100,15 @@ def chunker_arguments(chunk_type, json_config):
     }
     config = {**LEGACY_DEFAULTS.get(chunk_type, {}), **json_config}
 
-    return build_chunk_arguments(config, signature), signature
+    return chunker_class, build_chunk_arguments(config, signature), signature
 
 
 def build_chunker(chunk_type, json_config):
     """Instantiates the configured chunker with chunker_arguments; raises
     UnsupportedChunkType for a type outside SUPPORTED_CHUNK_TYPES."""
-    arguments, _ = chunker_arguments(chunk_type, json_config)
+    chunker_class, arguments, _ = chunker_arguments(chunk_type, json_config)
 
-    return _chunker_class(chunk_type)(**arguments)
+    return chunker_class(**arguments)
 
 
 def chunk_text(chunker, text):
