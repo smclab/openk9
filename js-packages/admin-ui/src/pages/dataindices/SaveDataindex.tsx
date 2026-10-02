@@ -265,17 +265,21 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     const docTypeIds = form.inputProps("docTypeIds").value;
     if (!docTypeIds?.length) return;
 
-    try {
-      setSettingsLoading(true);
-      setSettingsError(null);
-      const response = await restClient.dataIndexResource.postApiDatasourceV1DataIndexGetSettingsFromDocTypes({
-        docTypeIds,
-      });
-      setSettings(JSON.stringify(response, null, 2));
-    } catch (error) {
-      setSettingsError("Errore nel recupero delle impostazioni.");
-    } finally {
-      setSettingsLoading(false);
+    // the view shows the settings of the index template, which is what the
+    // dataIndex has: recalculating them from the docTypes would replace them
+    if (verifyData !== "view") {
+      try {
+        setSettingsLoading(true);
+        setSettingsError(null);
+        const response = await restClient.dataIndexResource.postApiDatasourceV1DataIndexGetSettingsFromDocTypes({
+          docTypeIds,
+        });
+        setSettings(JSON.stringify(response, null, 2));
+      } catch (error) {
+        setSettingsError("Errore nel recupero delle impostazioni.");
+      } finally {
+        setSettingsLoading(false);
+      }
     }
 
     try {
@@ -290,7 +294,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     } finally {
       setMappingsLoading(false);
     }
-  }, [form, restClient]);
+  }, [form, restClient, verifyData]);
 
   useEffect(() => {
     const currentDocTypeIds = form.inputProps("docTypeIds").value || [];
