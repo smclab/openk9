@@ -22,7 +22,7 @@
     <parent>
         <artifactId>hibernate-rx-multitenancy-parent</artifactId>
         <groupId>io.openk9</groupId>
-        <version>3.33.3.3</version>
+        <version>3.40.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -71,9 +71,13 @@
             <artifactId>quarkus-reactive-datasource-deployment</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-reactive-transactions-deployment</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.openk9</groupId>
             <artifactId>hibernate-rx-multitenancy</artifactId>
-            <version>3.33.3.3</version>
+            <version>3.40.1</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
