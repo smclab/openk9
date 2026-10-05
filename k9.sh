@@ -665,7 +665,8 @@ Profiles (--with):
   core           Base services: PostgreSQL, OpenSearch, RabbitMQ,
                  API Gateway, Datasource, Tenant Manager, Ingestion,
                  Searcher, frontends, Caddy reverse proxy (default)
-  file-handling  Core + file handling: MinIO, Tika, File Manager
+  file-handling  Core + file handling: SeaweedFS (S3 storage,
+                 replaces MinIO), Tika, File Manager
   gen-ai         Core + AI services: Agentic RAG module, Embedding, Talk-To
   oauth2         Core + Keycloak OAuth2/OIDC identity provider
 
