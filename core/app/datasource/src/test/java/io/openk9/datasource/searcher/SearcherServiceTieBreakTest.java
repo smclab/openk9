@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 
+import io.openk9.searcher.grpc.Sort;
 import org.junit.jupiter.api.Test;
 import org.opensearch.search.builder.SearchSourceBuilder;
 import org.opensearch.search.sort.FieldSortBuilder;
@@ -43,6 +44,8 @@ class SearcherServiceTieBreakTest {
 	private static final boolean NOT_HYBRID = false;
 	private static final boolean CHUNKED = true;
 	private static final boolean NOT_CHUNKED = false;
+	private static final List<Sort> USER_SORT = List.of(
+		Sort.newBuilder().setField("web.content").build());
 
 	@Test
 	void should_sort_by_score_then_tie_break_when_no_sort_was_requested() {
@@ -171,9 +174,25 @@ class SearcherServiceTieBreakTest {
 		var searchSourceBuilder = new SearchSourceBuilder();
 		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, NOT_CHUNKED);
 
-		SearcherService.applySearchAfter(searchSourceBuilder, cursor("[1.5,\"abc\"]"));
+		SearcherService.applySearchAfter(
+			searchSourceBuilder, USER_SORT, cursor("[1.5,\"abc\"]"));
 
 		assertArrayEquals(new Object[] {1.5, "abc"}, searchSourceBuilder.searchAfter());
+	}
+
+	@Test
+	void should_ignore_the_cursor_when_no_sort_was_requested() {
+		// a cursor taken with a user sort has more values than the clause of a
+		// request without one, and OpenSearch answers 400 on the mismatch
+		var searchSourceBuilder = new SearchSourceBuilder();
+		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, NOT_CHUNKED);
+
+		SearcherService.applySearchAfter(
+			searchSourceBuilder, List.of(), cursor("[\"title\",\"title\",\"abc\"]"));
+		SearcherService.applySearchAfter(
+			searchSourceBuilder, null, cursor("[\"title\",\"title\",\"abc\"]"));
+
+		assertNull(searchSourceBuilder.searchAfter());
 	}
 
 	@Test
@@ -181,20 +200,20 @@ class SearcherServiceTieBreakTest {
 		var searchSourceBuilder = new SearchSourceBuilder();
 		SearcherService.applyTieBreak(searchSourceBuilder, NOT_HYBRID, CHUNKED);
 
-		SearcherService.applySearchAfter(searchSourceBuilder, null);
-		SearcherService.applySearchAfter(searchSourceBuilder, "");
+		SearcherService.applySearchAfter(searchSourceBuilder, USER_SORT, null);
+		SearcherService.applySearchAfter(searchSourceBuilder, USER_SORT, "");
 
 		assertNull(searchSourceBuilder.searchAfter());
 	}
 
 	@Test
 	void should_not_resume_when_there_is_no_sort_clause() {
-		// a hybrid query without a requested sort has no clause, and OpenSearch
-		// rejects search_after without one
+		// a hybrid query without a clause rejects search_after
 		var searchSourceBuilder = new SearchSourceBuilder();
 		SearcherService.applyTieBreak(searchSourceBuilder, HYBRID, CHUNKED);
 
-		SearcherService.applySearchAfter(searchSourceBuilder, cursor("[\"abc\"]"));
+		SearcherService.applySearchAfter(
+			searchSourceBuilder, USER_SORT, cursor("[\"abc\"]"));
 
 		assertNull(searchSourceBuilder.searchAfter());
 	}
