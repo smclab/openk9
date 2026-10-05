@@ -560,7 +560,8 @@ Profiles (--with):
   core           Base services: PostgreSQL, OpenSearch, RabbitMQ,
                  Keycloak, Datasource, Tenant Manager, Ingestion,
                  Searcher, frontends, Caddy reverse proxy (default)
-  file-handling  Core + file handling: MinIO, Tika, File Manager
+  file-handling  Core + file handling: SeaweedFS (S3 storage,
+                 replaces MinIO), Tika, File Manager
   gen-ai         Core + AI services: RAG module, Embedding, Talk-To
 
   Profiles are additive. Combine multiple --with flags to
