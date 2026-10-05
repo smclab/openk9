@@ -24,6 +24,7 @@ import io.openk9.filemanager.grpc.FileResourceResponse;
 import io.openk9.filemanager.grpc.FindFileResourceByDatasourceIdFileIdRequest;
 import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
 import io.quarkus.grpc.GrpcService;
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -35,6 +36,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
+@QuarkusTestResource(SeaweedFsTestResource.class)
 class UploadServiceTest {
 
 	private static final byte[] binary = new byte[]{
