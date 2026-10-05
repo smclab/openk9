@@ -34,6 +34,15 @@ llama-index-core==0.14.18
 llama-index==0.14.18
 openinference-instrumentation-langchain==0.1.61
 opensearch-py==3.1.0
+opentelemetry-api==1.44.0
+opentelemetry-exporter-otlp==1.44.0
+opentelemetry-exporter-otlp-proto-common==1.44.0
+opentelemetry-exporter-otlp-proto-grpc==1.44.0
+opentelemetry-exporter-otlp-proto-http==1.44.0
+opentelemetry-instrumentation==0.65b0
+opentelemetry-proto==1.44.0
+opentelemetry-sdk==1.44.0
+opentelemetry-semantic-conventions==0.65b0
 protobuf==6.33.5
 pyjwt==2.13.0
 python-dotenv==1.2.2
