@@ -1,0 +1,14 @@
+{
+  "identities": [
+    {
+      "name": "openk9",
+      "credentials": [
+        {
+          "accessKey": "openk9",
+          "secretKey": "openk9-secret"
+        }
+      ],
+      "actions": ["Admin", "Read", "Write", "List"]
+    }
+  ]
+}
