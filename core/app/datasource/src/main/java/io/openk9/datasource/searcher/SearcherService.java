@@ -501,12 +501,20 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	/**
 	 * Resumes the search after the given cursor. It is applied once the whole
-	 * sort clause is known, tie-break included: the cursor always comes from a
-	 * response built with the same clause, so it carries one value per
-	 * criterion even when a requested sort was discarded as not sortable.
+	 * sort clause is known, tie-break included, and only when the request
+	 * carries a user sort: that is the only case in which the searcher hands
+	 * out a cursor, and a cursor taken with a user sort has more values than
+	 * the clause of a request without one, which OpenSearch rejects. When the
+	 * requested sorts were all discarded as not sortable the clause is the
+	 * tie-break alone, the same the cursor was built with.
 	 */
 	static void applySearchAfter(
-		SearchSourceBuilder searchSourceBuilder, String sortAfterKey) {
+		SearchSourceBuilder searchSourceBuilder, List<Sort> sortList,
+		String sortAfterKey) {
+
+		if (sortList == null || sortList.isEmpty()) {
+			return;
+		}
 
 		if (sortAfterKey == null || sortAfterKey.isBlank()) {
 			return;
@@ -1686,7 +1694,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		applyTieBreak(searchSourceBuilder, hybrid, chunked);
 
-		applySearchAfter(searchSourceBuilder, request.getSortAfterKey());
+		applySearchAfter(
+			searchSourceBuilder, request.getSortList(), request.getSortAfterKey());
 
 		applyHighlightAndIncludeExclude(
 			searchSourceBuilder,
