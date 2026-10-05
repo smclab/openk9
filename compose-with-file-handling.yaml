@@ -1,16 +1,20 @@
 services:
-  minio:
-    image: minio/minio:latest
-    container_name: minio
-    command: server /data --console-address ":9090"
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.47
+    container_name: seaweedfs
+    hostname: seaweedfs
+    command: server -dir=/data -s3 -s3.config=/etc/seaweedfs/s3.json
     ports:
-      - "9000:9000"
-      - "9090:9090"
-    environment:
-      - MINIO_ROOT_USER=minio
-      - MINIO_ROOT_PASSWORD=minio123
+      - "8333:8333"
+      - "8888:8888"
     volumes:
-      - minio-data:/data
+      - ./compose-utilities/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+      - seaweedfs-data:/data
+    healthcheck:
+      test: "curl --silent --fail http://localhost:8333/healthz"
+      interval: 10s
+      timeout: 5s
+      retries: 10
   file-manager:
     image: ${IMAGE_GROUP:-openk9}/openk9-file-manager:${IMAGE_TAG:-3.0.x-SNAPSHOT}
     container_name: openk9-file-manager
@@ -21,10 +25,10 @@ services:
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
       QUARKUS_OTEL_SDK_DISABLED: 'true'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
-      QUARKUS_MINIO_ACCESS_KEY: 'minio'
-      QUARKUS_MINIO_SECRET_KEY: 'minio123'
+      QUARKUS_MINIO_ACCESS_KEY: 'openk9'
+      QUARKUS_MINIO_SECRET_KEY: 'openk9-secret'
       QUARKUS_MINIO_SECURE: 'false'
-      QUARKUS_MINIO_HOST: 'http://minio:9000'
+      QUARKUS_MINIO_HOST: 'http://seaweedfs:8333'
       QUARKUS_GRPC_CLIENTS__FILEMANAGER__HOST: 'openk9-datasource'
     healthcheck:
       test: "curl --silent --fail http://localhost:8080/q/health"
@@ -59,4 +63,4 @@ services:
       - "5002:5000"
 
 volumes:
-  minio-data:
+  seaweedfs-data:
