@@ -23,11 +23,8 @@ public final class QuarkusReactiveConnectionPoolInitiator
     }
 
     @Override
-    public ReactiveConnectionPool initiateService(
-            Map configurationValues,
-            ServiceRegistryImplementor registry) {
-
-        return new MultiSchemaSqlClientPool(pool);
+    public ReactiveConnectionPool initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+        return new MultiSchemaSqlClientPool(new io.quarkus.reactive.transaction.runtime.pool.TransactionalContextPool(pool));
     }
 
 }
