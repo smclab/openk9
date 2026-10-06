@@ -17,6 +17,7 @@
 
 package io.quarkus.hibernate.reactive.runtime.customized;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -60,10 +61,19 @@ public class MultiSchemaSqlClientPool extends SqlClientPool
 
     @Override
     public CompletionStage<ReactiveConnection> getConnection(String tenantId) {
-        return super.getConnection(tenantId)
+        CompletableFuture<ReactiveConnection> connection = super.getConnection(tenantId).toCompletableFuture();
+        CompletableFuture<ReactiveConnection> withSchema = connection
                 .thenCompose(c -> c
                         .execute(alterSessionSchema(dbKind, tenantId))
                         .thenApply(unused -> c));
+        // A caller that gives up cancels only this stage: pass the cancellation on, or
+        // close the connection if it has already arrived, so it goes back to the pool
+        withSchema.whenComplete((c, t) -> {
+            if (withSchema.isCancelled() && !connection.cancel(false)) {
+                connection.thenAccept(ReactiveConnection::close);
+            }
+        });
+        return withSchema;
     }
 
     @Override
