@@ -61,6 +61,18 @@
 		</plugins>
 	</build>
 
+	<dependencyManagement>
+		<dependencies>
+			<!-- tika-parser-pkg-module pulls junrar 7.6.0, affected by CVE-2026-86071;
+			     7.6.1 is the fixed patch of the same line. -->
+			<dependency>
+				<groupId>com.github.junrar</groupId>
+				<artifactId>junrar</artifactId>
+				<version>7.6.1</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>io.quarkus</groupId>
