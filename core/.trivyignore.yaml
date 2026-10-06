@@ -23,7 +23,8 @@ vulnerabilities:
   # --- Temporary suppressions (carry expired_at, re-evaluated before next release) ---
 
   - id: CVE-2025-14969
-    # org.hibernate.reactive:hibernate-reactive-core 3.4.2.Final
+    # org.hibernate.reactive:hibernate-reactive-core 3.4.4.Final in the services,
+    # 3.4.2.Final in the build of the vendored module
     statement: >-
       Denial of service through database connection pool exhaustion: a remote
       client closing an HTTP connection early leaks the pooled connection behind
@@ -33,7 +34,8 @@ vulnerabilities:
       commit cd7f104, "Roll back open transactions on close") is contained in tag
       4.2.1 and in no 3.x tag: 3.2.13 and 3.4.2 are diverged from it by 272
       commits. Waiting for the platform does not help either: Quarkus 3.40 LTS
-      ships 3.4.2. Forcing the 4.2.x line was evaluated on the previous LTS — the
+      ships 3.4.2, and core/pom.xml holds 3.4.4, the newest 3.x patch. Forcing
+      the 4.2.x line was evaluated on the previous LTS — the
       ORM requirement fitted and the pool SPI is unchanged — and declined: it
       would run a Hibernate Reactive major the platform does not ship, under the
       module that already needs a vendored extension, and that still holds.
