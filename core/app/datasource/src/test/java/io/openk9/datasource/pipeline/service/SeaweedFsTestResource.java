@@ -65,8 +65,11 @@ public class SeaweedFsTestResource
 		container = new GenericContainer<>(DockerImageName.parse(IMAGE))
 			.withExposedPorts(S3_PORT)
 			.withCopyToContainer(Transferable.of(S3_CONFIG), S3_CONFIG_PATH)
+			// every bucket takes its own volumes and the default cap is 8:
+			// the S3 tests sharing this container use more buckets than that
 			.withCommand(
-				"server", "-dir=/data", "-s3", "-s3.config=" + S3_CONFIG_PATH)
+				"server", "-dir=/data", "-volume.max=100", "-s3",
+				"-s3.config=" + S3_CONFIG_PATH)
 			.waitingFor(Wait.forHttp("/healthz").forPort(S3_PORT));
 
 		container.start();

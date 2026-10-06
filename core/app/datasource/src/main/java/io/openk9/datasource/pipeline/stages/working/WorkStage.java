@@ -26,7 +26,6 @@ import io.openk9.datasource.pipeline.actor.PartialUpdateWriter;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.WorkStageException;
 import io.openk9.datasource.pipeline.actor.WriterException;
-import io.openk9.datasource.pipeline.service.StagedBinaryService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
 
@@ -60,7 +59,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final String instanceId =
 		Long.toString(System.currentTimeMillis(), Character.MAX_RADIX);
 	private long counter = 0;
-	private Long datasourceId;
 
 	public WorkStage(
 		ActorContext<Command> context,
@@ -113,7 +111,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		switch (response) {
 			case Writer.Success(HeldMessage heldMessage):
 
-				deleteStagedBinaries(heldMessage);
 				this.replyTo.tell(new Done(heldMessage));
 				break;
 			case Writer.Failure(WriterException exception, HeldMessage heldMessage):
@@ -135,13 +132,11 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				.getSelf()
 				.tell(new Write(success.payload(), heldMessage));
 			case Processor.Skip ignored -> this.replyTo.tell(new Done(heldMessage));
-			case Processor.Complete ignored -> {
+			case Processor.Complete ignored ->
 				// the streaming processor already wrote every matured batch
 				// through its own writer, and confirmed the last one: there is
 				// nothing left to write, the document is done.
-				deleteStagedBinaries(heldMessage);
 				this.replyTo.tell(new Done(heldMessage));
-			}
 			case Processor.Failure failure -> {
 
 				var exception = failure.exception();
@@ -171,8 +166,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 					this.replyTo.tell(new Invalid("content-id is null", requester));
 					return this;
 				}
-
-				this.datasourceId = scheduler.getDatasourceId();
 
 				if (this.writer == null) {
 					this.writer = getContext().spawnAnonymous(
@@ -284,30 +277,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		}
 
 		return Behaviors.same();
-	}
-
-	/**
-	 * Drops the binaries staged for a content once it is on the index, since
-	 * every enricher has already read them. Neither awaited nor allowed to
-	 * fail the document: what is left behind is removed by the closing sweep.
-	 */
-	private void deleteStagedBinaries(HeldMessage heldMessage) {
-
-		if (datasourceId == null) {
-			return;
-		}
-
-		StagedBinaryService
-			.deleteByContent(
-				shardingKey.tenantId(), datasourceId, heldMessage.contentId())
-			.whenComplete((ignored, throwable) -> {
-				if (throwable != null) {
-					log.warnf(
-						throwable,
-						"%s: Failed to delete the staged binaries.",
-						heldMessage);
-				}
-			});
 	}
 
 	private Behavior<Command> onWrite(Write write) {

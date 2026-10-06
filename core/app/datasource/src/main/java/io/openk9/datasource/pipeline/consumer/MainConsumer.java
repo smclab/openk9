@@ -19,9 +19,12 @@ package io.openk9.datasource.pipeline.consumer;
 
 import java.io.IOException;
 
+import io.openk9.common.util.ingestion.PayloadType;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.actor.QueueManager;
 import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.service.StagedBinaryService;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 
@@ -60,6 +63,7 @@ public class MainConsumer extends BaseConsumer {
 			context.getSelf()
 		);
 
+		DataPayload payload;
 		byte[] encodedPayload;
 
 		try {
@@ -69,7 +73,7 @@ public class MainConsumer extends BaseConsumer {
 					IngestionIndexWriterPayload.class
 				);
 
-			var payload = payloadMapper.map(ingestionIndexWriterPayload);
+			payload = payloadMapper.map(ingestionIndexWriterPayload);
 			encodedPayload = Json.encodeToBuffer(payload).getBytes();
 		}
 		catch (Exception e) {
@@ -92,39 +96,81 @@ public class MainConsumer extends BaseConsumer {
 				),
 			timeout,
 			context.getSystem().scheduler()
-		).whenComplete((r, t) -> {
-			try {
-				if (t != null) {
-					log.infof(
-						"nack message with deliveryTag %s on actor %s",
-						envelope.getDeliveryTag(),
-						context.getSelf()
-					);
-					getChannel().basicNack(envelope.getDeliveryTag(), false, false);
-				}
-				else if (r instanceof Scheduling.Failure) {
-					log.infof(
-						"nack message with deliveryTag %s on actor %s",
-						envelope.getDeliveryTag(),
-						context.getSelf()
-					);
-					getChannel().basicNack(envelope.getDeliveryTag(), false, false);
-				} else {
-					log.infof(
-						"ack message with deliveryTag %s on actor %s",
-						envelope.getDeliveryTag(),
-						context.getSelf()
-					);
-					getChannel().basicAck(envelope.getDeliveryTag(), false);
-				}
-			} catch (Exception e) {
-				log.errorf(
-					e,
-					"Error on message acknowledgement for deliveryTag %s",
-					envelope.getDeliveryTag()
+		).whenComplete((r, t) -> settle(envelope, payload, r, t));
+	}
+
+	/**
+	 * Acks the message when the scheduling has done with it, nacks it
+	 * otherwise. Only an acked document drops its staged binaries: a nacked
+	 * one, or one whose ask timed out, comes back through the retry queue and
+	 * must find them again.
+	 */
+	void settle(
+		Envelope envelope, DataPayload payload, Scheduling.Response r, Throwable t) {
+
+		try {
+			if (t != null) {
+				log.infof(
+					"nack message with deliveryTag %s on actor %s",
+					envelope.getDeliveryTag(),
+					context.getSelf()
 				);
+				getChannel().basicNack(envelope.getDeliveryTag(), false, false);
 			}
-		});
+			else if (r instanceof Scheduling.Failure) {
+				log.infof(
+					"nack message with deliveryTag %s on actor %s",
+					envelope.getDeliveryTag(),
+					context.getSelf()
+				);
+				getChannel().basicNack(envelope.getDeliveryTag(), false, false);
+			} else {
+				log.infof(
+					"ack message with deliveryTag %s on actor %s",
+					envelope.getDeliveryTag(),
+					context.getSelf()
+				);
+				getChannel().basicAck(envelope.getDeliveryTag(), false);
+				deleteStagedBinaries(payload);
+			}
+		} catch (Exception e) {
+			log.errorf(
+				e,
+				"Error on message acknowledgement for deliveryTag %s",
+				envelope.getDeliveryTag()
+			);
+		}
+	}
+
+	/**
+	 * Drops the binaries staged for an acked document, since every enricher
+	 * has already read them. Neither awaited nor allowed to fail the message:
+	 * what is left behind is removed by the closing sweep.
+	 */
+	private void deleteStagedBinaries(DataPayload payload) {
+
+		if (payload.getType() != PayloadType.DOCUMENT
+			|| payload.getResources() == null
+			|| payload.getResources().getBinaries() == null
+			|| payload.getResources().getBinaries().isEmpty()) {
+
+			return;
+		}
+
+		var tenantId =
+			ShardingKey.fromString(queueBind.schedulingKey()).tenantId();
+
+		StagedBinaryService
+			.deleteByContent(
+				tenantId, payload.getDatasourceId(), payload.getContentId())
+			.whenComplete((ignored, throwable) -> {
+				if (throwable != null) {
+					log.warnf(
+						throwable,
+						"Failed to delete the staged binaries of content %s",
+						payload.getContentId());
+				}
+			});
 	}
 
 }
