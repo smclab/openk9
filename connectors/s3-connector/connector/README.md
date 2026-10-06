@@ -26,6 +26,7 @@ This endpoint takes different arguments in JSON raw body:
 - **prefix**: bucket object prefix (optional, default None)
 - **columns**: list of columns to extract (optional, default [])
 - **additionalMetadata**: dictionary of metadata added to datasource payload (optional, default {})
+- **publicBaseUrl**: base of the links to the source objects written in `document.url` as `<base>/<bucket>/<object>` (optional, default `http://<host>:<port>`); set it when the connection endpoint is not reachable by the users
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant
 - **scheduleId**: id of schedulation
@@ -52,6 +53,8 @@ curl --location --request POST 'http://localhost:5000/getData' \
     "timestamp": 0
 }'
 ```
+
+Every object is sent with `document.url`, the public URL of the source object (no signature), and with `rawContent` set to the object text when its content type is `text/*`; for the other formats the text is extracted by the enrichers.
 
 ### Health check endpoint
 

@@ -262,7 +262,11 @@ class DataExtraction(threading.Thread):
 				"contentId": content_id,
 				"parsingDate": int(end_timestamp),
 				"rawContent": raw_content,
-				"datasourcePayload": {"video": datasource_payload},
+				"datasourcePayload": {
+					"video": datasource_payload,
+					# document.url is the link to the source every connector emits
+					"document": {"title": title, "url": webpage_url}
+				},
 				"resources": {
 					"binaries": binaries
 				}

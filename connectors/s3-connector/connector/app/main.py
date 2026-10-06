@@ -56,6 +56,7 @@ class MinioRequest(BaseModel):
     columns: Optional[list] = []
     additionalMetadata: Optional[dict] = {}
     doTryExtractHeader: Optional[bool] = True
+    publicBaseUrl: Optional[str] = None
 
 
 @app.exception_handler(RequestValidationError)
@@ -82,9 +83,10 @@ def execute(request: MinioRequest):
     bucket_name = request["bucketName"]
     prefix = request["prefix"]
     additional_metadata = request["additionalMetadata"]
+    public_base_url = request["publicBaseUrl"]
 
     extractor = MinioExtractor(host, port, access_key, secret_key, bucket_name, prefix, additional_metadata,
-                               datasource_id, timestamp, schedule_id, tenant_id, ingestion_url)
+                               datasource_id, timestamp, schedule_id, tenant_id, ingestion_url, public_base_url)
 
     thread = threading.Thread(target=extractor.extract_data)
     thread.start()

@@ -91,6 +91,8 @@ A maximum of 500 replies in total ("maxTotalReplies": 500),
 A maximum of 100 replies under each root(base) comment ("maxRootCommentsReplies": 100)
 ```
 
+Every video is sent with `document.url`, the link to its page, next to the `video` metadata; `rawContent` carries its title and description.
+
 ### Health check endpoint
 
 Call this endpoint to perform health check for service.

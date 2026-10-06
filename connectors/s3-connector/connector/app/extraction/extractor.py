@@ -5,6 +5,7 @@ from logging.config import dictConfig
 
 from .base_extractor import BaseMinioExtractor
 from .log_config import LogConfig
+from .source import object_url, text_content
 from .utility import get_as_base64, IngestionHandler
 
 dictConfig(LogConfig().dict())
@@ -15,12 +16,16 @@ logger = logging.getLogger("status-logger")
 class MinioExtractor(BaseMinioExtractor):
 
     def __init__(self, host, port, access_key, secret_key, bucket_name, prefix, additional_metadata,
-                 datasource_id, timestamp, schedule_id, tenant_id, ingestion_url):
+                 datasource_id, timestamp, schedule_id, tenant_id, ingestion_url, public_base_url=None):
 
         super(MinioExtractor, self).__init__(host, port, access_key, secret_key, bucket_name, prefix,
                                              datasource_id, timestamp, schedule_id, tenant_id, ingestion_url)
 
         self.additional_metadata = dict(additional_metadata)
+
+        # document.url points to the source object; the connection endpoint
+        # is often internal, so a base reachable by the users can be given
+        self.public_base_url = public_base_url or ("http://" + self.url)
 
         self.ingestion_handler = IngestionHandler(self.ingestion_url, self.datasource_id, self.schedule_id, self.tenant_id)
         self.status_logger = logging.getLogger("status-logger")
@@ -51,7 +56,8 @@ class MinioExtractor(BaseMinioExtractor):
             "name": metadata.object_name
         },
             "document": {
-                "title": metadata.object_name
+                "title": metadata.object_name,
+                "url": object_url(self.public_base_url, self.bucket_name, metadata.object_name)
             },
         }
 
@@ -79,7 +85,7 @@ class MinioExtractor(BaseMinioExtractor):
             "datasourceId": self.datasource_id,
             "contentId": content_id,
             "parsingDate": int(end_timestamp),
-            "rawContent": "",
+            "rawContent": text_content(metadata.content_type, data.data),
             "datasourcePayload": datasource_payload,
             "resources": {
                 "binaries": binaries

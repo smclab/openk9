@@ -79,6 +79,19 @@
       }
     },
     {
+      "label": "Public Base URL",
+      "name": "publicBaseUrl",
+      "type": "text",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "placeholder": "https://minio.example.com",
+      "info": "Base of the links to the source objects (document.url); defaults to http://<host>:<port>",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
       "label": "Columns",
       "name": "columns",
       "type": "list",
