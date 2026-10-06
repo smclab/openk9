@@ -104,6 +104,7 @@
 		<quarkus-minio.version>3.8.6</quarkus-minio.version>
 		<quarkus-tika.version>2.3.2</quarkus-tika.version>
 		<hibernate.version>7.4.9.Final</hibernate.version>
+		<hibernate-reactive.version>3.4.4.Final</hibernate-reactive.version>
 		<surefire-plugin.version>3.5.2</surefire-plugin.version>
 		<failsafe-plugin.version>3.5.2</failsafe-plugin.version>
 		<gpg-plugin.version>3.2.7</gpg-plugin.version>
@@ -154,6 +155,17 @@
 				<groupId>org.apache.httpcomponents.client5</groupId>
 				<artifactId>httpclient5</artifactId>
 				<version>${httpclient5.version}</version>
+			</dependency>
+			<!-- Held above the platform, which ships 3.4.2: from 3.4.1 a caller that gives up
+			     while waiting for a pooled connection leaves that connection taken for the
+			     life of the process, and concurrent deletes of one entity type never commit
+			     and keep their connections. 3.4.4 fixes both in its own code: the vendored
+			     extension builds against the platform version and needs no change. Drop this
+			     once the platform ships 3.4.4 or later. -->
+			<dependency>
+				<groupId>org.hibernate.reactive</groupId>
+				<artifactId>hibernate-reactive-core</artifactId>
+				<version>${hibernate-reactive.version}</version>
 			</dependency>
 			<!-- Replaces the abandoned org.lz4:lz4-java that Pekko serialization pulls in;
 			     see the exclusion in app/datasource. Same net.jpountz packages, still
