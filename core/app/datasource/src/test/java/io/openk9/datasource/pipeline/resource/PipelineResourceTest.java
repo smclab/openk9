@@ -23,6 +23,7 @@ import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.emptyString;
 
 /**
  * The Quarkus test profile mocks the actor initializers, so the cluster
@@ -36,13 +37,17 @@ class PipelineResourceTest {
 
 	@Test
 	void should_answer_400_on_a_malformed_token() {
-		// a value that is not a callback token
+		// a value that is not a callback token, sent without X-TENANT-ID as
+		// the enrichers do
 		given()
 			.contentType(ContentType.JSON)
 			.body("{}")
 			.post("/callback/not-a-token")
 			.then()
-			.statusCode(400);
+			.statusCode(400)
+			// the resource answers with no body: a Problem would mean the
+			// tenant filter rejected the callback before the resource
+			.body(emptyString());
 	}
 
 }

@@ -19,6 +19,7 @@ package io.openk9.datasource.filter;
 
 import io.openk9.common.model.dto.Problem;
 import io.openk9.common.util.web.InternalHeaders;
+import io.openk9.datasource.pipeline.resource.PipelineResource;
 import io.openk9.datasource.service.TenantRegistry;
 import io.openk9.datasource.web.Problems;
 
@@ -30,6 +31,7 @@ import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 public class RouteFilters {
@@ -41,8 +43,18 @@ public class RouteFilters {
 	@Inject
 	TenantRegistry tenantRegistry;
 
+	@ConfigProperty(name = "quarkus.http.root-path")
+	String rootPath;
+
 	@RouteFilter(Integer.MAX_VALUE - 100)
 	void tenantIdRouteFilter(RoutingContext rc) {
+		// the enrichers call back without X-TENANT-ID: the tenant is in the
+		// callback token, and the callback does not touch the database.
+		if (rc.normalizedPath().startsWith(callbackPath())) {
+			rc.next();
+			return;
+		}
+
 		HttpServerRequest request = rc.request();
 		MultiMap headers = request.headers();
 		String tenantId = headers.get(InternalHeaders.TENANT_ID);
@@ -78,6 +90,10 @@ public class RouteFilters {
 			);
 
 
+	}
+
+	private String callbackPath() {
+		return rootPath + PipelineResource.PATH + PipelineResource.CALLBACK_PATH;
 	}
 
 	private static void endsWithProblem(RoutingContext rc, Problem problem) {

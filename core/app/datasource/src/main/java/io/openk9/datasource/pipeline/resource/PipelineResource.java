@@ -37,8 +37,16 @@ import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
-@Path("/pipeline")
+@Path(PipelineResource.PATH)
 public class PipelineResource {
+
+	public static final String PATH = "/pipeline";
+
+	/**
+	 * Path of the enricher callback, relative to {@link #PATH}. The enrichers
+	 * call it directly, without the gateway headers.
+	 */
+	public static final String CALLBACK_PATH = "/callback/";
 
 	private static final Duration ASK_TIMEOUT = Duration.ofSeconds(10);
 
@@ -56,7 +64,7 @@ public class PipelineResource {
 	 * answer in time
 	 */
 	@POST
-	@Path("/callback/{token-id}")
+	@Path(CALLBACK_PATH + "{token-id}")
 	@Operation(
 		summary = "Callback",
 		description = "Delivers the result of an asynchronous enricher to the "
