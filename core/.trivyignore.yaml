@@ -22,23 +22,6 @@
 vulnerabilities:
   # --- Temporary suppressions (carry expired_at, re-evaluated before next release) ---
 
-  - id: CVE-2026-45292
-    # io.opentelemetry:opentelemetry-api / -extension-trace-propagators 1.55.0 (api-gateway)
-    statement: >-
-      Unbounded memory/CPU when parsing oversized W3C baggage (DoS), fixed in
-      OpenTelemetry 1.62.0. The Quarkus services already resolve 1.62.0 on 3.40
-      LTS; what remains is api-gateway, which takes 1.55.0 from Spring Boot 4.0.8
-      through the Micrometer tracing bridge, and only the 4.1 line of Spring Boot
-      manages 1.62.0. The gateway faces the internet and extracts W3C baggage, but
-      its Reactor Netty server keeps the default 8 KiB request-header limit: a
-      10 KiB baggage header is answered 431 before the application sees it. That
-      is the 8192-byte cap the fix itself introduces, and the bound the advisory
-      names as limiting what an external attacker can deliver. NB severity is
-      contested — GitHub 5.3 MEDIUM vs Red Hat 7.5 HIGH (availability:H); under
-      the Red Hat score this becomes a blocking finding. Re-evaluate with the
-      Spring Boot upgrade, or sooner if the gateway's header limit is raised.
-    expired_at: 2026-12-22
-
   - id: CVE-2025-14969
     # org.hibernate.reactive:hibernate-reactive-core 3.4.2.Final
     statement: >-
