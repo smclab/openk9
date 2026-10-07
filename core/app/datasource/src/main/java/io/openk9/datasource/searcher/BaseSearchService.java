@@ -55,6 +55,7 @@ import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.service.TenantIdResolver;
+import io.openk9.datasource.service.exception.InvalidTenantException;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryParserRequest;

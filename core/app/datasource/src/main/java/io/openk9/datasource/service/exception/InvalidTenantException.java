@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.searcher;
+package io.openk9.datasource.service.exception;
 
 public class InvalidTenantException extends RuntimeException {
 
