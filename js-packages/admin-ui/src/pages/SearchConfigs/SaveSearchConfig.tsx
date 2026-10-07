@@ -287,12 +287,12 @@ export function SaveSearchConfig() {
                       <BooleanInput
                         label="min Score Suggestions"
                         {...form.inputProps("minScoreSuggestions")}
-                        description="If use configured min score to filter search results"
+                        description="If use configured min score to filter suggestions"
                       />
                       <BooleanInput
                         label="min Score Search"
                         {...form.inputProps("minScoreSearch")}
-                        description="If use configured min score to filter suggestions"
+                        description="If use configured min score to filter search results"
                       />
                       <TooltipDescription informationDescription="Set Hybrid Search after creation">
                         <Button
