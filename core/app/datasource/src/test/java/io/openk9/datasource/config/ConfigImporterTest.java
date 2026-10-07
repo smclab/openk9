@@ -32,21 +32,34 @@ import io.openk9.datasource.config.model.ConfigEntityType;
 import io.openk9.datasource.config.model.ConfigPackage;
 import io.openk9.datasource.config.model.ImportMode;
 import io.openk9.datasource.config.model.ImportReport;
+import io.openk9.datasource.config.model.PlannedAction;
+import io.openk9.datasource.config.model.representation.AclMappingRepresentation;
+import io.openk9.datasource.config.model.representation.EnrichPipelineItemRepresentation;
+import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.model.EnrichPipelineItemKey;
 import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.PluginDriverDocTypeFieldKey;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.ResultAclConfig;
+import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.dto.base.CharFilterDTO;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
 import io.openk9.datasource.model.dto.base.ResultAclConfigDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.CharFilterService;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
+import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.ResultAclConfigService;
 
@@ -98,6 +111,12 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "result-acl-title";
 	private static final String ACL_DATE_NAME =
 		ENTITY_NAME_PREFIX + "result-acl-date";
+	private static final String SKIP_JOINS_PIPELINE_NAME =
+		ENTITY_NAME_PREFIX + "skip-joins-pipeline";
+	private static final String OVERWRITE_JOINS_PIPELINE_NAME =
+		ENTITY_NAME_PREFIX + "overwrite-joins-pipeline";
+	private static final String CREATED_PIPELINE_NAME =
+		ENTITY_NAME_PREFIX + "created-pipeline";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -123,8 +142,13 @@ public class ConfigImporterTest {
 	@Inject
 	ResultAclConfigService resultAclConfigService;
 
+	@Inject
+	EnrichPipelineService enrichPipelineService;
+
 	private static final String COUNT_JOIN_ROWS =
 		"select count(i) from EnrichPipelineItem i";
+	private static final String COUNT_ACL_MAPPING_ROWS =
+		"select count(a) from AclMapping a";
 
 	@Test
 	void round_trip_in_skip_mode_creates_nothing() {
@@ -137,6 +161,8 @@ public class ConfigImporterTest {
 
 		assertEquals(0, result.created(),
 			"round-trip against the same tenant must create nothing");
+		assertEquals(0, result.overwritten(),
+			"SKIP must overwrite nothing, join entities included");
 		assertTrue(result.skipped() > 0, "every existing entity must be skipped");
 		assertEquals(
 			pkg.getEntities().size(),
@@ -705,6 +731,186 @@ public class ConfigImporterTest {
 		assertEquals(0, countByName("DocTypeField", DANGLING_FIELD_NAME));
 	}
 
+	@Test
+	void skip_leaves_the_joins_of_an_existing_parent_untouched() {
+		// A join follows the action of its parent (the pipeline, the plugin
+		// driver). Both parents exist, so SKIP must neither rewrite an existing
+		// join nor add a missing one, in the preview as in the apply.
+
+		// 1. Seed both joins, then export them carrying different values
+		SeededJoins joins =
+			seedJoins(SKIP_JOINS_PIPELINE_NAME, 1.0f, UserField.USERNAME);
+		ConfigPackage pkg = withJoinValues(
+			configExporter.export(TENANT_ID).await().indefinitely(),
+			joins, 5.0f, UserField.ROLES);
+
+		// 2. Joins present: SKIP keeps their current values
+		ImportReport present = previewThenApply(pkg, ImportMode.SKIP);
+
+		assertEquals(0, present.created());
+		assertEquals(0, present.overwritten(), "SKIP must not rewrite a join");
+		assertEquals(
+			PlannedAction.Action.SKIP,
+			actionOf(present, joins.enrichPipelineItemRef()));
+		assertEquals(
+			PlannedAction.Action.SKIP, actionOf(present, joins.aclMappingRef()));
+		assertEquals(1.0f, loadWeight(joins.pipelineId(), joins.enrichItemId()));
+		assertEquals(
+			UserField.USERNAME,
+			loadUserField(joins.pluginDriverId(), joins.docTypeFieldId()));
+
+		// 3. Joins absent: SKIP does not add them to the existing parents
+		removeJoinRows(joins);
+		ImportReport absent = previewThenApply(pkg, ImportMode.SKIP);
+
+		assertEquals(0, absent.created(),
+			"SKIP must not add a join to an existing parent");
+		assertNull(loadWeight(joins.pipelineId(), joins.enrichItemId()));
+		assertNull(loadUserField(joins.pluginDriverId(), joins.docTypeFieldId()));
+
+		// 4. Clean up the pipeline created by this method
+		EntitiesUtils.removeEntity(
+			joins.pipelineId(), enrichPipelineService, sessionFactory);
+	}
+
+	@Test
+	void overwrite_rewrites_existing_joins_and_creates_missing_ones() {
+		// 1. Seed both joins, then export them carrying different values
+		SeededJoins joins =
+			seedJoins(OVERWRITE_JOINS_PIPELINE_NAME, 1.0f, UserField.USERNAME);
+		ConfigPackage pkg = withJoinValues(
+			configExporter.export(TENANT_ID).await().indefinitely(),
+			joins, 5.0f, UserField.ROLES);
+
+		// 2. Joins present: OVERWRITE applies the package values
+		ImportReport present = previewThenApply(pkg, ImportMode.OVERWRITE);
+
+		assertEquals(
+			PlannedAction.Action.OVERWRITE,
+			actionOf(present, joins.enrichPipelineItemRef()));
+		assertEquals(
+			PlannedAction.Action.OVERWRITE,
+			actionOf(present, joins.aclMappingRef()));
+		assertEquals(5.0f, loadWeight(joins.pipelineId(), joins.enrichItemId()));
+		assertEquals(
+			UserField.ROLES,
+			loadUserField(joins.pluginDriverId(), joins.docTypeFieldId()));
+
+		// 3. Joins absent: OVERWRITE creates them with the package values
+		removeJoinRows(joins);
+		ImportReport absent = previewThenApply(pkg, ImportMode.OVERWRITE);
+
+		assertEquals(2, absent.created(), "only the two joins are missing");
+		assertEquals(
+			PlannedAction.Action.CREATE,
+			actionOf(absent, joins.enrichPipelineItemRef()));
+		assertEquals(
+			PlannedAction.Action.CREATE, actionOf(absent, joins.aclMappingRef()));
+		assertEquals(5.0f, loadWeight(joins.pipelineId(), joins.enrichItemId()));
+		assertEquals(
+			UserField.ROLES,
+			loadUserField(joins.pluginDriverId(), joins.docTypeFieldId()));
+
+		// 4. Clean up the joins, then the pipeline created by this method
+		removeJoinRows(joins);
+		EntitiesUtils.removeEntity(
+			joins.pipelineId(), enrichPipelineService, sessionFactory);
+	}
+
+	@Test
+	void a_join_with_an_endpoint_outside_the_package_is_skipped() {
+		// A join whose endpoints are not in the package cannot be applied: it is
+		// planned as SKIP and its dangling edges are reported.
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put("pluginDriver", List.of("PLUGIN_DRIVER-MISSING"));
+		refs.put("docTypeField", List.of("DOC_TYPE_FIELD-MISSING"));
+
+		ConfigEntity danglingMapping = new ConfigEntity(
+			"ACL_MAPPING-MISSING",
+			ConfigEntityType.ACL_MAPPING,
+			null,
+			new AclMappingRepresentation(UserField.ROLES),
+			refs,
+			null);
+
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(danglingMapping));
+		long mappingsBefore = count(COUNT_ACL_MAPPING_ROWS);
+
+		// 1. Preview and apply both skip the join
+		ImportReport report = previewThenApply(pkg, ImportMode.OVERWRITE);
+
+		assertEquals(1, report.skipped());
+		assertEquals(
+			PlannedAction.Action.SKIP, actionOf(report, "ACL_MAPPING-MISSING"));
+
+		// 2. Both dangling edges are reported, and nothing is written
+		assertEquals(
+			2,
+			report.missingReferences().stream()
+				.filter(missing -> "ACL_MAPPING-MISSING".equals(missing.fromRef()))
+				.count());
+		assertEquals(mappingsBefore, count(COUNT_ACL_MAPPING_ROWS));
+	}
+
+	@Test
+	void the_join_of_a_created_parent_is_created() {
+		// A new pipeline joined to an existing enrich item: the parent is created,
+		// so its join is created too, even in SKIP, after both endpoints exist.
+		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+
+		String enrichItemRef = pkg.getEntities().stream()
+			.filter(entity -> entity.getType() == ConfigEntityType.ENRICH_ITEM)
+			.map(ConfigEntity::getRef)
+			.findFirst()
+			.orElseThrow(() ->
+				new IllegalStateException("the test tenant must have enrich items"));
+
+		ConfigEntity newPipeline = new ConfigEntity(
+			"ENRICH_PIPELINE-NEW",
+			ConfigEntityType.ENRICH_PIPELINE,
+			CREATED_PIPELINE_NAME,
+			EnrichPipelineDTO.builder().name(CREATED_PIPELINE_NAME).build(),
+			new LinkedHashMap<>(),
+			null);
+
+		Map<String, List<String>> itemRefs = new LinkedHashMap<>();
+		itemRefs.put("enrichPipeline", List.of("ENRICH_PIPELINE-NEW"));
+		itemRefs.put("enrichItem", List.of(enrichItemRef));
+
+		ConfigEntity newItem = new ConfigEntity(
+			"ENRICH_PIPELINE_ITEM-NEW",
+			ConfigEntityType.ENRICH_PIPELINE_ITEM,
+			null,
+			new EnrichPipelineItemRepresentation(2.0f),
+			itemRefs,
+			null);
+
+		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
+		entities.add(newPipeline);
+		entities.add(newItem);
+		ConfigPackage augmented = new ConfigPackage(
+			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
+
+		// 1. Preview and apply both create the pipeline and its join
+		ImportReport report = previewThenApply(augmented, ImportMode.SKIP);
+
+		assertEquals(2, report.created());
+		assertEquals(
+			PlannedAction.Action.CREATE,
+			actionOf(report, "ENRICH_PIPELINE_ITEM-NEW"));
+
+		// 2. The join row exists with the package value
+		Long pipelineId = report.resolvedIds().get("ENRICH_PIPELINE-NEW");
+		Long enrichItemId = report.resolvedIds().get(enrichItemRef);
+		assertNotNull(pipelineId, "the new pipeline must have been created");
+		assertEquals(2.0f, loadWeight(pipelineId, enrichItemId));
+
+		// 3. Clean up the join, then the pipeline created by this method
+		removeEnrichPipelineItem(pipelineId, enrichItemId);
+		EntitiesUtils.removeEntity(pipelineId, enrichPipelineService, sessionFactory);
+	}
+
 	private Long seedCharFilter(String name, String jsonConfig) {
 		return sessionFactory.withTransaction(TENANT_ID, (s, t) -> {
 			CharFilter charFilter = new CharFilter();
@@ -734,6 +940,169 @@ public class ConfigImporterTest {
 				.setParameter("name", name)
 				.getSingleResult()
 		).await().indefinitely();
+	}
+
+	/**
+	 * Imports the package as a dry-run, then applies it, and asserts that the
+	 * preview announced exactly what the apply did: the same actions and counts,
+	 * with every package entity accounted for. Returns the apply report.
+	 */
+	private ImportReport previewThenApply(ConfigPackage pkg, ImportMode mode) {
+		ImportReport preview =
+			configImporter.importConfig(TENANT_ID, pkg, mode, true)
+				.await().indefinitely();
+		ImportReport applied =
+			configImporter.importConfig(TENANT_ID, pkg, mode, false)
+				.await().indefinitely();
+
+		assertEquals(preview.actions(), applied.actions(),
+			"the preview must plan the actions the apply takes");
+		assertEquals(preview.created(), applied.created());
+		assertEquals(preview.overwritten(), applied.overwritten());
+		assertEquals(preview.skipped(), applied.skipped());
+		assertEquals(pkg.getEntities().size(), applied.actions().size(),
+			"every package entity, join entities included, must be planned");
+		assertEquals(
+			pkg.getEntities().size(),
+			applied.created() + applied.overwritten() + applied.skipped());
+		return applied;
+	}
+
+	private static PlannedAction.Action actionOf(ImportReport report, String ref) {
+		return report.actions().stream()
+			.filter(action -> ref.equals(action.ref()))
+			.map(PlannedAction::action)
+			.findFirst()
+			.orElseThrow(() -> new AssertionError("no action planned for " + ref));
+	}
+
+	/**
+	 * Seeds a new pipeline joined to an existing enrich item, and an ACL mapping
+	 * between an existing plugin driver and an existing doc type field.
+	 */
+	private SeededJoins seedJoins(
+		String pipelineName, float weight, UserField userField) {
+
+		Long enrichItemId = firstId("EnrichItem");
+		Long pluginDriverId = firstId("PluginDriver");
+		Long docTypeFieldId = firstId("DocTypeField");
+
+		Long pipelineId = sessionFactory.withTransaction(TENANT_ID, (s, t) -> {
+			EnrichPipeline pipeline = new EnrichPipeline();
+			pipeline.setName(pipelineName);
+			return s.persist(pipeline).call(s::flush).replaceWith(pipeline);
+		}).await().indefinitely().getId();
+
+		sessionFactory.withTransaction(TENANT_ID, (s, t) -> {
+			EnrichPipelineItem item = new EnrichPipelineItem();
+			item.setKey(EnrichPipelineItemKey.of(pipelineId, enrichItemId));
+			item.setEnrichPipeline(s.getReference(EnrichPipeline.class, pipelineId));
+			item.setEnrichItem(s.getReference(EnrichItem.class, enrichItemId));
+			item.setWeight(weight);
+
+			AclMapping mapping = new AclMapping();
+			mapping.setKey(
+				PluginDriverDocTypeFieldKey.of(pluginDriverId, docTypeFieldId));
+			mapping.setPluginDriver(
+				s.getReference(PluginDriver.class, pluginDriverId));
+			mapping.setDocTypeField(
+				s.getReference(DocTypeField.class, docTypeFieldId));
+			mapping.setUserField(userField);
+
+			return s.persistAll(item, mapping);
+		}).await().indefinitely();
+
+		return new SeededJoins(
+			pipelineId, enrichItemId, pluginDriverId, docTypeFieldId);
+	}
+
+	/**
+	 * The package with the two seeded joins carrying the given values instead of
+	 * the exported ones.
+	 */
+	private static ConfigPackage withJoinValues(
+		ConfigPackage pkg, SeededJoins joins, float weight, UserField userField) {
+
+		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
+		entities.replaceAll(entity -> {
+			if (joins.enrichPipelineItemRef().equals(entity.getRef())) {
+				return new ConfigEntity(
+					entity.getRef(), entity.getType(), entity.getKey(),
+					new EnrichPipelineItemRepresentation(weight),
+					entity.getReferences(), entity.getRedactedFields());
+			}
+			if (joins.aclMappingRef().equals(entity.getRef())) {
+				return new ConfigEntity(
+					entity.getRef(), entity.getType(), entity.getKey(),
+					new AclMappingRepresentation(userField),
+					entity.getReferences(), entity.getRedactedFields());
+			}
+			return entity;
+		});
+		return new ConfigPackage(pkg.getSchemaVersion(), pkg.getMetadata(), entities);
+	}
+
+	private Long firstId(String jpqlEntity) {
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.createQuery("select min(e.id) from " + jpqlEntity + " e", Long.class)
+				.getSingleResult()
+		).await().indefinitely();
+	}
+
+	private Float loadWeight(Long pipelineId, Long enrichItemId) {
+		EnrichPipelineItemKey key = EnrichPipelineItemKey.of(pipelineId, enrichItemId);
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.find(EnrichPipelineItem.class, key)
+				.onItem().ifNotNull().transform(EnrichPipelineItem::getWeight)
+		).await().indefinitely();
+	}
+
+	private UserField loadUserField(Long pluginDriverId, Long docTypeFieldId) {
+		PluginDriverDocTypeFieldKey key =
+			PluginDriverDocTypeFieldKey.of(pluginDriverId, docTypeFieldId);
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.find(AclMapping.class, key)
+				.onItem().ifNotNull().transform(AclMapping::getUserField)
+		).await().indefinitely();
+	}
+
+	private void removeJoinRows(SeededJoins joins) {
+		removeEnrichPipelineItem(joins.pipelineId(), joins.enrichItemId());
+
+		PluginDriverDocTypeFieldKey key = PluginDriverDocTypeFieldKey.of(
+			joins.pluginDriverId(), joins.docTypeFieldId());
+		sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.find(AclMapping.class, key)
+				.onItem().ifNotNull().call(mapping -> s.remove(mapping))
+		).await().indefinitely();
+	}
+
+	private void removeEnrichPipelineItem(Long pipelineId, Long enrichItemId) {
+		EnrichPipelineItemKey key = EnrichPipelineItemKey.of(pipelineId, enrichItemId);
+		sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.find(EnrichPipelineItem.class, key)
+				.onItem().ifNotNull().call(item -> s.remove(item))
+		).await().indefinitely();
+	}
+
+	/**
+	 * The endpoints of the two join rows seeded by a test: a pipeline-to-item join
+	 * and a plugin-driver-to-field ACL mapping, with their package handles.
+	 */
+	private record SeededJoins(
+		Long pipelineId, Long enrichItemId, Long pluginDriverId,
+		Long docTypeFieldId) {
+
+		String enrichPipelineItemRef() {
+			return ConfigEntityType.ENRICH_PIPELINE_ITEM.name()
+				+ "-" + pipelineId + "-" + enrichItemId;
+		}
+
+		String aclMappingRef() {
+			return ConfigEntityType.ACL_MAPPING.name()
+				+ "-" + pluginDriverId + "-" + docTypeFieldId;
+		}
+
 	}
 
 }

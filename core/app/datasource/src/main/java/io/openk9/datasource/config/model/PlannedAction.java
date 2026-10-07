@@ -26,7 +26,7 @@ package io.openk9.datasource.config.model;
  * @param action     {@code CREATE} (no match), {@code OVERWRITE} or {@code SKIP}
  *                   (matched an existing entity, depending on the import mode)
  * @param existingId the id of the matched existing entity, or {@code null} for
- *                   {@code CREATE}
+ *                   {@code CREATE} and for a join entity, whose key is composite
  */
 public record PlannedAction(
 	String ref, ConfigEntityType type, Action action, Long existingId) {

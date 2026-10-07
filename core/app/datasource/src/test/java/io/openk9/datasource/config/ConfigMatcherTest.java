@@ -38,7 +38,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -95,19 +94,18 @@ public class ConfigMatcherTest {
 		ImportPlan plan =
 			configMatcher.plan(TENANT_ID, pkg, ImportMode.SKIP).await().indefinitely();
 
-		// Every non-join entity already exists, so every action is SKIP with a
-		// resolved existing id; no unexpected CREATE.
+		// Every entity already exists, so every action is SKIP; no unexpected
+		// CREATE. Join entities are planned too, without an existing id: their
+		// key is composite.
 		assertEquals(0, plan.count(PlannedAction.Action.CREATE),
 			"round-trip against the same tenant must not plan any CREATE");
+		assertEquals(pkg.getEntities().size(), plan.getActions().size(),
+			"every package entity, join entities included, must be planned");
 
 		boolean sawDocTypeField = false;
 		for (PlannedAction action : plan.getActions()) {
 			assertSame(PlannedAction.Action.SKIP, action.action(), action.ref());
-			assertNotNull(action.existingId(), action.ref());
-
-			// Join entities are rebuilt by the importer, never planned here.
-			assertNotSame(ConfigEntityType.ENRICH_PIPELINE_ITEM, action.type());
-			assertNotSame(ConfigEntityType.ACL_MAPPING, action.type());
+			assertExistingId(action);
 
 			if (action.type() == ConfigEntityType.DOC_TYPE_FIELD) {
 				sawDocTypeField = true;
@@ -128,7 +126,7 @@ public class ConfigMatcherTest {
 		assertEquals(0, plan.count(PlannedAction.Action.CREATE));
 		for (PlannedAction action : plan.getActions()) {
 			assertSame(PlannedAction.Action.OVERWRITE, action.action(), action.ref());
-			assertNotNull(action.existingId(), action.ref());
+			assertExistingId(action);
 		}
 	}
 
@@ -207,8 +205,17 @@ public class ConfigMatcherTest {
 		return configMatcher.plan(TENANT_ID, augmented, mode).await().indefinitely();
 	}
 
-	private static void assertNotSame(ConfigEntityType unexpected, ConfigEntityType actual) {
-		assertFalse(unexpected == actual, "unexpected join entity in plan: " + actual);
+	/**
+	 * A matched entity carries the id it matched; a join entity carries none, its
+	 * key being composite.
+	 */
+	private static void assertExistingId(PlannedAction action) {
+		if (ConfigMatcher.isJoinEntity(action.type().getEntityType())) {
+			assertNull(action.existingId(), action.ref());
+		}
+		else {
+			assertNotNull(action.existingId(), action.ref());
+		}
 	}
 
 }

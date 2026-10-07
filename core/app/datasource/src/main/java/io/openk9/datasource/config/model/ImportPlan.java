@@ -28,7 +28,7 @@ import java.util.Map;
  * no writes.
  * <p>
  * Composite-key join entities ({@code EnrichPipelineItem}, {@code AclMapping})
- * carry no action here: they are rebuilt from their endpoints by the importer.
+ * are planned too, after their endpoints, with no existing id.
  */
 public class ImportPlan {
 

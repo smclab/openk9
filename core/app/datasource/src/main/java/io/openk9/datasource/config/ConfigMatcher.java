@@ -21,9 +21,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -40,6 +42,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import io.openk9.datasource.config.model.ConfigEntity;
+import io.openk9.datasource.config.model.ConfigEntityType;
 import io.openk9.datasource.config.model.ConfigPackage;
 import io.openk9.datasource.config.model.ImportMode;
 import io.openk9.datasource.config.model.ImportPlan;
@@ -66,8 +69,9 @@ import org.hibernate.reactive.mutiny.Mutiny;
  * <p>
  * Entities are processed in {@link ConfigEntitySorter} order so ancestors are
  * resolved first. Composite-key join entities ({@code EnrichPipelineItem},
- * {@code AclMapping}) are not matched here: the importer rebuilds them from
- * their endpoints, so they carry no action in the plan.
+ * {@code AclMapping}) have no natural key: they are planned after their
+ * endpoints and follow the action of their parent, the side holding the
+ * collection of joins.
  */
 @ApplicationScoped
 public class ConfigMatcher {
@@ -125,19 +129,31 @@ public class ConfigMatcher {
 	/**
 	 * Walks the entities in dependency-first order, matching each against the
 	 * tenant on the same session and folding the results into the plan; ancestor
-	 * ids resolved along the way feed the matching of their dependents.
+	 * ids resolved along the way feed the matching of their dependents. A join
+	 * entity comes after both its endpoints, so its action derives from theirs.
 	 */
 	private Uni<ImportPlan> doPlan(
 		Mutiny.Session s, ConfigPackage pkg, ImportMode mode) {
 
 		List<ConfigEntity> ordered = sorter.sort(pkg.getEntities());
 		Map<String, Long> matchedIds = new HashMap<>();
+		Set<String> packageRefs = new HashSet<>();
+		for (ConfigEntity entity : ordered) {
+			packageRefs.add(entity.getRef());
+		}
 
 		Uni<List<PlannedAction>> acc =
 			Uni.createFrom().item(new ArrayList<PlannedAction>());
 
 		for (ConfigEntity entity : ordered) {
 			if (isJoinEntity(entity.getType().getEntityType())) {
+				acc = acc.flatMap(actions ->
+					planJoin(s, entity, mode, packageRefs, matchedIds)
+						.map(action -> {
+							actions.add(new PlannedAction(
+								entity.getRef(), entity.getType(), action, null));
+							return actions;
+						}));
 				continue;
 			}
 			acc = acc.flatMap(actions -> matchExisting(s, entity, matchedIds)
@@ -159,6 +175,23 @@ public class ConfigMatcher {
 		}
 
 		return acc.map(ImportPlan::new);
+	}
+
+	/**
+	 * Whether a join row already connects the two matched endpoints.
+	 */
+	private Uni<Boolean> joinExists(
+		Mutiny.Session s, Class<?> joinClass, JoinSides sides, Long parentId,
+		Long otherId) {
+
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+		CriteriaQuery<Long> query = cb.createQuery(Long.class);
+		Root<?> root = query.from(joinClass);
+		query.select(cb.count(root)).where(
+			cb.equal(root.get(sides.parent()).get("id"), parentId),
+			cb.equal(root.get(sides.other()).get("id"), otherId));
+
+		return s.createQuery(query).getSingleResult().map(count -> count > 0);
 	}
 
 	/**
@@ -226,11 +259,53 @@ public class ConfigMatcher {
 			.map(ids -> ids.isEmpty() ? null : ids.get(0));
 	}
 
+	/**
+	 * Plans a composite-key join entity, which follows the action of its parent
+	 * (the side holding the collection of joins). A join with an endpoint outside
+	 * the package cannot be applied ({@code SKIP}); the join of a parent being
+	 * created is created. The join of a matched parent is left as it is in
+	 * {@code SKIP} mode; in {@code OVERWRITE} mode it is overwritten when the row
+	 * exists, created otherwise.
+	 */
+	private Uni<PlannedAction.Action> planJoin(
+		Mutiny.Session s, ConfigEntity entity, ImportMode mode,
+		Set<String> packageRefs, Map<String, Long> matchedIds) {
+
+		JoinSides sides = JoinSides.of(entity.getType());
+		String parentHandle = referenceHandle(entity, sides.parent());
+		String otherHandle = referenceHandle(entity, sides.other());
+
+		if (!packageRefs.contains(parentHandle)
+			|| !packageRefs.contains(otherHandle)) {
+
+			return Uni.createFrom().item(PlannedAction.Action.SKIP);
+		}
+
+		Long parentId = matchedIds.get(parentHandle);
+		if (parentId == null) {
+			return Uni.createFrom().item(PlannedAction.Action.CREATE);
+		}
+		if (mode == ImportMode.SKIP) {
+			return Uni.createFrom().item(PlannedAction.Action.SKIP);
+		}
+
+		Long otherId = matchedIds.get(otherHandle);
+		if (otherId == null) {
+			// The other endpoint will be created, so no existing row can match.
+			return Uni.createFrom().item(PlannedAction.Action.CREATE);
+		}
+		return joinExists(
+				s, entity.getType().getEntityType(), sides, parentId, otherId)
+			.map(exists -> exists
+				? PlannedAction.Action.OVERWRITE
+				: PlannedAction.Action.CREATE);
+	}
+
 	// --- natural-key derivation from the JPA model -----------------------------
 
 	/**
 	 * True when the entity has a composite key ({@code @EmbeddedId}): a join
-	 * entity, not matched by this component.
+	 * entity, planned from its endpoints rather than matched by natural key.
 	 */
 	public static boolean isJoinEntity(Class<?> entityClass) {
 		for (Class<?> c = entityClass;
@@ -371,5 +446,24 @@ public class ConfigMatcher {
 	 * resolve it through a reference handle rather than a scalar value.
 	 */
 	public record KeyComponent(Field field, boolean association) {}
+
+	/**
+	 * The two reference names of a join entity, as the exporter emits them:
+	 * {@code parent}, the side holding the collection of joins, whose action the
+	 * join follows, and {@code other}, the joined endpoint.
+	 */
+	private record JoinSides(String parent, String other) {
+
+		static JoinSides of(ConfigEntityType type) {
+			return switch (type) {
+				case ENRICH_PIPELINE_ITEM ->
+					new JoinSides("enrichPipeline", "enrichItem");
+				case ACL_MAPPING -> new JoinSides("pluginDriver", "docTypeField");
+				default -> throw new IllegalStateException(
+					"not a join type: " + type);
+			};
+		}
+
+	}
 
 }
