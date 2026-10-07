@@ -445,14 +445,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				.stream()
 				.anyMatch(st -> !st.getFilter())) {
 
-
-			if (searchConfig != null && searchConfig.getMinScore() != null) {
-				searchSourceBuilder.minScore(searchConfig.getMinScore());
-			}
-			else {
-				searchSourceBuilder.minScore(0.5f);
-			}
-
+			searchSourceBuilder.minScore(0.5f);
 		}
 	}
 
