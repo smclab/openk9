@@ -362,13 +362,13 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                           label="Suggestions"
                           sxControl={sxControl}
                           {...form.inputProps("minScoreSuggestions")}
-                          description="If use configured min score to filter search results"
+                          description="If use configured min score to filter suggestions"
                         />
                         <BooleanInput
                           label="Search"
                           sxControl={sxControl}
                           {...form.inputProps("minScoreSearch")}
-                          description="If use configured min score to filter suggestions"
+                          description="If use configured min score to filter search results"
                         />
                       </RefreshOptionsLayout>
                       <NumberInput
