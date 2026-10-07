@@ -119,7 +119,6 @@
 		     version lags the Netty releases that fix the netty-handler / netty-codec-* CVEs,
 		     and is imported by spring-boot-app. -->
 		<netty-springboot.version>4.2.18.Final</netty-springboot.version>
-		<postgresql-springboot.version>42.7.13</postgresql-springboot.version>
 		<jackson-springboot.version>3.1.7</jackson-springboot.version>
 		<spring-cloud.version>2025.1.3</spring-cloud.version>
 		<spring-boot.version>4.1.1</spring-boot.version>
