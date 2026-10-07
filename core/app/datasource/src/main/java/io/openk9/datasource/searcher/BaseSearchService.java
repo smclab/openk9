@@ -55,6 +55,7 @@ import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.service.exception.InvalidTenantException;
 import io.openk9.searcher.client.dto.InvalidQueryMediaException;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.dto.QueryMediaValidator;

@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.sql;
 
-import io.openk9.datasource.searcher.InvalidTenantException;
+import io.openk9.datasource.service.exception.InvalidTenantException;
 
 import io.quarkus.arc.Unremovable;
 import io.quarkus.hibernate.orm.PersistenceUnitExtension;
