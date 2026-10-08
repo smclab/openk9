@@ -15,7 +15,7 @@ push-tika-helm:
   script:
   - cd helm-charts/02-file-handling && mkdir package
   - helm package openk9-tika -d package
-  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 push-resources-validator-helm:
   stage: push
@@ -31,4 +31,4 @@ push-resources-validator-helm:
   script:
   - cd helm-charts/02-file-handling && mkdir package
   - helm package openk9-resources-validator -d package
-  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
