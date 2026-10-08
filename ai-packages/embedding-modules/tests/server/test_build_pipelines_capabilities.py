@@ -89,10 +89,12 @@ def calls(monkeypatch):
     monkeypatch.setattr(server_module, "_apply_credentials", apply_credentials)
     monkeypatch.setattr(
         multimodal,
-        "MULTIMODAL_EMBEDDERS",
+        "MODEL_REGISTRY",
         [
             entry._replace(factory=build_multimodal_embedder)
-            for entry in multimodal.MULTIMODAL_EMBEDDERS
+            if entry.factory
+            else entry
+            for entry in multimodal.MODEL_REGISTRY
         ],
     )
     monkeypatch.setattr(

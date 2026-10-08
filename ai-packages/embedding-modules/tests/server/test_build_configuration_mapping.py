@@ -50,6 +50,7 @@ def _complete_model():
             "aws_bedrock": {"region_name": "eu-west-1"},
             "keep_alive": 60,
             "num_gpu": 0,
+            "batch_size": 64,
             "unrelated": "ignored",
         }
     )
@@ -68,6 +69,7 @@ COMPLETE_CONFIGURATION = {
     "aws_bedrock": {"region_name": "eu-west-1"},
     "keep_alive": 60.0,
     "num_gpu": 0.0,
+    "batch_size": 64.0,
 }
 
 
@@ -88,6 +90,7 @@ def test_an_empty_embedding_model_maps_to_the_proto_defaults():
         "aws_bedrock": None,
         "keep_alive": None,
         "num_gpu": None,
+        "batch_size": None,
     }
 
 

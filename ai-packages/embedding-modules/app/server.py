@@ -39,7 +39,7 @@ from langchain_openai import OpenAIEmbeddings
 
 from app.embedding import chunking, query, router, vertex_batching
 from app.embedding.fetch import fetch_url
-from app.embedding.multimodal import find_multimodal_embedder
+from app.embedding.multimodal import find_model, find_multimodal_embedder
 from app.embedding.quantization import l2_normalize, quantize_binary, quantize_int8
 from app.embedding.router import Pipelines
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
@@ -75,9 +75,12 @@ DEFAULT_MODEL = "text-embedding-3-small"
 DEFAULT_KEEP_ALIVE = 1800
 # EmbedContent embeds the inline text this many chunks at a time and emits each
 # batch before embedding the next, so the first chunks reach the caller after
-# one batch instead of after the whole document. The per-request limits of the
-# providers are enforced by the embedders themselves, not by this value.
-EMBED_CONTENT_BATCH_SIZE = int(os.getenv("EMBED_CONTENT_BATCH_SIZE", "256"))
+# one batch instead of after the whole document. The registry of models and
+# batch_size in the jsonConfig of the embedding model override it
+# (resolve_batch_size). The per-request limits of the providers are enforced by
+# the embedders themselves, not by this value.
+DEFAULT_EMBED_CONTENT_BATCH_SIZE = 256
+
 
 class BatchedVertexAIEmbeddings(VertexAIEmbeddings):
     """VertexAIEmbeddings that sends the documents in request batches
@@ -313,12 +316,53 @@ def client_name(configuration):
     return LANGCHAIN_CLIENT if entry is None else entry.name
 
 
-def _log_served(rpc, request, configuration, input_type, count, start):
+def _valid_batch_size(value):
+    """The batch size a jsonConfig value stands for, or None: a whole number
+    of at least 1. The gRPC Struct decodes every number as a float, so 512.0
+    is 512."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    if value != int(value) or value < 1:
+        return None
+
+    return int(value)
+
+
+def resolve_batch_size(configuration):
+    """The number of chunks EmbedContent embeds its text with: batch_size in
+    the jsonConfig of the embedding model, else the registry entry of the
+    model, else the default. An invalid batch_size is ignored with a warning.
+    """
+    configured = configuration.get("batch_size")
+
+    if configured is not None:
+        batch_size = _valid_batch_size(configured)
+        if batch_size is not None:
+            return batch_size
+
+        logger.warning(
+            "Ignoring batch_size %r of model %s: not a whole number of at least 1",
+            configured,
+            configuration.get("model"),
+        )
+
+    entry = find_model(configuration)
+
+    if entry is not None and entry.batch_size is not None:
+        return entry.batch_size
+
+    return DEFAULT_EMBED_CONTENT_BATCH_SIZE
+
+
+def _log_served(rpc, request, configuration, input_type, count, start, batch_size=None):
     """One INFO line per successful RPC: who asked, which model, which
-    client served it and how long it took. Never the credentials."""
-    logger.info(
+    client served it and how long it took, plus the batch size the text was
+    embedded with when the RPC has one. Never the credentials."""
+    message = (
         "%s served: tenantId=%s provider=%s model=%s client=%s inputType=%s "
-        "vectorDataType=%s vectors=%s seconds=%s",
+        "vectorDataType=%s vectors=%s seconds=%s"
+    )
+    arguments = [
         rpc,
         request.tenantId,
         configuration.get("model_type"),
@@ -328,7 +372,13 @@ def _log_served(rpc, request, configuration, input_type, count, start):
         embedding_pb2.VectorDataType.Name(request.vectorDataType),
         count,
         round(time.time() - start, 2),
-    )
+    ]
+
+    if batch_size is not None:
+        message += " batchSize=%s"
+        arguments.append(batch_size)
+
+    logger.info(message, *arguments)
 
 
 def _text_embedding(configuration, embedder, input_type):
@@ -476,6 +526,7 @@ def _build_configuration(embedding_model):
         "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
         "keep_alive": embedding_model_json_config.get("keep_alive"),
         "num_gpu": embedding_model_json_config.get("num_gpu"),
+        "batch_size": embedding_model_json_config.get("batch_size"),
     }
 
 
@@ -617,6 +668,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         tenant_id = request.tenantId
         vector_data_type = request.vectorDataType
         number = 0
+        batch_size = resolve_batch_size(configuration)
 
         # Text first, fail-fast: an error building the model/chunker or
         # embedding the text ends the whole RPC with INTERNAL, the same as
@@ -633,9 +685,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 chunks = pipelines.chunk(clean_text(request.text))
                 # total is known only for a text-only request
                 total = len(chunks) if not refs else None
-                for pieces in router.text_piece_batches(
-                    chunks, pipelines, EMBED_CONTENT_BATCH_SIZE
-                ):
+                for pieces in router.text_piece_batches(chunks, pipelines, batch_size):
                     for piece in pieces:
                         number += 1
                         yield to_chunk_message(piece, number, total, vector_data_type)
@@ -688,7 +738,13 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 yield message
 
         _log_served(
-            "EmbedContent", request, configuration, "search_document", number, start
+            "EmbedContent",
+            request,
+            configuration,
+            "search_document",
+            number,
+            start,
+            batch_size=batch_size,
         )
 
     def EmbedQuery(self, request, context):

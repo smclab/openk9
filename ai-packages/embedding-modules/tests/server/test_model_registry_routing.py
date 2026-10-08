@@ -97,8 +97,11 @@ def calls(monkeypatch):
 
     monkeypatch.setattr(
         multimodal,
-        "MULTIMODAL_EMBEDDERS",
-        [entry._replace(factory=direct) for entry in multimodal.MULTIMODAL_EMBEDDERS],
+        "MODEL_REGISTRY",
+        [
+            entry._replace(factory=direct) if entry.factory else entry
+            for entry in multimodal.MODEL_REGISTRY
+        ],
     )
     monkeypatch.setattr(server_module, "_apply_credentials", lambda configuration: None)
 
@@ -238,10 +241,12 @@ def test_a_provider_error_is_not_retried_on_another_client(stub, calls, monkeypa
     provider_error = RuntimeError("UnrecognizedClientException: invalid token")
     monkeypatch.setattr(
         multimodal,
-        "MULTIMODAL_EMBEDDERS",
+        "MODEL_REGISTRY",
         [
             entry._replace(factory=lambda configuration: _FakeDirectEmbedder(calls, provider_error))
-            for entry in multimodal.MULTIMODAL_EMBEDDERS
+            if entry.factory
+            else entry
+            for entry in multimodal.MODEL_REGISTRY
         ],
     )
 
@@ -261,6 +266,9 @@ def test_a_provider_error_is_not_retried_on_another_client(stub, calls, monkeypa
         pytest.param(("chat_vertex_ai", "multimodalembedding@001"), "direct", id="vertex multimodal"),
         pytest.param(TITAN_V2, "langchain", id="titan"),
         pytest.param(("openai", "text-embedding-3-small"), "langchain", id="openai"),
+        # registry entries with a batch size only keep langchain
+        pytest.param(("ollama", "qwen3-embedding:0.6b"), "langchain", id="ollama"),
+        pytest.param(("chat_vertex_ai", "text-embedding-005"), "langchain", id="vertex text"),
     ],
 )
 def test_get_messages_picks_the_client_from_the_model(stub, calls, provider_model, client):
@@ -316,6 +324,8 @@ def test_a_query_logs_the_client_that_served_it(stub, calls, caplog):
     assert "inputType=search_query" in line
     assert "vectorDataType=VECTOR_DATA_TYPE_FLOAT32 vectors=1" in line
     assert "secret-key" not in line
+    # only EmbedContent embeds a text in batches
+    assert "batchSize" not in line
 
 
 def test_an_indexing_logs_the_client_and_the_chunks(stub, calls, caplog):
@@ -326,6 +336,31 @@ def test_an_indexing_logs_the_client_and_the_chunks(stub, calls, caplog):
     assert "client=langchain" in line
     assert "inputType=search_document" in line
     assert "vectors=2" in line
+    assert "batchSize=256" in line
+
+
+def test_an_ollama_indexing_stays_on_langchain_in_batches_of_its_entry(
+    stub, calls, caplog
+):
+    with caplog.at_level(logging.INFO, logger=server_module.logger.name):
+        _index(stub, _model(("ollama", "qwen3-embedding:0.6b")), refs=())
+
+    [line] = _served_lines(caplog, "EmbedContent")
+    assert "client=langchain" in line
+    assert "batchSize=512" in line
+
+
+def test_the_json_config_batch_size_wins_over_the_registry(stub, calls):
+    model = _model(("ollama", "qwen3-embedding:0.6b"))
+    model.jsonConfig.update({"batch_size": 1})
+
+    _index(stub, model, text="uno due tre", refs=())
+
+    assert [call for call in calls if call[0] == "embed_documents"] == [
+        ("embed_documents", ["uno"]),
+        ("embed_documents", ["due"]),
+        ("embed_documents", ["tre"]),
+    ]
 
 
 def test_a_failed_query_logs_no_served_line(stub, calls, caplog):

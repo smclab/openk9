@@ -140,3 +140,28 @@ Two defaults differ from those of Ollama, and change the behaviour of an existin
 
 - `keep_alive` is thirty minutes instead of the five of Ollama. The model stays resident longer and holds VRAM or RAM with the chat idle: on an Ollama shared with other workloads this is worth a thought, and the previous behaviour is `"keep_alive": 300`.
 - `reasoning` is off instead of following the model. On the models that turn thinking on by themselves both the answer and the latency change; `"reasoning": true` brings it back.
+
+## Embedding Batch Size
+
+When a document is indexed, the embedding module embeds its text a batch of chunks at a time and sends each batch to the datasource before embedding the next. The first chunks are written while the rest of the document is still being embedded, instead of after the whole of it.
+
+The size of the batch is the key `batch_size` of the `jsonConfig` of the Embedding Model. Without it, the module takes the size known for the model, and 256 for every other model:
+
+| Model | Batch size |
+|---|---|
+| Bedrock `cohere.embed-v4` (and its inference profiles) | `96` |
+| Any Ollama model | `512` |
+| Vertex AI text models | `250` |
+| Any other model | `256` |
+
+A value that is not a whole number of at least 1 is ignored, with a warning in the log of the module, and the size of the model applies.
+
+The batch size applies to the text of the document only: the files a connector sends by reference, text or images, are embedded whole, as before. It does not bound the requests to the provider either. A provider that accepts fewer texts per request than the batch, such as Cohere on Bedrock or the Vertex AI text models, receives the batch in more requests: a larger size makes the indexing slower, not failing.
+
+Example, an Ollama embedding model embedding 1024 chunks at a time:
+
+```json
+{
+  "batch_size": 1024
+}
+```

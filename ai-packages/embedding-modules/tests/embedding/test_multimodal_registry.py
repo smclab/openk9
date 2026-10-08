@@ -32,6 +32,7 @@ from app.embedding import bedrock, multimodal, vertex
         pytest.param("aws_bedrock", "amazon.titan-embed-text-v2:0", id="bedrock titan"),
         pytest.param("aws_bedrock", "cohere.embed-english-v3", id="bedrock cohere v3"),
         pytest.param("chat_vertex_ai", "text-embedding-005", id="vertex text"),
+        pytest.param("ollama", "qwen3-embedding:0.6b", id="ollama"),
         pytest.param("my-gateway", "cohere.embed-v4:0", id="custom provider"),
     ],
 )
@@ -60,6 +61,33 @@ def test_a_registered_model_is_found_by_provider_and_model(provider, model, name
     entry = multimodal.find_multimodal_embedder({"model_type": provider, "model": model})
 
     assert entry.name == name
+
+
+@pytest.mark.parametrize(
+    ("provider", "model", "batch_size"),
+    [
+        pytest.param("aws_bedrock", "cohere.embed-v4:0", 96, id="cohere v4"),
+        pytest.param("aws_bedrock", "eu.cohere.embed-v4:0", 96, id="cohere v4 eu profile"),
+        pytest.param("chat_vertex_ai", "multimodalembedding@001", None, id="vertex multimodal"),
+        pytest.param("ollama", "qwen3-embedding:0.6b", 512, id="ollama"),
+        pytest.param("chat_vertex_ai", "text-embedding-005", 250, id="vertex text"),
+    ],
+)
+def test_a_registry_entry_carries_the_batch_size_of_its_model(provider, model, batch_size):
+    entry = multimodal.find_model({"model_type": provider, "model": model})
+
+    assert entry.batch_size == batch_size
+
+
+@pytest.mark.parametrize(
+    ("provider", "model"),
+    [
+        pytest.param("openai", "text-embedding-3-small", id="openai"),
+        pytest.param("aws_bedrock", "amazon.titan-embed-text-v2:0", id="bedrock titan"),
+    ],
+)
+def test_a_model_with_no_rule_of_its_own_has_no_entry(provider, model):
+    assert multimodal.find_model({"model_type": provider, "model": model}) is None
 
 
 def test_bedrock_provider_maps_to_bedrock_embedder(monkeypatch):

@@ -18,14 +18,14 @@
 """EmbedContent streams the inline text batch by batch: the first chunks
 reach the caller while the next batch is still being embedded, numbering
 and total span the whole text, and an error on a later batch ends the RPC
-with INTERNAL after the chunks already emitted."""
+with INTERNAL after the chunks already emitted. The batch size comes from
+the jsonConfig of the embedding model, as an administrator would set it."""
 
 import threading
 
 import grpc
 import pytest
 
-from app import server as server_module
 from app.embedding.router import Pipelines
 from app.external_services.grpc.embedding import embedding_pb2
 
@@ -44,9 +44,11 @@ def _pipelines(embed_texts):
     return build_pipelines
 
 
-@pytest.fixture(autouse=True)
-def batches_of_two(monkeypatch):
-    monkeypatch.setattr(server_module, "EMBED_CONTENT_BATCH_SIZE", 2)
+def _request(text):
+    """A request whose embedding model asks for batches of two chunks."""
+    request = embedding_pb2.EmbedContentRequest(tenantId="mew", text=text)
+    request.embeddingModel.jsonConfig.update({"batch_size": 2})
+    return request
 
 
 def test_the_first_batch_is_emitted_before_the_next_is_embedded(make_stub):
@@ -62,9 +64,7 @@ def test_the_first_batch_is_emitted_before_the_next_is_embedded(make_stub):
         return [VECTOR for _ in texts]
 
     stub = make_stub(_pipelines(embed_texts))
-    stream = stub.EmbedContent(
-        embedding_pb2.EmbedContentRequest(tenantId="mew", text="uno due tre")
-    )
+    stream = stub.EmbedContent(_request("uno due tre"))
 
     first = [next(stream), next(stream)]
 
@@ -81,11 +81,7 @@ def test_the_first_batch_is_emitted_before_the_next_is_embedded(make_stub):
 
 def test_numbering_and_total_span_all_the_batches(make_stub):
     stub = make_stub(_pipelines(lambda texts: [VECTOR for _ in texts]))
-    request = embedding_pb2.EmbedContentRequest(
-        tenantId="mew", text="uno due tre quattro cinque"
-    )
-
-    chunks = list(stub.EmbedContent(request))
+    chunks = list(stub.EmbedContent(_request("uno due tre quattro cinque")))
 
     assert [chunk.number for chunk in chunks] == [1, 2, 3, 4, 5]
     assert all(chunk.total == 5 for chunk in chunks)
@@ -108,9 +104,7 @@ def test_an_error_on_a_later_batch_ends_with_internal(make_stub):
         return [VECTOR for _ in texts]
 
     stub = make_stub(_pipelines(embed_texts))
-    stream = stub.EmbedContent(
-        embedding_pb2.EmbedContentRequest(tenantId="mew", text="uno due tre")
-    )
+    stream = stub.EmbedContent(_request("uno due tre"))
 
     received = []
     with pytest.raises(grpc.RpcError) as error:
