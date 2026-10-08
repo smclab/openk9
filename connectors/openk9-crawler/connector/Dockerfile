@@ -24,8 +24,8 @@ RUN tldextract --cache_dir /tld_cache --update || echo "Update failed, using loc
 # --- STAGE 2: Runtime ---
 FROM python:3.13-slim
 
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-ENV TLDEXTRACT_CACHE=/tld_cache
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
+ENV TLDEXTRACT_CACHE=/app/tld_cache
 
 # Uninstall global pip uses venv pip
 RUN python -m pip uninstall -y pip
