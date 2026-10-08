@@ -58,8 +58,8 @@ FROM python:3.13-slim
 ARG WITH_SCRAPYDWEB=0
 ENV WITH_SCRAPYDWEB=$WITH_SCRAPYDWEB
 
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-ENV TLDEXTRACT_CACHE=/tld_cache
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
+ENV TLDEXTRACT_CACHE=/app/tld_cache
 
 # Copy the compiled site-packages/binaries from the builder
 COPY --from=builder /opt/venv /opt/venv
