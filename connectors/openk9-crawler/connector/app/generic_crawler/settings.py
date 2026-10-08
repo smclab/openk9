@@ -132,9 +132,12 @@ if PLAYWRIGHT_MAX_CONTEXTS is None:
 
 
 # Configure maximum pages opened by Playwright (default: CONCURRENT_REQUESTS)
-PLAYWRIGHT_MAX_PAGES_PER_CONTEXT = os.environ.get("PLAYWRIGHT_MAX_PAGES_PER_CONTEXT")
-if PLAYWRIGHT_MAX_PAGES_PER_CONTEXT is None:
-    PLAYWRIGHT_MAX_PAGES_PER_CONTEXT = 4
+# Never lower than CONCURRENT_REQUESTS, otherwise the requests exceeding the
+# limit would bypass Playwright.
+PLAYWRIGHT_MAX_PAGES_PER_CONTEXT = max(
+    int(os.environ.get("PLAYWRIGHT_MAX_PAGES_PER_CONTEXT", CONCURRENT_REQUESTS)),
+    CONCURRENT_REQUESTS,
+)
 
 
 # Optimize resource usage
