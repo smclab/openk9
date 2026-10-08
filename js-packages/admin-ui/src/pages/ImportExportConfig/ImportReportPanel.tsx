@@ -129,7 +129,7 @@ export function ImportReportPanel({ report }: { report: ImportReport }) {
             {ofKind.map((action, index) => (
               <Typography component="li" variant="body2" key={`${action.ref}-${index}`}>
                 {action.type} · {action.ref}
-                {action.existingId !== undefined && ` (existing id ${action.existingId})`}
+                {action.existingId != null && ` (existing id ${action.existingId})`}
               </Typography>
             ))}
           </Section>
