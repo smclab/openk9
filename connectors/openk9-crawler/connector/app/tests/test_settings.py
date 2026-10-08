@@ -47,3 +47,35 @@ def test_download_handlers_not_driven_by_use_playwright_env(monkeypatch, restore
 
     assert not hasattr(reloaded, "DOWNLOAD_HANDLERS")
     assert not hasattr(reloaded, "USE_PLAYWRIGHT")
+
+
+ENV_VAR = "PLAYWRIGHT_MAX_PAGES_PER_CONTEXT"
+
+
+@pytest.fixture
+def reload_settings(monkeypatch):
+    def _reload(value=None):
+        if value is None:
+            monkeypatch.delenv(ENV_VAR, raising=False)
+        else:
+            monkeypatch.setenv(ENV_VAR, value)
+        return importlib.reload(settings)
+
+    yield _reload
+    monkeypatch.delenv(ENV_VAR, raising=False)
+    importlib.reload(settings)
+
+
+def test_max_pages_defaults_to_concurrent_requests(reload_settings):
+    s = reload_settings()
+    assert s.PLAYWRIGHT_MAX_PAGES_PER_CONTEXT == s.CONCURRENT_REQUESTS
+
+
+def test_max_pages_below_concurrent_requests_is_raised(reload_settings):
+    s = reload_settings("4")
+    assert s.PLAYWRIGHT_MAX_PAGES_PER_CONTEXT == s.CONCURRENT_REQUESTS
+
+
+def test_max_pages_above_concurrent_requests_is_kept(reload_settings):
+    s = reload_settings("16")
+    assert s.PLAYWRIGHT_MAX_PAGES_PER_CONTEXT == 16
