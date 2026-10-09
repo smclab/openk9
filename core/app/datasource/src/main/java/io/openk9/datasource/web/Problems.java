@@ -72,16 +72,6 @@ public final class Problems {
 		return problem;
 	}
 
-	public static Problem invalidTenantId(String tenantId) {
-		var problem = new Problem();
-		problem.setStatus(404);
-		problem.setTitle("Invalid tenantId");
-		problem.setDetail(
-			"No tenant exists for the " + InternalHeaders.TENANT_ID
-			+ " value '" + tenantId + "'");
-		return problem;
-	}
-
 	public static Problem healthEndpointError(
 		HealthEndpointException exception) {
 
