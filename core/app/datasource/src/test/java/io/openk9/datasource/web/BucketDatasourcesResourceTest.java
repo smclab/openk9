@@ -68,8 +68,8 @@ public class BucketDatasourcesResourceTest {
 
 	// two tenants served by the same instance: the test tenant resolver maps
 	// both on the same schema, so only the cache can tell them apart
-	private static final String TENANT_A = "tenant-a";
-	private static final String TENANT_B = "tenant-b";
+	private static final String TENANT_A = "tenanta";
+	private static final String TENANT_B = "tenantb";
 	private static final String SEEDED_NAME = PREFIX + "Seeded for tenant B";
 
 	@Inject
@@ -132,6 +132,7 @@ public class BucketDatasourcesResourceTest {
 		// the active bucket is the one bound to the tenant: the Host header
 		// takes no part in resolving it
 		given()
+			.header(InternalHeaders.TENANT_ID, "public")
 			.header("Host", "another.host.example")
 			.accept(ContentType.JSON)
 			.when()
