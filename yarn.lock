@@ -2007,33 +2007,33 @@
   resolved "https://registry.npmjs.org/@hey-api/client-fetch/-/client-fetch-0.13.1.tgz#d01cdeed5f5b5b5706d52ffe29387741d2a533e0"
   integrity sha512-29jBRYNdxVGlx5oewFgOrkulZckpIpBIRHth3uHFn1PrL2ucMy52FvWOY3U3dVx2go1Z3kUmMi6lr07iOpUqqA==
 
-"@hey-api/codegen-core@0.8.1":
-  version "0.8.1"
-  resolved "https://registry.npmjs.org/@hey-api/codegen-core/-/codegen-core-0.8.1.tgz#70fbc7ef83974816376ac2d6d4ee754f12075590"
-  integrity sha512-Iciv2vUCJTW9lWM/ROvyZLblmcbYJHPuXfzb1SzeDVVn4xEXu2ilLU1pq3fn+09FZ/Y0P7VyvRE47UDU6om8xA==
+"@hey-api/codegen-core@0.8.2":
+  version "0.8.2"
+  resolved "https://registry.npmjs.org/@hey-api/codegen-core/-/codegen-core-0.8.2.tgz#b58ba632d164d828654607c1af0e9d12c1764665"
+  integrity sha512-R2NMf3wq97rh1mjz33WJQU8svz3F0RYUjvx/QzXucjpSqQ3O5huTdDjErG4fMxSr1X+X56NuDrqtGfHmo1TRUQ==
   dependencies:
     "@hey-api/types" "0.1.4"
     ansi-colors "4.1.3"
     c12 "3.3.4"
     color-support "1.1.3"
 
-"@hey-api/json-schema-ref-parser@1.4.1":
-  version "1.4.1"
-  resolved "https://registry.npmjs.org/@hey-api/json-schema-ref-parser/-/json-schema-ref-parser-1.4.1.tgz#2c02769ceb55d84b56ffb7d99de04c53984ae6b6"
-  integrity sha512-DoPJGxVApDlktP1yYLjmOrF0YBEqb32ieCbx1S1i09n8TyCgdoh4yQaQ3kp0sMTauH+bwNKPsFh7S8qiWCoKZA==
+"@hey-api/json-schema-ref-parser@1.4.2":
+  version "1.4.2"
+  resolved "https://registry.npmjs.org/@hey-api/json-schema-ref-parser/-/json-schema-ref-parser-1.4.2.tgz#d63ce9a23f92588464143d9425101aad93b9a71a"
+  integrity sha512-ZhCFSKI2ipZHEbgmtUHdyddvRU3wJ4elgCfYUC7T7hZa4EivSrVflTQf2w+v3TuaYxR1Y2V2kq3otqTttrrK8Q==
   dependencies:
     "@jsdevtools/ono" "7.1.3"
     "@types/json-schema" "7.0.15"
-    yaml "2.8.3"
+    js-yaml "4.1.1"
 
-"@hey-api/openapi-ts@0.97.0":
-  version "0.97.0"
-  resolved "https://registry.npmjs.org/@hey-api/openapi-ts/-/openapi-ts-0.97.0.tgz#d4192dc9fc30231a6a3b5cce0bd8bc97c596d6dc"
-  integrity sha512-WZkKgrDlZpxKlDv2HkBCzaAYeuM+EtZKFmKGBv9/JblAKpX3JQTROi7PzlCZE3eisetRPSakbcRgn+LGyB7EiQ==
+"@hey-api/openapi-ts@0.97.3":
+  version "0.97.3"
+  resolved "https://registry.npmjs.org/@hey-api/openapi-ts/-/openapi-ts-0.97.3.tgz#b5c4d0d35f9c90a6505b76d1ea89c8eaa5e4ac84"
+  integrity sha512-4sR6/E/POuy7aPZW9DDjhObzZCq7eSJWiW0+epXeKNczoTWEwdOyWFy9Ca/CnXYlZ3oJsrv0ZD0OO+YuczT7CA==
   dependencies:
-    "@hey-api/codegen-core" "0.8.1"
-    "@hey-api/json-schema-ref-parser" "1.4.1"
-    "@hey-api/shared" "0.4.2"
+    "@hey-api/codegen-core" "0.8.2"
+    "@hey-api/json-schema-ref-parser" "1.4.2"
+    "@hey-api/shared" "0.4.5"
     "@hey-api/spec-types" "0.2.0"
     "@hey-api/types" "0.1.4"
     "@lukeed/ms" "2.0.2"
@@ -2042,13 +2042,13 @@
     commander "14.0.3"
     get-tsconfig "4.14.0"
 
-"@hey-api/shared@0.4.2":
-  version "0.4.2"
-  resolved "https://registry.npmjs.org/@hey-api/shared/-/shared-0.4.2.tgz#e7e319f0140ab8ed74156e70d38d501a8f4929d4"
-  integrity sha512-4fconS10E0Xr4/acV8G+BkApxaIStxrT0GhB9BDTQWvrFTy5/nV933SyFk8qImcbpKvgv9hpn3N+7bV8oFrbjA==
+"@hey-api/shared@0.4.5":
+  version "0.4.5"
+  resolved "https://registry.npmjs.org/@hey-api/shared/-/shared-0.4.5.tgz#e73b5031f68d56c673181b4aa583b637e6be3303"
+  integrity sha512-au4eHpBXAe1du0iMp6ESYuEaMS2jsoEyrbcT246btRhI9rMeQFEs7ZjtcMGXGsxhpaR38A8cPGNHx7QOrWAdMw==
   dependencies:
-    "@hey-api/codegen-core" "0.8.1"
-    "@hey-api/json-schema-ref-parser" "1.4.1"
+    "@hey-api/codegen-core" "0.8.2"
+    "@hey-api/json-schema-ref-parser" "1.4.2"
     "@hey-api/spec-types" "0.2.0"
     "@hey-api/types" "0.1.4"
     ansi-colors "4.1.3"
@@ -2839,11 +2839,6 @@
   version "2.11.8"
   resolved "https://registry.npmjs.org/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
-
-"@remix-run/router@1.23.4":
-  version "1.23.4"
-  resolved "https://registry.npmjs.org/@remix-run/router/-/router-1.23.4.tgz#d2becd2afca4a40c30a659d913b9b0bcc28bced8"
-  integrity sha512-q7j5geK7xs3UJSdm9/iytUNclBnLmYx1EnSeCFXHPeutdqgIMeFeHtUZgS3EhlKxdBEAu8OwtJCwmLrEzpSs7Q==
 
 "@repeaterjs/repeater@3.0.4":
   version "3.0.4"
@@ -5350,6 +5345,11 @@ convert-source-map@^2.0.0:
   resolved "https://registry.npmjs.org/convert-source-map/-/convert-source-map-2.0.0.tgz#4b560f649fc4e918dd0ab75cf4961e8bc882d82a"
   integrity sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==
 
+cookie@^1.0.1:
+  version "1.1.1"
+  resolved "https://registry.npmjs.org/cookie/-/cookie-1.1.1.tgz#3bb9bdfc82369db9c2f69c93c9c3ceb310c88b3c"
+  integrity sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==
+
 core-js-compat@^3.43.0, core-js-compat@^3.48.0:
   version "3.50.0"
   resolved "https://registry.npmjs.org/core-js-compat/-/core-js-compat-3.50.0.tgz#d5922c2a692ab1cba6078c920e7c5567421ae08e"
@@ -5418,10 +5418,10 @@ create-require@^1.1.0:
   resolved "https://registry.npmjs.org/create-require/-/create-require-1.1.1.tgz#c1d7e8f1e5f6cfc9ff65f9cd352d37348756c333"
   integrity sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==
 
-cronstrue@^2.58.0:
-  version "2.61.0"
-  resolved "https://registry.npmjs.org/cronstrue/-/cronstrue-2.61.0.tgz#97c79c77045c052afb44cb9f5f8eaf54398094f2"
-  integrity sha512-ootN5bvXbIQI9rW94+QsXN5eROtXWwew6NkdGxIRpS/UFWRggL0G5Al7a9GTBFEsuvVhJ2K3CntIIVt7L2ILhA==
+cronstrue@^3.27.0:
+  version "3.31.0"
+  resolved "https://registry.npmjs.org/cronstrue/-/cronstrue-3.31.0.tgz#4b271b041b5f58046ac2a6ec082cfcd462b56437"
+  integrity sha512-P+qVKwM6CHu6lWfQIq13DCBx95pxY/2zCQhIJvu5FsEsOlt9ZtuUI124V1LafoPsqHH09ruRsentTc4sbWxQHA==
 
 cross-env@^7.0.3:
   version "7.0.3"
@@ -8113,6 +8113,13 @@ js-yaml@4.1.0:
   dependencies:
     argparse "^2.0.1"
 
+js-yaml@4.1.1:
+  version "4.1.1"
+  resolved "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.1.tgz#854c292467705b699476e1a2decc0c8a3458806b"
+  integrity sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==
+  dependencies:
+    argparse "^2.0.1"
+
 js-yaml@^3.10.0, js-yaml@^3.13.1:
   version "3.15.2"
   resolved "https://registry.npmjs.org/js-yaml/-/js-yaml-3.15.2.tgz#3f83823ac6be17f570f23b2ecdef3777ff5ea364"
@@ -10801,20 +10808,20 @@ react-refresh@^0.18.0:
   resolved "https://registry.npmjs.org/react-refresh/-/react-refresh-0.18.0.tgz#2dce97f4fe932a4d8142fa1630e475c1729c8062"
   integrity sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw==
 
-react-router-dom@^6.3.0:
-  version "6.30.6"
-  resolved "https://registry.npmjs.org/react-router-dom/-/react-router-dom-6.30.6.tgz#acaf0db65efeddabd0840616243c97f578b3baf3"
-  integrity sha512-0RHKZz7wwffvkU+2MFVT2NnjK44ssLEV+m0CAJaS2Ksmorrwj7WxH00jO0SOCW26/tINUnJHToXblDs33I38YQ==
+react-router-dom@^7.18.4:
+  version "7.18.4"
+  resolved "https://registry.npmjs.org/react-router-dom/-/react-router-dom-7.18.4.tgz#07b72b8aab2d80af847425107f966f1688c703d0"
+  integrity sha512-yrfmJHIpDG7taCpqKjT1G5B6q3O2K+RN8/fgNf0lTjCwiPbQ0ei6vXX9ZjQR+7ld8Tr7Z5xmyMnZ8YJrphWQUw==
   dependencies:
-    "@remix-run/router" "1.23.4"
-    react-router "6.30.6"
+    react-router "7.18.4"
 
-react-router@6.30.6:
-  version "6.30.6"
-  resolved "https://registry.npmjs.org/react-router/-/react-router-6.30.6.tgz#a2ad70f3472de61c61e44182b3e5a25fd91f9f68"
-  integrity sha512-5HfK7k5im7LTOB0EqCQmfvy4C13G92Ssj1VTmouTK3AJvyjKTnFuCV0vcMAD/JS+JC4DvDIBRrlAeJIFjh5VWg==
+react-router@7.18.4:
+  version "7.18.4"
+  resolved "https://registry.npmjs.org/react-router/-/react-router-7.18.4.tgz#dc30cbb27e936f06d9e1d75ab648b317deb698a4"
+  integrity sha512-PUPQcMhMGRAslLcvtlPz/kmzBEWPhLdgLFrL7pLNepBL6dX0lWj4WD2cUYVgYCuT3jxvghYFg81cDTj44DhetQ==
   dependencies:
-    "@remix-run/router" "1.23.4"
+    cookie "^1.0.1"
+    set-cookie-parser "^2.6.0"
 
 react-select@^5.10.2:
   version "5.10.2"
@@ -11477,6 +11484,11 @@ set-blocking@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/set-blocking/-/set-blocking-2.0.0.tgz#045f9782d011ae9a6803ddd382b24392b3d890f7"
   integrity sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==
+
+set-cookie-parser@^2.6.0:
+  version "2.7.2"
+  resolved "https://registry.npmjs.org/set-cookie-parser/-/set-cookie-parser-2.7.2.tgz#ccd08673a9ae5d2e44ea2a2de25089e67c7edf68"
+  integrity sha512-oeM1lpU/UvhTxw+g3cIfxXHyJRc/uidd3yK1P242gzHds0udQBYzs3y8j4gCCW+ZJ7ad0yctld8RYO+bdurlvw==
 
 set-function-length@^1.2.2:
   version "1.2.2"
@@ -13186,11 +13198,6 @@ yaml-ast-parser@^0.0.43:
   version "0.0.43"
   resolved "https://registry.npmjs.org/yaml-ast-parser/-/yaml-ast-parser-0.0.43.tgz#e8a23e6fb4c38076ab92995c5dca33f3d3d7c9bb"
   integrity sha512-2PTINUwsRqSd+s8XxKaJWQlUuEMHJQyEuh2edBbW8KNJz0SJPwUSD2zRWqezFEdN7IzAgeuYHFUCF7o8zRdZ0A==
-
-yaml@2.8.3:
-  version "2.8.3"
-  resolved "https://registry.npmjs.org/yaml/-/yaml-2.8.3.tgz#a0d6bd2efb3dd03c59370223701834e60409bd7d"
-  integrity sha512-AvbaCLOO2Otw/lW5bmh9d/WEdcDFdQp2Z2ZUH3pX9U2ihyUY0nvLv7J6TrWowklRGPYbB/IuIMfYgxaCPg5Bpg==
 
 yaml@^1.10.0, yaml@^1.10.2:
   version "1.10.3"
