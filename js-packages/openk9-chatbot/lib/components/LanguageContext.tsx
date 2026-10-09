@@ -57,11 +57,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       : remappingLanguage(document.documentElement.lang || "en")
   );
 
-  useEffect(() => {
+  const [prevInitialLanguage, setPrevInitialLanguage] = useState(initialLanguage);
+  if (initialLanguage !== prevInitialLanguage) {
+    setPrevInitialLanguage(initialLanguage);
     if (initialLanguage) {
       setLanguage(remappingLanguage(initialLanguage));
     }
-  }, [initialLanguage]);
+  }
 
   useEffect(() => {
     const handleLangChange = () => {

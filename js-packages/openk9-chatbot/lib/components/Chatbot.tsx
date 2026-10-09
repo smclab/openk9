@@ -182,7 +182,9 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   ragMode = DEFAULT_RAG_MODE,
 }) => {
   const [isView, setIsView] = React.useState(false);
-  const [welcomeMessageTime, setWelcomeMessageTime] = React.useState("");
+  const [welcomeMessageTime] = React.useState(() =>
+    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  );
   const chatbotSearchRef = React.useRef<HTMLInputElement | null>(null);
   const theme = useTheme();
   const aiDisclosureId = React.useId();
@@ -216,16 +218,6 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-
-  React.useEffect(() => {
-    const currentTime = new Date();
-    setWelcomeMessageTime(
-      currentTime.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    );
-  }, []);
 
   React.useEffect(() => {
     if (isView && chatbotSearchRef.current) {

@@ -55,56 +55,53 @@ const focusableElementsSelector =
   "a[href], area[href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, *[tabindex], *[contenteditable]";
 const TAB_KEY = 9;
 
+function selectNextFocusableElem(
+  sortedFocusableElems: HTMLElement[],
+  currentIndex?: number,
+  shiftKeyPressed: boolean = false,
+  skipCount: number = 0
+): void {
+  if (skipCount > sortedFocusableElems.length) {
+    return;
+  }
+
+  const backwards = !!shiftKeyPressed;
+  const maxIndex = sortedFocusableElems.length - 1;
+
+  if (currentIndex === undefined) {
+    currentIndex =
+      sortedFocusableElems.indexOf(document.activeElement as HTMLElement) ??
+      0;
+  }
+
+  let nextIndex = backwards ? currentIndex - 1 : currentIndex + 1;
+
+  if (nextIndex > maxIndex) {
+    nextIndex = 0;
+  }
+
+  if (nextIndex < 0) {
+    nextIndex = maxIndex;
+  }
+
+  const newFocusElem = sortedFocusableElems[nextIndex];
+
+  newFocusElem.focus();
+
+  if (document.activeElement !== newFocusElem) {
+    selectNextFocusableElem(
+      sortedFocusableElems,
+      nextIndex,
+      shiftKeyPressed,
+      skipCount + 1
+    );
+  }
+}
+
 export function useFocusTrap(
   isActive: boolean
 ): [React.RefObject<HTMLDivElement | null>] {
   const trapRef = useRef<HTMLDivElement>(null);
-
-  const selectNextFocusableElem = useCallback(
-    (
-      sortedFocusableElems: HTMLElement[],
-      currentIndex?: number,
-      shiftKeyPressed: boolean = false,
-      skipCount: number = 0
-    ): void => {
-      if (skipCount > sortedFocusableElems.length) {
-        return;
-      }
-
-      const backwards = !!shiftKeyPressed;
-      const maxIndex = sortedFocusableElems.length - 1;
-
-      if (currentIndex === undefined) {
-        currentIndex =
-          sortedFocusableElems.indexOf(document.activeElement as HTMLElement) ??
-          0;
-      }
-
-      let nextIndex = backwards ? currentIndex - 1 : currentIndex + 1;
-
-      if (nextIndex > maxIndex) {
-        nextIndex = 0;
-      }
-
-      if (nextIndex < 0) {
-        nextIndex = maxIndex;
-      }
-
-      const newFocusElem = sortedFocusableElems[nextIndex];
-
-      newFocusElem.focus();
-
-      if (document.activeElement !== newFocusElem) {
-        selectNextFocusableElem(
-          sortedFocusableElems,
-          nextIndex,
-          shiftKeyPressed,
-          skipCount + 1
-        );
-      }
-    },
-    []
-  );
 
   const trapper = useCallback(
     (evt: KeyboardEvent) => {
@@ -127,7 +124,7 @@ export function useFocusTrap(
         }
       }
     },
-    [selectNextFocusableElem]
+    []
   );
 
   useEffect(() => {
