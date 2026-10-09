@@ -9,7 +9,6 @@ from scrapy.http import Request, XmlResponse
 from scrapy.spiders import SitemapSpider
 from scrapy.utils.gz import gunzip, gzip_magic_number
 from scrapy.utils.sitemap import Sitemap, sitemap_urls_from_robots
-from scrapy_playwright.page import PageMethod
 
 from generic_crawler.items import Payload
 from generic_crawler.spiders.abstractBaseCrawlSpider import AbstractBaseCrawlSpider
@@ -35,7 +34,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
     payload = {}
 
     def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_body_tags, title_tag, replace_rule, links_to_follow,
-                 use_playwright, playwright_selector, playwright_timeout, datasource_id, schedule_id, ingestion_url, timestamp,
+                 use_playwright, playwright_selector, playwright_timeout, playwright_wait_until, datasource_id, schedule_id, ingestion_url, timestamp,
                  additional_metadata, max_length, max_size_bytes, tenant_id, excluded_paths, allowed_paths,
                  document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map, custom_metadata, do_extract_docs, cert_verification, *a, **kw):
 
@@ -43,7 +42,8 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         AbstractBaseCrawlSpider.__init__(self, ingestion_url, body_tag, excluded_body_tags, title_tag, allowed_domains,
                                         excluded_paths, allowed_paths, max_length, max_size_bytes, document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map,
                                         custom_metadata, additional_metadata, do_extract_docs, cert_verification, datasource_id,
-                                        schedule_id, timestamp, tenant_id, *a, **kw)
+                                        schedule_id, timestamp, tenant_id, use_playwright, playwright_selector,
+                                        playwright_timeout, playwright_wait_until, *a, **kw)
 
         self._cbs = []
         for r, c in self.sitemap_rules:
@@ -55,21 +55,6 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
 
         self.sitemap_urls = ast.literal_eval(sitemap_urls)
         self.replace_rule = ast.literal_eval(replace_rule)
-        self.use_playwright = ast.literal_eval(use_playwright)
-        self.playwright_selector = playwright_selector
-        self.playwright_timeout = ast.literal_eval(playwright_timeout)
-
-        self.playwright_meta = {
-            "playwright": self.use_playwright,
-            "playwright_page_goto_kwargs": {
-                "timeout": self.playwright_timeout,
-                "wait_until": "domcontentloaded"
-            },
-            "playwright_page_coroutines": [
-                # We'll just wait a short time — if not found, no crash
-                PageMethod("wait_for_selector", self.playwright_selector, timeout=self.playwright_timeout)
-            ]
-        } if self.use_playwright else {}
 
         self.links_to_follow = ast.literal_eval(links_to_follow)
         self.parsed_links = set()  # url cache

@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 import requests
 from scrapy import Spider
+from scrapy_playwright.page import PageMethod
 
 from generic_crawler.items import FileItem, BinaryItem, Payload
 from generic_crawler.spiders.util.file.utility import get_path, extension_from_mimetype
@@ -23,7 +24,8 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 
 	def __init__(self, ingestion_url, body_tag, excluded_body_tags, title_tag, allowed_domains, excluded_paths,
 				 allowed_paths, max_length, max_size_bytes, document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map, custom_metadata, additional_metadata,
-				 do_extract_docs, cert_verification, datasource_id, schedule_id, timestamp, tenant_id, *a, **kw):
+				 do_extract_docs, cert_verification, datasource_id, schedule_id, timestamp, tenant_id, use_playwright,
+				 playwright_selector, playwright_timeout, playwright_wait_until, *a, **kw):
 		if self.__class__ == AbstractBaseCrawlSpider:
 			raise Exception("Error: Abstract class initialization")
 		super(AbstractBaseCrawlSpider, self).__init__(*a, **kw)
@@ -56,6 +58,23 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		self.do_extract_docs = ast.literal_eval(do_extract_docs)
 		self.cert_verification = ast.literal_eval(cert_verification)
 		self.count = 0
+
+		self.use_playwright = ast.literal_eval(use_playwright)
+		self.playwright_selector = playwright_selector
+		self.playwright_timeout = ast.literal_eval(playwright_timeout)
+		self.playwright_wait_until = playwright_wait_until
+
+		self.playwright_meta = {
+			"playwright": self.use_playwright,
+			"playwright_page_goto_kwargs": {
+				"timeout": self.playwright_timeout,
+				"wait_until": self.playwright_wait_until
+			},
+			"playwright_page_coroutines": [
+				# We'll just wait a short time — if not found, no crash
+				PageMethod("wait_for_selector", self.playwright_selector, timeout=self.playwright_timeout)
+			]
+		} if self.use_playwright else {}
 
 	def try_parse_documents(self, anchors, url_request, extracted_custom_metadata):
 
