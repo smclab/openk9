@@ -27,7 +27,7 @@ export default defineConfig({
   plugins: [
     react(),
     libInjectCss(),
-    dts({ include: ["lib"], outDir: "dist" }),
+    dts({ include: ["lib"], outDirs: "dist" }),
     commonjs({
       include: /node_modules/,
       transformMixedEsModules: true,

@@ -150,7 +150,7 @@ export function Table<
         </div>
         <TableVirtuoso
           hidden={showSelectedItemsTable}
-          totalCount={field(data)?.edges?.length}
+          totalCount={field(data)?.edges?.length ?? 0}
           style={{
             height: "80vh",
             backgroundColor: theme.palette.background.paper,
