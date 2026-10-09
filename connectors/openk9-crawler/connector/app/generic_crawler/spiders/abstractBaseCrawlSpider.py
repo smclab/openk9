@@ -13,7 +13,7 @@ from scrapy_playwright.page import PageMethod
 
 from generic_crawler.items import FileItem, BinaryItem, Payload
 from generic_crawler.spiders.util.file.utility import get_path, extension_from_mimetype
-from generic_crawler.spiders.util.generic.utility import get_as_base64, post_message, generate_item
+from generic_crawler.spiders.util.generic.utility import get_as_base64, post_message, generate_item, wait_for_selector
 
 logger = logging.getLogger(__name__)
 
@@ -70,9 +70,9 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 				"timeout": self.playwright_timeout,
 				"wait_until": self.playwright_wait_until
 			},
-			"playwright_page_coroutines": [
-				# We'll just wait a short time — if not found, no crash
-				PageMethod("wait_for_selector", self.playwright_selector, timeout=self.playwright_timeout)
+			"playwright_page_methods": [
+				PageMethod("wait_for_load_state", self.playwright_wait_until, timeout=self.playwright_timeout),
+				PageMethod(wait_for_selector, self.playwright_selector, timeout=self.playwright_timeout)
 			]
 		} if self.use_playwright else {}
 

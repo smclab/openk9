@@ -4,6 +4,7 @@ import base64
 import logging
 import re
 import requests
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from scrapy import Item, Spider
 import scrapy
 
@@ -137,5 +138,16 @@ def generate_item(fields):
     for field in fields:
         item.fields[field] = scrapy.Field()
     return item
+
+# endregion
+
+
+# region Playwright
+
+async def wait_for_selector(page, selector, timeout):
+    try:
+        await page.locator(selector).first.wait_for(state="visible", timeout=timeout)
+    except PlaywrightTimeoutError:
+        logger.warning("Selector '%s' not visible within %sms at url: %s", selector, timeout, page.url)
 
 # endregion
