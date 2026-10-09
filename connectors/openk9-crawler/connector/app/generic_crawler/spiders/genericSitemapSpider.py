@@ -14,7 +14,7 @@ from scrapy_playwright.page import PageMethod
 from generic_crawler.items import Payload
 from generic_crawler.spiders.abstractBaseCrawlSpider import AbstractBaseCrawlSpider
 from generic_crawler.spiders.util.generic.utility import post_message
-from .util.generic.utility import get_content, get_favicon, get_title, generate_item
+from .util.generic.utility import get_content, get_favicon, get_title, generate_item, wait_for_selector
 from .util.sitemap.utility import iterloc, regex, is_absolute
 
 logger = logging.getLogger(__name__)
@@ -65,9 +65,8 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
                 "timeout": self.playwright_timeout,
                 "wait_until": "domcontentloaded"
             },
-            "playwright_page_coroutines": [
-                # We'll just wait a short time — if not found, no crash
-                PageMethod("wait_for_selector", self.playwright_selector, timeout=self.playwright_timeout)
+            "playwright_page_methods": [
+                PageMethod(wait_for_selector, self.playwright_selector, timeout=self.playwright_timeout)
             ]
         } if self.use_playwright else {}
 
