@@ -433,7 +433,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		return highlightBuilder;
 	}
 
-	private static void applyMinScore(
+	static void applyMinScore(
 		SearchSourceBuilder searchSourceBuilder,
 		List<SearchTokenRequest> searchQuery, SearchConfig searchConfig) {
 
