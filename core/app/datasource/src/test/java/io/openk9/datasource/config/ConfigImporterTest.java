@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
@@ -36,14 +38,17 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
+import io.openk9.datasource.model.ResultAclConfig;
 import io.openk9.datasource.model.dto.base.CharFilterDTO;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.base.ResultAclConfigDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.CharFilterService;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.RAGConfigurationService;
+import io.openk9.datasource.service.ResultAclConfigService;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -52,6 +57,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -86,6 +92,12 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "dryrun-char-filter";
 	private static final String DANGLING_FIELD_NAME =
 		ENTITY_NAME_PREFIX + "dangling-field";
+	private static final String ACL_DOC_TYPE_NAME =
+		ENTITY_NAME_PREFIX + "result-acl-doc-type";
+	private static final String ACL_TITLE_NAME =
+		ENTITY_NAME_PREFIX + "result-acl-title";
+	private static final String ACL_DATE_NAME =
+		ENTITY_NAME_PREFIX + "result-acl-date";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -107,6 +119,9 @@ public class ConfigImporterTest {
 
 	@Inject
 	RAGConfigurationService ragConfigurationService;
+
+	@Inject
+	ResultAclConfigService resultAclConfigService;
 
 	private static final String COUNT_JOIN_ROWS =
 		"select count(i) from EnrichPipelineItem i";
@@ -471,6 +486,101 @@ public class ConfigImporterTest {
 			"OVERWRITE must apply the incoming value on a name match");
 
 		EntitiesUtils.removeEntity(id, charFilterService, sessionFactory);
+	}
+
+	@Test
+	void the_result_acl_config_round_trips_with_its_roles_and_visible_fields() {
+		// 1. Seed a doc type with two fields and the configuration
+		var docType = docTypeService.create(DocTypeDTO.builder()
+				.name(ACL_DOC_TYPE_NAME)
+				.build())
+			.await().indefinitely();
+		var title = addAclField(docType, ACL_TITLE_NAME, "resultAclImportTitle");
+		var date = addAclField(docType, ACL_DATE_NAME, "resultAclImportDate");
+
+		var seeded = resultAclConfigService.create(ResultAclConfigDTO.builder()
+				.name(ResultAclConfig.DEFAULT_NAME)
+				.enabled(true)
+				.superUserRoles(List.of("auditor", "legal"))
+				.visibleFieldIds(Set.of(title.getId(), date.getId()))
+				.build())
+			.await().indefinitely();
+
+		// 2. The export carries the values and the visible fields as references
+		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+		ConfigEntity exported = pkg.getEntities().stream()
+			.filter(entity -> entity.getType() == ConfigEntityType.RESULT_ACL_CONFIG)
+			.findFirst()
+			.orElseThrow();
+		var exportedAttributes = (ResultAclConfigDTO) exported.getAttributes();
+
+		assertEquals(ResultAclConfig.DEFAULT_NAME, exported.getKey());
+		assertTrue(exportedAttributes.getEnabled());
+		assertEquals(List.of("auditor", "legal"), exportedAttributes.getSuperUserRoles());
+		assertEquals(2, exported.getReferences().get("visibleFields").size());
+
+		// 3. Without a configuration in the tenant the import creates it
+		EntitiesUtils.removeEntity(seeded.getId(), resultAclConfigService, sessionFactory);
+		assertNull(resultAclConfigService.findCurrent().await().indefinitely());
+
+		configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, false)
+			.await().indefinitely();
+
+		assertResultAclConfig(
+			true, List.of("auditor", "legal"), Set.of(title.getId(), date.getId()));
+
+		// 4. With a changed configuration the overwrite restores the exported one
+		var created = resultAclConfigService.findCurrent().await().indefinitely();
+		resultAclConfigService.update(created.getId(), ResultAclConfigDTO.builder()
+				.name(ResultAclConfig.DEFAULT_NAME)
+				.superUserRoles(List.of("other"))
+				.visibleFieldIds(Set.of(title.getId()))
+				.build())
+			.await().indefinitely();
+
+		configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+			.await().indefinitely();
+
+		assertResultAclConfig(
+			true, List.of("auditor", "legal"), Set.of(title.getId(), date.getId()));
+		assertEquals(1, countByName("ResultAclConfig", ResultAclConfig.DEFAULT_NAME),
+			"the import must overwrite the configuration, not duplicate it");
+
+		// Created in this method: remove the configuration before the doc type,
+		// which deletes its fields.
+		EntitiesUtils.removeEntity(
+			resultAclConfigService.findCurrent().await().indefinitely(),
+			resultAclConfigService,
+			sessionFactory);
+		docTypeService.deleteById(docType.getId()).await().indefinitely();
+	}
+
+	private DocTypeField addAclField(DocType docType, String name, String fieldName) {
+		return docTypeService.addDocTypeField(
+				docType.getId(),
+				DocTypeFieldDTO.builder()
+					.name(name)
+					.fieldName(fieldName)
+					.fieldType(FieldType.TEXT)
+					.build())
+			.await().indefinitely()
+			.right;
+	}
+
+	private void assertResultAclConfig(
+		boolean enabled, List<String> roles, Set<Long> visibleFieldIds) {
+
+		var current = resultAclConfigService.findCurrent().await().indefinitely();
+		var currentVisibleFieldIds = resultAclConfigService
+			.getVisibleFields(current.getId())
+			.await().indefinitely()
+			.stream()
+			.map(DocTypeField::getId)
+			.collect(Collectors.toSet());
+
+		assertEquals(enabled, current.isEnabled());
+		assertEquals(roles, ResultAclConfig.toRoleList(current.getSuperUserRoles()));
+		assertEquals(visibleFieldIds, currentVisibleFieldIds);
 	}
 
 	private static ConfigEntity charFilterNode(String ref, String name) {

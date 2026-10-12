@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.config;
 
+import java.util.List;
+
 import io.openk9.datasource.config.model.representation.AclMappingRepresentation;
 import io.openk9.datasource.config.model.representation.EnrichPipelineItemRepresentation;
 import io.openk9.datasource.model.AclMapping;
@@ -42,6 +44,7 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.Range;
+import io.openk9.datasource.model.ResultAclConfig;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.Sorting;
@@ -137,6 +140,8 @@ public interface ConfigEntityMapper {
 
 	HighlightDTO dto(Highlight entity);
 
+	ResultAclConfigDTO dto(ResultAclConfig entity);
+
 	// Nested value objects, reused as sub-mappings by the methods above.
 
 	ProviderModelDTO dto(ProviderModel providerModel);
@@ -207,6 +212,8 @@ public interface ConfigEntityMapper {
 
 	Highlight entity(HighlightDTO dto);
 
+	ResultAclConfig entity(ResultAclConfigDTO dto);
+
 	ProviderModel entity(ProviderModelDTO dto);
 
 	Range entity(RangeDTO dto);
@@ -271,5 +278,30 @@ public interface ConfigEntityMapper {
 	Autocorrection update(@MappingTarget Autocorrection entity, AutocorrectionDTO dto);
 
 	Highlight update(@MappingTarget Highlight entity, HighlightDTO dto);
+
+	ResultAclConfig update(
+		@MappingTarget ResultAclConfig entity, ResultAclConfigDTO dto);
+
+	/**
+	 * Converts the stored super-user roles of a {@link ResultAclConfig} into the
+	 * list carried by its DTO.
+	 *
+	 * @param roles the roles, one per line
+	 * @return the roles, empty when none is stored
+	 */
+	default List<String> toRoleList(String roles) {
+		return ResultAclConfig.toRoleList(roles);
+	}
+
+	/**
+	 * Converts the super-user roles of a {@link ResultAclConfigDTO} into their
+	 * stored form.
+	 *
+	 * @param roles the roles
+	 * @return the roles one per line, {@code null} when there are none
+	 */
+	default String toRoleText(List<String> roles) {
+		return ResultAclConfig.toRoleText(roles);
+	}
 
 }

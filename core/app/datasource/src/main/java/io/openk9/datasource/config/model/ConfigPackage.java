@@ -35,7 +35,7 @@ import lombok.NoArgsConstructor;
 @JsonDeserialize(using = ConfigPackageDeserializer.class)
 public class ConfigPackage {
 
-	public static final String CURRENT_SCHEMA_VERSION = "1.0";
+	public static final String CURRENT_SCHEMA_VERSION = "1.1";
 
 	private String schemaVersion;
 	private ConfigMetadata metadata;

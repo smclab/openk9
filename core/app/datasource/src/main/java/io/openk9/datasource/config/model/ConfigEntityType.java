@@ -41,6 +41,7 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.ResultAclConfig;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.Sorting;
@@ -68,6 +69,7 @@ import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.dto.base.QueryAnalysisDTO;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
+import io.openk9.datasource.model.dto.base.ResultAclConfigDTO;
 import io.openk9.datasource.model.dto.base.RuleDTO;
 import io.openk9.datasource.model.dto.base.SearchConfigDTO;
 import io.openk9.datasource.model.dto.base.SortingDTO;
@@ -125,7 +127,8 @@ public enum ConfigEntityType {
 	TOKEN_TAB(TokenTab.class, TokenTabDTO.class),
 	AUTOCOMPLETE(Autocomplete.class, AutocompleteDTO.class),
 	AUTOCORRECTION(Autocorrection.class, AutocorrectionDTO.class),
-	HIGHLIGHT(Highlight.class, HighlightDTO.class);
+	HIGHLIGHT(Highlight.class, HighlightDTO.class),
+	RESULT_ACL_CONFIG(ResultAclConfig.class, ResultAclConfigDTO.class);
 
 	private final Class<?> entityType;
 	private final Class<?> attributesType;

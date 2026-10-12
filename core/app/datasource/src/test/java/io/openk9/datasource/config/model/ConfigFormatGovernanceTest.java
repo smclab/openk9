@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
  */
 class ConfigFormatGovernanceTest {
 
-	private static final String EXPECTED_SCHEMA_VERSION = "1.0";
+	private static final String EXPECTED_SCHEMA_VERSION = "1.1";
 
 	private static final Set<String> EXPECTED_TYPES = Set.of(
 		"BUCKET",
@@ -68,7 +68,8 @@ class ConfigFormatGovernanceTest {
 		"TOKEN_TAB",
 		"AUTOCOMPLETE",
 		"AUTOCORRECTION",
-		"HIGHLIGHT");
+		"HIGHLIGHT",
+		"RESULT_ACL_CONFIG");
 
 	@Test
 	void exportable_type_set_is_pinned_to_the_schema_version() {
