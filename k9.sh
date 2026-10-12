@@ -626,6 +626,33 @@ compose() {
     IMAGE_GROUP="$GROUP" IMAGE_TAG="$TAG" "${DOCKER_COMPOSE_CMD[@]}" "${flags[@]}" "$@"
 }
 
+# --- Stack ownership check ---
+
+# Container names are fixed, so a stack started from another directory
+# (e.g. another worktree) only shows up as a docker name conflict.
+# Stop early and say where that stack comes from.
+check_stack_owner() {
+    local names
+    names="$(compose config 2>/dev/null | awk '$1 == "container_name:" { print $2 }')"
+    [ -n "$names" ] || return 0
+
+    local name dir project
+    while IFS=$'\t' read -r name dir project; do
+        grep -qxF "$name" <<< "$names" || continue
+        [ "$dir" = "$PWD" ] && continue
+        if [ -z "$dir" ]; then
+            _error "container '$name' exists and is not part of a compose stack."
+            _info "Remove or rename it, then run the command again."
+        else
+            _error "the OpenK9 stack was started from another directory:"
+            _info "  $dir   (project: $project)"
+            _info "Stop it there with './k9.sh down', or from anywhere with:"
+            _info "  docker compose -p $project down"
+        fi
+        exit 1
+    done < <(docker ps -a --format '{{.Names}}\t{{.Label "com.docker.compose.project.working_dir"}}\t{{.Label "com.docker.compose.project"}}')
+}
+
 # --- Usage ---
 
 usage() {
@@ -772,6 +799,7 @@ case "$CMD" in
         do_build
         ;;
     up|start)
+        check_stack_owner
         if [ "$BUILD" = true ]; then
             do_build
         fi
@@ -793,6 +821,7 @@ case "$CMD" in
         fi
         ;;
     restart)
+        check_stack_owner
         if [ "$BUILD" = true ]; then
             do_build
         fi
