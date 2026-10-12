@@ -201,35 +201,17 @@ public class EmbeddingServiceUtilsTest {
 	}
 
 	@Test
-	void mapToEmbeddingModelRequest_should_set_multimodal_when_true() {
+	void mapToEmbeddingModelRequest_should_leave_jsonConfig_untouched() {
 
-		// a multimodal model carrying a pre-existing jsonConfig
-		var embeddingModel = new EmbeddingModel();
-		embeddingModel.setJsonConfig("{\"foo\":\"bar\"}");
-		embeddingModel.setMultimodal(true);
-
-		var request = EmbeddingService.mapToEmbeddingModelRequest(embeddingModel);
-
-		// the flag travels in its own field, the jsonConfig is left untouched
-		assertTrue(request.getMultimodal());
-		var fields = request.getJsonConfig().getFieldsMap();
-		assertFalse(fields.containsKey("multimodal"));
-		assertEquals("bar", fields.get("foo").getStringValue());
-	}
-
-	@Test
-	void mapToEmbeddingModelRequest_should_not_set_multimodal_when_false() {
-
-		// a text-only model carrying a pre-existing jsonConfig
+		// a model carrying a pre-existing jsonConfig
 		var embeddingModel = new EmbeddingModel();
 		embeddingModel.setJsonConfig("{\"foo\":\"bar\"}");
 
 		var request = EmbeddingService.mapToEmbeddingModelRequest(embeddingModel);
 
-		// the flag stays at its proto3 default and the jsonConfig is unchanged
-		assertFalse(request.getMultimodal());
+		// the jsonConfig is copied as it is
 		var fields = request.getJsonConfig().getFieldsMap();
-		assertFalse(fields.containsKey("multimodal"));
+		assertEquals(1, fields.size());
 		assertEquals("bar", fields.get("foo").getStringValue());
 	}
 
@@ -243,7 +225,6 @@ public class EmbeddingServiceUtilsTest {
 
 		// the jsonConfig stays unset, as on the text-only wire
 		assertFalse(request.hasJsonConfig());
-		assertFalse(request.getMultimodal());
 	}
 
 	@Test

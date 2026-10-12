@@ -910,8 +910,6 @@ public class EmbeddingService {
 				StructUtils.fromJson(embeddingModel.getJsonConfig()));
 		}
 
-		embeddingModelBuilder.setMultimodal(embeddingModel.isMultimodal());
-
 		return embeddingModelBuilder.build();
 	}
 

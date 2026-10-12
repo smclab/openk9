@@ -53,6 +53,7 @@ import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.dto.base.CharFilterDTO;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
 import io.openk9.datasource.model.dto.base.ResultAclConfigDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
@@ -63,12 +64,15 @@ import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.ResultAclConfigService;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -117,6 +121,8 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "overwrite-joins-pipeline";
 	private static final String CREATED_PIPELINE_NAME =
 		ENTITY_NAME_PREFIX + "created-pipeline";
+	private static final String OLD_EMBEDDING_MODEL_NAME =
+		ENTITY_NAME_PREFIX + "old-embedding-model";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -144,6 +150,9 @@ public class ConfigImporterTest {
 
 	@Inject
 	EnrichPipelineService enrichPipelineService;
+
+	@Inject
+	ObjectMapper objectMapper;
 
 	private static final String COUNT_JOIN_ROWS =
 		"select count(i) from EnrichPipelineItem i";
@@ -909,6 +918,34 @@ public class ConfigImporterTest {
 		// 3. Clean up the join, then the pipeline created by this method
 		removeEnrichPipelineItem(pipelineId, enrichItemId);
 		EntitiesUtils.removeEntity(pipelineId, enrichPipelineService, sessionFactory);
+	}
+
+	@Test
+	void an_older_export_with_the_multimodal_flag_is_still_read()
+		throws JsonProcessingException {
+
+		// an embedding model exported when the flag was still in the schema
+		String json = """
+			{
+				"ref": "EMBEDDING_MODEL-OLD",
+				"type": "EMBEDDING_MODEL",
+				"key": "%s",
+				"attributes": {
+					"name": "%s",
+					"vectorSize": 1024,
+					"multimodal": true
+				}
+			}
+			""".formatted(OLD_EMBEDDING_MODEL_NAME, OLD_EMBEDDING_MODEL_NAME);
+
+		// the request body is read by the same mapper
+		ConfigEntity entity = objectMapper.readValue(json, ConfigEntity.class);
+
+		// the flag is dropped, the other attributes are kept
+		EmbeddingModelDTO dto =
+			assertInstanceOf(EmbeddingModelDTO.class, entity.getAttributes());
+		assertEquals(OLD_EMBEDDING_MODEL_NAME, dto.getName());
+		assertEquals(1024, dto.getVectorSize());
 	}
 
 	private Long seedCharFilter(String name, String jsonConfig) {

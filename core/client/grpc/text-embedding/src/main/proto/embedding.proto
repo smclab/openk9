@@ -59,14 +59,12 @@ message ProviderModel {
 }
 
 message EmbeddingModel {
+  reserved 5;
+  reserved "multimodal";
   optional string apiKey = 1;
   ProviderModel providerModel = 2;
   .google.protobuf.Struct jsonConfig = 3;
   optional string apiUrl = 4;
-  // Deprecated and ignored by the embedding module: whether a model
-  // embeds images is decided by the module's registry of models, from
-  // provider and model. Kept for older modules; removed in a later release.
-  bool multimodal = 5 [deprecated = true];
 }
 
 message ResponseChunk {

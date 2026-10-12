@@ -32,6 +32,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static io.smallrye.graphql.client.core.Argument.arg;
@@ -61,7 +62,9 @@ public class EmbeddingModelGraphqlTest {
 	private static final String ENTITY = "entity";
 	private static final String FIELD = "field";
 	private static final String FIELD_VALIDATORS = "fieldValidators";
+	private static final String FIELDS = "fields";
 	private static final String ID = "id";
+	private static final String INPUT_FIELDS = "inputFields";
 	private static final String JSON_CONFIG = "jsonConfig";
 	private static final String JSON_CONFIG_EMPTY = "{}";
 	private static final String JSON_CONFIG_UPDATED = "{\n" +
@@ -90,6 +93,7 @@ public class EmbeddingModelGraphqlTest {
 	private static final String MODEL = "model";
 	private static final String MODEL_VALUE = "model_value";
 	private static final String MODEL_VALUE_UPDATED = "model_updated";
+	private static final String MULTIMODAL = "multimodal";
 	private static final String NAME = "name";
 	private static final String PATCH = "patch";
 	private static final String PROVIDER = "provider";
@@ -471,9 +475,51 @@ public class EmbeddingModelGraphqlTest {
 		assertEquals(JSON_CONFIG_UPDATED, embeddingModelPatched.getJsonConfig());
 	}
 
+	@Test
+	void should_not_expose_multimodal() throws ExecutionException, InterruptedException {
+
+		// the output type and the input type of the embedding model
+		var outputFields = typeFieldNames("EmbeddingModel", FIELDS);
+		var inputFields = typeFieldNames("EmbeddingModelDTOInput", INPUT_FIELDS);
+
+		// both are found, and neither names the removed flag
+		assertTrue(outputFields.contains(VECTOR_SIZE));
+		assertTrue(inputFields.contains(VECTOR_SIZE));
+		assertFalse(outputFields.contains(MULTIMODAL));
+		assertFalse(inputFields.contains(MULTIMODAL));
+	}
+
 	@AfterEach
 	void tearDown() {
 		removeEmbeddingModelTwo();
+	}
+
+	private List<String> typeFieldNames(String typeName, String fieldsName)
+		throws ExecutionException, InterruptedException {
+
+		var query = document(
+			operation(
+				OperationType.QUERY,
+				field(
+					"__type",
+					args(
+						arg(NAME, typeName)
+					),
+					field(fieldsName, field(NAME))
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		assertFalse(response.hasError());
+
+		return response.getData()
+			.getJsonObject("__type")
+			.getJsonArray(fieldsName)
+			.stream()
+			.map(field -> field.asJsonObject().getString(NAME))
+			.toList();
 	}
 
 	private void createEmbeddingModelTwo() {

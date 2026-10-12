@@ -87,19 +87,4 @@ public class EmbeddingModelDTO extends K9EntityDTO {
 	)
 	private EmbeddingModel.VectorDataType vectorDataType;
 
-	/**
-	 * @deprecated ignored by the embedding module, which tells a multimodal
-	 * model from its provider and model; accepted until the field is removed.
-	 */
-	@Deprecated
-	@Nullable
-	@Description(
-		"""
-			Deprecated and ignored: the embedding module tells a multimodal
-			model from its provider and model (Cohere Embed v4 on AWS Bedrock,
-			multimodalembedding on Vertex AI). It will be removed.
-			"""
-	)
-	private Boolean multimodal = false;
-
 }
