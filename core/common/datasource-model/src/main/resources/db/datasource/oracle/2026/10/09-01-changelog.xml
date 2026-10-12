@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2026/10/09-01-changelog.xml">
+
+	<changeSet id="1791562120-1" author="openk9">
+		<createTable tableName="result_acl_config">
+			<column name="id" type="NUMBER(38)">
+				<constraints
+					nullable="false"
+					primaryKey="true"
+					primaryKeyName="result_acl_config_pk"
+				/>
+			</column>
+			<column name="create_date" type="TIMESTAMP"/>
+			<column name="modified_date" type="TIMESTAMP"/>
+			<column name="description" type="VARCHAR2(4096)"/>
+			<column name="name" type="VARCHAR2(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="enabled" type="NUMBER(1)" defaultValueBoolean="false">
+				<constraints nullable="false"/>
+			</column>
+			<column name="super_user_roles" type="CLOB"/>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1791562120-2" author="openk9">
+		<createTable tableName="result_acl_config_visible_fields">
+			<column name="result_acl_config_id" type="NUMBER(38)">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="result_acl_config_visible_fields_pk"/>
+			</column>
+			<column name="doc_type_field_id" type="NUMBER(38)">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="result_acl_config_visible_fields_pk"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1791562120-3" author="openk9">
+		<addForeignKeyConstraint baseTableName="result_acl_config_visible_fields"
+								 baseColumnNames="result_acl_config_id"
+								 constraintName="fk_result_acl_config_visible_fields"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedTableName="result_acl_config"
+								 referencedColumnNames="id"/>
+	</changeSet>
+
+	<changeSet id="1791562120-4" author="openk9">
+		<addForeignKeyConstraint baseTableName="result_acl_config_visible_fields"
+								 baseColumnNames="doc_type_field_id"
+								 constraintName="fk_visible_fields_result_acl_config"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedTableName="doc_type_field"
+								 referencedColumnNames="id"/>
+	</changeSet>
+
+	<changeSet id="1791562120-5" author="openk9">
+		<addUniqueConstraint tableName="result_acl_config"
+							 columnNames="name"
+							 constraintName="uk_result_acl_config_name"/>
+	</changeSet>
+
+</databaseChangeLog>

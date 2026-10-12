@@ -188,6 +188,21 @@ public class DocTypeFieldGraphqlResource {
 	}
 
 	@Description("""
+		Retrieves all DocTypeField that can be added to the visible fields of the
+		 result ACL configuration.
+
+		This query returns the DocTypeFields that are not excluded and are not
+		 already visible fields of the tenant result ACL configuration.
+
+		Returns:
+		- A list of DocTypeFields available as visible fields.
+		""")
+	@Query
+	public Uni<List<DocTypeField>> getUnboundDocTypeFieldByResultAclConfig() {
+		return docTypeFieldService.findUnboundDocTypeFieldByResultAclConfig();
+	}
+
+	@Description("""
 		Retrieves all DocTypeField that are not bound to a specific Autocorrection.
 		
 		This query returns all DocTypeFields of textual type (TEXT, KEYWORD, CONSTANT_KEYWORD, 

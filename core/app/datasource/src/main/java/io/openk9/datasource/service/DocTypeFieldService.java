@@ -46,6 +46,8 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.ResultAclConfig;
+import io.openk9.datasource.model.ResultAclConfig_;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.request.DocTypeFieldWithAnalyzerDTO;
 import io.openk9.datasource.service.util.Tuple2;
@@ -318,6 +320,48 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 						FieldType.SEARCH_AS_YOU_TYPE
 					),
 					cb.isNotNull(rootDocTypeField.get(DocTypeField_.parentDocTypeField))
+				)
+			);
+
+			return s.createQuery(criteriaQuery).getResultList();
+		});
+	}
+
+	/**
+	 * Returns the DocTypeFields that can still be added to the visible fields
+	 * of the tenant {@link ResultAclConfig}: the fields that are not excluded
+	 * and not already visible.
+	 *
+	 * @return the selectable DocTypeFields
+	 */
+	public Uni<List<DocTypeField>> findUnboundDocTypeFieldByResultAclConfig() {
+
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<DocTypeField> criteriaQuery = cb.createQuery(DocTypeField.class);
+			Root<DocTypeField> rootDocTypeField = criteriaQuery.from(DocTypeField.class);
+
+			criteriaQuery.select(rootDocTypeField);
+
+			// subquery to find IDs of DocTypeField already visible
+			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<ResultAclConfig> rootResultAclConfig =
+				idsToExcludeQuery.from(ResultAclConfig.class);
+
+			Join<ResultAclConfig, DocTypeField> docTypeFieldJoinToExclude =
+				rootResultAclConfig.join(ResultAclConfig_.visibleFields, JoinType.INNER);
+
+			idsToExcludeQuery.select(docTypeFieldJoinToExclude.get(DocTypeField_.id));
+
+			// exclude already visible DocTypeFields AND the excluded ones
+			criteriaQuery.where(
+				cb.and(
+					cb.not(rootDocTypeField.get(DocTypeField_.id).in(idsToExcludeQuery)),
+					cb.or(
+						cb.isNull(rootDocTypeField.get(DocTypeField_.exclude)),
+						cb.isFalse(rootDocTypeField.get(DocTypeField_.exclude))
+					)
 				)
 			);
 
