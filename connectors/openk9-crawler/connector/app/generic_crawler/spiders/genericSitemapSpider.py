@@ -98,7 +98,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         self.parsed_links = set()
         self.extracted_links_to_follow = set()
 
-    def start_requests(self):
+    async def start(self):
         for url in self.sitemap_urls:
             yield Request(url, self._parse_sitemap, errback=self.playwright_raise_error)
 

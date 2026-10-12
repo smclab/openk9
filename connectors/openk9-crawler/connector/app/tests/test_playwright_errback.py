@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import re
 
@@ -77,7 +78,10 @@ def test_sitemap_requests_use_the_errback():
     spider = sitemap_spider(0)
     spider.sitemap_urls = ["https://example.com/sitemap.xml", "https://example.com/robots.txt"]
 
-    start_requests = list(spider.start_requests())
+    async def collect_start_requests():
+        return [request async for request in spider.start()]
+
+    start_requests = asyncio.run(collect_start_requests())
     index = XmlResponse(
         url="https://example.com/sitemap.xml",
         body=b'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
