@@ -41,7 +41,6 @@ def _complete_model():
         providerModel=embedding_pb2.ProviderModel(
             provider="aws_bedrock", model="cohere.embed-v4"
         ),
-        multimodal=True,
     )
     model.jsonConfig.update(
         {

@@ -214,9 +214,8 @@ Limits:
 - custom providers (served as OpenAI-compatible endpoints) and models outside
   the registry embed text only.
 
-The `multimodal` field of `EmbeddingModel` is deprecated and ignored: it no
-longer selects the embedder. A model enters the registry, or leaves it for
-langchain, with a measure on that model.
+A model enters the registry, or leaves it for langchain, with a measure on
+that model.
 
 ### EmbedContent (v2)
 

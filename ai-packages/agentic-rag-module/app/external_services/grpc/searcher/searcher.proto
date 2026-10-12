@@ -267,12 +267,11 @@ message GetRAGConfigurationsResponse{
 }
 
 message GetEmbeddingModelConfigurationsResponse {
+  reserved 6;
+  reserved "multimodal";
   string apiUrl = 1;
   optional string apiKey = 2;
   .google.protobuf.Struct jsonConfig = 3;
   ProviderModel providerModel = 4;
   int32 vectorSize = 5;
-  // Deprecated and ignored: the embedding module tells a multimodal model
-  // from its provider and model. It will be removed.
-  bool multimodal = 6 [deprecated = true];
 }

@@ -397,7 +397,6 @@ def get_embedding_model_configuration(grpc_host, tenant_id):
             "model": model,
             "vector_size": vector_size,
             "json_config": json_config,
-            "multimodal": response.multimodal,
         }
 
         return configuration
@@ -453,7 +452,6 @@ def generate_documents_embeddings(
                 "apiKey": api_key,
                 "providerModel": provider_model,
                 "jsonConfig": json_config,
-                "multimodal": False,
             },
             document={
                 "filename": "report.pdf",

@@ -290,8 +290,7 @@ def resolve_embedder(configuration):
 
     A model in the multimodal registry is served by its own embedder for
     every modality; any other model goes to langchain and embeds text only.
-    The choice depends on provider and model alone: the deprecated
-    `multimodal` flag of the request is not even read.
+    The choice depends on provider and model alone.
 
     Returns the name of the client and the registry embedder, or None when
     langchain serves the model.
@@ -507,8 +506,7 @@ def to_vector_message(vector, vector_data_type):
 
 def _build_configuration(embedding_model):
     """Maps an EmbeddingModel wire message onto the configuration dict
-    shared by the RPCs. The deprecated multimodal flag is left out: the
-    registry of models decides which client serves a model.
+    shared by the RPCs.
     """
     embedding_model_json_config = json_format.MessageToDict(embedding_model.jsonConfig)
 

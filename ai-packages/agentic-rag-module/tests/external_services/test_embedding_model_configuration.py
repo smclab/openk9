@@ -18,9 +18,7 @@
 """get_embedding_model_configuration asks the datasource for the tenant's
 embedding model and returns it as the dict every embedding call starts from.
 
-The tenant travels with the configuration, and the multimodal flag comes from
-the datasource: it decides whether media may be embedded at all, so it must
-never be assumed.
+The tenant travels with the configuration.
 """
 
 from unittest.mock import MagicMock, patch
@@ -34,7 +32,7 @@ from app.external_services.grpc import grpc_client
 from app.external_services.grpc.searcher import searcher_pb2
 
 
-def _response(multimodal):
+def _response():
     struct = Struct()
     struct.update({"region": "us-central1", "dimensions": 1408})
     return searcher_pb2.GetEmbeddingModelConfigurationsResponse(
@@ -45,7 +43,6 @@ def _response(multimodal):
             provider="vertex", model="multimodalembedding@001"
         ),
         vectorSize=1408,
-        multimodal=multimodal,
     )
 
 
@@ -71,10 +68,9 @@ def _get_embedding_model_configuration(get_embedding_model_configurations):
     return configuration, stub
 
 
-@pytest.mark.parametrize("multimodal", [True, False])
-def test_every_field_reaches_its_output_key(multimodal):
+def test_every_field_reaches_its_output_key():
     configuration, stub = _get_embedding_model_configuration(
-        MagicMock(return_value=_response(multimodal))
+        MagicMock(return_value=_response())
     )
 
     stub.GetEmbeddingModelConfigurations.assert_called_once_with(
@@ -88,7 +84,6 @@ def test_every_field_reaches_its_output_key(multimodal):
         "model": "multimodalembedding@001",
         "vector_size": 1408,
         "json_config": {"region": "us-central1", "dimensions": 1408},
-        "multimodal": multimodal,
     }
 
 

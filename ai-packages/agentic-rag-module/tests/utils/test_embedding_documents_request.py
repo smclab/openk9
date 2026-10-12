@@ -65,7 +65,6 @@ def test_embedding_model_is_mapped_from_the_configuration():
         "providerModel": {"provider": "openai", "model": "text-embedding-3-small"},
         "jsonConfig": {"dimensions": 1536},
         "apiUrl": "http://embedding.local",
-        "multimodal": False,
     }
 
 

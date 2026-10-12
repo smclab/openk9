@@ -23,12 +23,7 @@ from app.external_services.grpc.grpc_client import (
 
 
 def _embedding_model_message(embedding_model_configuration):
-    """Map the embedding model configuration onto the gRPC EmbeddingModel.
-
-    The multimodal flag comes from the searcher configuration and selects the
-    embedder in the embedding module: without it a multimodal model would be
-    served by the text-only path.
-    """
+    """Map the embedding model configuration onto the gRPC EmbeddingModel."""
     provider_model = {
         "provider": embedding_model_configuration.get("model_type"),
         "model": embedding_model_configuration.get("model"),
@@ -39,7 +34,6 @@ def _embedding_model_message(embedding_model_configuration):
         "providerModel": provider_model,
         "jsonConfig": embedding_model_configuration.get("json_config"),
         "apiUrl": embedding_model_configuration.get("api_url"),
-        "multimodal": bool(embedding_model_configuration.get("multimodal")),
     }
 
 

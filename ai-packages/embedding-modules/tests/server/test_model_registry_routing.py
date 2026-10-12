@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""The model picks the client, not the multimodal flag.
+"""The model picks the client.
 
 A model in the registry is served by its own embedder for text, images and
 mixed queries; any other model goes to langchain and embeds text only. The
@@ -129,11 +129,10 @@ def stub(make_stub, monkeypatch):
     )
 
 
-def _model(provider_model, multimodal_flag=False):
+def _model(provider_model):
     provider, model = provider_model
     return embedding_pb2.EmbeddingModel(
         providerModel=embedding_pb2.ProviderModel(provider=provider, model=model),
-        multimodal=multimodal_flag,
     )
 
 
@@ -169,8 +168,8 @@ def _normalized(vector):
     return pytest.approx([component / norm for component in vector])
 
 
-def test_cohere_v4_embeds_images_without_the_flag(stub, calls):
-    chunks = _index(stub, _model(COHERE_V4, multimodal_flag=False))
+def test_cohere_v4_embeds_images(stub, calls):
+    chunks = _index(stub, _model(COHERE_V4))
 
     assert [(text, file_id) for text, file_id, _ in chunks] == [
         ("uno", None),
@@ -183,13 +182,6 @@ def test_cohere_v4_embeds_images_without_the_flag(stub, calls):
     assert not any(call[0] == "langchain" for call in calls)
 
 
-def test_the_flag_does_not_change_the_client(stub, calls):
-    without_flag = _index(stub, _model(COHERE_V4, multimodal_flag=False))
-    with_flag = _index(stub, _model(COHERE_V4, multimodal_flag=True))
-
-    assert with_flag == without_flag
-
-
 def test_cohere_v4_answers_a_mixed_query_with_one_vector(stub, calls):
     vector = _query(stub, _model(COHERE_V4), text="un gatto", image=b"png-1")
 
@@ -197,11 +189,9 @@ def test_cohere_v4_answers_a_mixed_query_with_one_vector(stub, calls):
     assert ("embed_mixed", "un gatto", b"png-1", "image/png") in calls
 
 
-def test_a_model_outside_the_registry_with_the_flag_embeds_text_only(
-    stub, calls, caplog
-):
+def test_a_model_outside_the_registry_embeds_text_only(stub, calls, caplog):
     with caplog.at_level(logging.WARNING, logger=server_module.logger.name):
-        chunks = _index(stub, _model(TITAN_V2, multimodal_flag=True))
+        chunks = _index(stub, _model(TITAN_V2))
 
     assert [(text, file_id) for text, file_id, _ in chunks] == [("uno", None), ("due", None)]
     assert calls == [
@@ -214,13 +204,9 @@ def test_a_model_outside_the_registry_with_the_flag_embeds_text_only(
     )
 
 
-def test_a_custom_provider_with_the_flag_does_not_fail(stub, calls, caplog):
+def test_a_custom_provider_does_not_fail(stub, calls, caplog):
     with caplog.at_level(logging.INFO, logger=server_module.logger.name):
-        chunks = _index(
-            stub,
-            _model(("my-gateway", "my-embedder"), multimodal_flag=True),
-            refs=(),
-        )
+        chunks = _index(stub, _model(("my-gateway", "my-embedder")), refs=())
 
     assert [text for text, _, _ in chunks] == ["uno", "due"]
     assert calls[0] == ("langchain", "my-embedder")

@@ -26,12 +26,8 @@ import pytest
 from app import server as server_module
 from app.embedding import multimodal
 
-MULTIMODAL_CONFIGURATION = {
-    "model_type": "aws_bedrock",
-    "model": "cohere.embed-v4",
-    "multimodal": True,
-}
-TEXT_ONLY_CONFIGURATION = {"model_type": "openai", "model": "m", "multimodal": False}
+MULTIMODAL_CONFIGURATION = {"model_type": "aws_bedrock", "model": "cohere.embed-v4"}
+TEXT_ONLY_CONFIGURATION = {"model_type": "openai", "model": "m"}
 
 
 class _FakeMultimodalEmbedder:

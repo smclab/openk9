@@ -50,7 +50,6 @@ EMBEDDING_MODEL = {
     "apiKey": "sk-embed",
     "providerModel": {"provider": "openai", "model": "text-embedding-3-small"},
     "apiUrl": "http://embedder:8080",
-    "multimodal": False,
 }
 
 # time.time() at the moment the chunks are read: a timestamp in milliseconds
@@ -104,7 +103,6 @@ def test_the_request_carries_the_text_and_the_embedding_setup():
                     provider="openai", model="text-embedding-3-small"
                 ),
                 apiUrl="http://embedder:8080",
-                multimodal=False,
             ),
             vectorDataType=embedding_pb2.VECTOR_DATA_TYPE_FLOAT32,
             text="un gatto e un topo",
