@@ -21,10 +21,17 @@ import java.util.List;
 import java.util.Map;
 import jakarta.inject.Inject;
 
+import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
+import io.quarkus.test.kubernetes.client.KubernetesServer;
+import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import io.quarkus.test.kubernetes.client.WithKubernetesTestServer;
+import io.quarkus.test.vertx.RunOnVertxContext;
+import io.quarkus.test.vertx.UniAsserter;
+import io.quarkus.vertx.VertxContextSupport;
+import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -33,21 +40,44 @@ import org.junit.jupiter.api.Test;
 @TestProfile(IngressServiceEmptyConfigTest.EmptyIngressConfig.class)
 class IngressServiceEmptyConfigTest {
 
+	private static final String NAMESPACE = "k9-unit-test";
+	private static final String INGRESS_NAME = "tenant-ingress";
+
+	@KubernetesTestServer
+	KubernetesServer mockServer;
 	@Inject
 	IngressService ingressService;
 
 	@Test
-	void emptyProperties_resolveAsAbsent() {
+	@RunOnVertxContext
+	void emptyProperties_createIngressWithoutTlsAndClass(UniAsserter asserter) {
 		var ingressDef = IngressDef.of(
-			"tenant-ingress",
+			INGRESS_NAME,
 			"tenant.openk9.local",
 			List.of(IngressDef.Route.of("/", "openk9-search-frontend", 8080))
 		);
 
-		var spec = ingressService.getIngress(ingressDef).getSpec();
+		asserter.execute(() -> ingressService.create(ingressDef));
 
-		Assertions.assertTrue(spec.getTls().isEmpty());
-		Assertions.assertNull(spec.getIngressClassName());
+		asserter.assertThat(
+			this::readIngress,
+			ingress -> {
+				Assertions.assertNotNull(ingress);
+				Assertions.assertTrue(ingress.getSpec().getTls().isEmpty());
+				Assertions.assertNull(ingress.getSpec().getIngressClassName());
+			}
+		);
+	}
+
+	private Uni<Ingress> readIngress() {
+		return VertxContextSupport.executeBlocking(() -> mockServer.getClient()
+			.network()
+			.v1()
+			.ingresses()
+			.inNamespace(NAMESPACE)
+			.withName(INGRESS_NAME)
+			.get()
+		);
 	}
 
 	public static class EmptyIngressConfig implements QuarkusTestProfile {
