@@ -286,7 +286,7 @@ async function ensureAutocorrection(schemaName, name, docTypeFieldId) {
 
   if (existing != null) {
     console.log(`  Autocorrection "${name}": already exists, skipping.`);
-    return existing;
+    return null;
   }
 
   const data = await graphqlQuery(
@@ -312,7 +312,7 @@ async function ensureAutocomplete(schemaName, name, fieldId) {
 
   if (existing != null) {
     console.log(`  Autocomplete "${name}": already exists, skipping.`);
-    return existing;
+    return null;
   }
 
   const data = await graphqlQuery(
@@ -338,7 +338,7 @@ async function ensureSuggestionCategory(schemaName, name, priority, docTypeField
 
   if (existing != null) {
     console.log(`  Suggestion Category "${name}": already exists, skipping.`);
-    return existing;
+    return null;
   }
 
   const data = await graphqlQuery(
@@ -391,6 +391,8 @@ async function configureSearchFeatures(schemaName) {
   }
 
   // DocTypeFields are auto-generated when the plugin driver is registered (step 3).
+  // The ensure* helpers return an id only for an entity created in this run:
+  // an existing one keeps the bucket bindings it has, also when removed by hand.
   const fieldMap = await getDocTypeFieldMap(schemaName);
 
   // Autocorrection on web.content
@@ -651,6 +653,7 @@ async function main() {
   created = 0;
   skipped = 0;
   failed = 0;
+  const createdDatasourceNames = [];
 
   for (const ds of datasources) {
     if (existingDatasources.has(ds.name)) {
@@ -670,6 +673,7 @@ async function main() {
           ds.dataIndex,
           docTypeIds
         );
+        createdDatasourceNames.push(ds.name);
         created++;
       }
       catch (err) {
@@ -703,7 +707,9 @@ async function main() {
       (defaultBucket.node.datasources?.edges ?? []).map(e => e.node.name)
     );
 
-    const datasourceNames = datasources.map(ds => ds.name);
+    // Only the datasources created in this run, so one removed from the
+    // bucket by hand stays removed.
+    const datasourceNames = createdDatasourceNames;
     let linked = 0;
 
     for (const dsName of datasourceNames) {
