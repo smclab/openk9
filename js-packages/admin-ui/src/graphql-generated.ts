@@ -1695,8 +1695,6 @@ export type EmbeddingModel = {
   jsonConfig?: Maybe<Scalars['String']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
-  /** Deprecated and ignored: the embedding module tells a multimodal model from its provider and model (Cohere Embed v4 on AWS Bedrock, multimodalembedding on Vertex AI). It will be removed. */
-  multimodal: Scalars['Boolean'];
   name?: Maybe<Scalars['String']>;
   providerModel?: Maybe<ProviderModel>;
   vectorDataType?: Maybe<VectorDataType>;
@@ -1719,12 +1717,6 @@ export type EmbeddingModelDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
   jsonConfig?: InputMaybe<Scalars['String']>;
-  /**
-   * Deprecated and ignored: the embedding module tells a multimodal
-   * model from its provider and model (Cohere Embed v4 on AWS Bedrock,
-   * multimodalembedding on Vertex AI). It will be removed.
-   */
-  multimodal?: InputMaybe<Scalars['Boolean']>;
   name: Scalars['String'];
   providerModel: ProviderModelDtoInput;
   /**
@@ -17235,4 +17227,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-09-30T11:50:26+02:00
+// Generated on 2026-10-12T15:02:26+02:00
