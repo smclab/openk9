@@ -66,10 +66,12 @@ public class MultiSchemaSqlClientPool extends SqlClientPool
                 .thenCompose(c -> c
                         .execute(alterSessionSchema(dbKind, tenantId))
                         .thenApply(unused -> c));
-        // A caller that gives up cancels only this stage: pass the cancellation on, or
-        // close the connection if it has already arrived, so it goes back to the pool
+        // A caller that gives up cancels only this stage, and a schema that cannot be
+        // set fails it: either way the caller never gets the connection, so pass the
+        // cancellation on, or close the connection if it has already arrived, so it
+        // goes back to the pool
         withSchema.whenComplete((c, t) -> {
-            if (withSchema.isCancelled() && !connection.cancel(false)) {
+            if (t != null && !connection.cancel(false)) {
                 connection.thenAccept(ReactiveConnection::close);
             }
         });
