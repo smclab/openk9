@@ -65,6 +65,19 @@ async function ensureTenant() {
 async function initTenant(schemaName) {
   console.log('2/7 Initializing Tenant Data...');
 
+  // initTenant resets the Default Bucket and its search config to the
+  // defaults, so run it only on a tenant that has no Default Bucket yet.
+  const bucketData = await graphqlQuery(
+    schemaName,
+    `{ buckets(first: 10, searchText: "Default Bucket") { edges { node { id name } } } }`,
+    'Query Default Bucket'
+  );
+
+  if (bucketData?.buckets?.edges?.some(e => e.node.name === 'Default Bucket')) {
+    console.log('2/7 Tenant already initialized, skipping.');
+    return;
+  }
+
   const response = await fetchWithRetry(
     `${TENANT_API}/api/tenant-manager/provisioning/initTenant`,
     {
