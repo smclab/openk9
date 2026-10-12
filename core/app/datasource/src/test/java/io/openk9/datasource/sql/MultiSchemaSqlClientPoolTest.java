@@ -41,7 +41,8 @@ import static org.mockito.Mockito.when;
 /**
  * A caller that gives up on a tenant connection, while it waits in the pool
  * queue or while the tenant schema is being set, must not keep that
- * connection taken: it goes back to the pool as soon as it arrives.
+ * connection taken: it goes back to the pool as soon as it arrives. The same
+ * holds when the tenant schema cannot be set and the caller gets an error.
  */
 class MultiSchemaSqlClientPoolTest {
 
@@ -95,6 +96,34 @@ class MultiSchemaSqlClientPoolTest {
 
 		// then the caller gives up
 		request.cancel(false);
+
+		verify(sqlConnection).close();
+	}
+
+	@Test
+	@DisplayName("Should close a connection whose tenant id is rejected")
+	void should_close_a_connection_whose_tenant_id_is_rejected() {
+		// a request with no tenant asks for a connection
+		pool.getConnection("<unknown>");
+
+		// then the pool hands over a connection
+		acquisition.complete(sqlConnection);
+
+		verify(sqlConnection).close();
+	}
+
+	@Test
+	@DisplayName("Should close a connection whose tenant schema could not be set")
+	void should_close_a_connection_when_setting_the_schema_fails() {
+		// the database rejects the statement that sets the tenant schema
+		PreparedQuery<RowSet<Row>> setSchema = mock();
+		when(setSchema.execute())
+			.thenReturn(Future.failedFuture(new IllegalStateException("SET failed")));
+		when(sqlConnection.preparedQuery(anyString())).thenReturn(setSchema);
+
+		// a caller asks for a connection and the pool hands one over
+		pool.getConnection(TENANT_ID);
+		acquisition.complete(sqlConnection);
 
 		verify(sqlConnection).close();
 	}
