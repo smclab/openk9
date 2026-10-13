@@ -188,7 +188,6 @@ parse_args() {
         elif [[ "$arg" == -* ]]; then
             OTHER_ARGS+=("$arg")
         else
-            validate_service "$arg"
             SERVICES+=("$arg")
         fi
     done
@@ -228,6 +227,12 @@ parse_args() {
         fi
     done
     PROFILES=("${unique[@]}")
+
+    # Validated once the profiles are known: a service from the extra
+    # compose files may depend on a profile service.
+    for svc in "${SERVICES[@]}"; do
+        validate_service "$svc"
+    done
 }
 
 validate_service() {
@@ -237,6 +242,11 @@ validate_service() {
             return 0
         fi
     done
+    # Services from the K9_EXTRA_COMPOSE files, for the compose commands.
+    if [ -n "${K9_EXTRA_COMPOSE:-}" ] && [ "$CMD" != build ] \
+        && compose config --services 2>/dev/null | grep -qxF "$svc"; then
+        return 0
+    fi
     echo "Error: unknown service '$svc'"
     echo "Valid services: ${VALID_SERVICES[*]}"
     exit 1
@@ -623,6 +633,12 @@ compose() {
             flags+=(-f "$overlay")
         fi
     done
+    # Extra compose files, e.g. the services of a demo built on the stack.
+    local extra
+    IFS=':' read -ra extra <<< "${K9_EXTRA_COMPOSE:-}"
+    for f in "${extra[@]}"; do
+        [ -n "$f" ] && flags+=(-f "$f")
+    done
     IMAGE_GROUP="$GROUP" IMAGE_TAG="$TAG" "${DOCKER_COMPOSE_CMD[@]}" "${flags[@]}" "$@"
 }
 
@@ -749,24 +765,23 @@ Access:
   evaluator) start together with the with-gen-ai profile.
 
 Custom overlays:
-  After starting the stack with k9.sh, you can attach
-  additional services (seeders, connectors, debug tools)
-  using docker compose directly:
+  To add services of your own (a demo frontend, a seeder, a
+  debug tool) to the stack, list their compose files in
+  K9_EXTRA_COMPOSE, in openk9/.env or in the shell, separated
+  by ':':
 
-    docker compose -f my-overlay.yaml up -d
+    K9_EXTRA_COMPOSE=../my-demo/compose.yaml
 
-  Declare the openk9 network as external in your file
-  so the containers join the same network as the stack:
+  Every command then loads them with the profile files, so
+  up, down, logs and restart manage those services too, and
+  their names are accepted as services (./k9.sh logs my-demo).
+  The services join the openk9 network. Relative paths inside
+  those files resolve from openk9/, not from the file: use
+  absolute paths there.
 
-    networks:
-      openk9:
-        external: true
-        name: openk9
-
-  The network must be declared external because it is
-  created and owned by the k9.sh compose project. A
-  separate compose invocation cannot create or manage
-  it — it can only join an existing one.
+  To expose a service under https://<tenant>.openk9.localhost,
+  put a Caddy route in compose-utilities/caddy/conf.d/ (see
+  the README there). Git ignores both kinds of local files.
 
 Examples:
   ./k9.sh up                          Start core services
@@ -793,6 +808,10 @@ USAGE
 # --- Main ---
 
 parse_args "$@"
+
+if [ -n "${K9_EXTRA_COMPOSE:-}" ] && [ "$CMD" != build ]; then
+    _info "Extra compose files (K9_EXTRA_COMPOSE): $K9_EXTRA_COMPOSE"
+fi
 
 case "$CMD" in
     build)

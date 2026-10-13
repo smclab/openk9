@@ -18,6 +18,9 @@ tenant-manager.openk9.localhost {
 localhost, *.localhost, *.*.localhost {
     tls internal
 
+    # Local routes, e.g. for a demo built on the stack: see conf.d/README.md.
+    import /etc/caddy/conf.d/*.caddy
+
     handle /api/datasource/* {
         reverse_proxy openk9-api-gateway:8080
     }
