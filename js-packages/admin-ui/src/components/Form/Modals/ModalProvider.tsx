@@ -51,21 +51,22 @@ export function useModal() {
 type ModalProviderProps = { children: React.ReactNode };
 export function ModalProvider({ children }: ModalProviderProps) {
   const [modalItems, setModalItems] = React.useState<
-    Array<{ key: string } & ModalDefinition>
+    Array<{ key: number } & ModalDefinition>
   >([]);
+  const nextKey = React.useRef(0);
 
   const addModal = React.useCallback(
-    ({ displayType, title, content }: ModalDefinition) => {
-      const key = new Date().toJSON();
+    (definition: ModalDefinition) => {
+      const key = nextKey.current++;
       setModalItems((modalItems) => [
         ...modalItems,
-        { key, displayType, title, content },
+        { key, ...definition },
       ]);
     },
     [],
   );
 
-  const removeModal = (key: string) => {
+  const removeModal = (key: number) => {
     setModalItems((modalItems) =>
       modalItems.filter((item) => item.key !== key),
     );

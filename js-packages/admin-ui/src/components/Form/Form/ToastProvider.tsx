@@ -16,14 +16,23 @@ export function useToast() {
 
 type ToastProviderProps = { children: React.ReactNode };
 export function ToastProvider({ children }: ToastProviderProps) {
-  const [toastItems, setToastItems] = React.useState<Array<{ key: string } & ToastDefinition>>([]);
+  const [toastItems, setToastItems] = React.useState<Array<{ key: number } & ToastDefinition>>([]);
+  const nextKey = React.useRef(0);
+  const timers = React.useRef(new Set<ReturnType<typeof setTimeout>>());
+
+  React.useEffect(() => {
+    const pending = timers.current;
+    return () => pending.forEach((timer) => clearTimeout(timer));
+  }, []);
 
   const addToast = React.useCallback(({ displayType, title, content }: ToastDefinition) => {
-    const key = new Date().toJSON();
+    const key = nextKey.current++;
     setToastItems((toastItems) => [...toastItems, { key, displayType, title, content }]);
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      timers.current.delete(timer);
       setToastItems((toastItems) => toastItems.filter((item) => item.key !== key));
     }, 6000);
+    timers.current.add(timer);
   }, []);
 
   return (
