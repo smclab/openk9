@@ -1,4 +1,22 @@
 services:
+  # Creates the keycloak database when it is missing. The postgres init
+  # script runs only on an empty volume, so it cannot add it to a volume
+  # created without this profile.
+  keycloak-db-init:
+    image: postgres:17
+    container_name: keycloak-db-init
+    environment:
+      PGHOST: postgresql
+      PGUSER: postgres
+      PGPASSWORD: openk9
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        psql -tAc "SELECT 1 FROM pg_database WHERE datname = 'keycloak'" | grep -q 1 \
+          || psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE keycloak WITH OWNER openk9"
+    depends_on:
+      postgresql:
+        condition: service_healthy
   keycloak:
     image: keycloak/keycloak:26.5
     container_name: keycloak
@@ -22,14 +40,13 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+      keycloak-db-init:
+        condition: service_completed_successfully
     healthcheck:
       test: "bash -c ':> /dev/tcp/127.0.0.1/8081' || exit 1"
       interval: 10s
       timeout: 10s
       retries: 10
-  postgresql:
-    environment:
-      - POSTGRES_MULTIPLE_DATABASES=tenantmanager,apigateway,openk9,keycloak
   admin-ui:
     environment:
       AUTH_ORIGIN: ${AUTH_ORIGIN:-http://keycloak.openk9.localhost:8081}
