@@ -26,7 +26,7 @@ import json
 
 import pytest
 
-from app.utils.file_upload import parse_upload_file_extensions
+from app.config import parse_upload_file_extensions
 
 EXPECTED = [".pdf", ".md", ".docx"]
 

@@ -15,9 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import os
-
 from opensearchpy import OpenSearch
+
+from app.config import settings
 
 HOSTS_SEPARATOR = ","
 TLS_SCHEME = "https://"
@@ -57,9 +57,9 @@ def parse_hosts(hosts):
 
 def _connection_options(hosts):
     """
-    Derive the TLS and authentication options from the environment.
+    Derive the TLS and authentication options from the module settings.
 
-    The environment is read at every call rather than at import time: clients
+    The settings are read at every call rather than at import time: clients
     are already built per request, and this keeps the factory testable.
 
     The scheme is left to ``opensearch-py``, which resolves it per host: an
@@ -83,18 +83,18 @@ def _connection_options(hosts):
     options = {}
 
     if any(host.lower().startswith(TLS_SCHEME) for host in hosts):
-        verify_certs = os.getenv("OPENSEARCH_VERIFY_CERTS", "true").lower() != "false"
+        verify_certs = settings.opensearch_verify_certs
         options["verify_certs"] = verify_certs
 
-        ca_certs = os.getenv("OPENSEARCH_CA_CERTS")
+        ca_certs = settings.opensearch_ca_certs
         if ca_certs:
             options["ca_certs"] = ca_certs
 
         if not verify_certs:
             options["ssl_show_warn"] = False
 
-    username = os.getenv("OPENSEARCH_USERNAME")
-    password = os.getenv("OPENSEARCH_PASSWORD")
+    username = settings.opensearch_username
+    password = settings.opensearch_password
 
     if username and password:
         options["http_auth"] = (username, password)

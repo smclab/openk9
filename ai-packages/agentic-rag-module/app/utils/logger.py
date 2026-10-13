@@ -17,14 +17,11 @@
 
 import hashlib
 import logging
-import os
 
-from dotenv import load_dotenv
+from app.config import settings
 
-load_dotenv()
-
-LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
-DEPENDENCIES_LOGGING_LEVEL = os.getenv("DEPENDENCIES_LOGGING_LEVEL", "INFO")
+LOGGING_LEVEL = settings.logging_level
+DEPENDENCIES_LOGGING_LEVEL = settings.dependencies_logging_level
 
 # The root level governs the third-party libraries, and LOGGING_LEVEL only the
 # modules of this application. Left on the root, LOGGING_LEVEL=DEBUG would turn

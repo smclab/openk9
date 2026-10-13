@@ -17,16 +17,13 @@
 
 import asyncio
 import json
-import os
 import secrets
 from contextlib import asynccontextmanager
 from enum import Enum
-from pathlib import Path
 from typing import Annotated
 from urllib.parse import urlparse, urlunparse
 
 import uvicorn
-from dotenv import load_dotenv
 from fastapi import (
     Depends,
     FastAPI,
@@ -44,6 +41,7 @@ from opensearchpy.exceptions import NotFoundError
 from phoenix.otel import register
 from sse_starlette.sse import EventSourceResponse
 
+from app.config import settings
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
 )
@@ -53,7 +51,7 @@ from app.rag.evaluations import evaluations
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import decode_token, unauthorized_response
 from app.utils.embedding import documents_embedding
-from app.utils.file_upload import parse_upload_file_extensions, process_file
+from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import debug_extra, get_logger
 from app.utils.opensearch_client import get_opensearch_client
@@ -68,35 +66,28 @@ from app.utils.scheduler import start_document_deletion_scheduler
 
 logger = get_logger(__name__)
 
-load_dotenv()
-
-ORIGINS = os.getenv("ORIGINS")
-ORIGINS = ORIGINS.split(",")
-OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
-GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
-GRPC_EMBEDDING_MODULE_HOST = os.getenv("GRPC_EMBEDDING_MODULE_HOST")
-RERANKER_API_URL = os.getenv("RERANKER_API_URL")
-SCHEDULE = bool(os.getenv("SCHEDULE", False))
-CRON_EXPRESSION = os.getenv("CRON_EXPRESSION", "0 0 0 ? * * *")
-INTERVAL_IN_DAYS = int(os.getenv("INTERVAL_IN_DAYS", 180))
-ARIZE_PHOENIX_ENABLED = bool(os.getenv("ARIZE_PHOENIX_ENABLED", False))
-ARIZE_PHOENIX_PROJECT_NAME = os.getenv("ARIZE_PHOENIX_PROJECT_NAME", "default")
-ARIZE_PHOENIX_ENDPOINT = os.getenv(
-    "ARIZE_PHOENIX_ENDPOINT", "http://127.0.0.1:6006/v1/traces"
-)
+ORIGINS = settings.origins
+OPENSEARCH_HOST = settings.opensearch_host
+GRPC_DATASOURCE_HOST = settings.grpc_datasource_host
+GRPC_EMBEDDING_MODULE_HOST = settings.grpc_embedding_module_host
+RERANKER_API_URL = settings.reranker_api_url
+SCHEDULE = settings.schedule
+CRON_EXPRESSION = settings.cron_expression
+INTERVAL_IN_DAYS = settings.interval_in_days
+ARIZE_PHOENIX_ENABLED = settings.arize_phoenix_enabled
+ARIZE_PHOENIX_PROJECT_NAME = settings.arize_phoenix_project_name
+ARIZE_PHOENIX_ENDPOINT = settings.arize_phoenix_endpoint
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 USER_ID_KEY = "sub"
 TENANT_ID_KEY = "realm_name"
-UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR"))
+UPLOAD_DIR = settings.upload_dir
 UPLOAD_DIR.mkdir(exist_ok=True)
-UPLOAD_FILE_EXTENSIONS = parse_upload_file_extensions(
-    os.getenv("UPLOAD_FILE_EXTENSIONS", "")
-)
-MAX_UPLOAD_FILE_SIZE = int(os.getenv("MAX_UPLOAD_FILE_SIZE")) * 1024 * 1024
-MAX_UPLOAD_FILES_NUMBER = int(os.getenv("MAX_UPLOAD_FILES_NUMBER"))
+UPLOAD_FILE_EXTENSIONS = settings.upload_file_extensions
+MAX_UPLOAD_FILE_SIZE = settings.max_upload_file_size * 1024 * 1024
+MAX_UPLOAD_FILES_NUMBER = settings.max_upload_files_number
 OPENK9_SECURITY_ADMIN_USERNAME = "admin"
-OPENK9_SECURITY_ADMIN_PASSWORD = os.getenv("OPENK9_SECURITY_ADMIN_PASSWORD")
+OPENK9_SECURITY_ADMIN_PASSWORD = settings.openk9_security_admin_password
 
 
 if ARIZE_PHOENIX_ENABLED:

@@ -32,6 +32,7 @@ a reload would silently assert nothing.
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -59,22 +60,24 @@ def _levels(**environment):
     """Effective level of each logger in a process configured with the given
     environment.
 
-    The module's .env is kept out: load_dotenv() would otherwise fill in the
-    variables a case leaves unset with whatever the developer has configured.
+    The module's .env is kept out by running from an empty directory: the
+    settings would otherwise fill in the variables a case leaves unset with
+    whatever the developer has configured.
     """
-    completed = subprocess.run(
-        [sys.executable, "-c", PROBE],
-        capture_output=True,
-        text=True,
-        check=True,
-        cwd=MODULE_ROOT,
-        env={
-            "PATH": "/usr/bin:/bin",
-            "HOME": str(Path.home()),
-            "PYTHON_DOTENV_DISABLED": "1",
-            **environment,
-        },
-    )
+    with tempfile.TemporaryDirectory() as empty_directory:
+        completed = subprocess.run(
+            [sys.executable, "-c", PROBE],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=empty_directory,
+            env={
+                "PATH": "/usr/bin:/bin",
+                "HOME": str(Path.home()),
+                "ORIGINS": "http://localhost",
+                **environment,
+            },
+        )
     return json.loads(completed.stdout)
 
 
