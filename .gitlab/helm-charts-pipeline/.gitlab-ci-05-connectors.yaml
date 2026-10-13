@@ -20,7 +20,7 @@ push-web-connector-helm:
   script:
   - cd connectors/openk9-crawler/chart/openk9-web-connector && mkdir -p package
   - helm package . -d package
-  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 push-email-connector-helm:
   stage: push
@@ -41,7 +41,7 @@ push-email-connector-helm:
   script:
   - cd connectors/email-connector/chart/openk9-email-connector && mkdir -p package
   - helm package . -d package
-  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 push-database-connector-helm:
   stage: push
@@ -62,7 +62,7 @@ push-database-connector-helm:
   script:
   - cd connectors/database-connector/chart/openk9-database-connector && mkdir -p package
   - helm package . -d package
-  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 push-youtube-connector-helm:
   stage: push
@@ -83,7 +83,7 @@ push-youtube-connector-helm:
   script:
   - cd connectors/youtube-connector/chart/openk9-youtube-connector && mkdir -p package
   - helm package . -d package
-  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 push-minio-connector-helm:
   stage: push
@@ -104,7 +104,7 @@ push-minio-connector-helm:
   script:
   - cd connectors/minio-connector/chart/openk9-minio-connector && mkdir -p package
   - helm package . -d package
-  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 push-gitlab-connector-helm:
   stage: push
@@ -125,4 +125,4 @@ push-gitlab-connector-helm:
   script:
   - cd connectors/gitlab-connector/chart/openk9-gitlab-connector && mkdir -p package
   - helm package . -d package
-  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz

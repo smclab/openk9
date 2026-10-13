@@ -15,7 +15,7 @@ push-openk9-rag-module-helm:
   script:
     - cd helm-charts/03-gen-ai && mkdir package
     - helm package openk9-rag-module -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 push-openk9-agentic-rag-module-helm:
   stage: push
@@ -31,7 +31,7 @@ push-openk9-agentic-rag-module-helm:
   script:
     - cd helm-charts/03-gen-ai && mkdir package
     - helm package openk9-agentic-rag-module -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 push-openk9-embedding-module-helm:
   stage: push
@@ -47,7 +47,7 @@ push-openk9-embedding-module-helm:
   script:
     - cd helm-charts/03-gen-ai && mkdir package
     - helm package openk9-embedding-module -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 push-talk-to-helm:
   stage: push
@@ -63,5 +63,5 @@ push-talk-to-helm:
   script:
     - cd helm-charts/03-gen-ai && mkdir package
     - helm package openk9-talk-to -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 

@@ -15,7 +15,7 @@ push-datasource-helm:
   script:
     - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-datasource -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 push-ingestion-helm:
   stage: push
@@ -31,7 +31,7 @@ push-ingestion-helm:
   script:
     - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-ingestion -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 
 push-searcher-helm:
@@ -48,7 +48,7 @@ push-searcher-helm:
   script:
     - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-searcher -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 
 push-tenant-manager-helm:
@@ -65,7 +65,7 @@ push-tenant-manager-helm:
   script:
     - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-tenant-manager -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 
 push-tenant-ui-helm:
@@ -82,7 +82,7 @@ push-tenant-ui-helm:
   script:
     - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-tenant-ui -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 
 push-admin-ui-helm:
@@ -99,7 +99,7 @@ push-admin-ui-helm:
   script:
     - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-admin-ui -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 
 push-search-frontend-helm:
@@ -116,7 +116,7 @@ push-search-frontend-helm:
   script:
     - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-search-frontend -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
 
 
 push-api-gateway-helm:
@@ -133,4 +133,4 @@ push-api-gateway-helm:
   script:
     - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-api-gateway -d package
-    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz
