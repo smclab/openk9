@@ -3,10 +3,19 @@ ARG PYTHON_BASE_DOCKER_IMAGE=3.12-slim
 FROM python:${PYTHON_BASE_DOCKER_IMAGE} AS builder
 
 ARG MODE=cpu
-# Populated automatically by BuildKit from --platform (e.g. arm64, amd64).
-ARG TARGETARCH
+
+# The venv lives outside the WORKDIR, which is chowned to the runtime user
+# below: chowning it would copy the whole venv into a new layer
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_NO_CACHE=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /docling-processor/
+
+COPY --from=ghcr.io/astral-sh/uv:0.13.0@sha256:cdc6093146eb3ff6a40107b38f008b789e050e77ad87865e381d9917da55a168 /uv /uvx /bin/
 
 # `cv2` ends up being the non-headless opencv-python that rapidocr pulls in,
 # and it needs these libraries, which python:*-slim does not carry.
@@ -17,22 +26,11 @@ RUN apt-get update && \
         libglib2.0-0t64 && \
     rm -rf /var/lib/apt/lists/*
 
-COPY ./requirements.txt ./
-COPY ./requirements_cpu.txt ./
-COPY ./requirements_arm64.txt ./
+COPY ./pyproject.toml ./uv.lock ./
 
-RUN echo "MODE=$MODE TARGETARCH=$TARGETARCH"
-# MODE=gpu uses the CUDA requirements; otherwise pick CPU wheels by arch: the
-# +cpu torch/torchvision wheels are x86_64-only, so arm64 builds use the
-# default-PyPI aarch64 wheels (requirements_arm64) to run natively instead of
-# under amd64 emulation.
-RUN if [ "$MODE" = "gpu" ]; then \
-        pip install --no-cache-dir -r requirements.txt; \
-    elif [ "$TARGETARCH" = "arm64" ]; then \
-        pip install --no-cache-dir -r requirements_arm64.txt; \
-    else \
-        pip install --no-cache-dir -r requirements_cpu.txt; \
-    fi
+# MODE=cpu installs the +cpu torch/torchvision wheels, available for both amd64
+# and arm64; MODE=gpu installs the CUDA ones.
+RUN uv sync --locked --no-dev --extra "$MODE"
 
 COPY ./app ./app
 
@@ -41,9 +39,11 @@ COPY ./app ./app
 # depends on this stage's output.
 FROM builder AS test
 
+ARG MODE=cpu
+
 COPY ./tests ./tests
 
-RUN pip install --no-cache-dir pytest==9.1.0 && \
+RUN uv sync --locked --extra "$MODE" --group dev && \
     python -m pytest tests && \
     touch /tmp/tests.passed
 

@@ -27,7 +27,7 @@ DOCLING_PROCESSOR_DOCKER_IMAGE_NAME := docling-processor
 CONFIG_FILE := python_modules_config.txt
 GIT_REPO_ROOT := $(shell git rev-parse --show-toplevel 2>/dev/null)
 CONFIG_PATH := $(if $(GIT_REPO_ROOT),$(GIT_REPO_ROOT)/$(CONFIG_FILE),)
-# gpu builds install the CUDA requirements instead of the CPU wheels.
+# gpu builds install the CUDA torch wheels instead of the CPU ones.
 MODE ?= cpu
 
 # Show help message
@@ -44,7 +44,7 @@ help:
 	@echo "  help                        Show this help message"
 	@echo ""
 	@echo "Variables:"
-	@echo "  MODE                        cpu (default) or gpu, selects the requirements file"
+	@echo "  MODE                        cpu (default) or gpu, selects the torch variant"
 
 # Check for required commands and environment
 check_commands:

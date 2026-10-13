@@ -40,7 +40,8 @@ Converted formats:
 Docling also knows OpenDocument (`odt`, `ods`, `odp`), XBRL (`xml_xbrl`),
 audio and video, but their backends need install extras this image does not
 ship (`odfdo`, `arelle-release`, `whisper`/`librosa`). Adding one means adding
-the matching extra to the three `requirements*.in` and to `SUPPORTED_FORMATS`
+the matching extra to the `docling` dependency in `pyproject.toml` (then
+running `uv lock`) and to `SUPPORTED_FORMATS`
 in `app/utils/pipeline_options.py`.
 
 USPTO patents (`xml_uspto`) and METS-GBS archives (`mets_gbs`) are left out for
@@ -73,44 +74,32 @@ The enricher runs as part of the OpenK9 stack. Bring it up with the
 The prerequisite for this enricher is:
 - An Openk9 pipeline callback endpoint
 
-> **Build platform note:** the `cpu` mode pins `torch`/`torchvision` `+cpu`
-> wheels that are published only for `linux/amd64` (it runs under emulation on
-> Apple Silicon, so build and startup are slower).
+> **Build platform note:** the `cpu` mode installs the `torch`/`torchvision`
+> `+cpu` wheels, published for both `linux/amd64` and `linux/arm64`, so the
+> image builds and runs natively on Apple Silicon too. The `gpu` mode is
+> `linux/amd64` only.
  
 ### Local Setup
 To run the enricher in local you have to:
-1. Create a virtual environment from the ernicher folder project, run:
+1. Install the dependencies from the enricher folder with
+   [uv](https://docs.astral.sh/uv/): `pyproject.toml` declares the direct
+   dependencies and `uv.lock` pins the whole tree.
     ```bash
-    python -m venv venv
-    ```
-2. Activate the virtual environment:
-    ```bash
-    #On macOS / Linux
-    source venv/bin/activate
-
-    #On Windows (PowerShell)
-    venv\Scripts\Activate
-
-    #On Windows (cmd)
-    venv\Scripts\activate.bat
-    ```
-3. Install the requirements:
-    ```bash 
     #CPU only mode
-    pip install -r requirements_cpu.txt
+    uv sync --extra cpu --group dev
 
     #GPU mode
-    pip install -r requirements.txt
+    uv sync --extra gpu --group dev
     ```
-4. Start the two services, each in its own terminal:
+2. Start the two services, each in its own terminal:
     ```bash
     #Docling Processor
-    uvicorn app.server:app --host 0.0.0.0 --port 8002
+    uv run uvicorn app.server:app --host 0.0.0.0 --port 8002
 
     #OpenK9 datasource/callback mock (receives the result on DATASOURCE_HOST)
-    uvicorn external.doc_server:app --host 0.0.0.0 --port 8001
+    uv run uvicorn external.doc_server:app --host 0.0.0.0 --port 8001
     ```
-5. Serve a sample binary over HTTP so Docling can fetch it. Drop a document
+3. Serve a sample binary over HTTP so Docling can fetch it. Drop a document
    (for example `sample.pdf`) into a directory and start Python's built-in
    static server from that directory:
     ```bash
@@ -118,7 +107,7 @@ To run the enricher in local you have to:
     python -m http.server 8003
     ```
    The file is now reachable at `http://localhost:8003/sample.pdf`.
-6. Trigger a task on the processor. Open the Docling Swagger UI at
+4. Trigger a task on the processor. Open the Docling Swagger UI at
    http://localhost:8002/docs, call `POST /start-task/`, and set each binary's
    `url` to the static-server URL from the previous step:
     ```json
@@ -168,8 +157,12 @@ make build MODE=gpu
 `make test` builds the `test` stage alone, so pytest and the tests never reach
 the runtime image; `make build` fails when a test fails, because the runtime
 stage depends on the output of the test stage. The suite also runs from the
-enricher folder with `python -m pytest tests`, provided the pinned
-requirements are installed in the active environment.
+enricher folder with `uv run pytest tests`.
+
+To change a dependency, edit `pyproject.toml` and run `uv lock`; to upgrade a
+single package, run `uv lock --upgrade-package <package>`. Commit `uv.lock`
+together with `pyproject.toml`: the Docker build installs with `--locked` and
+fails if the two are out of sync.
 
 ## API Reference
 

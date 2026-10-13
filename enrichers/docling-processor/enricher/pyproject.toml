@@ -1,0 +1,57 @@
+[project]
+name = "docling-processor"
+version = "2026.3.0.dev0"
+description = "OpenK9 enricher that converts documents to Markdown with Docling"
+authors = [{ name = "SMC", email = "smc.roma@smc.it" }]
+keywords = ["OpenK9", "enricher", "docling"]
+license = "AGPL-3.0-or-later"
+requires-python = "==3.12.*"
+dependencies = [
+    "docling[easyocr]==2.126.0",
+    "fastapi==0.141.1",
+    "uvicorn==0.52.4",
+]
+
+[project.optional-dependencies]
+cpu = ["torch==2.14.0", "torchvision==0.29.0"]
+# CUDA wheels exist for Linux only
+gpu = [
+    "torch==2.14.0; sys_platform == 'linux'",
+    "torchvision==0.29.0; sys_platform == 'linux'",
+]
+
+[dependency-groups]
+dev = ["pytest==9.1.0"]
+
+[project.urls]
+Homepage = "https://www.openk9.io/"
+Documentation = "https://www.openk9.io/docs/"
+Repository = "https://github.com/smclab/openk9.git"
+Issues = "https://github.com/smclab/openk9/issues"
+
+[tool.uv]
+# Not an installable package: the image copies app/ and runs it in place
+package = false
+# The images are Linux; macOS is kept for local development
+environments = ["sys_platform == 'linux'", "sys_platform == 'darwin'"]
+conflicts = [[{ extra = "cpu" }, { extra = "gpu" }]]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-gpu", extra = "gpu" },
+]
+torchvision = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-gpu", extra = "gpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-gpu"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
