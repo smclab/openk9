@@ -74,6 +74,8 @@ COPY --from=builder /tld_cache /app/tld_cache
 COPY ./scrapydweb_settings_v11.py /app/scrapydweb_settings_v11.py
 
 RUN apt-get update && apt-get upgrade -y && \
+        # Install tini as PID 1 to reap zombie processes
+        apt-get install -y --no-install-recommends tini && \
         # Install playwright to install dependencies
         python -m playwright install-deps webkit && \
     apt-get clean && \
@@ -104,5 +106,5 @@ RUN chgrp -R 0 /app /var/lib/scrapyd /var/lib/scrapydweb && \
 # Security best practice: run as non-root
 USER 1001
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["/etc/docker-entrypoint.sh"]
