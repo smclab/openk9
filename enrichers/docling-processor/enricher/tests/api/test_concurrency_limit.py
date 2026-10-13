@@ -21,9 +21,9 @@ import threading
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-import dotenv
-
+import app.config
 import app.server as server
+from app.config import Settings
 
 TASKS = 6
 
@@ -81,9 +81,9 @@ def test_conversions_never_exceed_the_configured_concurrency():
 # its executor as they are.
 def test_conversions_are_serial_by_default(monkeypatch):
     monkeypatch.delenv("MAX_CONCURRENT_CONVERSIONS", raising=False)
-    # The module loads the .env on import: a developer's own must not stand in
-    # for the default.
-    monkeypatch.setattr(dotenv, "load_dotenv", lambda *args, **kwargs: False)
+    # The settings load the .env: a developer's own must not stand in for the
+    # default.
+    monkeypatch.setattr(app.config, "settings", Settings(_env_file=None))
     spec = importlib.util.spec_from_file_location("isolated_server", server.__file__)
     isolated = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(isolated)

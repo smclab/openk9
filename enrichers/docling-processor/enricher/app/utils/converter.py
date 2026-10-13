@@ -16,7 +16,6 @@
 #
 
 import json
-import os
 import threading
 from io import BytesIO
 
@@ -24,18 +23,13 @@ import requests
 from docling.datamodel.base_models import InputFormat
 from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
-from dotenv import load_dotenv
 
+from app.config import settings
 from app.utils.format_detect import detect_format, stream_name
 from app.utils.logger import logger
 from app.utils.pipeline_options import get_format_options
 
-# app.server is imported before it loads the .env itself, so this module has to
-# load it too, or the timeout below would only honour real environment
-# variables.
-load_dotenv()
-
-FETCH_TIMEOUT_SECONDS = float(os.getenv("FETCH_TIMEOUT_SECONDS", "30"))
+FETCH_TIMEOUT_SECONDS = settings.fetch_timeout_seconds
 
 # One converter per worker thread, per format and configuration. Building a
 # DocumentConverter loads the docling models (OCR, layout, table structure),

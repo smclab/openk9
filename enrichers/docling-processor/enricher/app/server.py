@@ -15,27 +15,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import os
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from app.config import settings
 from app.utils.converter import conversion
 from app.utils.exceptions import handle_exception
 from app.utils.logger import logger
 
-load_dotenv()
-
-DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
+DATASOURCE_HOST = settings.datasource_host
 # Conversions are CPU-bound and a single one peaks around 3 GiB (docling loads
 # the OCR, layout and table models, and each worker keeps its own), so the pool
 # is deliberately serial by default: raising it multiplies the resident memory
 # and makes every single conversion slower.
-MAX_CONCURRENT_CONVERSIONS = int(os.getenv("MAX_CONCURRENT_CONVERSIONS", "1"))
-CALLBACK_TIMEOUT_SECONDS = float(os.getenv("CALLBACK_TIMEOUT_SECONDS", "30"))
+MAX_CONCURRENT_CONVERSIONS = settings.max_concurrent_conversions
+CALLBACK_TIMEOUT_SECONDS = settings.callback_timeout_seconds
 
 EXECUTOR = ThreadPoolExecutor(
     max_workers=MAX_CONCURRENT_CONVERSIONS, thread_name_prefix="conversion"
