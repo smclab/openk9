@@ -591,8 +591,13 @@ async function main() {
   const connectors = [
     {
       name: 'Sitemap Crawler',
-      description: 'Docker Compose Web Connector',
-      resourceUri: { baseUri: 'http://openk9-web-connector:5000', path: '/startSitemapCrawling' }
+      description: 'Docker Compose Web Connector, crawling from a sitemap',
+      resourceUri: { baseUri: 'http://openk9-web-connector:5000/sitemap', path: '/startSitemapCrawling' }
+    },
+    {
+      name: 'URL Crawler',
+      description: 'Docker Compose Web Connector, crawling from start URLs',
+      resourceUri: { baseUri: 'http://openk9-web-connector:5000/urls', path: '/startUrlsCrawling' }
     },
     {
       name: 'S3 Connector',
