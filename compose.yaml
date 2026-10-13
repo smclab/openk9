@@ -139,6 +139,9 @@ services:
     image: ${IMAGE_GROUP:-openk9}/openk9-datasource:${IMAGE_TAG:-2026.1.5-SNAPSHOT}
     container_name: openk9-datasource
     hostname: openk9-datasource
+    # Comes back after an out-of-memory kill: the searcher fails every
+    # request while the datasource is down.
+    restart: unless-stopped
     environment:
       PEKKO_CLUSTER_BOOTSTRAP_SERVICE_NAME: 'datasource'
       PEKKO_CLUSTER_FILE: 'local'
@@ -146,6 +149,9 @@ services:
       IO_OPENK9_SCHEDULING_PURGE_MAX_AGE: '2d'
       IO_OPENK9_SCHEDULING_TIMEOUT: '100s'
       JAVA_DEBUG: 'true'
+      # Max heap as a percentage of the Docker VM memory: the base image
+      # default (80%) lets the datasource take the memory of the whole stack.
+      JAVA_MAX_MEM_RATIO: ${DATASOURCE_JAVA_MAX_MEM_RATIO:-25}
       MP_MESSAGING_INCOMING_EVENTS_ROUTING_KEYS: 'noop'
       OPENK9_DATASOURCE_ACL_QUERY_EXTRA_PARAMS_ENABLED: 'true'
       OPENK9_DATASOURCE_QUERY_PARSER_MAX_TEXT_QUERY_LENGTH: '0'
