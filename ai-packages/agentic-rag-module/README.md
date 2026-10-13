@@ -198,24 +198,31 @@ request it sends to the model, and the SSE layer prints every chunk of the
 answer as it is streamed.
 
 ## Local Development
+Dependencies are managed with [uv](https://docs.astral.sh/uv/):
+`pyproject.toml` declares the direct dependencies and `uv.lock` pins the whole
+tree. PyTorch comes in two variants, selected with the `cpu` or `gpu` extra.
+
 ```bash
 # 1. Clone and setup
 git clone <repo>
 cd agentic-rag-module
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Generate gRPC Python code (run after installing requirements)
-python -m grpc_tools.protoc -I. \
-  --python_out=. \
-  --grpc_python_out=. \
-  app/external_services/grpc/searcher/searcher.proto \
-  app/external_services/grpc/embedding/embedding.proto
+uv sync --extra cpu --group dev
 
 # 2. Start development server
-uvicorn app.server:app --host 0.0.0.0 --port 5000 --reload
+uv run uvicorn app.server:app --host 0.0.0.0 --port 5000 --reload
+
+# 3. Run the unit tests
+uv run pytest tests
 ```
+
+`uv run` generates the gRPC stubs from the `.proto` files under
+`app/external_services/grpc/`, and generates them again whenever a `.proto`
+changes or a stub is missing.
+
+To change a dependency, edit `pyproject.toml` and run `uv lock`; to upgrade a
+single package, run `uv lock --upgrade-package <package>`. Commit `uv.lock`
+together with `pyproject.toml`: the Docker build installs with `--locked` and
+fails if the two are out of sync.
 
 ## Deployment with Docker
 
@@ -230,8 +237,14 @@ make check_commands
 # Load and validate configurations
 make load_config
 
-# Build Docker image with configured base image and version
-make build
+# Build Docker image with configured base image and version, installing pytorch-cpu
+make build_pytorch_cpu
+
+# Build Docker image with configured base image and version, installing pytorch with CUDA
+make build_pytorch_gpu
+
+# Run the unit tests in the Docker test stage (MODE=cpu by default)
+make test
 
 # Start Docker Compose services in detached mode
 make start

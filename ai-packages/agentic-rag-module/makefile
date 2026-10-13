@@ -17,7 +17,7 @@
 
 SHELL := /bin/bash
 .PHONY: check_commands load_config \
-        build \
+        build_pytorch_cpu build_pytorch_gpu \
         test \
         start \
         stop
@@ -28,6 +28,7 @@ RAG_MODULE_DOCKER_IMAGE_NAME := agentic-rag-module
 CONFIG_FILE := python_modules_config.txt
 GIT_REPO_ROOT := $(shell git rev-parse --show-toplevel 2>/dev/null)
 CONFIG_PATH := $(if $(GIT_REPO_ROOT),$(GIT_REPO_ROOT)/$(CONFIG_FILE),)
+MODE := cpu
 
 # Show help message
 help:
@@ -38,14 +39,16 @@ help:
 	@echo "Targets:"
 	@echo "  check_commands              Verify required tools (git, docker) and environment"
 	@echo "  load_config                 Load and validate configuration from $(CONFIG_FILE)"
-	@echo "  build                       Build Docker image with configured base image and version"
+	@echo "  build_pytorch_cpu           Build Docker image with configured base image and version, small image size installing only pytorch-cpu"
+	@echo "  build_pytorch_gpu           Build Docker image with configured base image and version, installing pytorch with CUDA"
 	@echo "  test                        Run the unit tests in the Docker test stage"
 	@echo "  start                       Start Docker Compose services in detached mode"
 	@echo "  stop                        Stop running Docker Compose services"
 	@echo "  help                        Show this help message"
 	@echo ""
 	@echo "Typical workflow:"
-	@echo "  make build                  # Build the Docker image"
+	@echo "  make build_pytorch_cpu      # Build the Docker image installing pytorch-cpu"
+	@echo "  make build_pytorch_gpu      # Build the Docker image installing pytorch with CUDA"
 	@echo "  make start                  # Start the services"
 	@echo "  make stop                   # Stop the services"
 
@@ -63,11 +66,21 @@ load_config: check_commands
 	test -n "$$OPENK9_VERSION" || { echo "Error: OPENK9_VERSION not set in config"; exit 1; }; \
 	test -n "$$PYTHON_BASE_DOCKER_IMAGE" || { echo "Error: PYTHON_BASE_DOCKER_IMAGE not set in config"; exit 1; }
 
-# Build Docker image
-build: load_config
+# Build Docker images
+build_pytorch_cpu: load_config
 	@source "$(CONFIG_PATH)" && \
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
+		--build-arg MODE=cpu \
+		--pull \
+		-t "$(RAG_MODULE_DOCKER_IMAGE_NAME):$$OPENK9_VERSION" \
+		.
+
+build_pytorch_gpu: load_config
+	@source "$(CONFIG_PATH)" && \
+	docker buildx build \
+		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
+		--build-arg MODE=gpu \
 		--pull \
 		-t "$(RAG_MODULE_DOCKER_IMAGE_NAME):$$OPENK9_VERSION" \
 		.
@@ -77,6 +90,7 @@ test: load_config
 	@source "$(CONFIG_PATH)" && \
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
+		--build-arg MODE=$(MODE) \
 		--pull \
 		--target test \
 		--output type=cacheonly \
