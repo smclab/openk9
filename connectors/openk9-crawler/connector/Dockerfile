@@ -43,7 +43,7 @@ COPY --from=builder /tld_cache /app/tld_cache
 COPY ./app /app
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
-        curl dos2unix && \
+        curl dos2unix tini && \
         # Install playwright to install dependencies
         pip install playwright && \
         playwright install-deps webkit && \
@@ -69,5 +69,5 @@ RUN chgrp -R 0 /app && \
 # Security best practice: run as non-root
 USER 1001
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["/etc/docker-entrypoint.sh"]

@@ -26,3 +26,15 @@ def test_runtime_env_points_to_the_copied_files(env_var, builder_path):
         rf"^COPY --from=builder {re.escape(builder_path)} (\S+)$", stage, flags=re.MULTILINE
     ).group(1)
     assert env == copied_to
+
+
+def test_tini_is_pid_1():
+    stage = runtime_stage()
+    assert re.search(r"^ENTRYPOINT \[\"/usr/bin/tini\", \"--\"\]$", stage, flags=re.MULTILINE)
+    assert re.search(r"^CMD \[\"/etc/docker-entrypoint.sh\"\]$", stage, flags=re.MULTILINE)
+    assert re.search(r"apt-get install\b[^&]*\btini\b", stage)
+
+
+def test_runtime_runs_as_non_root():
+    stage = runtime_stage()
+    assert re.findall(r"^USER (\S+)$", stage, flags=re.MULTILINE)[-1] == "1001"
