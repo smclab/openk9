@@ -45,7 +45,6 @@ import {
   QDatasourceSchedulersQuery,
   useQDatasourceSchedulersQuery,
 } from "../../../../graphql-generated";
-import { formatOffsetDateTime } from "../../../../utils/formatOffsetDateTime";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@components/Form";
@@ -390,7 +389,7 @@ export function useReindexMutation() {
       const response = await restClient.triggerWithDateResource?.postApiDatasourceV2Trigger({
         datasourceId: Number(datasourceId),
         reindex,
-        startIngestionDate: formatOffsetDateTime(startIngestionDate),
+        startIngestionDate,
       });
       return { status: response?.status || "unknown" };
     },
