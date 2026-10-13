@@ -151,7 +151,7 @@ export function SaveTokenTab() {
 
   const [createOrUpdateTabTokenMutate, createOrUpdateTabTokenMutation] = useCreateOrUpdateTabTokenMutation({
     refetchQueries: ["TabTokenTab", "TabTokens"],
-    onCompleted(data: any) {
+    onCompleted(data) {
       if (data.tokenTabWithDocTypeField?.entity) {
         const isNew = tokenTabId === "new" ? "created" : "updated";
         toast({
@@ -165,7 +165,7 @@ export function SaveTokenTab() {
       } else {
         toast({
           title: `Error`,
-          content: combineErrorMessages(data.tokenTab?.fieldValidators),
+          content: combineErrorMessages(data.tokenTabWithDocTypeField?.fieldValidators),
           displayType: "error",
         });
       }
