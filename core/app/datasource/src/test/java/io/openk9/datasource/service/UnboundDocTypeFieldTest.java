@@ -142,7 +142,10 @@ public class UnboundDocTypeFieldTest {
 
 		assertFalse(actualUnboundDocTypeFields.isEmpty());
 		assertEquals(expectedUnboundDocTypeFields.size(), actualUnboundDocTypeFields.size());
-		assertEquals(expectedUnboundDocTypeFields, actualUnboundDocTypeFields);
+		// the two queries have no ORDER BY: compare the fields, not their order
+		assertEquals(
+			Set.copyOf(expectedUnboundDocTypeFields),
+			Set.copyOf(actualUnboundDocTypeFields));
 
 	}
 
@@ -162,7 +165,10 @@ public class UnboundDocTypeFieldTest {
 		assertEquals(expectedUnboundDocTypeFields.size(), actualUnboundDocTypeFields.size());
 		assertTrue(
 			actualUnboundDocTypeFields.containsAll(expectedUnboundDocTypeFields));
-		assertEquals(expectedUnboundDocTypeFields, actualUnboundDocTypeFields);
+		// the two queries have no ORDER BY: compare the fields, not their order
+		assertEquals(
+			Set.copyOf(expectedUnboundDocTypeFields),
+			Set.copyOf(actualUnboundDocTypeFields));
 
 	}
 
@@ -174,7 +180,11 @@ public class UnboundDocTypeFieldTest {
 		var expectedUnboundDocTypeFields = getAllFilteredDocTypeFields();
 
 		assertFalse(actualUnboundDocTypeFields.isEmpty());
-		assertEquals(expectedUnboundDocTypeFields, actualUnboundDocTypeFields);
+		assertEquals(expectedUnboundDocTypeFields.size(), actualUnboundDocTypeFields.size());
+		// the two queries have no ORDER BY: compare the fields, not their order
+		assertEquals(
+			Set.copyOf(expectedUnboundDocTypeFields),
+			Set.copyOf(actualUnboundDocTypeFields));
 	}
 
 	// Unbound by Autocorrection
@@ -263,7 +273,10 @@ public class UnboundDocTypeFieldTest {
 
 		assertFalse(actualUnboundDocTypeFields.isEmpty());
 		assertEquals(expectedUnboundDocTypeFields.size(), actualUnboundDocTypeFields.size());
-		assertEquals(expectedUnboundDocTypeFields, actualUnboundDocTypeFields);
+		// the two queries have no ORDER BY: compare the fields, not their order
+		assertEquals(
+			Set.copyOf(expectedUnboundDocTypeFields),
+			Set.copyOf(actualUnboundDocTypeFields));
 
 	}
 
@@ -280,7 +293,11 @@ public class UnboundDocTypeFieldTest {
 		var expectedUnboundDocTypeFields = getAllAutocompleteBoundableDocTypeFields();
 
 		assertFalse(actualUnboundDocTypeFields.isEmpty());
-		assertEquals(expectedUnboundDocTypeFields, actualUnboundDocTypeFields);
+		assertEquals(expectedUnboundDocTypeFields.size(), actualUnboundDocTypeFields.size());
+		// the two queries have no ORDER BY: compare the fields, not their order
+		assertEquals(
+			Set.copyOf(expectedUnboundDocTypeFields),
+			Set.copyOf(actualUnboundDocTypeFields));
 	}
 
 	@AfterEach
