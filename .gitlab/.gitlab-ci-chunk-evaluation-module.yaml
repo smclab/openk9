@@ -152,13 +152,6 @@ Build Chunk Evaluation Release:
   needs:
   - job: Fetch config
     artifacts: true
-  cache:
-    key: "shared-pip"
-    paths:
-    - .pip-cache/
-    policy: pull-push
-  before_script:
-  - mkdir -p .pip-cache
   script:
   - source $CI_PROJECT_DIR/config.env
   - mkdir -p /kaniko/.docker

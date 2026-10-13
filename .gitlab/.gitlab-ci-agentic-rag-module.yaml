@@ -41,16 +41,6 @@ Build Agentic Rag Image:
   needs:
   - job: Fetch config
     artifacts: true
-  cache:
-    # Shared pip cache across all AI modules (rag, agentic-rag, embedding).
-    # These modules share many heavy dependencies (torch, transformers, etc.).
-    # Removed 'when: always' to avoid writing a partial/corrupt cache on job failure.
-    key: "shared-pip"
-    paths:
-    - .pip-cache/
-    policy: pull-push
-  before_script:
-  - mkdir -p .pip-cache
   script:
   - source $CI_PROJECT_DIR/config.env
   - echo "=== Configuring Kaniko credentials ==="
@@ -161,13 +151,6 @@ Build Agentic Rag Release:
   needs:
   - job: Fetch config
     artifacts: true
-  cache:
-    key: "shared-pip"
-    paths:
-    - .pip-cache/
-    policy: pull-push
-  before_script:
-  - mkdir -p .pip-cache
   script:
   - source $CI_PROJECT_DIR/config.env
   - mkdir -p /kaniko/.docker
