@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import random
 import time
 from datetime import datetime, timedelta
@@ -10,6 +9,7 @@ import numpy as np
 import pandas as pd
 import pika
 from apscheduler.schedulers.background import BackgroundScheduler
+from config import settings
 from rabbit_manager.structure import setup_rabbitmq
 from utils.evaluators import layout_fidelity, redundancy_bloat, semantic_choerence
 from utils.helpers import (
@@ -23,7 +23,7 @@ from utils.helpers import (
 # The file handler writes to a path that must be writable by the (non-root)
 # runtime user. The WORKDIR (/app) is owned by root, so default to a writable
 # location and let it be overridden via LOG_FILE.
-LOG_FILE = os.getenv("LOG_FILE", "/tmp/app.log")
+LOG_FILE = settings.log_file
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,23 +49,23 @@ scheduler = BackgroundScheduler()
 scheduler.start()
 
 
-rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
-rabbit_user = os.getenv("RABBITMQ_USER", "user")
-rabbit_pass = os.getenv("RABBITMQ_PASS", "pass")
+rabbit_host = settings.rabbitmq_host
+rabbit_user = settings.rabbitmq_user
+rabbit_pass = settings.rabbitmq_pass
 
 setup_rabbitmq()
 
-MAX_RETRIES = os.getenv("RABBITMQ_MAX_RETRIES", 3)
-MIN_TIME_DELAY = int(os.getenv("MIN_TIME_DELAY_MINUTES", 5))
-BUFFER_TRESHOLD = int(os.getenv("BUFFER_TRESHOLD", 50))
-BUFFER_DELAY = int(os.getenv("BUFFER_DELAY", 20))
-BUFFER_UPLOAD = os.getenv("BUFFER_UPLOAD", "").lower() == "true"
+MAX_RETRIES = settings.rabbitmq_max_retries
+MIN_TIME_DELAY = settings.min_time_delay_minutes
+BUFFER_TRESHOLD = settings.buffer_treshold
+BUFFER_DELAY = settings.buffer_delay
+BUFFER_UPLOAD = settings.buffer_upload
 EVALUATORS = [semantic_choerence, redundancy_bloat, layout_fidelity]
-N_MAX_DOCUMENTS = int(os.getenv("N_MAX_DOCUMENTS", 150))
+N_MAX_DOCUMENTS = settings.n_max_documents
 
-DO_EXPERIMENTS = os.getenv("DO_EXPERIMENTS", "False").lower() == "true"
+DO_EXPERIMENTS = settings.do_experiments
 if DO_EXPERIMENTS:
-    EXPERIMENT_MODE = int(os.getenv("EXPERIMENT_MODE", 1))
+    EXPERIMENT_MODE = settings.experiment_mode
 else:
     EXPERIMENT_MODE = 0
 
@@ -229,7 +229,7 @@ def callback(ch, method, properties, body):
         headers = properties.headers or {}
         retry_count = headers.get("retry-count", 0)
 
-        if retry_count >= int(MAX_RETRIES):
+        if retry_count >= MAX_RETRIES:
             logger.info(
                 f"[ERROR] Max retries reached ({retry_count}) - invio in error queue"
             )

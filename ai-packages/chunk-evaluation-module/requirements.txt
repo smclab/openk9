@@ -71,9 +71,11 @@ pyasn1==0.6.4
 pycparser==3.0
 pydantic==2.12.5
 pydantic_core==2.41.5
+pydantic-settings==2.15.0
 Pygments==2.19.2
 pystache==0.6.8
 python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
 python-multipart==0.0.30
 PyYAML==6.0.3
 requests==2.32.5

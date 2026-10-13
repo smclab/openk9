@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import os
 import threading
 import time
 from datetime import datetime
@@ -9,6 +8,7 @@ from functools import partial
 from queue import Queue
 from typing import Any, List, Optional
 
+from config import settings
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from phoenix.otel import register
@@ -25,11 +25,9 @@ from utils.helpers import (
     score,
 )
 
-PHOENIX_PROJECT_NAME = os.getenv("PHOENIX_PROJECT_NAME", "test-eval-module")
-PHOENIX_COLLECTOR_ENDPOINT = os.getenv(
-    "PHOENIX_COLLECTOR_ENDPOINT", "https://phoenix.openk9.io/"
-)
-POLLING_FREQUENCY = float(os.getenv("POLLING_FREQUENCY", 2))
+PHOENIX_PROJECT_NAME = settings.phoenix_project_name
+PHOENIX_COLLECTOR_ENDPOINT = settings.phoenix_collector_endpoint
+POLLING_FREQUENCY = settings.polling_frequency
 
 tracer_provider = register(
     project_name=PHOENIX_PROJECT_NAME,
@@ -69,8 +67,8 @@ def health():
 
 @app.post("/add_dataset")
 def add_dataset(payload: InputPayload):
-    dataset_prefix = os.getenv("DATASET_PREFIX", "dataset")
-    experiment_prefix = os.getenv("EXPERIMENT_PREFIX", "experiment")
+    dataset_prefix = settings.dataset_prefix
+    experiment_prefix = settings.experiment_prefix
     chunks = payload.chunks
     text = payload.text
     chonkie_chunks = []

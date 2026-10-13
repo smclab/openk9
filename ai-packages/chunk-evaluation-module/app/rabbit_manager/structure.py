@@ -1,12 +1,11 @@
-import os
-
 import pika
+from config import settings
 
-rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
-rabbit_user = os.getenv("RABBITMQ_USER", "user")
-rabbit_pass = os.getenv("RABBITMQ_PASS", "pass")
+rabbit_host = settings.rabbitmq_host
+rabbit_user = settings.rabbitmq_user
+rabbit_pass = settings.rabbitmq_pass
 
-RETRY_DELAY_MS = os.getenv("RABBITMQ_RETRY_DELAY_MS", 5000)
+RETRY_DELAY_MS = settings.rabbitmq_retry_delay_ms
 
 MAIN_EX = "main.exchange"
 RETRY_EX = "retry.exchange"
@@ -43,7 +42,7 @@ def setup_rabbitmq():
         queue=RETRY_Q,
         durable=True,
         arguments={
-            "x-message-ttl": int(RETRY_DELAY_MS),  # Wait before retrying
+            "x-message-ttl": RETRY_DELAY_MS,  # Wait before retrying
             "x-dead-letter-exchange": MAIN_EX,  # After TTL → back to main
             "x-dead-letter-routing-key": "main",  # Recommended
         },
