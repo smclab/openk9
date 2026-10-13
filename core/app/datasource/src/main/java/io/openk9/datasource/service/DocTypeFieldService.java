@@ -329,44 +329,85 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 	/**
 	 * Returns the DocTypeFields that can still be added to the visible fields
-	 * of the tenant {@link ResultAclConfig}: the fields that are not excluded
-	 * and not already visible.
+	 * of the tenant {@link ResultAclConfig}: the fields that can be visible,
+	 * as decided by {@link #findResultAclSelectableIds(Mutiny.Session)}, and
+	 * are not visible yet.
 	 *
 	 * @return the selectable DocTypeFields
 	 */
 	public Uni<List<DocTypeField>> findUnboundDocTypeFieldByResultAclConfig() {
 
-		return sessionFactory.withTransaction(s -> {
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+		return sessionFactory.withTransaction(s -> findResultAclSelectableIds(s)
+			.flatMap(selectableIds -> {
+				CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
-			CriteriaQuery<DocTypeField> criteriaQuery = cb.createQuery(DocTypeField.class);
-			Root<DocTypeField> rootDocTypeField = criteriaQuery.from(DocTypeField.class);
+				CriteriaQuery<DocTypeField> criteriaQuery =
+					cb.createQuery(DocTypeField.class);
+				Root<DocTypeField> rootDocTypeField =
+					criteriaQuery.from(DocTypeField.class);
 
-			criteriaQuery.select(rootDocTypeField);
+				criteriaQuery.select(rootDocTypeField);
 
-			// subquery to find IDs of DocTypeField already visible
-			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
-			Root<ResultAclConfig> rootResultAclConfig =
-				idsToExcludeQuery.from(ResultAclConfig.class);
+				// subquery to find IDs of DocTypeField already visible
+				Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+				Root<ResultAclConfig> rootResultAclConfig =
+					idsToExcludeQuery.from(ResultAclConfig.class);
 
-			Join<ResultAclConfig, DocTypeField> docTypeFieldJoinToExclude =
-				rootResultAclConfig.join(ResultAclConfig_.visibleFields, JoinType.INNER);
+				Join<ResultAclConfig, DocTypeField> docTypeFieldJoinToExclude =
+					rootResultAclConfig.join(
+						ResultAclConfig_.visibleFields, JoinType.INNER);
 
-			idsToExcludeQuery.select(docTypeFieldJoinToExclude.get(DocTypeField_.id));
+				idsToExcludeQuery.select(
+					docTypeFieldJoinToExclude.get(DocTypeField_.id));
 
-			// exclude already visible DocTypeFields AND the excluded ones
-			criteriaQuery.where(
-				cb.and(
-					cb.not(rootDocTypeField.get(DocTypeField_.id).in(idsToExcludeQuery)),
-					cb.or(
-						cb.isNull(rootDocTypeField.get(DocTypeField_.exclude)),
-						cb.isFalse(rootDocTypeField.get(DocTypeField_.exclude))
-					)
-				)
-			);
+				criteriaQuery.where(cb.not(
+					rootDocTypeField.get(DocTypeField_.id).in(idsToExcludeQuery)));
 
-			return s.createQuery(criteriaQuery).getResultList();
-		});
+				// filtered in memory: an IN on every selectable ID would hit
+				// the limit of the expressions in a list on Oracle
+				return s.createQuery(criteriaQuery).getResultList()
+					.map(fields -> fields.stream()
+						.filter(field -> selectableIds.contains(field.getId()))
+						.toList());
+			})
+		);
+	}
+
+	/**
+	 * Returns the IDs of the DocTypeFields of the tenant that can be visible
+	 * fields of the {@link ResultAclConfig}, as decided by
+	 * {@link ResultAclConfig#selectableFieldIds(Collection)}.
+	 * <p>
+	 * The fields are read as a projection of their ID, parent ID, type and
+	 * exclude flag, so the outcome does not depend on which parents the
+	 * session has loaded.
+	 *
+	 * @param session the session of the tenant
+	 * @return the IDs of the fields that can be visible
+	 */
+	public Uni<Set<Long>> findResultAclSelectableIds(Mutiny.Session session) {
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+		CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
+		Root<DocTypeField> root = query.from(DocTypeField.class);
+		Join<DocTypeField, DocTypeField> parent =
+			root.join(DocTypeField_.parentDocTypeField, JoinType.LEFT);
+
+		query.multiselect(
+			root.get(DocTypeField_.id),
+			parent.get(DocTypeField_.id),
+			root.get(DocTypeField_.fieldType),
+			root.get(DocTypeField_.exclude)
+		);
+
+		return session.createQuery(query).getResultList()
+			.map(rows -> ResultAclConfig.selectableFieldIds(rows.stream()
+				.map(row -> new ResultAclConfig.FieldNode(
+					(Long) row[0],
+					(Long) row[1],
+					(FieldType) row[2],
+					(Boolean) row[3]))
+				.toList()));
 	}
 
 	/**

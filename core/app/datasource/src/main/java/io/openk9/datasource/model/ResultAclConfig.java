@@ -18,9 +18,15 @@
 package io.openk9.datasource.model;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -60,6 +66,13 @@ public class ResultAclConfig extends K9Entity {
 	public static final String DEFAULT_NAME = "Default Result ACL Configuration";
 
 	private static final String ROLE_SEPARATOR = "\n";
+
+	/**
+	 * The field types whose value is the set of their sub-fields, so a field
+	 * of one of these types holds no value of its own when it has sub-fields.
+	 */
+	private static final Set<FieldType> CONTAINER_TYPES =
+		EnumSet.of(FieldType.OBJECT, FieldType.NESTED);
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
@@ -121,5 +134,81 @@ public class ResultAclConfig extends K9Entity {
 			? null
 			: String.join(ROLE_SEPARATOR, roles);
 	}
+
+	/**
+	 * Selects the DocTypeFields that can be visible fields: for each value of
+	 * a document, the most specific field that holds it.
+	 * <p>
+	 * A field qualifies unless it is excluded, an OBJECT or NESTED field with
+	 * sub-fields (its sub-fields are chosen instead), a field inside an I18N
+	 * field (the I18N field stands for all its variants) or a multi-field,
+	 * which is indexed but never part of the document source. So leaves,
+	 * OBJECT fields without sub-fields, FLATTENED fields and I18N fields
+	 * qualify.
+	 *
+	 * @param fields every DocTypeField of the tenant, so that parents and
+	 *               sub-fields can be told apart
+	 * @return the IDs of the fields that can be visible
+	 */
+	public static Set<Long> selectableFieldIds(Collection<FieldNode> fields) {
+		Map<Long, FieldNode> fieldsById = fields.stream()
+			.collect(Collectors.toMap(FieldNode::id, Function.identity()));
+
+		Set<Long> parentIds = fields.stream()
+			.map(FieldNode::parentId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+
+		return fields.stream()
+			.filter(field -> isSelectable(field, fieldsById, parentIds))
+			.map(FieldNode::id)
+			.collect(Collectors.toSet());
+	}
+
+	private static boolean isSelectable(
+		FieldNode field, Map<Long, FieldNode> fieldsById, Set<Long> parentIds) {
+
+		if (Boolean.TRUE.equals(field.exclude())) {
+			return false;
+		}
+
+		if (CONTAINER_TYPES.contains(field.fieldType())
+			&& parentIds.contains(field.id())) {
+
+			return false;
+		}
+
+		var parent = fieldsById.get(field.parentId());
+
+		// a sub-field of a field holding a value is a multi-field; a sub-field
+		// of an I18N field is one of its variants
+		if (parent != null && !CONTAINER_TYPES.contains(parent.fieldType())) {
+			return false;
+		}
+
+		for (var ancestor = parent; ancestor != null;
+			ancestor = fieldsById.get(ancestor.parentId())) {
+
+			if (ancestor.fieldType() == FieldType.I18N) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * A DocTypeField reduced to what decides whether it can be a visible
+	 * field.
+	 *
+	 * @param id        the ID of the field
+	 * @param parentId  the ID of its parent field, {@code null} for a root
+	 *                  field
+	 * @param fieldType the type of the field
+	 * @param exclude   whether the field is excluded from the search results
+	 */
+	public record FieldNode(
+		Long id, Long parentId, FieldType fieldType, Boolean exclude
+	) {}
 
 }
