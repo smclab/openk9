@@ -74,6 +74,7 @@ services:
       - "443:443"
     volumes:
       - ./compose-utilities/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./compose-utilities/caddy/conf.d:/etc/caddy/conf.d
       - caddy-data:/data
     depends_on:
       - api-gateway
