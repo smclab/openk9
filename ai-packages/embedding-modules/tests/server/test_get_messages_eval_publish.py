@@ -25,6 +25,7 @@ from types import SimpleNamespace
 import pytest
 
 from app import server as server_module
+from app.config import settings
 from app.external_services.grpc.embedding import embedding_pb2
 
 
@@ -83,8 +84,10 @@ def broker(monkeypatch):
         "build_text_embed_texts",
         lambda configuration: lambda texts: [[float(len(text))] for text in texts],
     )
-    for variable in ("DO_EVAL", "RABBITMQ_HOST", "RABBITMQ_USER", "RABBITMQ_PASS"):
-        monkeypatch.delenv(variable, raising=False)
+    monkeypatch.setattr(settings, "do_eval", False)
+    monkeypatch.setattr(settings, "rabbitmq_host", "localhost")
+    monkeypatch.setattr(settings, "rabbitmq_user", "openk9")
+    monkeypatch.setattr(settings, "rabbitmq_password", "openk9")
 
     return broker
 
@@ -109,10 +112,9 @@ def test_without_do_eval_nothing_is_published(stub, broker):
     assert broker.connections == []
 
 
-@pytest.mark.parametrize("value", ["true", "True", "TRUE"])
-def test_do_eval_publishes_the_chunks_and_the_text(stub, broker, monkeypatch, value):
-    monkeypatch.setenv("DO_EVAL", value)
-    monkeypatch.setenv("RABBITMQ_HOST", "rabbit")
+def test_do_eval_publishes_the_chunks_and_the_text(stub, broker, monkeypatch):
+    monkeypatch.setattr(settings, "do_eval", True)
+    monkeypatch.setattr(settings, "rabbitmq_host", "rabbit")
 
     _get_messages(stub)
 
@@ -133,7 +135,7 @@ def test_do_eval_publishes_the_chunks_and_the_text(stub, broker, monkeypatch, va
 
 
 def test_a_broker_failure_keeps_the_response(stub, broker, monkeypatch):
-    monkeypatch.setenv("DO_EVAL", "true")
+    monkeypatch.setattr(settings, "do_eval", True)
     broker.error = ConnectionError("broker down")
 
     response = _get_messages(stub)

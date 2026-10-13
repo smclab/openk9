@@ -25,7 +25,6 @@ from logging.handlers import TimedRotatingFileHandler
 
 import grpc
 import pika
-from dotenv import load_dotenv
 from google.protobuf import json_format
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
@@ -37,6 +36,7 @@ from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
+from app.config import settings
 from app.embedding import chunking, query, router, vertex_batching
 from app.embedding.fetch import fetch_url
 from app.embedding.multimodal import find_model, find_multimodal_embedder
@@ -45,9 +45,7 @@ from app.embedding.router import Pipelines
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
 from app.utils.text_cleaner import clean_text
 
-load_dotenv()
-
-LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+LOGGING_LEVEL = settings.logging_level
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)
@@ -595,12 +593,10 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 round(end - start, 2),
             )
 
-            do_eval = os.getenv("DO_EVAL", "false").lower() == "true"
-
-            if do_eval:
-                rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
-                rabbit_user = os.getenv("RABBITMQ_USER", "openk9")
-                rabbit_pass = os.getenv("RABBITMQ_PASS", "openk9")
+            if settings.do_eval:
+                rabbit_host = settings.rabbitmq_host
+                rabbit_user = settings.rabbitmq_user
+                rabbit_pass = settings.rabbitmq_password
 
                 connection = None
                 try:

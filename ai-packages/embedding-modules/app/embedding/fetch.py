@@ -24,11 +24,11 @@ the response Content-Type, used as a fallback modality hint when the
 MediaRef carries none.
 """
 
-import os
-
 import httpx
 
-FETCH_TIMEOUT_SECONDS = float(os.getenv("FETCH_TIMEOUT_SECONDS", "30"))
+from app.config import settings
+
+FETCH_TIMEOUT_SECONDS = settings.fetch_timeout_seconds
 
 
 def fetch_url(url, client=None):
