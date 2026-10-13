@@ -14,10 +14,12 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-export const convertToInputFormat = (isoString: any) => {
-  const date = new Date(isoString);
-  const formattedDate = date.toISOString().slice(0, 19);
-  return formattedDate;
+export const convertToInputFormat = (isoString: string | null | undefined) => {
+  const date = new Date(isoString ?? 0);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  const time = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  return `${day}T${time}`;
 };
 
 export function convertToBackEndFormatData(isoString: string) {
