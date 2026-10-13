@@ -141,7 +141,7 @@ export const TabsSection = ({
       )}
       {activeTab === "monitoring" && datasourceId !== "new" && <MonitoringTab id={datasourceId} />}
       {activeTab === "reindex" && datasourceId !== "new" && (
-        <Reindex id={datasourceId} data={formValues.lastIngestionDate ?? ""} />
+        <Reindex id={datasourceId} data={formValues.lastIngestionDate} />
       )}
       {activeTab === "dataIndex" && isCreated ? (
         <DataIndex

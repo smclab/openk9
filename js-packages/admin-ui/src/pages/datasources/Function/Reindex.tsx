@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 
 type ReindexType = "reindex" | "partial-reindex";
 
-export default function Reindex({ id, data }: { id: string; data: string }) {
+export default function Reindex({ id, data }: { id: string; data: string | null | undefined }) {
   const { t } = useTranslation();
   const [areaState, setAreaState] = React.useState<ReindexType>("reindex");
   const [modalHeaderButton, setModalHeaderButton] = React.useState<
