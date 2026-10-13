@@ -147,7 +147,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
                 it = self.sitemap_filter(s)
                 for loc in iterloc(it, self.sitemap_alternate_links):
                     loc = self.sitemap_replace(loc, self.replace_rule)
-                    yield Request(loc, callback=self.parse, errback=self.playwright_raise_error)
+                    yield Request(loc, callback=self.parse, meta=self.playwright_meta, errback=self.playwright_raise_error)
 
     def _get_sitemap_body(self, response):
         """Return the sitemap body contained in the given response,
