@@ -54,7 +54,7 @@ Openk9 Agentic Rag Module service handles retention mechanism to handle saved co
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `retention.schedule`    | Enable retention if not empty string     | `""`    |
+| `retention.schedule`    | Enable the retention of saved conversations: `true`/`false` (also `1`/`0`, `yes`/`no`, `on`/`off`). Any other non-empty value blocks the startup     | `""`    |
 | `retention.cronexpression`  | Cron expression to specify when retention job runs      | `0 0 * ? * *` |
 | `retention.interval`      | Interval in days to specify age of conversations to retain | `30`    |     
 
