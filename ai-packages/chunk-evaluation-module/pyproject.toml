@@ -1,0 +1,46 @@
+[project]
+name = "chunk-evaluation-module"
+version = "2026.3.0.dev0"
+description = "OpenK9 module for chunk quality evaluation"
+authors = [{ name = "SMC", email = "smc.roma@smc.it" }]
+keywords = ["OpenK9", "Generative AI", "chunking", "evaluation"]
+license = "AGPL-3.0-or-later"
+requires-python = "==3.12.*"
+dependencies = [
+    "apscheduler==3.11.2",
+    "arize-phoenix==12.35.0",
+    "arize-phoenix-client==1.28.1",
+    "arize-phoenix-otel==0.14.0",
+    "chonkie==1.7.0",
+    "fastapi==0.137.0",
+    "model2vec==0.7.0",
+    "numpy==2.4.2",
+    "pandas==3.0.0",
+    "pika==1.3.2",
+    "pydantic==2.12.5",
+    "sse-starlette==3.2.0",
+    "tokenizers==0.22.2",
+    "uvicorn==0.40.0",
+    # Not imported directly: pinned to versions that fix known vulnerabilities
+    "anyio==4.14.2",
+    "cryptography==50.0.0",
+    "pyarrow==23.0.1",
+    "pyasn1==0.6.4",
+    "python-multipart==0.0.30",
+    "starlette==1.3.1",
+]
+
+[dependency-groups]
+dev = ["pytest==9.1.0"]
+
+[project.urls]
+Homepage = "https://www.openk9.io/"
+Documentation = "https://www.openk9.io/docs/"
+Repository = "https://github.com/smclab/openk9.git"
+Issues = "https://github.com/smclab/openk9/issues"
+
+[tool.uv]
+# Not an installable package: the image copies app/ and runs it in place
+package = false
+# The images are Linux; macOS is kept for local development
+environments = ["sys_platform == 'linux'", "sys_platform == 'darwin'"]

@@ -109,6 +109,27 @@ At this point, it is ready to consume messages.
 
 To see how to send messages, see here: [LINK PER EMBEDDING MODULE]
 
+### Local Development
+Dependencies are managed with [uv](https://docs.astral.sh/uv/):
+`pyproject.toml` declares the direct dependencies and `uv.lock` pins the whole
+tree.
+
+```bash
+# Install the dependencies, test ones included
+uv sync --group dev
+
+# Start the evaluator (reads the same variables as the .env above)
+cd app && uv run python server.py
+
+# Run the unit tests
+uv run pytest tests
+```
+
+To change a dependency, edit `pyproject.toml` and run `uv lock`; to upgrade a
+single package, run `uv lock --upgrade-package <package>`. Commit `uv.lock`
+together with `pyproject.toml`: the Docker build installs with `--locked` and
+fails if the two are out of sync.
+
 ## API Reference
 
 #### Message Payload Format
