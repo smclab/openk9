@@ -172,27 +172,34 @@ public class ResultAclConfigService
 		}
 
 		return docTypeFieldService.findByIds(session, visibleFieldIds)
-			.map(fields -> {
-				validateVisibleFields(visibleFieldIds, fields);
+			.flatMap(fields -> docTypeFieldService
+				.findResultAclSelectableIds(session)
+				.map(selectableIds -> {
+					validateVisibleFields(visibleFieldIds, fields, selectableIds);
 
-				return new LinkedHashSet<>(fields);
-			});
+					return new LinkedHashSet<>(fields);
+				}));
 	}
 
 	/**
-	 * Checks that every requested field exists and that none is excluded.
+	 * Checks that every requested field exists and can be visible.
 	 * <p>
-	 * An excluded field is never part of the documents returned by a search,
-	 * so it cannot be shown on an obscured result either.
+	 * A visible field is the most specific field holding a value of the
+	 * document, see {@link ResultAclConfig#selectableFieldIds}: an excluded
+	 * field is never part of the documents returned by a search, and a
+	 * container, a variant of an I18N field or a multi-field would show
+	 * either a whole subtree or nothing.
 	 *
 	 * @param requestedIds    the field IDs requested in the DTO
 	 * @param persistedFields the fields found on the database, with a
 	 *                        {@code null} entry for each missing ID
+	 * @param selectableIds   the IDs of the fields that can be visible
 	 * @throws InvalidDocTypeFieldSetException if an ID does not exist or a
-	 *                                         field is excluded
+	 *                                         field cannot be visible
 	 */
 	private static void validateVisibleFields(
-		Set<Long> requestedIds, List<DocTypeField> persistedFields) {
+		Set<Long> requestedIds, List<DocTypeField> persistedFields,
+		Set<Long> selectableIds) {
 
 		var existingFields = persistedFields.stream()
 			.filter(Objects::nonNull)
@@ -208,11 +215,11 @@ public class ResultAclConfigService
 				+ "docTypeFields");
 		}
 
-		if (existingFields.stream()
-			.anyMatch(field -> Boolean.TRUE.equals(field.getExclude()))) {
-
+		if (!selectableIds.containsAll(requestedIds)) {
 			throw new InvalidDocTypeFieldSetException(
-				"Excluded docTypeFields cannot be visible fields");
+				"One or more docTypeFields cannot be visible fields: excluded "
+				+ "fields, containers with sub-fields, variants of an i18n "
+				+ "field and multi-fields are not allowed");
 		}
 	}
 

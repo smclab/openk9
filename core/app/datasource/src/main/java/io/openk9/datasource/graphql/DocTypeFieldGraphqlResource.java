@@ -199,8 +199,12 @@ public class DocTypeFieldGraphqlResource {
 		Retrieves all DocTypeField that can be added to the visible fields of the
 		 result ACL configuration.
 
-		This query returns the DocTypeFields that are not excluded and are not
-		 already visible fields of the tenant result ACL configuration.
+		This query returns, for each value of a document, the most specific
+		 DocTypeField holding it, unless it is excluded or already a visible
+		 field of the tenant result ACL configuration. Containers with
+		 sub-fields, the variants of an i18n field and multi-fields are left
+		 out: their sub-fields, the i18n field and the field holding the value
+		 are listed instead.
 
 		Returns:
 		- A list of DocTypeFields available as visible fields.

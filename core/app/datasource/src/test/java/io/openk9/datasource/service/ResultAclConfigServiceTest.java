@@ -55,6 +55,19 @@ public class ResultAclConfigServiceTest {
 	private static final String TITLE_NAME = ENTITY_NAME_PREFIX + "title";
 	private static final String DATE_NAME = ENTITY_NAME_PREFIX + "date";
 	private static final String BODY_NAME = ENTITY_NAME_PREFIX + "body";
+	private static final String TITLE_KEYWORD_NAME =
+		ENTITY_NAME_PREFIX + "title keyword";
+	private static final String META_NAME = ENTITY_NAME_PREFIX + "meta";
+	private static final String META_AUTHOR_NAME =
+		ENTITY_NAME_PREFIX + "meta author";
+	private static final String RAW_NAME = ENTITY_NAME_PREFIX + "raw";
+	private static final String SUMMARY_NAME = ENTITY_NAME_PREFIX + "summary";
+	private static final String SUMMARY_I18N_NAME =
+		ENTITY_NAME_PREFIX + "summary i18n";
+	private static final String SUMMARY_IT_NAME =
+		ENTITY_NAME_PREFIX + "summary it";
+	private static final String SUMMARY_BASE_NAME =
+		ENTITY_NAME_PREFIX + "summary base";
 	private static final String ROLE_AUDITOR = "auditor";
 	private static final String ROLE_LEGAL = "legal";
 
@@ -74,6 +87,14 @@ public class ResultAclConfigServiceTest {
 	private DocTypeField title;
 	private DocTypeField date;
 	private DocTypeField body;
+	private DocTypeField titleKeyword;
+	private DocTypeField meta;
+	private DocTypeField metaAuthor;
+	private DocTypeField raw;
+	private DocTypeField summary;
+	private DocTypeField summaryI18n;
+	private DocTypeField summaryIt;
+	private DocTypeField summaryBase;
 
 	@BeforeEach
 	void setup() {
@@ -85,6 +106,26 @@ public class ResultAclConfigServiceTest {
 		title = addField(TITLE_NAME, "resultAclTitle", FieldType.TEXT, false);
 		date = addField(DATE_NAME, "resultAclDate", FieldType.DATE, null);
 		body = addField(BODY_NAME, "resultAclBody", FieldType.TEXT, true);
+
+		// a multi-field of the title
+		titleKeyword = addSubField(
+			title, TITLE_KEYWORD_NAME, "keyword", FieldType.KEYWORD);
+
+		// a container with a sub-field, and an object without sub-fields
+		meta = addField(META_NAME, "resultAclMeta", FieldType.OBJECT, null);
+		metaAuthor = addSubField(
+			meta, META_AUTHOR_NAME, "author", FieldType.KEYWORD);
+		raw = addField(RAW_NAME, "resultAclRaw", FieldType.OBJECT, null);
+
+		// an i18n field with its variants
+		summary = addField(
+			SUMMARY_NAME, "resultAclSummary", FieldType.I18N, null);
+		summaryI18n = addSubField(
+			summary, SUMMARY_I18N_NAME, "i18n", FieldType.OBJECT);
+		summaryIt = addSubField(
+			summaryI18n, SUMMARY_IT_NAME, "it", FieldType.TEXT);
+		summaryBase = addSubField(
+			summary, SUMMARY_BASE_NAME, "base", FieldType.TEXT);
 	}
 
 	@AfterEach
@@ -243,13 +284,64 @@ public class ResultAclConfigServiceTest {
 	}
 
 	@Test
+	void should_reject_a_field_holding_no_value_of_its_own() {
+		// a container with sub-fields, a variant of an i18n field and a
+		// multi-field, each alone
+		for (var field : List.of(meta, summaryI18n, summaryIt, summaryBase,
+			titleKeyword)) {
+
+			var dto = ResultAclConfigDTO.builder()
+				.name(ResultAclConfig.DEFAULT_NAME)
+				.visibleFieldIds(Set.of(field.getId()))
+				.build();
+
+			assertThrows(
+				InvalidDocTypeFieldSetException.class,
+				() -> resultAclConfigService.create(dto).await().indefinitely(),
+				field.getName());
+		}
+
+		// nothing has been saved
+		assertNull(resultAclConfigService.findCurrent().await().indefinitely());
+	}
+
+	@Test
+	void should_accept_the_most_specific_fields_holding_a_value() {
+		// a sub-field of a container, an object without sub-fields and an
+		// i18n field
+		resultAclConfigService.create(ResultAclConfigDTO.builder()
+				.name(ResultAclConfig.DEFAULT_NAME)
+				.visibleFieldIds(Set.of(
+					metaAuthor.getId(), raw.getId(), summary.getId()))
+				.build())
+			.await().indefinitely();
+
+		var current = resultAclConfigService.findCurrent()
+			.await().indefinitely();
+
+		assertEquals(
+			Set.of(metaAuthor.getId(), raw.getId(), summary.getId()),
+			visibleFieldIds(current));
+	}
+
+	@Test
 	void should_list_only_the_selectable_fields() {
-		// 1. Without a configuration every field but the excluded one is selectable
+		// 1. Without a configuration only the most specific fields holding a
+		// value are selectable
 		var selectable = selectableFieldIds();
 
 		assertTrue(selectable.contains(title.getId()));
 		assertTrue(selectable.contains(date.getId()));
+		assertTrue(selectable.contains(metaAuthor.getId()));
+		assertTrue(selectable.contains(raw.getId()));
+		assertTrue(selectable.contains(summary.getId()));
+
 		assertFalse(selectable.contains(body.getId()));
+		assertFalse(selectable.contains(titleKeyword.getId()));
+		assertFalse(selectable.contains(meta.getId()));
+		assertFalse(selectable.contains(summaryI18n.getId()));
+		assertFalse(selectable.contains(summaryIt.getId()));
+		assertFalse(selectable.contains(summaryBase.getId()));
 
 		// 2. A visible field is no longer selectable
 		resultAclConfigService.create(ResultAclConfigDTO.builder()
@@ -299,6 +391,20 @@ public class ResultAclConfigServiceTest {
 					.build())
 			.await().indefinitely()
 			.right;
+	}
+
+	private DocTypeField addSubField(
+		DocTypeField parent, String name, String fieldName,
+		FieldType fieldType) {
+
+		return EntitiesUtils.createSubField(
+			parent.getId(),
+			DocTypeFieldDTO.builder()
+				.name(name)
+				.fieldName(fieldName)
+				.fieldType(fieldType)
+				.build(),
+			docTypeFieldService);
 	}
 
 	private Set<Long> selectableFieldIds() {
