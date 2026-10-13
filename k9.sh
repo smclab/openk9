@@ -742,7 +742,7 @@ Startup behavior:
   On every start, the initializer container is rebuilt and runs
   seed.js, which idempotently provisions:
     - A demo tenant (demo.openk9.localhost)
-    - Plugin drivers (Sitemap Crawler, Minio Connector)
+    - Plugin drivers (Sitemap Crawler, URL Crawler, Minio Connector)
     - A sample datasource (SMC Website)
     - Links the datasource to the Default Bucket
 
