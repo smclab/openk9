@@ -5,9 +5,20 @@ FROM python:${PYTHON_BASE_DOCKER_IMAGE} AS base
 
 ARG MODE=cpu
 
+# The venv lives outside the WORKDIR, which is chowned to the runtime user
+# below: chowning it would copy the whole venv into a new layer
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_NO_CACHE=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
+
 WORKDIR /embedding_module/
 
-COPY ./requirements.txt ./
+COPY --from=ghcr.io/astral-sh/uv:0.13.0@sha256:cdc6093146eb3ff6a40107b38f008b789e050e77ad87865e381d9917da55a168 /uv /uvx /bin/
+
+COPY ./pyproject.toml ./uv.lock ./
 
 
 # Single-layer RUN: install build tools, build python packages, then purge the
@@ -15,11 +26,7 @@ COPY ./requirements.txt ./
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
         build-essential && \
-    if [ "$MODE" = "cpu" ]; then \
-        sed -i '1i\--extra-index-url https://download.pytorch.org/whl/cpu\n' requirements.txt; \
-    fi && \
-    pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
+    uv sync --locked --no-dev --no-install-project --extra "$MODE" && \
     apt-get purge -y --auto-remove build-essential && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -35,10 +42,11 @@ RUN python -m grpc_tools.protoc \
 # ---- test: quality gate; the runtime stage depends on this passing ----
 FROM base AS test
 
-COPY ./pyproject.toml ./
+ARG MODE=cpu
+
 COPY ./tests ./tests
 
-RUN pip install --no-cache-dir pytest && \
+RUN uv sync --locked --no-install-project --extra "$MODE" --group dev && \
     python -m pytest && \
     touch /tests-passed
 

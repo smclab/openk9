@@ -68,38 +68,38 @@ embedding-module:
 ```
 
 ### Local Setup
-To run the embedding model in local you have to:
-1. Create a virtual environment from the ernicher folder project, run:
-    ```bash
-    python -m venv venv
-    ```
-2. Activate the virtual environment:
-    ```bash
-    #On macOS / Linux
-    source venv/bin/activate
+Dependencies are managed with [uv](https://docs.astral.sh/uv/):
+`pyproject.toml` declares the direct dependencies and `uv.lock` pins the whole
+tree. PyTorch comes in two variants, selected with the `cpu` or `gpu` extra.
 
-    #On Windows (PowerShell)
-    venv\Scripts\Activate
-
-    #On Windows (cmd)
-    venv\Scripts\activate.bat
-    ```
-3. Install the requirements:
-    ```bash 
+1. Install the dependencies from the module folder:
+    ```bash
     #CPU only mode
-    pip install -r requirements_cpu.txt
+    uv sync --extra cpu --group dev
 
     #GPU mode
-    pip install -r requirements.txt
+    uv sync --extra gpu --group dev
     ```
-4. Run the following commands:
+2. Start the server:
     ```bash
-    python server.py
+    uv run python -m app.server
     ```
-5. Modify the client.py file and then run:
+3. Modify the `app/client.py` file and then run:
     ```bash
-    python client.py
+    uv run python -m app.client
     ```
+4. Run the unit tests:
+    ```bash
+    uv run pytest
+    ```
+
+`uv run` generates the gRPC stubs from `embedding.proto`, and generates them
+again whenever the `.proto` changes or a stub is missing.
+
+To change a dependency, edit `pyproject.toml` and run `uv lock`; to upgrade a
+single package, run `uv lock --upgrade-package <package>`. Commit `uv.lock`
+together with `pyproject.toml`: the Docker build installs with `--locked` and
+fails if the two are out of sync.
 
 ## API Reference
 
