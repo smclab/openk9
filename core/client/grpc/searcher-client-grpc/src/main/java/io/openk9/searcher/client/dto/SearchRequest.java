@@ -48,4 +48,12 @@ public class SearchRequest {
 	private String sortAfterKey;
 	@Schema(description = "Language used to apply search in specific language.")
 	private String language;
+	@Schema(
+		description = "Whether to return the results the user is not authorized "
+			+ "to read, obscured to their visible fields instead of filtered out. "
+			+ "It applies only when the tenant enables the result ACL mode, and "
+			+ "never to knn or hybrid searches.",
+		defaultValue = "false"
+	)
+	private boolean includeObscured;
 }
