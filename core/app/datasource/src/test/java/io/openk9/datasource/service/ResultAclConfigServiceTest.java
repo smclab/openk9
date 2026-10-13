@@ -69,6 +69,7 @@ public class ResultAclConfigServiceTest {
 	private static final String SUMMARY_BASE_NAME =
 		ENTITY_NAME_PREFIX + "summary base";
 	private static final String ROLE_AUDITOR = "auditor";
+	private static final String TENANT_ID = "public";
 	private static final String ROLE_LEGAL = "legal";
 
 	@Inject
@@ -322,6 +323,52 @@ public class ResultAclConfigServiceTest {
 		assertEquals(
 			Set.of(metaAuthor.getId(), raw.getId(), summary.getId()),
 			visibleFieldIds(current));
+	}
+
+	@Test
+	void should_read_disabled_search_settings_unless_the_mode_is_enabled() {
+		// 1. Without a configuration
+		assertEquals(
+			ResultAclConfig.SearchSettings.DISABLED,
+			resultAclConfigService.findSearchSettings(TENANT_ID)
+				.await().indefinitely());
+
+		// 2. With the mode disabled, whatever the roles and the fields
+		resultAclConfigService.create(ResultAclConfigDTO.builder()
+				.name(ResultAclConfig.DEFAULT_NAME)
+				.enabled(false)
+				.superUserRoles(List.of(ROLE_AUDITOR))
+				.visibleFieldIds(Set.of(title.getId()))
+				.build())
+			.await().indefinitely();
+
+		assertEquals(
+			ResultAclConfig.SearchSettings.DISABLED,
+			resultAclConfigService.findSearchSettings(TENANT_ID)
+				.await().indefinitely());
+	}
+
+	@Test
+	void should_read_the_search_settings_of_an_enabled_configuration() {
+		// setup — two roles, a leaf and an object without sub-fields
+		resultAclConfigService.create(ResultAclConfigDTO.builder()
+				.name(ResultAclConfig.DEFAULT_NAME)
+				.enabled(true)
+				.superUserRoles(List.of(ROLE_AUDITOR, ROLE_LEGAL))
+				.visibleFieldIds(Set.of(title.getId(), raw.getId()))
+				.build())
+			.await().indefinitely();
+
+		// action
+		var settings = resultAclConfigService.findSearchSettings(TENANT_ID)
+			.await().indefinitely();
+
+		// assertion
+		assertTrue(settings.enabled());
+		assertEquals(Set.of(ROLE_AUDITOR, ROLE_LEGAL), settings.superUserRoles());
+		assertEquals(
+			Set.of(title.getId(), raw.getId()),
+			settings.visibleFieldIds());
 	}
 
 	@Test

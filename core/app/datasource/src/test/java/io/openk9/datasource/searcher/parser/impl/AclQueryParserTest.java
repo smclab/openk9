@@ -34,9 +34,13 @@ import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 
 import org.junit.jupiter.api.Test;
+import org.opensearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -251,5 +255,75 @@ class AclQueryParserTest {
 
 		// assertion
 		assertEquals(1, boolQuery.should().size());
+	}
+
+	@Test
+	void should_filter_the_query_when_no_acl_mode_is_set() {
+		// setup — the context every caller builds today
+		var mutableQuery = QueryBuilders.boolQuery();
+
+		// action
+		applyAcl(mutableQuery, null);
+
+		// assertion — the ACL clause itself is the filter
+		assertEquals(1, mutableQuery.filter().size());
+		var filter = (BoolQueryBuilder) mutableQuery.filter().getFirst();
+		assertNull(filter.queryName());
+		assertTrue(filter.toString().contains("acl.public"));
+	}
+
+	@Test
+	void should_name_the_acl_inside_an_always_true_filter_when_obscuring() {
+		// setup
+		var mutableQuery = QueryBuilders.boolQuery();
+
+		// action
+		applyAcl(mutableQuery, ParserContext.AclMode.OBSCURE);
+
+		// assertion — the filter is "ACL OR NOT ACL": it lets every document
+		// through, and the named ACL tells the authorized ones apart
+		assertEquals(1, mutableQuery.filter().size());
+		var filter = (BoolQueryBuilder) mutableQuery.filter().getFirst();
+		assertEquals("1", filter.minimumShouldMatch());
+		assertEquals(2, filter.should().size());
+
+		var namedAcl = (BoolQueryBuilder) filter.should().get(0);
+		assertEquals(AclQueryParser.AUTHORIZED_QUERY_NAME, namedAcl.queryName());
+		assertTrue(namedAcl.toString().contains("acl.public"));
+
+		var notAcl = (BoolQueryBuilder) filter.should().get(1);
+		assertEquals(1, notAcl.mustNot().size());
+		var negatedAcl = assertInstanceOf(
+			BoolQueryBuilder.class, notAcl.mustNot().getFirst());
+		assertNull(negatedAcl.queryName());
+		assertTrue(negatedAcl.toString().contains("acl.public"));
+	}
+
+	@Test
+	void should_add_no_acl_clause_for_a_super_user() {
+		// setup
+		var mutableQuery = QueryBuilders.boolQuery();
+
+		// action
+		applyAcl(mutableQuery, ParserContext.AclMode.NONE);
+
+		// assertion
+		assertTrue(mutableQuery.filter().isEmpty());
+		assertFalse(mutableQuery.toString().contains("acl.public"));
+	}
+
+	private static void applyAcl(
+		BoolQueryBuilder mutableQuery, ParserContext.AclMode aclMode) {
+
+		var aclQueryParser = new AclQueryParser();
+		aclQueryParser.extraRolesEnabled = false;
+
+		var parserContext = ParserContext.builder()
+			.tenantWithBucket(new TenantWithBucket("1", new Bucket()))
+			.mutableQuery(mutableQuery)
+			.aclMode(aclMode)
+			.build();
+
+		aclQueryParser.apply(parserContext).await().indefinitely();
 	}
 }

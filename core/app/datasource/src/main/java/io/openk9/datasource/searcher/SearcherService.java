@@ -43,10 +43,14 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.ResultAclConfig;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
+import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
+import io.openk9.datasource.searcher.parser.impl.AclQueryParser;
 import io.openk9.datasource.searcher.parser.impl.HybridQueryParser;
 import io.openk9.datasource.searcher.queryanalysis.Grammar;
 import io.openk9.datasource.searcher.queryanalysis.GrammarProvider;
@@ -59,6 +63,7 @@ import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
+import io.openk9.datasource.service.ResultAclConfigService;
 import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.AutocompleteConfigurationsRequest;
@@ -82,6 +87,7 @@ import io.openk9.searcher.grpc.QueryAnalysisTokens;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.RAGType;
+import io.openk9.searcher.grpc.ResultAcl;
 import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.grpc.Sort;
@@ -161,6 +167,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	DefaultJWTParser jwtParser;
 	@Inject
 	LargeLanguageModelService largeLanguageModelService;
+	@Inject
+	ResultAclConfigService resultAclConfigService;
 
 	/**
 	 * This value is only used if the associated {@link SearchConfig} entity
@@ -1176,24 +1184,40 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 						queryParams = new HashMap<>();
 
-						return createBoolQuery(
-							tokenGroup,
-							tenantWithBucket,
-							jwt,
-							extraParams,
-							language
-						)
-							.map(boolQueryBuilder -> {
+						return getResultAclSettings(request, tokenGroup, tenantWithBucket)
+							.flatMap(resultAclSettings -> {
 
-								searchSourceBuilder.query(boolQueryBuilder);
+								var aclMode = getAclMode(
+									resultAclSettings, UserField.ROLES.getTerms(jwt));
 
-								return QueryParserResponse
-									.newBuilder()
-									.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
-									.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
-									.putAllQueryParameters(queryParams)
-									.build();
+								return createBoolQuery(
+									tokenGroup,
+									tenantWithBucket,
+									jwt,
+									extraParams,
+									language,
+									aclMode
+								)
+									.map(boolQueryBuilder -> {
 
+										searchSourceBuilder.query(boolQueryBuilder);
+
+										var response = QueryParserResponse
+											.newBuilder()
+											.setQuery(
+												searchSourceBuilderToOutput(searchSourceBuilder))
+											.addAllIndexName(
+												List.of(tenantWithBucket.getIndexNames()))
+											.putAllQueryParameters(queryParams);
+
+										if (aclMode == ParserContext.AclMode.OBSCURE) {
+											response.setResultAcl(
+												toResultAcl(tenantWithBucket, resultAclSettings));
+										}
+
+										return response.build();
+
+									});
 							});
 					}
 
@@ -1248,12 +1272,15 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					String language = _getLanguage(request, bucket);
 
+					// the filters never count the documents the user is not
+					// authorized to read, whatever the request asks for
 					return createBoolQuery(
 						tokenGroup,
 						tenantWithBucket,
 						jwt,
 						extraParams,
-						language
+						language,
+						ParserContext.AclMode.FILTER
 					)
 						.flatMap(boolQueryBuilder -> {
 
@@ -1720,6 +1747,89 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Tells whether a search may obscure the results instead of filtering
+	 * them: the request asks for it and has no knn token, since a knn search,
+	 * and a request mixing text and knn, stays filtered.
+	 *
+	 * @param request    the request of the search
+	 * @param tokenGroup the tokens of the request, grouped by parser type
+	 * @return {@code true} if the tenant settings decide how ACLs apply
+	 */
+	static boolean mayObscure(
+		QueryParserRequest request,
+		Map<QueryParserType, List<ParserSearchToken>> tokenGroup) {
+
+		return request.getIncludeObscured()
+			&& !tokenGroup.containsKey(QueryParserType.KNN);
+	}
+
+	/**
+	 * Decides how the ACLs apply to a search that may obscure the results.
+	 *
+	 * @param resultAclSettings the result ACL settings of the tenant
+	 * @param roles             the roles of the user, as read from the JWT
+	 * @return {@link ParserContext.AclMode#FILTER} when the mode is disabled,
+	 *         {@link ParserContext.AclMode#NONE} for a super-user,
+	 *         {@link ParserContext.AclMode#OBSCURE} otherwise
+	 */
+	static ParserContext.AclMode getAclMode(
+		ResultAclConfig.SearchSettings resultAclSettings, List<String> roles) {
+
+		if (!resultAclSettings.enabled()) {
+			return ParserContext.AclMode.FILTER;
+		}
+
+		return resultAclSettings.isSuperUser(roles)
+			? ParserContext.AclMode.NONE
+			: ParserContext.AclMode.OBSCURE;
+	}
+
+	/**
+	 * Tells the searcher how to obscure the results of a bucket.
+	 *
+	 * @param tenantWithBucket  the bucket searched
+	 * @param resultAclSettings the result ACL settings of the tenant
+	 * @return the named query of the authorized results and the paths of the
+	 *         visible fields of the bucket
+	 */
+	static ResultAcl toResultAcl(
+		TenantWithBucket tenantWithBucket,
+		ResultAclConfig.SearchSettings resultAclSettings) {
+
+		var visibleFields = Utils
+			.getDocTypeFieldsFrom(tenantWithBucket.getBucket())
+			.filter(field ->
+				resultAclSettings.visibleFieldIds().contains(field.getId()))
+			.map(DocTypeField::getPath)
+			.distinct()
+			.sorted()
+			.toList();
+
+		return ResultAcl
+			.newBuilder()
+			.setAuthorizedQueryName(AclQueryParser.AUTHORIZED_QUERY_NAME)
+			.addAllVisibleFields(visibleFields)
+			.build();
+	}
+
+	private Uni<ResultAclConfig.SearchSettings> getResultAclSettings(
+		QueryParserRequest request,
+		Map<QueryParserType, List<ParserSearchToken>> tokenGroup,
+		TenantWithBucket tenantWithBucket) {
+
+		if (!mayObscure(request, tokenGroup)) {
+			return Uni.createFrom().item(ResultAclConfig.SearchSettings.DISABLED);
+		}
+
+		var tenantId = tenantWithBucket.getTenantId();
+
+		return cache.getAsync(
+			new CompositeCacheKey(tenantId, "getResultAclSettings"),
+			key -> resultAclConfigService.findSearchSettings(tenantId)
+		);
 	}
 
 	private JsonWebToken getJwt(String jwtString) {

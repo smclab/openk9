@@ -38,6 +38,12 @@ import org.opensearch.index.query.QueryBuilders;
 @ApplicationScoped
 public class AclQueryParser implements QueryParser {
 
+	/**
+	 * Name of the named query matched by the documents the user is authorized
+	 * to read, when the ACLs obscure the results instead of filtering them.
+	 */
+	public static final String AUTHORIZED_QUERY_NAME = "k9_acl_authorized";
+
 	@ConfigProperty(
 		name = "openk9.datasource.acl.query.extra.params.enabled",
 		defaultValue = "false"
@@ -64,7 +70,26 @@ public class AclQueryParser implements QueryParser {
 	@Override
 	public Uni<Void> apply(ParserContext parserContext) {
 
+		var aclMode = parserContext.getAclMode();
+
+		if (aclMode == ParserContext.AclMode.NONE) {
+			return Uni.createFrom().voidItem();
+		}
+
 		var innerQuery = getBoolQuery(parserContext);
+
+		if (aclMode == ParserContext.AclMode.OBSCURE) {
+			// "ACL OR NOT ACL" is true for every document, so neither the
+			// documents answering the query nor their score change; the named
+			// query tells the authorized ones apart in matched_queries
+			innerQuery = QueryBuilders
+				.boolQuery()
+				.minimumShouldMatch(1)
+				.should(innerQuery.queryName(AUTHORIZED_QUERY_NAME))
+				.should(QueryBuilders
+					.boolQuery()
+					.mustNot(getBoolQuery(parserContext)));
+		}
 
 		parserContext.getMutableQuery().filter(innerQuery);
 

@@ -44,6 +44,11 @@ public class ParserContext {
 	private JsonWebToken jwt;
 	private Map<String, List<String>> extraParams;
 	private String language;
+	/**
+	 * How the ACLs apply to the query; {@code null} stands for
+	 * {@link AclMode#FILTER}.
+	 */
+	private AclMode aclMode;
 
 
 	/**
@@ -133,6 +138,25 @@ public class ParserContext {
 		}
 
 		return Optional.ofNullable(jsonConfig.getString(key));
+	}
+
+	/**
+	 * How the ACLs apply to a query.
+	 */
+	public enum AclMode {
+		/**
+		 * The documents the user is not authorized to read are filtered out.
+		 */
+		FILTER,
+		/**
+		 * Every document answers the query; the authorized ones match a named
+		 * query, so that the others can be obscured.
+		 */
+		OBSCURE,
+		/**
+		 * No ACL applies: the user is a super-user.
+		 */
+		NONE
 	}
 
 }
