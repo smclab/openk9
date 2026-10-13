@@ -164,6 +164,44 @@ public class ResultAclConfigService
 		);
 	}
 
+	/**
+	 * Reads what a search of the given tenant needs of its configuration.
+	 * <p>
+	 * The visible fields are limited to the ones that can be visible, see
+	 * {@link ResultAclConfig#selectableFieldIds}: an import does not go
+	 * through the validation of this service, so a configuration may hold a
+	 * field that would show a whole subtree.
+	 *
+	 * @param tenantId the tenant to read the configuration of
+	 * @return the settings, {@link ResultAclConfig.SearchSettings#DISABLED}
+	 *         when the tenant has no configuration or the mode is disabled
+	 */
+	public Uni<ResultAclConfig.SearchSettings> findSearchSettings(
+		String tenantId) {
+
+		return sessionFactory.withTransaction(tenantId, (session, transaction) ->
+			findCurrent(session).flatMap(config -> {
+				if (config == null || !config.isEnabled()) {
+					return Uni.createFrom().item(
+						ResultAclConfig.SearchSettings.DISABLED);
+				}
+
+				return Mutiny.fetch(config.getVisibleFields())
+					.flatMap(visibleFields -> docTypeFieldService
+						.findResultAclSelectableIds(session)
+						.map(selectableIds -> new ResultAclConfig.SearchSettings(
+							true,
+							Set.copyOf(ResultAclConfig.toRoleList(
+								config.getSuperUserRoles())),
+							visibleFields.stream()
+								.map(DocTypeField::getId)
+								.filter(selectableIds::contains)
+								.collect(Collectors.toUnmodifiableSet())
+						)));
+			})
+		);
+	}
+
 	private Uni<Set<DocTypeField>> findVisibleFields(
 		Mutiny.Session session, Set<Long> visibleFieldIds) {
 

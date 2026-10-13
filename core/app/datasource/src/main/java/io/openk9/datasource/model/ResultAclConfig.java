@@ -198,6 +198,38 @@ public class ResultAclConfig extends K9Entity {
 	}
 
 	/**
+	 * What a search needs of the configuration, read once and cached.
+	 *
+	 * @param enabled         whether the mode is enabled
+	 * @param superUserRoles  the super-user roles
+	 * @param visibleFieldIds the IDs of the visible fields, limited to the
+	 *                        ones that can be visible
+	 */
+	public record SearchSettings(
+		boolean enabled, Set<String> superUserRoles, Set<Long> visibleFieldIds
+	) {
+
+		/**
+		 * The settings of a tenant without a configuration, or with the mode
+		 * disabled.
+		 */
+		public static final SearchSettings DISABLED =
+			new SearchSettings(false, Set.of(), Set.of());
+
+		/**
+		 * Tells whether a user holding the given roles reads every result in
+		 * full.
+		 *
+		 * @param roles the roles of the user, as read from the JWT
+		 * @return {@code true} if one of the roles is a super-user role
+		 */
+		public boolean isSuperUser(Collection<String> roles) {
+			return roles.stream().anyMatch(superUserRoles::contains);
+		}
+
+	}
+
+	/**
 	 * A DocTypeField reduced to what decides whether it can be a visible
 	 * field.
 	 *

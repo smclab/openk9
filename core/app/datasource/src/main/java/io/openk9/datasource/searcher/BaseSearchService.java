@@ -176,7 +176,8 @@ public abstract class BaseSearchService {
 
 	protected Uni<BoolQueryBuilder> createBoolQuery(
 		Map<QueryParserType, List<ParserSearchToken>> tokenGroup, TenantWithBucket tenantWithBucket,
-		JsonWebToken jwt, Map<String, List<String>> extraParams, String language) {
+		JsonWebToken jwt, Map<String, List<String>> extraParams, String language,
+		ParserContext.AclMode aclMode) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -251,6 +252,7 @@ public abstract class BaseSearchService {
 						)
 						.jwt(jwt)
 						.extraParams(extraParams)
+						.aclMode(aclMode)
 						.build()
 				);
 
