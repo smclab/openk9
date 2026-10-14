@@ -596,7 +596,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             if settings.do_eval:
                 rabbit_host = settings.rabbitmq_host
                 rabbit_user = settings.rabbitmq_user
-                rabbit_pass = settings.rabbitmq_password
+                rabbit_pass = settings.rabbitmq_password.get_secret_value()
 
                 connection = None
                 try:

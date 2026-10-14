@@ -19,6 +19,7 @@
 from unittest.mock import patch
 
 import pytest
+from pydantic import SecretStr
 
 from app.config import settings
 from app.utils.opensearch_client import get_opensearch_client, parse_hosts
@@ -161,7 +162,7 @@ def test_get_opensearch_client_http_ignores_tls_settings(mock_opensearch, monkey
 @patch("app.utils.opensearch_client.OpenSearch")
 def test_get_opensearch_client_basic_auth(mock_opensearch, monkeypatch):
     monkeypatch.setattr(settings, "opensearch_username", "opensearch")
-    monkeypatch.setattr(settings, "opensearch_password", "s3cret")
+    monkeypatch.setattr(settings, "opensearch_password", SecretStr("s3cret"))
 
     get_opensearch_client("node-1:9200")
 
@@ -197,7 +198,7 @@ def test_get_opensearch_client_multi_host_shares_credentials(
     mock_opensearch, monkeypatch
 ):
     monkeypatch.setattr(settings, "opensearch_username", "opensearch")
-    monkeypatch.setattr(settings, "opensearch_password", "s3cret")
+    monkeypatch.setattr(settings, "opensearch_password", SecretStr("s3cret"))
 
     get_opensearch_client("https://node-1:9200,https://node-2:9200")
 
@@ -213,7 +214,7 @@ def test_get_opensearch_client_explicit_kwargs_win_over_settings(
     mock_opensearch, monkeypatch
 ):
     monkeypatch.setattr(settings, "opensearch_username", "opensearch")
-    monkeypatch.setattr(settings, "opensearch_password", "s3cret")
+    monkeypatch.setattr(settings, "opensearch_password", SecretStr("s3cret"))
 
     get_opensearch_client("node-1:9200", http_auth=("admin", "admin"))
 

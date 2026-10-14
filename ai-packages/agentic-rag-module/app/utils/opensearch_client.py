@@ -97,7 +97,7 @@ def _connection_options(hosts):
     password = settings.opensearch_password
 
     if username and password:
-        options["http_auth"] = (username, password)
+        options["http_auth"] = (username, password.get_secret_value())
 
     return options
 

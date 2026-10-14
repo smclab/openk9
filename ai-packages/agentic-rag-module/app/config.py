@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -49,10 +49,13 @@ class Settings(BaseSettings):
 
     Every field maps to the environment variable with the same name in upper
     case. An empty variable falls back to the default, because the charts render
-    unset values as empty strings.
+    unset values as empty strings. Variables of the .env that no field declares
+    are ignored, as the environment ones already are.
     """
 
-    model_config = SettingsConfigDict(env_file=".env", env_ignore_empty=True)
+    model_config = SettingsConfigDict(
+        env_file=".env", env_ignore_empty=True, extra="ignore"
+    )
 
     origins: Annotated[list[str], NoDecode]
     opensearch_host: str | None = None
@@ -61,7 +64,7 @@ class Settings(BaseSettings):
     reranker_api_url: str | None = None
     schedule: bool = False
     cron_expression: str = "0 0 0 ? * * *"
-    interval_in_days: int = 180
+    interval_in_days: int = Field(180, gt=0)
     arize_phoenix_enabled: bool = False
     arize_phoenix_project_name: str = "default"
     arize_phoenix_endpoint: str = "http://127.0.0.1:6006/v1/traces"
@@ -74,15 +77,15 @@ class Settings(BaseSettings):
         ".pptx",
         ".csv",
     ]
-    max_upload_file_size: int = 10
-    max_upload_files_number: int = 5
-    openk9_security_admin_password: str | None = None
+    max_upload_file_size: int = Field(10, gt=0)
+    max_upload_files_number: int = Field(5, gt=0)
+    openk9_security_admin_password: SecretStr | None = None
     logging_level: str = "INFO"
     dependencies_logging_level: str = "INFO"
     opensearch_verify_certs: bool = True
     opensearch_ca_certs: str | None = None
     opensearch_username: str | None = None
-    opensearch_password: str | None = None
+    opensearch_password: SecretStr | None = None
 
     @field_validator("origins", mode="before")
     @classmethod

@@ -87,7 +87,11 @@ UPLOAD_FILE_EXTENSIONS = settings.upload_file_extensions
 MAX_UPLOAD_FILE_SIZE = settings.max_upload_file_size * 1024 * 1024
 MAX_UPLOAD_FILES_NUMBER = settings.max_upload_files_number
 OPENK9_SECURITY_ADMIN_USERNAME = "admin"
-OPENK9_SECURITY_ADMIN_PASSWORD = settings.openk9_security_admin_password
+OPENK9_SECURITY_ADMIN_PASSWORD = (
+    settings.openk9_security_admin_password.get_secret_value()
+    if settings.openk9_security_admin_password
+    else None
+)
 
 
 if ARIZE_PHOENIX_ENABLED:

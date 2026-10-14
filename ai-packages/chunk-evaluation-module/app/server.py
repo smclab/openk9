@@ -51,7 +51,7 @@ scheduler.start()
 
 rabbit_host = settings.rabbitmq_host
 rabbit_user = settings.rabbitmq_user
-rabbit_pass = settings.rabbitmq_pass
+rabbit_pass = settings.rabbitmq_pass.get_secret_value()
 
 setup_rabbitmq()
 

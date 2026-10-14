@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,27 +24,31 @@ class Settings(BaseSettings):
 
     Every field maps to the environment variable with the same name in upper
     case. An empty variable falls back to the default, because the charts render
-    unset values as empty strings.
+    unset values as empty strings. Variables of the .env that no field declares
+    are ignored, as the environment ones already are: PHOENIX_* among them,
+    which the phoenix library reads by itself.
     """
 
-    model_config = SettingsConfigDict(env_file=".env", env_ignore_empty=True)
+    model_config = SettingsConfigDict(
+        env_file=".env", env_ignore_empty=True, extra="ignore"
+    )
 
     log_file: str = "/tmp/app.log"
     rabbitmq_host: str = "localhost"
     rabbitmq_user: str = "user"
-    rabbitmq_pass: str = "pass"
-    rabbitmq_retry_delay_ms: int = 5000
-    rabbitmq_max_retries: int = 3
-    min_time_delay_minutes: int = 5
-    buffer_treshold: int = 50
-    buffer_delay: int = 20
+    rabbitmq_pass: SecretStr = SecretStr("pass")
+    rabbitmq_retry_delay_ms: int = Field(5000, ge=0)
+    rabbitmq_max_retries: int = Field(3, ge=0)
+    min_time_delay_minutes: int = Field(5, gt=0)
+    buffer_treshold: int = Field(50, ge=0)
+    buffer_delay: int = Field(20, ge=0)
     buffer_upload: bool = False
-    n_max_documents: int = 150
+    n_max_documents: int = Field(150, gt=0)
     do_experiments: bool = False
     experiment_mode: int = 1
     phoenix_project_name: str = "test-eval-module"
     phoenix_collector_endpoint: str = "https://phoenix.openk9.io/"
-    polling_frequency: float = 2
+    polling_frequency: float = Field(2, gt=0)
     dataset_prefix: str = "dataset"
     experiment_prefix: str = "experiment"
 

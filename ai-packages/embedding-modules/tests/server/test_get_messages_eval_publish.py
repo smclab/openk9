@@ -23,6 +23,7 @@ import json
 from types import SimpleNamespace
 
 import pytest
+from pydantic import SecretStr
 
 from app import server as server_module
 from app.config import settings
@@ -87,7 +88,7 @@ def broker(monkeypatch):
     monkeypatch.setattr(settings, "do_eval", False)
     monkeypatch.setattr(settings, "rabbitmq_host", "localhost")
     monkeypatch.setattr(settings, "rabbitmq_user", "openk9")
-    monkeypatch.setattr(settings, "rabbitmq_password", "openk9")
+    monkeypatch.setattr(settings, "rabbitmq_password", SecretStr("openk9"))
 
     return broker
 

@@ -95,7 +95,9 @@ def test_datasource_host_is_kept_as_configured(monkeypatch):
 
 def test_variable_defined_only_in_the_env_file_is_loaded(tmp_path):
     env_file = tmp_path / ".env"
-    env_file.write_text("DATASOURCE_HOST=http://from-env-file\nFETCH_TIMEOUT_SECONDS=5\n")
+    env_file.write_text(
+        "DATASOURCE_HOST=http://from-env-file\nFETCH_TIMEOUT_SECONDS=5\n"
+    )
 
     settings = Settings(_env_file=env_file)
 
@@ -109,3 +111,35 @@ def test_environment_wins_over_the_env_file(monkeypatch, tmp_path):
     env_file.write_text("DATASOURCE_HOST=http://from-env-file\n")
 
     assert Settings(_env_file=env_file).datasource_host == "http://from-environment"
+
+
+def test_variable_of_the_env_file_without_a_field_is_ignored(tmp_path):
+    """A developer's .env may hold variables of other tools: they must not
+    block the startup."""
+    env_file = tmp_path / ".env"
+    env_file.write_text("HF_HUB_OFFLINE=1\nMAX_CONCURRENT_CONVERSIONS=2\n")
+
+    settings = Settings(_env_file=env_file)
+
+    assert settings.max_concurrent_conversions == 2
+    assert not hasattr(settings, "hf_hub_offline")
+
+
+@pytest.mark.parametrize(
+    "variable",
+    [
+        "MAX_CONCURRENT_CONVERSIONS",
+        "CALLBACK_TIMEOUT_SECONDS",
+        "FETCH_TIMEOUT_SECONDS",
+    ],
+)
+@pytest.mark.parametrize("value", ["0", "-1"])
+def test_non_positive_value_is_refused_naming_the_variable(
+    monkeypatch, variable, value
+):
+    monkeypatch.setenv(variable, value)
+
+    with pytest.raises(ValidationError) as error:
+        _settings()
+
+    assert variable.lower() in _error_fields(error.value)

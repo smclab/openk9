@@ -204,3 +204,45 @@ def test_environment_wins_over_the_env_file(monkeypatch, tmp_path):
     env_file.write_text("MAX_UPLOAD_FILE_SIZE=20\n")
 
     assert Settings(_env_file=env_file).max_upload_file_size == 30
+
+
+def test_variable_of_the_env_file_without_a_field_is_ignored(monkeypatch, tmp_path):
+    """A developer's .env also holds variables of other tools or of older
+    versions of the module: they must not block the startup."""
+    monkeypatch.delenv("ORIGINS")
+    env_file = tmp_path / ".env"
+    env_file.write_text("ORIGINS=http://localhost\nKEYCLOAK_URL=http://keycloak\n")
+
+    settings = Settings(_env_file=env_file)
+
+    assert settings.origins == ["http://localhost"]
+    assert not hasattr(settings, "keycloak_url")
+
+
+@pytest.mark.parametrize(
+    "variable",
+    ["OPENK9_SECURITY_ADMIN_PASSWORD", "OPENSEARCH_PASSWORD"],
+)
+def test_passwords_are_hidden_from_the_representation(monkeypatch, variable):
+    monkeypatch.setenv(variable, "s3cret")
+
+    settings = _settings()
+
+    assert "s3cret" not in repr(settings)
+    assert getattr(settings, variable.lower()).get_secret_value() == "s3cret"
+
+
+@pytest.mark.parametrize(
+    "variable",
+    ["INTERVAL_IN_DAYS", "MAX_UPLOAD_FILE_SIZE", "MAX_UPLOAD_FILES_NUMBER"],
+)
+@pytest.mark.parametrize("value", ["0", "-1"])
+def test_non_positive_value_is_refused_naming_the_variable(
+    monkeypatch, variable, value
+):
+    monkeypatch.setenv(variable, value)
+
+    with pytest.raises(ValidationError) as error:
+        _settings()
+
+    assert variable.lower() in _error_fields(error.value)

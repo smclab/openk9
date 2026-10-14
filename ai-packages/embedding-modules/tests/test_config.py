@@ -49,7 +49,7 @@ def test_variables_fall_back_to_their_defaults():
     assert settings.do_eval is False
     assert settings.rabbitmq_host == "localhost"
     assert settings.rabbitmq_user == "openk9"
-    assert settings.rabbitmq_password == "openk9"
+    assert settings.rabbitmq_password.get_secret_value() == "openk9"
     assert settings.fetch_timeout_seconds == 30.0
 
 
@@ -114,7 +114,7 @@ def test_rabbitmq_variables_are_read(monkeypatch):
 
     assert settings.rabbitmq_host == "rabbitmq"
     assert settings.rabbitmq_user == "user"
-    assert settings.rabbitmq_password == "secret"
+    assert settings.rabbitmq_password.get_secret_value() == "secret"
 
 
 def test_the_old_rabbitmq_pass_name_is_no_longer_read(monkeypatch):
@@ -122,7 +122,7 @@ def test_the_old_rabbitmq_pass_name_is_no_longer_read(monkeypatch):
     OpenK9 services do."""
     monkeypatch.setenv("RABBITMQ_PASS", "secret")
 
-    assert _settings().rabbitmq_password == "openk9"
+    assert _settings().rabbitmq_password.get_secret_value() == "openk9"
 
 
 def test_variable_defined_only_in_the_env_file_is_loaded(tmp_path):
@@ -141,3 +141,34 @@ def test_environment_wins_over_the_env_file(monkeypatch, tmp_path):
     env_file.write_text("LOGGING_LEVEL=DEBUG\n")
 
     assert Settings(_env_file=env_file).logging_level == "WARNING"
+
+
+def test_variable_of_the_env_file_without_a_field_is_ignored(tmp_path):
+    """A developer's .env also holds the provider keys used by hand: they must
+    not block the startup."""
+    env_file = tmp_path / ".env"
+    env_file.write_text("OPENAI_API_KEY=sk-test\nDO_EVAL=true\n")
+
+    settings = Settings(_env_file=env_file)
+
+    assert settings.do_eval is True
+    assert not hasattr(settings, "openai_api_key")
+
+
+def test_rabbitmq_password_is_hidden_from_the_representation(monkeypatch):
+    monkeypatch.setenv("RABBITMQ_PASSWORD", "s3cret")
+
+    settings = _settings()
+
+    assert "s3cret" not in repr(settings)
+    assert settings.rabbitmq_password.get_secret_value() == "s3cret"
+
+
+@pytest.mark.parametrize("value", ["0", "-1"])
+def test_non_positive_fetch_timeout_is_refused_naming_the_variable(monkeypatch, value):
+    monkeypatch.setenv("FETCH_TIMEOUT_SECONDS", value)
+
+    with pytest.raises(ValidationError) as error:
+        _settings()
+
+    assert "fetch_timeout_seconds" in _error_fields(error.value)

@@ -47,7 +47,7 @@ def test_variables_fall_back_to_their_defaults():
     assert settings.log_file == "/tmp/app.log"
     assert settings.rabbitmq_host == "localhost"
     assert settings.rabbitmq_user == "user"
-    assert settings.rabbitmq_pass == "pass"
+    assert settings.rabbitmq_pass.get_secret_value() == "pass"
     assert settings.rabbitmq_retry_delay_ms == 5000
     assert settings.rabbitmq_max_retries == 3
     assert settings.min_time_delay_minutes == 5
@@ -150,3 +150,57 @@ def test_environment_wins_over_the_env_file(monkeypatch, tmp_path):
     env_file.write_text("RABBITMQ_HOST=from-env-file\n")
 
     assert Settings(_env_file=env_file).rabbitmq_host == "from-environment"
+
+
+def test_variable_of_the_env_file_without_a_field_is_ignored(tmp_path):
+    """The .env.example also lists PHOENIX_API_KEY, which the phoenix library
+    reads by itself: it must not block the startup."""
+    env_file = tmp_path / ".env"
+    env_file.write_text("PHOENIX_API_KEY=key\nRABBITMQ_HOST=rabbitmq\n")
+
+    settings = Settings(_env_file=env_file)
+
+    assert settings.rabbitmq_host == "rabbitmq"
+    assert not hasattr(settings, "phoenix_api_key")
+
+
+def test_rabbitmq_password_is_hidden_from_the_representation(monkeypatch):
+    monkeypatch.setenv("RABBITMQ_PASS", "s3cret")
+
+    settings = _settings()
+
+    assert "s3cret" not in repr(settings)
+    assert settings.rabbitmq_pass.get_secret_value() == "s3cret"
+
+
+@pytest.mark.parametrize(
+    "variable",
+    ["MIN_TIME_DELAY_MINUTES", "N_MAX_DOCUMENTS", "POLLING_FREQUENCY"],
+)
+def test_zero_is_refused_where_a_positive_value_is_needed(monkeypatch, variable):
+    monkeypatch.setenv(variable, "0")
+
+    with pytest.raises(ValidationError) as error:
+        _settings()
+
+    assert variable.lower() in _error_fields(error.value)
+
+
+@pytest.mark.parametrize(
+    "variable",
+    [
+        "RABBITMQ_RETRY_DELAY_MS",
+        "RABBITMQ_MAX_RETRIES",
+        "BUFFER_TRESHOLD",
+        "BUFFER_DELAY",
+    ],
+)
+def test_zero_is_accepted_and_negative_values_are_refused(monkeypatch, variable):
+    monkeypatch.setenv(variable, "0")
+    assert getattr(_settings(), variable.lower()) == 0
+
+    monkeypatch.setenv(variable, "-1")
+    with pytest.raises(ValidationError) as error:
+        _settings()
+
+    assert variable.lower() in _error_fields(error.value)

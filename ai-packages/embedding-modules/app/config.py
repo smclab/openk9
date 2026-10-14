@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,17 +24,20 @@ class Settings(BaseSettings):
 
     Every field maps to the environment variable with the same name in upper
     case. An empty variable falls back to the default, because the charts render
-    unset values as empty strings.
+    unset values as empty strings. Variables of the .env that no field declares
+    are ignored, as the environment ones already are.
     """
 
-    model_config = SettingsConfigDict(env_file=".env", env_ignore_empty=True)
+    model_config = SettingsConfigDict(
+        env_file=".env", env_ignore_empty=True, extra="ignore"
+    )
 
     logging_level: str = "INFO"
     do_eval: bool = False
     rabbitmq_host: str = "localhost"
     rabbitmq_user: str = "openk9"
-    rabbitmq_password: str = "openk9"
-    fetch_timeout_seconds: float = 30
+    rabbitmq_password: SecretStr = SecretStr("openk9")
+    fetch_timeout_seconds: float = Field(30, gt=0)
 
 
 settings = Settings()
