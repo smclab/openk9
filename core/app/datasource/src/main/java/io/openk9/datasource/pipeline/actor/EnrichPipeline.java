@@ -501,7 +501,19 @@ public class EnrichPipeline {
 			prevJsonObject, newJsonObject
 		);
 
-		return prevDataPayload.rest(jsonMerge.merge(jsonPath).getMap());
+		DataPayload mergedDataPayload =
+			prevDataPayload.rest(jsonMerge.merge(jsonPath).getMap());
+
+		// rawContent is a declared field, out of the rest map the merge
+		// works on: the one returned by the enricher takes over, unless it
+		// left it out
+		String rawContent = newDataPayload.getRawContent();
+
+		if (rawContent != null) {
+			mergedDataPayload.setRawContent(rawContent);
+		}
+
+		return mergedDataPayload;
 
 	}
 
