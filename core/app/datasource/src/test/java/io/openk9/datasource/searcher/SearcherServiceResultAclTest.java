@@ -105,6 +105,25 @@ class SearcherServiceResultAclTest {
 	}
 
 	@Test
+	void should_count_every_document_in_the_filters_only_for_a_super_user() {
+		// a super-user counts every document
+		assertEquals(
+			ParserContext.AclMode.NONE,
+			SearcherService.getFiltersAclMode(ENABLED, List.of(ROLE_AUDITOR)));
+
+		// everyone else counts only the documents they can read
+		assertEquals(
+			ParserContext.AclMode.FILTER,
+			SearcherService.getFiltersAclMode(ENABLED, List.of(ROLE_SALES)));
+
+		// with the mode disabled the super-users are ignored
+		assertEquals(
+			ParserContext.AclMode.FILTER,
+			SearcherService.getFiltersAclMode(
+				ResultAclConfig.SearchSettings.DISABLED, List.of(ROLE_AUDITOR)));
+	}
+
+	@Test
 	void should_send_the_visible_fields_of_the_bucket_by_path() {
 		// setup — the web doc type with title, url and content, and a field
 		// of a doc type the bucket does not search

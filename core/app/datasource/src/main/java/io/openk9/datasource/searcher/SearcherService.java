@@ -1272,16 +1272,17 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					String language = _getLanguage(request, bucket);
 
-					// the filters never count the documents the user is not
-					// authorized to read, whatever the request asks for
-					return createBoolQuery(
-						tokenGroup,
-						tenantWithBucket,
-						jwt,
-						extraParams,
-						language,
-						ParserContext.AclMode.FILTER
-					)
+					return getResultAclSettings(request, tokenGroup, tenantWithBucket)
+						.map(resultAclSettings -> getFiltersAclMode(
+							resultAclSettings, UserField.ROLES.getTerms(jwt)))
+						.flatMap(aclMode -> createBoolQuery(
+							tokenGroup,
+							tenantWithBucket,
+							jwt,
+							extraParams,
+							language,
+							aclMode
+						))
 						.flatMap(boolQueryBuilder -> {
 
 							SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -1785,6 +1786,24 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		return resultAclSettings.isSuperUser(roles)
 			? ParserContext.AclMode.NONE
 			: ParserContext.AclMode.OBSCURE;
+	}
+
+	/**
+	 * Decides how the ACLs apply to the filters of a search that may obscure
+	 * the results: the filters never count the documents the user is not
+	 * authorized to read, only a super-user counts them all.
+	 *
+	 * @param resultAclSettings the result ACL settings of the tenant
+	 * @param roles             the roles of the user, as read from the JWT
+	 * @return {@link ParserContext.AclMode#NONE} for a super-user,
+	 *         {@link ParserContext.AclMode#FILTER} otherwise
+	 */
+	static ParserContext.AclMode getFiltersAclMode(
+		ResultAclConfig.SearchSettings resultAclSettings, List<String> roles) {
+
+		return getAclMode(resultAclSettings, roles) == ParserContext.AclMode.NONE
+			? ParserContext.AclMode.NONE
+			: ParserContext.AclMode.FILTER;
 	}
 
 	/**
