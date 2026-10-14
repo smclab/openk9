@@ -37,6 +37,7 @@ import io.openk9.datasource.processor.payload.DataPayload;
 
 import com.typesafe.config.ConfigFactory;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import org.apache.pekko.actor.testkit.typed.javadsl.ActorTestKit;
 import org.apache.pekko.actor.testkit.typed.javadsl.TestProbe;
 import org.apache.pekko.actor.typed.ActorRef;
@@ -188,6 +189,61 @@ class EnrichPipelineCallbackTest {
 		scheduling.expectMessageClass(Processor.Success.class);
 	}
 
+	@Test
+	void should_replace_raw_content_with_the_one_returned_by_the_enricher() {
+		// 1. a pipeline for a binary the connector sent with no text
+		var posts = TEST_KIT.<Http.POST>createTestProbe();
+		var pipeline = TEST_KIT.spawn(EnrichPipeline.create(PROCESS_KEY, fakeHttp(posts)));
+		var scheduling = TEST_KIT.<Processor.Response>createTestProbe();
+		var callbacks = TEST_KIT.<EnrichPipeline.CallbackResponse>createTestProbe();
+
+		pipeline.tell(start(scheduler(60_000L), scheduling.ref(), ""));
+		var token = CallbackToken.decode(
+			posts.receiveMessage().enricherInputDTO().getReplyTo());
+
+		// 2. the enricher calls back with the text it extracted
+		var body = (
+			"{\"payload\":{\"rawContent\":\"extracted text\"," +
+			"\"document\":{\"content\":\"extracted text\"}}}"
+		).getBytes(StandardCharsets.UTF_8);
+
+		pipeline.tell(new EnrichPipeline.Callback(token.nonce(), body, callbacks.ref()));
+		callbacks.expectMessage(EnrichPipeline.CallbackResponse.ACCEPTED);
+
+		// 3. the result carries the text both in rawContent and in the document
+		var success = scheduling.expectMessageClass(Processor.Success.class);
+		var payload = new JsonObject(new String(success.payload(), StandardCharsets.UTF_8));
+		Assertions.assertEquals(
+			"extracted text", payload.getString("rawContent"), payload.encode());
+		Assertions.assertEquals(
+			"extracted text",
+			payload.getJsonObject("document").getString("content"),
+			payload.encode());
+	}
+
+	@Test
+	void should_keep_raw_content_when_the_enricher_does_not_return_it() {
+		// 1. a pipeline for a document the connector sent with its text
+		var posts = TEST_KIT.<Http.POST>createTestProbe();
+		var pipeline = TEST_KIT.spawn(EnrichPipeline.create(PROCESS_KEY, fakeHttp(posts)));
+		var scheduling = TEST_KIT.<Processor.Response>createTestProbe();
+		var callbacks = TEST_KIT.<EnrichPipeline.CallbackResponse>createTestProbe();
+
+		pipeline.tell(start(scheduler(60_000L), scheduling.ref(), "connector text"));
+		var token = CallbackToken.decode(
+			posts.receiveMessage().enricherInputDTO().getReplyTo());
+
+		// 2. the enricher calls back without any rawContent
+		pipeline.tell(new EnrichPipeline.Callback(token.nonce(), CALLBACK_BODY, callbacks.ref()));
+		callbacks.expectMessage(EnrichPipeline.CallbackResponse.ACCEPTED);
+
+		// 3. the text of the connector is still there
+		var success = scheduling.expectMessageClass(Processor.Success.class);
+		var payload = new JsonObject(new String(success.payload(), StandardCharsets.UTF_8));
+		Assertions.assertEquals(
+			"connector text", payload.getString("rawContent"), payload.encode());
+	}
+
 	// the fake HTTP actor: hands every POST to the probe and answers 200
 	private static Supplier<Behavior<Http.Command>> fakeHttp(TestProbe<Http.POST> posts) {
 		return () -> Behaviors
@@ -226,11 +282,19 @@ class EnrichPipelineCallbackTest {
 	private static Processor.Start start(
 		SchedulerDTO scheduler, ActorRef<Processor.Response> replyTo) {
 
+		return start(scheduler, replyTo, null);
+	}
+
+	private static Processor.Start start(
+		SchedulerDTO scheduler, ActorRef<Processor.Response> replyTo,
+		String rawContent) {
+
 		var payload = Json.encodeToBuffer(DataPayload.builder()
 				.type(PayloadType.DOCUMENT)
 				.tenantId("tenant")
 				.datasourceId(1L)
 				.contentId("content-1")
+				.rawContent(rawContent)
 				.documentTypes(new String[] {"web"})
 				.build())
 			.getBytes();
