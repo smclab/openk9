@@ -19,8 +19,10 @@ const tenantManager = (): ProxyOptions => ({
   },
 });
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: "/admin/",
+  // Apollo >= 3.8 strips its dev-only checks from builds only when this is false
+  define: { "globalThis.__DEV__": JSON.stringify(command !== "build") },
   plugins: [
     {
       name: "redirect-root-to-admin",
@@ -78,4 +80,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

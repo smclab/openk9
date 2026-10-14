@@ -24,8 +24,10 @@ const api = (mode: string) =>
         changeOrigin: true,
       };
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ command, mode }) => ({
   base: "/admin/",
+  // Apollo >= 3.8 strips its dev-only checks from builds only when this is false
+  define: { "globalThis.__DEV__": JSON.stringify(command !== "build") },
   plugins: [
     {
       name: "redirect-root-to-admin",
