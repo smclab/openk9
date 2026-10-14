@@ -70,15 +70,16 @@ embedding-module:
 ### Local Setup
 Dependencies are managed with [uv](https://docs.astral.sh/uv/):
 `pyproject.toml` declares the direct dependencies and `uv.lock` pins the whole
-tree. PyTorch comes in two variants, selected with the `cpu` or `gpu` extra.
+tree. PyTorch comes in two variants, the `cpu` and `gpu` dependency groups:
+`uv sync` and `uv run` install `cpu` together with the `dev` group.
 
 1. Install the dependencies from the module folder:
     ```bash
     #CPU only mode
-    uv sync --extra cpu --group dev
+    uv sync
 
-    #GPU mode
-    uv sync --extra gpu --group dev
+    #GPU mode: pass the same flags to every uv run
+    uv sync --no-default-groups --group gpu --group dev
     ```
 2. Start the server:
     ```bash

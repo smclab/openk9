@@ -40,6 +40,8 @@ Repository = "https://github.com/smclab/openk9.git"
 Issues = "https://github.com/smclab/openk9/issues"
 
 [tool.uv]
+# Same uv as the Dockerfile, so the lock is written in the same format
+required-version = ">=0.13.0"
 # Not an installable package: the image copies app/ and runs it in place
 package = false
 # The images are Linux; macOS is kept for local development

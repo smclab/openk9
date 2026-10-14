@@ -26,7 +26,7 @@ COPY ./pyproject.toml ./uv.lock ./
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
         build-essential && \
-    uv sync --locked --no-dev --no-install-project --extra "$MODE" && \
+    uv sync --locked --no-default-groups --group "$MODE" --no-install-project && \
     apt-get purge -y --auto-remove build-essential && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -46,7 +46,7 @@ ARG MODE=cpu
 
 COPY ./tests ./tests
 
-RUN uv sync --locked --no-install-project --extra "$MODE" --group dev && \
+RUN uv sync --locked --no-default-groups --group "$MODE" --group dev --no-install-project && \
     python -m pytest && \
     touch /tests-passed
 

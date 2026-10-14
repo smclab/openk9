@@ -83,13 +83,14 @@ The prerequisite for this enricher is:
 To run the enricher in local you have to:
 1. Install the dependencies from the enricher folder with
    [uv](https://docs.astral.sh/uv/): `pyproject.toml` declares the direct
-   dependencies and `uv.lock` pins the whole tree.
+   dependencies and `uv.lock` pins the whole tree. PyTorch comes in the
+   `cpu` and `gpu` dependency groups, and `cpu` is the default.
     ```bash
     #CPU only mode
-    uv sync --extra cpu --group dev
+    uv sync
 
-    #GPU mode
-    uv sync --extra gpu --group dev
+    #GPU mode: pass the same flags to every uv run
+    uv sync --no-default-groups --group gpu --group dev
     ```
 2. Start the two services, each in its own terminal:
     ```bash

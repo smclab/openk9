@@ -30,7 +30,7 @@ COPY ./pyproject.toml ./uv.lock ./
 
 # MODE=cpu installs the +cpu torch/torchvision wheels, available for both amd64
 # and arm64; MODE=gpu installs the CUDA ones.
-RUN uv sync --locked --no-dev --extra "$MODE"
+RUN uv sync --locked --no-default-groups --group "$MODE"
 
 COPY ./app ./app
 
@@ -43,7 +43,7 @@ ARG MODE=cpu
 
 COPY ./tests ./tests
 
-RUN uv sync --locked --extra "$MODE" --group dev && \
+RUN uv sync --locked --no-default-groups --group "$MODE" --group dev && \
     python -m pytest tests && \
     touch /tmp/tests.passed
 

@@ -200,13 +200,14 @@ answer as it is streamed.
 ## Local Development
 Dependencies are managed with [uv](https://docs.astral.sh/uv/):
 `pyproject.toml` declares the direct dependencies and `uv.lock` pins the whole
-tree. PyTorch comes in two variants, selected with the `cpu` or `gpu` extra.
+tree. PyTorch comes in two variants, the `cpu` and `gpu` dependency groups:
+`uv sync` and `uv run` install `cpu` together with the `dev` group.
 
 ```bash
 # 1. Clone and setup
 git clone <repo>
 cd agentic-rag-module
-uv sync --extra cpu --group dev
+uv sync
 
 # 2. Start development server
 uv run uvicorn app.server:app --host 0.0.0.0 --port 5000 --reload
@@ -214,6 +215,10 @@ uv run uvicorn app.server:app --host 0.0.0.0 --port 5000 --reload
 # 3. Run the unit tests
 uv run pytest tests
 ```
+
+For the CUDA variant, replace the default `cpu` group with `gpu` and pass
+the same flags to `uv run`, otherwise it switches back to the CPU wheels:
+`uv sync --no-default-groups --group gpu --group dev`.
 
 `uv run` generates the gRPC stubs from the `.proto` files under
 `app/external_services/grpc/`, and generates them again whenever a `.proto`

@@ -12,16 +12,16 @@ dependencies = [
     "uvicorn==0.52.4",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
+dev = ["pytest==9.1.0"]
+# PyTorch variant: cpu is installed by default, gpu replaces it in the
+# CUDA images (--no-default-groups --group gpu)
 cpu = ["torch==2.14.0", "torchvision==0.29.0"]
 # CUDA wheels exist for Linux only
 gpu = [
     "torch==2.14.0; sys_platform == 'linux'",
     "torchvision==0.29.0; sys_platform == 'linux'",
 ]
-
-[dependency-groups]
-dev = ["pytest==9.1.0"]
 
 [project.urls]
 Homepage = "https://www.openk9.io/"
@@ -30,20 +30,23 @@ Repository = "https://github.com/smclab/openk9.git"
 Issues = "https://github.com/smclab/openk9/issues"
 
 [tool.uv]
+# Same uv as the Dockerfile, so the lock is written in the same format
+required-version = ">=0.13.0"
 # Not an installable package: the image copies app/ and runs it in place
 package = false
 # The images are Linux; macOS is kept for local development
 environments = ["sys_platform == 'linux'", "sys_platform == 'darwin'"]
-conflicts = [[{ extra = "cpu" }, { extra = "gpu" }]]
+default-groups = ["dev", "cpu"]
+conflicts = [[{ group = "cpu" }, { group = "gpu" }]]
 
 [tool.uv.sources]
 torch = [
-    { index = "pytorch-cpu", extra = "cpu" },
-    { index = "pytorch-gpu", extra = "gpu" },
+    { index = "pytorch-cpu", group = "cpu" },
+    { index = "pytorch-gpu", group = "gpu" },
 ]
 torchvision = [
-    { index = "pytorch-cpu", extra = "cpu" },
-    { index = "pytorch-gpu", extra = "gpu" },
+    { index = "pytorch-cpu", group = "cpu" },
+    { index = "pytorch-gpu", group = "gpu" },
 ]
 
 [[tool.uv.index]]

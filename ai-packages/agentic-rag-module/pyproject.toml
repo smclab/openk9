@@ -63,16 +63,16 @@ dependencies = [
     "uvicorn==0.42.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
+dev = ["pytest==9.1.0"]
+# PyTorch variant: cpu is installed by default, gpu replaces it in the
+# CUDA images (--no-default-groups --group gpu)
 cpu = ["torch==2.14.1", "torchvision==0.29.1"]
 # CUDA wheels exist for Linux only
 gpu = [
     "torch==2.14.1; sys_platform == 'linux'",
     "torchvision==0.29.1; sys_platform == 'linux'",
 ]
-
-[dependency-groups]
-dev = ["pytest==9.1.0"]
 
 [project.urls]
 Homepage = "https://www.openk9.io/"
@@ -91,9 +91,12 @@ packages = ["app"]
 [tool.hatch.build.hooks.custom]
 
 [tool.uv]
+# Same uv as the Dockerfile, so the lock is written in the same format
+required-version = ">=0.13.0"
 # The images are Linux; macOS is kept for local development
 environments = ["sys_platform == 'linux'", "sys_platform == 'darwin'"]
-conflicts = [[{ extra = "cpu" }, { extra = "gpu" }]]
+default-groups = ["dev", "cpu"]
+conflicts = [[{ group = "cpu" }, { group = "gpu" }]]
 # Rebuild the project (and regenerate the stubs) when a .proto changes or a
 # stub goes missing
 cache-keys = [
@@ -104,12 +107,12 @@ cache-keys = [
 
 [tool.uv.sources]
 torch = [
-    { index = "pytorch-cpu", extra = "cpu" },
-    { index = "pytorch-gpu", extra = "gpu" },
+    { index = "pytorch-cpu", group = "cpu" },
+    { index = "pytorch-gpu", group = "gpu" },
 ]
 torchvision = [
-    { index = "pytorch-cpu", extra = "cpu" },
-    { index = "pytorch-gpu", extra = "gpu" },
+    { index = "pytorch-cpu", group = "cpu" },
+    { index = "pytorch-gpu", group = "gpu" },
 ]
 
 [[tool.uv.index]]

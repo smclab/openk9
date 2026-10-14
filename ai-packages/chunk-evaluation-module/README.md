@@ -116,7 +116,7 @@ tree.
 
 ```bash
 # Install the dependencies, test ones included
-uv sync --group dev
+uv sync
 
 # Start the evaluator (reads the same variables as the .env above)
 cd app && uv run python server.py
