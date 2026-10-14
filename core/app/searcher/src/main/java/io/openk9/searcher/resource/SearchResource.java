@@ -64,6 +64,7 @@ import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
 import io.openk9.searcher.grpc.QueryAnalysisTokens;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
+import io.openk9.searcher.grpc.ResultAcl;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.grpc.Sort;
 import io.openk9.searcher.grpc.SortType;
@@ -1122,7 +1123,12 @@ public class SearchResource {
 							}
 						}))
 					.map(searchResponse -> toSearchResponse(
-						searchResponse, withUserSort));
+						searchResponse,
+						queryParserResponse.hasResultAcl()
+							? queryParserResponse.getResultAcl()
+							: null,
+						searchRequest.isIncludeObscured(),
+						withUserSort));
 			})
 			.onFailure()
 			.transform(throwable -> new WebApplicationException(
@@ -1707,7 +1713,6 @@ public class SearchResource {
 
 		var rawToken = getRawToken(headers);
 
-		String sortAfterKey = searchRequest.getSortAfterKey();
 		String language = searchRequest.getLanguage();
 
 		return requestBuilder
@@ -1715,7 +1720,7 @@ public class SearchResource {
 			.setJwt(rawToken)
 			.putAllExtra(extra)
 			.addAllSort(mapToGrpc(searchRequest.getSort()))
-			.setSortAfterKey(sortAfterKey == null ? "" : sortAfterKey)
+			.setSortAfterKey(sortAfterKeyOf(searchRequest))
 			.setLanguage(language == null ? "" : language)
 			.build();
 
@@ -1921,8 +1926,124 @@ public class SearchResource {
 
 	}
 
+	/**
+	 * Builds one result of the search response from a hit.
+	 * <p>
+	 * When the datasource sent a {@link ResultAcl} and the hit did not match
+	 * its named query, the user is not authorized to read the document: the
+	 * source keeps only the visible fields and lists the others in
+	 * {@code obscuredFields}, and the highlight keeps only the visible fields.
+	 * A search asking for the obscured results carries no
+	 * {@code sortAfterKey}: the sort values may hold fields that are not
+	 * visible, and the next page goes by offset. Outside that mode the key is
+	 * returned only with a user sort, the only case where the datasource
+	 * writes search_after.
+	 *
+	 * @param hit             the hit returned by OpenSearch
+	 * @param resultAcl       how to obscure, {@code null} when nothing is
+	 *                        obscured for this search
+	 * @param includeObscured whether the request asked for the obscured
+	 *                        results
+	 * @param withUserSort    whether the request carries a user sort
+	 * @return the result, with its source, highlight, score and, with a user
+	 *         sort outside the obscured mode, its sortAfterKey
+	 */
+	static Map<String, Object> toHitMap(
+		SearchHit hit, ResultAcl resultAcl, boolean includeObscured,
+		boolean withUserSort) {
+
+		Set<String> visibleFields = isObscured(hit, resultAcl)
+			? Set.copyOf(resultAcl.getVisibleFieldsList())
+			: null;
+
+		Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+
+		Map<String, Object> sourceMap = new HashMap<>(
+			sourceAsMap.size() + 1, 1);
+
+		sourceMap.putAll(visibleFields == null
+			? sourceAsMap
+			: ResultObscurer.obscureSource(sourceAsMap, visibleFields));
+
+		mapI18nFields(sourceMap);
+
+		sourceMap.put("id", hit.getId());
+
+		Map<String, HighlightField> highlightFields =
+			hit.getHighlightFields();
+
+		Map<String, Object> highlightMap = new HashMap<>(
+			highlightFields.size(), 1);
+
+		for (HighlightField value : highlightFields.values()) {
+			if (visibleFields != null
+				&& !ResultObscurer.isVisible(value.getName(), visibleFields)) {
+
+				continue;
+			}
+
+			highlightMap.put(
+				getHighlightName(value.getName()),
+				Arrays
+					.stream(value.getFragments())
+					.map(Text::string)
+					.toArray(String[]::new)
+			);
+		}
+
+		Map<String, Object> hitMap = new HashMap<>(2, 1);
+
+		hitMap.put("source", sourceMap);
+		hitMap.put("highlight", highlightMap);
+		hitMap.put("score", hit.getScore());
+
+		Object[] sortValues = hit.getSortValues();
+
+		if (withUserSort && !includeObscured
+			&& sortValues != null && sortValues.length > 0) {
+
+			hitMap.put(
+				"sortAfterKey",
+				Base64.getEncoder().encodeToString(
+					JsonArray.of(sortValues).toBuffer().getBytes()
+				)
+			);
+		}
+
+		return hitMap;
+	}
+
+	/**
+	 * Returns the sortAfterKey to pass to the datasource. A search asking for
+	 * the obscured results ignores the one it receives: a key built by hand
+	 * would let a client probe the values of the fields that are not visible.
+	 *
+	 * @param searchRequest the search request
+	 * @return the key, empty when there is none or it is ignored
+	 */
+	static String sortAfterKeyOf(SearchRequest searchRequest) {
+		String sortAfterKey = searchRequest.getSortAfterKey();
+
+		return searchRequest.isIncludeObscured() || sortAfterKey == null
+			? ""
+			: sortAfterKey;
+	}
+
+	private static boolean isObscured(SearchHit hit, ResultAcl resultAcl) {
+		if (resultAcl == null) {
+			return false;
+		}
+
+		String[] matchedQueries = hit.getMatchedQueries();
+
+		return matchedQueries == null || !Arrays.asList(matchedQueries)
+			.contains(resultAcl.getAuthorizedQueryName());
+	}
+
 	private Response toSearchResponse(
-		SearchResponse searchResponse, boolean withUserSort) {
+		SearchResponse searchResponse, ResultAcl resultAcl,
+		boolean includeObscured, boolean withUserSort) {
+
 		printShardFailures(searchResponse);
 
 		SearchHits hits = searchResponse.getHits();
@@ -1930,53 +2051,7 @@ public class SearchResource {
 		List<Map<String, Object>> result = new ArrayList<>();
 
 		for (SearchHit hit : hits.getHits()) {
-
-			Map<String, Object> sourceAsMap = hit.getSourceAsMap();
-
-			Map<String, Object> sourceMap = new HashMap<>(
-				sourceAsMap.size() + 1, 1);
-
-			sourceMap.putAll(sourceAsMap);
-
-			mapI18nFields(sourceMap);
-
-			sourceMap.put("id", hit.getId());
-
-			Map<String, HighlightField> highlightFields =
-				hit.getHighlightFields();
-
-			Map<String, Object> highlightMap = new HashMap<>(
-				highlightFields.size(), 1);
-
-			for (HighlightField value : highlightFields.values()) {
-				highlightMap.put(
-					getHighlightName(value.getName()),
-					Arrays
-						.stream(value.getFragments())
-						.map(Text::string)
-						.toArray(String[]::new)
-				);
-			}
-
-			Map<String, Object> hitMap = new HashMap<>(2, 1);
-
-			hitMap.put("source", sourceMap);
-			hitMap.put("highlight", highlightMap);
-			hitMap.put("score", hit.getScore());
-
-			Object[] sortValues = hit.getSortValues();
-
-			if (withUserSort && sortValues != null && sortValues.length > 0) {
-				hitMap.put(
-					"sortAfterKey",
-					Base64.getEncoder().encodeToString(
-						JsonArray.of(sortValues).toBuffer().getBytes()
-					)
-				);
-			}
-
-			result.add(hitMap);
-
+			result.add(toHitMap(hit, resultAcl, includeObscured, withUserSort));
 		}
 
 		TotalHits totalHits = hits.getTotalHits();
