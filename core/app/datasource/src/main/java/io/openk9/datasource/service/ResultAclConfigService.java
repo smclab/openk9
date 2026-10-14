@@ -118,7 +118,7 @@ public class ResultAclConfigService
 
 						return findVisibleFields(session, dto.getVisibleFieldIds())
 							.flatMap(visibleFields -> {
-								newStateConfig.setVisibleFields(visibleFields);
+								replaceVisibleFields(newStateConfig, visibleFields);
 
 								return session.merge(newStateConfig);
 							});
@@ -141,12 +141,27 @@ public class ResultAclConfigService
 
 						return findVisibleFields(session, dto.getVisibleFieldIds())
 							.flatMap(visibleFields -> {
-								newStateConfig.setVisibleFields(visibleFields);
+								replaceVisibleFields(newStateConfig, visibleFields);
 
 								return session.merge(newStateConfig);
 							});
 					})
 		);
+	}
+
+	/**
+	 * Replaces the visible fields of a persisted configuration, changing its
+	 * set in place: the cache invalidation reacts to an updated collection,
+	 * not to a collection replaced by a new one.
+	 *
+	 * @param config        the persisted configuration
+	 * @param visibleFields the new visible fields
+	 */
+	private static void replaceVisibleFields(
+		ResultAclConfig config, Set<DocTypeField> visibleFields) {
+
+		config.getVisibleFields().clear();
+		config.getVisibleFields().addAll(visibleFields);
 	}
 
 	/**

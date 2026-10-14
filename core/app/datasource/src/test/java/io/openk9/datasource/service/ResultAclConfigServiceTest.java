@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.EntitiesUtils;
+import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
@@ -35,6 +36,7 @@ import io.openk9.datasource.service.exception.InvalidDocTypeFieldSetException;
 import io.openk9.datasource.service.exception.K9Error;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.mockito.InjectSpy;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +48,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.verify;
 
 @QuarkusTest
 public class ResultAclConfigServiceTest {
@@ -83,6 +88,9 @@ public class ResultAclConfigServiceTest {
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
+
+	@InjectSpy
+	ActorSystemProvider actorSystemProvider;
 
 	private DocType docType;
 	private DocTypeField title;
@@ -423,6 +431,33 @@ public class ResultAclConfigServiceTest {
 		assertEquals(
 			"There are some DocTypeFields referenced by other entities",
 			error.getMessage());
+	}
+
+	@Test
+	void should_ask_for_a_cache_invalidation_when_only_the_visible_fields_change() {
+		// setup — the configuration enabled, with a role and a visible field
+		var created = resultAclConfigService.create(ResultAclConfigDTO.builder()
+				.name(ResultAclConfig.DEFAULT_NAME)
+				.enabled(true)
+				.superUserRoles(List.of(ROLE_AUDITOR))
+				.visibleFieldIds(Set.of(title.getId()))
+				.build())
+			.await().indefinitely();
+
+		clearInvocations(actorSystemProvider);
+
+		// action — the same configuration with another visible field
+		resultAclConfigService.update(created.getId(), ResultAclConfigDTO.builder()
+				.name(ResultAclConfig.DEFAULT_NAME)
+				.enabled(true)
+				.superUserRoles(List.of(ROLE_AUDITOR))
+				.visibleFieldIds(Set.of(date.getId()))
+				.build())
+			.await().indefinitely();
+
+		// assertion — the cache invalidation reaches the actor system, so a
+		// search no longer reads the previous visible fields
+		verify(actorSystemProvider, atLeastOnce()).getActorSystem();
 	}
 
 	private DocTypeField addField(
