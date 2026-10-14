@@ -54,8 +54,8 @@ class ResultAclConfigTest {
 	private static final FieldNode CONTENT_BASE =
 		new FieldNode(10L, 7L, FieldType.TEXT, null);
 
-	// fields holding their whole value: an OBJECT without sub-fields and a
-	// FLATTENED field
+	// an OBJECT without sub-fields, never fetched by a search, and a FLATTENED
+	// field, holding its whole value
 	private static final FieldNode RAW =
 		new FieldNode(11L, null, FieldType.OBJECT, null);
 	private static final FieldNode METADATA =
@@ -83,13 +83,14 @@ class ResultAclConfigTest {
 		var selectable = ResultAclConfig.selectableFieldIds(fields);
 
 		// assertion — left out: the multi-field, the containers with
-		// sub-fields, the variants of the i18n field and the excluded field
+		// sub-fields, the variants of the i18n field, the OBJECT without
+		// sub-fields and the excluded field
 		assertEquals(
 			Set.of(
 				TITLE.id(),
 				BINARY_NAME.id(), BINARY_DATA.id(),
 				CONTENT.id(),
-				RAW.id(), METADATA.id(),
+				METADATA.id(),
 				DATE.id()
 			),
 			selectable);

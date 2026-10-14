@@ -139,12 +139,13 @@ public class ResultAclConfig extends K9Entity {
 	 * Selects the DocTypeFields that can be visible fields: for each value of
 	 * a document, the most specific field that holds it.
 	 * <p>
-	 * A field qualifies unless it is excluded, an OBJECT or NESTED field with
-	 * sub-fields (its sub-fields are chosen instead), a field inside an I18N
-	 * field (the I18N field stands for all its variants) or a multi-field,
-	 * which is indexed but never part of the document source. So leaves,
-	 * OBJECT fields without sub-fields, FLATTENED fields and I18N fields
-	 * qualify.
+	 * A field qualifies unless it is excluded, an OBJECT field (a search never
+	 * fetches it, its values reach a result only through its sub-fields), a
+	 * NESTED field with sub-fields (its sub-fields are chosen instead), a field
+	 * inside an I18N field (the I18N field stands for all its variants) or a
+	 * multi-field, which is indexed but never part of the document source. So
+	 * leaves, NESTED fields without sub-fields, FLATTENED fields and I18N
+	 * fields qualify.
 	 *
 	 * @param fields every DocTypeField of the tenant, so that parents and
 	 *               sub-fields can be told apart
@@ -169,6 +170,10 @@ public class ResultAclConfig extends K9Entity {
 		FieldNode field, Map<Long, FieldNode> fieldsById, Set<Long> parentIds) {
 
 		if (Boolean.TRUE.equals(field.exclude())) {
+			return false;
+		}
+
+		if (field.fieldType() == FieldType.OBJECT) {
 			return false;
 		}
 

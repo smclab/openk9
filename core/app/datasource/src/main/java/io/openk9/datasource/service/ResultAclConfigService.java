@@ -271,8 +271,8 @@ public class ResultAclConfigService
 		if (!selectableIds.containsAll(requestedIds)) {
 			throw new InvalidDocTypeFieldSetException(
 				"One or more docTypeFields cannot be visible fields: excluded "
-				+ "fields, containers with sub-fields, variants of an i18n "
-				+ "field and multi-fields are not allowed");
+				+ "fields, OBJECT fields, containers with sub-fields, variants "
+				+ "of an i18n field and multi-fields are not allowed");
 		}
 	}
 
