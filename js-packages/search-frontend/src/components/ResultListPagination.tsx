@@ -190,7 +190,7 @@ export function InfiniteResults<E>({
       `}
       className="scroll"
     >
-      {results?.data?.pages[0]?.total ?? 0 > 0 ? (
+      {(results?.data?.pages[0]?.total ?? 0) > 0 ? (
         <div
           className="openk9-infinite-results-container-wrapper"
           css={css`

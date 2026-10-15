@@ -1920,13 +1920,16 @@ function renderPortal(
     typeof container === "string"
       ? document.querySelector(container)
       : container;
-  return (
-    <SimpleErrorBoundary>
-      <React.Suspense>
-        {element ? (ReactDOM.createPortal(node, element) as any) : null}
-      </React.Suspense>
-    </SimpleErrorBoundary>
-  );
+  // The boundary and Suspense sit inside the portal, so their fallback shows
+  // in the widget's own container instead of the detached React root.
+  return element
+    ? ReactDOM.createPortal(
+        <SimpleErrorBoundary>
+          <React.Suspense>{node}</React.Suspense>
+        </SimpleErrorBoundary>,
+        element,
+      )
+    : null;
 }
 
 function useDetailsMobile(

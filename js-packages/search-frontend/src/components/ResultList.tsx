@@ -467,6 +467,12 @@ export function InfiniteResults<E>({
   );
 }
 
+// Defined once at module level: created inside VirtualResults it would be a
+// new component on every render, and React would remount the whole list.
+const StyledVirtuoso = styled(Virtuoso)`
+  flex-grow: 1;
+`;
+
 type VirtualResultsProps<E> = ResulListProps<E> & {
   sortAfterKey: string;
   language: string;
@@ -503,10 +509,6 @@ export function VirtualResults<E>({
     results.data?.pages[0].total && results.data.pages[0].total > 0,
   );
   setTotalResult(results.data?.pages[0].total ?? null);
-
-  const StyledVirtuoso = styled(Virtuoso)`
-    flex-grow: 1;
-  `;
 
   return (
     <div
