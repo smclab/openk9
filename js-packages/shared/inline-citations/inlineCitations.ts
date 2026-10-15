@@ -111,8 +111,10 @@ export function sourcesByOrdinal(
 }
 
 /**
- * A remark plugin that turns every `[n]` in the prose into a `<span>` the app
- * can style, carrying the number in `data-citation-ordinal`.
+ * A remark plugin that turns the `[n]` markers in the prose into a `<span>`
+ * the app can style, carrying the numbers in `data-citation-ordinals`.
+ * Markers written next to each other become one span: "[1][3]" is a sentence
+ * with two sources, which the reader wants as one citation, not two.
  *
  * A plugin rather than a `components` entry because react-markdown has no
  * hook for text nodes: intercepting them from the block elements would mean
@@ -155,21 +157,67 @@ function visit(node: unknown): void {
       continue;
     }
 
-    for (const piece of pieces) {
+    // Adjacent markers are one citation with several sources: the model
+    // writes "[1][3]" for a sentence that draws on two, and the reader wants
+    // one chip saying so, not two chips in a row.
+    for (let index = 0; index < pieces.length; index += 1) {
+      const piece = pieces[index];
       if (piece.kind === "text") {
         rebuilt.push({ type: "text", value: piece.text });
-      } else {
-        rebuilt.push({
-          type: "text",
-          value: String(piece.ordinal),
-          data: {
-            hName: "span",
-            hProperties: { "data-citation-ordinal": String(piece.ordinal) },
-          },
-        });
+        continue;
       }
+
+      const group = [piece.ordinal];
+      while (index + 1 < pieces.length) {
+        const next = pieces[index + 1];
+        if (next.kind !== "marker") break;
+        group.push(next.ordinal);
+        index += 1;
+      }
+
+      rebuilt.push({
+        type: "text",
+        value: group.join(","),
+        data: {
+          hName: "span",
+          hProperties: { "data-citation-ordinals": group.join(",") },
+        },
+      });
     }
   }
 
   parent.children = rebuilt;
+}
+
+/**
+ * The first quote of each cited source, by the number the answer marks it
+ * with, read off the `DOCUMENT` events.
+ *
+ * They arrive once the answer is complete - which sources were used is known
+ * only then - so a panel shows the title while the answer is being written
+ * and gains the quote at the end. Sources shown without one are normal: on
+ * the measured corpus about a quarter of them have no passage that could be
+ * copied word for word.
+ */
+export function quotesByOrdinal(
+  documents: readonly unknown[] | undefined,
+): Map<number, string> {
+  const quotes = new Map<number, string>();
+  for (const document of documents ?? []) {
+    if (typeof document !== "object" || document === null) continue;
+    const fields = document as Record<string, unknown>;
+    const ordinal = fields.ordinal;
+    if (typeof ordinal !== "number" || !Number.isInteger(ordinal)) continue;
+    const citations = fields.citations;
+    if (!Array.isArray(citations)) continue;
+    for (const citation of citations) {
+      if (typeof citation !== "object" || citation === null) continue;
+      const quote = optionalString((citation as Record<string, unknown>).quote);
+      if (quote) {
+        quotes.set(ordinal, quote);
+        break;
+      }
+    }
+  }
+  return quotes;
 }

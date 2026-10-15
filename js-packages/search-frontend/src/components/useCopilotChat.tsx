@@ -58,6 +58,12 @@ function toChatSource(chunk: unknown): ChatSource | null {
     source: optionalString(fields.source),
     filename: optionalString(fields.filename),
     file_extension: optionalString(fields.file_extension),
+    // the number the answer marks this source with, and the passages it
+    // quoted from it: what turns a marker into a chip with evidence
+    ordinal: typeof fields.ordinal === "number" ? fields.ordinal : undefined,
+    citations: Array.isArray(fields.citations)
+      ? (fields.citations as Array<{ quote?: string }>)
+      : undefined,
   };
   return Object.values(source).some((value) => value !== undefined)
     ? source

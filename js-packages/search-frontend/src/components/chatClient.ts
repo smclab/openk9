@@ -32,6 +32,10 @@ export type ChatSource = {
   url?: string;
   filename?: string;
   file_extension?: string;
+  /** the number the answer marks this source with, when it marked it */
+  ordinal?: number;
+  /** passages copied verbatim from the source, when the tenant asks for them */
+  citations?: Array<{ quote?: string }>;
 };
 
 export type ChatHistoryEntry = {

@@ -7,7 +7,10 @@ import { ChatSource, useOpenK9Client } from "./client";
 import { Message } from "./useGenerateResponse";
 import { toCitations } from "./chatSources";
 import { citationComponents } from "./CitationMarker";
-import { remarkCitationMarkers } from "../../../shared/inline-citations/inlineCitations";
+import {
+  quotesByOrdinal,
+  remarkCitationMarkers,
+} from "../../../shared/inline-citations/inlineCitations";
 
 type CopilotProps = {
   endpoint?: string | null;
@@ -564,7 +567,10 @@ export function Copilot({
                 ) : (
                   <Markdown
                     remarkPlugins={[remarkCitationMarkers]}
-                    components={citationComponents(message.citedSources)}
+                    components={citationComponents(
+                      message.citedSources,
+                      quotesByOrdinal(message.sources),
+                    )}
                   >
                     {message.answer}
                   </Markdown>

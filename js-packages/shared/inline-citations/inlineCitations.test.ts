@@ -19,6 +19,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   parseSourcesEvent,
+  quotesByOrdinal,
   remarkCitationMarkers,
   sourcesByOrdinal,
   splitAnswerOnMarkers,
@@ -135,12 +136,12 @@ describe("remarkCitationMarkers", () => {
     return tree;
   };
   const text = (value: string) => ({ type: "text", value });
-  const marker = (ordinal: string) => ({
+  const marker = (ordinals: string) => ({
     type: "text",
-    value: ordinal,
+    value: ordinals,
     data: {
       hName: "span",
-      hProperties: { "data-citation-ordinal": ordinal },
+      hProperties: { "data-citation-ordinals": ordinals },
     },
   });
 
@@ -220,5 +221,69 @@ describe("remarkCitationMarkers", () => {
     expect(() => run(null)).not.toThrow();
     expect(() => run({ type: "root" })).not.toThrow();
     expect(() => run({ type: "root", children: [null, 7] })).not.toThrow();
+  });
+
+  it("groups markers written next to each other into one citation", () => {
+    // "[1][3]" is one sentence with two sources: one chip, not two.
+    const tree = {
+      type: "root",
+      children: [{ type: "paragraph", children: [text("Una frase [1][3].")] }],
+    };
+
+    expect(run(tree)).toEqual({
+      type: "root",
+      children: [
+        {
+          type: "paragraph",
+          children: [text("Una frase "), marker("1,3"), text(".")],
+        },
+      ],
+    });
+  });
+
+  it("keeps markers apart when text separates them", () => {
+    const tree = {
+      type: "root",
+      children: [{ type: "paragraph", children: [text("Uno [1]. Due [3].")] }],
+    };
+    run(tree);
+
+    const children = (tree.children[0] as any).children;
+    expect(children).toEqual([
+      text("Uno "),
+      marker("1"),
+      text(". Due "),
+      marker("3"),
+      text("."),
+    ]);
+  });
+});
+
+describe("quotesByOrdinal", () => {
+  it("reads the first quote of each cited source", () => {
+    const quotes = quotesByOrdinal([
+      { ordinal: 1, citations: [{ quote: "primo passaggio" }] },
+      { ordinal: 2, citations: [{ quote: "secondo" }, { quote: "terzo" }] },
+    ]);
+
+    expect(quotes.get(1)).toBe("primo passaggio");
+    expect(quotes.get(2)).toBe("secondo");
+  });
+
+  it("leaves out a source with no surviving quote", () => {
+    // Normal: about a quarter of the sources have no passage that could be
+    // copied word for word, and the panel then shows the title alone.
+    const quotes = quotesByOrdinal([
+      { ordinal: 1, citations: [] },
+      { ordinal: 2 },
+    ]);
+
+    expect(quotes.size).toBe(0);
+  });
+
+  it("survives anything that is not the expected shape", () => {
+    expect(quotesByOrdinal(undefined).size).toBe(0);
+    expect(quotesByOrdinal([null, 7, { ordinal: "1" }]).size).toBe(0);
+    expect(quotesByOrdinal([{ ordinal: 1, citations: [{}, 7] }]).size).toBe(0);
   });
 });

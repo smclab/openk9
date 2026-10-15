@@ -17,7 +17,10 @@ import {
 	extractDocumentFromAnswer,
 	markdownComponentsWithCitations,
 } from "./MarkdownRenderer";
-import { remarkCitationMarkers } from "../../../shared/inline-citations/inlineCitations";
+import {
+	quotesByOrdinal,
+	remarkCitationMarkers,
+} from "../../../shared/inline-citations/inlineCitations";
 import { GenerationStatus, Message } from "./useGenerateResponse";
 import { isSafeExternalUrl } from "../../../shared/safe-external-url/safeExternalUrl";
 
@@ -385,7 +388,10 @@ export function MessageCard({
 							<Markdown
 								remarkPlugins={[remarkGfm, remarkCitationMarkers]}
 								components={{
-									...markdownComponentsWithCitations(message.citedSources),
+									...markdownComponentsWithCitations(
+										message.citedSources,
+										quotesByOrdinal(message.sources),
+									),
 									pre: (props) => <PreBlock {...props} />,
 									code: (props: ComponentPropsWithoutRef<"code"> & { inline?: boolean }) => {
 										const { inline, style, children, ...rest } = props || {};
