@@ -98,7 +98,14 @@ export const DataIndexQuery = gql`
   }
 `;
 
-/* Probably not needed*/
+export const DeleteDataIndexMutation = gql`
+  mutation DeleteDataIndex($dataIndexId: ID!, $dataIndexName: String!) {
+    deleteDataIndex(dataIndexId: $dataIndexId, dataIndexName: $dataIndexName) {
+      id
+      name
+    }
+  }
+`;
 
 gql`
   query DataIndexMapping($id: ID!) {

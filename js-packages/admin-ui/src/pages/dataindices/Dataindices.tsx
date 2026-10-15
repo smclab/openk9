@@ -3,12 +3,34 @@ import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDataIndicesQuery } from "../../graphql-generated";
+import { useToast } from "@components/Form";
+import { useDataIndicesQuery, useDeleteDataIndexMutation } from "../../graphql-generated";
 
 export function Dataindices() {
   const dataIndicesQuery = useDataIndicesQuery({ variables: { first: 10 } });
   const navigate = useNavigate();
+  const toast = useToast();
   const isLoading = dataIndicesQuery.loading;
+  const [deleteDataIndex] = useDeleteDataIndexMutation({
+    refetchQueries: ["DataIndices"],
+    onCompleted(data) {
+      if (data.deleteDataIndex?.id) {
+        toast({
+          title: "Data Index Deleted",
+          content: "Data Index has been deleted successfully",
+          displayType: "success",
+        });
+      }
+    },
+    onError(error) {
+      console.log(error);
+      toast({
+        title: "Error Delete",
+        content: "Impossible to delete Data Index",
+        displayType: "error",
+      });
+    },
+  });
 
   if (isLoading) {
     return null;
@@ -58,6 +80,14 @@ export function Dataindices() {
             edgesPath="dataIndices.edges"
             pageInfoPath="dataIndices.pageInfo"
             onDelete={(dataIndices) => {}}
+            deleted={{
+              title: "Data Index",
+              messsage: "Deleting the data index will remove its search index and all indexed documents.",
+              wordConfirm: "Delete",
+              actionDeleted: (id: string, name: string) => {
+                deleteDataIndex({ variables: { dataIndexId: id, dataIndexName: name } });
+              },
+            }}
             columns={[
               {
                 header: "Name",
