@@ -28,6 +28,9 @@ def _graph_with_llm_returning(content):
     llm = MagicMock()
     llm.return_value = SimpleNamespace(content=content)
     graph.utility_llm = llm
+    # The resolver runs outside the graph, so it is handed the request config
+    # explicitly: that is what puts its tokens on the request's own tally.
+    graph.config = {}
     return graph
 
 

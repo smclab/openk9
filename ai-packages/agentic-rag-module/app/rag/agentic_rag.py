@@ -23,6 +23,7 @@ from enum import Enum
 from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
 
 from IPython.display import Image
+from langchain_core.callbacks import UsageMetadataCallbackHandler
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
@@ -147,6 +148,29 @@ CITATION_QUOTES_INSTRUCTION = (
     "compose is worse than none. List every number you marked and no other. "
     "Write nothing after the JSON object."
 )
+
+
+def _render_token_usage(usage: UsageMetadataCallbackHandler) -> str:
+    """Render the tokens a request spent, summed over every model it called.
+
+    The handler reports per model, because a request uses the answering LLM
+    and the cheaper utility one for routing, rewriting and the language.
+    Summing them is what answers "what did this request cost"; the per-model
+    split follows for the cases where that matters.
+
+    Providers that report no usage leave the handler empty, so the record
+    says tokens=unavailable rather than a confident zero."""
+    per_model = getattr(usage, "usage_metadata", None) or {}
+    if not per_model:
+        return "tokens=unavailable"
+
+    total_in = sum(m.get("input_tokens", 0) for m in per_model.values())
+    total_out = sum(m.get("output_tokens", 0) for m in per_model.values())
+    split = " ".join(
+        f"{model}={m.get('input_tokens', 0)}/{m.get('output_tokens', 0)}"
+        for model, m in sorted(per_model.items())
+    )
+    return f"tokens_in={total_in} tokens_out={total_out} by_model[{split}]"
 
 
 def _normalize_quote(text: str) -> str:
@@ -1130,7 +1154,8 @@ class RagGraph:
                 {
                     "query": query,
                     "format_instructions": format_instructions,
-                }
+                },
+                config=self.config,
             )
 
             if isinstance(raw_output.content, list):
@@ -2527,6 +2552,12 @@ class RagGraph:
         outcome = "COMPLETED"
         cited_sources = []
         result_answer = ""
+        # Counts every model call this request makes - the answer, the
+        # router, the rewriting, the language resolver - not just the
+        # generation. The RagGraph is built per request, so hanging it off
+        # self.config cannot leak into another one.
+        usage = UsageMetadataCallbackHandler()
+        self.config["callbacks"] = [usage]
 
         logger.info(
             f"[request] start rag_type={self.rag_type} "
@@ -2842,5 +2873,6 @@ class RagGraph:
                 f"duration_ms={int((time.monotonic() - started_at) * 1000)} "
                 f"chain=agentic_rag {self._log_context()}"
                 + f" cited_sources={cited_sources}"
+                + f" {_render_token_usage(usage)}"
                 + debug_extra(logger, answer=result_answer)
             )
