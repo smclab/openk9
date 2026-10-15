@@ -113,6 +113,8 @@ def test_rag_prompt_carries_history_context_query_and_language():
     rendered = _rendered_prompt(graph)
     assert rendered.startswith("Human: SYSTEM")
     assert f"Previous conversation: {RENDERED_HISTORY}\n" in rendered
+    # These documents carry no document_id, so they get no ordinal: a source
+    # that can never be emitted as a DOCUMENT event must not be citable.
     assert (
         "Context: DGS e una societa di consulenza.\n\nHa sede a Roma.\n"
     ) in rendered

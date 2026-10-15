@@ -58,29 +58,40 @@ def _state():
     return GraphState(current_query=QUERY, use_rag=True, context=CONTEXT)
 
 
-def test_flag_on_labels_the_context_and_asks_for_the_citations_block():
+def test_the_context_is_numbered_and_the_markers_are_always_asked_for():
+    # Numbering and markers do not depend on retrieve_citations: they are what
+    # lets the answer carry only the sources it used.
+    graph = _graph(retrieve_citations=False, answer="Risposta.")
+
+    graph.llm_response_node(_state())
+
+    prompt = _rendered_prompt(graph)
+    assert "[1]\nLa garanzia Cristalli" in prompt
+    assert "[2]\nLa garanzia Furto" in prompt
+    assert "square brackets at the end of the sentence" in prompt
+
+
+def test_the_flag_adds_the_quotes_block_on_top_of_the_markers():
     graph = _graph(retrieve_citations=True, answer="Risposta.")
 
     graph.llm_response_node(_state())
 
     prompt = _rendered_prompt(graph)
+    assert "square brackets at the end of the sentence" in prompt
+    assert CITATIONS_DELIMITER in prompt
     # The JSON shape in the instruction reaches the model verbatim: it must not
     # be mistaken for template variables while rendering.
-    assert "[document_id: doc-1]" in prompt
-    assert "[document_id: doc-2]" in prompt
-    assert CITATIONS_DELIMITER in prompt
-    assert '[{"document_id": "<id>", "quotes": ["..."]}]' in prompt
+    assert '{"2": ["..."], "5": ["..."]}' in prompt
 
 
-def test_flag_off_leaves_the_prompt_and_the_context_unlabelled():
+def test_flag_off_asks_for_no_quotes_block():
     graph = _graph(retrieve_citations=False, answer="Risposta.")
 
     state = graph.llm_response_node(_state())
 
-    prompt = _rendered_prompt(graph)
-    assert "document_id" not in prompt
-    assert CITATIONS_DELIMITER not in prompt
+    assert CITATIONS_DELIMITER not in _rendered_prompt(graph)
     assert state.response == "Risposta."
+    # No marker in the answer, so every source is kept.
     assert state.citations is None
 
 
@@ -88,25 +99,27 @@ def test_the_saved_response_excludes_the_citations_tail():
     graph = _graph(
         retrieve_citations=True,
         answer=(
-            "La polizza copre la rottura dei vetri.\n"
+            "La polizza copre la rottura dei vetri [1].\n"
             f"{CITATIONS_DELIMITER}\n"
-            '[{"document_id": "doc-1", "quotes": ["copre la rottura dei vetri"]}]'
+            '{"1": ["copre la rottura dei vetri"]}'
         ),
     )
 
     state = graph.llm_response_node(_state())
 
-    assert state.response == "La polizza copre la rottura dei vetri."
+    # The tail is cut off; the marker stays, because the client renders it.
+    assert state.response == "La polizza copre la rottura dei vetri [1]."
     assert state.citations == {"doc-1": ["copre la rottura dei vetri"]}
+    assert state.citation_ordinals == {1: "doc-1"}
 
 
-def test_a_missing_citations_block_leaves_the_answer_untouched():
-    graph = _graph(retrieve_citations=True, answer="Risposta senza citazioni.")
+def test_a_missing_quotes_block_keeps_the_markers_without_evidence():
+    graph = _graph(retrieve_citations=True, answer="Risposta [2].")
 
     state = graph.llm_response_node(_state())
 
-    assert state.response == "Risposta senza citazioni."
-    assert state.citations is None
+    assert state.response == "Risposta [2]."
+    assert state.citations == {"doc-2": []}
 
 
 def test_the_direct_branch_is_never_asked_for_citations():
@@ -114,6 +127,65 @@ def test_the_direct_branch_is_never_asked_for_citations():
 
     state = graph.llm_response_node(GraphState(current_query=QUERY, use_rag=False))
 
-    assert CITATIONS_DELIMITER not in _rendered_prompt(graph)
+    prompt = _rendered_prompt(graph)
+    assert CITATIONS_DELIMITER not in prompt
+    assert "square brackets at the end of the sentence" not in prompt
     assert state.response == "Risposta diretta."
     assert state.citations is None
+
+
+# --- what the flag does and does not gate ---------------------------------
+
+
+def test_sources_are_filtered_even_with_the_flag_off():
+    """The point of the change: a tenant that never asked for citations still
+    gets only the documents the answer used, because the markers say which."""
+    graph = _graph(retrieve_citations=False, answer="Copre i vetri [1].")
+
+    state = graph.llm_response_node(_state())
+
+    assert state.citations == {"doc-1": []}
+    assert state.citation_ordinals == {1: "doc-1"}
+
+
+def test_the_markers_reach_the_client_with_the_flag_off():
+    graph = _graph(retrieve_citations=False, answer="Copre i vetri [1].")
+
+    state = graph.llm_response_node(_state())
+
+    # Not suppressed: the client turns [1] into a footnote, and a client that
+    # cannot still shows something readable.
+    assert state.response == "Copre i vetri [1]."
+
+
+def test_quotes_are_absent_with_the_flag_off_even_if_the_model_sends_them():
+    # The model was not asked for a tail; if it writes one anyway it is not
+    # parsed, and it stays out of the saved answer only because the streaming
+    # filter is off here - so the tail would be visible. Worth knowing.
+    graph = _graph(retrieve_citations=False, answer="Copre i vetri [1].")
+
+    state = graph.llm_response_node(_state())
+
+    assert all(quotes == [] for quotes in state.citations.values())
+
+
+def test_with_no_quotes_asked_the_model_is_told_to_append_nothing():
+    """Regression guard. With the flag off there is no tail expected, so the
+    streaming filter is off too: a source list the model appends on its own
+    would reach the reader. The instruction has to forbid it."""
+    graph = _graph(retrieve_citations=False, answer="Risposta [1].")
+
+    graph.llm_response_node(_state())
+
+    prompt = _rendered_prompt(graph)
+    assert "Write no list of sources at the end" in prompt
+
+
+def test_with_quotes_asked_the_model_is_not_told_to_append_nothing():
+    # The opposite: a tail IS expected, and forbidding it would contradict
+    # the quotes instruction.
+    graph = _graph(retrieve_citations=True, answer="Risposta [1].")
+
+    graph.llm_response_node(_state())
+
+    assert "Write no list of sources at the end" not in _rendered_prompt(graph)

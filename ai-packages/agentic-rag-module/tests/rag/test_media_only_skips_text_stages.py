@@ -188,7 +188,9 @@ def test_textless_matches_still_reach_the_model_with_the_instruction():
         graph.llm_response_node(state)
 
     arguments = chain.invoke.call_args.args[0]
-    assert arguments["context"] == "\n\n"
+    # Textless matches are still numbered: they carry a document_id, so they
+    # can be cited, and the label costs nothing when the chunk is empty.
+    assert arguments["context"] == "[1]\n\n\n[2]\n"
     assert arguments["query"] == MEDIA_ONLY_QUERY_INSTRUCTION
     assert state.no_context_answer is False
 

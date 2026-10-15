@@ -17,6 +17,7 @@
 
 import json
 import logging
+import re
 import time
 from enum import Enum
 from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
@@ -92,20 +93,59 @@ MEDIA_ONLY_QUERY_INSTRUCTION = (
 
 CITATIONS_DELIMITER = "<<<CITATIONS>>>"
 MAX_CITATION_QUOTES = 2
-CITATIONS_INSTRUCTION = (
-    "After the answer, on a new line, write the marker "
-    f"{CITATIONS_DELIMITER} followed by a JSON array listing ONLY the sources "
-    "you actually used, in this exact shape: "
-    '[{"document_id": "<id>", "quotes": ["..."]}]. '
-    "Use the document_id values shown in the context. Quote one passage for each "
-    "distinct statement your answer takes from that source, up to 2 quotes per "
-    "source. Every quote must be copied verbatim from that source, word for word "
-    "and no longer than 25 words: never merge two passages into one sentence, "
-    "never rewrite them, and never add a quote for something your answer does "
-    "not say. If the source holds no second passage you can copy word for word, "
-    "give one quote only: one real quote is better than two, and a quote you had "
-    "to compose is worse than none. Write nothing after the JSON array. If you "
-    "used no source, write an empty array."
+
+# Attribution comes in two layers, gated differently.
+#
+# The markers are ALWAYS asked for: the model numbers its sources and writes
+# [2] at the end of each sentence taken from source 2, which is what lets the
+# answer carry only the documents it actually used and say which part came
+# from where. The marker is NOT suppressed - it travels to the client as
+# answer text, and a CITATION event carries the ordinal -> document mapping a
+# client needs to render it as a footnote. Nothing to suppress means no
+# streaming filter, and a marker a client cannot resolve degrades into a
+# readable [2] rather than into text eaten by the suppression logic.
+CITATION_MARKER = re.compile(r"\[(\d{1,3})\]")
+CITATION_MARKERS_INSTRUCTION = (
+    "Each source in the context is numbered. Every time a sentence of your "
+    "answer states something taken from a source, write that source's number "
+    "in square brackets at the end of the sentence, before the full stop, "
+    "like this: SMC opera dal 1995 [2]. Use only the numbers shown in the "
+    "context and never invent one. Mark each sentence with the one source it "
+    "took its statement from. Do not mark a sentence you wrote yourself "
+    "rather than took from a source."
+)
+
+# Said only when no quotes are asked for. Without it nothing stops the model
+# from appending a list of sources of its own invention, and with no tail
+# expected there is no streaming filter to hold it back: it would reach the
+# reader as answer text.
+CITATION_MARKERS_ONLY_INSTRUCTION = (
+    " Write no list of sources at the end and nothing after the answer: "
+    "these markers are the only citation you must produce."
+)
+
+# The quotes are asked for only when the tenant turns retrieve_citations on.
+# They answer a different question from the markers: the marker says where a
+# sentence came from, the quote says the sentence is really in there, and
+# only the quote refuses prose the source does not state. They cost a tail,
+# and with it the streaming filter.
+#
+# Quotes are keyed by ORDINAL, not document_id: the model is already writing
+# those numbers, and it sidesteps the int-vs-str document_id mismatch that
+# silently dropped every citation when the model wrote the id unquoted.
+CITATION_QUOTES_INSTRUCTION = (
+    " After the answer, on a new line, write the marker "
+    f"{CITATIONS_DELIMITER} followed by a JSON object mapping each source "
+    "number you marked to its quotes, in this exact shape: "
+    '{"2": ["..."], "5": ["..."]}. '
+    "For each source, quote the passage your marked sentence took from it, "
+    "copied verbatim word for word and no longer than 25 words: never merge "
+    "two passages into one sentence, never rewrite them, and never quote "
+    "something your answer does not say. Give one quote per source unless the "
+    "answer takes two distinct statements from it, and if there is no second "
+    "passage you can copy word for word, give one only: a quote you had to "
+    "compose is worse than none. List every number you marked and no other. "
+    "Write nothing after the JSON object."
 )
 
 
@@ -247,6 +287,10 @@ class GraphState(BaseModel):
     citations: Optional[dict] = Field(
         default=None,
         description="Quotes the LLM cited from each used source, by document_id",
+    )
+    citation_ordinals: Optional[dict] = Field(
+        default=None,
+        description="Inline marker number -> document_id it points to",
     )
     # conversation_summary: Annotated[str, "conversation_summary"] = Field(
     #     "", description="Summary of the conversation"
@@ -1907,6 +1951,11 @@ class RagGraph:
         # llm_response token stream and leaked to the client.
         target_lang = state.target_lang or "Italian"
 
+        # Bound here, not in the branch that fills them: the parsing below
+        # reads them on every path through this node.
+        ordinals = {}
+        source_text = {}
+
         if state.use_rag and context:
             prompt = escape_curly_braces(self.configuration.get("prompt_template"))
 
@@ -1914,19 +1963,44 @@ class RagGraph:
             # the LLM can attribute its quotes. The instruction is passed as a
             # template *value*, not appended to the template, so the JSON shape
             # it contains is never parsed as template variables.
-            if self.retrieve_citations:
-                context_text = "\n\n".join(
-                    f"[document_id: {doc.metadata.get('document_id')}]\n"
-                    f"{doc.page_content}"
-                    for doc in context
-                )
-                citations_instruction = CITATIONS_INSTRUCTION
-                logger.debug(
-                    f"[citations] enabled, labelling {len(context)} context chunks"
-                )
-            else:
-                context_text = "\n\n".join([doc.page_content for doc in context])
-                citations_instruction = ""
+            # One ordinal per source, not per chunk: two chunks of the same
+            # document share a number, so the model cannot cite the same
+            # source twice under different names.
+            # A chunk with no document_id can never be emitted as a source,
+            # so it gets no number either: numbering it would let the model
+            # cite something that no DOCUMENT event can ever carry.
+            for doc in context:
+                if document_id := doc.metadata.get("document_id"):
+                    ordinals.setdefault(str(document_id), len(ordinals) + 1)
+
+            def _label(doc):
+                document_id = doc.metadata.get("document_id")
+                ordinal = ordinals.get(str(document_id)) if document_id else None
+                return f"[{ordinal}]\n{doc.page_content}" if ordinal else doc.page_content
+
+            context_text = "\n\n".join(_label(doc) for doc in context)
+
+            chunks_by_ordinal = {}
+            for doc in context:
+                if document_id := doc.metadata.get("document_id"):
+                    chunks_by_ordinal.setdefault(
+                        str(ordinals[str(document_id)]), []
+                    ).append(doc.page_content)
+            source_text = {
+                ordinal: "\n".join(chunks)
+                for ordinal, chunks in chunks_by_ordinal.items()
+            }
+
+            citations_instruction = CITATION_MARKERS_INSTRUCTION + (
+                CITATION_QUOTES_INSTRUCTION
+                if self.retrieve_citations
+                else CITATION_MARKERS_ONLY_INSTRUCTION
+            )
+            logger.debug(
+                f"[citations] {len(context)} chunks numbered over "
+                f"{len(ordinals)} sources"
+                + (", quotes requested" if self.retrieve_citations else "")
+            )
 
             rag_prompt = ChatPromptTemplate.from_template(
                 prompt
@@ -1990,26 +2064,20 @@ class RagGraph:
         else:
             llm_response = response.content
 
-        if self.retrieve_citations and state.use_rag and context:
-            llm_response, _, citations_tail = llm_response.partition(
-                CITATIONS_DELIMITER
-            )
-            llm_response = llm_response.rstrip()
-            state.citations = self._parse_citations(citations_tail, context)
+        if state.use_rag and context:
+            # The markers stay in llm_response: they are part of the answer
+            # the client renders. Only the quotes tail, asked for when the
+            # tenant wants citations, is cut off before the answer is stored.
+            quotes_tail = ""
+            if self.retrieve_citations:
+                llm_response, _, quotes_tail = llm_response.partition(
+                    CITATIONS_DELIMITER
+                )
+                llm_response = llm_response.rstrip()
 
-            if state.citations is not None:
-                retrieved_sources = {
-                    doc.metadata.get("document_id") for doc in context
-                }
-                cited_quotes = ", ".join(
-                    f"{document_id}={len(quotes)}"
-                    for document_id, quotes in state.citations.items()
-                )
-                logger.debug(
-                    f"[citations] {len(state.citations)} of "
-                    f"{len(retrieved_sources)} retrieved sources cited "
-                    f"(quotes per source: {cited_quotes})"
-                )
+            state.citations, state.citation_ordinals = self._parse_citations(
+                llm_response, ordinals, quotes_tail, source_text
+            )
 
         state.response = llm_response
 
@@ -2017,104 +2085,143 @@ class RagGraph:
 
     @staticmethod
     def _parse_citations(
-        citations_tail: str, documents: List[Document]
-    ) -> Optional[dict]:
-        """Map the cited document_ids to their quotes.
+        answer: str, ordinals: dict, quotes_tail: str = "", source_text: dict = None
+    ) -> tuple:
+        """Read the inline [n] markers, and the quotes tail when there is one.
 
-        Returns None whenever the block is missing, malformed or attributes
-        nothing to a retrieved document, so the caller falls back to emitting
-        every retrieved source. Quotes not found in the source they are
-        attributed to are dropped, and each source keeps at most
-        MAX_CITATION_QUOTES of them."""
-        if not citations_tail.strip():
+        Returns the sources to keep (document_id -> its quotes, empty unless
+        a tail was asked for) and the ordinal -> document_id mapping the
+        CITATION events carry.
+
+        The markers decide WHICH sources are kept; the quotes only add
+        evidence to them, so a missing or malformed tail costs the evidence
+        and never the attribution. Returns (None, None) when nothing usable
+        was marked, and the caller then falls back to showing every retrieved
+        source rather than an answer with no source at all."""
+        source_text = source_text or {}
+        by_ordinal = {ordinal: document_id for document_id, ordinal in ordinals.items()}
+
+        cited_ordinals = {}
+        invented = []
+        for match in CITATION_MARKER.finditer(answer):
+            ordinal = int(match.group(1))
+            if ordinal in by_ordinal:
+                cited_ordinals.setdefault(ordinal, by_ordinal[ordinal])
+            elif ordinal not in invented:
+                invented.append(ordinal)
+
+        if invented:
+            # The number points at no source: a client would render a
+            # footnote leading nowhere. Counted, not corrected.
             logger.warning(
-                "[citations] the answer carries no citations block, "
+                f"[citations] inline markers {invented} point to no source "
+                f"(only 1..{len(ordinals)} exist)"
+            )
+
+        if not cited_ordinals:
+            logger.debug(
+                "[citations] the answer carries no usable inline marker, "
                 "keeping all sources"
             )
-            return None
+            return None, None
 
-        payload = citations_tail.strip()
+        logger.debug(
+            f"[citations] {len(cited_ordinals)} of {len(ordinals)} retrieved "
+            f"sources cited (inline markers: "
+            f"{','.join(str(ordinal) for ordinal in cited_ordinals)})"
+        )
+
+        quotes = RagGraph._parse_quotes(quotes_tail, cited_ordinals, source_text)
+        return (
+            {
+                document_id: quotes.get(ordinal, [])
+                for ordinal, document_id in cited_ordinals.items()
+            },
+            cited_ordinals,
+        )
+
+    @staticmethod
+    def _parse_quotes(
+        quotes_tail: str, cited_ordinals: dict, source_text: dict
+    ) -> dict:
+        """Map each marked source number to the quotes it was given.
+
+        Empty whenever no tail was asked for, or the one that came back is
+        unusable. Quotes not found in the source they are attributed to are
+        dropped, and each source keeps at most MAX_CITATION_QUOTES."""
+        if not quotes_tail.strip():
+            return {}
+
+        payload = quotes_tail.strip()
         if payload.startswith("```"):
-            payload = payload.removeprefix("```json").removeprefix("```").strip()
-            payload = payload.removesuffix("```").strip()
+            payload = payload.split("```")[1] if "```" in payload[3:] else payload[3:]
+            payload = payload.removeprefix("json").strip()
 
         try:
             entries = json.loads(payload)
-        except ValueError:
+        except json.JSONDecodeError as error:
             logger.warning(
-                "[citations] malformed citations block, keeping all sources: "
-                f"{payload[:200]!r}"
+                f"[citations] malformed quotes block, keeping the markers "
+                f"without quotes: {error}"
             )
-            return None
+            return {}
 
-        if not isinstance(entries, list):
+        if not isinstance(entries, dict):
             logger.warning(
-                f"[citations] citations block is a {type(entries).__name__}, "
-                "not a JSON array: keeping all sources"
+                f"[citations] quotes block is a {type(entries).__name__}, "
+                "expected an object keyed by source number"
             )
-            return None
+            return {}
 
-        if not entries:
-            logger.warning(
-                "[citations] the LLM declared it cited no source, "
-                "keeping all sources"
-            )
-            return None
-
-        # Keyed by the string form of the id: the model may return it quoted or
-        # as a bare JSON number, and an int would never match a str key.
-        sources = {}
-        for document in documents:
-            if document_id := document.metadata.get("document_id"):
-                sources.setdefault(str(document_id), []).append(document.page_content)
-
-        citations = {}
-        for entry in entries:
-            if not isinstance(entry, dict):
-                logger.debug(f"[citations] skipping non-object entry: {entry!r}")
+        quotes = {}
+        for key, raw_quotes in entries.items():
+            try:
+                ordinal = int(key)
+            except (TypeError, ValueError):
+                logger.debug(f"[citations] skipping non-numeric quote key {key!r}")
                 continue
 
-            document_id = entry.get("document_id")
-            document_id = None if document_id is None else str(document_id)
-            if document_id not in sources:
+            if ordinal not in cited_ordinals:
+                # Quoted but never marked: the two disagree about which
+                # sources the answer used. The markers win, because they are
+                # what the reader sees next to the sentence.
                 logger.warning(
-                    f"[citations] cited document_id={document_id!r} was never "
-                    "retrieved, ignored"
+                    f"[citations] source {ordinal} is quoted but carries no "
+                    "inline marker, quotes dropped"
                 )
                 continue
 
-            source_text = _normalize_quote("\n".join(sources[document_id]))
-            quotes = citations.setdefault(document_id, [])
+            if not isinstance(raw_quotes, list):
+                raw_quotes = [raw_quotes]
 
-            for quote in entry.get("quotes") or []:
-                if len(quotes) == MAX_CITATION_QUOTES:
+            normalized_source = _normalize_quote(source_text.get(str(ordinal), ""))
+            kept = quotes.setdefault(ordinal, [])
+            for quote in raw_quotes:
+                if not isinstance(quote, str) or not quote.strip():
+                    continue
+                if len(kept) == MAX_CITATION_QUOTES:
                     logger.debug(
-                        f"[citations] document_id={document_id} hit the "
+                        f"[citations] source {ordinal} hit the "
                         f"{MAX_CITATION_QUOTES}-quote cap, extra quotes dropped"
                     )
                     break
-                if not isinstance(quote, str) or not (
-                    normalized_quote := _normalize_quote(quote)
-                ):
-                    continue
-                if normalized_quote not in source_text:
-                    # The model paraphrased instead of copying: the quote would
-                    # not be verifiable against the source, so it is dropped.
+                if _normalize_quote(quote) not in normalized_source:
                     logger.debug(
-                        f"[citations] quote not found in document_id="
-                        f"{document_id}, dropped: {quote[:120]!r}"
+                        f"[citations] quote not found in source {ordinal}, "
+                        f"dropped: {quote!r}"
                     )
                     continue
-                quotes.append(quote)
+                kept.append(quote)
 
-        if not citations:
-            logger.warning(
-                "[citations] no cited source matches the retrieved documents, "
-                "keeping all sources"
+        logger.debug(
+            "[citations] quotes per source: "
+            + ", ".join(
+                f"{ordinal}={len(quotes.get(ordinal, []))}"
+                for ordinal in cited_ordinals
             )
-            return None
+        )
+        return quotes
 
-        return citations
 
     def history_saver_node(self, state: GraphState) -> GraphState:
         """Update messages with the latest query and response"""
@@ -2366,6 +2473,20 @@ class RagGraph:
                     "matches a streamed document: no DOCUMENT event emitted"
                 )
 
+    def _stream_citations(self, ordinals: dict = None):
+        """Emit one CITATION event per inline marker the answer used.
+
+        The marker itself travels inside the answer text; this only tells the
+        client which source each number stands for, so it can turn [2] into a
+        link. A client that ignores the event still shows a readable [2]."""
+        for ordinal, document_id in (ordinals or {}).items():
+            yield json.dumps(
+                {
+                    "chunk": {"ordinal": ordinal, "document_id": document_id},
+                    "type": "CITATION",
+                }
+            )
+
     def _iter_answer_chunks(self, query: str, target_lang: str) -> Iterator[str]:
         """Yield the llm_response text chunks, without the citations tail.
 
@@ -2373,6 +2494,9 @@ class RagGraph:
         messages mode (the node calls invoke(), but LangGraph's streaming
         callback makes the model stream its tokens anyway) and the citations
         tail is suppressed before any branch can emit it."""
+        # The markers produce no tail and must reach the client as answer
+        # text. Only the quotes, when the tenant asks for them, put a tail
+        # after the answer that has to be held back.
         citations_filter = CitationsTailFilter(self.retrieve_citations)
 
         for chunk, metadata in self.graph.stream(
@@ -2676,6 +2800,9 @@ class RagGraph:
                     yield from self._stream_documents(
                         documents, last_state.values.get("citations")
                     )
+                    yield from self._stream_citations(
+                        last_state.values.get("citation_ordinals")
+                    )
 
                 cited_sources = list(last_state.values.get("citations") or {})
 
@@ -2716,6 +2843,6 @@ class RagGraph:
                 f"[request] end outcome={outcome} "
                 f"duration_ms={int((time.monotonic() - started_at) * 1000)} "
                 f"chain=agentic_rag {self._log_context()}"
-                + (f" cited_sources={cited_sources}" if self.retrieve_citations else "")
+                + f" cited_sources={cited_sources}"
                 + debug_extra(logger, answer=result_answer)
             )

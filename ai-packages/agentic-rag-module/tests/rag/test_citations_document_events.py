@@ -117,3 +117,45 @@ def test_stream_passes_the_state_citations_to_the_document_events():
             "url": "http://due",
         }
     ]
+
+
+# --- CITATION events: the ordinal -> source mapping the client renders -----
+
+
+def _citations(ordinals):
+    graph = RagGraph.__new__(RagGraph)
+    return [json.loads(event) for event in graph._stream_citations(ordinals)]
+
+
+def test_one_citation_event_per_marker_used():
+    events = _citations({1: "doc-1", 2: "doc-2"})
+
+    assert [event["type"] for event in events] == ["CITATION", "CITATION"]
+    assert [event["chunk"] for event in events] == [
+        {"ordinal": 1, "document_id": "doc-1"},
+        {"ordinal": 2, "document_id": "doc-2"},
+    ]
+
+
+def test_no_markers_means_no_citation_events():
+    # The fallback case: every source is shown, and there is no ordinal to
+    # map, so the client renders the answer with no footnotes at all.
+    assert _citations(None) == []
+    assert _citations({}) == []
+
+
+def test_citation_events_follow_the_documents_in_the_stream():
+    # Order matters for a client that builds its footnote list as it reads:
+    # the DOCUMENT carrying title and url arrives before the mapping to it.
+    graph = RagGraph.__new__(RagGraph)
+    graph.rag_type = "CHAT"
+    citations = {"doc-1": []}
+    ordinals = {1: "doc-1"}
+
+    types = [
+        json.loads(event)["type"]
+        for event in list(graph._stream_documents(DOCUMENTS, citations))
+        + list(graph._stream_citations(ordinals))
+    ]
+
+    assert types == ["DOCUMENT", "CITATION"]
