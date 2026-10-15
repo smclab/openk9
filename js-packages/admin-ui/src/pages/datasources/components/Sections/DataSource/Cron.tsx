@@ -35,6 +35,9 @@ import {
   useTheme,
 } from "@mui/material";
 import cronstrue from "cronstrue";
+import "cronstrue/locales/de";
+import "cronstrue/locales/es";
+import "cronstrue/locales/fr";
 import "cronstrue/locales/it";
 import React, { useEffect, useState } from "react";
 import { useToast } from "../../../../../components/Form/Form/ToastProvider";
@@ -225,7 +228,8 @@ const CronEditor: React.FC<CronEditorProps> = ({
   // onChangeData,
 }) => {
   const { t, i18n } = useTranslation();
-  const cronLocale = i18n.resolvedLanguage === "it" ? "it" : "en";
+  // every panel language has its cronstrue locale imported above
+  const cronLocale = i18n.resolvedLanguage ?? "en";
   const getCronFromType = () => {
     const defaultCronValues = {
       reindex: "0 0 1 * * ?",

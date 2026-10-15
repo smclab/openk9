@@ -48,6 +48,9 @@ import {
 } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
 import cronstrue from "cronstrue";
+import "cronstrue/locales/de";
+import "cronstrue/locales/es";
+import "cronstrue/locales/fr";
 import "cronstrue/locales/it";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -150,7 +153,8 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: Datasource[]
     description: "",
   });
 
-  const cronstrueLocale = i18n.resolvedLanguage === "it" ? "it" : "en";
+  // every panel language has its cronstrue locale imported above
+  const cronstrueLocale = i18n.resolvedLanguage ?? "en";
 
   const getReadableCronDescription = (cronExpression: string): string => {
     try {

@@ -23,6 +23,9 @@ import { changeLanguage, SupportedLanguage, supportedLanguages } from "../i18n";
 const languageLabels: Record<SupportedLanguage, string> = {
   en: "English",
   it: "Italiano",
+  es: "Español",
+  fr: "Français",
+  de: "Deutsch",
 };
 
 const LanguageSwitcher: React.FC = () => {
