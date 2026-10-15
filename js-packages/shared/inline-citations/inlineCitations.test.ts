@@ -15,10 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
+  claimPanel,
   parseSourcesEvent,
+  remarkStripCitationMarkers,
+  stripCitationMarkers,
+  releasePanel,
   quotesByOrdinal,
   remarkCitationMarkers,
   sourcesByOrdinal,
@@ -285,5 +289,105 @@ describe("quotesByOrdinal", () => {
     expect(quotesByOrdinal(undefined).size).toBe(0);
     expect(quotesByOrdinal([null, 7, { ordinal: "1" }]).size).toBe(0);
     expect(quotesByOrdinal([{ ordinal: 1, citations: [{}, 7] }]).size).toBe(0);
+  });
+});
+
+describe("claimPanel", () => {
+  it("closes the panel that was open when another claims", () => {
+    // Panels close on a delay, so moving quickly between two chips would
+    // otherwise leave both on screen.
+    const closeFirst = vi.fn();
+    const closeSecond = vi.fn();
+
+    claimPanel(closeFirst);
+    claimPanel(closeSecond);
+
+    expect(closeFirst).toHaveBeenCalledTimes(1);
+    expect(closeSecond).not.toHaveBeenCalled();
+    releasePanel(closeSecond);
+  });
+
+  it("does not close the panel that claims twice", () => {
+    const close = vi.fn();
+
+    claimPanel(close);
+    claimPanel(close);
+
+    expect(close).not.toHaveBeenCalled();
+    releasePanel(close);
+  });
+
+  it("releasing lets the next claim pass without closing anything", () => {
+    const closeFirst = vi.fn();
+    const closeSecond = vi.fn();
+
+    claimPanel(closeFirst);
+    releasePanel(closeFirst);
+    claimPanel(closeSecond);
+
+    expect(closeFirst).toHaveBeenCalledTimes(0);
+    releasePanel(closeSecond);
+  });
+
+  it("releasing a panel that no longer holds the claim does nothing", () => {
+    const closeFirst = vi.fn();
+    const closeSecond = vi.fn();
+
+    claimPanel(closeFirst);
+    claimPanel(closeSecond);
+    releasePanel(closeFirst);
+    const closeThird = vi.fn();
+    claimPanel(closeThird);
+
+    expect(closeSecond).toHaveBeenCalledTimes(1);
+    releasePanel(closeThird);
+  });
+});
+
+describe("stripCitationMarkers", () => {
+  it("toglie il marcatore e lo spazio che lo precede", () => {
+    expect(stripCitationMarkers("in marketing [1].")).toBe("in marketing.");
+  });
+
+  it("toglie i marcatori raggruppati", () => {
+    expect(stripCitationMarkers("una frase [1][3].")).toBe("una frase.");
+  });
+
+  it("lascia intatto il testo senza marcatori", () => {
+    expect(stripCitationMarkers("niente qui.")).toBe("niente qui.");
+  });
+
+  it("non tocca una parentesi che non e' un marcatore", () => {
+    expect(stripCitationMarkers("vedi [1234] e [abc]")).toBe("vedi [1234] e [abc]");
+  });
+});
+
+describe("remarkStripCitationMarkers", () => {
+  it("toglie i marcatori dalla prosa", () => {
+    const tree = {
+      type: "root",
+      children: [
+        { type: "paragraph", children: [{ type: "text", value: "Uno [1]. Due [2]." }] },
+      ],
+    };
+    remarkStripCitationMarkers()(tree);
+
+    expect((tree.children[0] as any).children).toEqual([
+      { type: "text", value: "Uno. Due." },
+    ]);
+  });
+
+  it("lascia stare un indice dentro un blocco di codice", () => {
+    const tree = {
+      type: "root",
+      children: [{ type: "code", lang: "python", value: "valori[2] = 7" }],
+    };
+    remarkStripCitationMarkers()(tree);
+
+    expect(tree.children[0]).toEqual({
+      type: "code",
+      lang: "python",
+      value: "valori[2] = 7",
+    });
   });
 });

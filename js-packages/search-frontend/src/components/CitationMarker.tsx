@@ -19,6 +19,8 @@ import type { Components } from "react-markdown";
 
 import {
   type CitedSource,
+  claimPanel,
+  releasePanel,
   sourcesByOrdinal,
 } from "../../../shared/inline-citations/inlineCitations";
 
@@ -84,17 +86,25 @@ function CitationChip({
   const closing = React.useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const closeNow = React.useRef(() => setOpen(false));
   const show = () => {
     if (closing.current) clearTimeout(closing.current);
+    // only one panel at a time: the one being left is still inside its
+    // grace period, so moving quickly between chips would show both
+    claimPanel(closeNow.current);
     setOpen(true);
   };
   const hide = () => {
     if (closing.current) clearTimeout(closing.current);
-    closing.current = setTimeout(() => setOpen(false), 200);
+    closing.current = setTimeout(() => {
+      releasePanel(closeNow.current);
+      setOpen(false);
+    }, 200);
   };
   React.useEffect(
     () => () => {
       if (closing.current) clearTimeout(closing.current);
+      releasePanel(closeNow.current);
     },
     [],
   );
@@ -223,7 +233,7 @@ function CitationChip({
                       z-index: 1;
                     `}
                   >
-                    \u201c{quote}\u201d
+                    “{quote}”
                   </span>
                 )}
               </span>

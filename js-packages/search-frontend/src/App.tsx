@@ -29,6 +29,12 @@ import { Logo } from "./components/Logo";
 import { type Citation, toCitations } from "./components/chatSources";
 import { fadingSeparator } from "./components/fadingSeparator";
 import { type Turn } from "./components/useCopilotChat";
+import { citationComponents } from "./components/CitationMarker";
+import {
+  quotesByOrdinal,
+  remarkCitationMarkers,
+  stripCitationMarkers,
+} from "../../shared/inline-citations/inlineCitations";
 import { OpenK9 } from "./embeddable/entry";
 
 const isOAuth2Enabled = import.meta.env.VITE_OAUTH2_ENABLED !== "false";
@@ -1656,7 +1662,9 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 >
                   {preview ? (
                     preview.answer ? (
-                      preview.answer
+                      // a two-line teaser with no citations to click: the
+                      // markers would be noise the reader cannot act on
+                      stripCitationMarkers(preview.answer)
                     ) : (
                       <TypingDots />
                     )
@@ -2297,7 +2305,15 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                     {message.status === "CHUNK" && message.answer === "" ? (
                       <TypingDots />
                     ) : (
-                      <Markdown>{message.answer}</Markdown>
+                      <Markdown
+                        remarkPlugins={[remarkCitationMarkers]}
+                        components={citationComponents(
+                          message.citedSources,
+                          quotesByOrdinal(message.sources),
+                        )}
+                      >
+                        {message.answer}
+                      </Markdown>
                     )}
                   </div>
                 </div>

@@ -127,12 +127,33 @@ export function sourcesByOrdinal(
  * it cannot import mdast's types.
  */
 export function remarkCitationMarkers() {
-  return (tree: unknown): void => visit(tree);
+  return (tree: unknown): void => visit(tree, "tag");
+}
+
+/**
+ * A remark plugin that removes the markers instead of tagging them, for a
+ * view that does not render citations: there the "[2]" would be noise the
+ * reader cannot act on.
+ *
+ * A plugin and not a string replace for the same reason as above: an array
+ * index inside a fenced block is a `code` node, not a `text` one, and must
+ * survive.
+ */
+export function remarkStripCitationMarkers() {
+  return (tree: unknown): void => visit(tree, "strip");
+}
+
+/**
+ * Drop the markers from a line of prose, taking the space before each with
+ * it: "in marketing [1]." has to read "in marketing.", not "in marketing .".
+ */
+export function stripCitationMarkers(text: string): string {
+  return text.replace(/[ \t]*\[\d{1,3}\]/g, "");
 }
 
 type LooseNode = { type?: string; value?: unknown; children?: unknown[] };
 
-function visit(node: unknown): void {
+function visit(node: unknown, mode: "tag" | "strip"): void {
   if (typeof node !== "object" || node === null) return;
   const parent = node as LooseNode;
   if (!Array.isArray(parent.children)) return;
@@ -146,7 +167,7 @@ function visit(node: unknown): void {
       candidate.type !== "text" ||
       typeof candidate.value !== "string"
     ) {
-      visit(child);
+      visit(child, mode);
       rebuilt.push(child);
       continue;
     }
@@ -154,6 +175,11 @@ function visit(node: unknown): void {
     const pieces = splitAnswerOnMarkers(candidate.value);
     if (!pieces.some((piece) => piece.kind === "marker")) {
       rebuilt.push(child);
+      continue;
+    }
+
+    if (mode === "strip") {
+      rebuilt.push({ type: "text", value: stripCitationMarkers(candidate.value) });
       continue;
     }
 
@@ -220,4 +246,29 @@ export function quotesByOrdinal(
     }
   }
   return quotes;
+}
+
+/**
+ * Keeps one citation panel open at a time.
+ *
+ * Panels close on a delay, so that the pointer can travel from the chip to
+ * the link without the panel vanishing under it. Moving quickly between two
+ * chips then shows both: the one being left is still inside its grace period
+ * when the next one opens. Opening a panel closes the previous one at once.
+ *
+ * Module state, which means one registry per bundle: an app that inlines
+ * this module gets its own, and that is the right scope - panels in two
+ * different apps on one page do not compete.
+ */
+let closeOpenPanel: (() => void) | undefined;
+
+/** Open this panel, closing whichever other one is open. */
+export function claimPanel(close: () => void): void {
+  if (closeOpenPanel && closeOpenPanel !== close) closeOpenPanel();
+  closeOpenPanel = close;
+}
+
+/** Give up the claim, if this panel still holds it. */
+export function releasePanel(close: () => void): void {
+  if (closeOpenPanel === close) closeOpenPanel = undefined;
 }

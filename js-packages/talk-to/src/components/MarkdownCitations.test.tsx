@@ -153,6 +153,19 @@ describe("la pastiglia che cita la fonte", () => {
     await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
   });
 
+  it("ne resta aperto uno solo passando in fretta da una pastiglia all'altra", async () => {
+    // La chiusura e' ritardata per lasciare raggiungere il link: senza un
+    // registro, la pastiglia che si lascia e' ancora nel suo margine di
+    // tolleranza quando la successiva apre, e si vedono due pannelli.
+    const user = userEvent.setup();
+    renderAnswer("Prima [1]. Seconda [2].");
+
+    await user.hover(screen.getByText("Primo documento"));
+    await user.hover(screen.getByText("Secondo documento"));
+
+    expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+  });
+
   it("lascia il numero visibile se nessuna fonte lo risolve", () => {
     // Il server non sopprime il marcatore proprio perche' degradi in
     // qualcosa di leggibile.

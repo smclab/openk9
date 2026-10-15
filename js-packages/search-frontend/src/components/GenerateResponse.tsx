@@ -22,6 +22,7 @@ import styled, { keyframes } from "styled-components";
 import { css } from "styled-components";
 import { DeleteLogo } from "./DeleteLogo";
 import useGenerateResponse, { Message } from "./useGenerateResponse";
+import { remarkStripCitationMarkers } from "../../../shared/inline-citations/inlineCitations";
 import { useRange } from "./useRange";
 import { SearchToken, SortField } from "./client";
 
@@ -185,7 +186,11 @@ export default function GenerateResponse({
                 {(isChatting || loadingSearch) && <SmallLoader />}
                 {(message?.answer || isChatting) && (
                   <Answer>
-                    <Markdown>{message?.answer ?? ""}</Markdown>
+                    {/* this view renders no citations, so the markers the
+                        answer carries are noise the reader cannot act on */}
+                    <Markdown remarkPlugins={[remarkStripCitationMarkers]}>
+                      {message?.answer ?? ""}
+                    </Markdown>
                   </Answer>
                 )}
               </>
