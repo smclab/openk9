@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { parseSourcesEvent } from "../../../shared/inline-citations/inlineCitations";
 import { useTranslation } from "react-i18next";
 import {
   CHAT_TOOL_ENDPOINT,
@@ -213,6 +214,14 @@ export function useCopilotChat({
                   status: "CHUNK",
                 }));
                 break;
+              case "SOURCES": {
+                // the numbering the answer will use, sent ahead of it
+                if (cancelledRef.current.has(turnId)) break;
+                const citedSources = parseSourcesEvent(data.chunk);
+                if (citedSources.length === 0) break;
+                updateTurn(turnId, (prev) => ({ ...prev, citedSources }));
+                break;
+              }
               case "DOCUMENT": {
                 // a stopped turn keeps nothing that arrives after the stop
                 if (cancelledRef.current.has(turnId)) break;

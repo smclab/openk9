@@ -8,6 +8,10 @@ import { useTranslation } from "react-i18next";
 import type { Components } from "react-markdown";
 import { downloadTextFile, fileNameFromUrl, isImageUrl, useDocumentPreview } from "./DocumentPreview";
 import { isSafeExternalUrl } from "../../../shared/safe-external-url/safeExternalUrl";
+import {
+	type CitedSource,
+	sourcesByOrdinal,
+} from "../../../shared/inline-citations/inlineCitations";
 
 const DOCUMENT_EXT = /\.(pdf|docx?|xlsx?|pptx?|csv|txt|md|json|xml|rtf|odt|ods|odp)$/i;
 const DOC_FENCE_EXT = /\.(md|markdown|txt|csv|json|xml|ya?ml|html?)$/i;
@@ -134,6 +138,71 @@ function MarkdownLink({ href, children }: { href?: string; children?: React.Reac
 }
 
 // markdown overrides: tables, images, links (code blocks handled by the caller)
+/**
+ * A `[n]` the answer wrote, rendered as the footnote it is: a link to the
+ * source when one resolves, the bare number otherwise.
+ *
+ * Leaving the number visible when nothing resolves is deliberate. The server
+ * never suppresses the marker precisely so that it degrades into something a
+ * reader can still make sense of, instead of vanishing or eating text.
+ */
+function CitationMarker({ ordinal, source }: { ordinal: string; source?: CitedSource }) {
+	const url = source?.url;
+	const label = source?.title ?? url;
+	const common = {
+		verticalAlign: "super",
+		fontSize: "0.72em",
+		lineHeight: 0,
+		ml: "1px",
+		px: "3px",
+		borderRadius: "4px",
+	} as const;
+
+	if (!url || !isSafeExternalUrl(url)) {
+		return (
+			<Box component="span" sx={{ ...common, color: "text.secondary" }}>
+				[{ordinal}]
+			</Box>
+		);
+	}
+
+	return (
+		<Box
+			component="a"
+			href={url}
+			target="_blank"
+			rel="noreferrer"
+			title={label}
+			sx={{
+				...common,
+				color: "primary.main",
+				textDecoration: "none",
+				backgroundColor: "rgba(0, 0, 0, 0.04)",
+				"&:hover": { backgroundColor: "rgba(0, 0, 0, 0.10)" },
+			}}
+		>
+			[{ordinal}]
+		</Box>
+	);
+}
+
+/**
+ * The components for an answer that carries inline citation markers. The
+ * sources come from the `SOURCES` event, which arrives before the first
+ * token, so the links appear as the sentence is written.
+ */
+export function markdownComponentsWithCitations(sources: CitedSource[] | undefined): Components {
+	const byOrdinal = sourcesByOrdinal(sources ?? []);
+	return {
+		...richMarkdownComponents,
+		span: ({ node, children, ...props }) => {
+			const ordinal = (props as Record<string, unknown>)["data-citation-ordinal"];
+			if (typeof ordinal !== "string") return <span {...props}>{children}</span>;
+			return <CitationMarker ordinal={ordinal} source={byOrdinal.get(Number(ordinal))} />;
+		},
+	};
+}
+
 export const richMarkdownComponents: Components = {
 	img: ({ node, ...props }) => (
 		<MarkdownImage src={props.src as string | undefined} alt={props.alt} title={props.title} />

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { type CitedSource } from "../../../shared/inline-citations/inlineCitations";
 import { useTranslation } from "react-i18next";
 import {
   ChatSource,
@@ -14,6 +15,13 @@ export interface Message {
   sendTime?: string | null;
   status?: "END" | "CHUNK" | "ERROR";
   sources?: ChatSource[];
+  /**
+   * The sources the answer may mark, by the number it marks them with.
+   * Arrives on `SOURCES` before the first token, so a marker inside the
+   * answer can become a link while it is still being written; `sources`
+   * above arrives at the end and holds only the ones actually cited.
+   */
+  citedSources?: CitedSource[];
 }
 
 type UseArgs = {

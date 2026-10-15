@@ -7,6 +7,10 @@ import React from "react";
 import { useChatContext } from "../context/HistoryChatContext";
 import { useTranslation } from "react-i18next";
 import { isAuthenticated } from "../auth/oauth2";
+import {
+	type CitedSource,
+	parseSourcesEvent,
+} from "../../../shared/inline-citations/inlineCitations";
 
 /**
  * Sorgente citata in una risposta. Ne esistono due varianti: i documenti
@@ -48,6 +52,13 @@ export interface Message {
 	sendTime?: string | null;
 	status?: "END" | "CHUNK" | "ERROR";
 	sources?: Source[];
+	/**
+	 * The sources the answer may mark, by the number it marks them with.
+	 * Arrives on `SOURCES` before the first token, so the markers inside the
+	 * answer can become links while it is still being written; `sources`
+	 * above arrives at the end and holds only the ones actually cited.
+	 */
+	citedSources?: CitedSource[];
 	chat_sequence_number: number;
 	timestamp?: string;
 	/** Session-only preview: backend history keeps no binary, so it is absent after a reload. */
@@ -194,6 +205,19 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 														? {
 																...msg,
 																answer: msg.answer + data.chunk,
+														  }
+														: msg,
+												),
+											);
+											break;
+
+										case "SOURCES":
+											setMessages((prev) =>
+												prev.map((msg) =>
+													msg.id === id
+														? {
+																...msg,
+																citedSources: parseSourcesEvent(data.chunk),
 														  }
 														: msg,
 												),

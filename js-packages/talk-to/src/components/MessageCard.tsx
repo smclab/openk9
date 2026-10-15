@@ -12,7 +12,12 @@ import remarkGfm from "remark-gfm";
 import { Logo } from "../Svg/Logo";
 import type { Source } from "./useGenerateResponse";
 import { useDocumentPreview } from "./DocumentPreview";
-import { ArtifactCard, extractDocumentFromAnswer, richMarkdownComponents } from "./MarkdownRenderer";
+import {
+	ArtifactCard,
+	extractDocumentFromAnswer,
+	markdownComponentsWithCitations,
+} from "./MarkdownRenderer";
+import { remarkCitationMarkers } from "../../../shared/inline-citations/inlineCitations";
 import { GenerationStatus, Message } from "./useGenerateResponse";
 import { isSafeExternalUrl } from "../../../shared/safe-external-url/safeExternalUrl";
 
@@ -378,9 +383,9 @@ export function MessageCard({
 							/>
 						) : (
 							<Markdown
-								remarkPlugins={[remarkGfm]}
+								remarkPlugins={[remarkGfm, remarkCitationMarkers]}
 								components={{
-									...richMarkdownComponents,
+									...markdownComponentsWithCitations(message.citedSources),
 									pre: (props) => <PreBlock {...props} />,
 									code: (props: ComponentPropsWithoutRef<"code"> & { inline?: boolean }) => {
 										const { inline, style, children, ...rest } = props || {};

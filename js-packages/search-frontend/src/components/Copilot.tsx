@@ -6,6 +6,8 @@ import { useCopilotChat } from "./useCopilotChat";
 import { ChatSource, useOpenK9Client } from "./client";
 import { Message } from "./useGenerateResponse";
 import { toCitations } from "./chatSources";
+import { citationComponents } from "./CitationMarker";
+import { remarkCitationMarkers } from "../../../shared/inline-citations/inlineCitations";
 
 type CopilotProps = {
   endpoint?: string | null;
@@ -560,7 +562,12 @@ export function Copilot({
                 {isStreaming ? (
                   <TypingIndicator label={t("copilot-loading") ?? undefined} />
                 ) : (
-                  <Markdown>{message.answer}</Markdown>
+                  <Markdown
+                    remarkPlugins={[remarkCitationMarkers]}
+                    components={citationComponents(message.citedSources)}
+                  >
+                    {message.answer}
+                  </Markdown>
                 )}
                 {citations.length > 0 && (
                   <div

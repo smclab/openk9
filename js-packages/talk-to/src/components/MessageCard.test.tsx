@@ -22,6 +22,7 @@ vi.mock("./MarkdownRenderer", () => ({
 	ArtifactCard: () => null,
 	extractDocumentFromAnswer: () => null,
 	richMarkdownComponents: {},
+	markdownComponentsWithCitations: () => ({}),
 }));
 
 vi.mock("react-i18next", () => ({
