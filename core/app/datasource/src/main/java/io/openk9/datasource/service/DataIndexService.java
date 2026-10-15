@@ -393,6 +393,34 @@ public class DataIndexService
 			}));
 	}
 
+	/**
+	 * Deletes a DataIndex entity by its ID after verifying the provided name matches the entity's name.
+	 *
+	 * <p>This method adds a validation step to the deletion process by requiring the caller to provide
+	 * the correct name of the DataIndex being deleted. This serves as a safety mechanism to prevent
+	 * accidental deletions by confirming the caller has knowledge of the entity they intend to remove.
+	 *
+	 * <p>The validation flow:
+	 * <ol>
+	 *   <li>Retrieves the DataIndex entity by the provided ID</li>
+	 *   <li>Validates that the provided name exactly matches the entity's name</li>
+	 *   <li>If validation passes, proceeds with the deletion process</li>
+	 * </ol>
+	 *
+	 * @param dataIndexId   The ID of the DataIndex to delete
+	 * @param dataIndexName The name of the DataIndex to verify before deletion
+	 * @return A {@link io.smallrye.mutiny.Uni} containing the deleted DataIndex if successful
+	 * @throws ValidationException If the provided name doesn't match the entity's actual name
+	 * @see #deleteById(long) The underlying deletion method called after validation
+	 */
+	public Uni<DataIndex> deleteById(long dataIndexId, String dataIndexName) {
+		return findById(dataIndexId)
+			.flatMap(dataIndex -> {
+				verifyNameMatches(dataIndex.getName(), dataIndexName);
+				return deleteById(dataIndexId);
+			});
+	}
+
 	@Override
 	public Uni<DataIndex> deleteById(long entityId) {
 		return sessionFactory.withTransaction(s -> getCurrentTenant(s)
