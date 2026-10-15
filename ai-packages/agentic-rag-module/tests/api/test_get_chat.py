@@ -105,7 +105,7 @@ def _document(document_id, title):
     }
 
 
-def _checkpoint_with_sources(context, citations=None):
+def _checkpoint_with_sources(context, citations=None, citation_ordinals=None):
     """A turn carrying retrieved documents, optionally with its citations."""
     channel_values = {
         "current_query": "question",
@@ -116,6 +116,8 @@ def _checkpoint_with_sources(context, citations=None):
     }
     if citations is not None:
         channel_values["citations"] = citations
+    if citation_ordinals is not None:
+        channel_values["citation_ordinals"] = citation_ordinals
 
     return {
         "_source": {
@@ -221,6 +223,7 @@ def test_get_chat_returns_only_cited_sources_with_their_quotes(client, monkeypat
         {
             "document_id": "doc-1",
             "score": 0.5,
+            "ordinal": None,
             "title": "Citato",
             "url": "http://smc.it/doc-1",
             "citations": [{"quote": "una quota"}],
@@ -321,6 +324,7 @@ def test_get_chat_lists_the_sources_of_each_answer(client, monkeypatch):
         {
             "document_id": "doc-1",
             "score": 0.91,
+            "ordinal": None,
             "title": "Guida",
             "url": "https://example.com/guida",
             "citations": [],
@@ -328,6 +332,7 @@ def test_get_chat_lists_the_sources_of_each_answer(client, monkeypatch):
         {
             "document_id": "doc-2",
             "score": None,
+            "ordinal": None,
             "title": "FAQ",
             "url": "https://example.com/faq",
             "citations": [],
@@ -344,3 +349,46 @@ def test_get_chat_returns_404_when_the_chat_has_no_messages(client, monkeypatch)
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Item not found."
+
+
+def test_get_chat_returns_the_marker_number_of_each_source(client, monkeypatch):
+    """A reloaded conversation must be able to render its [n] markers: the
+    saved answer carries them as text, so the mapping has to come back too."""
+    context = [_document("doc-1", "Primo"), _document("doc-2", "Secondo")]
+    hits = [
+        _checkpoint_with_sources(
+            context,
+            citations={"doc-1": [], "doc-2": []},
+            citation_ordinals={"1": "doc-1", "2": "doc-2"},
+        )
+    ]
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits)
+    )
+
+    response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    sources = response.json()["messages"][0]["sources"]
+    assert [(s["ordinal"], s["document_id"]) for s in sources] == [
+        (1, "doc-1"),
+        (2, "doc-2"),
+    ]
+
+
+def test_get_chat_keeps_a_gap_in_the_marker_numbering(client, monkeypatch):
+    # Only the second source was marked: its number must survive, because
+    # the saved answer reads [2] and nothing else can supply it.
+    context = [_document("doc-1", "Primo"), _document("doc-2", "Secondo")]
+    hits = [
+        _checkpoint_with_sources(
+            context, citations={"doc-2": []}, citation_ordinals={"2": "doc-2"}
+        )
+    ]
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits)
+    )
+
+    response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    sources = response.json()["messages"][0]["sources"]
+    assert [(s["ordinal"], s["document_id"]) for s in sources] == [(2, "doc-2")]

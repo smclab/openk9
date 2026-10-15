@@ -883,6 +883,19 @@ async def get_chat(
             # when the turn was answered with citations. Turns saved before
             # citations existed have no such key, so they keep every source.
             citations = channel_values.get("citations")
+            # The number the saved answer marks each source with, so a
+            # reloaded conversation can render its [2] the same way the live
+            # stream does. Absent on turns saved before the markers existed.
+            # int(), because the checkpoint is JSON and JSON has no integer
+            # keys: the ordinals come back as strings and would otherwise
+            # reach the client with a different type than the live stream
+            # gives them.
+            ordinal_of = {
+                document_id: int(ordinal)
+                for ordinal, document_id in (
+                    channel_values.get("citation_ordinals") or {}
+                ).items()
+            }
 
             sources = []
             document_ids = set()
@@ -903,6 +916,7 @@ async def get_chat(
                 context_document = {
                     "document_id": document_id,
                     "score": document_metadata.get("score"),
+                    "ordinal": ordinal_of.get(str(document_id)),
                     "title": document_metadata.get("title"),
                     "url": document_metadata.get("url"),
                     "citations": (

@@ -119,43 +119,35 @@ def test_stream_passes_the_state_citations_to_the_document_events():
     ]
 
 
-# --- CITATION events: the ordinal -> source mapping the client renders -----
+# --- the ordinal: which marker in the answer points at this document ------
 
 
-def _citations(ordinals):
+def _documents_with_ordinals(citations, ordinals):
     graph = RagGraph.__new__(RagGraph)
-    return [json.loads(event) for event in graph._stream_citations(ordinals)]
-
-
-def test_one_citation_event_per_marker_used():
-    events = _citations({1: "doc-1", 2: "doc-2"})
-
-    assert [event["type"] for event in events] == ["CITATION", "CITATION"]
-    assert [event["chunk"] for event in events] == [
-        {"ordinal": 1, "document_id": "doc-1"},
-        {"ordinal": 2, "document_id": "doc-2"},
+    return [
+        json.loads(event)["chunk"]
+        for event in graph._stream_documents(DOCUMENTS, citations, ordinals)
     ]
 
 
-def test_no_markers_means_no_citation_events():
-    # The fallback case: every source is shown, and there is no ordinal to
-    # map, so the client renders the answer with no footnotes at all.
-    assert _citations(None) == []
-    assert _citations({}) == []
+def test_each_cited_source_carries_the_number_the_answer_marks_it_with():
+    chunks = _documents_with_ordinals({"doc-1": [], "doc-2": []}, {1: "doc-1", 2: "doc-2"})
+
+    assert [(c["ordinal"], c["title"]) for c in chunks] == [(1, "Uno"), (2, "Due")]
 
 
-def test_citation_events_follow_the_documents_in_the_stream():
-    # Order matters for a client that builds its footnote list as it reads:
-    # the DOCUMENT carrying title and url arrives before the mapping to it.
-    graph = RagGraph.__new__(RagGraph)
-    graph.rag_type = "CHAT"
-    citations = {"doc-1": []}
-    ordinals = {1: "doc-1"}
+def test_the_ordinal_survives_a_gap_in_the_numbering():
+    # Only source 2 was marked: its event must still say 2, because the
+    # answer reads [2] and a client cannot infer it from the position.
+    chunks = _documents_with_ordinals({"doc-2": []}, {2: "doc-2"})
 
-    types = [
-        json.loads(event)["type"]
-        for event in list(graph._stream_documents(DOCUMENTS, citations))
-        + list(graph._stream_citations(ordinals))
-    ]
+    assert [c["ordinal"] for c in chunks] == [2]
 
-    assert types == ["DOCUMENT", "CITATION"]
+
+def test_sources_shown_without_an_ordinal_carry_none():
+    # The fallback: nothing was marked, so every source is shown and there is
+    # no number to attach.
+    chunks = _documents_with_ordinals(None, None)
+
+    assert all("ordinal" not in chunk for chunk in chunks)
+    assert [chunk["title"] for chunk in chunks] == ["Uno", "Due"]

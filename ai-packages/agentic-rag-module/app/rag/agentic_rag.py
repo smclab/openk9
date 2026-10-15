@@ -2422,11 +2422,22 @@ class RagGraph:
             }
         )
 
-    def _stream_documents(self, documents: List[Document], citations: dict = None):
+    def _stream_documents(
+        self,
+        documents: List[Document],
+        citations: dict = None,
+        ordinals: dict = None,
+    ):
         """Emit one DOCUMENT event per retrieved source.
 
         With citations given, only the sources the LLM cited are emitted, each
-        carrying the quotes it used."""
+        carrying the quotes it used. The ordinal is the number the answer
+        marks that source with, so a client can turn [2] in the text into a
+        link to this document; it rides on DOCUMENT rather than on an event
+        of its own, so a client that ignores it is unaffected."""
+        ordinal_of = {
+            document_id: ordinal for ordinal, document_id in (ordinals or {}).items()
+        }
         documents_id = set()
         for document in documents:
             metadata = document.metadata
@@ -2437,6 +2448,8 @@ class RagGraph:
                     continue
                 documents_id.add(document_id)
                 chunk = {}
+                if (ordinal := ordinal_of.get(str(document_id))) is not None:
+                    chunk["ordinal"] = ordinal
                 chunk["citations"] = (
                     []
                     if citations is None
@@ -2472,20 +2485,6 @@ class RagGraph:
                     f"[citations] none of the {len(citations)} cited sources "
                     "matches a streamed document: no DOCUMENT event emitted"
                 )
-
-    def _stream_citations(self, ordinals: dict = None):
-        """Emit one CITATION event per inline marker the answer used.
-
-        The marker itself travels inside the answer text; this only tells the
-        client which source each number stands for, so it can turn [2] into a
-        link. A client that ignores the event still shows a readable [2]."""
-        for ordinal, document_id in (ordinals or {}).items():
-            yield json.dumps(
-                {
-                    "chunk": {"ordinal": ordinal, "document_id": document_id},
-                    "type": "CITATION",
-                }
-            )
 
     def _iter_answer_chunks(self, query: str, target_lang: str) -> Iterator[str]:
         """Yield the llm_response text chunks, without the citations tail.
@@ -2798,10 +2797,9 @@ class RagGraph:
                     and (documents := last_state.values.get("context"))
                 ):
                     yield from self._stream_documents(
-                        documents, last_state.values.get("citations")
-                    )
-                    yield from self._stream_citations(
-                        last_state.values.get("citation_ordinals")
+                        documents,
+                        last_state.values.get("citations"),
+                        last_state.values.get("citation_ordinals"),
                     )
 
                 cited_sources = list(last_state.values.get("citations") or {})
