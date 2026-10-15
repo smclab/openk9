@@ -2447,6 +2447,53 @@ class RagGraph:
             }
         )
 
+    def _stream_sources_map(self):
+        """Emit, before the answer, the number each retrieved source will be
+        marked with.
+
+        The answer carries [2] inside its text, but the DOCUMENT events that
+        say what 2 is only arrive once the answer is complete, because which
+        sources were used is known only then. A client that wants the link
+        next to the sentence, as it is written, needs the mapping up front -
+        and it is available up front, because the ordinals are assigned while
+        building the context, before the model is called.
+
+        This lists every RETRIEVED source. The DOCUMENT events that follow
+        list the ones actually used: the client renders links from this, then
+        prunes its bibliography with those."""
+        state = self.graph.get_state(self.config)
+        context = (state.values or {}).get("context") or []
+
+        ordinals = {}
+        sources = []
+        for document in context:
+            metadata = document.metadata
+            document_id = metadata.get("document_id")
+            # Same rule as the numbering in the prompt: one ordinal per
+            # source, and none at all for a chunk that could never be cited.
+            if not document_id or str(document_id) in ordinals:
+                continue
+            ordinals[str(document_id)] = len(ordinals) + 1
+            # The ordinal is what the answer writes and what joins this to
+            # the DOCUMENT events. The document_id is here as well, and
+            # deliberately not on DOCUMENT: ordinals are per request, so the
+            # [2] of one turn and the [2] of the next are different sources.
+            # A client keeping one bibliography for the whole conversation
+            # needs a key that survives the turn, without putting sixteen
+            # digits in front of the reader.
+            sources.append(
+                {
+                    "ordinal": ordinals[str(document_id)],
+                    "document_id": document_id,
+                    "title": metadata.get("title"),
+                    "url": metadata.get("url"),
+                }
+            )
+
+        if sources:
+            logger.debug(f"[citations] sources map sent ahead: {len(sources)} sources")
+            yield json.dumps({"chunk": sources, "type": "SOURCES"})
+
     def _stream_documents(
         self,
         documents: List[Document],
@@ -2582,6 +2629,7 @@ class RagGraph:
                 try:
                     for chunk_response in self._iter_answer_chunks(query, target_lang):
                         if start_chunk:
+                            yield from self._stream_sources_map()
                             yield json.dumps({"chunk": "", "type": "START"})
                             start_chunk = False
 
@@ -2661,6 +2709,7 @@ class RagGraph:
                 try:
                     for chunk_response in self._iter_answer_chunks(query, target_lang):
                         if start_chunk:
+                            yield from self._stream_sources_map()
                             yield json.dumps({"chunk": "", "type": "START"})
                             start_chunk = False
 
@@ -2727,6 +2776,7 @@ class RagGraph:
                         chunk_number += 1
 
                         if start_chunk:
+                            yield from self._stream_sources_map()
                             yield json.dumps({"chunk": "", "type": "START"})
                             start_chunk = False
 
@@ -2781,6 +2831,7 @@ class RagGraph:
                 try:
                     for chunk_response in self._iter_answer_chunks(query, target_lang):
                         if start_chunk:
+                            yield from self._stream_sources_map()
                             yield json.dumps({"chunk": "", "type": "START"})
                             start_chunk = False
 
