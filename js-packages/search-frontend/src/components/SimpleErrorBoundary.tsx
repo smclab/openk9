@@ -15,27 +15,43 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React from "react";
+import { useTranslation } from "react-i18next";
 
-export class SimpleErrorBoundary extends React.Component<{
-  children: React.ReactNode;
-}> {
-  state = { hasError: false };
-  componentDidCatch(error: unknown, errorInfo: unknown) {
-    this.setState({ hasError: true });
+type SimpleErrorBoundaryState = { hasError: boolean };
+
+// React already logs the errors a boundary catches, so there is no
+// componentDidCatch here: it would only log them a second time.
+export class SimpleErrorBoundary extends React.Component<
+  {
+    children: React.ReactNode;
+  },
+  SimpleErrorBoundaryState
+> {
+  state: SimpleErrorBoundaryState = { hasError: false };
+  static getDerivedStateFromError(): SimpleErrorBoundaryState {
+    return { hasError: true };
   }
   render() {
     if (this.state.hasError) {
       return (
-        <button
-          onClick={() => {
+        <RetryButton
+          onRetry={() => {
             this.setState({ hasError: false });
           }}
-        >
-          retry
-        </button>
+        />
       );
     }
     return this.props.children;
   }
+}
+
+function RetryButton({ onRetry }: { onRetry(): void }) {
+  const { t } = useTranslation();
+  // type="button": the fallback lives in the host page, possibly inside a form.
+  return (
+    <button type="button" onClick={onRetry}>
+      {t("retry")}
+    </button>
+  );
 }
 
