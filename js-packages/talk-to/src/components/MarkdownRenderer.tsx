@@ -251,11 +251,11 @@ function CitationChip({
 						zIndex: 10,
 						top: "100%",
 						left: 0,
-						// padding, not margin: the gap between chip and panel has to
-						// belong to the panel, or crossing it leaves both and closes
-						pt: "6px",
 						width: 320,
 						maxWidth: "80vw",
+						// padding and not margin: the gap between the chip and the
+						// panel has to belong to the panel, or the pointer crossing
+						// it leaves both and the panel closes under it
 						p: 1,
 						borderRadius: "12px",
 						backgroundColor: "background.paper",
