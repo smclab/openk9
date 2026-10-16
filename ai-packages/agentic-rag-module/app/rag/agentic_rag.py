@@ -30,7 +30,6 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.checkpoint.opensearch import OpenSearchSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from phoenix.evals import (
@@ -65,6 +64,7 @@ from app.utils.llm import (
 )
 from app.utils.logger import content_fingerprint, debug_extra, get_logger
 from app.utils.opensearch_client import get_opensearch_client
+from app.utils.opensearch_saver import OpenSearchSaver
 from app.utils.query_rewrite import escape_curly_braces
 from app.utils.query_validation import is_blank_query
 
