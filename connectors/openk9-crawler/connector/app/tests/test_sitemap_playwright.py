@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from scrapy.http import HtmlResponse, XmlResponse
 
@@ -65,7 +67,10 @@ def test_sitemap_files_do_not_use_playwright(url, body):
 def test_sitemap_urls_do_not_use_playwright():
     sitemap_spider = spider(sitemap_urls="['https://example.com/sitemap.xml']")
 
-    requests = list(sitemap_spider.start_requests())
+    async def collect_start_requests():
+        return [request async for request in sitemap_spider.start()]
+
+    requests = asyncio.run(collect_start_requests())
 
     assert len(requests) == 1
     assert "playwright" not in requests[0].meta

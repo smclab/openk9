@@ -8,6 +8,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 import requests
+from playwright.async_api import Error as PlaywrightError
 from scrapy import Spider
 from scrapy_playwright.page import PageMethod
 
@@ -25,7 +26,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 	def __init__(self, ingestion_url, body_tag, excluded_body_tags, title_tag, allowed_domains, excluded_paths,
 				 allowed_paths, max_length, max_size_bytes, document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map, custom_metadata, additional_metadata,
 				 do_extract_docs, cert_verification, datasource_id, schedule_id, timestamp, tenant_id, use_playwright,
-				 playwright_selector, playwright_timeout, playwright_wait_until, *a, **kw):
+				 playwright_selector, playwright_timeout, playwright_wait_until, playwright_max_retries, *a, **kw):
 		if self.__class__ == AbstractBaseCrawlSpider:
 			raise Exception("Error: Abstract class initialization")
 		super(AbstractBaseCrawlSpider, self).__init__(*a, **kw)
@@ -63,6 +64,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		self.playwright_selector = playwright_selector
 		self.playwright_timeout = ast.literal_eval(playwright_timeout)
 		self.playwright_wait_until = playwright_wait_until
+		self.playwright_max_retries = ast.literal_eval(playwright_max_retries)
 
 		self.playwright_meta = {
 			"playwright": self.use_playwright,
@@ -75,6 +77,19 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 				PageMethod(wait_for_selector, self.playwright_selector, timeout=self.playwright_timeout)
 			]
 		} if self.use_playwright else {}
+
+	def playwright_raise_error(self, failure):
+		# playwright_include_page is never set to True, so scrapy-playwright closes the page by itself.
+		# If it is ever enabled, this errback must close the page too, to avoid leaking it.
+		request = failure.request
+		retry_count = request.meta.get("playwright_retry_count", 0)
+
+		if failure.check(PlaywrightError) and retry_count < self.playwright_max_retries:
+			logger.warning("Playwright failed on %s (attempt %d of %d), retrying: %s",
+						   request.url, retry_count + 1, self.playwright_max_retries + 1, failure.value)
+			return request.replace(dont_filter=True, meta={**request.meta, "playwright_retry_count": retry_count + 1})
+
+		logger.error("Request failed on %s after %d attempt(s): %s", request.url, retry_count + 1, failure.value)
 
 	def try_parse_documents(self, anchors, url_request, extracted_custom_metadata):
 

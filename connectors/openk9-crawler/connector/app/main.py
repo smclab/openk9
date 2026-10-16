@@ -4,7 +4,7 @@ from enum import StrEnum
 from fastapi import APIRouter, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, FileResponse
-from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 from typing import Optional, Self
 import json
 import logging
@@ -81,6 +81,7 @@ class BaseRequest(ABC, BaseModel):
     playwrightSelector: Optional[str] = ""
     playwrightTimeout: Optional[int] = 5000
     playwrightWaitUntil: PlaywrightWaitUntil = PlaywrightWaitUntil.DOMCONTENTLOADED
+    playwrightMaxRetries: int = Field(default=0, ge=0)
 
     @model_validator(mode='after')
     def validate_base_request(self) -> 'BaseRequest':
@@ -141,6 +142,7 @@ def get_base_request_payload(request):
     playwright_selector = request["playwrightSelector"]
     playwright_timeout = request["playwrightTimeout"]
     playwright_wait_until = request["playwrightWaitUntil"]
+    playwright_max_retries = request["playwrightMaxRetries"]
 
     payload = {
         "allowed_domains": json.dumps(allowed_domains),
@@ -168,6 +170,7 @@ def get_base_request_payload(request):
         "playwright_selector": playwright_selector,
         "playwright_timeout": playwright_timeout,
         "playwright_wait_until": playwright_wait_until,
+        "playwright_max_retries": playwright_max_retries,
     }
 
     return payload

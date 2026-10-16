@@ -30,6 +30,7 @@ PLAYWRIGHT_FIELDS = {
     "playwrightSelector": "div.content",
     "playwrightTimeout": 3000,
     "playwrightWaitUntil": "load",
+    "playwrightMaxRetries": 2,
 }
 
 REQUESTS = [(SitemapRequest, SITEMAP_REQUEST), (CrawlRequest, CRAWL_REQUEST)]
@@ -60,6 +61,7 @@ SPIDER_ARGS = {
     "playwright_selector": "div.content",
     "playwright_timeout": "3000",
     "playwright_wait_until": "load",
+    "playwright_max_retries": "2",
 }
 
 SITEMAP_SPIDER_ARGS = {
@@ -107,6 +109,20 @@ def test_both_requests_accept_playwright_fields(request_class, request_data):
     assert request.playwrightSelector == "div.content"
     assert request.playwrightTimeout == 3000
     assert request.playwrightWaitUntil == "load"
+    assert request.playwrightMaxRetries == 2
+
+
+@pytest.mark.parametrize("request_class, request_data", REQUESTS)
+def test_max_retries_defaults_to_zero(request_class, request_data):
+    request = request_class(**request_data)
+
+    assert request.playwrightMaxRetries == 0
+
+
+@pytest.mark.parametrize("request_class, request_data", REQUESTS)
+def test_max_retries_rejects_negative_values(request_class, request_data):
+    with pytest.raises(ValidationError):
+        request_class(**request_data, playwrightMaxRetries=-1)
 
 
 @pytest.mark.parametrize("set_up, request_class, request_data", [
@@ -120,6 +136,18 @@ def test_payload_contains_playwright_fields(set_up, request_class, request_data)
     assert payload["playwright_selector"] == "div.content"
     assert payload["playwright_timeout"] == 3000
     assert payload["playwright_wait_until"] == "load"
+    assert payload["playwright_max_retries"] == 2
+
+
+def test_sitemap_form_has_max_retries_number_defaulting_to_zero():
+    from fastapi.testclient import TestClient
+    from main import app
+
+    form = TestClient(app).get("/form").json()
+    field = next(f for f in form["fields"] if f["name"] == "playwrightMaxRetries")
+
+    assert field["type"] == "number"
+    assert [v["value"] for v in field["values"] if v["isDefault"]] == [0]
 
 
 def test_sitemap_form_has_wait_until_select():
