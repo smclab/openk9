@@ -7,14 +7,7 @@ import { noCustomOutput } from "./plugins/noCustomOutput";
 
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        plugins: [
-          "babel-plugin-macros",
-          ["@babel/plugin-transform-runtime", { regenerator: true }],
-        ],
-      },
-    }),
+    react(),
     license({
       thirdParty: {
         allow: (name) => true,

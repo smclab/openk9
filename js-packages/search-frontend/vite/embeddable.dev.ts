@@ -3,16 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
-  plugins: [
-    react({
-      babel: {
-        plugins: [
-          "babel-plugin-macros",
-          ["@babel/plugin-transform-runtime", { regenerator: true }],
-        ],
-      },
-    }),
-  ],
+  plugins: [react()],
   build: {
     sourcemap: true,
     minify: false,

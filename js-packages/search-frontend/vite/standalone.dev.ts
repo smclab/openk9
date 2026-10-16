@@ -59,7 +59,6 @@ export default defineConfig(({ mode }) => {
         "react/jsx-runtime",
         "styled-components",
         "lodash",
-        "luxon",
         "moment",
         "react-dates",
       ],
