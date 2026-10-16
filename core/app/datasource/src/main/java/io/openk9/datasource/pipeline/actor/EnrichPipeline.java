@@ -485,7 +485,7 @@ public class EnrichPipeline {
 
 	}
 
-	private static DataPayload mergeResponse(
+	static DataPayload mergeResponse(
 		String jsonPath, EnrichItem.BehaviorMergeType behaviorMergeType,
 		DataPayload prevDataPayload, DataPayload newDataPayload) {
 
