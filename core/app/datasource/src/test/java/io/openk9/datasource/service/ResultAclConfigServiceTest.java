@@ -294,9 +294,9 @@ public class ResultAclConfigServiceTest {
 
 	@Test
 	void should_reject_a_field_holding_no_value_of_its_own() {
-		// a container with sub-fields, a variant of an i18n field and a
-		// multi-field, each alone
-		for (var field : List.of(meta, summaryI18n, summaryIt, summaryBase,
+		// a container with sub-fields, an object without sub-fields, a variant
+		// of an i18n field and a multi-field, each alone
+		for (var field : List.of(meta, raw, summaryI18n, summaryIt, summaryBase,
 			titleKeyword)) {
 
 			var dto = ResultAclConfigDTO.builder()
@@ -316,12 +316,10 @@ public class ResultAclConfigServiceTest {
 
 	@Test
 	void should_accept_the_most_specific_fields_holding_a_value() {
-		// a sub-field of a container, an object without sub-fields and an
-		// i18n field
+		// a sub-field of a container and an i18n field
 		resultAclConfigService.create(ResultAclConfigDTO.builder()
 				.name(ResultAclConfig.DEFAULT_NAME)
-				.visibleFieldIds(Set.of(
-					metaAuthor.getId(), raw.getId(), summary.getId()))
+				.visibleFieldIds(Set.of(metaAuthor.getId(), summary.getId()))
 				.build())
 			.await().indefinitely();
 
@@ -329,7 +327,7 @@ public class ResultAclConfigServiceTest {
 			.await().indefinitely();
 
 		assertEquals(
-			Set.of(metaAuthor.getId(), raw.getId(), summary.getId()),
+			Set.of(metaAuthor.getId(), summary.getId()),
 			visibleFieldIds(current));
 	}
 
@@ -358,12 +356,12 @@ public class ResultAclConfigServiceTest {
 
 	@Test
 	void should_read_the_search_settings_of_an_enabled_configuration() {
-		// setup — two roles, a leaf and an object without sub-fields
+		// setup — two roles and two leaves
 		resultAclConfigService.create(ResultAclConfigDTO.builder()
 				.name(ResultAclConfig.DEFAULT_NAME)
 				.enabled(true)
 				.superUserRoles(List.of(ROLE_AUDITOR, ROLE_LEGAL))
-				.visibleFieldIds(Set.of(title.getId(), raw.getId()))
+				.visibleFieldIds(Set.of(title.getId(), date.getId()))
 				.build())
 			.await().indefinitely();
 
@@ -375,7 +373,7 @@ public class ResultAclConfigServiceTest {
 		assertTrue(settings.enabled());
 		assertEquals(Set.of(ROLE_AUDITOR, ROLE_LEGAL), settings.superUserRoles());
 		assertEquals(
-			Set.of(title.getId(), raw.getId()),
+			Set.of(title.getId(), date.getId()),
 			settings.visibleFieldIds());
 	}
 
@@ -388,10 +386,10 @@ public class ResultAclConfigServiceTest {
 		assertTrue(selectable.contains(title.getId()));
 		assertTrue(selectable.contains(date.getId()));
 		assertTrue(selectable.contains(metaAuthor.getId()));
-		assertTrue(selectable.contains(raw.getId()));
 		assertTrue(selectable.contains(summary.getId()));
 
 		assertFalse(selectable.contains(body.getId()));
+		assertFalse(selectable.contains(raw.getId()));
 		assertFalse(selectable.contains(titleKeyword.getId()));
 		assertFalse(selectable.contains(meta.getId()));
 		assertFalse(selectable.contains(summaryI18n.getId()));
