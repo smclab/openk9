@@ -128,6 +128,7 @@ This endpoint takes different arguments in JSON raw body:
 - **linksToFollow**: list of href xpath to follow during extraction (optional, if not specified is ignored)
 - **playwrightSelector**: css/xpath selector to be waited for by playwright (optional, if set playwright will be used)
 - **playwrightTimeout**: timeout waited by selector if not found (optional, default is *5000*)
+- **playwrightWaitUntil**: event playwright waits for before considering the navigation finished, one of *load*, *domcontentloaded*, *commit* (optional, default is *domcontentloaded*)
 - **excludedBodyTags**:list of excluded tags (css selector) (optional, if not specified exclude nothing)
 - **titleTag**: html tag for title to assign to extracted page  (optional, if not specified get head title tag)
 - **pageCount**: count of page limit to crawl

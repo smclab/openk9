@@ -2,36 +2,7 @@ import pytest
 from scrapy.http import HtmlResponse, XmlResponse
 
 from generic_crawler.spiders.genericSitemapSpider import GenericSitemapSpider
-
-SITEMAP_SPIDER_ARGS = {
-    "sitemap_urls": "[]",
-    "allowed_domains": "[]",
-    "body_tag": "body",
-    "excluded_body_tags": "[]",
-    "title_tag": "title::text",
-    "replace_rule": "['', '']",
-    "links_to_follow": "[]",
-    "use_playwright": "True",
-    "playwright_selector": "div.content",
-    "playwright_timeout": "3000",
-    "datasource_id": 1,
-    "schedule_id": "schedule",
-    "ingestion_url": "http://ingestion",
-    "timestamp": 1,
-    "additional_metadata": "{}",
-    "max_length": "-1",
-    "max_size_bytes": "1000",
-    "tenant_id": "",
-    "excluded_paths": "[]",
-    "allowed_paths": "[]",
-    "document_file_extensions": "[]",
-    "do_use_mimetype_map": "True",
-    "do_use_default_mimetype_map": "True",
-    "mimetype_map": "{}",
-    "custom_metadata": "{}",
-    "do_extract_docs": "False",
-    "cert_verification": "True",
-}
+from test_playwright_params import SITEMAP_SPIDER_ARGS
 
 URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
