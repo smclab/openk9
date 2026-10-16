@@ -24,13 +24,13 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
     def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, excluded_body_tags, title_tag, follow,
                  max_length, max_size_bytes, datasource_id, schedule_id, tenant_id, ingestion_url, document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map,
                  custom_metadata, additional_metadata, do_extract_docs, cert_verification, timestamp, use_playwright,
-                 playwright_selector, playwright_timeout, playwright_wait_until, *a, **kw):
+                 playwright_selector, playwright_timeout, playwright_wait_until, playwright_max_retries, *a, **kw):
         CrawlSpider.__init__(self, *a, **kw)
         AbstractBaseCrawlSpider.__init__(self, ingestion_url, body_tag, excluded_body_tags, title_tag, allowed_domains, excluded_paths,
                                          allowed_paths, max_length, max_size_bytes, document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map, custom_metadata,
                                          additional_metadata, do_extract_docs, cert_verification, datasource_id, schedule_id,
                                          timestamp, tenant_id, use_playwright, playwright_selector, playwright_timeout,
-                                         playwright_wait_until, *a, *kw)
+                                         playwright_wait_until, playwright_max_retries, *a, *kw)
 
         self.start_urls = ast.literal_eval(start_urls)
         if not isinstance(self.start_urls, list):
@@ -40,7 +40,7 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
         GenericCrawlSpider.rules = (
             # Extract links matching 'item.php' and parse them with the spider's method parse_item
             Rule(LinkExtractor(allow=self.allowed_paths, deny=self.excluded_paths, ),
-                 callback='parse', follow=self.follow, ),
+                 callback='parse', follow=self.follow, errback=self.playwright_raise_error, ),
         )
         super(GenericCrawlSpider, self)._compile_rules()
 

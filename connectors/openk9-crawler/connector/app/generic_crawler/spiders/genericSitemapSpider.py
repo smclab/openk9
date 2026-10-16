@@ -34,7 +34,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
     payload = {}
 
     def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_body_tags, title_tag, replace_rule, links_to_follow,
-                 use_playwright, playwright_selector, playwright_timeout, playwright_wait_until, datasource_id, schedule_id, ingestion_url, timestamp,
+                 use_playwright, playwright_selector, playwright_timeout, playwright_wait_until, playwright_max_retries, datasource_id, schedule_id, ingestion_url, timestamp,
                  additional_metadata, max_length, max_size_bytes, tenant_id, excluded_paths, allowed_paths,
                  document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map, custom_metadata, do_extract_docs, cert_verification, *a, **kw):
 
@@ -43,7 +43,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
                                         excluded_paths, allowed_paths, max_length, max_size_bytes, document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map,
                                         custom_metadata, additional_metadata, do_extract_docs, cert_verification, datasource_id,
                                         schedule_id, timestamp, tenant_id, use_playwright, playwright_selector,
-                                        playwright_timeout, playwright_wait_until, *a, **kw)
+                                        playwright_timeout, playwright_wait_until, playwright_max_retries, *a, **kw)
 
         self._cbs = []
         for r, c in self.sitemap_rules:
@@ -98,9 +98,9 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         self.parsed_links = set()
         self.extracted_links_to_follow = set()
 
-    def start_requests(self):
+    async def start(self):
         for url in self.sitemap_urls:
-            yield Request(url, self._parse_sitemap)
+            yield Request(url, self._parse_sitemap, errback=self.playwright_raise_error)
 
     def sitemap_replace(self, loc, rule):
         new_loc = loc.replace(rule[0], rule[1])
@@ -140,7 +140,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
     def _parse_sitemap(self, response):
         if response.url.endswith('/robots.txt'):
             for url in sitemap_urls_from_robots(response.text, base_url=response.url):
-                yield Request(url, callback=self._parse_sitemap)
+                yield Request(url, callback=self._parse_sitemap, errback=self.playwright_raise_error)
         else:
             body = self._get_sitemap_body(response)
             if body is None:
@@ -153,12 +153,12 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
             if s.type == 'sitemapindex':
                 for loc in iterloc(s, self.sitemap_alternate_links):
                     if any(x.search(loc) for x in self._follow):
-                        yield Request(loc, callback=self._parse_sitemap)
+                        yield Request(loc, callback=self._parse_sitemap, errback=self.playwright_raise_error)
             elif s.type == 'urlset':
                 it = self.sitemap_filter(s)
                 for loc in iterloc(it, self.sitemap_alternate_links):
                     loc = self.sitemap_replace(loc, self.replace_rule)
-                    yield Request(loc, callback=self.parse, meta=self.playwright_meta)
+                    yield Request(loc, callback=self.parse, meta=self.playwright_meta, errback=self.playwright_raise_error)
 
     def _get_sitemap_body(self, response):
         """Return the sitemap body contained in the given response,
@@ -276,7 +276,3 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
                 errback=self.playwright_raise_error,
                 meta=self.playwright_meta
             )
-
-    def playwright_raise_error(self, failure):
-        # TODO: could send HALT message
-        pass
