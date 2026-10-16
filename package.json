@@ -5,8 +5,6 @@
   "devDependencies": {
     "husky": "^4.2.3",
     "lerna": "^10.0.1",
-    "patch-package": "^6.2.2",
-    "postinstall-postinstall": "^2.1.0",
     "prettier": "^2.7.1",
     "syncpack": "15.3.3"
   },
@@ -17,8 +15,7 @@
     "format": "lerna run --stream format",
     "lint": "lerna run --stream lint",
     "lint:versions": "syncpack lint",
-    "test": "lerna run --stream test",
-    "postinstall": "patch-package"
+    "test": "lerna run --stream test"
   },
   "husky": {
     "hooks": {
