@@ -21,18 +21,12 @@ import { libInjectCss } from "vite-plugin-lib-inject-css";
 import { extname, relative, resolve } from "path";
 import { fileURLToPath } from "node:url";
 import { glob } from "glob";
-import commonjs from "@rollup/plugin-commonjs";
 
 export default defineConfig({
   plugins: [
     react(),
     libInjectCss(),
     dts({ include: ["lib"], outDirs: "dist" }),
-    commonjs({
-      include: /node_modules/,
-      transformMixedEsModules: true,
-      requireReturnsDefault: "auto",
-    }),
   ],
   server: {
     proxy: {
@@ -88,7 +82,6 @@ export default defineConfig({
       "react-is",
       "@mui/material",
       "@mui/system",
-      "@mui/utils",
     ],
   },
 });
