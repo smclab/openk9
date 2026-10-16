@@ -94,6 +94,21 @@ message QueryParserResponse {
   bytes query = 1;
   repeated string indexName = 2;
   map<string, string> queryParameters = 3;
+  // Set only when the results the user is not authorized to read are
+  // obscured instead of filtered out: the request asked for it, the tenant
+  // enables the mode and the user is not a super-user.
+  ResultAcl resultAcl = 4;
+}
+
+// How the searcher obscures the results the user is not authorized to read.
+message ResultAcl {
+  // Name of the named query matched by the authorized results; a result
+  // that does not report it in matched_queries is obscured.
+  string authorizedQueryName = 1;
+  // Paths of the fields left visible on an obscured result. Each one is the
+  // most specific field holding a value, so it is kept with its whole value:
+  // an I18N field with all its variants.
+  repeated string visibleFields = 2;
 }
 
 message SuggestionsResponse {
@@ -136,6 +151,10 @@ message QueryParserRequest {
   optional string language = 11;
   optional bool vectorIndices = 12 [deprecated = true];
   string tenantId = 13;
+  // Asks for the results the user is not authorized to read, obscured
+  // instead of filtered out; it applies only when the tenant enables the
+  // mode, and never to knn or hybrid searches.
+  bool includeObscured = 14;
 }
 
 message Sort {
