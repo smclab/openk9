@@ -18,7 +18,11 @@
 
 from unittest.mock import patch
 
-from app.utils.opensearch_client import get_opensearch_client, parse_hosts
+from app.utils.opensearch_client import (
+    POOL_MAXSIZE,
+    get_opensearch_client,
+    parse_hosts,
+)
 
 
 def test_parse_hosts_single_host():
@@ -75,14 +79,18 @@ def test_parse_hosts_keeps_url_form():
 def test_get_opensearch_client_single_host(mock_opensearch):
     get_opensearch_client("node-1:9200")
 
-    mock_opensearch.assert_called_once_with(hosts=["node-1:9200"])
+    mock_opensearch.assert_called_once_with(
+        hosts=["node-1:9200"], pool_maxsize=POOL_MAXSIZE
+    )
 
 
 @patch("app.utils.opensearch_client.OpenSearch")
 def test_get_opensearch_client_multi_host(mock_opensearch):
     get_opensearch_client("node-1:9200, node-2:9200")
 
-    mock_opensearch.assert_called_once_with(hosts=["node-1:9200", "node-2:9200"])
+    mock_opensearch.assert_called_once_with(
+        hosts=["node-1:9200", "node-2:9200"], pool_maxsize=POOL_MAXSIZE
+    )
 
 
 @patch("app.utils.opensearch_client.OpenSearch")
@@ -90,5 +98,21 @@ def test_get_opensearch_client_forwards_extra_kwargs(mock_opensearch):
     get_opensearch_client("node-1:9200", http_compress=True)
 
     mock_opensearch.assert_called_once_with(
-        hosts=["node-1:9200"], http_compress=True
+        hosts=["node-1:9200"], http_compress=True, pool_maxsize=POOL_MAXSIZE
     )
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_sizes_connection_pool_for_concurrency(mock_opensearch):
+    """urllib3 keeps a single connection per host unless told otherwise, and the
+    checkpointer writes in background threads on the same client."""
+    get_opensearch_client("node-1:9200")
+
+    assert mock_opensearch.call_args.kwargs["pool_maxsize"] == 10
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_explicit_pool_maxsize_wins(mock_opensearch):
+    get_opensearch_client("node-1:9200", pool_maxsize=25)
+
+    mock_opensearch.assert_called_once_with(hosts=["node-1:9200"], pool_maxsize=25)

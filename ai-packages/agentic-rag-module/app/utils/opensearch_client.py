@@ -18,6 +18,7 @@
 from opensearchpy import OpenSearch
 
 HOSTS_SEPARATOR = ","
+POOL_MAXSIZE = 10
 
 
 def parse_hosts(hosts):
@@ -60,6 +61,10 @@ def get_opensearch_client(hosts, **kwargs):
     clusters are supported everywhere: ``opensearch-py`` round-robins over the
     connection pool and skips nodes that are unreachable.
 
+    The connection pool keeps ``POOL_MAXSIZE`` connections per host, because the
+    LangGraph checkpointer sends concurrent requests on the same client. An
+    explicit ``pool_maxsize`` keyword argument takes precedence.
+
     :param hosts: Comma-separated hosts string, or a list of hosts
     :type hosts: str | list | tuple | None
     :param kwargs: Extra keyword arguments forwarded to the OpenSearch client
@@ -72,4 +77,6 @@ def get_opensearch_client(hosts, **kwargs):
 
             client = get_opensearch_client("node-1:9200,node-2:9200")
     """
+    kwargs.setdefault("pool_maxsize", POOL_MAXSIZE)
+
     return OpenSearch(hosts=parse_hosts(hosts), **kwargs)
