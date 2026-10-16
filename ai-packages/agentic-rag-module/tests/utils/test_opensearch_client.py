@@ -22,7 +22,11 @@ import pytest
 from pydantic import SecretStr
 
 from app.config import settings
-from app.utils.opensearch_client import get_opensearch_client, parse_hosts
+from app.utils.opensearch_client import (
+    POOL_MAXSIZE,
+    get_opensearch_client,
+    parse_hosts,
+)
 
 OPENSEARCH_SETTINGS_DEFAULTS = {
     "opensearch_verify_certs": True,
@@ -94,14 +98,18 @@ def test_parse_hosts_keeps_url_form():
 def test_get_opensearch_client_single_host(mock_opensearch):
     get_opensearch_client("node-1:9200")
 
-    mock_opensearch.assert_called_once_with(hosts=["node-1:9200"])
+    mock_opensearch.assert_called_once_with(
+        hosts=["node-1:9200"], pool_maxsize=POOL_MAXSIZE
+    )
 
 
 @patch("app.utils.opensearch_client.OpenSearch")
 def test_get_opensearch_client_multi_host(mock_opensearch):
     get_opensearch_client("node-1:9200, node-2:9200")
 
-    mock_opensearch.assert_called_once_with(hosts=["node-1:9200", "node-2:9200"])
+    mock_opensearch.assert_called_once_with(
+        hosts=["node-1:9200", "node-2:9200"], pool_maxsize=POOL_MAXSIZE
+    )
 
 
 @patch("app.utils.opensearch_client.OpenSearch")
@@ -109,7 +117,7 @@ def test_get_opensearch_client_forwards_extra_kwargs(mock_opensearch):
     get_opensearch_client("node-1:9200", http_compress=True)
 
     mock_opensearch.assert_called_once_with(
-        hosts=["node-1:9200"], http_compress=True
+        hosts=["node-1:9200"], http_compress=True, pool_maxsize=POOL_MAXSIZE
     )
 
 
@@ -118,7 +126,7 @@ def test_get_opensearch_client_https_verifies_certificates(mock_opensearch):
     get_opensearch_client("https://node-1:9200")
 
     mock_opensearch.assert_called_once_with(
-        hosts=["https://node-1:9200"], verify_certs=True
+        hosts=["https://node-1:9200"], verify_certs=True, pool_maxsize=POOL_MAXSIZE
     )
 
 
@@ -131,7 +139,10 @@ def test_get_opensearch_client_https_without_certificate_verification(
     get_opensearch_client("https://node-1:9200")
 
     mock_opensearch.assert_called_once_with(
-        hosts=["https://node-1:9200"], verify_certs=False, ssl_show_warn=False
+        hosts=["https://node-1:9200"],
+        verify_certs=False,
+        ssl_show_warn=False,
+        pool_maxsize=POOL_MAXSIZE,
     )
 
 
@@ -145,6 +156,7 @@ def test_get_opensearch_client_https_with_ca_bundle(mock_opensearch, monkeypatch
         hosts=["https://node-1:9200"],
         verify_certs=True,
         ca_certs="/etc/opensearch-certs/ca.pem",
+        pool_maxsize=POOL_MAXSIZE,
     )
 
 
@@ -156,7 +168,9 @@ def test_get_opensearch_client_http_ignores_tls_settings(mock_opensearch, monkey
 
     get_opensearch_client("node-1:9200")
 
-    mock_opensearch.assert_called_once_with(hosts=["node-1:9200"])
+    mock_opensearch.assert_called_once_with(
+        hosts=["node-1:9200"], pool_maxsize=POOL_MAXSIZE
+    )
 
 
 @patch("app.utils.opensearch_client.OpenSearch")
@@ -167,7 +181,9 @@ def test_get_opensearch_client_basic_auth(mock_opensearch, monkeypatch):
     get_opensearch_client("node-1:9200")
 
     mock_opensearch.assert_called_once_with(
-        hosts=["node-1:9200"], http_auth=("opensearch", "s3cret")
+        hosts=["node-1:9200"],
+        http_auth=("opensearch", "s3cret"),
+        pool_maxsize=POOL_MAXSIZE,
     )
 
 
@@ -179,7 +195,9 @@ def test_get_opensearch_client_without_password_skips_auth(
 
     get_opensearch_client("node-1:9200")
 
-    mock_opensearch.assert_called_once_with(hosts=["node-1:9200"])
+    mock_opensearch.assert_called_once_with(
+        hosts=["node-1:9200"], pool_maxsize=POOL_MAXSIZE
+    )
 
 
 @patch("app.utils.opensearch_client.OpenSearch")
@@ -189,7 +207,9 @@ def test_get_opensearch_client_mixed_schemes_apply_tls_once(mock_opensearch):
     get_opensearch_client("node-1:9200,https://node-2:9200")
 
     mock_opensearch.assert_called_once_with(
-        hosts=["node-1:9200", "https://node-2:9200"], verify_certs=True
+        hosts=["node-1:9200", "https://node-2:9200"],
+        verify_certs=True,
+        pool_maxsize=POOL_MAXSIZE,
     )
 
 
@@ -206,6 +226,7 @@ def test_get_opensearch_client_multi_host_shares_credentials(
         hosts=["https://node-1:9200", "https://node-2:9200"],
         verify_certs=True,
         http_auth=("opensearch", "s3cret"),
+        pool_maxsize=POOL_MAXSIZE,
     )
 
 
@@ -219,5 +240,21 @@ def test_get_opensearch_client_explicit_kwargs_win_over_settings(
     get_opensearch_client("node-1:9200", http_auth=("admin", "admin"))
 
     mock_opensearch.assert_called_once_with(
-        hosts=["node-1:9200"], http_auth=("admin", "admin")
+        hosts=["node-1:9200"], http_auth=("admin", "admin"), pool_maxsize=POOL_MAXSIZE
     )
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_sizes_connection_pool_for_concurrency(mock_opensearch):
+    """urllib3 keeps a single connection per host unless told otherwise, and the
+    checkpointer writes in background threads on the same client."""
+    get_opensearch_client("node-1:9200")
+
+    assert mock_opensearch.call_args.kwargs["pool_maxsize"] == 10
+
+
+@patch("app.utils.opensearch_client.OpenSearch")
+def test_get_opensearch_client_explicit_pool_maxsize_wins(mock_opensearch):
+    get_opensearch_client("node-1:9200", pool_maxsize=25)
+
+    mock_opensearch.assert_called_once_with(hosts=["node-1:9200"], pool_maxsize=25)
