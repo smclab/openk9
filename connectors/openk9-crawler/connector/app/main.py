@@ -1,4 +1,5 @@
 from abc import ABC
+from enum import StrEnum
 
 from fastapi import APIRouter, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -48,6 +49,12 @@ if ingestion_url is None:
 scrapyd_url = os.environ.get("SCRAPYD_URL", "localhost:6800")
 
 
+class PlaywrightWaitUntil(StrEnum):
+    LOAD = "load"
+    DOMCONTENTLOADED = "domcontentloaded"
+    COMMIT = "commit"
+
+
 class BaseRequest(ABC, BaseModel):
     bodyTag: Optional[str] = "body"
     titleTag: Optional[str] = "title::text"
@@ -70,9 +77,15 @@ class BaseRequest(ABC, BaseModel):
     doGetFileExtensionFromMimetypeMap: Optional[bool] = True
     doUseDefaultMimetypeMap: Optional[bool] = True
     mimetypeMap: Optional[dict] = {}
+    usePlaywright: Optional[bool] = False
+    playwrightSelector: Optional[str] = ""
+    playwrightTimeout: Optional[int] = 5000
+    playwrightWaitUntil: PlaywrightWaitUntil = PlaywrightWaitUntil.DOMCONTENTLOADED
 
     @model_validator(mode='after')
     def validate_base_request(self) -> 'BaseRequest':
+        if self.usePlaywright and not self.playwrightSelector:
+            raise ValueError("Field 'playwrightSelector' must be set when 'usePlaywright' is True")
         if (
             self.doGetFileExtensionFromMimetypeMap
             and not self.doUseDefaultMimetypeMap
@@ -86,15 +99,6 @@ class SitemapRequest(BaseRequest):
     sitemapUrls: list
     replaceRule: Optional[list] = ["", ""]
     linksToFollow: Optional[list[str]] = []
-    usePlaywright: Optional[bool] = False
-    playwrightSelector: Optional[str] = ""
-    playwrightTimeout: Optional[int] = 5000
-
-    @model_validator(mode='after')
-    def validate_sitemap_request(self) -> 'SitemapRequest':
-        if self.usePlaywright and not self.playwrightSelector:
-            raise ValueError("Field 'playwrightSelector' must be set when 'usePlaywright' is True")
-        return self
 
 
 class CrawlRequest(BaseRequest):
@@ -133,6 +137,10 @@ def get_base_request_payload(request):
     do_use_mimetype_map = request["doGetFileExtensionFromMimetypeMap"]
     do_use_default_mimetype_map = request["doUseDefaultMimetypeMap"]
     mimetype_map = request["mimetypeMap"]
+    use_playwright = request["usePlaywright"]
+    playwright_selector = request["playwrightSelector"]
+    playwright_timeout = request["playwrightTimeout"]
+    playwright_wait_until = request["playwrightWaitUntil"]
 
     payload = {
         "allowed_domains": json.dumps(allowed_domains),
@@ -156,6 +164,10 @@ def get_base_request_payload(request):
         "do_extract_docs": do_extract_docs,
         "cert_verification": cert_verification,
         "additional_metadata": json.dumps(additional_metadata),
+        "use_playwright": use_playwright,
+        "playwright_selector": playwright_selector,
+        "playwright_timeout": playwright_timeout,
+        "playwright_wait_until": playwright_wait_until,
     }
 
     return payload
@@ -169,9 +181,6 @@ def set_up_sitemap_endpoint(request):
 
     sitemap_urls = request['sitemapUrls']
     links_to_follow = request["linksToFollow"]
-    use_playwright = request["usePlaywright"]
-    playwright_selector = request["playwrightSelector"]
-    playwright_timeout = request["playwrightTimeout"]
     page_count = request["pageCount"]
     replace_rule = request["replaceRule"]
 
@@ -182,10 +191,7 @@ def set_up_sitemap_endpoint(request):
         "ingestion_url": ingestion_url,
         "replace_rule": json.dumps(replace_rule),
         "links_to_follow": json.dumps(links_to_follow),
-        "use_playwright": use_playwright,
-        "playwright_selector": playwright_selector,
-        "playwright_timeout": playwright_timeout,
-        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "LOG_LEVEL=%s" % log_level, "USE_PLAYWRIGHT=%s" % use_playwright],
+        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "LOG_LEVEL=%s" % log_level, "USE_PLAYWRIGHT=%s" % request["usePlaywright"]],
     }
 
     base_request_payload = get_base_request_payload(request)

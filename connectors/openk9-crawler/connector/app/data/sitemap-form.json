@@ -290,6 +290,29 @@
       }
     },
     {
+      "label": "Playwright Wait Until",
+      "name": "playwrightWaitUntil",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "info": "When Playwright considers the navigation finished. domcontentloaded: the DOMContentLoaded event is fired. load: the load event is fired. commit: the network response is received and the document started loading.",
+      "values": [
+        {
+          "value": "load",
+          "isDefault": false
+        },
+        {
+          "value": "domcontentloaded",
+          "isDefault": true
+        },
+        {
+          "value": "commit",
+          "isDefault": false
+        }
+      ],
+      "validator": null
+    },
+    {
       "info": "If verify certificates",
       "label": "Certificate Verification",
       "name": "certVerification",
