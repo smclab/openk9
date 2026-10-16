@@ -208,6 +208,13 @@ components:
         sortAfterKey:
           type: string
           description: After key used for pagination when sort is present
+        includeObscured:
+          type: boolean
+          description: "Whether to return the results the user is not authorized\
+            \ to read, obscured to their visible fields instead of filtered out.\
+            \ It applies only when the tenant enables the result ACL mode, and\
+            \ never to knn or hybrid searches."
+          default: false
         language:
           type: string
           description: Language used to apply search in specific language.
