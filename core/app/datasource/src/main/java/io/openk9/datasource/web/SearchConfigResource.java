@@ -19,6 +19,7 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.web.dto.openapi.DataIndexDtoExamples;
 import io.openk9.datasource.web.dto.openapi.SearchConfigDtoExamples;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -43,6 +44,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @ApplicationScoped
 @Path("/v1/search-config")
+@RolesAllowed("k9-admin")
 public class SearchConfigResource {
 
 	@Inject
