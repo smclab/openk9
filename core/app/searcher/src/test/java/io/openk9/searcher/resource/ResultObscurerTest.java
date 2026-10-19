@@ -83,6 +83,41 @@ class ResultObscurerTest {
 	}
 
 	@Test
+	void should_keep_a_visible_field_written_with_dotted_keys() {
+		// setup — the variants of the visible summary written as dotted keys,
+		// and a dotted key at the root for a field that is not visible
+		var source = new JsonObject("""
+			{
+				"documentTypes": ["web"],
+				"web": {
+					"title": "Progetto fusione",
+					"summary.base": "Sintesi della fusione",
+					"summary.i18n.it_IT": "Sintesi della fusione"
+				},
+				"web.content": "Piano della fusione"
+			}
+			""");
+
+		// action
+		var obscured = ResultObscurer.obscureSource(
+			source.getMap(), Set.of("web.summary"));
+
+		// assertion — the keys below the visible field are part of its value
+		assertEquals(
+			new JsonObject("""
+				{
+					"documentTypes": ["web"],
+					"web": {
+						"summary.base": "Sintesi della fusione",
+						"summary.i18n.it_IT": "Sintesi della fusione"
+					},
+					"obscuredFields": ["web.content", "web.title"]
+				}
+				"""),
+			new JsonObject(obscured));
+	}
+
+	@Test
 	void should_keep_the_visible_sub_fields_of_each_element_of_an_array() {
 		// setup — two attachments, only their name is visible
 		var source = new JsonObject("""

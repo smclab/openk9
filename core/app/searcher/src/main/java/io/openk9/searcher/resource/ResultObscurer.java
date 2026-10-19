@@ -32,8 +32,10 @@ import java.util.TreeSet;
  * <p>
  * Each visible field is the most specific field holding a value, so the value
  * at its path is kept whole: an I18N field with all its variants, an object
- * without mapped sub-fields with all its keys. A path that only leads to
- * visible fields is walked into, element by element for an array of objects.
+ * without mapped sub-fields with all its keys. A key below its path, written
+ * with dots such as {@code "summary.base"}, is part of that value too. A path
+ * that only leads to visible fields is walked into, element by element for an
+ * array of objects.
  */
 final class ResultObscurer {
 
@@ -106,7 +108,7 @@ final class ResultObscurer {
 			String path = prefix.isEmpty() ? key : prefix + "." + key;
 
 			if ((prefix.isEmpty() && KEPT_FIELDS.contains(key))
-				|| visibleFields.contains(path)) {
+				|| isVisible(path, visibleFields)) {
 
 				filtered.put(key, entry.getValue());
 			}
