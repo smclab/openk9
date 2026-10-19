@@ -65,7 +65,16 @@ ENV USER=docling \
     HF_HOME=/docling-processor/.cache/huggingface \
     TORCH_HOME=/docling-processor/.cache/torch \
     TORCHINDUCTOR_CACHE_DIR=/tmp/torchinductor \
-    XDG_CACHE_HOME=/docling-processor/.cache
+    XDG_CACHE_HOME=/docling-processor/.cache \
+    EASYOCR_MODULE_PATH=/docling-processor/.EasyOCR
+# Bake the PDF pipeline models (layout, TableFormer, EasyOCR) into the image so
+# the pod needs no egress at runtime. `docling-tools models download` is not
+# enough on docling 2.126: the layout model reads the HuggingFace cache, which
+# the CLI does not fill. Building the real pipeline goes through every download.
+RUN python -c "from docling.datamodel.base_models import InputFormat; \
+from docling.document_converter import DocumentConverter; \
+from app.utils.pipeline_options import get_format_options; \
+DocumentConverter(format_options=get_format_options({}, InputFormat.PDF)).initialize_pipeline(InputFormat.PDF)"
 RUN mkdir -p /docling-processor/.cache && \
     chown -R 1001:0 /docling-processor && chmod -R g=u /docling-processor
 
