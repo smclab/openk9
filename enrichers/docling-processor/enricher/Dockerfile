@@ -46,4 +46,29 @@ COPY --from=test /tmp/tests.passed /tmp/tests.passed
 
 EXPOSE 5000
 
+# Run non-root. docling loads torch-based layout/OCR models at runtime, which
+# resolve the user/home (getpwuid) and write a cache dir. Register the user, set
+# HOME and point the torch/HF caches at writable dirs. chown 1001:0 + g=u keeps
+# it OpenShift-friendly for arbitrary UIDs.
+RUN useradd -m -u 1001 -g 0 docling
+ENV USER=docling \
+    HOME=/docling-processor \
+    HF_HOME=/docling-processor/.cache/huggingface \
+    TORCH_HOME=/docling-processor/.cache/torch \
+    TORCHINDUCTOR_CACHE_DIR=/tmp/torchinductor \
+    XDG_CACHE_HOME=/docling-processor/.cache \
+    EASYOCR_MODULE_PATH=/docling-processor/.EasyOCR
+# Bake the PDF pipeline models (layout, TableFormer, EasyOCR) into the image so
+# the pod needs no egress at runtime. `docling-tools models download` is not
+# enough on docling 2.126: the layout model reads the HuggingFace cache, which
+# the CLI does not fill. Building the real pipeline goes through every download.
+RUN python -c "from docling.datamodel.base_models import InputFormat; \
+from docling.document_converter import DocumentConverter; \
+from app.utils.pipeline_options import get_format_options; \
+DocumentConverter(format_options=get_format_options({}, InputFormat.PDF)).initialize_pipeline(InputFormat.PDF)"
+RUN mkdir -p /docling-processor/.cache && \
+    chown -R 1001:0 /docling-processor && chmod -R g=u /docling-processor
+
+USER 1001
+
 CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "5000"]
