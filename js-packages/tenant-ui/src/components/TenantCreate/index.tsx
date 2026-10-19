@@ -3,7 +3,6 @@ import DomainIcon from "@mui/icons-material/Domain";
 import { Box, Button, CircularProgress, Container, IconButton, Step, StepLabel, Stepper, Toolbar, Typography } from "@mui/material";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError } from "../../openapi-generated";
 import { useRestClient } from "../client/queryClient";
 import { useToast } from "../ToastProvider";
 import { buildCreateTenantRequest } from "./payload";
@@ -34,17 +33,15 @@ export function TenantCreate() {
   function handleBack() {
     setActiveStep((s) => Math.max(0, s - 1));
   }
-  /** L'errore puo' essere un ApiError con corpo JSON, un Error, o altro. */
+  /** L'errore puo' essere un Error, con l'eventuale corpo della risposta in `body`, o altro. */
   function toErrorMessage(error: unknown): string {
-    if (error instanceof ApiError) {
-      const body = error.body;
-      if (typeof body === "object" && body !== null && "message" in body) {
-        const message = (body as { message?: unknown }).message;
-        if (typeof message === "string") return message;
-      }
+    if (!(error instanceof Error)) return "Unknown error";
+    const body = (error as { body?: unknown }).body;
+    if (typeof body === "object" && body !== null && "message" in body) {
+      const message = (body as { message?: unknown }).message;
+      if (typeof message === "string") return message;
     }
-    if (error instanceof Error) return error.message;
-    return "Unknown error";
+    return error.message;
   }
 
   async function handleSubmit() {

@@ -29,8 +29,8 @@
     "test": "vitest",
     "fetch-schemas": "node ../scripts/fetch-schemas.js app/tenant-manager",
     "compile-graphql": "yarn fetch-schemas && graphql-codegen --verbose",
-    "compile-openapi": "yarn fetch-schemas && openapi --input ../../core/app/tenant-manager/target/generated/openapi.yaml --output ./src/openapi-generated --name OpenApiRestClient",
-    "compile-clients": "yarn fetch-schemas && graphql-codegen --verbose && openapi --input ../../core/app/tenant-manager/target/generated/openapi.yaml --output ./src/openapi-generated --name OpenApiRestClient"
+    "compile-openapi": "yarn fetch-schemas && openapi-ts",
+    "compile-clients": "yarn fetch-schemas && graphql-codegen --verbose && openapi-ts"
   },
   "eslintConfig": {
     "extends": [
@@ -56,9 +56,9 @@
     "@graphql-codegen/typescript": "^2.7.2",
     "@graphql-codegen/typescript-operations": "^2.5.2",
     "@graphql-codegen/typescript-react-apollo": "^3.3.2",
+    "@hey-api/openapi-ts": "0.97.3",
     "@vitejs/plugin-react": "^5.2.0",
     "jsdom": "^29.1.1",
-    "openapi-typescript-codegen": "^0.23.0",
     "vite": "^7.3.6",
     "vite-plugin-compression": "^0.5.1",
     "vitest": "^5.0.2"
