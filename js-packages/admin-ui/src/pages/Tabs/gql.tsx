@@ -177,8 +177,8 @@ gql`
 `;
 
 gql`
-  query TabTokens($searchText: String, $cursor: String) {
-    totalTokenTabs(searchText: $searchText, first: 20, after: $cursor) {
+  query TabTokens($searchText: String, $after: String) {
+    totalTokenTabs(searchText: $searchText, first: 20, after: $after) {
       edges {
         node {
           id

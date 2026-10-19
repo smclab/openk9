@@ -66,8 +66,8 @@ gql`
 `;
 
 export const Sortings = gql`
-  query Sortings($searchText: String, $cursor: String) {
-    totalSortings(searchText: $searchText, first: 20, after: $cursor) {
+  query Sortings($searchText: String, $after: String) {
+    totalSortings(searchText: $searchText, first: 20, after: $after) {
       edges {
         node {
           id
