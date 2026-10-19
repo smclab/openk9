@@ -63,10 +63,15 @@ def _graph(provider="none", llm_content="NONE", categories=""):
 
 
 def _classify(graph, score=0.9, guardrail=None):
-    """Run _llm_output_guardrail with one guardrail document at ``score``.
+    """Run _llm_output_guardrail with one guardrail document at ``score``, or
+    with none when ``score`` is None.
 
     Returns the verdict and the mocks of the collaborators it went through."""
-    document = Document("documento", metadata={"document_id": 1, "score": score})
+    documents = (
+        []
+        if score is None
+        else [Document("documento", metadata={"document_id": 1, "score": score})]
+    )
 
     with (
         patch(
@@ -78,7 +83,7 @@ def _classify(graph, score=0.9, guardrail=None):
             "app.rag.agentic_rag.initialize_guardrail", return_value=guardrail
         ) as initialize,
     ):
-        retriever.return_value.invoke.return_value = [document]
+        retriever.return_value.invoke.return_value = documents
         verdict = graph._llm_output_guardrail(ANSWER, "chunk_interval")
 
     return SimpleNamespace(
@@ -104,7 +109,7 @@ def test_the_tenant_guardrail_index_is_searched_with_the_answer():
         grpc_host_embedding="embedding:50052",
         embedding_model_configuration=EMBEDDING_CONFIGURATION,
         uploaded_documents_index="tenant-1-guardrails-documents-index",
-        retrieve_type="HYBRID",
+        retrieve_type="KNN",
         search_text=ANSWER,
     )
     run.retriever.return_value.invoke.assert_called_once_with(ANSWER)
@@ -134,6 +139,26 @@ def test_the_input_threshold_does_not_gate_the_answer(input_threshold, score, ve
     graph.input_guardrail = {"input_guardrail_threshold": input_threshold}
 
     assert _classify(graph, score=score).verdict == verdict
+
+
+def test_a_zero_threshold_classifies_any_retrieved_document():
+    graph = _graph(llm_content="EXPLOSIVES")
+    graph.output_guardrail["output_guardrail_threshold"] = 0
+
+    assert _classify(graph, score=0.2).verdict == "EXPLOSIVES"
+    graph.llm.assert_called_once()
+
+
+def test_a_zero_threshold_does_not_classify_when_nothing_is_retrieved():
+    graph = _graph(llm_content="EXPLOSIVES")
+    graph.output_guardrail["output_guardrail_threshold"] = 0
+
+    verdict = _classify(graph, score=None).verdict
+
+    # The callers block only on a verdict other than NONE, and read a missing
+    # one the same way.
+    assert not verdict or verdict == "NONE"
+    graph.llm.assert_not_called()
 
 
 def test_the_default_classifier_reads_the_answer_against_the_default_categories():

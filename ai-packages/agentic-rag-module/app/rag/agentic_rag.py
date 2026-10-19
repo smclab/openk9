@@ -746,7 +746,7 @@ class RagGraph:
             grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
             embedding_model_configuration=embedding_model_configuration,
             uploaded_documents_index=f"{self.tenant_id}-guardrails-documents-index",
-            retrieve_type="HYBRID",
+            retrieve_type="KNN",
             search_text=result_answer,
         )
 
@@ -1002,7 +1002,7 @@ class RagGraph:
                 uploaded_documents_index=(
                     f"{self.tenant_id}-guardrails-documents-index"
                 ),
-                retrieve_type="HYBRID",
+                retrieve_type="KNN",
                 search_text=query,
             )
 
@@ -1184,7 +1184,7 @@ class RagGraph:
             grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
             embedding_model_configuration=embedding_model_configuration,
             uploaded_documents_index=f"{self.tenant_id}-domain-documents-index",
-            retrieve_type="HYBRID",
+            retrieve_type="KNN",
             search_text=query,
         )
 

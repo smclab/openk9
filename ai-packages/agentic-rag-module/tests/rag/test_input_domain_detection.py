@@ -93,7 +93,7 @@ def test_the_domain_index_is_searched_with_the_query():
         grpc_host_embedding="localhost:50052",
         embedding_model_configuration=embedding_configuration,
         uploaded_documents_index="tenant-1-domain-documents-index",
-        retrieve_type="HYBRID",
+        retrieve_type="KNN",
         search_text=QUERY,
     )
     retriever.invoke.assert_called_once_with(QUERY)

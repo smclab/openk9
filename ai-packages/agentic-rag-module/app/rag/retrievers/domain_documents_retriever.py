@@ -53,7 +53,7 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
 
     .. note::
         - Only searches within the domain documents of the index it is given
-        - Supports hybrid search combining vector similarity and keyword matching
+        - Vector retrieval runs a pure KNN query, so each score is an absolute similarity
         - Automatically generates embeddings for the query using gRPC service
         - Returns LangChain Document objects with metadata for RAG pipelines
 
@@ -120,22 +120,11 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
 
         if open_search_client.indices.exists(index=self.uploaded_documents_index):
             if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
+                # A pure KNN query: its score is an absolute similarity the
+                # caller can hold against a fixed threshold, while a hybrid
+                # score is normalized against the other hits of the same query.
                 open_search_query = {
-                    "query": {
-                        "hybrid": {
-                            "queries": [
-                                {"knn": {"vector": {"vector": vector_query, "k": 10}}},
-                                {
-                                    "match": {
-                                        "chunkText": {
-                                            "query": self.search_text,
-                                            "boost": 0.5,
-                                        }
-                                    }
-                                },
-                            ]
-                        }
-                    },
+                    "query": {"knn": {"vector": {"vector": vector_query, "k": 10}}},
                 }
             else:
                 open_search_query = {

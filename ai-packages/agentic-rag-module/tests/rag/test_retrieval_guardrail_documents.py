@@ -18,9 +18,9 @@
 """Retrieval from the guardrail index, which the input and output guardrails
 score the text against.
 
-The retriever searches the guardrail examples with a hybrid query for the
-vectorial retrieve types and a text match otherwise, and returns each hit with
-its score.
+The retriever searches the guardrail examples with a pure KNN query for the
+vectorial retrieve types, whose score the guardrails hold against an absolute
+threshold, and a text match otherwise, and returns each hit with its score.
 """
 
 from unittest.mock import MagicMock, patch
@@ -67,23 +67,14 @@ def _query_of(client):
 
 
 @pytest.mark.parametrize("retrieve_type", ["HYBRID", "KNN"])
-def test_vectorial_retrieval_runs_a_hybrid_query(retrieve_type):
+def test_vectorial_retrieval_runs_a_knn_query(retrieve_type):
     client = _client()
 
     _invoke(_retriever(retrieve_type), client)
 
     client.indices.exists.assert_called_once_with(index=INDEX)
     client.search.assert_called_once_with(
-        body={
-            "query": {
-                "hybrid": {
-                    "queries": [
-                        {"knn": {"vector": {"vector": VECTOR, "k": 10}}},
-                        {"match": {"chunkText": {"query": TEXT, "boost": 0.5}}},
-                    ]
-                }
-            }
-        },
+        body={"query": {"knn": {"vector": {"vector": VECTOR, "k": 10}}}},
         index=INDEX,
     )
 

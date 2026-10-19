@@ -211,7 +211,7 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
         score_threshold = json_config.get("score_threshold", 0.3)
 
         enable_input_guardrail = json_config.get("enable_input_guardrail", True)
-        input_guardrail_threshold = json_config.get("input_guardrail_threshold", 0.5)
+        input_guardrail_threshold = json_config.get("input_guardrail_threshold", 0)
         input_guardrail_provider = json_config.get("input_guardrail_provider", "")
         input_guardrail_aws_bedrock = json_config.get("input_guardrail_aws_bedrock", {})
         input_guardrail_google_model_armor = json_config.get(
@@ -226,7 +226,7 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
         output_guardrail_chunk_interval = json_config.get(
             "output_guardrail_chunk_interval", 10
         )
-        output_guardrail_threshold = json_config.get("output_guardrail_threshold", 0.5)
+        output_guardrail_threshold = json_config.get("output_guardrail_threshold", 0)
         output_guardrail_provider = json_config.get("output_guardrail_provider", "")
         output_guardrail_aws_bedrock = json_config.get(
             "output_guardrail_aws_bedrock", {}

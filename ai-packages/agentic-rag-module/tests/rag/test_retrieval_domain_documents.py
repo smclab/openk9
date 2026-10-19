@@ -18,7 +18,7 @@
 """Retrieval from the domain index, which domain detection relies on.
 
 The retriever searches the labelled documents of the domain index, with a
-hybrid query for the vectorial retrieve types and a text match otherwise, and
+pure KNN query for the vectorial retrieve types and a text match otherwise, and
 returns each hit with its domain and score. get_domains lists the domains the
 index holds, which is how domain detection knows whether it has anything to do.
 """
@@ -70,23 +70,14 @@ def _query_of(client):
 
 
 @pytest.mark.parametrize("retrieve_type", ["HYBRID", "KNN"])
-def test_vectorial_retrieval_runs_a_hybrid_query(retrieve_type):
+def test_vectorial_retrieval_runs_a_knn_query(retrieve_type):
     client = _client()
 
     _invoke(_retriever(retrieve_type), client)
 
     client.indices.exists.assert_called_once_with(index=INDEX)
     client.search.assert_called_once_with(
-        body={
-            "query": {
-                "hybrid": {
-                    "queries": [
-                        {"knn": {"vector": {"vector": VECTOR, "k": 10}}},
-                        {"match": {"chunkText": {"query": QUERY, "boost": 0.5}}},
-                    ]
-                }
-            }
-        },
+        body={"query": {"knn": {"vector": {"vector": VECTOR, "k": 10}}}},
         index=INDEX,
     )
 

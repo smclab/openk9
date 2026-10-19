@@ -100,7 +100,7 @@ def test_the_tenant_guardrail_index_is_searched_with_the_query():
         grpc_host_embedding="embedding:50052",
         embedding_model_configuration=EMBEDDING_CONFIGURATION,
         uploaded_documents_index="tenant-1-guardrails-documents-index",
-        retrieve_type="HYBRID",
+        retrieve_type="KNN",
         search_text=QUERY,
     )
     run.retriever.return_value.invoke.assert_called_once_with(QUERY)
@@ -124,6 +124,27 @@ def test_a_score_below_the_threshold_is_not_classified():
     graph._llm_input_guardrail.assert_not_called()
     assert run.state.guardrail_check is False
     assert run.state.guardrail_category is None
+
+
+def test_a_zero_threshold_classifies_any_retrieved_document():
+    graph = _graph()
+    graph.input_guardrail["input_guardrail_threshold"] = 0
+
+    run = _run_node(graph, [0.2], classifier_outcome="EXPLOSIVES")
+
+    graph._llm_input_guardrail.assert_called_once_with(QUERY)
+    assert run.state.guardrail_check is True
+    assert run.state.guardrail_category == "EXPLOSIVES"
+
+
+def test_a_zero_threshold_does_not_classify_when_nothing_is_retrieved():
+    graph = _graph()
+    graph.input_guardrail["input_guardrail_threshold"] = 0
+
+    run = _run_node(graph, [], classifier_outcome="EXPLOSIVES")
+
+    graph._llm_input_guardrail.assert_not_called()
+    assert run.state.guardrail_check is False
 
 
 def test_the_query_is_classified_once_however_many_documents_match():

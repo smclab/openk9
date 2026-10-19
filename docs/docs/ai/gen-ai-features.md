@@ -165,3 +165,19 @@ Example, an Ollama embedding model embedding 1024 chunks at a time:
   "batch_size": 1024
 }
 ```
+
+## Guardrail and Domain Thresholds
+
+Before answering, the agentic RAG searches the text in two indices: the guardrail examples, to decide whether the question or the answer has to be classified by the guardrail, and the domain documents, to recognise the domain of the question. The search is a vector one, and its score is an absolute similarity between the text and the closest document, so each step can hold it against a fixed threshold. Three keys of the `jsonConfig` of the RAG configuration set them:
+
+| Key | Default | Applies to |
+|---|---|---|
+| `input_guardrail_threshold` | `0` | input guardrail |
+| `output_guardrail_threshold` | `0` | output guardrail |
+| `domain_threshold` | `0.7` | domain detection |
+
+The score goes from 0 to 1. With embeddings of unit length, as those of the common providers, it is `1 / (3 − 2·cos)`, where `cos` is the cosine similarity between the text and the document: a score of `0.5` is a cosine of `0.5`, a score of `0.7` a cosine of about `0.79`. Which value separates the relevant texts from the others depends on the embedding model and on the documents of the index, and is best found on a labelled sample of the questions the tenant expects.
+
+With a guardrail threshold at `0` the guardrail classifies every question, or every answer, for which the guardrail index holds at least one document; with an empty or missing index it classifies nothing. A threshold above `0` classifies only the texts close enough to a guardrail example, which saves a classifier call on most of the traffic. It also stops classifying the texts that resemble no example: before raising the threshold, the guardrail index has to hold examples of every category the guardrail is configured with, or the requests of the missing categories are no longer checked.
+
+When no domain document scores at least `domain_threshold`, the domain is chosen by the language model among the configured ones.
