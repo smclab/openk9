@@ -1,6 +1,6 @@
 from abc import ABC
 
-from fastapi import FastAPI, Request, status
+from fastapi import APIRouter, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
@@ -336,12 +336,8 @@ def get_sample():
     return data
 
 
-@app.get("/form",
-        tags=["sitemap-form"],
-        summary="Get form structure of Sitemap request",
-        response_description="Return json form structure", )
-def get_sitemap_form():
-    f = open('data/sitemap-form.json')
+def read_form(filename):
+    f = open(f'data/{filename}')
 
     # returns JSON object as
     # a dictionary
@@ -350,3 +346,95 @@ def get_sitemap_form():
     f.close()
 
     return data
+
+
+@app.get("/form",
+        tags=["sitemap-form"],
+        summary="Get form structure of Sitemap request",
+        response_description="Return json form structure", )
+def get_sitemap_form():
+    return read_form('sitemap-form.json')
+
+
+sitemap_router = APIRouter(prefix="/sitemap")
+
+
+@sitemap_router.post("/startSitemapCrawling",
+          tags=["sitemap urls crawling"],
+          summary="Perform a generic crawling starting from sitemap urls",
+          response_description="Return HTTP Status Code 200 (OK)",
+          status_code=status.HTTP_200_OK
+          )
+def sitemap_execute_sitemap_request(request: SitemapRequest):
+    return execute_sitemap_request(request)
+
+
+@sitemap_router.get("/form",
+        tags=["sitemap-form"],
+        summary="Get form structure of Sitemap request",
+        response_description="Return json form structure", )
+def get_sitemap_mode_form():
+    return read_form('sitemap-form.json')
+
+
+@sitemap_router.get("/health",
+        tags=["healthcheck"],
+        summary="Perform a Health Check",
+        response_description="Return HTTP Status Code 200 (OK)",
+        status_code=status.HTTP_200_OK,
+        response_model=HealthCheck,
+        )
+def sitemap_get_health() -> HealthCheck:
+    return get_health()
+
+
+@sitemap_router.get("/sample",
+        tags=["sample"],
+        summary="Get a sample of result",
+        response_description="Return json sample result", )
+def sitemap_get_sample():
+    return get_sample()
+
+
+urls_router = APIRouter(prefix="/urls")
+
+
+@urls_router.post("/startUrlsCrawling",
+          tags=["generic urls crawling"],
+          summary="Perform a generic crawling starting from urls",
+          response_description="Return HTTP Status Code 200 (OK)",
+          status_code=status.HTTP_200_OK
+          )
+def urls_execute_crawl_request(request: CrawlRequest):
+    return execute_crawl_request(request)
+
+
+@urls_router.get("/form",
+        tags=["urls-form"],
+        summary="Get form structure of generic urls crawling request",
+        response_description="Return json form structure", )
+def get_urls_mode_form():
+    return read_form('url-form.json')
+
+
+@urls_router.get("/health",
+        tags=["healthcheck"],
+        summary="Perform a Health Check",
+        response_description="Return HTTP Status Code 200 (OK)",
+        status_code=status.HTTP_200_OK,
+        response_model=HealthCheck,
+        )
+def urls_get_health() -> HealthCheck:
+    return get_health()
+
+
+@urls_router.get("/sample",
+        tags=["sample"],
+        summary="Get a sample of result",
+        response_description="Return json sample result", )
+def urls_get_sample():
+    return get_sample()
+
+
+app.include_router(sitemap_router)
+app.include_router(urls_router)

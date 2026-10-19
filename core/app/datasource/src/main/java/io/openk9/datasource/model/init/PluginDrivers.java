@@ -60,6 +60,7 @@ public class PluginDrivers {
 				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
 				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
+				.basePath("/urls")
 				.secure(false)
 				.path("/startUrlsCrawling")
 				.build()
@@ -99,6 +100,7 @@ public class PluginDrivers {
 				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
 				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.SITEMAP))
+				.basePath("/sitemap")
 				.secure(false)
 				.path("/startSitemapCrawling")
 				.build()
@@ -150,6 +152,10 @@ public class PluginDrivers {
 		sb.append(":");
 		sb.append(PORT);
 
+		if (presetConfiguration.getBasePath() != null) {
+			sb.append(presetConfiguration.getBasePath());
+		}
+
 		return HttpPluginDriverInfo.builder()
 			.baseUri(sb.toString())
 			.secure(presetConfiguration.isSecure())
@@ -178,6 +184,7 @@ public class PluginDrivers {
 	@AllArgsConstructor
 	private static class PresetConfiguration {
 		private String baseUri;
+		private String basePath;
 		private String description;
 		private HttpPluginDriverInfo.Method method;
 		private String name;
