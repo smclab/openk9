@@ -19,7 +19,9 @@
 """Domain documents are embedded and indexed behind the admin credentials.
 
 Each chunk carries the domain of the document it comes from, so the domain
-retriever can classify a query by its nearest chunks.
+retriever can classify a query by its nearest chunks. The chunks go to the
+domain index of the tenant, created on first use with a vector field as wide
+as the model's vectors.
 """
 
 import logging
@@ -32,7 +34,7 @@ import app.server as server
 
 ADMIN = ("admin", "s3cret")
 HEADERS = {"x-tenant-id": "tenant-1"}
-INDEX = "domain-documents-index"
+INDEX = "tenant-1-domain-documents-index"
 HYBRID_SEARCH_PIPELINE = {
     "description": "Post processor for hybrid search",
     "phase_results_processors": [
@@ -109,8 +111,9 @@ def test_embed_domains_tags_every_chunk_with_its_domain(embedding):
         {"text": "polizza auto"},
         {"text": "ricetta della carbonara"},
     ]
-    host, chunks, vector_size = save.call_args.args
+    host, tenant_id, chunks, vector_size = save.call_args.args
     assert host == server.OPENSEARCH_HOST
+    assert tenant_id == "tenant-1"
     assert vector_size == 4
     assert [(c["chunkText"], c["domain"]) for c in chunks] == [
         ("polizza auto", "assicurazioni"),
@@ -158,7 +161,7 @@ def test_save_domains_creates_the_index_with_the_vector_size(monkeypatch):
     get_opensearch_client = MagicMock(return_value=open_search_client)
     monkeypatch.setattr(server, "get_opensearch_client", get_opensearch_client)
 
-    server.save_domains_documents("http://opensearch", [_chunk("a")], 4)
+    server.save_domains_documents("http://opensearch", "tenant-1", [_chunk("a")], 4)
 
     create = open_search_client.indices.create.call_args.kwargs
     assert create["index"] == INDEX
@@ -182,13 +185,38 @@ def test_save_domains_creates_the_index_with_the_vector_size(monkeypatch):
     )
 
 
+def test_save_domains_keeps_each_tenant_in_its_own_index(monkeypatch):
+    open_search_client = _opensearch_mock(index_exists=False)
+    monkeypatch.setattr(
+        server, "get_opensearch_client", lambda *a, **k: open_search_client
+    )
+
+    server.save_domains_documents("http://opensearch", "tenant-a", [_chunk("a")], 4)
+    server.save_domains_documents("http://opensearch", "tenant-b", [_chunk("b")], 6)
+
+    created = {
+        c.kwargs["index"]: c.kwargs["body"]["mappings"]["properties"]["vector"][
+            "dimension"
+        ]
+        for c in open_search_client.indices.create.call_args_list
+    }
+    assert created == {
+        "tenant-a-domain-documents-index": 4,
+        "tenant-b-domain-documents-index": 6,
+    }
+    assert [c.kwargs["body"][0] for c in open_search_client.bulk.call_args_list] == [
+        {"index": {"_index": "tenant-a-domain-documents-index"}},
+        {"index": {"_index": "tenant-b-domain-documents-index"}},
+    ]
+
+
 def test_save_domains_reuses_an_existing_index(monkeypatch):
     open_search_client = _opensearch_mock(index_exists=True)
     monkeypatch.setattr(
         server, "get_opensearch_client", lambda *a, **k: open_search_client
     )
 
-    server.save_domains_documents("http://opensearch", [_chunk("a")], 4)
+    server.save_domains_documents("http://opensearch", "tenant-1", [_chunk("a")], 4)
 
     open_search_client.indices.create.assert_not_called()
     open_search_client.transport.perform_request.assert_not_called()
@@ -201,7 +229,7 @@ def test_save_domains_bulk_indexes_every_document(monkeypatch):
     )
 
     result = server.save_domains_documents(
-        "http://opensearch", [_chunk("a"), _chunk("b")], 4
+        "http://opensearch", "tenant-1", [_chunk("a"), _chunk("b")], 4
     )
 
     assert result == "Successfully indexed 2 documents"
@@ -222,7 +250,9 @@ def test_save_domains_reports_a_failed_bulk(monkeypatch):
         server, "get_opensearch_client", lambda *a, **k: open_search_client
     )
 
-    result = server.save_domains_documents("http://opensearch", [_chunk("a")], 4)
+    result = server.save_domains_documents(
+        "http://opensearch", "tenant-1", [_chunk("a")], 4
+    )
 
     assert result == "Bulk indexing failed: cluster down"
 
@@ -242,7 +272,7 @@ def test_save_domains_logs_the_documents_that_failed_to_index(monkeypatch, caplo
 
     with caplog.at_level(logging.ERROR, logger="app"):
         server.save_domains_documents(
-            "http://opensearch", [_chunk("a"), _chunk("b")], 3
+            "http://opensearch", "tenant-1", [_chunk("a"), _chunk("b")], 3
         )
 
     errors = [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR]

@@ -1643,16 +1643,18 @@ async def upload_files(
         )
 
 
-def save_domains_documents(opensearch_host: str, documents: list, vector_size: int):
+def save_domains_documents(
+    opensearch_host: str, tenant_id: str, documents: list, vector_size: int
+):
     open_search_client = get_opensearch_client(opensearch_host)
-    guardrails_documents_index = "domain-documents-index"
+    domain_documents_index = f"{tenant_id}-domain-documents-index"
 
     index_actions = []
     for doc in documents:
-        index_actions.append({"index": {"_index": guardrails_documents_index}})
+        index_actions.append({"index": {"_index": domain_documents_index}})
         index_actions.append(doc)
 
-    if not open_search_client.indices.exists(index=guardrails_documents_index):
+    if not open_search_client.indices.exists(index=domain_documents_index):
         index_body = {
             "settings": {"index": {"knn": True}},
             "mappings": {
@@ -1669,7 +1671,7 @@ def save_domains_documents(opensearch_host: str, documents: list, vector_size: i
         }
 
         open_search_client.indices.create(
-            index=guardrails_documents_index,
+            index=domain_documents_index,
             body=index_body,
         )
 
@@ -1693,7 +1695,7 @@ def save_domains_documents(opensearch_host: str, documents: list, vector_size: i
         )
 
         open_search_client.indices.put_settings(
-            index=guardrails_documents_index,
+            index=domain_documents_index,
             body={"index": {"search": {"default_pipeline": SEARCH_PIPELINE}}},
         )
 
@@ -1782,7 +1784,9 @@ async def embed_domains(
 
         embedded_documents.extend(embedded_document)
 
-    return save_domains_documents(OPENSEARCH_HOST, embedded_documents, vector_size)
+    return save_domains_documents(
+        OPENSEARCH_HOST, tenant_id, embedded_documents, vector_size
+    )
 
 
 @app.get(

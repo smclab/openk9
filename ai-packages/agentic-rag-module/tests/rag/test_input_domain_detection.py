@@ -39,7 +39,7 @@ QUERY = "Che copertura ho per la grandine?"
 
 def _graph(utility_llm=None):
     graph = RagGraph.__new__(RagGraph)
-    graph.tenant_id = None
+    graph.tenant_id = "tenant-1"
     graph.user_id = None
     graph.chat_id = None
     graph.rag_type = "AGENTIC"
@@ -92,7 +92,7 @@ def test_the_domain_index_is_searched_with_the_query():
         opensearch_host="http://localhost:9200",
         grpc_host_embedding="localhost:50052",
         embedding_model_configuration=embedding_configuration,
-        uploaded_documents_index="domain-documents-index",
+        uploaded_documents_index="tenant-1-domain-documents-index",
         retrieve_type="HYBRID",
         search_text=QUERY,
     )

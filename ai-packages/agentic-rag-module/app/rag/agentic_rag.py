@@ -1006,7 +1006,7 @@ class RagGraph:
             opensearch_host=self.opensearch_host,
             grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
             embedding_model_configuration=embedding_model_configuration,
-            uploaded_documents_index="domain-documents-index",
+            uploaded_documents_index=f"{self.tenant_id}-domain-documents-index",
             retrieve_type="HYBRID",
             search_text=query,
         )

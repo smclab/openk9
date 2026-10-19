@@ -17,8 +17,8 @@
 
 """Domain detection is skipped when no domain is configured.
 
-The domain filter is opt-in: it needs documents labelled in
-``domain-documents-index``. With that index empty or absent, ``input_domain_node``
+The domain filter is opt-in: it needs documents labelled in the domain index
+of the tenant. With that index empty or absent, ``input_domain_node``
 used to embed the query and then ask the LLM to pick a domain out of an empty
 set, paying an embedding round-trip and a model call per turn for an answer the
 parser could never use. These tests pin the early exit and the fact that the
