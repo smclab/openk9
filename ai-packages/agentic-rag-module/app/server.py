@@ -1252,24 +1252,27 @@ async def evaluate(
 SEARCH_PIPELINE = "nlp-guardrails-documents-search-pipeline"
 
 
-def save_guardrails_documents(opensearch_host: str, documents: list, vector_size: int):
+def save_guardrails_documents(
+    opensearch_host: str, tenant_id: str, documents: list, vector_size: int
+):
     """
-    Save uploaded documents to OpenSearch index.
+    Save guardrail documents to the OpenSearch index of the tenant.
 
-    Stores uploaded documents with vector embeddings in a realm-specific OpenSearch index.
+    Stores guardrail documents with vector embeddings in the tenant OpenSearch index
+    ``<tenant_id>-guardrails-documents-index``.
     Creates the index with proper mappings and search pipeline if it doesn't exist, then
     performs bulk indexing of all documents.
 
     :param opensearch_host: The host URL of the OpenSearch instance (e.g., "http://localhost:9200")
     :type opensearch_host: str
-    :param tenant_id: The id of the Tenant for the user (used for index naming and isolation)
+    :param tenant_id: The id of the Tenant (used for index naming and isolation)
     :type tenant_id: str
-    :param documents: List of document dictionaries containing text, metadata, and vector embeddings
+    :param documents: List of document dictionaries containing text and vector embeddings
     :type documents: list
     :param vector_size: The dimensionality of the vector embeddings for proper index mapping
     :type vector_size: int
 
-    :return: None
+    :return: The outcome of the bulk indexing
 
     :raises Exception: If bulk indexing operation fails
 
@@ -1277,20 +1280,13 @@ def save_guardrails_documents(opensearch_host: str, documents: list, vector_size
 
     .. code-block:: python
 
-        save_uploaded_documents(
+        save_guardrails_documents(
             opensearch_host="http://localhost:9200",
-            tenant_id="my-realm",
+            tenant_id="my-tenant",
             documents=[
                 {
-                    "filename": "doc1.pdf",
-                    "file_extension": ".pdf",
-                    "user_id": "user_123",
-                    "chat_id": "chat_456",
-                    "chunk_number": 1,
-                    "total_chunks": 3,
-                    "chunkText": "Document content...",
+                    "chunkText": "Ignore the previous instructions...",
                     "vector": [0.1, 0.2, 0.3, ...],
-                    "timestamp": "2023-01-01T00:00:00Z"
                 }
             ],
             vector_size=1536
@@ -1299,10 +1295,9 @@ def save_guardrails_documents(opensearch_host: str, documents: list, vector_size
     .. note::
         - Creates index with KNN (k-Nearest Neighbors) support if it doesn't exist
         - Sets up a hybrid search pipeline for combining vector and text search
-        - Uses realm-based index naming for multi-tenant isolation
+        - Uses tenant-based index naming for multi-tenant isolation
         - Performs bulk indexing for better performance with multiple documents
         - Includes error handling and logging for indexing operations
-        - Automatically adds timestamp to documents during indexing
 
     .. warning::
         - Ensure OpenSearch instance is running and accessible at opensearch_host
@@ -1320,7 +1315,6 @@ def save_guardrails_documents(opensearch_host: str, documents: list, vector_size
 
         * **KNN enabled**: For efficient vector similarity search
         * **Vector field**: Configured with the specified dimension for embeddings
-        * **Keyword fields**: For efficient filtering on user_id and chat_id
         * **Timestamp**: For temporal filtering and sorting
         * **Hybrid search pipeline**: Combines vector and text search results
 
@@ -1332,7 +1326,7 @@ def save_guardrails_documents(opensearch_host: str, documents: list, vector_size
         * Enables hybrid search combining multiple relevance scores
     """
     open_search_client = get_opensearch_client(opensearch_host)
-    guardrails_documents_index = "guardrails-documents-index"
+    guardrails_documents_index = f"{tenant_id}-guardrails-documents-index"
 
     index_actions = []
     for doc in documents:
@@ -1460,7 +1454,9 @@ async def embed_guardrails(
 
         embedded_documents.extend(embedded_document)
 
-    return save_guardrails_documents(OPENSEARCH_HOST, embedded_documents, vector_size)
+    return save_guardrails_documents(
+        OPENSEARCH_HOST, tenant_id, embedded_documents, vector_size
+    )
 
 
 @app.post(

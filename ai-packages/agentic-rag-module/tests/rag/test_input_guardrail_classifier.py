@@ -89,7 +89,7 @@ def _run_node(graph, scores, classifier_outcome="NONE"):
     )
 
 
-def test_the_guardrail_index_is_searched_with_the_query():
+def test_the_tenant_guardrail_index_is_searched_with_the_query():
     run = _run_node(_graph(), [0.1])
 
     run.configuration.assert_called_once_with(
@@ -99,7 +99,7 @@ def test_the_guardrail_index_is_searched_with_the_query():
         opensearch_host="http://localhost:9200",
         grpc_host_embedding="embedding:50052",
         embedding_model_configuration=EMBEDDING_CONFIGURATION,
-        uploaded_documents_index="guardrails-documents-index",
+        uploaded_documents_index="tenant-1-guardrails-documents-index",
         retrieve_type="HYBRID",
         search_text=QUERY,
     )

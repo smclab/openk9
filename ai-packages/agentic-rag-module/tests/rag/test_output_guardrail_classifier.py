@@ -93,7 +93,7 @@ def _prompt(llm):
     return llm.call_args.args[0].to_string()
 
 
-def test_the_guardrail_index_is_searched_with_the_answer():
+def test_the_tenant_guardrail_index_is_searched_with_the_answer():
     run = _classify(_graph())
 
     run.configuration.assert_called_once_with(
@@ -103,7 +103,7 @@ def test_the_guardrail_index_is_searched_with_the_answer():
         opensearch_host="http://localhost:9200",
         grpc_host_embedding="embedding:50052",
         embedding_model_configuration=EMBEDDING_CONFIGURATION,
-        uploaded_documents_index="guardrails-documents-index",
+        uploaded_documents_index="tenant-1-guardrails-documents-index",
         retrieve_type="HYBRID",
         search_text=ANSWER,
     )
