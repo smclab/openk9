@@ -183,9 +183,10 @@ public class ResultAclConfigService
 	 * Reads what a search of the given tenant needs of its configuration.
 	 * <p>
 	 * The visible fields are limited to the ones that can be visible, see
-	 * {@link ResultAclConfig#selectableFieldIds}: an import does not go
-	 * through the validation of this service, so a configuration may hold a
-	 * field that would show a whole subtree.
+	 * {@link ResultAclConfig#selectableFieldIds}: a field accepted when the
+	 * configuration was saved may stop being selectable afterwards, for
+	 * instance when it is excluded, or when a NESTED field gets sub-fields
+	 * and would show a whole subtree.
 	 *
 	 * @param tenantId the tenant to read the configuration of
 	 * @return the settings, {@link ResultAclConfig.SearchSettings#DISABLED}
