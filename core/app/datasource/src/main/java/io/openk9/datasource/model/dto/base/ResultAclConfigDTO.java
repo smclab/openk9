@@ -57,7 +57,8 @@ public class ResultAclConfigDTO extends K9EntityDTO {
 	@Nullable
 	@Description("""
 		IDs of the DocTypeFields still visible on a result the user is not
-		authorized to read. Excluded DocTypeFields are rejected.
+		authorized to read. Excluded fields, OBJECT fields, containers with
+		sub-fields, variants of an i18n field and multi-fields are rejected.
 	""")
 	private Set<Long> visibleFieldIds;
 
