@@ -44,15 +44,18 @@ public class SearchRequest {
 	private String order = "asc";
 	@Schema(description = "List of objects to define sort logic")
 	private List<Map<String, Map<String, String>>> sort;
-	@Schema(description = "After key used for pagination when sort is present")
+	@Schema(description = "After key used for pagination when sort is present. "
+		+ "Ignored when includeObscured is true.")
 	private String sortAfterKey;
 	@Schema(description = "Language used to apply search in specific language.")
 	private String language;
 	@Schema(
 		description = "Whether to return the results the user is not authorized "
 			+ "to read, obscured to their visible fields instead of filtered out. "
-			+ "It applies only when the tenant enables the result ACL mode, and "
-			+ "never to knn or hybrid searches.",
+			+ "The obscuring applies only when the tenant enables the result ACL "
+			+ "mode, and never to knn or hybrid searches. Whatever the mode, the "
+			+ "results carry no sortAfterKey and the one received is ignored: the "
+			+ "next page goes by range.",
 		defaultValue = "false"
 	)
 	private boolean includeObscured;
