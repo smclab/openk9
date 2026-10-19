@@ -1,0 +1,116 @@
+{
+	"took": 21,
+	"timed_out": false,
+	"_shards": {
+		"total": 1,
+		"successful": 1,
+		"skipped": 0,
+		"failed": 0
+	},
+	"hits": {
+		"total": {
+			"value": 3,
+			"relation": "eq"
+		},
+		"max_score": null,
+		"hits": [
+			{
+				"_index": "demo-smc-web",
+				"_id": "uat2489acl-leg",
+				"_score": 7.9638834,
+				"_source": {
+					"web": {
+						"favicon": "",
+						"title": "Parere legale",
+						"content": "budget contenzioso",
+						"url": "https://example.org/acl/leg"
+					},
+					"documentTypes": [
+						"web"
+					],
+					"contentId": "uat2489acl-leg",
+					"acl": {
+						"roles": [
+							"legal"
+						]
+					}
+				},
+				"highlight": {
+					"web.content": [
+						"<em>budget</em> contenzioso"
+					]
+				},
+				"sort": [
+					7.9638834,
+					"uat2489acl-leg"
+				]
+			},
+			{
+				"_index": "demo-smc-web",
+				"_id": "uat2489acl-pub",
+				"_score": 7.9638834,
+				"_source": {
+					"web": {
+						"favicon": "",
+						"title": "Rapporto pubblico",
+						"content": "budget annuale",
+						"url": "https://example.org/acl/pub"
+					},
+					"documentTypes": [
+						"web"
+					],
+					"contentId": "uat2489acl-pub",
+					"acl": {
+						"roles": []
+					}
+				},
+				"highlight": {
+					"web.content": [
+						"<em>budget</em> annuale"
+					]
+				},
+				"sort": [
+					7.9638834,
+					"uat2489acl-pub"
+				],
+				"matched_queries": [
+					"k9_acl_authorized"
+				]
+			},
+			{
+				"_index": "demo-smc-web",
+				"_id": "uat2489acl-fin",
+				"_score": 6.6115913,
+				"_source": {
+					"web": {
+						"favicon": "",
+						"title": "Piano riservato",
+						"content": "budget fusione segreta",
+						"url": "https://example.org/acl/fin"
+					},
+					"documentTypes": [
+						"web"
+					],
+					"contentId": "uat2489acl-fin",
+					"acl": {
+						"roles": [
+							"finance"
+						]
+					}
+				},
+				"highlight": {
+					"web.content": [
+						"<em>budget</em> fusione segreta"
+					]
+				},
+				"sort": [
+					6.6115913,
+					"uat2489acl-fin"
+				],
+				"matched_queries": [
+					"k9_acl_authorized"
+				]
+			}
+		]
+	}
+}

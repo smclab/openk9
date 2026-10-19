@@ -17,6 +17,8 @@
 
 package io.openk9.searcher.resource;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,8 +27,12 @@ import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.grpc.ResultAcl;
 
 import org.junit.jupiter.api.Test;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.common.xcontent.json.JsonXContent;
 import org.opensearch.core.common.bytes.BytesArray;
 import org.opensearch.core.common.text.Text;
+import org.opensearch.core.xcontent.DeprecationHandler;
+import org.opensearch.core.xcontent.NamedXContentRegistry;
 import org.opensearch.search.DocValueFormat;
 import org.opensearch.search.SearchHit;
 import org.opensearch.search.fetch.subphase.highlight.HighlightField;
@@ -116,6 +122,40 @@ class SearchResourceResultAclTest {
 	}
 
 	@Test
+	void should_read_the_named_query_from_an_opensearch_response()
+		throws IOException {
+
+		// setup — what OpenSearch answered to the query of a finance user:
+		// the public and finance documents matched the named query, the legal
+		// one did not, and each hit has a highlight on the content
+		var response = readSearchResponse("obscured-search-response.json");
+
+		// action
+		var results = new HashMap<String, Map<String, Object>>();
+
+		for (SearchHit hit : response.getHits().getHits()) {
+			results.put(
+				hit.getId(), SearchResource.toHitMap(hit, RESULT_ACL, true, false));
+		}
+
+		// assertion — the authorized results stay whole
+		for (String id : List.of("uat2489acl-pub", "uat2489acl-fin")) {
+			var source = source(results.get(id));
+			assertFalse(source.containsKey(ResultObscurer.OBSCURED_FIELDS));
+			assertEquals(id, source.get("contentId"));
+			assertEquals(Set.of("web.content"), highlight(results.get(id)).keySet());
+		}
+
+		// the other one keeps only the visible title, without the highlight
+		var legal = results.get("uat2489acl-leg");
+		assertEquals(Map.of("title", "Parere legale"), source(legal).get("web"));
+		assertEquals(
+			List.of("acl", "contentId", "web.content", "web.favicon", "web.url"),
+			source(legal).get(ResultObscurer.OBSCURED_FIELDS));
+		assertEquals(Map.of(), highlight(legal));
+	}
+
+	@Test
 	void should_ignore_the_sort_after_key_received_in_the_obscured_mode() {
 		var searchRequest = new SearchRequest();
 		searchRequest.setSortAfterKey("WzcwMDBd");
@@ -157,6 +197,21 @@ class SearchResourceResultAclTest {
 		));
 
 		return hit;
+	}
+
+	private static SearchResponse readSearchResponse(String resource)
+		throws IOException {
+
+		try (var input = SearchResourceResultAclTest.class
+				.getClassLoader()
+				.getResourceAsStream(resource);
+			var parser = JsonXContent.jsonXContent.createParser(
+				NamedXContentRegistry.EMPTY,
+				DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
+				input)) {
+
+			return SearchResponse.fromXContent(parser);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
