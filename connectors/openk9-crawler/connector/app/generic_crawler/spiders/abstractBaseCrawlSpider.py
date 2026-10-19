@@ -18,6 +18,8 @@ from generic_crawler.spiders.util.generic.utility import get_as_base64, post_mes
 
 logger = logging.getLogger(__name__)
 
+PLAYWRIGHT_DOWNLOAD_HANDLER = 'scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler'
+
 
 class AbstractBaseCrawlSpider(ABC, Spider):
 
@@ -77,6 +79,15 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 				PageMethod(wait_for_selector, self.playwright_selector, timeout=self.playwright_timeout)
 			]
 		} if self.use_playwright else {}
+
+	@classmethod
+	def update_settings(cls, settings):
+		super().update_settings(settings)
+		if settings.getbool("USE_PLAYWRIGHT"):
+			settings.set("DOWNLOAD_HANDLERS", {
+				"http": PLAYWRIGHT_DOWNLOAD_HANDLER,
+				"https": PLAYWRIGHT_DOWNLOAD_HANDLER,
+			}, priority="spider")
 
 	def playwright_raise_error(self, failure):
 		# playwright_include_page is never set to True, so scrapy-playwright closes the page by itself.

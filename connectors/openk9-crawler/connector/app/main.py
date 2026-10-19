@@ -223,7 +223,7 @@ def set_up_crawl_endpoint(request):
         "start_urls": json.dumps(start_urls),
         "ingestion_url": ingestion_url,
         "follow": follow,
-        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % close_spider_page_count, "DEPTH_LIMIT=%s" % depth, "LOG_LEVEL=%s" % log_level],
+        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % close_spider_page_count, "DEPTH_LIMIT=%s" % depth, "LOG_LEVEL=%s" % log_level, "USE_PLAYWRIGHT=%s" % request["usePlaywright"]],
     }
 
     base_request_payload = get_base_request_payload(request)

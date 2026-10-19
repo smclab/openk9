@@ -18,8 +18,6 @@ from .util.sitemap.utility import iterloc, regex, is_absolute
 
 logger = logging.getLogger(__name__)
 
-PLAYWRIGHT_DOWNLOAD_HANDLER = 'scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler'
-
 
 class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
 
@@ -59,15 +57,6 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         self.links_to_follow = ast.literal_eval(links_to_follow)
         self.parsed_links = set()  # url cache
         self.extracted_links_to_follow = set()  # extracted links cache
-
-    @classmethod
-    def update_settings(cls, settings):
-        super().update_settings(settings)
-        if settings.getbool("USE_PLAYWRIGHT"):
-            settings.set("DOWNLOAD_HANDLERS", {
-                'http': PLAYWRIGHT_DOWNLOAD_HANDLER,
-                'https': PLAYWRIGHT_DOWNLOAD_HANDLER,
-            }, priority="spider")
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):

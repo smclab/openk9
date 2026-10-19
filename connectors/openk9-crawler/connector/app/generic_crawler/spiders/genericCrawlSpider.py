@@ -2,7 +2,7 @@ import ast
 import hashlib
 import logging
 
-from scrapy import signals
+from scrapy import Request, signals
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -40,9 +40,22 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
         GenericCrawlSpider.rules = (
             # Extract links matching 'item.php' and parse them with the spider's method parse_item
             Rule(LinkExtractor(allow=self.allowed_paths, deny=self.excluded_paths, ),
-                 callback='parse', follow=self.follow, errback=self.playwright_raise_error, ),
+                 callback='parse_item', follow=self.follow, process_request=self.add_playwright_meta,
+                 errback=self.playwright_raise_error, ),
         )
         super(GenericCrawlSpider, self)._compile_rules()
+
+    async def start(self):
+        # Seeds are not sent with dont_filter, so a seed linked from another page is not parsed twice
+        for url in self.start_urls:
+            yield Request(url, callback=self.parse_seed, errback=self.playwright_raise_error,
+                          meta=self.playwright_meta)
+
+    def parse_seed(self, response, **kwargs):
+        return self.parse_with_rules(response, self.parse_item, kwargs, self.follow)
+
+    def add_playwright_meta(self, request, response):
+        return request.replace(meta={**request.meta, **self.playwright_meta})
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -70,7 +83,7 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
 
         post_message(self.ingestion_url, dict(payload))
 
-    def parse(self, response, **kwargs):
+    def parse_item(self, response, **kwargs):
 
         if hasattr(response, "text"):
 

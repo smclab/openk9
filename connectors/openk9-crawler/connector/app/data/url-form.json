@@ -248,6 +248,88 @@
       "values": []
     },
     {
+      "label": "Use Playwright",
+      "name": "usePlaywright",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "info": "",
+      "values": [],
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Playwright Selector",
+      "name": "playwrightSelector",
+      "type": "text",
+      "size": 4,
+      "required": false,
+      "info": "Formato css/xpath",
+      "values": [],
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Playwright Timeout",
+      "name": "playwrightTimeout",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "info": "",
+      "values": [],
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Playwright Wait Until",
+      "name": "playwrightWaitUntil",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "info": "When Playwright considers the navigation finished. domcontentloaded: the DOMContentLoaded event is fired. load: the load event is fired. commit: the network response is received and the document started loading.",
+      "values": [
+        {
+          "value": "load",
+          "isDefault": false
+        },
+        {
+          "value": "domcontentloaded",
+          "isDefault": true
+        },
+        {
+          "value": "commit",
+          "isDefault": false
+        }
+      ],
+      "validator": null
+    },
+    {
+      "label": "Playwright Max Retries",
+      "name": "playwrightMaxRetries",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "info": "How many times a page is retried when Playwright fails to render it. If 0 the page is not retried",
+      "values": [
+        {
+          "value": 0,
+          "isDefault": true
+        }
+      ],
+      "validator": {
+        "min": 0
+      }
+    },
+    {
       "info": "If verify certificates",
       "label": "Certificate Verification",
       "name": "certVerification",
