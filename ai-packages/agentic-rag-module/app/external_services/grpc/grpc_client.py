@@ -226,6 +226,7 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
         output_guardrail_chunk_interval = json_config.get(
             "output_guardrail_chunk_interval", 10
         )
+        output_guardrail_threshold = json_config.get("output_guardrail_threshold", 0.5)
         output_guardrail_provider = json_config.get("output_guardrail_provider", "")
         output_guardrail_aws_bedrock = json_config.get(
             "output_guardrail_aws_bedrock", {}
@@ -262,6 +263,7 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
             "enable_output_guardrail": enable_output_guardrail,
             "output_guardrail_type": output_guardrail_type,
             "output_guardrail_chunk_interval": output_guardrail_chunk_interval,
+            "output_guardrail_threshold": output_guardrail_threshold,
             "output_guardrail_provider": output_guardrail_provider,
             "output_guardrail_aws_bedrock": output_guardrail_aws_bedrock,
             "output_guardrail_google_model_armor": output_guardrail_google_model_armor,

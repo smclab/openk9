@@ -50,8 +50,7 @@ def _output_guardrail_graph(verdict):
         "grpc_host_embedding": "embedding:50052",
     }
     graph.guardrail_categories = ""
-    graph.input_guardrail = {"input_guardrail_threshold": THRESHOLD}
-    graph.output_guardrail = {}
+    graph.output_guardrail = {"output_guardrail_threshold": THRESHOLD}
     graph.output_guardrail_provider = "none"
     graph.llm = MagicMock(return_value=SimpleNamespace(content=verdict))
     return graph

@@ -19,7 +19,7 @@
 """How the output guardrail classifies the answer produced so far.
 
 The answer is first searched in the guardrail index: only when a document
-there scores at least input_guardrail_threshold is the classifier consulted,
+there scores at least output_guardrail_threshold is the classifier consulted,
 through the configured provider or, by default, the chat model itself.
 """
 
@@ -51,8 +51,8 @@ def _graph(provider="none", llm_content="NONE", categories=""):
         "grpc_host_embedding": "embedding:50052",
     }
     graph.guardrail_categories = categories
-    graph.input_guardrail = {"input_guardrail_threshold": THRESHOLD}
     graph.output_guardrail = {
+        "output_guardrail_threshold": THRESHOLD,
         "output_guardrail_google_model_armor": ARMOR_CONFIGURATION,
         "output_guardrail_openai_moderation": MODERATION_CONFIGURATION,
         "output_guardrail_aws_bedrock": BEDROCK_CONFIGURATION,
@@ -115,6 +115,25 @@ def test_a_score_equal_to_the_threshold_is_classified():
 
     assert _classify(graph, score=THRESHOLD).verdict == "EXPLOSIVES"
     graph.llm.assert_called_once()
+
+
+def test_a_score_below_the_threshold_is_not_classified():
+    graph = _graph(llm_content="EXPLOSIVES")
+
+    assert _classify(graph, score=0.69).verdict == "NONE"
+    graph.llm.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("input_threshold", "score", "verdict"),
+    [(0.95, 0.8, "EXPLOSIVES"), (0.5, 0.6, "NONE")],
+    ids=["input_stricter", "input_looser"],
+)
+def test_the_input_threshold_does_not_gate_the_answer(input_threshold, score, verdict):
+    graph = _graph(llm_content="EXPLOSIVES")
+    graph.input_guardrail = {"input_guardrail_threshold": input_threshold}
+
+    assert _classify(graph, score=score).verdict == verdict
 
 
 def test_the_default_classifier_reads_the_answer_against_the_default_categories():

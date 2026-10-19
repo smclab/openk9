@@ -578,7 +578,7 @@ class RagGraph:
 
         for doc in retrieved_docs:
             score = doc.metadata["score"]
-            if score >= self.input_guardrail.get("input_guardrail_threshold"):
+            if score >= self.output_guardrail.get("output_guardrail_threshold"):
                 if self.guardrail_categories:
                     guardrail_prompt = f"""
                     You are an output guardrail system specialized in text classification.
