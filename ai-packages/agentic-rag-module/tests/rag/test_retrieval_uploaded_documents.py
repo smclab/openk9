@@ -78,9 +78,7 @@ def test_uploaded_document_metadata_includes_title_built_from_filename():
         "query_embedding",
         return_value=[0.1, 0.2],
     ):
-        documents = retriever._get_relevant_documents(
-            "zephyr", run_manager=MagicMock()
-        )
+        documents = retriever._get_relevant_documents("zephyr", run_manager=MagicMock())
 
     assert [document.page_content for document in documents] == ["some content"]
     # The source card title must be the original file name with its extension.
@@ -106,9 +104,7 @@ def test_history_handler_preserves_flag_on_followup_turn():
     # On follow-up turns the value resumed from the checkpoint must not be lost:
     # the node reloads the history but must leave retrieve_from_uploaded_documents
     # untouched.
-    with patch.object(
-        agentic_rag, "load_messages_from_snapshot", return_value=[]
-    ):
+    with patch.object(agentic_rag, "load_messages_from_snapshot", return_value=[]):
         state = rag_graph.history_handler_node(
             GraphState(retrieve_from_uploaded_documents=True)
         )
@@ -166,8 +162,8 @@ def test_vectorial_search_is_restricted_to_the_user_chat(retrieve_type):
             "query": {
                 "hybrid": {
                     "queries": [
-                        {"knn": {"vector": {"vector": VECTOR, "k": 10}}},
                         {"match": {"chunkText": {"query": "zephyr", "boost": 0.5}}},
+                        {"knn": {"vector": {"vector": VECTOR, "k": 10}}},
                     ]
                 }
             },
@@ -175,6 +171,70 @@ def test_vectorial_search_is_restricted_to_the_user_chat(retrieve_type):
         },
         index="test-index",
     )
+
+
+def _bucket_retriever(retrieve_type="HYBRID"):
+    """A retriever that knows the datasource, so it can look up the search
+    pipeline of the tenant's Search Config."""
+    retriever = _build_retriever(retrieve_type)
+    retriever.grpc_host = "datasource:50051"
+    retriever.tenant_id = "tenant-1"
+    retriever.jwt = "a-jwt"
+    return retriever
+
+
+def _search_with_bucket(retriever, query_parameters):
+    """Run _search with QueryParser answering ``query_parameters``."""
+    with patch.object(
+        uploaded_documents_retriever,
+        "query_parser",
+        return_value={"query": b"", "query_parameters": query_parameters},
+    ) as mock_query_parser:
+        _, client, _, _ = _search(retriever)
+
+    return client, mock_query_parser
+
+
+def test_hybrid_search_runs_through_the_search_config_pipeline():
+    client, _ = _search_with_bucket(
+        _bucket_retriever(), {"search_pipeline": "DefaultSearchConfig"}
+    )
+
+    assert client.search.call_args.kwargs["params"] == {
+        "search_pipeline": "DefaultSearchConfig"
+    }
+
+
+def test_hybrid_search_without_a_search_config_keeps_the_index_pipeline():
+    client, _ = _search_with_bucket(_bucket_retriever(), {})
+
+    assert "params" not in client.search.call_args.kwargs
+
+
+def test_the_pipeline_is_asked_for_without_embedding_the_query_again():
+    _, mock_query_parser = _search_with_bucket(
+        _bucket_retriever(), {"search_pipeline": "DefaultSearchConfig"}
+    )
+
+    kwargs = mock_query_parser.call_args.kwargs
+    assert kwargs["grpc_host"] == "datasource:50051"
+    assert kwargs["tenant_id"] == "tenant-1"
+    assert kwargs["jwt"] == "a-jwt"
+    # a hybrid token with no text: the datasource reports the pipeline and
+    # has nothing to embed
+    assert [
+        (token["tokenType"], token["values"]) for token in kwargs["search_query"]
+    ] == [("HYBRID", [])]
+
+
+@pytest.mark.parametrize("retrieve_type", ["KNN", "TEXT"])
+def test_only_a_hybrid_bucket_asks_for_the_pipeline(retrieve_type):
+    client, mock_query_parser = _search_with_bucket(
+        _bucket_retriever(retrieve_type), {"search_pipeline": "DefaultSearchConfig"}
+    )
+
+    mock_query_parser.assert_not_called()
+    assert "params" not in client.search.call_args.kwargs
 
 
 def test_missing_index_returns_nothing():
@@ -244,6 +304,9 @@ def test_node_searches_the_uploaded_documents_of_the_user_chat():
         user_id="user-1",
         chat_id="chat-1",
         search_text="zephyr",
+        grpc_host="datasource:50051",
+        tenant_id="tenant-1",
+        jwt=None,
     )
     mock_retriever.return_value.invoke.assert_called_once_with("zephyr")
     mock_searcher_retriever.assert_not_called()
@@ -258,7 +321,9 @@ def test_node_refuses_uploaded_documents_without_a_user():
         agentic_rag, "OpenSearchUploadedDocumentsRetriever"
     ) as mock_retriever, patch.object(
         agentic_rag, "OpenSearchRetriever"
-    ) as mock_searcher_retriever, pytest.raises(HTTPException) as error:
+    ) as mock_searcher_retriever, pytest.raises(
+        HTTPException
+    ) as error:
         graph.opensearch_retriever_node(
             GraphState(current_query="zephyr", use_rag=True)
         )

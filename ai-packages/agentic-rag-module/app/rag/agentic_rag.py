@@ -1416,6 +1416,9 @@ class RagGraph:
                 user_id=self.user_id,
                 chat_id=self.chat_id,
                 search_text=query,
+                grpc_host=self.configuration.get("grpc_host_datasource"),
+                tenant_id=self.configuration.get("tenant_id"),
+                jwt=self.configuration.get("jwt"),
             )
         elif self.retrieve_from_uploaded_documents and (not self.user_id):
             unauthorized_response()

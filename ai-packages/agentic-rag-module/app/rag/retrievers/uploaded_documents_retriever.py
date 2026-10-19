@@ -1,13 +1,15 @@
-from typing import List
+from typing import List, Optional
 
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 
+from app.external_services.grpc.grpc_client import query_parser
 from app.utils.embedding import query_embedding
 from app.utils.opensearch_client import get_opensearch_client
 
 VECTORIAL_RETRIEVE_TYPES = ["KNN", "HYBRID"]
+HYBRID_RETRIEVE_TYPE = "HYBRID"
 
 
 class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
@@ -34,6 +36,13 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
     :type chat_id: str
     :param search_text: The search query text to find relevant documents
     :type search_text: str
+    :param grpc_host: gRPC host of the datasource, asked for the search pipeline of
+        the tenant's Search Config
+    :type grpc_host: str, optional
+    :param tenant_id: Tenant whose Search Config applies
+    :type tenant_id: str, optional
+    :param jwt: JWT of the user, forwarded to the datasource
+    :type jwt: str, optional
 
     :Example:
 
@@ -59,6 +68,9 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
     .. note::
         - Only searches within documents uploaded by the specific user and chat session
         - Supports hybrid search combining vector similarity and keyword matching
+        - With the "HYBRID" retrieval type, the hybrid search runs through the search
+          pipeline of the tenant's Search Config, as the main retriever does, and
+          through the index default pipeline when the bucket has no Search Config
         - Automatically generates embeddings for the query using gRPC service
         - Applies filters to ensure users can only access their own documents
         - Returns LangChain Document objects with metadata for RAG pipelines
@@ -83,6 +95,45 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
     user_id: str
     chat_id: str
     search_text: str
+    grpc_host: Optional[str] = None
+    tenant_id: Optional[str] = None
+    jwt: Optional[str] = None
+
+    def _search_pipeline(self) -> Optional[str]:
+        """Name of the search pipeline of the tenant's Search Config, or None
+        when the bucket has none.
+
+        The datasource only reports it for a query with a hybrid token, and
+        embeds the token's text to build that query. The token is sent without
+        text: the query is already embedded here, and only the pipeline name
+        is read back.
+        """
+        query_data = query_parser(
+            search_query=[
+                {
+                    "entityType": "",
+                    "entityName": "",
+                    "tokenType": HYBRID_RETRIEVE_TYPE,
+                    "keywordKey": "",
+                    "values": [],
+                    "extra": {},
+                    "filter": True,
+                }
+            ],
+            range_values=[],
+            after_key=None,
+            suggest_keyword=None,
+            suggestion_category_id=None,
+            tenant_id=self.tenant_id,
+            jwt=self.jwt,
+            extra={},
+            sort=None,
+            sort_after_key=None,
+            language=None,
+            grpc_host=self.grpc_host,
+        )
+
+        return dict(query_data["query_parameters"]).get("search_pipeline")
 
     def _get_relevant_documents(
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
@@ -136,9 +187,10 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
             if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
                 open_search_query = {
                     "query": {
+                        # Text branch first, as the datasource builds it, so that
+                        # the weights of a Search Config mean the same here.
                         "hybrid": {
                             "queries": [
-                                {"knn": {"vector": {"vector": vector_query, "k": 10}}},
                                 {
                                     "match": {
                                         "chunkText": {
@@ -147,6 +199,7 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
                                         }
                                     }
                                 },
+                                {"knn": {"vector": {"vector": vector_query, "k": 10}}},
                             ]
                         }
                     },
@@ -170,9 +223,24 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
                     },
                 }
 
-            response = open_search_client.search(
-                body=open_search_query, index=self.uploaded_documents_index
+            search_pipeline = (
+                self._search_pipeline()
+                if self.retrieve_type == HYBRID_RETRIEVE_TYPE
+                and self.grpc_host
+                and self.tenant_id
+                else None
             )
+
+            if search_pipeline:
+                response = open_search_client.search(
+                    body=open_search_query,
+                    index=self.uploaded_documents_index,
+                    params={"search_pipeline": search_pipeline},
+                )
+            else:
+                response = open_search_client.search(
+                    body=open_search_query, index=self.uploaded_documents_index
+                )
 
             for row in response["hits"]["hits"]:
                 document_source = row.get("_source")
