@@ -156,6 +156,10 @@ message EmbeddedChunk {
     bytes i8 = 8;    // one signed byte per component
     bytes bits = 9;  // packed bits, dimension/8 bytes, MSB first
   }
+  // Metadata of this chunk, e.g. the page of a rasterized page. The Core
+  // merges it into the metadata of the source binary: on the same key
+  // the chunk wins. Absent when the module has nothing to add.
+  google.protobuf.Struct metadata = 10;
 }
 
 // Single vector returned by EmbedQuery, quantized with the same
