@@ -18,6 +18,8 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.rag.agentic_rag import GraphState, RagGraph
 from app.rag.retrievers import uploaded_documents_retriever
 from app.rag.retrievers.uploaded_documents_retriever import (
@@ -46,13 +48,13 @@ def test_history_handler_writes_flag_into_state_on_first_turn():
     assert state.retrieve_from_uploaded_documents is True
 
 
-def _build_retriever():
+def _build_retriever(retrieve_type="TEXT"):
     return OpenSearchUploadedDocumentsRetriever(
         opensearch_host="http://localhost:9200",
         grpc_host_embedding="localhost:50053",
         embedding_model_configuration={},
         uploaded_documents_index="test-index",
-        retrieve_type="TEXT",
+        retrieve_type=retrieve_type,
         user_id="user-1",
         chat_id="chat-1",
         search_text="zephyr",
@@ -111,3 +113,67 @@ def test_history_handler_preserves_flag_on_followup_turn():
     )
 
     assert state.retrieve_from_uploaded_documents is True
+
+
+@pytest.mark.parametrize("retrieve_type", ["HYBRID", "KNN"])
+def test_vectorial_search_is_restricted_to_the_user_chat(retrieve_type):
+    # Each branch filters while scoring: a post filter applied after an
+    # approximate knn loses the chat chunks when other chats hold closer ones.
+    # The vector branch scores exactly because nmslib indices reject knn filters.
+    isolation_filters = [
+        {"term": {"user_id.keyword": "user-1"}},
+        {"term": {"chat_id.keyword": "chat-1"}},
+    ]
+    client = MagicMock()
+    client.indices.exists.return_value = True
+    client.search.return_value = {"hits": {"hits": []}}
+
+    with patch.object(
+        uploaded_documents_retriever, "get_opensearch_client", return_value=client
+    ), patch.object(
+        uploaded_documents_retriever,
+        "documents_embedding",
+        return_value=[{"vector": [0.1, 0.2]}],
+    ):
+        _build_retriever(retrieve_type).invoke("zephyr")
+
+    client.search.assert_called_once_with(
+        body={
+            "query": {
+                "hybrid": {
+                    "queries": [
+                        {
+                            "script_score": {
+                                "query": {"bool": {"filter": isolation_filters}},
+                                "script": {
+                                    "source": "knn_score",
+                                    "lang": "knn",
+                                    "params": {
+                                        "field": "vector",
+                                        "query_value": [0.1, 0.2],
+                                        "space_type": "l2",
+                                    },
+                                },
+                            }
+                        },
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "match": {
+                                            "chunkText": {
+                                                "query": "zephyr",
+                                                "boost": 0.5,
+                                            }
+                                        }
+                                    }
+                                ],
+                                "filter": isolation_filters,
+                            }
+                        },
+                    ]
+                }
+            },
+        },
+        index="test-index",
+    )
