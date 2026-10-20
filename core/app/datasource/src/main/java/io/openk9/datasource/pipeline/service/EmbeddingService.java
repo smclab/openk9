@@ -21,6 +21,7 @@ package io.openk9.datasource.pipeline.service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,6 +45,7 @@ import io.openk9.ml.grpc.Embedding;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Value;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -71,11 +73,15 @@ public class EmbeddingService {
 	private static final String GET_EMBEDDED_PAYLOAD =
 		"EmbeddingService#getEmbeddedPayload";
 
-	// media_type fallback for a binary chunk whose ref carried no contentType
-	// (refs are sent unfiltered, so the connector may omit it): keep the field a
-	// non-null string, parallel to "text" for text chunks.
+	// binary.contentType fallback for a binary chunk whose ref carried no
+	// contentType (refs are sent unfiltered, so the connector may omit it):
+	// keep the field a non-null string.
 	private static final String DEFAULT_BINARY_MEDIA_TYPE =
 		"application/octet-stream";
+
+	private static final String RESOURCES_FIELD = "resources";
+
+	private static final String BINARY_FIELD = "binary";
 
 	private static final Logger log = Logger.getLogger(EmbeddingService.class);
 
@@ -236,7 +242,7 @@ public class EmbeddingService {
 
 		return reportMissingRefs(
 			windowAndEncode(
-				chunks, composed.root(), composed.contentTypeByFileId(),
+				chunks, composed.root(), composed.binaryByFileId(),
 				config.chunkWindowSize()),
 			composed.sentFileIds(),
 			receivedFileIds,
@@ -310,7 +316,7 @@ public class EmbeddingService {
 		// .injectBinaryUrls(): a just-in-time pre-signed GET URL, no contentType
 		// filtering (embeddability is the module's concern).
 		List<EmbeddingOuterClass.MediaRef> refs = new ArrayList<>();
-		Map<String, String> contentTypeByFileId = new HashMap<>();
+		Map<String, BinaryPayload> binaryByFileId = new HashMap<>();
 		Set<String> sentFileIds = new HashSet<>();
 
 		var resources = dataPayload.getResources();
@@ -327,7 +333,7 @@ public class EmbeddingService {
 				}
 
 				refs.add(refBuilder.build());
-				contentTypeByFileId.put(binary.getId(), binary.getContentType());
+				binaryByFileId.put(binary.getId(), binary);
 				sentFileIds.add(binary.getId());
 			}
 		}
@@ -360,7 +366,7 @@ public class EmbeddingService {
 		}
 
 		return new ComposedRequest(
-			requestBuilder.build(), root, contentTypeByFileId,
+			requestBuilder.build(), root, binaryByFileId,
 			sentFileIds, contentId);
 	}
 
@@ -380,7 +386,7 @@ public class EmbeddingService {
 	static Multi<byte[]> windowAndEncode(
 		Multi<EmbeddingOuterClass.EmbeddedChunk> chunks,
 		Map<String, Object> root,
-		Map<String, String> contentTypeByFileId,
+		Map<String, BinaryPayload> binaryByFileId,
 		int windowSize) {
 
 		// Text chunks come first, then those of each ref: the fileId (absent
@@ -397,21 +403,21 @@ public class EmbeddingService {
 			.onCompletion().switchTo(() ->
 				Multi.createFrom().iterable(buffer.flush()))
 			.onItem().transform(windowed ->
-				mapWindowedToDocument(windowed, root, contentTypeByFileId))
+				mapWindowedToDocument(windowed, root, binaryByFileId))
 			.onItem().transform(document -> document.toBuffer().getBytes());
 	}
 
 	/**
-	 * Builds a chunk-doc identical to the one of {@link #mapToDocumentObject} +
-	 * {@link #mapToChunkWindowObject}, plus the two fields specific to
-	 * {@code EmbedContent}: a flat {@code fileId} (omitted for text chunks) and
-	 * a Core-derived {@code media_type} ({@code "text"} when there is no
-	 * fileId, else the contentType of the matching ref).
+	 * Builds a chunk-doc like the one of {@link #mapToDocumentObject} +
+	 * {@link #mapToChunkWindowObject}, without the {@code resources} of the
+	 * source document. The chunk of a binary carries a {@code binary} object
+	 * with the data of that binary only (see {@link #mapBinary}); a text chunk
+	 * carries none.
 	 */
 	static JsonObject mapWindowedToDocument(
 		ChunkWindowBuffer.Windowed<EmbeddingOuterClass.EmbeddedChunk> windowed,
 		Map<String, Object> root,
-		Map<String, String> contentTypeByFileId) {
+		Map<String, BinaryPayload> binaryByFileId) {
 
 		var chunk = windowed.chunk();
 
@@ -428,21 +434,19 @@ public class EmbeddingService {
 		jsonObject.put("chunkText", chunk.getText());
 		jsonObject.put("vector", mapVector(chunk));
 
-		// merge the rest of the source document (same as mapToDocumentObject).
+		// merge the rest of the source document (same as mapToDocumentObject)
+		// but its resources: a chunk carries only its own binary.
 		for (Map.Entry<String, Object> entry : root.entrySet()) {
-			jsonObject.put(entry.getKey(), entry.getValue());
+			if (!RESOURCES_FIELD.equals(entry.getKey())) {
+				jsonObject.put(entry.getKey(), entry.getValue());
+			}
 		}
 
-		// EmbedContent additions, written after the merge so they are
-		// authoritative.
+		// written after the merge so it is authoritative.
 		if (chunk.hasFileId()) {
-			jsonObject.put("fileId", chunk.getFileId());
-			jsonObject.put("media_type", Objects.requireNonNullElse(
-				contentTypeByFileId.get(chunk.getFileId()),
-				DEFAULT_BINARY_MEDIA_TYPE));
-		}
-		else {
-			jsonObject.put("media_type", "text");
+			jsonObject.put(
+				BINARY_FIELD,
+				mapBinary(chunk, binaryByFileId.get(chunk.getFileId())));
 		}
 
 		var previous = new JsonArray();
@@ -459,6 +463,101 @@ public class EmbeddingService {
 		jsonObject.put("next", next);
 
 		return jsonObject;
+	}
+
+	/**
+	 * Builds the {@code binary} object of the chunk of a binary: {@code id},
+	 * {@code name}, {@code contentType}, {@code sourceUrl} and
+	 * {@code metadata}, the last ones only when present. The metadata of the
+	 * chunk are merged into the ones of the binary: on the same key the chunk
+	 * wins (e.g. the page of a rasterized page).
+	 *
+	 * @param chunk  the chunk derived from the binary
+	 * @param binary the binary the chunk comes from, {@code null} when the
+	 *               module returned a fileId that was not sent
+	 * @return the {@code binary} object of the chunk-doc
+	 */
+	static JsonObject mapBinary(
+		EmbeddingOuterClass.EmbeddedChunk chunk, BinaryPayload binary) {
+
+		var jsonObject = new JsonObject();
+		Map<String, Object> metadata = new LinkedHashMap<>();
+		String contentType = null;
+
+		jsonObject.put("id", chunk.getFileId());
+
+		if (binary != null) {
+			if (binary.getName() != null) {
+				jsonObject.put("name", binary.getName());
+			}
+
+			contentType = binary.getContentType();
+
+			if (binary.getMetadata() != null) {
+				metadata.putAll(binary.getMetadata());
+			}
+		}
+
+		jsonObject.put(
+			"contentType",
+			Objects.requireNonNullElse(contentType, DEFAULT_BINARY_MEDIA_TYPE));
+
+		if (binary != null && binary.getSourceUrl() != null) {
+			jsonObject.put("sourceUrl", binary.getSourceUrl());
+		}
+
+		if (chunk.hasMetadata()) {
+			for (Map.Entry<String, Value> entry
+				: chunk.getMetadata().getFieldsMap().entrySet()) {
+
+				metadata.put(entry.getKey(), toJava(entry.getValue()));
+			}
+		}
+
+		if (!metadata.isEmpty()) {
+			jsonObject.put("metadata", new JsonObject(metadata));
+		}
+
+		return jsonObject;
+	}
+
+	/**
+	 * Converts a protobuf {@link Value} to the plain Java value Vert.x JSON
+	 * encodes. A {@code Struct} carries every number as a double, so an
+	 * integral one becomes a {@code Long}: a page stays {@code 3}, not
+	 * {@code 3.0}.
+	 */
+	private static Object toJava(Value value) {
+
+		return switch (value.getKindCase()) {
+			case NUMBER_VALUE -> {
+				double number = value.getNumberValue();
+
+				// cast to Object, or the ternary would promote the Long back
+				yield number == Math.rint(number)
+					&& Math.abs(number) < Long.MAX_VALUE
+					? (Object) Long.valueOf((long) number)
+					: Double.valueOf(number);
+			}
+			case STRING_VALUE -> value.getStringValue();
+			case BOOL_VALUE -> value.getBoolValue();
+			case STRUCT_VALUE -> {
+				Map<String, Object> map = new LinkedHashMap<>();
+
+				for (Map.Entry<String, Value> entry
+					: value.getStructValue().getFieldsMap().entrySet()) {
+
+					map.put(entry.getKey(), toJava(entry.getValue()));
+				}
+
+				yield map;
+			}
+			case LIST_VALUE -> value.getListValue().getValuesList()
+				.stream()
+				.map(EmbeddingService::toJava)
+				.toList();
+			case NULL_VALUE, KIND_NOT_SET -> null;
+		};
 	}
 
 	/**
@@ -977,7 +1076,7 @@ public class EmbeddingService {
 	record ComposedRequest(
 		EmbeddingOuterClass.EmbedContentRequest request,
 		Map<String, Object> root,
-		Map<String, String> contentTypeByFileId,
+		Map<String, BinaryPayload> binaryByFileId,
 		Set<String> sentFileIds,
 		String contentId
 	) {}

@@ -338,13 +338,13 @@ public class EmbeddingServiceUtilsTest {
 		assertEquals("presigned:tenant|7|content-1|file-a", first.getUrl());
 		assertEquals("presigned:tenant|7|content-1|file-b", second.getUrl());
 
-		// bookkeeping: the contentType is what a chunk-doc's media_type is
-		// resolved from (null falls back to application/octet-stream), the
-		// sent ids are what the end-of-stream diff is computed against
-		var contentTypes = composed.contentTypeByFileId();
-		assertEquals(2, contentTypes.size());
-		assertEquals("image/png", contentTypes.get("file-a"));
-		assertNull(contentTypes.get("file-b"));
+		// bookkeeping: the binary is what a chunk-doc's binary object is
+		// built from, the sent ids are what the end-of-stream diff is
+		// computed against
+		var binaries = composed.binaryByFileId();
+		assertEquals(2, binaries.size());
+		assertEquals("image/png", binaries.get("file-a").getContentType());
+		assertNull(binaries.get("file-b").getContentType());
 
 		assertEquals(Set.of("file-a", "file-b"), composed.sentFileIds());
 	}

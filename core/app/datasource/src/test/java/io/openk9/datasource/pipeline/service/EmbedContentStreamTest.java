@@ -24,11 +24,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.openk9.datasource.processor.payload.BinaryPayload;
 import io.openk9.ml.grpc.EmbeddingOuterClass.EmbeddedChunk;
 import io.openk9.ml.grpc.EmbeddingOuterClass.FloatVector;
 import io.openk9.ml.grpc.EmbeddingOuterClass.VectorDataType;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
@@ -132,9 +135,8 @@ class EmbedContentStreamTest {
 			// the source document is merged.
 			Assertions.assertEquals("a title", doc.getString("title"));
 
-			// EmbedContent additions: text modality, no binary discriminator.
-			Assertions.assertEquals("text", doc.getString("media_type"));
-			Assertions.assertFalse(doc.containsKey("fileId"));
+			// a text chunk carries no binary.
+			Assertions.assertFalse(doc.containsKey("binary"));
 		}
 	}
 
@@ -179,21 +181,110 @@ class EmbedContentStreamTest {
 	}
 
 	@Test
-	void should_carry_fileId_and_media_type_for_binary_chunks() {
+	void should_carry_the_data_of_the_binary_on_its_chunk() {
 
+		// a text chunk and the chunk of an image with sourceUrl and page;
+		// the source document still carries its resources
 		var text = textChunk(1, 2, "some text");
-		var binary = binaryChunk(2, "file-1", 3.0f, 4.0f);
+		var image = binaryChunk(2, "file-1", 3.0f, 4.0f);
+		var binary = BinaryPayload.builder()
+			.id("file-1")
+			.name("photo.png")
+			.contentType("image/png")
+			.sourceUrl("https://source/photo.png")
+			.metadata(Map.of("page", 12))
+			.build();
+		Map<String, Object> root = Map.of(
+			"title", "a title",
+			"resources", Map.of("binaries", List.of(Map.of("id", "file-1"))));
 
 		var docs = runToDocs(
-			List.of(text, binary), 0, Map.of(), Map.of("file-1", "image/png"));
+			List.of(text, image), 0, root, Map.of("file-1", binary));
 
-		var textDoc = docs.get(0);
-		Assertions.assertEquals("text", textDoc.getString("media_type"));
-		Assertions.assertFalse(textDoc.containsKey("fileId"));
+		// the image chunk carries its binary
+		var binaryDoc = docs.get(1).getJsonObject("binary");
+		Assertions.assertEquals("file-1", binaryDoc.getString("id"));
+		Assertions.assertEquals("photo.png", binaryDoc.getString("name"));
+		Assertions.assertEquals("image/png", binaryDoc.getString("contentType"));
+		Assertions.assertEquals(
+			"https://source/photo.png", binaryDoc.getString("sourceUrl"));
+		Assertions.assertEquals(
+			12, binaryDoc.getJsonObject("metadata").getInteger("page"));
 
-		var binaryDoc = docs.get(1);
-		Assertions.assertEquals("file-1", binaryDoc.getString("fileId"));
-		Assertions.assertEquals("image/png", binaryDoc.getString("media_type"));
+		// the text chunk does not
+		Assertions.assertFalse(docs.get(0).containsKey("binary"));
+
+		// no chunk carries fileId, media_type or resources
+		for (var doc : docs) {
+			Assertions.assertFalse(doc.containsKey("fileId"));
+			Assertions.assertFalse(doc.containsKey("media_type"));
+			Assertions.assertFalse(doc.containsKey("resources"));
+			Assertions.assertEquals("a title", doc.getString("title"));
+		}
+	}
+
+	@Test
+	void should_carry_on_each_chunk_only_its_own_binary() {
+
+		// three images of the same content, pages 1, 2 and 3
+		Map<String, BinaryPayload> binaries = Map.of(
+			"img-1", binary("img-1", Map.of("page", 1)),
+			"img-2", binary("img-2", Map.of("page", 2)),
+			"img-3", binary("img-3", Map.of("page", 3)));
+
+		var docs = runToDocs(
+			List.of(
+				binaryChunk(1, "img-1", 1.0f),
+				binaryChunk(2, "img-2", 1.0f),
+				binaryChunk(3, "img-3", 1.0f)),
+			0, Map.of(), binaries);
+
+		// three image chunks, each with the id and page of its image
+		Assertions.assertEquals(3, docs.size());
+		for (int i = 0; i < 3; i++) {
+			var binaryDoc = docs.get(i).getJsonObject("binary");
+			Assertions.assertEquals("img-" + (i + 1), binaryDoc.getString("id"));
+			Assertions.assertEquals(
+				i + 1, binaryDoc.getJsonObject("metadata").getInteger("page"));
+		}
+	}
+
+	@Test
+	void should_carry_id_name_and_content_type_of_a_bare_binary() {
+
+		// an image without sourceUrl and metadata
+		var docs = runToDocs(
+			List.of(binaryChunk(1, "img-1", 1.0f)),
+			0, Map.of(), Map.of("img-1", binary("img-1", null)));
+
+		// the binary carries only id, name and contentType
+		Assertions.assertEquals(
+			new JsonObject()
+				.put("id", "img-1")
+				.put("name", "img-1.png")
+				.put("contentType", "image/png"),
+			docs.get(0).getJsonObject("binary"));
+	}
+
+	@Test
+	void should_let_the_metadata_of_the_chunk_win() {
+
+		// a PDF with page 1 and a chunk the module sent with page 3
+		var pdf = binary("pdf-1", Map.of("page", 1, "caption", "a report"));
+		var chunk = binaryChunk(1, "pdf-1", 1.0f).toBuilder()
+			.setMetadata(Struct.newBuilder()
+				.putFields("page", Value.newBuilder().setNumberValue(3).build()))
+			.build();
+
+		var docs = runToDocs(List.of(chunk), 0, Map.of(), Map.of("pdf-1", pdf));
+
+		// the page is the chunk's, as an integer; the other keys stay
+		var metadata = docs.get(0)
+			.getJsonObject("binary")
+			.getJsonObject("metadata");
+		Assertions.assertInstanceOf(Integer.class, metadata.getValue("page"));
+		Assertions.assertEquals(3, metadata.getInteger("page"));
+		Assertions.assertEquals("a report", metadata.getString("caption"));
 	}
 
 	@Test
@@ -255,18 +346,18 @@ class EmbedContentStreamTest {
 	}
 
 	@Test
-	void should_default_media_type_when_content_type_is_unknown() {
+	void should_default_the_content_type_when_it_is_unknown() {
 
 		// a binary ref whose contentType was not provided (not in the map):
-		// media_type falls back to the generic octet-stream, never null.
+		// contentType falls back to the generic octet-stream, never null.
 		var binary = binaryChunk(1, "file-x", 1.0f);
 
 		var docs = runToDocs(List.of(binary), 0, Map.of(), Map.of());
 
-		var doc = docs.get(0);
-		Assertions.assertEquals("file-x", doc.getString("fileId"));
+		var binaryDoc = docs.get(0).getJsonObject("binary");
+		Assertions.assertEquals("file-x", binaryDoc.getString("id"));
 		Assertions.assertEquals(
-			"application/octet-stream", doc.getString("media_type"));
+			"application/octet-stream", binaryDoc.getString("contentType"));
 	}
 
 	@Test
@@ -505,11 +596,11 @@ class EmbedContentStreamTest {
 
 	private static List<JsonObject> runToDocs(
 		List<EmbeddedChunk> chunks, int windowSize,
-		Map<String, Object> root, Map<String, String> contentTypeByFileId) {
+		Map<String, Object> root, Map<String, BinaryPayload> binaryByFileId) {
 
 		var subscriber = EmbeddingService.windowAndEncode(
 				Multi.createFrom().iterable(chunks),
-				root, contentTypeByFileId, windowSize)
+				root, binaryByFileId, windowSize)
 			.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
 
 		subscriber.awaitCompletion();
@@ -570,6 +661,17 @@ class EmbedContentStreamTest {
 			.setVectorDataType(VectorDataType.VECTOR_DATA_TYPE_FLOAT32)
 			.setDimension(vector.length)
 			.setF32(floatVector.build())
+			.build();
+	}
+
+	private static BinaryPayload binary(
+		String id, Map<String, Object> metadata) {
+
+		return BinaryPayload.builder()
+			.id(id)
+			.name(id + ".png")
+			.contentType("image/png")
+			.metadata(metadata)
 			.build();
 	}
 
