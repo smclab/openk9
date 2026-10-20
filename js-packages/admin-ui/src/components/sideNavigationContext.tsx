@@ -81,10 +81,12 @@ export type NamePath =
   | "connectors"
   | "admin-settings"
   | "admin-settings-group"
-  | "import-export";
+  | "import-export"
+  | "result-acl";
 
 export const namePath: { label: NamePath; value: NamePath }[] = [
   { label: "import-export", value: "import-export" },
+  { label: "result-acl", value: "result-acl" },
   { label: "admin-settings", value: "admin-settings" },
   { label: "admin", value: "admin" },
   { label: "dashboard", value: "dashboard" },

@@ -125,6 +125,7 @@ export const menuItems: MenuItem[] = [
       { labelKey: "nav.admin-settings-general", path: "/admin-settings", IsChildren: true, value: "admin-settings" },
       // Deliberately not nested under /admin-settings: the active item is resolved
       // by `startsWith` over `namePath`, so a child path would also match its parent.
+      { labelKey: "nav.result-acl", path: "/result-acl", IsChildren: true, value: "result-acl" },
       { labelKey: "nav.import-export", path: "/import-export", IsChildren: true, value: "import-export" },
     ],
   },

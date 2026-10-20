@@ -518,7 +518,7 @@ const AppRoutes = ({ setExtraFab }: AppRoutesProps) => (
     <Route path="/rag-configuration/:ragConfigId/:view" element={<SaveRagConfiguration setExtraFab={setExtraFab} />} />
 
     <Route path="/admin-settings" element={<AdminSettings />} />
-    <Route path="/admin-settings/result-acl" element={<SaveResultAclConfig />} />
+    <Route path="/result-acl" element={<SaveResultAclConfig />} />
     <Route path="/import-export" element={<ImportExportConfig />} />
   </Routes>
 );

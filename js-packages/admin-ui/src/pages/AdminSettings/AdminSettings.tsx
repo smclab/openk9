@@ -19,7 +19,6 @@ import { Box, Typography } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { AppearanceSection } from "./AppearanceSection";
-import { ResultAclSection } from "./ResultAclSection";
 
 /**
  * The tenant-wide preferences of the administrator.
@@ -42,7 +41,6 @@ export function AdminSettings() {
       </Box>
 
       <AppearanceSection />
-      <ResultAclSection />
     </ContainerFluid>
   );
 }
