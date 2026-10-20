@@ -39,6 +39,7 @@ vi.mock("react-virtuoso", async (importOriginal) => ({
 vi.mock("../Form", () => ({ EmptySpace: () => null, ModalConfirm: () => null }));
 
 const TABLE_HEIGHT = 800;
+const HEADER_HEIGHT = 54;
 
 type Row = { id: string; name: string };
 type Query = { items: { edges: Array<{ node: Row }>; pageInfo: { hasNextPage: boolean; endCursor: string } } };
@@ -60,7 +61,7 @@ function renderTable(
   {
     fetchMore,
     refetch = () => Promise.resolve({ data }),
-  }: { fetchMore: () => Promise<unknown>; refetch?: () => Promise<{ data: Query | undefined }> },
+  }: { fetchMore: () => Promise<unknown>; refetch?: () => Promise<{ data: Query | undefined } | undefined> },
 ) {
   const table = (data: Query | undefined) => (
     <Table
@@ -82,9 +83,12 @@ function renderTable(
 
   const scroller = document.createElement("div");
   Object.defineProperty(scroller, "clientHeight", { value: TABLE_HEIGHT });
+  // jsdom lays nothing out: the header gets the height Virtuoso reports before any row is measured
+  const header = scroller.appendChild(document.createElement("table")).appendChild(document.createElement("thead"));
+  header.getBoundingClientRect = () => new DOMRect(0, 0, 0, HEADER_HEIGHT);
   rendered().scrollerRef?.(scroller);
 
-  return (data: Query) => rerender(table(data));
+  return { rerender: (data: Query) => rerender(table(data)) };
 }
 
 function rendered() {
@@ -120,7 +124,7 @@ describe("the table loads the next page", () => {
 
   test("page after page, until the rows fill the table", async () => {
     const fetchMore = vi.fn(() => Promise.resolve());
-    const rerender = renderTable(loaded(10, true), { fetchMore });
+    const { rerender } = renderTable(loaded(10, true), { fetchMore });
     await settle();
 
     rendered().totalListHeightChanged?.(400);
@@ -140,10 +144,12 @@ describe("the table loads the next page", () => {
     const refetch = () => new Promise<{ data: Query }>((resolve) => (finishRefetch = resolve));
     const fetchMore = vi.fn(() => new Promise(() => {}));
     // the list an earlier visit left in the cache, while the refetch brings it back to page one
-    renderTable(loaded(30, true), { fetchMore, refetch });
+    const { rerender } = renderTable(loaded(30, true), { fetchMore, refetch });
 
-    rendered().totalListHeightChanged?.(54); // the header alone: no row measured yet
+    rendered().totalListHeightChanged?.(2664);
     rendered().endReached?.(29);
+    rerender(loaded(10, true)); // page one can show up before the refetch promise settles
+    rendered().totalListHeightChanged?.(400);
     expect(fetchMore).not.toHaveBeenCalled();
 
     await act(async () => finishRefetch({ data: loaded(10, true) }));
@@ -157,17 +163,49 @@ describe("the table loads the next page", () => {
     const refetch = () => new Promise<{ data: Query }>((resolve) => (finishRefetch = resolve));
     const fetchMore = vi.fn(() => new Promise(() => {}));
     // nothing in the cache yet: the table mounts empty
-    const rerender = renderTable(undefined, { fetchMore, refetch });
+    const { rerender } = renderTable(undefined, { fetchMore, refetch });
 
-    rendered().totalListHeightChanged?.(54); // the header of the empty list
+    rendered().totalListHeightChanged?.(HEADER_HEIGHT); // the empty list
     await act(async () => finishRefetch({ data: loaded(10, true) }));
+    rerender(loaded(10, true));
+    rendered().totalListHeightChanged?.(HEADER_HEIGHT); // page one is there, but none of its rows is measured yet
     expect(fetchMore).not.toHaveBeenCalled();
 
-    rerender(loaded(10, true));
     rendered().totalListHeightChanged?.(400);
 
     expect(fetchMore).toHaveBeenCalledOnce();
     expect(fetchMore).toHaveBeenCalledWith(expect.objectContaining({ variables: { first: 20, after: "10" } }));
+  });
+
+  test("when the end of the list was reached during the refetch", async () => {
+    let finishRefetch: (result: { data: Query }) => void = () => {};
+    const refetch = () => new Promise<{ data: Query }>((resolve) => (finishRefetch = resolve));
+    const fetchMore = vi.fn(() => new Promise(() => {}));
+    // scrolled to the bottom of a long list, the user searches: page one fills the table
+    // and shows its last row before the refetch promise settles
+    const { rerender } = renderTable(loaded(60, true), { fetchMore, refetch });
+
+    rendered().totalListHeightChanged?.(5000);
+    rerender(loaded(20, true));
+    rendered().totalListHeightChanged?.(1700);
+    rendered().endReached?.(19);
+    expect(fetchMore).not.toHaveBeenCalled();
+
+    await act(async () => finishRefetch({ data: loaded(20, true) }));
+
+    expect(fetchMore).toHaveBeenCalledOnce();
+    expect(fetchMore).toHaveBeenCalledWith(expect.objectContaining({ variables: { first: 20, after: "20" } }));
+  });
+
+  test("after a refetch that a newer one replaced", async () => {
+    const fetchMore = vi.fn(() => new Promise(() => {}));
+    // Apollo resolves a replaced refetch with nothing
+    renderTable(loaded(10, true), { fetchMore, refetch: () => Promise.resolve(undefined) });
+    await settle();
+
+    rendered().totalListHeightChanged?.(400);
+
+    expect(fetchMore).toHaveBeenCalledOnce();
   });
 });
 

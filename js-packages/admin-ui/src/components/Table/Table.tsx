@@ -129,6 +129,8 @@ export function Table<
   // essere sostituita: accodarle la pagina dopo il suo cursore la corromperebbe
   const isRefetching = React.useRef(true);
   const isLoadingMore = React.useRef(false);
+  // `endReached` arrivato durante il refetch: Virtuoso non lo ripete per lo stesso numero di righe
+  const endMissed = React.useRef(false);
 
   const loadMoreResults = (list: Query | undefined) => {
     const pageInfo = getByPath(list, pageInfoPath);
@@ -173,9 +175,13 @@ export function Table<
       .finally(() => {
         if (isCurrent) isRefetching.current = false;
       })
-      // gli eventi di Virtuoso arrivati durante il refetch sono stati ignorati
-      .then(({ data: refetched }) => {
-        if (isCurrent) fillTable(refetched);
+      // gli eventi di Virtuoso arrivati durante il refetch si recuperano qui; un refetch
+      // sostituito da uno più recente (es. refetchQueries) Apollo lo risolve senza risultato
+      .then((result) => {
+        if (!isCurrent || !result) return;
+        if (endMissed.current) loadMoreResults(result.data);
+        else fillTable(result.data);
+        endMissed.current = false;
       });
     return () => {
       isCurrent = false;
@@ -432,14 +438,16 @@ export function Table<
             );
           }}
           endReached={() => {
-            loadMoreResults && loadMoreResults(data);
+            if (isRefetching.current) endMissed.current = true;
+            else loadMoreResults(data);
           }}
           scrollerRef={(element) => {
             scroller.current = element instanceof HTMLElement ? element : null;
           }}
           totalListHeightChanged={(height) => {
-            // con la lista vuota Virtuoso misura il solo header
-            if (field(data)?.edges?.length) listHeight.current = height;
+            // finché nessuna riga è misurata (lista vuota, o appena disegnata) Virtuoso conta il solo header
+            const header = scroller.current?.querySelector("thead")?.getBoundingClientRect().height ?? 0;
+            if (height > header + 1) listHeight.current = height;
             fillTable(data);
           }}
         />
