@@ -485,24 +485,19 @@ public class IndexMappingService {
 
 			for (DocTypeField docTypeField : generatedFields) {
 				var fieldPath = DocTypeFieldUtils.fieldPath(docTypeName, docTypeField);
-				boolean retained = true;
 
 				// does not retain an ignored field
 				if (isIgnoredFieldPath(fieldPath)) {
 					continue;
 				}
 
-				// does not retain an existing field
-				for (DocTypeField existingField : persistedFields) {
+				var existingField = _findByPath(persistedFields, fieldPath);
 
-					var existingFieldPath = existingField.getPath();
-					if (Objects.equals(existingFieldPath, fieldPath)) {
-						retained = false;
-						break;
-					}
+				// an existing field is not retained, but it takes the new subfields
+				if (existingField != null) {
+					_mergeSubFields(docTypeName, existingField, docTypeField);
 				}
-
-				if (retained) {
+				else {
 					retainedFields.add(docTypeField);
 				}
 			}
@@ -516,6 +511,38 @@ public class IndexMappingService {
 
 		return docTypes;
 
+	}
+
+	private static DocTypeField _findByPath(
+		Collection<DocTypeField> docTypeFields, String fieldPath) {
+
+		return docTypeFields.stream()
+			.filter(field -> Objects.equals(field.getPath(), fieldPath))
+			.findFirst()
+			.orElse(null);
+	}
+
+	// adds to the existing field the generated subfields it does not have yet,
+	// at any depth: a new key under an object that already exists
+	private static void _mergeSubFields(
+		String docTypeName, DocTypeField existingField,
+		DocTypeField generatedField) {
+
+		for (DocTypeField generatedSubField : generatedField.getSubDocTypeFields()) {
+			var subFieldPath =
+				DocTypeFieldUtils.fieldPath(docTypeName, generatedSubField);
+
+			var existingSubField = _findByPath(
+				existingField.getSubDocTypeFields(), subFieldPath);
+
+			if (existingSubField != null) {
+				_mergeSubFields(docTypeName, existingSubField, generatedSubField);
+			}
+			else {
+				generatedSubField.setParentDocTypeField(existingField);
+				existingField.getSubDocTypeFields().add(generatedSubField);
+			}
+		}
 	}
 
 	protected static Map<String, List<DocTypeField>> toDocTypeAndFieldsGroup(

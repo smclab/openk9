@@ -153,6 +153,74 @@ public class IndexMappingServiceTest {
 	}
 
 	@Test
+	void should_add_a_new_key_under_a_persisted_object() {
+		// the default docType already holds binary.metadata.page
+		var defaultDocType = new DocType();
+		defaultDocType.setName(DocType.DEFAULT_NAME);
+
+		var binary = persistedField(defaultDocType, null, "binary", FieldType.OBJECT);
+		var metadata = persistedField(
+			defaultDocType, binary, "metadata", FieldType.OBJECT);
+		var page = persistedField(
+			defaultDocType, metadata, "page", FieldType.INTEGER);
+
+		defaultDocType.setDocTypeFields(
+			new LinkedHashSet<>(List.of(binary, metadata, page)));
+
+		// the index mapping adds binary.metadata.lato
+		var indexMappings = new JsonObject("""
+			{"properties": {"binary": {"properties": {"metadata": {
+				"properties": {
+					"page": {"type": "integer", "ignore_malformed": true},
+					"lato": {"type": "text", "fields": {
+						"keyword": {"type": "keyword", "ignore_above": 256}}}
+				}}}}}}
+			""");
+
+		Map<String, List<DocTypeField>> docTypeAndFieldsGroup =
+			IndexMappingService.toDocTypeAndFieldsGroup(
+				IndexMappingService.toDocTypeFields(indexMappings.getMap()),
+				List.of());
+
+		IndexMappingService.mergeDocTypes(
+			docTypeAndFieldsGroup, List.of(defaultDocType));
+
+		// lato is a new child of the persisted metadata, page is not doubled
+		var lato = metadata.getSubDocTypeFields().stream()
+			.filter(f -> "lato".equals(f.getFieldName()))
+			.findFirst()
+			.orElseThrow();
+
+		assertEquals("binary.metadata.lato", lato.getPath());
+		assertEquals(defaultDocType, lato.getDocType());
+		assertEquals(FieldType.TEXT, lato.getFieldType());
+		assertTrue(lato.getSubDocTypeFields().stream()
+			.anyMatch(f -> "binary.metadata.lato.keyword".equals(f.getPath())));
+		assertEquals(1, metadata.getSubDocTypeFields().stream()
+			.filter(f -> "page".equals(f.getFieldName()))
+			.count());
+	}
+
+	private static DocTypeField persistedField(
+		DocType docType, DocTypeField parent, String fieldName,
+		FieldType fieldType) {
+
+		var field = new DocTypeField();
+		field.setDocType(docType);
+		field.setFieldName(fieldName);
+		field.setFieldType(fieldType);
+		field.setDescription("persisted");
+		field.setSubDocTypeFields(new LinkedHashSet<>());
+
+		if (parent != null) {
+			field.setParentDocTypeField(parent);
+			parent.getSubDocTypeFields().add(field);
+		}
+
+		return field;
+	}
+
+	@Test
 	void shouldLayRecordedSettingsOverDerivedOnesExceptTheAnalysis() {
 		// a docType whose field carries an analyzer, as the docTypes hold it now
 		var analyzer = new Analyzer();
