@@ -57,6 +57,8 @@ RAG_CONFIGURATION = {
     "answer_only_with_context": True,
     "score_threshold": 0.3,
     "domain_threshold": 0.7,
+    "query_image_to_llm": True,
+    "source_images_to_llm": False,
 }
 
 
@@ -168,6 +170,8 @@ def test_graph_receives_the_tenant_configuration_and_streams_the_question(
         "answer_only_with_context": RAG_CONFIGURATION["answer_only_with_context"],
         "score_threshold": RAG_CONFIGURATION["score_threshold"],
         "domain_threshold": RAG_CONFIGURATION["domain_threshold"],
+        "query_image_to_llm": RAG_CONFIGURATION["query_image_to_llm"],
+        "source_images_to_llm": RAG_CONFIGURATION["source_images_to_llm"],
         "model_type": LLM_CONFIGURATION["model_type"],
         "context_window": LLM_CONFIGURATION["context_window"],
         "retrieve_type": LLM_CONFIGURATION["retrieve_type"],

@@ -52,6 +52,7 @@ dependencies = [
     "opentelemetry-proto==1.44.0",
     "opentelemetry-sdk==1.44.0",
     "opentelemetry-semantic-conventions==0.65b0",
+    "pillow==12.3.0",
     "protobuf==6.33.5",
     "pydantic-settings==2.15.0",
     "pyjwt==2.14.0",

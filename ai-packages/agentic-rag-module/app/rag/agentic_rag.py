@@ -29,6 +29,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.runnables import RunnableLambda
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
@@ -41,6 +42,14 @@ from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
 )
 from app.models import models
+from app.rag.image_inputs import (
+    MAX_SOURCE_IMAGES,
+    SourceImage,
+    accepts_images,
+    fetch_source_images,
+    is_rejection,
+    mark_text_only,
+)
 from app.rag.retrievers.domain_documents_retriever import (
     OpenSearchDomainDocumentsRetriever,
 )
@@ -251,6 +260,46 @@ class CitationsTailFilter:
         """Held-back text that turned out not to be the delimiter."""
         answer_text, self.buffer = ("" if self.tail_reached else self.buffer), ""
         return answer_text
+
+
+# The same turn when the image does reach the model: it can look at it, and the
+# context is what the search found close to it.
+MEDIA_ONLY_QUERY_WITH_IMAGE_INSTRUCTION = (
+    "The user submitted an image instead of a written question: it is "
+    "attached to this message. Answer about what the image shows. The "
+    "documents in the context are the closest matches to that image: use "
+    "them where they help, and say so when they do not."
+)
+
+# Appended to the question when an image meant for the model did not reach it:
+# the model tells the user, so the notice stays in the chat history with the
+# answer. The descriptions are values, never template text.
+UNSEEN_IMAGES_NOTICE = (
+    "Note: {images} could not be shown to you. Start your answer by telling "
+    "the user, in {target_lang}, that you did not see {pronoun}, then answer "
+    "using the text only."
+)
+USER_IMAGE_DESCRIPTION = "the image attached by the user"
+
+# Only the chat answers with the images; SIMPLE_GENERATE stays text.
+IMAGE_RAG_TYPES = ("CHAT_RAG", "CHAT_RAG_TOOL")
+
+
+def _with_images(prompt_value, images: List[tuple]) -> List[Any]:
+    """Add the images to the last message of the rendered prompt.
+
+    Each image follows a short text that says what it is, in the standard
+    LangChain content blocks every chat class of the module translates for its
+    provider.
+    """
+    messages = prompt_value.to_messages()
+    content = [{"type": "text", "text": messages[-1].content}]
+    for label, image in images:
+        content.append({"type": "text", "text": label})
+        content.append(
+            {"type": "image", "base64": image.data, "mime_type": image.mime_type}
+        )
+    return messages[:-1] + [HumanMessage(content=content)]
 
 
 class GraphState(BaseModel):
@@ -1946,14 +1995,50 @@ class RagGraph:
 
         return state
 
+    def _query_image(self) -> Optional[SourceImage]:
+        """The image the user attached to the turn, when it may go to the model."""
+        if getattr(self, "rag_type", None) not in IMAGE_RAG_TYPES:
+            return None
+        if not self.configuration.get("query_image_to_llm", True):
+            return None
+
+        media = self.configuration.get("media")
+        data = getattr(media, "data", None)
+        content_type = getattr(media, "contentType", None)
+        if not data or not content_type:
+            return None
+        return SourceImage(data, content_type)
+
+    def _image_sources(self, context: List[Document]) -> List[Document]:
+        """The first retrieved sources whose image may go to the model."""
+        if getattr(self, "rag_type", None) not in IMAGE_RAG_TYPES:
+            return []
+        if not self.configuration.get("source_images_to_llm", True):
+            return []
+
+        sources = [
+            doc
+            for doc in context
+            if isinstance(doc.metadata.get("image_source_url"), str)
+        ]
+        return sources[:MAX_SOURCE_IMAGES]
+
+    @staticmethod
+    def _source_image_description(document: Document) -> str:
+        name = document.metadata.get("image_name") or document.metadata.get("title", "")
+        return f'the image of the source "{name}"' if name else "a source image"
+
+    @staticmethod
+    def _unseen_images_notice(descriptions: List[str], target_lang: str) -> str:
+        return UNSEEN_IMAGES_NOTICE.format(
+            images=", ".join(descriptions),
+            target_lang=target_lang,
+            pronoun="it" if len(descriptions) == 1 else "them",
+        )
+
     def llm_response_node(self, state: GraphState) -> GraphState:
         """LLM response node"""
         query = state.current_query
-        if self._is_media_only_query(query):
-            # Only the local query is replaced: state.current_query stays empty
-            # so the later stages still see the turn for what it was.
-            query = MEDIA_ONLY_QUERY_INSTRUCTION
-            logger.debug("[llm_response] media-only query -> dedicated instruction")
         context = state.context or []
         messages = state.messages
 
@@ -1982,12 +2067,6 @@ class RagGraph:
         source_text = {}
 
         if state.use_rag and context:
-            prompt = escape_curly_braces(self.configuration.get("prompt_template"))
-
-            # With citations on, each chunk is labelled with its document_id so
-            # the LLM can attribute its quotes. The instruction is passed as a
-            # template *value*, not appended to the template, so the JSON shape
-            # it contains is never parsed as template variables.
             # One ordinal per source, not per chunk: two chunks of the same
             # document share a number, so the model cannot cite the same
             # source twice under different names.
@@ -1997,13 +2076,6 @@ class RagGraph:
             for doc in context:
                 if document_id := doc.metadata.get("document_id"):
                     ordinals.setdefault(str(document_id), len(ordinals) + 1)
-
-            def _label(doc):
-                document_id = doc.metadata.get("document_id")
-                ordinal = ordinals.get(str(document_id)) if document_id else None
-                return f"[{ordinal}]\n{doc.page_content}" if ordinal else doc.page_content
-
-            context_text = "\n\n".join(_label(doc) for doc in context)
 
             chunks_by_ordinal = {}
             for doc in context:
@@ -2015,6 +2087,156 @@ class RagGraph:
                 ordinal: "\n".join(chunks)
                 for ordinal, chunks in chunks_by_ordinal.items()
             }
+
+        # What the model should see in this turn, decided before the prompt:
+        # with a text-only model nothing is downloaded and the prompt is the
+        # text one, but the user is told that their image went unseen.
+        query_image = self._query_image()
+        image_sources = self._image_sources(context) if state.use_rag else []
+        model_accepts_images = (
+            accepts_images(self.llm) if query_image or image_sources else None
+        )
+        unseen = []
+        source_images = []
+        if model_accepts_images is False:
+            if query_image:
+                unseen.append(USER_IMAGE_DESCRIPTION)
+            query_image = None
+        elif image_sources:
+            fetched = fetch_source_images(
+                [doc.metadata["image_source_url"] for doc in image_sources]
+            )
+            for doc, image in zip(image_sources, fetched):
+                if image:
+                    source_images.append((doc, image))
+                else:
+                    unseen.append(self._source_image_description(doc))
+
+        try:
+            response = self._generate_response(
+                state,
+                query,
+                conversation_history,
+                target_lang,
+                ordinals,
+                query_image,
+                source_images,
+                unseen,
+            )
+        except Exception as error:
+            if not (query_image or source_images) or not is_rejection(error):
+                raise
+            # The rejection comes before the first chunk: the client only
+            # ever sees the tokens of the text-only answer.
+            logger.warning(
+                "[llm_response] the provider rejected the images, retrying "
+                f"with text only: {str(error)[:300]} {self._log_context()}"
+            )
+            if model_accepts_images is None:
+                mark_text_only(self.llm)
+            unseen = (
+                ([USER_IMAGE_DESCRIPTION] if query_image else [])
+                + [self._source_image_description(doc) for doc, _ in source_images]
+                + unseen
+            )
+            response = self._generate_response(
+                state,
+                query,
+                conversation_history,
+                target_lang,
+                ordinals,
+                None,
+                [],
+                unseen,
+            )
+
+        llm_response = ""
+
+        if isinstance(response.content, list):
+            llm_response = response.content[0].get("text") if response.content else ""
+        else:
+            llm_response = response.content
+
+        if state.use_rag and context:
+            # The markers stay in llm_response: they are part of the answer
+            # the client renders. Only the quotes tail, asked for when the
+            # tenant wants citations, is cut off before the answer is stored.
+            quotes_tail = ""
+            if self.retrieve_citations:
+                llm_response, _, quotes_tail = llm_response.partition(
+                    CITATIONS_DELIMITER
+                )
+                llm_response = llm_response.rstrip()
+
+            state.citations, state.citation_ordinals = self._parse_citations(
+                llm_response, ordinals, quotes_tail, source_text
+            )
+
+        state.response = llm_response
+
+        return state
+
+    def _generate_response(
+        self,
+        state: GraphState,
+        query: str,
+        conversation_history: str,
+        target_lang: str,
+        ordinals: dict,
+        query_image: Optional[SourceImage],
+        source_images: List[tuple],
+        unseen: List[str],
+    ):
+        """Ask the model for the answer, with the images it is meant to see.
+
+        The prompt is the text one; the images are added to its last message
+        after the template, so a turn without images sends exactly the prompt
+        of a text-only chat.
+        """
+        context = state.context or []
+        if self._is_media_only_query(query):
+            # Only the local query is replaced: state.current_query stays empty
+            # so the later stages still see the turn for what it was.
+            query = (
+                MEDIA_ONLY_QUERY_WITH_IMAGE_INSTRUCTION
+                if query_image
+                else MEDIA_ONLY_QUERY_INSTRUCTION
+            )
+            logger.debug("[llm_response] media-only query -> dedicated instruction")
+        if unseen:
+            query = f"{query}\n\n{self._unseen_images_notice(unseen, target_lang)}"
+
+        images = []
+        if query_image:
+            images.append(("Image attached by the user:", query_image))
+        image_numbers = {}
+        for number, (doc, image) in enumerate(source_images, 1):
+            image_numbers[id(doc)] = number
+            images.append((f"[Image {number}] of the context:", image))
+        to_model = (
+            RunnableLambda(lambda prompt_value: _with_images(prompt_value, images))
+            if images
+            else None
+        )
+
+        if state.use_rag and context:
+            prompt = escape_curly_braces(self.configuration.get("prompt_template"))
+
+            # With citations on, each chunk is labelled with its document_id so
+            # the LLM can attribute its quotes. The instruction is passed as a
+            # template *value*, not appended to the template, so the JSON shape
+            # it contains is never parsed as template variables.
+            # A chunk whose image is shown also carries the number of that
+            # image, after the number of its source.
+            def _label(doc):
+                text = doc.page_content
+                if id(doc) in image_numbers:
+                    text = f"[Image {image_numbers[id(doc)]}]\n{text}"
+                document_id = doc.metadata.get("document_id")
+                ordinal = ordinals.get(str(document_id)) if document_id else None
+                return f"[{ordinal}]\n{text}" if ordinal else text
+
+            context_text = "\n\n".join(_label(doc) for doc in context)
 
             citations_instruction = CITATION_MARKERS_INSTRUCTION + (
                 CITATION_QUOTES_INSTRUCTION
@@ -2044,7 +2266,9 @@ class RagGraph:
                 """
             )
 
-            rag_chain = rag_prompt | self.llm
+            rag_chain = (
+                rag_prompt | to_model | self.llm if to_model else rag_prompt | self.llm
+            )
             response = rag_chain.invoke(
                 {
                     "query": query,
@@ -2073,7 +2297,11 @@ class RagGraph:
                 Answer:
                 """
             )
-            direct_chain = direct_prompt | self.llm
+            direct_chain = (
+                direct_prompt | to_model | self.llm
+                if to_model
+                else direct_prompt | self.llm
+            )
             response = direct_chain.invoke(
                 {
                     "query": query,
@@ -2082,31 +2310,7 @@ class RagGraph:
                 }
             )
 
-        llm_response = ""
-
-        if isinstance(response.content, list):
-            llm_response = response.content[0].get("text") if response.content else ""
-        else:
-            llm_response = response.content
-
-        if state.use_rag and context:
-            # The markers stay in llm_response: they are part of the answer
-            # the client renders. Only the quotes tail, asked for when the
-            # tenant wants citations, is cut off before the answer is stored.
-            quotes_tail = ""
-            if self.retrieve_citations:
-                llm_response, _, quotes_tail = llm_response.partition(
-                    CITATIONS_DELIMITER
-                )
-                llm_response = llm_response.rstrip()
-
-            state.citations, state.citation_ordinals = self._parse_citations(
-                llm_response, ordinals, quotes_tail, source_text
-            )
-
-        state.response = llm_response
-
-        return state
+        return response
 
     @staticmethod
     def _parse_citations(

@@ -60,6 +60,27 @@ def _token_to_dict(token) -> dict:
     return token_dict
 
 
+def _image_source_metadata(document_source: dict) -> dict:
+    """Return where the generation model can read the image of a chunk.
+
+    Only an image binary with a URL at its source qualifies: any other chunk,
+    PDF pages included, stays text for the model. The URL is kept as a plain
+    string, never the image: the metadata end up in the graph state, which the
+    checkpointer persists.
+    """
+    binary = document_source.get("binary") or {}
+    content_type = binary.get("contentType") or ""
+    source_url = binary.get("sourceUrl")
+
+    if not content_type.startswith("image/") or not source_url:
+        return {}
+
+    return {
+        "image_source_url": source_url,
+        "image_name": binary.get("name") or "",
+    }
+
+
 class OpenSearchRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving documents."""
 
@@ -206,6 +227,7 @@ class OpenSearchRetriever(BaseRetriever):
                         "prev": previous_chunk,
                         "next": next_chunk,
                         "domain": document_domain,
+                        **_image_source_metadata(document_source),
                     }
 
                 else:

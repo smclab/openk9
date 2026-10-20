@@ -23,6 +23,8 @@ each piece of the streamed body as a message chunk, closing with an empty one.
 
 from unittest.mock import patch
 
+import pytest
+
 from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
 from langchain_core.outputs import ChatGenerationChunk
 
@@ -70,3 +72,16 @@ def test_model_type():
     assert CustomChatHuggingFaceModel(base_url=BASE_URL)._llm_type == (
         "custom-chat-hugging-face-model"
     )
+
+
+def test_a_message_with_an_image_is_rejected():
+    # an error, not a silent drop: the response node retries with text only
+    message = HumanMessage(
+        content=[
+            {"type": "text", "text": "Cosa raffigura?"},
+            {"type": "image", "base64": "iVBORw0KGgo=", "mime_type": "image/png"},
+        ]
+    )
+
+    with pytest.raises(ValueError, match="does not accept images"):
+        _stream([message], [b"Buongiorno"])

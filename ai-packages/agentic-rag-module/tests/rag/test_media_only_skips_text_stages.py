@@ -129,6 +129,9 @@ def test_rag_router_forces_retrieval_on_media_only():
 
 def test_llm_response_uses_the_dedicated_instruction_on_media_only():
     graph, state = _graph(IMAGE, "")
+    # the image stays out of the prompt: the text-only variant of the
+    # instruction, the one the turn had before the model could see images
+    graph.configuration["query_image_to_llm"] = False
     state.context = [MagicMock(page_content="chunk one")]
     state.use_rag = True
     state.target_lang = "Italian"
@@ -174,6 +177,7 @@ def test_textless_matches_still_reach_the_model_with_the_instruction():
     # the instruction is the only thing standing between an empty context and
     # an invented answer, which is why it tells the model to say so plainly.
     graph, state = _graph(IMAGE, "")
+    graph.configuration["query_image_to_llm"] = False
     state.context = [MagicMock(page_content=""), MagicMock(page_content="")]
     state.use_rag = True
     state.target_lang = "Italian"

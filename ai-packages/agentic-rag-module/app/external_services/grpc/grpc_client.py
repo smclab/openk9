@@ -248,6 +248,9 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
 
         domain_threshold = json_config.get("domain_threshold", 0.7)
 
+        query_image_to_llm = json_config.get("query_image_to_llm", True)
+        source_images_to_llm = json_config.get("source_images_to_llm", True)
+
         guardrail_categories = json_config.get("guardrail_categories", [])
 
         input_guardrail = {
@@ -297,6 +300,8 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
             "metadata": metadata,
             "guardrails_configuration": guardrails_configuration,
             "domain_threshold": domain_threshold,
+            "query_image_to_llm": query_image_to_llm,
+            "source_images_to_llm": source_images_to_llm,
         }
 
         return configuration

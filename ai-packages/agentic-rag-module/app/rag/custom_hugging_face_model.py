@@ -28,6 +28,20 @@ from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResu
 _FIELD_SEPARATOR = ":"
 
 
+def _reject_images(message: BaseMessage) -> None:
+    """Fail on a message that carries more than text.
+
+    The backend reads a plain string: an image would be dropped in silence.
+    Failing lets the response node retry with text only and tell the user, as
+    it does when any other provider rejects the images.
+    """
+    if isinstance(message.content, list) and any(
+        not isinstance(block, str) and block.get("type") != "text"
+        for block in message.content
+    ):
+        raise ValueError("the Hugging Face backend does not accept images")
+
+
 class CustomChatHuggingFaceModel(BaseChatModel):
     """A custom chat model that echoes the first `n` characters of the input.
 
@@ -65,6 +79,7 @@ class CustomChatHuggingFaceModel(BaseChatModel):
         # Replace this with actual logic to generate a response from a list
         # of messages.
         last_message = messages[-1]
+        _reject_images(last_message)
         tokens = last_message.content[: self.n]
         message = AIMessage(
             content=tokens,
@@ -104,6 +119,7 @@ class CustomChatHuggingFaceModel(BaseChatModel):
         """
 
         last_message = messages[-1]
+        _reject_images(last_message)
         tokens = last_message.content
 
         body = {"input_str": tokens}

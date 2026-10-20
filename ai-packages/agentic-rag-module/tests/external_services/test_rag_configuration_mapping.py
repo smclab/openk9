@@ -60,6 +60,8 @@ FULL_JSON_CONFIG = {
     "scope_gate_redirect_message": "Solo corsi Liferay.",
     "domain_threshold": 0.9,
     "guardrail_categories": ["violence", "hate"],
+    "query_image_to_llm": False,
+    "source_images_to_llm": False,
 }
 
 
@@ -149,6 +151,8 @@ def test_every_field_and_json_key_reaches_its_output_key():
             "guardrail_categories": ["violence", "hate"],
         },
         "domain_threshold": 0.9,
+        "query_image_to_llm": False,
+        "source_images_to_llm": False,
     }
 
 
@@ -199,6 +203,8 @@ def test_an_empty_json_config_yields_the_defaults():
             "guardrail_categories": [],
         },
         "domain_threshold": 0.7,
+        "query_image_to_llm": True,
+        "source_images_to_llm": True,
     }
 
 

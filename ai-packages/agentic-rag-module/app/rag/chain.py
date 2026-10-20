@@ -80,6 +80,8 @@ def get_agentic_rag(
         answer_only_with_context = rag_configuration.get("answer_only_with_context")
         score_threshold = rag_configuration.get("score_threshold")
         domain_threshold = rag_configuration.get("domain_threshold")
+        query_image_to_llm = rag_configuration.get("query_image_to_llm")
+        source_images_to_llm = rag_configuration.get("source_images_to_llm")
 
         model_type = llm_configuration.get("model_type")
         context_window = llm_configuration.get("context_window")
@@ -143,6 +145,8 @@ def get_agentic_rag(
             "guardrails_configuration": guardrails_configuration,
             "domain_threshold": domain_threshold,
             "retrieve_citations": retrieve_citations,
+            "query_image_to_llm": query_image_to_llm,
+            "source_images_to_llm": source_images_to_llm,
         }
 
         router = RagGraph(llm, graph_configuration, utility_llm=utility_llm)
