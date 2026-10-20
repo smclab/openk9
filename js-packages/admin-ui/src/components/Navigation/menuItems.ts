@@ -109,6 +109,13 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  {
+    label: "Admin Settings",
+    isGroup: true,
+    IsChildren: false,
+    value: "admin-settings-group",
+    children: [{ label: "ACL: Obscured Results", path: "/result-acl", IsChildren: true, value: "result-acl" }],
+  },
 ];
 
 export const useFilteredMenuItems = (searchTerm: string) => {

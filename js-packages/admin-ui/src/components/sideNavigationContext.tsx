@@ -74,9 +74,11 @@ export type NamePath =
   | "ai-tools-group"
   | "generative-ai-group"
   | "query-analysis-group"
+  | "admin-settings-group"
   | "rag-configuration"
   | "rag-configurations"
-  | "connectors";
+  | "connectors"
+  | "result-acl";
 
 export const namePath: { label: NamePath; value: NamePath }[] = [
   { label: "admin", value: "admin" },
@@ -127,6 +129,7 @@ export const namePath: { label: NamePath; value: NamePath }[] = [
   { label: "embedding-models", value: "embedding-models" },
   { label: "rag-configuration", value: "rag-configurations" },
   { label: "rag-configurations", value: "rag-configurations" },
+  { label: "result-acl", value: "result-acl" },
 ];
 
 type SideNavigationContextValue = {

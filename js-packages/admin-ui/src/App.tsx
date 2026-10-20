@@ -89,6 +89,7 @@ import { SaveDocumentType } from "@pages/DocumentTypes/SaveDocumentType";
 import { SubDocTypes } from "@pages/DocumentTypes/SubDocTypes";
 import { SavePluginnDriverModel } from "@pages/PluginDriver/SavePluginDriver";
 import { RagConfigurations, SaveRagConfiguration } from "@pages/RagConfiguration";
+import { SaveResultAclConfig } from "@pages/ResultAclConfig";
 import { QueryClientProvider } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
@@ -505,6 +506,8 @@ const AppRoutes = ({ setExtraFab }: AppRoutesProps) => (
     <Route path="/rag-configurations" element={<RagConfigurations />} />
     <Route path="/rag-configuration/:ragConfigId" element={<SaveRagConfiguration setExtraFab={setExtraFab} />} />
     <Route path="/rag-configuration/:ragConfigId/:view" element={<SaveRagConfiguration setExtraFab={setExtraFab} />} />
+
+    <Route path="/result-acl" element={<SaveResultAclConfig />} />
   </Routes>
 );
 
