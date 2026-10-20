@@ -447,8 +447,11 @@ export function Table<
             scroller.current = element instanceof HTMLElement ? element : null;
           }}
           totalListHeightChanged={(height) => {
+            // Virtuoso passa lo scroller da un effect, e può riportare l'altezza del solo header prima:
+            // senza scroller l'header non si misura e quell'altezza passerebbe per una lista corta
+            if (!scroller.current) return;
             // finché nessuna riga è misurata (lista vuota, o appena disegnata) Virtuoso conta il solo header
-            const header = scroller.current?.querySelector("thead")?.getBoundingClientRect().height ?? 0;
+            const header = scroller.current.querySelector("thead")?.getBoundingClientRect().height ?? 0;
             if (height > header + 1) listHeight.current = height;
             fillTable(data);
           }}
