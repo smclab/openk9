@@ -32,7 +32,7 @@ def _payload(id):
     return {
         "resources": {
             "binaries": [
-                {"id": id, "resourceId": f"r{id}", "url": f"http://binaries/r{id}"}
+                {"id": id, "resourceId": f"r{id}", "stagingUrl": f"http://binaries/r{id}"}
             ]
         },
         "tenantId": "t",

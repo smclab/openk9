@@ -32,5 +32,5 @@ public class BinaryPayload {
 	private String id;
 	private String name;
 	private String contentType;
-	private String url;
+	private String stagingUrl;
 }

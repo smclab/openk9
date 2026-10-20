@@ -113,7 +113,7 @@ def conversion(bin, configs, local_path=None):
 
     Args:
         bin (dict): A dictionary representing a binary resource. It must contain
-            the key `"url"`, a pre-signed GET URL from which the resource is
+            the key `"stagingUrl"`, a pre-signed GET URL from which the resource is
             fetched, and may carry `"name"`, the binary's file name, used as a
             hint to tell text-based formats apart.
         configs (dict): The enrich item configuration, applied to the docling
@@ -130,7 +130,7 @@ def conversion(bin, configs, local_path=None):
         with open(local_path, "rb") as file:
             content = file.read()
     else:
-        response = requests.get(bin.get("url"), timeout=FETCH_TIMEOUT_SECONDS)
+        response = requests.get(bin.get("stagingUrl"), timeout=FETCH_TIMEOUT_SECONDS)
         _check_status(response)
         content = response.content
     bites = BytesIO(content)

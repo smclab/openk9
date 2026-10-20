@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.processor.payload;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
@@ -25,7 +27,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
 @RegisterForReflection
@@ -33,10 +35,17 @@ public class BinaryPayload {
 	private String id;
 	private String name;
 	private String contentType;
+	// Persistent URL of the binary at the source, written by the connector
+	// when it exists: the only way to retrieve the binary after indexing.
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private String sourceUrl;
+	// page, caption, generated and free keys, all optional.
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private Map<String, Object> metadata;
 	// Pre-signed GET URL injected by the datasource before invoking an
 	// enricher that reads binaries; absent on the bus, minted per invocation
 	// and stripped before indexing (bearer credential), so it is serialized
 	// only when present.
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private String url;
+	private String stagingUrl;
 }

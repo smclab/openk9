@@ -162,7 +162,7 @@ public class ResourcesValidatorProcessor {
 
 			for (BinaryPayload binaryPayload : binaries) {
 
-				String url = binaryPayload.getUrl();
+				String url = binaryPayload.getStagingUrl();
 
 				try (InputStream inputStream = openStream(url)) {
 

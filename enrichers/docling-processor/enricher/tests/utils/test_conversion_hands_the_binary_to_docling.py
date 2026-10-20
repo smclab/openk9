@@ -70,7 +70,7 @@ def _stubbed():
 
 def test_the_downloaded_binary_is_what_docling_converts():
     with _stubbed() as stubs:
-        result = converter.conversion({"url": URL, "name": NAME}, CONFIGS)
+        result = converter.conversion({"stagingUrl": URL, "name": NAME}, CONFIGS)
 
     stubs.requests.get.assert_called_once_with(
         URL, timeout=converter.FETCH_TIMEOUT_SECONDS
@@ -92,7 +92,7 @@ def test_the_downloaded_binary_is_what_docling_converts():
 # The name is only a hint: a binary without one is detected from its bytes.
 def test_a_binary_without_a_name_is_detected_from_its_bytes():
     with _stubbed() as stubs:
-        converter.conversion({"url": URL}, {})
+        converter.conversion({"stagingUrl": URL}, {})
 
     stubs.detect_format.assert_called_once_with(CONTENT, "")
     stubs.stream_name.assert_called_once_with("", InputFormat.PDF)
@@ -105,7 +105,7 @@ def test_a_failed_download_is_raised_without_converting():
     with _stubbed() as stubs:
         stubs.requests.get.return_value.status_code = 403
         with pytest.raises(requests.HTTPError, match="HTTP 403") as raised:
-            converter.conversion({"url": URL, "name": NAME}, CONFIGS)
+            converter.conversion({"stagingUrl": URL, "name": NAME}, CONFIGS)
 
     assert URL not in str(raised.value)
 

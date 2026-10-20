@@ -23,7 +23,7 @@ from docling.datamodel.base_models import InputFormat
 
 import app.utils.converter as converter
 
-BINARY = {"url": "http://binaries/r0", "name": "doc.pdf"}
+BINARY = {"stagingUrl": "http://binaries/r0", "name": "doc.pdf"}
 
 
 @pytest.fixture(autouse=True)

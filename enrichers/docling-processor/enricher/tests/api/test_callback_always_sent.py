@@ -28,7 +28,7 @@ CALLBACK_URL = f"{DATASOURCE_HOST}/api/datasource/pipeline/callback/tok"
 
 
 def _binary(id):
-    return {"id": id, "resourceId": f"r{id}", "url": f"http://binaries/r{id}"}
+    return {"id": id, "resourceId": f"r{id}", "stagingUrl": f"http://binaries/r{id}"}
 
 
 # Run operation() with the given payload and conversion behaviour, and return

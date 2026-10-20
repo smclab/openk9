@@ -197,7 +197,7 @@ public class EnrichItemSupervisor {
 		}
 
 		for (BinaryPayload binary : resources.getBinaries()) {
-			binary.setUrl(
+			binary.setStagingUrl(
 				StagedBinaryService.presignGet(
 					dataPayload.getTenantId(),
 					dataPayload.getDatasourceId(),

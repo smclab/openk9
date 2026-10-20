@@ -135,7 +135,7 @@ public class TikaProcessor {
             JsonObject binaryJson =
                 binaries.getJsonObject(internalIndex);
 
-            String url = binaryJson.getString("url");
+            String url = binaryJson.getString("stagingUrl");
 
             String name = binaryJson.getString("name");
 

@@ -98,7 +98,7 @@ def enqueue(payload, configs, token):
     try:
         for index, binary in enumerate(_fetchable_binaries(payload)):
             try:
-                staged[index] = fetch_to_file(binary["url"])
+                staged[index] = fetch_to_file(binary["stagingUrl"])
             except Exception as e:
                 # the URL is a credential: only the status or the error type
                 reason = str(e) if isinstance(e, requests.HTTPError) else type(e).__name__
@@ -135,7 +135,7 @@ def operation(payload, configs, token, staged=None):
 
 
 def _fetchable_binaries(payload):
-    return [b for b in payload["resources"].get("binaries", []) if "url" in b]
+    return [b for b in payload["resources"].get("binaries", []) if "stagingUrl" in b]
 
 
 def _remove_staged(staged):

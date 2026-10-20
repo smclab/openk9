@@ -18,7 +18,11 @@
 package io.openk9.datasource.pipeline.actor;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -33,7 +37,9 @@ import io.openk9.datasource.pipeline.service.dto.EnrichItemDTO;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
+import io.openk9.datasource.processor.payload.BinaryPayload;
 import io.openk9.datasource.processor.payload.DataPayload;
+import io.openk9.datasource.processor.payload.ResourcesPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.openk9.datasource.util.JsonMerge;
 
@@ -517,8 +523,91 @@ public class EnrichPipeline {
 			mergedDataPayload.setRawContent(rawContent);
 		}
 
+		// resources are a declared field too: the binaries returned by the
+		// enricher update the known ones, matched by id
+		mergeBinaries(mergedDataPayload, newDataPayload);
+
 		return mergedDataPayload;
 
+	}
+
+	/**
+	 * Updates the binaries of a payload with the ones an enricher returned,
+	 * matched by {@code id}. A returned {@code name} or {@code contentType}
+	 * replaces the current one; the returned {@code metadata} keys replace
+	 * the current values and the missing keys stay. {@code id},
+	 * {@code sourceUrl} and {@code stagingUrl} never change. A binary with an
+	 * unknown id is discarded, a binary the enricher left out stays as it is.
+	 *
+	 * @param mergedDataPayload the payload to update, sharing its resources
+	 *                          with the previous payload
+	 * @param newDataPayload    the payload returned by the enricher
+	 */
+	private static void mergeBinaries(
+		DataPayload mergedDataPayload, DataPayload newDataPayload) {
+
+		var returnedResources = newDataPayload.getResources();
+
+		if (returnedResources == null
+			|| returnedResources.getBinaries() == null) {
+
+			return;
+		}
+
+		var resources = mergedDataPayload.getResources();
+		List<BinaryPayload> current = resources != null
+			&& resources.getBinaries() != null
+			? resources.getBinaries()
+			: List.of();
+
+		// copy the binaries: the resources are shared with the previous payload
+		List<BinaryPayload> binaries = new ArrayList<>();
+		Map<String, BinaryPayload> binaryById = new HashMap<>();
+
+		for (BinaryPayload binary : current) {
+			var copy = binary.toBuilder().build();
+			binaries.add(copy);
+			binaryById.put(copy.getId(), copy);
+		}
+
+		for (BinaryPayload returned : returnedResources.getBinaries()) {
+
+			var binary = binaryById.get(returned.getId());
+
+			if (binary == null) {
+				log.warnf(
+					"[contentId: %s] the enricher returned the unknown " +
+					"binary %s, discarding it.",
+					mergedDataPayload.getContentId(),
+					returned.getId()
+				);
+
+				continue;
+			}
+
+			if (returned.getName() != null) {
+				binary.setName(returned.getName());
+			}
+
+			if (returned.getContentType() != null) {
+				binary.setContentType(returned.getContentType());
+			}
+
+			if (returned.getMetadata() != null) {
+				Map<String, Object> metadata = binary.getMetadata() != null
+					? new LinkedHashMap<>(binary.getMetadata())
+					: new LinkedHashMap<>();
+
+				metadata.putAll(returned.getMetadata());
+				binary.setMetadata(metadata);
+			}
+		}
+
+		if (binaries.isEmpty()) {
+			return;
+		}
+
+		mergedDataPayload.setResources(ResourcesPayload.of(binaries));
 	}
 
 	private static DataPayload prepareDataPayload(byte[] payloadArray, SchedulerDTO scheduler) {
@@ -551,7 +640,7 @@ public class EnrichPipeline {
 		}
 
 		for (var binary : resources.getBinaries()) {
-			binary.setUrl(null);
+			binary.setStagingUrl(null);
 		}
 	}
 

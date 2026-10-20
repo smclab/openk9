@@ -58,7 +58,7 @@ def _payload(*urls):
     return {
         "resources": {
             "binaries": [
-                {"id": i, "name": f"f{i}.pdf", "url": url}
+                {"id": i, "name": f"f{i}.pdf", "stagingUrl": url}
                 for i, url in enumerate(urls)
             ]
         },

@@ -110,14 +110,14 @@ To run the enricher in local you have to:
    The file is now reachable at `http://localhost:8003/sample.pdf`.
 4. Trigger a task on the processor. Open the Docling Swagger UI at
    http://localhost:8002/docs, call `POST /start-task/`, and set each binary's
-   `url` to the static-server URL from the previous step:
+   `stagingUrl` to the static-server URL from the previous step:
     ```json
     {
       "payload": {
         "tenantId": "mrossi",
         "resources": {
           "binaries": [
-            {"resourceId": "doc_1", "url": "http://localhost:8003/sample.pdf"}
+            {"resourceId": "doc_1", "stagingUrl": "http://localhost:8003/sample.pdf"}
           ]
         }
       },
@@ -125,7 +125,7 @@ To run the enricher in local you have to:
       "replyTo": "fake-token"
     }
     ```
-   Docling fetches each binary with a plain GET on its `url`, converts it, and
+   Docling fetches each binary with a plain GET on its `stagingUrl`, converts it, and
    posts the Markdown result to
    `{DATASOURCE_HOST}/api/datasource/pipeline/callback/{replyTo}` on :8001,
    where the mock prints it. Any HTTP source works, so the static server can be
@@ -194,7 +194,7 @@ Starts the background document-processing task.
 **Behavior**
 
 * Extracts binary resources from the Openk9 payload
-* Downloads each binary from the pre-signed `url` in the payload as soon as the
+* Downloads each binary from the pre-signed `stagingUrl` in the payload as soon as the
   task arrives, into a temporary file, while the URL is still valid
 * Queues the conversion and, when a worker is free, converts the binaries into
   Markdown with Docling; the temporary files are removed afterwards
