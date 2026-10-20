@@ -238,7 +238,8 @@ export function SaveResultAclConfig() {
         </Typography>
       </SettingsSection>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+      {/* The bottom margin keeps Save clear of the floating buttons, as in the entity wizard */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", marginBottom: "70px" }}>
         <Button variant="contained" onClick={() => form.submit()} disabled={!form.canSubmit}>
           {t("common.save")}
         </Button>
