@@ -1,4 +1,36 @@
 {
+	"dynamic_templates": [
+	  {
+		"binary_metadata_strings": {
+		  "path_match": "binary.metadata.*",
+		  "match_mapping_type": "string",
+		  "mapping": {
+			"type": "text",
+			"fields": {
+			  "keyword": {
+				"ignore_above": 256,
+				"type": "keyword"
+			  }
+			}
+		  }
+		}
+	  },
+	  {
+		"binary_metadata_dates": {
+		  "path_match": "binary.metadata.*",
+		  "match_mapping_type": "date",
+		  "mapping": {
+			"type": "text",
+			"fields": {
+			  "keyword": {
+				"ignore_above": 256,
+				"type": "keyword"
+			  }
+			}
+		  }
+		}
+	  }
+	],
 	"properties": {
 	  "chunkText": {
 		"type": "text",
@@ -50,6 +82,48 @@
 		  }
 		}
       },
+	  "binary": {
+		"properties": {
+		  "id": {
+			"type": "keyword"
+		  },
+		  "name": {
+			"type": "text",
+			"fields": {
+			  "keyword": {
+				"ignore_above": 256,
+				"type": "keyword"
+			  }
+			}
+		  },
+		  "contentType": {
+			"type": "keyword"
+		  },
+		  "sourceUrl": {
+			"type": "keyword"
+		  },
+		  "metadata": {
+			"properties": {
+			  "page": {
+				"type": "integer",
+				"ignore_malformed": true
+			  },
+			  "caption": {
+				"type": "text",
+				"fields": {
+				  "keyword": {
+					"ignore_above": 256,
+					"type": "keyword"
+				  }
+				}
+			  },
+			  "generated": {
+				"type": "boolean"
+			  }
+			}
+		  }
+		}
+	  },
 	  "previous": {
 		"properties": {
 		  "chunkText": {

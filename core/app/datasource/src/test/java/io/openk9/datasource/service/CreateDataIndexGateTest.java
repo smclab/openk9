@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.service;
 
+import java.io.IOException;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -31,10 +32,13 @@ import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.vertx.core.json.JsonObject;
+import org.apache.http.util.EntityUtils;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.Request;
 import org.opensearch.client.RestHighLevelClient;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -121,6 +125,51 @@ class CreateDataIndexGateTest {
 			indexTemplate.composedOf().contains(componentTemplateName(embeddingModel)),
 			"the index template does not compose the embedding component template"
 		);
+	}
+
+	@Test
+	@DisplayName("Should rewrite the embedding component template of an older model")
+	void should_rewrite_the_component_template_on_a_knn_data_index()
+		throws IOException {
+
+		// the model was enabled when the chunk mappings had no binary
+		var embeddingModel = EntitiesUtils.getEntity(
+			Initializer.EMBEDDING_MODEL_DEFAULT_PRIMARY,
+			embeddingModelService,
+			sessionFactory
+		);
+		var componentTemplateName = componentTemplateName(embeddingModel);
+
+		var putRequest =
+			new Request("PUT", "/_component_template/" + componentTemplateName);
+		putRequest.setJsonEntity(new JsonObject()
+			.put("template", new JsonObject()
+				.put("settings", new JsonObject().put("index.knn", true))
+				.put("mappings", new JsonObject()
+					.put("properties", new JsonObject()
+						.put("vector", new JsonObject()
+							.put("type", "knn_vector")
+							.put("dimension", embeddingModel.getVectorSize())))))
+			.encode());
+		restHighLevelClient.getLowLevelClient().performRequest(putRequest);
+
+		// a knn dataIndex is created
+		createDataIndex(KNN_DATA_INDEX, true);
+
+		// the component template has the binary fields again
+		var response = restHighLevelClient.getLowLevelClient().performRequest(
+			new Request("GET", "/_component_template/" + componentTemplateName));
+		var mappings = new JsonObject(
+				EntityUtils.toString(response.getEntity()))
+			.getJsonArray("component_templates")
+			.getJsonObject(0)
+			.getJsonObject("component_template")
+			.getJsonObject("template")
+			.getJsonObject("mappings");
+
+		assertTrue(
+			mappings.getJsonObject("properties").containsKey("binary"),
+			"the component template was not rewritten: " + mappings);
 	}
 
 	@Test

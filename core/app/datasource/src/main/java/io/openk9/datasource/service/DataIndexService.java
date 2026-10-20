@@ -42,6 +42,7 @@ import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.exception.IndexMappingException;
 import io.openk9.datasource.index.model.DataIndexTemplate;
+import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
 import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.index.model.MappingsKey;
 import io.openk9.datasource.index.response.CatResponse;
@@ -1070,6 +1071,8 @@ public class DataIndexService
 
 		return recoverIndexTemplateSettings(session, dataIndex, recoverFrom)
 			.flatMap(unused -> getCurrentTenant(session))
+			.call(tenantId -> refreshEmbeddingComponentTemplate(
+				session, tenantId, dataIndex, embeddingModel))
 			.flatMap(tenantId -> session.fetch(dataIndex.getDocTypes())
 				// the mappings are built from the docTypeFields, so the
 				// docTypes have to be expanded whoever handed them over
@@ -1084,6 +1087,43 @@ public class DataIndexService
 					)
 				))
 			);
+	}
+
+	/**
+	 * Rewrites the component template of the embedding model before the index
+	 * template of a knn dataIndex is generated, so that a model enabled
+	 * before a change of the chunk mappings gets the new fields with the next
+	 * dataIndex or reindex. The fields of the {@code default} docType are
+	 * refreshed too.
+	 *
+	 * @param session        the session the docType fields are merged in
+	 * @param tenantId       the tenant owning the dataIndex
+	 * @param dataIndex      the dataIndex the index template belongs to
+	 * @param embeddingModel the model the vector field comes from,
+	 *                       {@code null} for a plain dataIndex
+	 * @return an empty {@link Uni}, failing when the component template
+	 * cannot be written
+	 */
+	private Uni<Void> refreshEmbeddingComponentTemplate(
+		Mutiny.Session session,
+		String tenantId,
+		DataIndex dataIndex,
+		EmbeddingModel embeddingModel) {
+
+		if (embeddingModel == null
+			|| !Boolean.TRUE.equals(dataIndex.getKnnIndex())) {
+			return Uni.createFrom().voidItem();
+		}
+
+		return indexMappingService.createEmbeddingComponentTemplate(
+			session,
+			new EmbeddingComponentTemplate(
+				tenantId,
+				embeddingModel.getName(),
+				embeddingModel.getVectorSize(),
+				embeddingModel.getVectorDataType()
+			)
+		);
 	}
 
 	/**

@@ -20,11 +20,17 @@ package io.openk9.datasource.index;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel.VectorDataType;
 
 import io.quarkus.qute.Engine;
@@ -84,7 +90,135 @@ public class EmbeddingComponentMappingsTest {
 		assertEquals("hamming", method.getString("space_type"));
 	}
 
+	@Test
+	void should_map_the_fixed_binary_fields_for_exact_filters() {
+
+		var binary = render(VectorDataType.FLOAT32)
+			.getJsonObject("properties")
+			.getJsonObject("binary")
+			.getJsonObject("properties");
+
+		// identity and type are keywords: a filter matches the whole value
+		assertEquals("keyword", typeOf(binary, "id"));
+		assertEquals("keyword", typeOf(binary, "contentType"));
+		assertEquals("keyword", typeOf(binary, "sourceUrl"));
+
+		// name and caption are text with a keyword subfield
+		assertTextWithKeyword(binary.getJsonObject("name"));
+		assertTextWithKeyword(
+			binary.getJsonObject("metadata")
+				.getJsonObject("properties")
+				.getJsonObject("caption"));
+	}
+
+	@Test
+	void should_map_the_free_metadata_keys_as_text_even_when_dates() {
+
+		var dynamicTemplates = render(VectorDataType.FLOAT32)
+			.getJsonArray("dynamic_templates");
+
+		// one template for strings, one for strings shaped as dates
+		assertEquals(2, dynamicTemplates.size());
+
+		for (int i = 0; i < dynamicTemplates.size(); i++) {
+			var entry = dynamicTemplates.getJsonObject(i);
+			var dynamicTemplate = entry.getJsonObject(
+				entry.fieldNames().iterator().next());
+
+			assertEquals("binary.metadata.*", dynamicTemplate.getString("path_match"));
+			assertTextWithKeyword(dynamicTemplate.getJsonObject("mapping"));
+		}
+
+		assertEquals(
+			"string",
+			dynamicTemplates.getJsonObject(0)
+				.getJsonObject("binary_metadata_strings")
+				.getString("match_mapping_type"));
+		assertEquals(
+			"date",
+			dynamicTemplates.getJsonObject(1)
+				.getJsonObject("binary_metadata_dates")
+				.getString("match_mapping_type"));
+	}
+
+	@Test
+	void should_drop_a_malformed_page_instead_of_the_chunk() {
+
+		var metadata = render(VectorDataType.FLOAT32)
+			.getJsonObject("properties")
+			.getJsonObject("binary")
+			.getJsonObject("properties")
+			.getJsonObject("metadata")
+			.getJsonObject("properties");
+
+		// a page that is not an integer is ignored, the chunk is indexed
+		var page = metadata.getJsonObject("page");
+		assertEquals("integer", page.getString("type"));
+		assertTrue(page.getBoolean("ignore_malformed"));
+
+		// generated stays a strict boolean
+		assertEquals("boolean", typeOf(metadata, "generated"));
+	}
+
+	@Test
+	void should_generate_searchable_default_fields_for_text_and_keywords() {
+
+		// the fields the component template adds to the default doc type
+		var docTypeFields = IndexMappingService.toDocTypeFields(
+			render(VectorDataType.FLOAT32).getMap());
+		Map<String, DocTypeField> fieldByName = new HashMap<>();
+		flatten(docTypeFields, fieldByName);
+
+		// text and keyword fields can be used by a FILTER
+		for (String name : List.of(
+			"binary.id", "binary.name", "binary.contentType",
+			"binary.sourceUrl", "binary.metadata.caption")) {
+
+			assertTrue(
+				fieldByName.get(name).isSearchable(), name + " not searchable");
+		}
+
+		// page and generated cannot
+		assertFalse(fieldByName.get("binary.metadata.page").isSearchable());
+		assertFalse(fieldByName.get("binary.metadata.generated").isSearchable());
+
+		// the dynamic templates are not fields
+		assertTrue(fieldByName.keySet()
+			.stream()
+			.noneMatch(name -> name.startsWith("dynamic_templates")));
+	}
+
+	private static void flatten(
+		Collection<DocTypeField> docTypeFields,
+		Map<String, DocTypeField> fieldByName) {
+
+		for (DocTypeField docTypeField : docTypeFields) {
+			fieldByName.put(docTypeField.getName(), docTypeField);
+			flatten(docTypeField.getSubDocTypeFields(), fieldByName);
+		}
+	}
+
+	private static String typeOf(JsonObject properties, String field) {
+		return properties.getJsonObject(field).getString("type");
+	}
+
+	private static void assertTextWithKeyword(JsonObject field) {
+		assertEquals("text", field.getString("type"));
+		assertEquals(
+			"keyword",
+			field.getJsonObject("fields")
+				.getJsonObject("keyword")
+				.getString("type"));
+	}
+
 	private static JsonObject renderVector(VectorDataType vectorDataType) {
+
+		return render(vectorDataType)
+			.getJsonObject("properties")
+			.getJsonObject("vector");
+	}
+
+	private static JsonObject render(VectorDataType vectorDataType) {
 
 		// resolve the knn parameters the same way the service does
 		var componentTemplate = new EmbeddingComponentTemplate(
@@ -93,9 +227,7 @@ public class EmbeddingComponentMappingsTest {
 		var rendered = IndexMappingService.renderEmbeddingComponentMappings(
 			template(), componentTemplate);
 
-		return new JsonObject(rendered)
-			.getJsonObject("properties")
-			.getJsonObject("vector");
+		return new JsonObject(rendered);
 	}
 
 	private static Template template() {
