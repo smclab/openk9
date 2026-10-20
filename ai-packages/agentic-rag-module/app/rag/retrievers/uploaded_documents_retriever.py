@@ -134,23 +134,47 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
                 {"term": {"chat_id.keyword": self.chat_id}},
             ]
             if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
+                # Both branches are restricted to the user chat while scoring:
+                # an approximate knn would pick its k neighbours among every
+                # chat of the tenant, and indices created on nmslib reject a
+                # knn filter. The vector branch therefore scores the chat
+                # chunks exactly, with the l2 space of the index mapping.
                 open_search_query = {
                     "query": {
                         "hybrid": {
                             "queries": [
-                                {"knn": {"vector": {"vector": vector_query, "k": 10}}},
                                 {
-                                    "match": {
-                                        "chunkText": {
-                                            "query": self.search_text,
-                                            "boost": 0.5,
-                                        }
+                                    "script_score": {
+                                        "query": {"bool": {"filter": filters}},
+                                        "script": {
+                                            "source": "knn_score",
+                                            "lang": "knn",
+                                            "params": {
+                                                "field": "vector",
+                                                "query_value": vector_query,
+                                                "space_type": "l2",
+                                            },
+                                        },
+                                    }
+                                },
+                                {
+                                    "bool": {
+                                        "must": [
+                                            {
+                                                "match": {
+                                                    "chunkText": {
+                                                        "query": self.search_text,
+                                                        "boost": 0.5,
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "filter": filters,
                                     }
                                 },
                             ]
                         }
                     },
-                    "post_filter": {"bool": {"filter": filters}},
                 }
             else:
                 open_search_query = {
