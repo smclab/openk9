@@ -2357,6 +2357,23 @@ export type Mutation = {
   removeTokenFilterFromAnalyzer?: Maybe<Tuple2_Analyzer_TokenFilter>;
   removeTokenFilterListFromAnalyzer?: Maybe<Analyzer>;
   removeTokenTabToTab?: Maybe<Tuple2_Tab_TokenTab>;
+  /**
+   * Creates or updates the result ACL configuration of the tenant.
+   *
+   * A tenant has a single configuration: the mutation creates it when it
+   * does not exist yet and updates it otherwise. The name is fixed and any
+   * value sent is ignored.
+   *
+   * Arguments:
+   * - `resultAclConfigDTO` (ResultAclConfigDTO!): The configuration data.
+   * - `patch` (Boolean): If true, updates only the values that are sent.
+   *   If false, replaces the whole configuration. Defaults to false.
+   *
+   * Returns:
+   * - A Response containing the saved configuration or the field
+   *   validation errors.
+   */
+  resultAclConfig?: Maybe<Response_ResultAclConfig>;
   rule?: Maybe<Response_Rule>;
   searchConfig?: Maybe<Response_SearchConfig>;
   searchConfigWithQueryParsers?: Maybe<Response_SearchConfig>;
@@ -3359,6 +3376,13 @@ export type MutationRemoveTokenTabToTabArgs = {
 
 
 /** Mutation root */
+export type MutationResultAclConfigArgs = {
+  patch?: InputMaybe<Scalars['Boolean']>;
+  resultAclConfigDTO?: InputMaybe<ResultAclConfigDtoInput>;
+};
+
+
+/** Mutation root */
 export type MutationRuleArgs = {
   id?: InputMaybe<Scalars['ID']>;
   patch?: InputMaybe<Scalars['Boolean']>;
@@ -3865,6 +3889,13 @@ export type Query = {
   queryParserConfigs?: Maybe<Connection_QueryParserConfig>;
   ragConfiguration?: Maybe<RagConfiguration>;
   ragConfigurations?: Maybe<Connection_RagConfiguration>;
+  /**
+   * Retrieves the result ACL configuration of the tenant.
+   *
+   * Returns null when the tenant has no configuration, which is equivalent
+   * to a configuration with the mode disabled.
+   */
+  resultAclConfig?: Maybe<ResultAclConfig>;
   rule?: Maybe<Rule>;
   rules?: Maybe<Connection_Rule>;
   scheduler?: Maybe<Scheduler>;
@@ -3941,6 +3972,21 @@ export type Query = {
    * - A list of unbound DocTypeFields available for the specified Autocorrection.
    */
   unboundDocTypeFieldByAutocorrection?: Maybe<Array<Maybe<DocTypeField>>>;
+  /**
+   * Retrieves all DocTypeField that can be added to the visible fields of the
+   *  result ACL configuration.
+   *
+   * This query returns, for each value of a document, the most specific
+   *  DocTypeField holding it, unless it is excluded or already a visible
+   *  field of the tenant result ACL configuration. Containers with
+   *  sub-fields, the variants of an i18n field and multi-fields are left
+   *  out: their sub-fields, the i18n field and the field holding the value
+   *  are listed instead.
+   *
+   * Returns:
+   * - A list of DocTypeFields available as visible fields.
+   */
+  unboundDocTypeFieldByResultAclConfig?: Maybe<Array<Maybe<DocTypeField>>>;
   /** Fetches DocTypeFields unbound to the provided SuggestionCategory ID with FieldType KEYWORD or I18N. */
   unboundDocTypeFieldsBySuggestionCategory?: Maybe<Array<Maybe<DocTypeField>>>;
   unboundEnrichPipelines?: Maybe<Array<Maybe<EnrichPipeline>>>;
@@ -5013,6 +5059,12 @@ export type Response_RagConfiguration = {
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
+export type Response_ResultAclConfig = {
+  __typename?: 'Response_ResultAclConfig';
+  entity?: Maybe<ResultAclConfig>;
+  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+};
+
 export type Response_Rule = {
   __typename?: 'Response_Rule';
   entity?: Maybe<Rule>;
@@ -5059,6 +5111,44 @@ export type Response_Tokenizer = {
   __typename?: 'Response_Tokenizer';
   entity?: Maybe<Tokenizer>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+};
+
+export type ResultAclConfig = {
+  __typename?: 'ResultAclConfig';
+  /** ISO-8601 */
+  createDate?: Maybe<Scalars['DateTime']>;
+  description?: Maybe<Scalars['String']>;
+  enabled: Scalars['Boolean'];
+  id?: Maybe<Scalars['ID']>;
+  /** ISO-8601 */
+  modifiedDate?: Maybe<Scalars['DateTime']>;
+  name?: Maybe<Scalars['String']>;
+  /** Roles whose holders read every result in full */
+  superUserRoles?: Maybe<Array<Maybe<Scalars['String']>>>;
+  /** DocTypeFields still visible on a result the user cannot read */
+  visibleFields?: Maybe<Array<Maybe<DocTypeField>>>;
+};
+
+export type ResultAclConfigDtoInput = {
+  description?: InputMaybe<Scalars['String']>;
+  /**
+   * Whether the ACLs decide what is visible of each result instead of
+   * filtering the query. False when omitted on create or update; left
+   * unchanged when omitted on patch.
+   */
+  enabled?: InputMaybe<Scalars['Boolean']>;
+  name: Scalars['String'];
+  /**
+   * Roles whose holders read every result in full, compared with the
+   * roles of the JWT. Each role must be non-blank and on a single line.
+   */
+  superUserRoles?: InputMaybe<Array<Scalars['String']>>;
+  /**
+   * IDs of the DocTypeFields still visible on a result the user is not
+   * authorized to read. Excluded fields, OBJECT fields, containers with
+   * sub-fields, variants of an i18n field and multi-fields are rejected.
+   */
+  visibleFieldIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
 };
 
 export enum RetrieveType {
@@ -6600,6 +6690,23 @@ export type UnboundRagConfigurationsByBucketQueryVariables = Exact<{
 
 
 export type UnboundRagConfigurationsByBucketQuery = { __typename?: 'Query', unboundRAGConfigurationByBucket?: Array<{ __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null> | null };
+
+export type ResultAclConfigQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ResultAclConfigQuery = { __typename?: 'Query', resultAclConfig?: { __typename?: 'ResultAclConfig', id?: string | null, enabled: boolean, superUserRoles?: Array<string | null> | null, visibleFields?: Array<{ __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null> | null } | null };
+
+export type UnboundDocTypeFieldByResultAclConfigQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type UnboundDocTypeFieldByResultAclConfigQuery = { __typename?: 'Query', unboundDocTypeFieldByResultAclConfig?: Array<{ __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null> | null };
+
+export type CreateOrUpdateResultAclConfigMutationVariables = Exact<{
+  resultAclConfigDTO: ResultAclConfigDtoInput;
+}>;
+
+
+export type CreateOrUpdateResultAclConfigMutation = { __typename?: 'Mutation', resultAclConfig?: { __typename?: 'Response_ResultAclConfig', entity?: { __typename?: 'ResultAclConfig', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
 export type RulesQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -11845,6 +11952,120 @@ export function useUnboundRagConfigurationsByBucketLazyQuery(baseOptions?: Apoll
 export type UnboundRagConfigurationsByBucketQueryHookResult = ReturnType<typeof useUnboundRagConfigurationsByBucketQuery>;
 export type UnboundRagConfigurationsByBucketLazyQueryHookResult = ReturnType<typeof useUnboundRagConfigurationsByBucketLazyQuery>;
 export type UnboundRagConfigurationsByBucketQueryResult = Apollo.QueryResult<UnboundRagConfigurationsByBucketQuery, UnboundRagConfigurationsByBucketQueryVariables>;
+export const ResultAclConfigDocument = gql`
+    query ResultAclConfig {
+  resultAclConfig {
+    id
+    enabled
+    superUserRoles
+    visibleFields {
+      id
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useResultAclConfigQuery__
+ *
+ * To run a query within a React component, call `useResultAclConfigQuery` and pass it any options that fit your needs.
+ * When your component renders, `useResultAclConfigQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useResultAclConfigQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useResultAclConfigQuery(baseOptions?: Apollo.QueryHookOptions<ResultAclConfigQuery, ResultAclConfigQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ResultAclConfigQuery, ResultAclConfigQueryVariables>(ResultAclConfigDocument, options);
+      }
+export function useResultAclConfigLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ResultAclConfigQuery, ResultAclConfigQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ResultAclConfigQuery, ResultAclConfigQueryVariables>(ResultAclConfigDocument, options);
+        }
+export type ResultAclConfigQueryHookResult = ReturnType<typeof useResultAclConfigQuery>;
+export type ResultAclConfigLazyQueryHookResult = ReturnType<typeof useResultAclConfigLazyQuery>;
+export type ResultAclConfigQueryResult = Apollo.QueryResult<ResultAclConfigQuery, ResultAclConfigQueryVariables>;
+export const UnboundDocTypeFieldByResultAclConfigDocument = gql`
+    query UnboundDocTypeFieldByResultAclConfig {
+  unboundDocTypeFieldByResultAclConfig {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useUnboundDocTypeFieldByResultAclConfigQuery__
+ *
+ * To run a query within a React component, call `useUnboundDocTypeFieldByResultAclConfigQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUnboundDocTypeFieldByResultAclConfigQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUnboundDocTypeFieldByResultAclConfigQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useUnboundDocTypeFieldByResultAclConfigQuery(baseOptions?: Apollo.QueryHookOptions<UnboundDocTypeFieldByResultAclConfigQuery, UnboundDocTypeFieldByResultAclConfigQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UnboundDocTypeFieldByResultAclConfigQuery, UnboundDocTypeFieldByResultAclConfigQueryVariables>(UnboundDocTypeFieldByResultAclConfigDocument, options);
+      }
+export function useUnboundDocTypeFieldByResultAclConfigLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundDocTypeFieldByResultAclConfigQuery, UnboundDocTypeFieldByResultAclConfigQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UnboundDocTypeFieldByResultAclConfigQuery, UnboundDocTypeFieldByResultAclConfigQueryVariables>(UnboundDocTypeFieldByResultAclConfigDocument, options);
+        }
+export type UnboundDocTypeFieldByResultAclConfigQueryHookResult = ReturnType<typeof useUnboundDocTypeFieldByResultAclConfigQuery>;
+export type UnboundDocTypeFieldByResultAclConfigLazyQueryHookResult = ReturnType<typeof useUnboundDocTypeFieldByResultAclConfigLazyQuery>;
+export type UnboundDocTypeFieldByResultAclConfigQueryResult = Apollo.QueryResult<UnboundDocTypeFieldByResultAclConfigQuery, UnboundDocTypeFieldByResultAclConfigQueryVariables>;
+export const CreateOrUpdateResultAclConfigDocument = gql`
+    mutation CreateOrUpdateResultAclConfig($resultAclConfigDTO: ResultAclConfigDTOInput!) {
+  resultAclConfig(resultAclConfigDTO: $resultAclConfigDTO, patch: false) {
+    entity {
+      id
+    }
+    fieldValidators {
+      field
+      message
+    }
+  }
+}
+    `;
+export type CreateOrUpdateResultAclConfigMutationFn = Apollo.MutationFunction<CreateOrUpdateResultAclConfigMutation, CreateOrUpdateResultAclConfigMutationVariables>;
+
+/**
+ * __useCreateOrUpdateResultAclConfigMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateResultAclConfigMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateResultAclConfigMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateResultAclConfigMutation, { data, loading, error }] = useCreateOrUpdateResultAclConfigMutation({
+ *   variables: {
+ *      resultAclConfigDTO: // value for 'resultAclConfigDTO'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateResultAclConfigMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateResultAclConfigMutation, CreateOrUpdateResultAclConfigMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateResultAclConfigMutation, CreateOrUpdateResultAclConfigMutationVariables>(CreateOrUpdateResultAclConfigDocument, options);
+      }
+export type CreateOrUpdateResultAclConfigMutationHookResult = ReturnType<typeof useCreateOrUpdateResultAclConfigMutation>;
+export type CreateOrUpdateResultAclConfigMutationResult = Apollo.MutationResult<CreateOrUpdateResultAclConfigMutation>;
+export type CreateOrUpdateResultAclConfigMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateResultAclConfigMutation, CreateOrUpdateResultAclConfigMutationVariables>;
 export const RulesDocument = gql`
     query Rules($searchText: String, $after: String) {
   rules(searchText: $searchText, first: 20, after: $after) {
@@ -17227,4 +17448,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-10-12T15:02:26+02:00
+// Generated on 2026-10-19T17:12:36+02:00
