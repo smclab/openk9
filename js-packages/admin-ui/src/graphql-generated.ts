@@ -5057,7 +5057,7 @@ export type DeleteDocumentTypeTemplateMutation = { __typename?: 'Mutation', dele
 
 export type DocumentTypesQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -5772,7 +5772,7 @@ export type RemoveTokenTabToTabMutation = { __typename?: 'Mutation', removeToken
 
 export type TabTokensQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -7571,8 +7571,8 @@ export type DeleteDocumentTypeTemplateMutationHookResult = ReturnType<typeof use
 export type DeleteDocumentTypeTemplateMutationResult = Apollo.MutationResult<DeleteDocumentTypeTemplateMutation>;
 export type DeleteDocumentTypeTemplateMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeTemplateMutation, DeleteDocumentTypeTemplateMutationVariables>;
 export const DocumentTypesDocument = gql`
-    query DocumentTypes($searchText: String, $cursor: String) {
-  docTypes(searchText: $searchText, first: 20, after: $cursor) {
+    query DocumentTypes($searchText: String, $after: String) {
+  docTypes(searchText: $searchText, first: 20, after: $after) {
     edges {
       node {
         id
@@ -11158,8 +11158,8 @@ export type RemoveTokenTabToTabMutationHookResult = ReturnType<typeof useRemoveT
 export type RemoveTokenTabToTabMutationResult = Apollo.MutationResult<RemoveTokenTabToTabMutation>;
 export type RemoveTokenTabToTabMutationOptions = Apollo.BaseMutationOptions<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>;
 export const TabTokensDocument = gql`
-    query TabTokens($searchText: String, $cursor: String) {
-  totalTokenTabs(searchText: $searchText, first: 20, after: $cursor) {
+    query TabTokens($searchText: String, $after: String) {
+  totalTokenTabs(searchText: $searchText, first: 20, after: $after) {
     edges {
       node {
         id

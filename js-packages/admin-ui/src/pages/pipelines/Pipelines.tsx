@@ -70,8 +70,8 @@ export function Pipelines() {
             field: (data) => data?.enrichPipelines,
           }}
           onCreatePath="/pipeline/new/mode/edit"
-          edgesPath="pipelines.edges"
-          pageInfoPath="pipelines.pageInfo"
+          edgesPath="enrichPipelines.edges"
+          pageInfoPath="enrichPipelines.pageInfo"
           onDelete={(pipelines) => {
             if (pipelines?.id)
               deleteEnrichPipelineMutate({

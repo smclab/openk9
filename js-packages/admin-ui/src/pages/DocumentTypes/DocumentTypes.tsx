@@ -65,8 +65,8 @@ export default function DocumentTypes() {
               field: (data) => data?.docTypes,
             }}
             onCreatePath="/document-type/new"
-            edgesPath="documentTypes.edges"
-            pageInfoPath="documentTypes.pageInfo"
+            edgesPath="docTypes.edges"
+            pageInfoPath="docTypes.pageInfo"
             onDelete={(documentType) => {
               if (documentType?.id) {
               }

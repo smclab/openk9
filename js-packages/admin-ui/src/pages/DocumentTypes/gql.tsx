@@ -28,8 +28,8 @@ gql`
 `;
 
 gql`
-  query DocumentTypes($searchText: String, $cursor: String) {
-    docTypes(searchText: $searchText, first: 20, after: $cursor) {
+  query DocumentTypes($searchText: String, $after: String) {
+    docTypes(searchText: $searchText, first: 20, after: $after) {
       edges {
         node {
           id
