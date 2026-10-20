@@ -358,6 +358,29 @@
           "not-applied": "Import not applied"
         }
       },
+      "result-acl": {
+        "title": "Result ACLs",
+        "description": "Also show in text search the documents the user cannot read, with only the visible fields.",
+        "open": "Configure",
+        "page-description": "With the mode on, in the text searches that ask for it ACLs no longer exclude documents: a user without permission sees the document among the results, but only with its visible fields. Knn and hybrid search and the chat stay filtered by ACLs, and the filter values, with their counts, come only from the documents the user can read.",
+        "risk-title": "Risk of exfiltration by inference",
+        "risk-body": "In text search an obscured document answers like a readable one: the searched text, the applied filters, sorting and score also use the fields that are not visible. By repeating searches and watching which documents appear, and in which order, a user can infer part of the content they cannot see. For each obscured result the response also lists the names of the removed fields, not their values.",
+        "frontend-note": "The search frontend asks for obscured results only if whoever embeds it turns on the dedicated option. The option does not protect the documents: with the mode on, any user who calls the search API directly can ask for them.",
+        "mode-title": "Mode",
+        "mode-description": "In text search ACLs decide what is visible of each result, instead of excluding it.",
+        "enabled-label": "Turn on result ACLs",
+        "super-users-title": "Super-user roles",
+        "super-users-description": "Users with one of these roles in their access token see in full every result of the text searches that ask for the mode, and the filter values, with their counts, come from all documents. In knn and hybrid search and in the chat the ACL filter applies to them too. The extra roles of the request do not count.",
+        "visible-fields-title": "Visible fields",
+        "visible-fields-description": "Visible even in obscured results, which always show the id and the document type as well. Excluded fields, OBJECT fields, NESTED fields with sub-fields, variants of i18n fields and multi-fields cannot be selected.",
+        "doc-type-note": "A document type with a visible field cannot be deleted: remove the field from here first.",
+        "enable-warning": "With the mode on, in the text searches that ask for it the documents a user cannot read appear among their results with only the visible fields. By repeating searches the user can infer part of the content they cannot see.",
+        "add-field-warning": "The value of the fields you add will be visible to every user who finds the document in a text search, even if they cannot read it. Add only fields that do not reveal confidential content. The risk of inference remains: by repeating searches a user can infer part of the content from the fields that are not visible too.",
+        "saved-title": "Configuration saved",
+        "saved-content": "The result ACL configuration has been saved.",
+        "save-error-content": "Unable to save the result ACL configuration.",
+        "load-error": "Unable to read the result ACL configuration or the selectable fields. Reload the page: until they are read, the page does not allow saving."
+      },
       "general-title": "General settings"
     },
     "analyzers": {

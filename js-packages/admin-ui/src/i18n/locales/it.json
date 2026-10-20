@@ -358,6 +358,29 @@
           "not-applied": "Importazione non applicata"
         }
       },
+      "result-acl": {
+        "title": "ACL sui risultati",
+        "description": "Mostra nella ricerca testuale anche i documenti che l'utente non può leggere, con i soli campi in chiaro.",
+        "open": "Configura",
+        "page-description": "Con la modalità attiva, nelle ricerche testuali che la chiedono le ACL non escludono più i documenti: chi non ha il permesso vede il documento fra i risultati, ma solo con i campi in chiaro. La ricerca knn e ibrida e la chat restano filtrate per ACL, e i valori dei filtri, con i loro conteggi, vengono solo dai documenti che l'utente può leggere.",
+        "risk-title": "Rischio di esfiltrazione per inferenza",
+        "risk-body": "Nella ricerca testuale un documento oscurato risponde come uno leggibile: il testo cercato, i filtri applicati, l'ordinamento e il punteggio usano anche i campi non in chiaro. Ripetendo le ricerche e osservando quali documenti compaiono, e in che ordine, un utente può ricavare parte del contenuto che non vede. Di ogni risultato oscurato la risposta elenca inoltre i nomi dei campi tolti, non i valori.",
+        "frontend-note": "Il frontend di ricerca chiede i risultati oscurati solo se chi lo integra attiva l'opzione apposita. L'opzione non protegge i documenti: con la modalità attiva, qualunque utente che chiama direttamente l'API di ricerca può chiederli.",
+        "mode-title": "Modalità",
+        "mode-description": "Nella ricerca testuale le ACL decidono cosa si vede di ogni risultato, invece di escluderlo.",
+        "enabled-label": "Attiva le ACL sui risultati",
+        "super-users-title": "Ruoli super-user",
+        "super-users-description": "Chi ha uno di questi ruoli nel token di accesso vede per intero tutti i risultati delle ricerche testuali che chiedono la modalità, e i valori dei filtri, con i loro conteggi, vengono da tutti i documenti. Nella ricerca knn e ibrida e nella chat vale anche per loro il filtro ACL. Gli extra roles della richiesta non contano.",
+        "visible-fields-title": "Campi in chiaro",
+        "visible-fields-description": "Si vedono anche nei risultati oscurati, che mostrano sempre anche id e tipo di documento. Non sono selezionabili i campi esclusi, gli OBJECT, i NESTED con sotto-campi, le varianti dei campi i18n e i multi-field.",
+        "doc-type-note": "Un tipo di documento con un campo in chiaro non si può cancellare: prima togli il campo da qui.",
+        "enable-warning": "Con la modalità attiva, nelle ricerche testuali che la chiedono i documenti che un utente non può leggere compaiono fra i suoi risultati con i soli campi in chiaro. Ripetendo le ricerche l'utente può ricavare parte del contenuto che non vede.",
+        "add-field-warning": "Il valore dei campi che aggiungi sarà visibile a ogni utente che trova il documento in una ricerca testuale, anche se non può leggerlo. Aggiungi solo campi che non rivelano il contenuto riservato. Resta il rischio di inferenza: ripetendo le ricerche un utente può ricavare parte del contenuto anche dai campi che non sono in chiaro.",
+        "saved-title": "Configurazione salvata",
+        "saved-content": "La configurazione delle ACL sui risultati è stata salvata.",
+        "save-error-content": "Impossibile salvare la configurazione delle ACL sui risultati.",
+        "load-error": "Impossibile leggere la configurazione delle ACL sui risultati o i campi selezionabili. Ricarica la pagina: finché non si leggono, la pagina non permette di salvare."
+      },
       "general-title": "Impostazioni generali"
     },
     "analyzers": {
