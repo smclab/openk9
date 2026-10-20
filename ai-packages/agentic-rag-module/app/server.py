@@ -1379,29 +1379,29 @@ def save_guardrails_documents(
             body=index_body,
         )
 
-        pipeline_body = {
-            "description": "Post processor for hybrid search",
-            "phase_results_processors": [
-                {
-                    "normalization-processor": {
-                        "normalization": {"technique": "min_max"},
-                        "combination": {
-                            "technique": "arithmetic_mean",
-                            "parameters": {"weights": [0.5, 0.5]},
-                        },
-                    }
+    pipeline_body = {
+        "description": "Post processor for hybrid search",
+        "phase_results_processors": [
+            {
+                "normalization-processor": {
+                    "normalization": {"technique": "min_max"},
+                    "combination": {
+                        "technique": "arithmetic_mean",
+                        "parameters": {"weights": [0.5, 0.5]},
+                    },
                 }
-            ],
-        }
+            }
+        ],
+    }
 
-        open_search_client.transport.perform_request(
-            "PUT", f"/_search/pipeline/{SEARCH_PIPELINE}", body=pipeline_body
-        )
+    open_search_client.transport.perform_request(
+        "PUT", f"/_search/pipeline/{SEARCH_PIPELINE}", body=pipeline_body
+    )
 
-        open_search_client.indices.put_settings(
-            index=guardrails_documents_index,
-            body={"index": {"search": {"default_pipeline": SEARCH_PIPELINE}}},
-        )
+    open_search_client.indices.put_settings(
+        index=guardrails_documents_index,
+        body={"index": {"search": {"default_pipeline": SEARCH_PIPELINE}}},
+    )
 
     if index_actions:
         try:
@@ -1703,29 +1703,29 @@ def save_domains_documents(
             body=index_body,
         )
 
-        pipeline_body = {
-            "description": "Post processor for hybrid search",
-            "phase_results_processors": [
-                {
-                    "normalization-processor": {
-                        "normalization": {"technique": "min_max"},
-                        "combination": {
-                            "technique": "arithmetic_mean",
-                            "parameters": {"weights": [0.5, 0.5]},
-                        },
-                    }
+    pipeline_body = {
+        "description": "Post processor for hybrid search",
+        "phase_results_processors": [
+            {
+                "normalization-processor": {
+                    "normalization": {"technique": "min_max"},
+                    "combination": {
+                        "technique": "arithmetic_mean",
+                        "parameters": {"weights": [0.5, 0.5]},
+                    },
                 }
-            ],
-        }
+            }
+        ],
+    }
 
-        open_search_client.transport.perform_request(
-            "PUT", f"/_search/pipeline/{SEARCH_PIPELINE}", body=pipeline_body
-        )
+    open_search_client.transport.perform_request(
+        "PUT", f"/_search/pipeline/{SEARCH_PIPELINE}", body=pipeline_body
+    )
 
-        open_search_client.indices.put_settings(
-            index=domain_documents_index,
-            body={"index": {"search": {"default_pipeline": SEARCH_PIPELINE}}},
-        )
+    open_search_client.indices.put_settings(
+        index=domain_documents_index,
+        body={"index": {"search": {"default_pipeline": SEARCH_PIPELINE}}},
+    )
 
     if index_actions:
         try:

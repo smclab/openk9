@@ -195,7 +195,9 @@ def test_save_guardrails_keeps_each_tenant_in_its_own_index(monkeypatch):
     ]
 
 
-def test_save_guardrails_reuses_an_existing_index(monkeypatch):
+def test_save_guardrails_reuses_an_existing_index_and_rewrites_its_pipeline(
+    monkeypatch,
+):
     open_search_client = _opensearch_mock(index_exists=True)
     monkeypatch.setattr(
         server, "get_opensearch_client", lambda *a, **k: open_search_client
@@ -204,7 +206,17 @@ def test_save_guardrails_reuses_an_existing_index(monkeypatch):
     server.save_guardrails_documents("http://opensearch", "tenant-1", [_chunk("a")], 3)
 
     open_search_client.indices.create.assert_not_called()
-    open_search_client.transport.perform_request.assert_not_called()
+    # Rewritten on every load, so an index left without its pipeline, or with
+    # an outdated one, is repaired by the next load.
+    open_search_client.transport.perform_request.assert_called_once_with(
+        "PUT",
+        f"/_search/pipeline/{server.SEARCH_PIPELINE}",
+        body=HYBRID_SEARCH_PIPELINE,
+    )
+    open_search_client.indices.put_settings.assert_called_once_with(
+        index=INDEX,
+        body={"index": {"search": {"default_pipeline": server.SEARCH_PIPELINE}}},
+    )
 
 
 def test_save_guardrails_bulk_indexes_every_document(monkeypatch):

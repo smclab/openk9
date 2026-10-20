@@ -18,8 +18,8 @@
 """Uploaded documents are indexed in the tenant's uploaded-documents index.
 
 The first upload of a tenant creates the index, with a knn vector of the
-embedding size, and the hybrid search pipeline it defaults to; later uploads
-only add documents. Indexing failures are logged, never raised, so a failed
+embedding size; every upload rewrites the hybrid search pipeline and sets it
+as the index default, so an index left without it is repaired. Indexing failures are logged, never raised, so a failed
 upload does not break the request that triggered it.
 """
 
@@ -105,14 +105,21 @@ def test_first_upload_creates_the_index_and_its_pipeline(client):
     )
 
 
-def test_later_upload_only_adds_documents(client):
+def test_later_upload_rewrites_the_pipeline_without_creating_the_index(client):
     client.indices.exists.return_value = True
 
     _save()
 
     client.indices.create.assert_not_called()
-    client.transport.perform_request.assert_not_called()
-    client.indices.put_settings.assert_not_called()
+    client.transport.perform_request.assert_called_once()
+    assert client.transport.perform_request.call_args.args == (
+        "PUT",
+        f"/_search/pipeline/{chat_history.SEARCH_PIPELINE}",
+    )
+    client.indices.put_settings.assert_called_once_with(
+        index=INDEX,
+        body={"index": {"search": {"default_pipeline": chat_history.SEARCH_PIPELINE}}},
+    )
     client.bulk.assert_called_once()
 
 
