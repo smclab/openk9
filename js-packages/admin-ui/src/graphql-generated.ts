@@ -5755,7 +5755,7 @@ export type UnboundDocTypeFieldByAutocompleteQuery = { __typename?: 'Query', unb
 
 export type AutocorrectionsOptionsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -5879,7 +5879,7 @@ export type DeleteDocumentTypeTemplateMutation = { __typename?: 'Mutation', dele
 
 export type DocumentTypesQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -6475,7 +6475,7 @@ export type CreateOrUpdateSortingMutation = { __typename?: 'Mutation', sortingWi
 
 export type SortingsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -6660,7 +6660,7 @@ export type RemoveTokenTabToTabMutation = { __typename?: 'Mutation', removeToken
 
 export type TabTokensQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -8289,8 +8289,8 @@ export type UnboundDocTypeFieldByAutocompleteQueryHookResult = ReturnType<typeof
 export type UnboundDocTypeFieldByAutocompleteLazyQueryHookResult = ReturnType<typeof useUnboundDocTypeFieldByAutocompleteLazyQuery>;
 export type UnboundDocTypeFieldByAutocompleteQueryResult = Apollo.QueryResult<UnboundDocTypeFieldByAutocompleteQuery, UnboundDocTypeFieldByAutocompleteQueryVariables>;
 export const AutocorrectionsOptionsDocument = gql`
-    query AutocorrectionsOptions($searchText: String, $cursor: String) {
-  autocorrections(searchText: $searchText, first: 5, after: $cursor) {
+    query AutocorrectionsOptions($searchText: String, $after: String) {
+  autocorrections(searchText: $searchText, first: 5, after: $after) {
     edges {
       cursor
       node {
@@ -8964,8 +8964,8 @@ export type DeleteDocumentTypeTemplateMutationHookResult = ReturnType<typeof use
 export type DeleteDocumentTypeTemplateMutationResult = Apollo.MutationResult<DeleteDocumentTypeTemplateMutation>;
 export type DeleteDocumentTypeTemplateMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeTemplateMutation, DeleteDocumentTypeTemplateMutationVariables>;
 export const DocumentTypesDocument = gql`
-    query DocumentTypes($searchText: String, $cursor: String) {
-  docTypes(searchText: $searchText, first: 20, after: $cursor) {
+    query DocumentTypes($searchText: String, $after: String) {
+  docTypes(searchText: $searchText, first: 20, after: $after) {
     edges {
       node {
         id
@@ -11946,8 +11946,8 @@ export type CreateOrUpdateSortingMutationHookResult = ReturnType<typeof useCreat
 export type CreateOrUpdateSortingMutationResult = Apollo.MutationResult<CreateOrUpdateSortingMutation>;
 export type CreateOrUpdateSortingMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateSortingMutation, CreateOrUpdateSortingMutationVariables>;
 export const SortingsDocument = gql`
-    query Sortings($searchText: String, $cursor: String) {
-  totalSortings(searchText: $searchText, first: 20, after: $cursor) {
+    query Sortings($searchText: String, $after: String) {
+  totalSortings(searchText: $searchText, first: 20, after: $after) {
     edges {
       node {
         id
@@ -12907,8 +12907,8 @@ export type RemoveTokenTabToTabMutationHookResult = ReturnType<typeof useRemoveT
 export type RemoveTokenTabToTabMutationResult = Apollo.MutationResult<RemoveTokenTabToTabMutation>;
 export type RemoveTokenTabToTabMutationOptions = Apollo.BaseMutationOptions<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>;
 export const TabTokensDocument = gql`
-    query TabTokens($searchText: String, $cursor: String) {
-  totalTokenTabs(searchText: $searchText, first: 20, after: $cursor) {
+    query TabTokens($searchText: String, $after: String) {
+  totalTokenTabs(searchText: $searchText, first: 20, after: $after) {
     edges {
       node {
         id

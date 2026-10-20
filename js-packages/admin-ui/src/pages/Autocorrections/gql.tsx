@@ -17,8 +17,8 @@
 import { gql } from "@apollo/client";
 
 export const autocorrectionsConfigOptions = gql`
-  query AutocorrectionsOptions($searchText: String, $cursor: String) {
-    autocorrections(searchText: $searchText, first: 5, after: $cursor) {
+  query AutocorrectionsOptions($searchText: String, $after: String) {
+    autocorrections(searchText: $searchText, first: 5, after: $after) {
       edges {
         cursor
         node {

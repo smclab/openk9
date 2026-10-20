@@ -119,10 +119,20 @@ export function Table<
   const [showSelectedItemsTable] = React.useState(false);
   const [viewDeleteModal, setViewDeleteModal] = React.useState({ isView: false, name: "", id: "" });
   const [openMenuIndex, setOpenMenuIndex] = React.useState<number | null>(null);
+  const scroller = React.useRef<HTMLElement | null>(null);
+  // finché Virtuoso non misura le righe non si sa se riempiono la tabella
+  const listHeight = React.useRef(Number.POSITIVE_INFINITY);
+  // mentre il refetch è in volo la lista mostrata (al montaggio quella in cache) sta per
+  // essere sostituita: accodarle la pagina dopo il suo cursore la corromperebbe
+  const isRefetching = React.useRef(true);
+  const isLoadingMore = React.useRef(false);
+  // `endReached` arrivato durante il refetch: Virtuoso non lo ripete per lo stesso numero di righe
+  const endMissed = React.useRef(false);
 
-  const loadMoreResults = () => {
-    const pageInfo = getByPath(data, pageInfoPath);
-    if (pageInfo?.hasNextPage) {
+  const loadMoreResults = (list: Query | undefined) => {
+    const pageInfo = getByPath(list, pageInfoPath);
+    if (!isRefetching.current && !isLoadingMore.current && pageInfo?.hasNextPage) {
+      isLoadingMore.current = true;
       fetchMore({
         variables: {
           first: 20,
@@ -152,12 +162,36 @@ export function Table<
 
           return updated;
         },
+      }).finally(() => {
+        isLoadingMore.current = false;
       });
     }
   };
 
+  // `endReached` non riparte se la lista si accorcia (refetch, ricerca) restando tutta
+  // visibile: si caricano pagine finché le righe non superano l'altezza della tabella.
+  const fillTable = (list: Query | undefined) => {
+    if (scroller.current && listHeight.current < scroller.current.clientHeight) loadMoreResults(list);
+  };
+
   React.useEffect(() => {
-    refetch({ searchText: searchTextDebounced } as any);
+    let isCurrent = true;
+    isRefetching.current = true;
+    refetch({ searchText: searchTextDebounced } as any)
+      .finally(() => {
+        if (isCurrent) isRefetching.current = false;
+      })
+      // gli eventi di Virtuoso arrivati durante il refetch si recuperano qui; un refetch
+      // sostituito da uno più recente (es. refetchQueries) Apollo lo risolve senza risultato
+      .then((result) => {
+        if (!isCurrent || !result) return;
+        if (endMissed.current) loadMoreResults(result.data);
+        else fillTable(result.data);
+        endMissed.current = false;
+      });
+    return () => {
+      isCurrent = false;
+    };
   }, [refetch, searchTextDebounced]);
   const theme = useTheme();
   const borderColor = theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)";
@@ -406,7 +440,17 @@ export function Table<
             );
           }}
           endReached={() => {
-            loadMoreResults && loadMoreResults();
+            if (isRefetching.current) endMissed.current = true;
+            else loadMoreResults(data);
+          }}
+          scrollerRef={(element) => {
+            scroller.current = element instanceof HTMLElement ? element : null;
+          }}
+          totalListHeightChanged={(height) => {
+            // finché nessuna riga è misurata (lista vuota, o appena disegnata) Virtuoso conta il solo header
+            const header = scroller.current?.querySelector("thead")?.getBoundingClientRect().height ?? 0;
+            if (height > header + 1) listHeight.current = height;
+            fillTable(data);
           }}
         />
       </div>
