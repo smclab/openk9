@@ -149,7 +149,9 @@ def test_text_search_is_restricted_to_the_user_chat():
 
 @pytest.mark.parametrize("retrieve_type", ["HYBRID", "KNN"])
 def test_vectorial_search_is_restricted_to_the_user_chat(retrieve_type):
-    # a hybrid query cannot hold a filter itself: the isolation is a post filter
+    # Each branch filters while scoring: a post filter applied after an
+    # approximate knn loses the chat chunks when other chats hold closer ones.
+    # The vector branch scores exactly because nmslib indices reject knn filters.
     _, client, _, mock_embedding = _search(_build_retriever(retrieve_type))
 
     mock_embedding.assert_called_once_with(
@@ -162,12 +164,38 @@ def test_vectorial_search_is_restricted_to_the_user_chat(retrieve_type):
             "query": {
                 "hybrid": {
                     "queries": [
-                        {"match": {"chunkText": {"query": "zephyr", "boost": 0.5}}},
-                        {"knn": {"vector": {"vector": VECTOR, "k": 10}}},
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "match": {
+                                            "chunkText": {
+                                                "query": "zephyr",
+                                                "boost": 0.5,
+                                            }
+                                        }
+                                    }
+                                ],
+                                "filter": ISOLATION_FILTERS,
+                            }
+                        },
+                        {
+                            "script_score": {
+                                "query": {"bool": {"filter": ISOLATION_FILTERS}},
+                                "script": {
+                                    "source": "knn_score",
+                                    "lang": "knn",
+                                    "params": {
+                                        "field": "vector",
+                                        "query_value": VECTOR,
+                                        "space_type": "l2",
+                                    },
+                                },
+                            }
+                        },
                     ]
                 }
             },
-            "post_filter": {"bool": {"filter": ISOLATION_FILTERS}},
         },
         index="test-index",
     )
