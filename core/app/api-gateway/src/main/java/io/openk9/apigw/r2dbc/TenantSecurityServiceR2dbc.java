@@ -40,6 +40,7 @@ import io.openk9.apigw.security.oauth2.OAuth2Settings;
 import io.openk9.event.tenant.ApiGroup;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.security.core.Authentication;
@@ -58,6 +59,7 @@ import reactor.core.publisher.Mono;
  * The aggregated cached object is used when the methods of this service are invoked.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 
 	private final DatabaseClient db;
@@ -147,12 +149,33 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
                     """)
 			.bind("tenantId", tenantId)
 			.map((row, meta) -> Map.entry(
-				ApiRoute.valueOf(row.get("route", String.class)),
-				AuthorizationSchemeToken.valueOf(row.get("authorization_scheme", String.class))
+				row.get("route", String.class),
+				row.get("authorization_scheme", String.class)
 			))
 			.all()
-			.collectMap(Map.Entry::getKey, Map.Entry::getValue, () -> new EnumMap<>(ApiRoute.class))
+			.filter(entry -> isKnownRoute(tenantId, entry.getKey()))
+			.collectMap(
+				entry -> ApiRoute.valueOf(entry.getKey()),
+				entry -> AuthorizationSchemeToken.valueOf(entry.getValue()),
+				() -> new EnumMap<>(ApiRoute.class))
 			.map(RouteAuthorizationMap::of);
+	}
+
+	// A route removed from ApiRoute can still be in route_security:
+	// an older gateway replaying the tenant events writes it back.
+	// Skip it, so that the rest of the tenant keeps working.
+	private static boolean isKnownRoute(String tenantId, String route) {
+		for (ApiRoute apiRoute : ApiRoute.values()) {
+			if (apiRoute.name().equals(route)) {
+				return true;
+			}
+		}
+
+		log.warn(
+			"Ignoring unknown route in route_security: tenantId={}, route={}",
+			tenantId, route);
+
+		return false;
 	}
 
 	@Override
