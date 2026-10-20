@@ -17,6 +17,9 @@
 
 package io.openk9.ingestion.dto;
 
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,4 +35,8 @@ public class BinaryPayload {
 	private String id;
 	private String name;
 	private String contentType;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private String sourceUrl;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private Map<String, Object> metadata;
 }

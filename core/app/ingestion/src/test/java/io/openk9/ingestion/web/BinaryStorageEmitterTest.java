@@ -103,6 +103,7 @@ class BinaryStorageEmitterTest {
 			BinaryDTO reference = references.get(0);
 			assertEquals(dto.getContentId(), reference.getId());
 			assertNull(reference.getData());
+			assertSourceDataCarried(reference);
 			assertEquals("", dto.getRawContent());
 			assertTrue(dto.getDatasourcePayload().containsKey("file"));
 		}
@@ -143,6 +144,9 @@ class BinaryStorageEmitterTest {
 		assertEquals(2, references.size());
 		references.forEach(reference -> assertNull(reference.getData()));
 
+		// the source URL and the metadata of each binary are carried along
+		references.forEach(BinaryStorageEmitterTest::assertSourceDataCarried);
+
 		// both binaries are persisted under the shared content key
 		assertStored(BinaryKeys.key(100L, "doc-1", "f1"));
 		assertStored(BinaryKeys.key(100L, "doc-1", "f2"));
@@ -159,12 +163,22 @@ class BinaryStorageEmitterTest {
 		}
 	}
 
+	private static void assertSourceDataCarried(BinaryDTO reference) {
+		assertEquals(
+			"https://source/" + reference.getId(), reference.getSourceUrl());
+		assertEquals(
+			Map.of("page", 12, "caption", reference.getId()),
+			reference.getMetadata());
+	}
+
 	private static BinaryDTO binary(String id, String contentType) {
 		return BinaryDTO.builder()
 			.id(id)
 			.name(id)
 			.contentType(contentType)
 			.data("some-bytes".getBytes())
+			.sourceUrl("https://source/" + id)
+			.metadata(Map.of("page", 12, "caption", id))
 			.build();
 	}
 

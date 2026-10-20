@@ -17,6 +17,8 @@
 
 package io.openk9.ingestion.dto;
 
+import java.util.Map;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,4 +42,9 @@ public class BinaryDTO {
 	@Schema(format = "byte",
 			description = "Base64 encoded string of binary resource.")
 	private byte[] data;
+	@Schema(description = "Persistent URL of the binary at the source, if any.")
+	private String sourceUrl;
+	@Schema(description = "Optional metadata of the binary: page (integer), "
+		+ "caption, generated (boolean) and free keys.")
+	private Map<String, Object> metadata;
 }

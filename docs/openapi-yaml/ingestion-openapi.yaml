@@ -58,6 +58,14 @@ components:
           type: string
           format: byte
           description: Base64 encoded string of binary resource.
+        sourceUrl:
+          type: string
+          description: "Persistent URL of the binary at the source, if any."
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: "Optional metadata of the binary: page (integer), caption,\
+            \ generated (boolean) and free keys."
         resourceId:
           type: string
           format: uuid

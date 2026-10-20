@@ -99,6 +99,8 @@ public class BinaryStorageEmitter {
 									.id(fileId)
 									.name(binaryDTO.getName())
 									.contentType(binaryDTO.getContentType())
+									.sourceUrl(binaryDTO.getSourceUrl())
+									.metadata(binaryDTO.getMetadata())
 									.build();
 
 								var uploadUni = binaryStorageService.store(
