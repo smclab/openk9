@@ -178,6 +178,30 @@ def test_failed_source_image_stays_text_and_is_announced():
     assert "Start your answer by telling the user, in Italian" in text
 
 
+def test_the_notice_keeps_the_photo_the_model_saw():
+    # the photo reached the model and a source image did not: the notice must
+    # not send the model back to the text alone
+    graph = _graph()
+
+    _run(graph, _state(context=[_image_source()]), fetched=[None])
+
+    assert len(_images(graph)) == 1
+    text = _text(graph)
+    assert 'the image of the source "retro.jpg" could not be shown to you' in text
+    assert "answer with the images you were shown and the text" in text
+    assert "text only" not in text
+
+
+def test_the_notice_sends_a_model_without_images_to_the_text():
+    graph = _graph()
+
+    _run(graph, _state(), accepts=False)
+
+    text = _text(graph)
+    assert "answer using the text only" in text
+    assert "images you were shown" not in text
+
+
 def test_image_chunk_without_url_stays_text():
     graph = _graph(media=None)
     chunk = Document("Foto del retro", metadata={"document_id": "doc-1"})
@@ -196,6 +220,44 @@ def test_text_only_model_gets_the_notice_not_the_photo():
 
     assert _images(graph) == []
     assert "the image attached by the user could not be shown to you" in _text(graph)
+
+
+def test_the_log_counts_the_images_of_the_turn(caplog):
+    graph = _graph()
+    sources = [_image_source("a.jpg", "https://h/a.jpg"), _image_source()]
+
+    with caplog.at_level(logging.INFO, logger=agentic_rag.logger.name):
+        _run(
+            graph,
+            _state(context=sources),
+            fetched=[SourceImage(SOURCE_PHOTO, "image/jpeg"), None],
+        )
+
+    assert "[llm_response] images accepts=True query=1 sources=1 unseen=1" in (
+        caplog.text
+    )
+
+
+def test_the_log_shows_a_text_only_model_kept_the_sources_back(caplog):
+    graph = _graph(media=None)
+
+    with caplog.at_level(logging.INFO, logger=agentic_rag.logger.name):
+        _run(graph, _state(context=[_image_source()]), accepts=False)
+
+    assert "[llm_response] images accepts=False query=0 sources=0 unseen=0" in (
+        caplog.text
+    )
+
+
+def test_the_log_shows_a_model_still_to_try(caplog):
+    graph = _graph()
+
+    with caplog.at_level(logging.INFO, logger=agentic_rag.logger.name):
+        _run(graph, _state(), accepts=None)
+
+    assert "[llm_response] images accepts=None query=1 sources=0 unseen=0" in (
+        caplog.text
+    )
 
 
 def _prompt_of_today(context):

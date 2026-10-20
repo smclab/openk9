@@ -277,8 +277,12 @@ MEDIA_ONLY_QUERY_WITH_IMAGE_INSTRUCTION = (
 UNSEEN_IMAGES_NOTICE = (
     "Note: {images} could not be shown to you. Start your answer by telling "
     "the user, in {target_lang}, that you did not see {pronoun}, then answer "
-    "using the text only."
+    "{rest}."
 )
+# The end of the notice follows what the model does see: "text only" next to a
+# photo it was shown makes it ignore the photo.
+UNSEEN_NOTICE_TEXT_ONLY = "using the text only"
+UNSEEN_NOTICE_WITH_IMAGES = "with the images you were shown and the text"
 USER_IMAGE_DESCRIPTION = "the image attached by the user"
 
 # Only the chat answers with the images; SIMPLE_GENERATE stays text.
@@ -2029,11 +2033,16 @@ class RagGraph:
         return f'the image of the source "{name}"' if name else "a source image"
 
     @staticmethod
-    def _unseen_images_notice(descriptions: List[str], target_lang: str) -> str:
+    def _unseen_images_notice(
+        descriptions: List[str], target_lang: str, images_shown: bool
+    ) -> str:
         return UNSEEN_IMAGES_NOTICE.format(
             images=", ".join(descriptions),
             target_lang=target_lang,
             pronoun="it" if len(descriptions) == 1 else "them",
+            rest=(
+                UNSEEN_NOTICE_WITH_IMAGES if images_shown else UNSEEN_NOTICE_TEXT_ONLY
+            ),
         )
 
     def llm_response_node(self, state: GraphState) -> GraphState:
@@ -2093,9 +2102,8 @@ class RagGraph:
         # text one, but the user is told that their image went unseen.
         query_image = self._query_image()
         image_sources = self._image_sources(context) if state.use_rag else []
-        model_accepts_images = (
-            accepts_images(self.llm) if query_image or image_sources else None
-        )
+        has_images = bool(query_image or image_sources)
+        model_accepts_images = accepts_images(self.llm) if has_images else None
         unseen = []
         source_images = []
         if model_accepts_images is False:
@@ -2111,6 +2119,12 @@ class RagGraph:
                     source_images.append((doc, image))
                 else:
                     unseen.append(self._source_image_description(doc))
+        if has_images:
+            logger.info(
+                f"[llm_response] images accepts={model_accepts_images} "
+                f"query={1 if query_image else 0} sources={len(source_images)} "
+                f"unseen={len(unseen)} {self._log_context()}"
+            )
 
         try:
             response = self._generate_response(
@@ -2204,7 +2218,10 @@ class RagGraph:
             )
             logger.debug("[llm_response] media-only query -> dedicated instruction")
         if unseen:
-            query = f"{query}\n\n{self._unseen_images_notice(unseen, target_lang)}"
+            notice = self._unseen_images_notice(
+                unseen, target_lang, bool(query_image or source_images)
+            )
+            query = f"{query}\n\n{notice}"
 
         images = []
         if query_image:
