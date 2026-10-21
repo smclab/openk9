@@ -393,7 +393,9 @@ export function OpenK9Client({
       const data = await response.json();
       return data;
     },
-    async generateResponse<E>(searchRequest: GenerateRequest): Promise<unknown> {
+    async generateResponse<E>(
+      searchRequest: GenerateRequest,
+    ): Promise<unknown> {
       const response = await authFetch(`/api/rag/generate`, {
         method: "POST",
         body: JSON.stringify(searchRequest),
@@ -521,6 +523,7 @@ export function OpenK9Client({
       suggestKeyword,
       order,
       language,
+      includeObscured,
     }: {
       searchQuery: SearchToken[];
       suggestionCategoryId?: number;
@@ -529,6 +532,7 @@ export function OpenK9Client({
       suggestKeyword?: string; // to source by text in suggestions
       order: "desc" | "asc";
       language: string;
+      includeObscured: boolean;
     }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
       const request = await authFetch(`/api/searcher/v1/suggestions`, {
         method: "POST",
@@ -540,6 +544,7 @@ export function OpenK9Client({
           suggestKeyword,
           order,
           language,
+          includeObscured,
         }),
         headers: {
           Accept: "application/json",
@@ -730,7 +735,9 @@ export function asResultItem<T = unknown, S = Record<string, unknown>>(
 }
 
 /** Apre il dettaglio di un risultato su mobile, o lo chiude con `null`. */
-export type SetDetailMobile = (result: GenericResultItem<unknown> | null) => void;
+export type SetDetailMobile = (
+  result: GenericResultItem<unknown> | null,
+) => void;
 
 export type GenericResultItem<E = {}> = {
   source: {
@@ -741,6 +748,8 @@ export type GenericResultItem<E = {}> = {
     rawContent: string;
     tenantId: number;
     datasourceId: number;
+    /** Solo nei risultati oscurati: i path dei campi tolti, anche vuoto (#2489). */
+    obscuredFields?: string[];
     entities?: Array<{
       entityType: string;
       context: DeepKeys<Without<GenericResultItem<E>["source"], "entities">>[];
@@ -947,6 +956,7 @@ type SearchRequest = {
   language: string;
   sortAfterKey: string;
   overrideSearchWithCorrection?: boolean;
+  includeObscured: boolean;
 };
 
 export type GenerateRequest = {

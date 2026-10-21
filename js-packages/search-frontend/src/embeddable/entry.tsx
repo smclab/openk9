@@ -19,6 +19,7 @@ import { ResultsDisplayMode } from "../components/ResultList";
 import { Tab } from "../components/Tabs";
 import { Options } from "../components/Select";
 import { RangeProvider } from "../components/useRange";
+import { IncludeObscuredContext } from "../components/useIncludeObscured";
 import { TypeAllFilters } from "../components/AllFiltersConfigurable";
 
 export const rendererComponents = RendererComponents;
@@ -104,11 +105,15 @@ export class OpenK9 {
             <OpenK9ClientContext.Provider value={this.client}>
               <QueryClientProvider client={this.queryClient}>
                 <RangeProvider>
-                  <Main
-                    configuration={this.configuration}
-                    onConfigurationChange={this.updateConfiguration}
-                    onQueryStateChange={this.onQueryStateChange}
-                  />
+                  <IncludeObscuredContext.Provider
+                    value={this.configuration.includeObscured}
+                  >
+                    <Main
+                      configuration={this.configuration}
+                      onConfigurationChange={this.updateConfiguration}
+                      onQueryStateChange={this.onQueryStateChange}
+                    />
+                  </IncludeObscuredContext.Provider>
                 </RangeProvider>
               </QueryClientProvider>
             </OpenK9ClientContext.Provider>
@@ -236,7 +241,9 @@ type CalendarMobileConfiguration = {
   endDate: Moment | null;
   setEndDate: React.Dispatch<React.SetStateAction<Moment | null>>;
   focusedInput: FocusedInputShape | null;
-  setFocusedInput: React.Dispatch<React.SetStateAction<FocusedInputShape | null>>;
+  setFocusedInput: React.Dispatch<
+    React.SetStateAction<FocusedInputShape | null>
+  >;
   isCLickReset: boolean;
   setIsCLickReset: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -541,6 +548,11 @@ export type Configuration = {
   externalSearchTokens?: ExternalSearchTokens;
   defaultString: string | null | undefined;
   extraClass?: ExtraClassProps | null | undefined;
+  /**
+   * Ask also for the results the user cannot read, which arrive obscured (#2489).
+   * Turn it on only after adapting the custom templates: they receive them too.
+   */
+  includeObscured: boolean;
   languageSelect: string | null | undefined;
   enabled: boolean;
   callbackClient(): void | null | undefined;
@@ -736,6 +748,7 @@ const defaultConfiguration: Configuration = {
   useFilterConfiguration: true,
   viewButton: false,
   waitForToken: false,
+  includeObscured: false,
   changeSortResult: (sort) => sort,
   overrideTabs: (tabs) => tabs,
 };

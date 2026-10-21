@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import React from "react";
+import { useIncludeObscured } from "./useIncludeObscured";
 import { useTranslation } from "react-i18next";
 import { useInfiniteQuery } from "react-query";
 import { css } from "styled-components";
@@ -273,6 +274,7 @@ export function useInfiniteResults<E>(
 ) {
   const client = useOpenK9Client();
   const image = useSearchImage();
+  const includeObscured = useIncludeObscured();
   const suppressIntermediate = React.useMemo(
     () => state.text.trim().length > 0 && searchQuery.length === 0,
     [state.text, searchQuery],
@@ -300,6 +302,7 @@ export function useInfiniteResults<E>(
       offset,
       elementForPage,
       overrideSearchWithCorrection?.renderingCorrection,
+      includeObscured,
     ] as const,
     async ({ queryKey }) => {
       const [
@@ -324,6 +327,7 @@ export function useInfiniteResults<E>(
         searchQuery: await resolveQueryImage(remappingSearchQuery, image),
         sort: qSort,
         sortAfterKey: qSortAfterKey || "",
+        includeObscured,
       });
     },
     {

@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import React from "react";
+import { useIncludeObscured } from "./useIncludeObscured";
 import { css } from "styled-components";
 import { SearchToken, SortField, SuggestionResult } from "./client";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
@@ -670,13 +671,20 @@ export function useInfiniteSuggestions(
 ) {
   const pageSize = numberResultOfFilters ? numberResultOfFilters : 8;
   const client = useOpenK9Client();
+  const includeObscured = useIncludeObscured();
 
   const searchQuery = false
     ? searchQueryParams
     : createSuggestion(searchQueryParams, isDynamicElement);
 
   const suggestionCategories = useInfiniteQuery(
-    ["suggestions", searchQuery, suggestionCategoryId, false] as const,
+    [
+      "suggestions",
+      searchQuery,
+      suggestionCategoryId,
+      false,
+      includeObscured,
+    ] as const,
     async ({ queryKey: [_, searchQuery, suggestionCategoryId], pageParam }) => {
       if (!searchQuery) throw new Error();
       const result = await client.getSuggestions({
@@ -686,6 +694,7 @@ export function useInfiniteSuggestions(
         suggestionCategoryId: suggestionCategoryId,
         order: "desc",
         language: language,
+        includeObscured,
       });
       return {
         result: result.result,

@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import React from "react";
+import { useIncludeObscured } from "./useIncludeObscured";
 import { css, keyframes } from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
@@ -931,6 +932,7 @@ export function useInfiniteSuggestions(
   const pageSizeBase = loadAll ? 19 : suggestKeyword === "" ? 8 : 19;
   const NPageSize = numberItems ?? pageSizeBase;
   const client = useOpenK9Client();
+  const includeObscured = useIncludeObscured();
   const searchQuery = allDynamic
     ? searchQueryNotFilter
     : createSuggestion(searchQueryNotFilter, isDynamicElement);
@@ -943,6 +945,7 @@ export function useInfiniteSuggestions(
       suggestKeyword,
       loadAll,
       language,
+      includeObscured,
     ] as const,
     async ({ queryKey: [_, sq, activeId, sk], pageParam }) => {
       if (!sq) throw new Error("missing searchQuery");
@@ -954,6 +957,7 @@ export function useInfiniteSuggestions(
         suggestKeyword: sk,
         order: sk ? "desc" : "asc",
         language,
+        includeObscured,
       });
       return {
         result: result?.result ?? [],
