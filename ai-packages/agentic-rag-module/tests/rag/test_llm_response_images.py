@@ -151,6 +151,20 @@ def test_source_image_next_to_its_text():
     assert "[Image 1] of the context:" in text
 
 
+def test_a_source_image_keeps_the_number_of_its_source() -> None:
+    graph = _graph(media=None)
+    graph.llm.return_value = SimpleNamespace(content="Il retro è verde [1].")
+
+    result, _, _ = _run(
+        graph,
+        _state(context=[_image_source()]),
+        fetched=[SourceImage(SOURCE_PHOTO, "image/jpeg")],
+    )
+
+    assert "[1]\n[Image 1]\nFoto del retro" in _text(graph)
+    assert result.citation_ordinals == {1: "doc-1"}
+
+
 def test_at_most_four_source_images_in_context_order():
     graph = _graph(media=None)
     sources = [_image_source(f"{n}.jpg", f"https://h/{n}.jpg") for n in range(6)]
