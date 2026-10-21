@@ -1,19 +1,19 @@
 /*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
 import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 import { Options } from "./SortResults";
@@ -100,7 +100,9 @@ async function loadOauthConfig(tenant: string): Promise<OauthConfig | null> {
 
 function buildUserManager(config: OauthConfig): UserManager {
   const redirectUri =
-    typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+    typeof window !== "undefined"
+      ? window.location.origin + window.location.pathname
+      : "";
   return new UserManager({
     authority: config.issuerUri,
     client_id: config.clientId,
@@ -492,6 +494,7 @@ export function OpenK9Client({
       suggestKeyword,
       order,
       language,
+      includeObscured,
     }: {
       searchQuery: SearchToken[];
       suggestionCategoryId?: number;
@@ -500,6 +503,7 @@ export function OpenK9Client({
       suggestKeyword?: string; // to source by text in suggestions
       order: "desc" | "asc";
       language: string;
+      includeObscured: boolean;
     }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
       const request = await authFetch(`/api/searcher/v1/suggestions`, {
         method: "POST",
@@ -511,6 +515,7 @@ export function OpenK9Client({
           suggestKeyword,
           order,
           language,
+          includeObscured,
         }),
         headers: {
           Accept: "application/json",
@@ -609,7 +614,9 @@ export function OpenK9Client({
         blobUrl = URL.createObjectURL(blob);
         // @ts-ignore
 
-        const code = await import(/* @vite-ignore */ /* webpackIgnore: true */ blobUrl);
+        const code = await import(
+          /* @vite-ignore */ /* webpackIgnore: true */ blobUrl
+        );
         return code.exports.template;
       } catch (err) {
         console.warn(err);
@@ -688,6 +695,14 @@ export function OpenK9Client({
   };
 }
 
+/**
+ * Un risultato oscurato ha solo id, documentTypes e i campi in chiaro: non si apre
+ * in anteprima né nel dettaglio e non ha link al documento originale.
+ */
+export function isObscured<E>(result: GenericResultItem<E>): boolean {
+  return result.source.obscuredFields !== undefined;
+}
+
 export type GenericResultItem<E = {}> = {
   source: {
     documentTypes: (keyof E)[];
@@ -697,6 +712,8 @@ export type GenericResultItem<E = {}> = {
     rawContent: string;
     tenantId: number;
     datasourceId: number;
+    /** Solo nei risultati oscurati: i path dei campi tolti, anche vuoto (#2489). */
+    obscuredFields?: string[];
     entities?: Array<{
       entityType: string;
       context: DeepKeys<Without<GenericResultItem<E>["source"], "entities">>[];
@@ -885,6 +902,7 @@ type SearchRequest = {
   language: string;
   sortAfterKey: string;
   overrideSearchWithCorrection?: boolean;
+  includeObscured: boolean;
 };
 
 export type GenerateRequest = {

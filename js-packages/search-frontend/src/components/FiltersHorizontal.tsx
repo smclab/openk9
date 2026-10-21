@@ -1,20 +1,21 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
+import { useIncludeObscured } from "./useIncludeObscured";
 import { css } from "styled-components";
 import { SearchToken, SortField, SuggestionResult } from "./client";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
@@ -578,13 +579,20 @@ export function useInfiniteSuggestions(
 ) {
   const pageSize = numberResultOfFilters ? numberResultOfFilters : 8;
   const client = useOpenK9Client();
+  const includeObscured = useIncludeObscured();
 
   const searchQuery = false
     ? searchQueryParams
     : createSuggestion(searchQueryParams, isDynamicElement);
 
   const suggestionCategories = useInfiniteQuery(
-    ["suggestions", searchQuery, suggestionCategoryId, false] as const,
+    [
+      "suggestions",
+      searchQuery,
+      suggestionCategoryId,
+      false,
+      includeObscured,
+    ] as const,
     async ({ queryKey: [_, searchQuery, suggestionCategoryId], pageParam }) => {
       if (!searchQuery) throw new Error();
       const result = await client.getSuggestions({
@@ -594,6 +602,7 @@ export function useInfiniteSuggestions(
         suggestionCategoryId: suggestionCategoryId,
         order: "desc",
         language: language,
+        includeObscured,
       });
       return {
         result: result.result,
@@ -643,4 +652,3 @@ export function NoFilters() {
 export function isChecked(values: string[], value: string) {
   return values.includes(value);
 }
-

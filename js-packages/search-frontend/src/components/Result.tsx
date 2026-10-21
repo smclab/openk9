@@ -1,23 +1,24 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
 import { css } from "styled-components";
 import { WebResult } from "../renderers/openk9/web/WebResult";
-import { GenericResultItem, ResultRendererProps } from "./client";
+import { GenericResultItem, ResultRendererProps, isObscured } from "./client";
+import { ObscuredResult } from "./ObscuredResult";
 import { DocumentResult } from "../renderers/openk9/document/DocumentResult";
 import { PdfResult } from "../renderers/openk9/pdf/PdfResult";
 import { Renderers } from "./useRenderers";
@@ -64,23 +65,25 @@ function Result<E>(props: ResultProps<E>) {
 
     return matchedTemplate?.Template ?? null;
   };
+  // un oscurato non si apre né in anteprima né nel dettaglio, qualunque template abbia
+  const obscured = isObscured(result);
   return (
     <div
       className={`openk9-embeddable-search--result-container openk9-card-${result?.source?.id}`}
       onMouseEnter={() => {
-        if (overChangeCard && !isMobile) {
+        if (overChangeCard && !isMobile && !obscured) {
           onDetail(result);
           if (setIdPreview) setIdPreview(result?.source?.id || "");
         }
       }}
       onClick={() => {
-        if (!overChangeCard && !isMobile && !viewButton) {
+        if (!overChangeCard && !isMobile && !viewButton && !obscured) {
           onDetail(result);
           if (setIdPreview) setIdPreview(result?.source?.id || "");
         }
       }}
       css={css`
-        cursor: ${!overChangeCard ? "pointer" : "auto"};
+        cursor: ${!overChangeCard && !obscured ? "pointer" : "auto"};
       `}
     >
       {(() => {
@@ -90,7 +93,7 @@ function Result<E>(props: ResultProps<E>) {
           return (
             <React.Fragment>
               <CustomTemplate {...result} />
-              {isMobile && (
+              {isMobile && !obscured && (
                 <CreateButton
                   setIdPreview={setIdPreview}
                   setDetailMobile={setDetailMobile}
@@ -110,14 +113,14 @@ function Result<E>(props: ResultProps<E>) {
           return (
             <React.Fragment>
               <Renderer result={result} />
-              {isMobile && (
+              {isMobile && !obscured && (
                 <CreateButton
                   setIdPreview={setIdPreview}
                   setDetailMobile={setDetailMobile}
                   result={result}
                 />
               )}
-              {viewButton && !isMobile && (
+              {viewButton && !isMobile && !obscured && (
                 <ButtonDetail
                   result={result}
                   onDetail={onDetail}
@@ -128,6 +131,9 @@ function Result<E>(props: ResultProps<E>) {
             </React.Fragment>
           );
         }
+
+        // i template builtin leggono campi che un oscurato non ha: al loro posto il default
+        if (obscured) return <ObscuredResult result={result} />;
 
         if (result.source.documentTypes.includes("pdf")) {
           return (
@@ -323,4 +329,3 @@ function ButtonDetail<E>({
 }
 
 export const ResultMemo = React.memo(Result) as typeof Result;
-

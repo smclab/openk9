@@ -1,20 +1,21 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
+import { useIncludeObscured } from "./useIncludeObscured";
 import { useTranslation } from "react-i18next";
 import { useInfiniteQuery } from "react-query";
 import { css } from "styled-components";
@@ -270,6 +271,7 @@ export function useInfiniteResults<E>(
   dynamicFilters: boolean = true,
 ) {
   const client = useOpenK9Client();
+  const includeObscured = useIncludeObscured();
   const suppressIntermediate = React.useMemo(
     () => state.text.trim().length > 0 && searchQuery.length === 0,
     [state.text, searchQuery],
@@ -294,6 +296,7 @@ export function useInfiniteResults<E>(
       offset,
       elementForPage,
       overrideSearchWithCorrection?.renderingCorrection,
+      includeObscured,
     ] as const,
     async ({ queryKey }) => {
       const [
@@ -317,6 +320,7 @@ export function useInfiniteResults<E>(
         searchQuery: remappingSearchQuery,
         sort: qSort,
         sortAfterKey: qSortAfterKey || "",
+        includeObscured,
       });
     },
     {
@@ -377,4 +381,3 @@ export function SkeletonResult({
     </>
   );
 }
-

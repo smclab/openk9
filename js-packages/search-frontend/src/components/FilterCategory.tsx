@@ -1,20 +1,21 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
+import { useIncludeObscured } from "./useIncludeObscured";
 import { css } from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
@@ -490,6 +491,7 @@ export function useInfiniteSuggestions(
   const pageSize = loadAll ? 19 : suggestKeyword === "" ? 8 : 19;
   const NPageSize = numberItems ? numberItems : pageSize;
   const client = useOpenK9Client();
+  const includeObscured = useIncludeObscured();
   let searchQuery: SearchToken[] | null = [];
   if (searchQueryParams && searchQueryParams?.length > 0) {
     searchQueryParams.forEach((singleSearchQuery) => {
@@ -507,6 +509,7 @@ export function useInfiniteSuggestions(
       suggestKeyword,
       loadAll,
       language,
+      includeObscured,
     ] as const,
     async ({
       queryKey: [_, searchQuery, activeSuggestionCategory, suggestKeyword],
@@ -521,6 +524,7 @@ export function useInfiniteSuggestions(
         suggestKeyword,
         order: suggestKeyword ? "desc" : "asc",
         language: language,
+        includeObscured,
       });
       return {
         result: result.result,
@@ -756,4 +760,3 @@ export function NoFilter({
     </fieldset>
   );
 }
-
