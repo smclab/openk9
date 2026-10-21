@@ -86,12 +86,22 @@ class Settings(BaseSettings):
     opensearch_ca_certs: str | None = None
     opensearch_username: str | None = None
     opensearch_password: SecretStr | None = None
+    # Comma-separated regexes, one of which must match the whole host of a
+    # source image before it is downloaded.
+    source_image_host_regexes: Annotated[list[str], NoDecode] = [".*"]
 
     @field_validator("origins", mode="before")
     @classmethod
     def split_origins(cls, value):
         if isinstance(value, str):
             return value.split(",")
+        return value
+
+    @field_validator("source_image_host_regexes", mode="before")
+    @classmethod
+    def split_source_image_host_regexes(cls, value):
+        if isinstance(value, str):
+            return [regex.strip() for regex in value.split(",") if regex.strip()]
         return value
 
     @field_validator("upload_file_extensions", mode="before")

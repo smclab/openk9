@@ -35,7 +35,6 @@ graph state, so neither the checkpoint nor the chat history ever holds them.
 
 import base64
 import io
-import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -47,6 +46,7 @@ import requests
 from langchain_ollama import ChatOllama
 from PIL import Image
 
+from app.config import settings
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -65,11 +65,7 @@ OLLAMA_VISION_CAPABILITY = "vision"
 
 # Same semantics as the plugin driver and enricher whitelist of the datasource:
 # comma-separated regexes, one of which must match the whole host.
-SOURCE_IMAGE_HOST_REGEXES = [
-    regex.strip()
-    for regex in os.getenv("SOURCE_IMAGE_HOST_REGEXES", ".*").split(",")
-    if regex.strip()
-]
+SOURCE_IMAGE_HOST_REGEXES = settings.source_image_host_regexes
 
 _DOWNLOAD_CHUNK_BYTES = 64 * 1024
 

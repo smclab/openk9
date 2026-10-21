@@ -175,6 +175,19 @@ def test_malformed_upload_file_extensions_are_refused(monkeypatch):
     assert "upload_file_extensions" in _error_fields(error.value)
 
 
+def test_source_image_hosts_default_to_any_host():
+    assert _settings().source_image_host_regexes == [".*"]
+
+
+def test_source_image_hosts_are_a_comma_separated_list(monkeypatch):
+    monkeypatch.setenv("SOURCE_IMAGE_HOST_REGEXES", r"photos\..*, cdn\.example\.com")
+
+    assert _settings().source_image_host_regexes == [
+        r"photos\..*",
+        r"cdn\.example\.com",
+    ]
+
+
 def test_hosts_are_kept_as_configured(monkeypatch):
     """Hosts are passed through untouched: gRPC targets are host:port, and the
     OpenSearch host can be a comma-separated list of nodes."""
