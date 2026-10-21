@@ -361,6 +361,93 @@ class EmbedContentStreamTest {
 	}
 
 	@Test
+	void should_use_the_caption_as_the_text_of_an_image() {
+
+		// the same image, with and without a caption
+		var chunk = imageChunk(1, "img-1", 3.0f, 4.0f);
+		var captioned = binary("img-1", Map.of("caption", "schema impianto 12V"));
+
+		var doc = runToDocs(
+			List.of(chunk), 0, Map.of(), Map.of("img-1", captioned)).get(0);
+		var bare = runToDocs(
+			List.of(chunk), 0, Map.of(), Map.of("img-1", binary("img-1", null)))
+			.get(0);
+
+		// the caption is the text, the vector does not change
+		Assertions.assertEquals(
+			"schema impianto 12V", doc.getString("chunkText"));
+		Assertions.assertEquals(
+			bare.getJsonArray("vector"), doc.getJsonArray("vector"));
+	}
+
+	@Test
+	void should_leave_empty_the_text_of_an_image_without_caption() {
+
+		// an image with a name and a blank caption, one with no metadata
+		var blank = binary("img-1", Map.of("caption", " "));
+		var bare = binary("img-2", null);
+
+		var docs = runToDocs(
+			List.of(imageChunk(1, "img-1", 1.0f), imageChunk(2, "img-2", 1.0f)),
+			0, Map.of(), Map.of("img-1", blank, "img-2", bare));
+
+		// the text stays empty, the name is not used
+		for (var doc : docs) {
+			Assertions.assertEquals("", doc.getString("chunkText"));
+		}
+	}
+
+	@Test
+	void should_keep_the_text_the_module_sent() {
+
+		// an image the module sent a text for, and a text file with a caption
+		var image = binary("img-1", Map.of("caption", "a caption"));
+		var textFile = BinaryPayload.builder()
+			.id("txt-1")
+			.contentType("text/plain")
+			.metadata(Map.of("caption", "a caption"))
+			.build();
+		var line = binaryChunk(2, "txt-1", 1.0f);
+
+		var docs = runToDocs(
+			List.of(
+				binaryChunk(1, "img-1", 1.0f),
+				line,
+				line.toBuilder().setNumber(3).clearText().build()),
+			0, Map.of(), Map.of("img-1", image, "txt-1", textFile));
+
+		// the module's text wins; the caption fills only the text of an image
+		Assertions.assertEquals(
+			"binary-chunk-1", docs.get(0).getString("chunkText"));
+		Assertions.assertEquals(
+			"binary-chunk-2", docs.get(1).getString("chunkText"));
+		Assertions.assertEquals("", docs.get(2).getString("chunkText"));
+	}
+
+	@Test
+	void should_keep_the_caption_out_of_the_windows() {
+
+		// a text in two chunks and an image with a caption
+		var image = binary("img-1", Map.of("caption", "schema impianto 12V"));
+
+		var docs = runToDocs(
+			List.of(
+				textChunk(1, 2, "first", 1.0f),
+				textChunk(2, 2, "second", 1.0f),
+				imageChunk(3, "img-1", 1.0f)),
+			1, Map.of(), Map.of("img-1", image));
+
+		// the image chunk has the caption, no window of the text carries it
+		Assertions.assertEquals(
+			"schema impianto 12V", docs.get(2).getString("chunkText"));
+		for (var doc : docs.subList(0, 2)) {
+			var windows = doc.getJsonArray("previous").encode()
+				+ doc.getJsonArray("next").encode();
+			Assertions.assertFalse(windows.contains("schema impianto 12V"));
+		}
+	}
+
+	@Test
 	void should_keep_outstanding_bounded_when_the_writer_is_slow() {
 
 		// The pipeline claims O(windowSize) memory because it is demand-driven:
@@ -690,6 +777,15 @@ class EmbedContentStreamTest {
 			.setVectorDataType(VectorDataType.VECTOR_DATA_TYPE_FLOAT32)
 			.setDimension(vector.length)
 			.setF32(floatVector.build())
+			.build();
+	}
+
+	/** The chunk of an image: the module sends it without a text. */
+	private static EmbeddedChunk imageChunk(
+		int number, String fileId, float... vector) {
+
+		return binaryChunk(number, fileId, vector).toBuilder()
+			.clearText()
 			.build();
 	}
 

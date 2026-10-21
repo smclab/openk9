@@ -411,8 +411,9 @@ public class EmbeddingService {
 	 * Builds a chunk-doc like the one of {@link #mapToDocumentObject} +
 	 * {@link #mapToChunkWindowObject}, without the {@code resources} of the
 	 * source document. The chunk of a binary carries a {@code binary} object
-	 * with the data of that binary only (see {@link #mapBinary}); a text chunk
-	 * carries none.
+	 * with the data of that binary only (see {@link #mapBinary}) and, for an
+	 * image, its caption as text (see {@link #mapBinaryChunkText}); a text
+	 * chunk carries none.
 	 */
 	static JsonObject mapWindowedToDocument(
 		ChunkWindowBuffer.Windowed<EmbeddingOuterClass.EmbeddedChunk> windowed,
@@ -444,9 +445,10 @@ public class EmbeddingService {
 
 		// written after the merge so it is authoritative.
 		if (chunk.hasFileId()) {
-			jsonObject.put(
-				BINARY_FIELD,
-				mapBinary(chunk, binaryByFileId.get(chunk.getFileId())));
+			var binary = mapBinary(chunk, binaryByFileId.get(chunk.getFileId()));
+
+			jsonObject.put(BINARY_FIELD, binary);
+			jsonObject.put("chunkText", mapBinaryChunkText(chunk, binary));
 		}
 
 		var previous = new JsonArray();
@@ -519,6 +521,35 @@ public class EmbeddingService {
 		}
 
 		return jsonObject;
+	}
+
+	/**
+	 * Returns the {@code chunkText} of the chunk of a binary: the text the
+	 * module sent or, for an image the module sent no text for, the
+	 * {@code caption} of its {@code binary.metadata}. The vector stays the one
+	 * of the image, and the windows keep the text the module sent: the
+	 * caption does not end up in the {@code previous}/{@code next} of the
+	 * chunks around it.
+	 *
+	 * @param chunk  the chunk derived from the binary
+	 * @param binary the {@code binary} object of the chunk-doc
+	 * @return the caption, or the text of the module when there is none
+	 */
+	static String mapBinaryChunkText(
+		EmbeddingOuterClass.EmbeddedChunk chunk, JsonObject binary) {
+
+		if (!chunk.getText().isBlank()
+			|| !binary.getString("contentType").startsWith("image/")) {
+
+			return chunk.getText();
+		}
+
+		var metadata = binary.getJsonObject("metadata");
+		var caption = metadata != null ? metadata.getValue("caption") : null;
+
+		return caption instanceof String text && !text.isBlank()
+			? text
+			: chunk.getText();
 	}
 
 	/**
