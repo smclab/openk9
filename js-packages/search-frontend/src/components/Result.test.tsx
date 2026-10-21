@@ -176,16 +176,18 @@ describe("an obscured result", () => {
 });
 
 describe("the visible fields of an obscured result", () => {
-  test("are its fields but the reserved ones, one row per i18n parent", () => {
+  test("are its non empty fields but the reserved ones, one row per path", () => {
     const fields = visibleFields(
       {
         id: "doc-1",
         documentTypes: ["document"],
         obscuredFields: ["document.content"],
         document: {
-          title: { i18n: { it: "Titolo" }, base: "Title" },
+          title: "Titolo",
           lastModifiedDate: 1757548800000,
           tags: ["a", "b"],
+          authors: [{ name: "Ada" }, { name: "Grace", email: "" }],
+          summary: null,
         },
       },
       "it",
@@ -198,6 +200,7 @@ describe("the visible fields of an obscured result", () => {
         value: new Date(1757548800000).toLocaleDateString("it"),
       },
       { label: "Tags", value: "a, b" },
+      { label: "Name", value: "Ada, Grace" },
     ]);
   });
 });

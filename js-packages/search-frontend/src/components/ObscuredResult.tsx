@@ -182,39 +182,34 @@ export function visibleFields(
   source: Record<string, unknown>,
   language: string,
 ): VisibleField[] {
-  const fields = new Map<string, VisibleField>();
-  const visit = (value: unknown, path: string) => {
-    if (value === null || value === undefined || value === "") return;
-    if (Array.isArray(value)) {
-      if (value.some((item) => typeof item === "object" && item !== null)) {
-        value.forEach((item) => visit(item, path));
-      } else {
-        add(path, value.map(String).join(", "));
-      }
-      return;
-    }
-    if (typeof value === "object") {
-      Object.entries(value).forEach(([key, child]) =>
-        visit(child, `${path}.${key}`),
-      );
-      return;
-    }
-    add(path, String(value));
-  };
-  const add = (path: string, value: string) => {
-    // un padre I18N vale per tutte le varianti: una riga sola, la prima che arriva
-    const field = path.replace(/\.i18n\.[^.]+$|\.base$/, "");
-    if (fields.has(field)) return;
-    const name = field.split(".").pop() ?? field;
-    fields.set(field, {
-      label: toLabel(name),
-      value: /date/i.test(name) ? formatDate(value, language) : value,
-    });
-  };
-  Object.entries(source).forEach(([key, value]) => {
-    if (!RESERVED_KEYS.has(key)) visit(value, key);
+  const leaves = Object.entries(source)
+    .filter(([key]) => !RESERVED_KEYS.has(key))
+    .flatMap(([key, value]) => leavesOf(value, key));
+  // gli elementi di un array hanno lo stesso percorso: una riga sola, con i valori uniti
+  const paths = [...new Set(leaves.map((leaf) => leaf.path))];
+  return paths.map((path) => {
+    const name = path.split(".").pop() ?? path;
+    const isDate = /date/i.test(name);
+    const values = leaves
+      .filter((leaf) => leaf.path === path)
+      .map((leaf) => (isDate ? formatDate(leaf.value, language) : leaf.value));
+    return { label: toLabel(name), value: values.join(", ") };
   });
-  return [...fields.values()];
+}
+
+type Leaf = { path: string; value: string };
+
+// i valori non vuoti dentro `value`, ognuno col suo percorso; un array non aggiunge un livello
+function leavesOf(value: unknown, path: string): Leaf[] {
+  if (value === null || value === undefined || value === "") return [];
+  if (Array.isArray(value))
+    return value.flatMap((item) => leavesOf(item, path));
+  if (typeof value === "object") {
+    return Object.entries(value).flatMap(([key, child]) =>
+      leavesOf(child, `${path}.${key}`),
+    );
+  }
+  return [{ path, value: String(value) }];
 }
 
 // il nome del campo, da `lastModifiedDate` a "Last modified date": la response non ha le etichette
