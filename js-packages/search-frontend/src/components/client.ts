@@ -732,6 +732,13 @@ export function asResultItem<T = unknown, S = Record<string, unknown>>(
   item: GenericResultItem<S>,
 ): GenericResultItem<T> {
   return item as unknown as GenericResultItem<T>;
+  /**
+   * Un risultato oscurato ha solo id, documentTypes e i campi in chiaro: non si apre
+   * in anteprima né nel dettaglio e non ha link al documento originale.
+   */
+  export function isObscured<E>(result: GenericResultItem<E>): boolean {
+    return result.source.obscuredFields !== undefined;
+  }
 }
 
 /** Apre il dettaglio di un risultato su mobile, o lo chiude con `null`. */
