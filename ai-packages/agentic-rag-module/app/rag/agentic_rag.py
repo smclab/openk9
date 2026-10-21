@@ -263,12 +263,15 @@ class CitationsTailFilter:
 
 
 # The same turn when the image does reach the model: it can look at it, and the
-# context is what the search found close to it.
+# context is what the search found close to it. The answer starts from what the
+# model sees: told only to use the matches, it describes the image with their
+# text.
 MEDIA_ONLY_QUERY_WITH_IMAGE_INSTRUCTION = (
     "The user submitted an image instead of a written question: it is "
-    "attached to this message. Answer about what the image shows. The "
-    "documents in the context are the closest matches to that image: use "
-    "them where they help, and say so when they do not."
+    "attached to this message. First describe what you see in the attached "
+    "image. The documents in the context are only the closest matches found "
+    "for it, not a description of it: do not assume the image is one of "
+    "them. Then say which documents relate to it, if any."
 )
 
 # Appended to the question when an image meant for the model did not reach it:

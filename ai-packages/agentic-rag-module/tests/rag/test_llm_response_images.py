@@ -298,6 +298,8 @@ def test_media_only_with_a_visual_model():
     assert _images(graph) == [PHOTO]
     text = _text(graph)
     assert MEDIA_ONLY_QUERY_WITH_IMAGE_INSTRUCTION in text
+    assert "First describe what you see in the attached image." in text
+    assert "do not assume the image is one of them" in text
     assert VISUAL_DETAILS_BAN not in text
 
 
