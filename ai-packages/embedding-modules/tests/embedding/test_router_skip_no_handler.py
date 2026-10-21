@@ -30,7 +30,10 @@ def test_classify_maps_modalities():
     assert classify("text/markdown; charset=utf-8") == "text"
     assert classify("audio/mpeg") == "audio"
     assert classify("video/mp4") == "video"
-    assert classify("application/pdf") == "unknown"
+    assert classify("application/pdf") == "pdf"
+    assert classify(
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) == "unknown"
     assert classify(None) == "unknown"
 
 

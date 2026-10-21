@@ -26,7 +26,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "safetensors" },
     { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
@@ -146,7 +146,7 @@ name = "cffi"
 version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser", marker = "implementation_name != 'PyPy' or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "pycparser", marker = "implementation_name != 'PyPy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9e/ef/008a1939e372c06329a3fce4279c02f328488f3526744906eeec3da7ad5f/cffi-2.1.1.tar.gz", hash = "sha256:dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be", size = 530807, upload-time = "2026-08-03T21:21:18.939Z" }
 wheels = [
@@ -216,7 +216,7 @@ wheels = [
 [package.optional-dependencies]
 neural = [
     { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "transformers" },
@@ -266,7 +266,7 @@ name = "cryptography"
 version = "50.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "cffi", marker = "platform_python_implementation != 'PyPy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9d/af/182eb91b0df3fe75c4d9f26fe70684569566745f6ba7e5c9c73a862c5252/cryptography-50.0.2.tar.gz", hash = "sha256:7b46165bb56eb4704e2eaaf86f3c940d19154535d9b0ca7d6d590b04060e00d5", size = 880623, upload-time = "2026-09-30T15:30:04.884Z" }
 wheels = [
@@ -338,43 +338,43 @@ wheels = [
 
 [package.optional-dependencies]
 cublas = [
-    { name = "nvidia-cublas", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cublas", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 cudart = [
-    { name = "nvidia-cuda-runtime", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cuda-runtime", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 cufft = [
-    { name = "nvidia-cufft", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cufft", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 cufile = [
-    { name = "nvidia-cufile", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cufile", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 cupti = [
-    { name = "nvidia-cuda-cupti", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cuda-cupti", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 curand = [
-    { name = "nvidia-curand", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-curand", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 cusolver = [
-    { name = "nvidia-cublas", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "nvidia-cusolver", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "nvidia-cusparse", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cublas", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cusolver", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cusparse", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 cusparse = [
-    { name = "nvidia-cusparse", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cusparse", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 nvjitlink = [
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 nvrtc = [
-    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 nvtx = [
-    { name = "nvidia-nvtx", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "nvidia-nvtx", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 
 [[package]]
@@ -417,7 +417,9 @@ dependencies = [
     { name = "langchain-ollama" },
     { name = "langchain-openai" },
     { name = "pika" },
+    { name = "pillow" },
     { name = "pydantic-settings" },
+    { name = "pypdfium2" },
     { name = "python-dotenv" },
     { name = "regex" },
     { name = "sentence-transformers" },
@@ -453,7 +455,9 @@ requires-dist = [
     { name = "langchain-ollama", specifier = "==1.1.0" },
     { name = "langchain-openai", specifier = "==1.6.3" },
     { name = "pika", specifier = "==1.3.2" },
+    { name = "pillow", specifier = "==13.0.0" },
     { name = "pydantic-settings", specifier = "==2.15.0" },
+    { name = "pypdfium2", specifier = "==5.14.0" },
     { name = "python-dotenv", specifier = "==1.0.1" },
     { name = "regex", specifier = "==2026.9.3" },
     { name = "sentence-transformers", specifier = "==6.1.0" },
@@ -880,7 +884,7 @@ dependencies = [
     { name = "click" },
     { name = "filelock" },
     { name = "fsspec" },
-    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64' or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64'" },
     { name = "httpx" },
     { name = "packaging" },
     { name = "pyyaml" },
@@ -1183,7 +1187,7 @@ dependencies = [
     { name = "anyio" },
     { name = "distro" },
     { name = "httpx2" },
-    { name = "orjson", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "orjson", marker = "platform_python_implementation != 'PyPy'" },
     { name = "packaging" },
     { name = "pydantic" },
     { name = "requests" },
@@ -1568,6 +1572,24 @@ wheels = [
 ]
 
 [[package]]
+name = "pillow"
+version = "13.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/a4/9cc30690a394a8305e8be4c9036aa16d0dfddadd09079860b582f562496d/pillow-13.0.0.tar.gz", hash = "sha256:cdcd1ba258178f7356d74170c9a81ba4eab6a5d55748bc402a5a2a6fe6be3510", size = 47058631, upload-time = "2026-10-16T22:18:09.718Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7a/b8/58d79332229482eb0d27c82973850808c19d37e5bdc14443d3417bd373f5/pillow-13.0.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:67c8d44ad89fa7eb88de5d6ef6199b1e03dd24974f85a67639fc8badb801fe79", size = 5568643, upload-time = "2026-10-16T22:15:44.474Z" },
+    { url = "https://files.pythonhosted.org/packages/39/4b/f2ed53d83aa44ac19599ac0a54897f867fafb95f406980d1e24083f8cbe3/pillow-13.0.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:fc481f742ccda20e9ed760b8f978dff50f2a4e9bc253ac167fb0a05b0783ef52", size = 4852329, upload-time = "2026-10-16T22:15:46.284Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/bb/9e30e8ed18c20800ee327a12107d5249ad8dc444867b3adfcc21654e3c71/pillow-13.0.0-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:8bf295fe459343bc6093c8e5e0df60bfa189e0fcb775a22e2c2488fdeccc6c0d", size = 6519309, upload-time = "2026-10-16T22:15:48.14Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/99/fdf65cc539e266ab93546c261bdf98411fe165c6e4e13f9dbf597097192b/pillow-13.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:42d63be3af4f9b951b199b0a9d23365d37ab14687e6d77b74940432c8515c4ca", size = 7144542, upload-time = "2026-10-16T22:15:50.093Z" },
+    { url = "https://files.pythonhosted.org/packages/26/9b/f38b7c4d8f599537e2d1a6d546cec9beef7536ff8f5c49a3f9c78179d8ac/pillow-13.0.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:4bd024d567eca931b668978d672dba914d4b8e2628e2c3073a2ad178de8a2620", size = 6618042, upload-time = "2026-10-16T22:15:52.054Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/7c/45ee28531f89ee4582967d8a17f7a26d71ca64cd902b93c269590cd60a00/pillow-13.0.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:23edf4ec4b6f4f240e8df6e4985e9ee2ced86474632433e55fb1e2548744bf40", size = 7228137, upload-time = "2026-10-16T22:15:54.009Z" },
+    { url = "https://files.pythonhosted.org/packages/60/da/f6d644e631c5b370c5d0b899f3ccadd2780aab070b29a110527cf4e1fd2c/pillow-13.0.0-pp312-pypy312_pp80-macosx_10_15_x86_64.whl", hash = "sha256:8619685cad8efc4c38c66d3b36aad854523297c43d748b3b6f0cc03c90ba3463", size = 5523188, upload-time = "2026-10-16T22:17:59.334Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/b0/2594f202d743a35d4fe80682bfd96f277e5ca7aecb27cf64ef5bfc1d000b/pillow-13.0.0-pp312-pypy312_pp80-macosx_11_0_arm64.whl", hash = "sha256:7e91e97a929232cdb828889ee6ad0e48d7f40f4ec38818f4e4a8968b2b1af22e", size = 4806808, upload-time = "2026-10-16T22:18:01.188Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/ed/d504165ef79af6fafe25c76726cf30f544cc236002f7ed054f1d51adc4ff/pillow-13.0.0-pp312-pypy312_pp80-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:93ff9c9c3663ce23aaa5d0b6b6abac55359e2a0c06c7e30f3771829af816be63", size = 5464358, upload-time = "2026-10-16T22:18:02.779Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/fe/a10aba5503ca13e9e009b8bd0a1a4ce5584bdce246245fd6f3a83701369c/pillow-13.0.0-pp312-pypy312_pp80-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:e65dd6e75de67b2362a4fa3e16aa627595f65054dc4ec73d64680c84d592fa61", size = 6043514, upload-time = "2026-10-16T22:18:04.538Z" },
+]
+
+[[package]]
 name = "pluggy"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1721,6 +1743,31 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/49/2e/ced460408999b33da6b31b0021b0f37d329e202d4169aeb164493778f25b/pygments-2.21.0.tar.gz", hash = "sha256:610ca751c9bc2492b38eb9a38a7fbc93edbbb2d7182edaf34e66ae493dee5c8c", size = 5005329, upload-time = "2026-08-17T08:02:48.824Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl", hash = "sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9", size = 1250147, upload-time = "2026-08-17T08:02:44.912Z" },
+]
+
+[[package]]
+name = "pypdfium2"
+version = "5.14.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/95/d0/c81d3a7c2a9af37b817ace1de0acd40cf44d15f12407c5e86b3668364a5c/pypdfium2-5.14.0.tar.gz", hash = "sha256:c5f009b3157f10e97dceb55963f5910eff92feb00587ba10a76f12b87ce1a4b6", size = 376498, upload-time = "2026-10-04T15:19:19.835Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d1/ea/14673bc9d8b7beeaa1eb46e9951b22543edaf2a4676c586e3b1e032ff6ee/pypdfium2-5.14.0-py3-none-macosx_13_0_arm64.whl", hash = "sha256:2de384df66ba55fcaab0775f30f28ec1090af3dfa60276a07821efc96d993118", size = 3542294, upload-time = "2026-10-04T15:18:44.345Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/11/b720097b01fa0874854f2f6669cbea4e4ea4e075769687714fac64d68964/pypdfium2-5.14.0-py3-none-macosx_13_0_x86_64.whl", hash = "sha256:e4e203ea9710fd00e5448edb6f1615dc8587035357f75f40b432dde0c33e8da1", size = 3735845, upload-time = "2026-10-04T15:18:45.975Z" },
+    { url = "https://files.pythonhosted.org/packages/92/b4/0c31aa51887cd6cd032191dfe010a6d01ed43cf03204cfbd2184ebe4b715/pypdfium2-5.14.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f1b696e6901e16f114a2ec6332e5e3f8f5033a901614ead28499ab18ca6024f5", size = 3719672, upload-time = "2026-10-04T15:18:47.455Z" },
+    { url = "https://files.pythonhosted.org/packages/93/a8/ae6ef96bf66559328d07b9e402ea704352ea00c49b6a73573da57e1fb378/pypdfium2-5.14.0-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:593f2c952ae3ffdca0efcbb3d9464fbccb876254386114ff900cabef21157c3f", size = 3435593, upload-time = "2026-10-04T15:18:49.131Z" },
+    { url = "https://files.pythonhosted.org/packages/59/ff/a78405fab4c8bad0ec25b49c5efba2c85ed14609ec73645f95220560bd81/pypdfium2-5.14.0-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:d436ee9e024f981e68f5775f5a9d115f93ea14ee6c2c6efd35dd17d83edf4942", size = 3868604, upload-time = "2026-10-04T15:18:51.304Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/6e/09e9b62ab66c9acef5ad14f8a8c0d7b4d8d6ea6492e4e65b612ef146d373/pypdfium2-5.14.0-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:f6f13bbcc5f4adabc2676e52f662c6cb375de86b314790b0ae08f3ab62eb116a", size = 4279333, upload-time = "2026-10-04T15:18:52.948Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/a3/c9cc797fc8bdfb8f37b9b0f8b9d02a5fc196b2015f408d53624cab5b0519/pypdfium2-5.14.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:11f281613fa22313d9c7ab89947665e84eccf8ebe40e1198a84a88352305648d", size = 3799581, upload-time = "2026-10-04T15:18:54.913Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/76/54355a4bbd88bdd5ed3f4405bdc345eb593df9995daf90d285cbdf5c1410/pypdfium2-5.14.0-py3-none-manylinux_2_27_s390x.manylinux_2_28_s390x.whl", hash = "sha256:51d9e9b64ebc34effaf57f9b6d4511b3f66ad3744bd1690d2cc6700853173dcf", size = 4113022, upload-time = "2026-10-04T15:18:56.774Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/bc/ea461961ed0e0c4866df7a5610e76f769ef468bff28cd007e2aeecc8b882/pypdfium2-5.14.0-py3-none-manylinux_2_34_riscv64.manylinux_2_39_riscv64.whl", hash = "sha256:605ab9d0d4c5e223599c9065b88d16b2c1f131c807c80dea8adbb16f1433e95b", size = 4062832, upload-time = "2026-10-04T15:18:58.471Z" },
+    { url = "https://files.pythonhosted.org/packages/32/30/dde99bc8cb3f8ace1d856095c2b4a29c80eecf9089b186a3b0845d0abc69/pypdfium2-5.14.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:382de7fe20d32c42993a274d7b6c555a5623a97570dfc1d2f5e0a16fe0d5d482", size = 5058436, upload-time = "2026-10-04T15:18:59.993Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/16/5314182dda2695fdf5bd414a450ee866087068cca4725703932770d4be04/pypdfium2-5.14.0-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:dbfd6deff68cc46b134acd6be380d98d694a9f018fbb622c07229225c85db389", size = 4595505, upload-time = "2026-10-04T15:19:01.835Z" },
+    { url = "https://files.pythonhosted.org/packages/63/3f/474c42e726f0020095c7d5f3fb88cfd4e5d39c1361105a72899ada0ecd1b/pypdfium2-5.14.0-py3-none-musllinux_1_2_i686.whl", hash = "sha256:9f4d77db5232826dd03a63481f32164331b96c21fd68f0667b2e43dbae141a93", size = 5309775, upload-time = "2026-10-04T15:19:03.564Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/0c/723a6cf11cff00f125310d8c2c08362dc6c100d05fff8f92285a4df1bd41/pypdfium2-5.14.0-py3-none-musllinux_1_2_ppc64le.whl", hash = "sha256:b40a0913196a1483f0fdc22a53f8719c3aef87f1c4d8d9c38d2ad4e207500fdf", size = 5224565, upload-time = "2026-10-04T15:19:05.264Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/c5/86ab02a41e77a7aa962af6545a406815aeb9abaecd9f25dec34dbc336b72/pypdfium2-5.14.0-py3-none-musllinux_1_2_riscv64.whl", hash = "sha256:790e2cac1641a65912b73bd7243f45195d36f1663c85a3e1a126a8f5867c82a3", size = 4704416, upload-time = "2026-10-04T15:19:07.05Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/de/fb75013f924c5a4dde4a4a41ec13e7495f9b80022bf35dd51baa54e05910/pypdfium2-5.14.0-py3-none-musllinux_1_2_s390x.whl", hash = "sha256:09b99c8f0cb427eb17fec13c0862ed598bba34b4843df153f70fff806a2820bc", size = 5163621, upload-time = "2026-10-04T15:19:09.021Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/77/e59c814f10b533bc4565abe90ccef888ba29be45ada4627ebbf710961f0d/pypdfium2-5.14.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:e70d87cb0577eab38f2106f9c9606b458930beef612a1b5f298772ed259f5ec0", size = 5121606, upload-time = "2026-10-04T15:19:10.609Z" },
+    { url = "https://files.pythonhosted.org/packages/21/25/e067396b4bdd26c19f0997bfa3422d3975a49ceec2c59668e7599f2adcba/pypdfium2-5.14.0-py3-none-pyemscripten_2026_0_wasm32.whl", hash = "sha256:c73be14076bedebd9bcaf9b062579c95c668580043bccd29eb0db502101d5716", size = 2675501, upload-time = "2026-10-04T15:19:12.588Z" },
 ]
 
 [[package]]
@@ -1926,7 +1973,7 @@ dependencies = [
     { name = "scipy" },
     { name = "tokenizers" },
     { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "tqdm" },
@@ -2107,18 +2154,18 @@ resolution-markers = [
 dependencies = [
     { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "filelock", marker = "(sys_platform != 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu')" },
-    { name = "fsspec", marker = "(sys_platform != 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu')" },
-    { name = "jinja2", marker = "(sys_platform != 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu')" },
-    { name = "networkx", marker = "(sys_platform != 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu')" },
+    { name = "filelock", marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "fsspec", marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "jinja2", marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "networkx", marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "nvidia-cudnn-cu13", marker = "(sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "nvidia-cusparselt-cu13", marker = "(sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "nvidia-nccl-cu13", marker = "(sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "nvidia-nvshmem-cu13", marker = "(sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "setuptools", marker = "(sys_platform != 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu')" },
-    { name = "sympy", marker = "(sys_platform != 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu')" },
+    { name = "setuptools", marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
+    { name = "sympy", marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
     { name = "triton", marker = "(sys_platform == 'linux' and extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
-    { name = "typing-extensions", marker = "(sys_platform != 'linux' and extra != 'group-16-embedding-module-cpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu')" },
+    { name = "typing-extensions", marker = "(sys_platform != 'linux' and extra == 'group-16-embedding-module-gpu') or (extra != 'group-16-embedding-module-cpu' and extra != 'group-16-embedding-module-gpu') or (extra == 'group-16-embedding-module-cpu' and extra == 'group-16-embedding-module-gpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4b/3c/379349820e9a6e713826de3d0b88f07728541bdcabe2a3afd128871cdc4b/torch-2.14.1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:420dbf314c180ee4b86e9bc00aee5746a7d6e5bacdd7df925af671ed393f0b2e", size = 127307099, upload-time = "2026-09-30T17:44:10.421Z" },

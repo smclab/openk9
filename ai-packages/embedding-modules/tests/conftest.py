@@ -25,7 +25,71 @@ locally and at Docker build time in the image.
 import pathlib
 import sys
 
+import pytest
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+
+class PdfSamples:
+    """Builds small PDFs in memory, one page per content stream: a page
+    with a line of text, a page with only a vector drawing, a corrupted
+    file. No fixture files: what each page holds is readable here."""
+
+    CORRUPTED = b"%PDF-1.4\nnot really a pdf"
+    # a frame, two diagonals and a box: lines only, no text
+    DRAWING = b"4 w 50 50 495 742 re S 50 50 m 545 792 l S 50 792 m 545 50 l S"
+
+    @staticmethod
+    def text_page(text: str) -> bytes:
+        return b"BT /F1 24 Tf 72 720 Td (%s) Tj ET" % text.encode("latin-1")
+
+    @staticmethod
+    def build(*pages: bytes) -> bytes:
+        objects = [
+            b"<< /Type /Catalog /Pages 2 0 R >>",
+            b"",
+            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        ]
+        kids = []
+
+        for content in pages:
+            page_number = len(objects) + 1
+            kids.append(b"%d 0 R" % page_number)
+            objects.append(
+                b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
+                b"/Resources << /Font << /F1 3 0 R >> >> /Contents %d 0 R >>"
+                % (page_number + 1)
+            )
+            objects.append(
+                b"<< /Length %d >>\nstream\n%s\nendstream" % (len(content), content)
+            )
+
+        objects[1] = b"<< /Type /Pages /Kids [%s] /Count %d >>" % (
+            b" ".join(kids),
+            len(pages),
+        )
+
+        out = bytearray(b"%PDF-1.4\n")
+        offsets = []
+        for number, body in enumerate(objects, start=1):
+            offsets.append(len(out))
+            out += b"%d 0 obj\n%s\nendobj\n" % (number, body)
+
+        xref = len(out)
+        out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+        for offset in offsets:
+            out += b"%010d 00000 n \n" % offset
+        out += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (
+            len(objects) + 1,
+            xref,
+        )
+
+        return bytes(out)
+
+
+@pytest.fixture
+def pdf_samples():
+    return PdfSamples

@@ -18,10 +18,11 @@
 """Media-aware routing for EmbedContent.
 
 Turns a content source (inline text, or a media ref pulled from its
-pre-signed URL) into embedded Pieces, one per chunk. The module is the
-sole authority on embeddability: a ref whose modality has no handler in
-phase 1 (audio, video, unknown), or that the configured model cannot
-embed (image on a text-only model, binary not decodable), raises SkipRef
+pre-signed URL) into embedded Pieces, one per chunk; a PDF gives one Piece
+per page, rasterized, in groups. The module is the sole authority on
+embeddability: a ref whose modality has no handler (audio, video, unknown),
+that the configured model cannot embed (image or PDF on a text-only model,
+binary not decodable) or that the media options turn off, raises SkipRef
 so the caller skips it — no chunk for that fileId, structured log, the
 stream continues. A model failing on content it can embed is not a skip:
 it raises EmbedFailed and the caller fails the request. New modalities
@@ -30,8 +31,21 @@ HTTP fetch) are injected via Pipelines, so the routing is testable
 without network or models.
 """
 
-from collections.abc import Callable
+import io
+import logging
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+
+import pypdfium2 as pdfium
+
+from app.embedding.media_options import MediaOptions
+from app.utils.text_cleaner import clean_text
+
+logger = logging.getLogger(__name__)
+
+PDF_CONTENT_TYPE = "application/pdf"
+# the content type of a rasterized page, as the image embedders receive it
+PAGE_CONTENT_TYPE = "image/png"
 
 
 class SkipRef(Exception):
@@ -46,12 +60,14 @@ class EmbedFailed(Exception):
 
 @dataclass
 class Piece:
-    """One embedded chunk: its vector, its text (empty for images) and the
-    source fileId (None for inline-text chunks)."""
+    """One embedded chunk: its vector, its text (empty for images), the
+    source fileId (None for inline-text chunks) and its metadata (the page
+    of a PDF page, None when there is nothing to add)."""
 
     vector: list
     text: str = ""
     file_id: str | None = None
+    metadata: dict | None = None
 
 
 @dataclass
@@ -65,8 +81,8 @@ class Pipelines:
 
 
 def classify(content_type) -> str:
-    """Maps a content type onto a modality: text | image | audio | video |
-    unknown. Subtype parameters (charset, ...) are ignored."""
+    """Maps a content type onto a modality: text | image | pdf | audio |
+    video | unknown. Subtype parameters (charset, ...) are ignored."""
     if not content_type:
         return "unknown"
 
@@ -76,6 +92,8 @@ def classify(content_type) -> str:
         return "text"
     if main.startswith("image/"):
         return "image"
+    if main == PDF_CONTENT_TYPE:
+        return "pdf"
     if main.startswith("audio/"):
         return "audio"
     if main.startswith("video/"):
@@ -125,9 +143,6 @@ def _text_ref_pieces(data, content_type, pipelines, file_id):
 
 
 def _image_ref_pieces(data, content_type, pipelines, file_id):
-    if pipelines.embed_image is None:
-        raise SkipRef("the configured embedding model has no image input")
-
     try:
         vector = pipelines.embed_image(data, content_type)
     except Exception as error:
@@ -136,35 +151,154 @@ def _image_ref_pieces(data, content_type, pipelines, file_id):
     return [Piece(vector=vector, file_id=file_id)]
 
 
+def _render_page(page, resolution: int) -> tuple[bytes, str]:
+    """Rasterizes a page with its long side at resolution pixels, as PNG, and
+    reads its text, cleaned like the inline text."""
+    width, height = page.get_size()
+    bitmap = page.render(scale=resolution / max(width, height))
+    buffer = io.BytesIO()
+    bitmap.to_pil().save(buffer, format="PNG")
+
+    textpage = page.get_textpage()
+    try:
+        text = textpage.get_text_bounded()
+    finally:
+        textpage.close()
+
+    return buffer.getvalue(), clean_text(text)
+
+
+def _page_piece(pdf, index: int, pipelines, file_id, options) -> Piece | None:
+    """Embeds the page at index (from 0) as an image, or returns None when the
+    page cannot be rasterized: the other pages go on."""
+    try:
+        page = pdf[index]
+        try:
+            image, text = _render_page(page, options.page_resolution)
+        finally:
+            page.close()
+    except Exception as error:
+        logger.warning(
+            "Skipping page %d of PDF fileId=%s: %s", index + 1, file_id, error
+        )
+        return None
+
+    try:
+        vector = pipelines.embed_image(image, PAGE_CONTENT_TYPE)
+    except Exception as error:
+        raise EmbedFailed(str(error)) from error
+
+    return Piece(
+        vector=vector, text=text, file_id=file_id, metadata={"page": index + 1}
+    )
+
+
+def _pdf_page_batches(
+    data, content_type, pipelines, file_id, options, batch_size
+) -> Iterator[list[Piece]]:
+    """Embeds the pages of a PDF, up to max_pages, batch_size at a time,
+    yielding the Pieces of each batch so the caller can emit them before the
+    next is rasterized: the PDF stays in memory, the page images do not."""
+    try:
+        pdf = pdfium.PdfDocument(data)
+    except pdfium.PdfiumError as error:
+        raise SkipRef(f"PDF not readable: {error}") from error
+
+    try:
+        total = len(pdf)
+        pages = min(total, options.max_pages)
+
+        if pages < total:
+            logger.warning(
+                "PDF fileId=%s has %d pages: embedding the first %d (max_pages), "
+                "skipping %d",
+                file_id,
+                total,
+                pages,
+                total - pages,
+            )
+
+        for start in range(0, pages, batch_size):
+            group = []
+            for index in range(start, min(start + batch_size, pages)):
+                piece = _page_piece(pdf, index, pipelines, file_id, options)
+                if piece is not None:
+                    group.append(piece)
+
+            if group:
+                yield group
+    finally:
+        pdf.close()
+
+
+def _one_group(handler):
+    """A handler that embeds the whole ref at once, as a handler of groups."""
+
+    def batches(data, content_type, pipelines, file_id, options, batch_size):
+        yield handler(data, content_type, pipelines, file_id)
+
+    return batches
+
+
+# modality -> (data, content_type, pipelines, file_id, options, batch_size),
+# yielding the Pieces of the ref in groups
 _HANDLERS = {
-    "text": _text_ref_pieces,
-    "image": _image_ref_pieces,
+    "text": _one_group(_text_ref_pieces),
+    "image": _one_group(_image_ref_pieces),
+    "pdf": _pdf_page_batches,
 }
 
 
-def ref_pieces(ref, pipelines) -> list[Piece]:
-    """Embeds one binary ref pulled from its pre-signed URL.
+def _check_embeddable(modality, content_type, pipelines, options) -> None:
+    """Raises SkipRef when the modality has no handler, the media options
+    turn it off or the model has no image input for it."""
+    if modality not in _HANDLERS:
+        raise SkipRef(f"no handler for modality {modality!r} ({content_type})")
+
+    if modality in ("image", "pdf"):
+        if not options.embed_images:
+            raise SkipRef("embed_images is false")
+        if modality == "pdf" and not options.rasterize_pages:
+            raise SkipRef("rasterize_pages is false")
+        if pipelines.embed_image is None:
+            raise SkipRef("the configured embedding model has no image input")
+
+
+def ref_piece_batches(
+    ref, pipelines, options: MediaOptions, batch_size: int
+) -> Iterator[list[Piece]]:
+    """Embeds one binary ref pulled from its pre-signed URL, yielding its
+    Pieces in groups: one group for text and images, batch_size pages at a
+    time for a PDF.
 
     The authoritative content type comes from the ref (connector
     metadata); the HTTP response Content-Type is only a fallback when the
-    ref carries none. Raises SkipRef when the modality has no handler or
-    the model cannot embed it, EmbedFailed when the model fails on it.
+    ref carries none. Raises SkipRef when the ref cannot be embedded,
+    before any group for a PDF, EmbedFailed when the model fails on it.
     """
     content_type = ref.get("contentType")
     modality = classify(content_type)
 
     # authoritative content type already excludes it: skip before fetching
-    if content_type and modality not in _HANDLERS:
-        raise SkipRef(f"no handler for modality {modality!r} ({content_type})")
+    if content_type:
+        _check_embeddable(modality, content_type, pipelines, options)
 
     data, response_content_type = pipelines.fetch(ref["url"])
 
     if not content_type:
         content_type = response_content_type
         modality = classify(content_type)
+        _check_embeddable(modality, content_type, pipelines, options)
 
-    handler = _HANDLERS.get(modality)
-    if handler is None:
-        raise SkipRef(f"no handler for modality {modality!r} ({content_type})")
+    yield from _HANDLERS[modality](
+        data, content_type, pipelines, ref.get("fileId"), options, batch_size
+    )
 
-    return handler(data, content_type, pipelines, ref.get("fileId"))
+
+def ref_pieces(ref, pipelines, options: MediaOptions = MediaOptions()) -> list[Piece]:
+    """All the Pieces of one binary ref at once (see ref_piece_batches)."""
+    return [
+        piece
+        for group in ref_piece_batches(ref, pipelines, options, options.max_pages)
+        for piece in group
+    ]

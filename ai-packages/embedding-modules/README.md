@@ -253,6 +253,7 @@ a fallback when absent).
 | `vectorDataType`     | `VectorDataType`    | Same as requested                                    |
 | `dimension`          | `int32`             | Vector dimension                                     |
 | `f32` / `i8` / `bits`| `oneof vector`      | The vector, encoded according to `vectorDataType`    |
+| `metadata`           | `Struct` (optional) | Chunk metadata, e.g. `page` (from 1) of a PDF page   |
 
 **Behavior**
 - Text is chunked and embedded first, then each ref in list order; `number` is
@@ -271,6 +272,14 @@ a fallback when absent).
 
 - Image refs are embedded only by a model in the multimodal registry (see
   Multimodal models); any other model embeds the text and skips its image refs.
+
+- A PDF ref (`application/pdf`) is rasterized page by page: every page is a
+  chunk with the image vector of the page, the text of the page in `text`
+  (empty for a scanned page) and its `page` in `metadata`. The pages are
+  streamed in groups of the batch size of the model, so they are not all held
+  in memory; a page that cannot be rasterized is skipped with a log line. A PDF
+  that does not open, or a model without image input, skips the ref. Other
+  document types (Office, ...) stay `unknown`: convert them to PDF upstream.
 
 #### Client Example
 
@@ -388,6 +397,17 @@ print(vector.dimension, vector.WhichOneof("vector"))
 Its `jsonConfig` keys are `chunk_size` (bytes, default `4096`), `delimiters`
 (default `"\n.?"`), `pattern`, `prefix`, `consecutive` and `forward_fallback`.
 An unknown chunk type is refused with `INVALID_ARGUMENT`.
+
+**Media options**: `EmbedContent` reads these keys from the `jsonConfig` of the
+chunk and does not pass them to the chunker. An invalid value is ignored with a
+warning and the default applies.
+
+| Key               | Default | Effect                                         |
+|-------------------|---------|------------------------------------------------|
+| `embed_images`    | `true`  | With `false` images and PDF pages are skipped  |
+| `rasterize_pages` | `true`  | With `false` PDF pages are skipped             |
+| `max_pages`       | `300`   | Pages per PDF; the log says how many are skipped |
+| `page_resolution` | `1568`  | Long side of a rasterized page, in pixels      |
 
 
 

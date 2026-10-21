@@ -39,6 +39,7 @@ from langchain_openai import OpenAIEmbeddings
 from app.config import settings
 from app.embedding import chunking, query, router, vertex_batching
 from app.embedding.fetch import fetch_url
+from app.embedding.media_options import split_media_options
 from app.embedding.multimodal import find_model, find_multimodal_embedder
 from app.embedding.quantization import l2_normalize, quantize_binary, quantize_int8
 from app.embedding.router import Pipelines
@@ -48,20 +49,26 @@ from app.utils.text_cleaner import clean_text
 LOGGING_LEVEL = settings.logging_level
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+# the router and the media options log the pages and the options they skip
+embedding_logger = logging.getLogger("app.embedding")
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+handlers = []
 try:
     file_handler = TimedRotatingFileHandler(
         "/var/log/openk9/embedding-module.log", when="D", interval=1, backupCount=10
     )
     file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+    handlers.append(file_handler)
 except OSError:
     # outside the container (tests, local runs) the log dir may not exist
     pass
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
+handlers.append(console_handler)
+for configured_logger in (logger, embedding_logger):
+    configured_logger.setLevel(LOGGING_LEVEL)
+    for handler in handlers:
+        configured_logger.addHandler(handler)
 
 # default text embedding parameters
 DEFAULT_MODEL_TYPE = "openai"
@@ -449,6 +456,8 @@ def to_chunk_message(piece, number, total, vector_data_type):
         message.total = total
     if piece.file_id is not None:
         message.fileId = piece.file_id
+    if piece.metadata:
+        message.metadata.update(piece.metadata)
 
     _encode_vector(message, piece.vector, vector_data_type)
 
@@ -670,9 +679,11 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         # error on a later batch ends the RPC after the earlier chunks.
         try:
             chunk = request.chunk
-            chunker = chunking.build_chunker(
-                chunk.type, json_format.MessageToDict(chunk.jsonConfig)
+            # the media options share the jsonConfig with the chunker
+            media_options, chunker_config = split_media_options(
+                json_format.MessageToDict(chunk.jsonConfig)
             )
+            chunker = chunking.build_chunker(chunk.type, chunker_config)
             pipelines = build_pipelines(configuration, chunker)
 
             if has_text:
@@ -691,23 +702,31 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         # for that fileId, structured log), the stream continues with the rest.
         # The model failing on a ref's content is not: like on the text, it
         # ends the RPC with INTERNAL, or the content would vanish unreported.
-        # The chunk messages are built inside the try so a quantization/encoding
-        # error skips the whole ref too, instead of breaking the stream after a
-        # partial emission; nothing is yielded until the ref is fully built.
+        # A ref is emitted group by group: one group for text and images, a
+        # batch of pages for a PDF, so its pages are not all held in memory.
+        # The chunk messages of a group are built inside the try so a
+        # quantization/encoding error skips the rest of the ref too, instead
+        # of breaking the stream in the middle of a group.
         for ref in refs:
             try:
-                pieces = router.ref_pieces(
+                groups = router.ref_piece_batches(
                     {
                         "url": ref.url,
                         "fileId": ref.fileId,
                         "contentType": ref.contentType,
                     },
                     pipelines,
+                    media_options,
+                    batch_size,
                 )
-                messages = [
-                    to_chunk_message(piece, number + offset, None, vector_data_type)
-                    for offset, piece in enumerate(pieces, start=1)
-                ]
+                for pieces in groups:
+                    messages = [
+                        to_chunk_message(piece, number + offset, None, vector_data_type)
+                        for offset, piece in enumerate(pieces, start=1)
+                    ]
+                    for message in messages:
+                        number += 1
+                        yield message
             except router.EmbedFailed as error:
                 logger.exception(
                     "EmbedContent ref error: tenantId=%s fileId=%s contentType=%s",
@@ -736,10 +755,6 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                     ref.contentType,
                 )
                 continue
-
-            for message in messages:
-                number += 1
-                yield message
 
         _log_served(
             "EmbedContent",
