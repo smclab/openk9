@@ -17,11 +17,11 @@
 import { useToast } from "@components/Form";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Handle, NodeProps, Position } from "react-flow-renderer";
+import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { useCreateOrUpdateRuleQueryMutation, useDeleteRulesMutation } from "../../../graphql-generated";
 import { RuleNodeData } from "../Rules";
 
-export default function NodeGraphRuleDouble(props: NodeProps<RuleNodeData>) {
+export default function NodeGraphRuleDouble(props: NodeProps<Node<RuleNodeData>>) {
   const { t } = useTranslation();
   const { data } = props;
   const [inputText, setInputText] = React.useState("");

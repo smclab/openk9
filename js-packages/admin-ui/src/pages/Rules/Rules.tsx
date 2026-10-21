@@ -15,7 +15,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React from "react";
-import ReactFlow, { Background, Controls, Edge, MiniMap, Node, NodeChange, applyNodeChanges } from "react-flow-renderer";
+import { Background, Controls, Edge, MiniMap, Node, NodeChange, ReactFlow, applyNodeChanges } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { RulesQuery, useRulesQuery } from "../../graphql-generated";
 import NodeGraphRule from "./Function/NodeGraphRule";
 import NodeGraphRuleDouble from "./Function/NodeGraphRuleDouble";
@@ -54,7 +55,7 @@ export function BuildGraph({ node, edgesValue }: { node: Node<RuleNodeData>[]; e
   }, [node, edgesValue]);
 
   const onNodesChange = React.useCallback(
-    (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    (changes: NodeChange<Node<RuleNodeData>>[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
     [setNodes],
   );
 
@@ -63,7 +64,7 @@ export function BuildGraph({ node, edgesValue }: { node: Node<RuleNodeData>[]; e
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        style={{ minHeight: "90vh", margin: "0 auto" }}
+        style={{ height: "100%", margin: "0 auto" }}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         fitView
@@ -187,7 +188,8 @@ export function Rules() {
     }
   });
 
-  return <BuildGraph node={elements} edgesValue={edges} />;
+  // Le regole ripetono lo stesso id: a differenza della v10, la MiniMap della v12 disegnerebbe i doppioni.
+  return <BuildGraph node={[...new Map(elements.map((n) => [n.id, n])).values()]} edgesValue={edges} />;
 }
 
 function recoveryValue({
