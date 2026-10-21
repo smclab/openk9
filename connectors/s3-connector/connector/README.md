@@ -56,6 +56,13 @@ curl --location --request POST 'http://localhost:5000/getData' \
 
 Every object is sent with `document.url`, the public URL of the source object (no signature); its text is extracted by the enrichers.
 
+The binary of the object carries the same URL in `sourceUrl` and, if the object has user metadata (`x-amz-meta-*`), a `metadata` map:
+
+- the key loses the `x-amz-meta-` prefix, is lowercased and its dots become underscores (`X-Amz-Meta-Data.Scatto` → `data_scatto`);
+- RFC 2047 encoded values (non-ASCII text) are decoded;
+- `page` must be an integer and `generated` must be `true` or `false`: a value of the wrong type is dropped and logged;
+- every other key is passed as a string.
+
 ### Health check endpoint
 
 Call this endpoint to perform health check for service.

@@ -5,7 +5,7 @@ from logging.config import dictConfig
 
 from .base_extractor import BaseMinioExtractor
 from .log_config import LogConfig
-from .source import object_url
+from .source import object_url, user_metadata
 from .utility import get_as_base64, IngestionHandler
 
 dictConfig(LogConfig().dict())
@@ -42,6 +42,8 @@ class MinioExtractor(BaseMinioExtractor):
     def manage_data(self, client, obj, end_timestamp):
         metadata = client.stat_object(self.bucket_name, obj.object_name)
 
+        url = object_url(self.public_base_url, self.bucket_name, metadata.object_name)
+
         try:
             file_type = self.type_mapping[metadata.content_type]
         except KeyError:
@@ -57,7 +59,7 @@ class MinioExtractor(BaseMinioExtractor):
         },
             "document": {
                 "title": metadata.object_name,
-                "url": object_url(self.public_base_url, self.bucket_name, metadata.object_name)
+                "url": url
             },
         }
 
@@ -76,8 +78,13 @@ class MinioExtractor(BaseMinioExtractor):
             "id": content_id,
             "name": metadata.object_name,
             "contentType": metadata.content_type,
-            "data": get_as_base64(data.data)
+            "data": get_as_base64(data.data),
+            "sourceUrl": url
         }
+
+        binary_metadata = user_metadata(metadata.metadata, metadata.object_name)
+        if binary_metadata:
+            binary_item["metadata"] = binary_metadata
 
         binaries.append(binary_item)
 
