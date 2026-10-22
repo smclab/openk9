@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Search from "./Search";
+import type { HandleSearch } from "./useGenerateResponse";
 
 vi.mock("./DatasourceSelect", () => ({
 	DatasourceSelectMemo: () => null,
@@ -40,7 +41,7 @@ vi.mock("../../../shared/image-query/imageQuery", () => ({
 const prepared = { data: "BASE64", contentType: "image/jpeg", width: 1568, height: 1176, bytes: 421_000 };
 
 function renderSearch(props: Partial<React.ComponentProps<typeof Search>> = {}) {
-	const handleSearch = vi.fn();
+	const handleSearch = vi.fn<HandleSearch>(() => true);
 	const utils = render(
 		<Search
 			handleSearch={handleSearch}
@@ -261,6 +262,22 @@ describe("Search — invio", () => {
 
 		expect(handleSearch).toHaveBeenCalledTimes(2);
 		expect(handleSearch.mock.calls[1][2]).toBeUndefined();
+	});
+
+	test("se handleSearch rifiuta l'invio, testo e immagine restano nel composer", async () => {
+		mockPrepareQueryImageCached.mockResolvedValue(prepared);
+		const refuse = vi.fn(() => false);
+		const { container } = renderSearch({ handleSearch: refuse });
+
+		fireEvent.change(screen.getByPlaceholderText("write-a-message"), { target: { value: "che pompa e'?" } });
+		pick(container, pngFile("pompa.png"));
+		await waitFor(() => expect(screen.getByLabelText("send-message")).toBeEnabled());
+
+		fireEvent.click(screen.getByLabelText("send-message"));
+
+		expect(refuse).toHaveBeenCalledTimes(1);
+		expect(screen.getByPlaceholderText("write-a-message")).toHaveValue("che pompa e'?");
+		expect(screen.getByText("pompa.png")).toBeInTheDocument();
 	});
 
 	test("l'object URL di un'immagine inviata non viene revocato: lo usa la miniatura", async () => {

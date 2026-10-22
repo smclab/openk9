@@ -15,6 +15,7 @@ declare global {
 	interface Window {
 		tenant: string;
 		OPENK9_NUMBER_OF_SOURCES?: number;
+		OPENK9_REQUIRE_LOGIN?: boolean;
 	}
 }
 

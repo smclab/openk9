@@ -1,4 +1,6 @@
-import { Box, Button, CssBaseline } from "@mui/material";
+import { Alert, Box, Button, CssBaseline, IconButton, Link } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { keyframes, ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -8,8 +10,9 @@ import "./App.css";
 import { getUserProfile } from "./components/authentication";
 import { OpenK9Client } from "./components/client";
 import { getNumberOfSources } from "./config/sources";
+import { isLoginRequired } from "./config/login";
 import { InitialConversation } from "./components/InitialConversation";
-import { isAuthenticated } from "./auth/oauth2";
+import { isAuthEnabled, isAuthenticated } from "./auth/oauth2";
 import { DocumentPreviewProvider } from "./components/DocumentPreview";
 import { MessageCard } from "./components/MessageCard";
 import Search from "./components/Search";
@@ -25,6 +28,7 @@ function App() {
 		undefined,
 	);
 	const [selectedDatasourceIds, setSelectedDatasourceIds] = React.useState<number[]>([]);
+	const [loginNoticeOpen, setLoginNoticeOpen] = React.useState(false);
 	const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
 	const { initialMessages } = useChatData(userId || "", chatId);
 	const isLoadingChat = !chatId?.isNew && initialMessages.isLoadingChat;
@@ -45,8 +49,14 @@ function App() {
 	const client = OpenK9Client();
 	const numberOfSources = getNumberOfSources();
 	const handleSearch: HandleSearch = (query, retrieveFromUploadedDocumentsParam, image) => {
+		// checked on every send, not at render: the session can expire while the page is open
+		if (isLoginRequired() && isAuthEnabled() && !isAuthenticated()) {
+			setLoginNoticeOpen(true);
+			return false;
+		}
 		const flag = retrieveFromUploadedDocumentsParam ?? retrieveFromUploadedDocuments;
 		chatId?.id && generateResponse(query, chatId?.id || "", flag, selectedDatasourceIds, image);
+		return true;
 	};
 
 	React.useEffect(() => {
@@ -226,6 +236,45 @@ function App() {
 									onSetRetrieveFromUploadedDocuments={(v) => setRetrieveFromUploadedDocuments(v)}
 									selectedDatasourceIds={selectedDatasourceIds}
 									onSetSelectedDatasourceIds={setSelectedDatasourceIds}
+									notice={
+										loginNoticeOpen && (
+											<Alert
+												severity="info"
+												icon={<LockOutlinedIcon fontSize="small" />}
+												sx={{
+													alignItems: "center",
+													py: 0,
+													px: "10px",
+													borderRadius: "10px",
+													border: "1px solid rgba(0, 0, 0, 0.15)",
+													backgroundColor: "white",
+													color: "text.primary",
+													"& .MuiAlert-icon": { color: "#c0272b" },
+												}}
+												action={
+													<>
+														<Link
+															component="button"
+															underline="hover"
+															onClick={() => client.authenticate()}
+															sx={{ mr: 1, color: "#c0272b", fontWeight: 600 }}
+														>
+															{t("login", { defaultValue: "Login" })}
+														</Link>
+														<IconButton
+															size="small"
+															aria-label={`${t("close", { defaultValue: "Close" })}`}
+															onClick={() => setLoginNoticeOpen(false)}
+														>
+															<CloseIcon fontSize="small" />
+														</IconButton>
+													</>
+												}
+											>
+												{t("login-required", { defaultValue: "You need to log in to use the chat." })}
+											</Alert>
+										)
+									}
 								/>
 							</Box>
 						</Box>

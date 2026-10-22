@@ -15,13 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import {
+  Alert,
   Box,
   Button,
   IconButton,
+  Link,
   Theme,
   ThemeProvider,
   useTheme,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import React from "react";
 import AiDisclosure from "./AiDisclosure";
 import Search from "./Search";
@@ -101,6 +105,18 @@ type ChatbotProps = {
    * stream events.
    */
   ragMode?: RagMode;
+  /**
+   * blocks sending while the user is anonymous: a notice asks them to log in and
+   * the typed message stays in the input. The user counts as anonymous when
+   * `callbackAuthorization` is missing or returns an empty value at send time.
+   * Off by default, so anonymous chat keeps working.
+   */
+  requireLogin?: boolean;
+  /**
+   * called by the "Log in" button of the `requireLogin` notice: the login flow
+   * belongs to the host page. Without it the notice shows the text only.
+   */
+  onLoginRequest?: () => void;
 };
 
 /** the two positions the disclosure can occupy inside the panel */
@@ -162,6 +178,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
   numberOfSources,
   aiDisclosure,
   ragMode,
+  requireLogin,
+  onLoginRequest,
 }) => {
   const resolvedNumberOfSources = resolveNumberOfSources(
     numberOfSources,
@@ -182,6 +200,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
             numberOfSources={resolvedNumberOfSources}
             aiDisclosure={aiDisclosure}
             ragMode={ragMode}
+            requireLogin={requireLogin}
+            onLoginRequest={onLoginRequest}
           />
         </LanguageProvider>
       </ThemeProvider>
@@ -200,8 +220,11 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   numberOfSources = DEFAULT_NUMBER_OF_SOURCES,
   aiDisclosure,
   ragMode = DEFAULT_RAG_MODE,
+  requireLogin = false,
+  onLoginRequest,
 }) => {
   const [isView, setIsView] = React.useState(false);
+  const [loginNoticeOpen, setLoginNoticeOpen] = React.useState(false);
   const [welcomeMessageTime] = React.useState(() =>
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
   );
@@ -276,6 +299,16 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     }),
     [],
   );
+
+  // same test as useGenerateResponse: no token at send time means anonymous
+  const handleSearch = (message: string) => {
+    if (requireLogin && !callbackAuthorization?.()) {
+      setLoginNoticeOpen(true);
+      return false;
+    }
+    generateResponse(message);
+    return true;
+  };
 
   React.useEffect(() => {
     if (messages && messagesEndRef.current) {
@@ -352,12 +385,68 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             numberOfSources={numberOfSources}
           />
           <Search
-            handleSearch={generateResponse}
+            handleSearch={handleSearch}
             cancelAllResponses={cancelAllResponses}
             isChatting={isChatting}
             icon={icon}
             chatbotSearchRef={chatbotSearchRef}
             describedById={aiDisclosureId}
+            notice={
+              loginNoticeOpen && (
+                <Alert
+                  className="openk9-login-notice"
+                  severity="info"
+                  icon={<LockOutlinedIcon fontSize="small" />}
+                  sx={{
+                    alignItems: "center",
+                    py: 0,
+                    px: "10px",
+                    fontSize: "12px",
+                    borderRadius: 2,
+                    border: 1,
+                    borderColor: "divider",
+                    backgroundColor: "background.paper",
+                    color: "text.primary",
+                    "& .MuiAlert-icon": { color: "primary.main" },
+                    // the panel is narrow: the message can wrap, keep the actions centred
+                    "& .MuiAlert-action": {
+                      alignItems: "center",
+                      pt: 0,
+                      pl: 1,
+                    },
+                  }}
+                  action={
+                    <>
+                      {onLoginRequest && (
+                        <Link
+                          component="button"
+                          type="button"
+                          underline="hover"
+                          onClick={onLoginRequest}
+                          sx={{
+                            mr: 1,
+                            color: "primary.main",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {Translate({ label: "login" })}
+                        </Link>
+                      )}
+                      <IconButton
+                        size="small"
+                        aria-label={Translate({ label: "close" })}
+                        onClick={() => setLoginNoticeOpen(false)}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </>
+                  }
+                >
+                  {Translate({ label: "loginRequired" })}
+                </Alert>
+              )
+            }
           />
           {resolvedAiDisclosure.bottom !== undefined && (
             <AiDisclosure

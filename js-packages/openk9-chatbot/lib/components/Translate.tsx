@@ -157,6 +157,27 @@ const translations: {
     de_DE:
       "Sie interagieren mit einem System der künstlichen Intelligenz. Die Antworten werden automatisch generiert und können Fehler enthalten: Überprüfen Sie wichtige Informationen.",
   },
+  loginRequired: {
+    it_IT: "Per usare la chat devi effettuare l'accesso.",
+    en_US: "You need to log in to use the chat.",
+    fr_FR: "Vous devez vous connecter pour utiliser le chat.",
+    es_ES: "Debes iniciar sesión para usar el chat.",
+    de_DE: "Melden Sie sich an, um den Chat zu nutzen.",
+  },
+  login: {
+    it_IT: "Accedi",
+    en_US: "Log in",
+    fr_FR: "Se connecter",
+    es_ES: "Iniciar sesión",
+    de_DE: "Anmelden",
+  },
+  close: {
+    it_IT: "Chiudi",
+    en_US: "Close",
+    fr_FR: "Fermer",
+    es_ES: "Cerrar",
+    de_DE: "Schließen",
+  },
 };
 
 type Language = "it_IT" | "en_US" | "fr_FR" | "es_ES" | "de_DE";
@@ -178,5 +199,8 @@ type TranslationKey =
   | "sourcesCountOne"
   | "showMoreSources"
   | "showLessSources"
-  | "aiDisclosure";
+  | "aiDisclosure"
+  | "loginRequired"
+  | "login"
+  | "close";
 

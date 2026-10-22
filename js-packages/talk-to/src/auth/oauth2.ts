@@ -105,6 +105,14 @@ export function initOAuth2(): Promise<boolean> {
 	return initPromise;
 }
 
+/**
+ * True when the tenant has OAuth2 configured, so a login can actually happen.
+ * Meaningful once `initOAuth2` has resolved.
+ */
+export function isAuthEnabled(): boolean {
+	return userManager !== null;
+}
+
 export function isAuthenticated(): boolean {
 	return authenticated;
 }

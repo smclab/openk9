@@ -61,6 +61,7 @@ export default function Search({
 	onSetRetrieveFromUploadedDocuments,
 	selectedDatasourceIds,
 	onSetSelectedDatasourceIds,
+	notice,
 }: {
 	handleSearch: HandleSearch;
 	cancelAllResponses(): void;
@@ -73,6 +74,8 @@ export default function Search({
 	onSetRetrieveFromUploadedDocuments?: (value: boolean) => void;
 	selectedDatasourceIds: number[];
 	onSetSelectedDatasourceIds: (ids: number[]) => void;
+	/** Shown above the input, e.g. why the last message was not sent. */
+	notice?: React.ReactNode;
 }) {
 	const [search, setSearch] = React.useState("");
 	const { t } = useTranslation();
@@ -231,6 +234,7 @@ export default function Search({
 
 	return (
 		<Box component="footer" p={2} bgcolor="background.paper" sx={{ borderRadius: "10px" }} zIndex={2} width={"100%"}>
+			{notice && <Box sx={{ mb: 1 }}>{notice}</Box>}
 			{(errors.length > 0 || uploadDone || uploading) && (
 				<Box sx={{ mb: 1 }}>
 					{uploading && (
@@ -268,7 +272,7 @@ export default function Search({
 					const image = attachment?.status === "ready" ? attachment : undefined;
 					// Image and uploaded documents take different retrieval branches, so the image wins.
 					const flag = image ? false : retrieveFromUploadedDocuments === true || uploadDone;
-					handleSearch(search, flag, image);
+					if (!handleSearch(search, flag, image)) return;
 					setSearch("");
 					clearAttachment(attachment, { revoke: image === undefined });
 				}}

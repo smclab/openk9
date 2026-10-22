@@ -34,11 +34,12 @@ export type QueryImageAttachment = {
 	filename: string;
 };
 
+/** Returns false when the message was not sent, so the composer keeps it. */
 export type HandleSearch = (
 	message: string,
 	retrieveFromUploadedDocuments?: boolean,
 	image?: QueryImageAttachment,
-) => void;
+) => boolean;
 
 export interface Message {
 	id?: string;
