@@ -406,7 +406,7 @@ warning and the default applies.
 |-------------------|---------|------------------------------------------------|
 | `embed_images`    | `true`  | With `false` images and PDF pages are skipped  |
 | `rasterize_pages` | `true`  | With `false` PDF pages are skipped             |
-| `max_pages`       | `300`   | Pages per PDF; the log says how many are skipped |
+| `max_pages`       | `200`   | Pages per PDF; the log says how many are skipped |
 | `page_resolution` | `1568`  | Long side of a rasterized page, in pixels      |
 
 

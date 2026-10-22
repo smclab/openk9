@@ -37,7 +37,7 @@ class MediaOptions:
 
     embed_images: bool = True
     rasterize_pages: bool = True
-    max_pages: int = 300
+    max_pages: int = 200
     page_resolution: int = 1568
 
 

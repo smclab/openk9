@@ -30,7 +30,7 @@ def test_without_media_keys_the_defaults_apply_and_the_config_is_unchanged():
     options, rest = split_media_options({"chunk_size": 100.0})
 
     assert options == MediaOptions(
-        embed_images=True, rasterize_pages=True, max_pages=300, page_resolution=1568
+        embed_images=True, rasterize_pages=True, max_pages=200, page_resolution=1568
     )
     assert rest == {"chunk_size": 100.0}
 
