@@ -245,7 +245,49 @@ async function findEntityIdByName(schemaName, queryField, name, label) {
   return data?.[queryField]?.edges?.find(e => e.node.name === name)?.node.id ?? null;
 }
 
-async function ensureSubField(schemaName, fieldMap, parentName, leafName) {
+async function ensureAnalyzer(schemaName, name, type) {
+  const existing = await findEntityIdByName(schemaName, 'analyzers', name, 'Query Analyzers');
+
+  if (existing != null) {
+    console.log(`  Analyzer "${name}": already exists, skipping.`);
+    return existing;
+  }
+
+  const jsonConfigEscaped = JSON.stringify({ type }).replace(/"/g, '\\"');
+
+  const data = await graphqlQuery(
+    schemaName,
+    `mutation {
+      analyzer(analyzerDTO: {
+        name: "${name}"
+        type: "${type}"
+        jsonConfig: "${jsonConfigEscaped}"
+      }) { entity { id } }
+    }`,
+    `Create Analyzer ${name}`
+  );
+
+  const id = data?.analyzer?.entity?.id ?? null;
+  console.log(id != null
+    ? `  Analyzer "${name}" created.`
+    : `  Analyzer "${name}": creation failed.`);
+  return id;
+}
+
+async function bindAnalyzer(schemaName, docTypeFieldId, analyzerId, label) {
+  const result = await graphqlQuery(
+    schemaName,
+    `mutation { bindAnalyzerToDocTypeField(docTypeFieldId: ${docTypeFieldId}, analyzerId: ${analyzerId}) { left { id } } }`,
+    `Bind analyzer to ${label}`
+  );
+
+  console.log(result
+    ? `  Analyzer bound to "${label}".`
+    : `  Analyzer bind to "${label}" failed.`);
+  return result != null;
+}
+
+async function ensureSubField(schemaName, fieldMap, parentName, leafName, fieldType, searchable) {
   const fullName = `${parentName}.${leafName}`;
 
   if (fieldMap.has(fullName)) {
@@ -266,8 +308,8 @@ async function ensureSubField(schemaName, fieldMap, parentName, leafName) {
       createSubField(parentDocTypeFieldId: ${parentId}, docTypeFieldDTO: {
         name: "${fullName}"
         fieldName: "${leafName}"
-        fieldType: SEARCH_AS_YOU_TYPE
-        searchable: true
+        fieldType: ${fieldType}
+        searchable: ${searchable}
         sortable: false
       }) { entity { id } }
     }`,
@@ -395,20 +437,26 @@ async function configureSearchFeatures(schemaName) {
   // an existing one keeps the bucket bindings it has, also when removed by hand.
   const fieldMap = await getDocTypeFieldMap(schemaName);
 
-  // Autocorrection on web.content
-  const contentFieldId = fieldMap.get('web.content');
-  if (contentFieldId == null) {
-    console.warn('  web.content not found, skipping Autocorrection.');
+  // Autocorrection on web.content.suggest: the term suggester proposes the
+  // terms of its field, so the field gets an analyzer without stemmer and
+  // stays out of the search (not searchable).
+  const suggestFieldId = await ensureSubField(schemaName, fieldMap, 'web.content', 'suggest', 'TEXT', false);
+  const suggestAnalyzerId = await ensureAnalyzer(schemaName, 'autocorrection_standard', 'standard');
+  const suggestReady = suggestFieldId != null
+    && suggestAnalyzerId != null
+    && await bindAnalyzer(schemaName, suggestFieldId, suggestAnalyzerId, 'web.content.suggest');
+  if (!suggestReady) {
+    console.warn('  web.content.suggest unavailable, skipping Autocorrection.');
   }
   else {
-    const id = await ensureAutocorrection(schemaName, 'Default Autocorrection', contentFieldId);
+    const id = await ensureAutocorrection(schemaName, 'Default Autocorrection', suggestFieldId);
     if (id != null) {
       await bindToBucket(schemaName, 'bindAutocorrectionToBucket', 'autocorrectionId', bucketId, id, 'Autocorrection');
     }
   }
 
   // Autocomplete on web.title.search_as_you_type (sub-field of web.title)
-  const saytFieldId = await ensureSubField(schemaName, fieldMap, 'web.title', 'search_as_you_type');
+  const saytFieldId = await ensureSubField(schemaName, fieldMap, 'web.title', 'search_as_you_type', 'SEARCH_AS_YOU_TYPE', true);
   if (saytFieldId == null) {
     console.warn('  search_as_you_type field unavailable, skipping Autocomplete.');
   }
