@@ -178,13 +178,16 @@ def _status_code(error: BaseException) -> Optional[int]:
 def is_rejection(error: BaseException) -> bool:
     """Tell whether the provider rejected a request because of its images.
 
-    Rate limits, server errors, timeouts and dropped connections say nothing
-    about the images: they keep today's handling. Any other error of a request
-    that carried images is taken as a rejection, whatever the provider calls
-    it.
+    Rate limits, a wrong key, permission or model, server errors, timeouts and
+    dropped connections say nothing about the images: they keep today's
+    handling. Any other error of a request that carried images is taken as a
+    rejection, whatever the provider calls it.
     """
     status = _status_code(error)
     if status == 429 or "rate_limit" in str(error).lower():
+        return False
+    # a wrong key, permission or model: nothing to do with the images
+    if status in (401, 403, 404):
         return False
     if status is not None and status >= 500:
         return False
