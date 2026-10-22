@@ -942,6 +942,87 @@ function TypingDots() {
   );
 }
 
+// ---- messaggio dell'autocorrezione ---------------------------------------
+// reso dal widget nello slot `correction`: propone il termine corretto, oppure
+// avvisa che la ricerca è già stata fatta con quello e offre il termine digitato
+
+type CorrectionNoticeProps = {
+  corrected: string;
+  typed: string;
+  searchedWithCorrection?: boolean;
+  onSearchTyped: () => void;
+  onSearchCorrected?: () => void;
+};
+
+const correctionTermStyle = css`
+  border: 1px solid ${RED};
+  border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
+  background: color-mix(in srgb, ${RED} 8%, #fff);
+  color: ${RED};
+  padding: 2px var(--openk9-embeddable-search--spacing-sm, 8px);
+  font: inherit;
+  font-weight: var(--openk9-embeddable-search--font-weight-bold, 700);
+  cursor: pointer;
+  &:hover {
+    background: color-mix(in srgb, ${RED} 15%, #fff);
+  }
+`;
+
+function CorrectionNotice({
+  corrected,
+  typed,
+  searchedWithCorrection,
+  onSearchTyped,
+  onSearchCorrected,
+}: CorrectionNoticeProps) {
+  const { t } = useTranslation();
+  return (
+    <p
+      css={css`
+        margin: 0 var(--openk9-embeddable-search--spacing-xl, 20px);
+        font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
+        color: ${MUTED};
+      `}
+    >
+      {searchedWithCorrection ? (
+        <>
+          {t("search-done-with")}
+          <strong
+            css={css`
+              color: var(
+                --openk9-embeddable-search--strong-text-color,
+                #1e1c21
+              );
+            `}
+          >
+            {`“${corrected}”`}
+          </strong>
+          {t("use-instead")}
+          <button
+            type="button"
+            onClick={onSearchTyped}
+            css={correctionTermStyle}
+          >
+            {typed}
+          </button>
+          .
+        </>
+      ) : (
+        <>
+          {t("your-search-did-you-mean")}{" "}
+          <button
+            type="button"
+            onClick={onSearchCorrected}
+            css={correctionTermStyle}
+          >
+            {corrected}
+          </button>
+        </>
+      )}
+    </p>
+  );
+}
+
 // ---- App -----------------------------------------------------------------
 
 export function App() {
@@ -1502,6 +1583,34 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                 ref={(element) => openk9.updateConfiguration({ tabs: element })}
               />
             </div>
+
+            {/* messaggio dell'autocorrezione: montato dal widget sotto i tab,
+                vuoto quando la ricerca non ha una correzione */}
+            <div
+              aria-live="polite"
+              ref={(element) =>
+                openk9.updateConfiguration({
+                  correction: {
+                    element,
+                    information: (
+                      corrected,
+                      typed,
+                      searchTyped,
+                      searchedWithCorrection,
+                      searchCorrected,
+                    ) => (
+                      <CorrectionNotice
+                        corrected={corrected}
+                        typed={typed}
+                        searchedWithCorrection={searchedWithCorrection}
+                        onSearchTyped={searchTyped}
+                        onSearchCorrected={searchCorrected}
+                      />
+                    ),
+                  },
+                })
+              }
+            />
 
             {/* micro-anteprima della risposta AI + CTA "Vai a K9 IA":
                 nascosta quando il backend non ha una risposta utile */}
