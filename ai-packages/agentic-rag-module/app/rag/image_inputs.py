@@ -37,7 +37,7 @@ import base64
 import io
 import re
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from typing import Optional
 from urllib.parse import urljoin, urlsplit
@@ -216,11 +216,15 @@ def _download(url: str) -> bytes:
     deadline = time.monotonic() + FETCH_TIMEOUT_SECONDS
 
     for _ in range(MAX_REDIRECTS + 1):
+        # The redirects share the deadline: every hop gets the time left.
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ImageFetchError(f"not read within {FETCH_TIMEOUT_SECONDS} seconds")
         _check_url(url)
         with requests.get(
             url,
             stream=True,
-            timeout=FETCH_TIMEOUT_SECONDS,
+            timeout=remaining,
             allow_redirects=False,
         ) as response:
             if response.is_redirect:
@@ -289,8 +293,30 @@ def fetch_source_image(url: str) -> Optional[SourceImage]:
 
 
 def fetch_source_images(urls: list[str]) -> list[Optional[SourceImage]]:
-    """Read the source images together, in the order of ``urls``."""
+    """Read the source images together, in the order of ``urls``.
+
+    A source still being read at the deadline counts as unseen: a server that
+    sends a byte at a time never hits the read timeout, and the turn does not
+    wait for it.
+    """
     if not urls:
         return []
-    with ThreadPoolExecutor(max_workers=MAX_SOURCE_IMAGES) as executor:
-        return list(executor.map(fetch_source_image, urls))
+    executor = ThreadPoolExecutor(max_workers=MAX_SOURCE_IMAGES)
+    futures = [executor.submit(fetch_source_image, url) for url in urls]
+    # The extra second lets _download fail on its own, with a precise reason.
+    done, _ = wait(futures, timeout=FETCH_TIMEOUT_SECONDS + 1)
+    # A thread still reading is not waited for: it ends on its own at the read
+    # timeout or at the 20 MB cap.
+    executor.shutdown(wait=False, cancel_futures=True)
+
+    images = []
+    for url, future in zip(urls, futures):
+        if future in done:
+            images.append(future.result())
+        else:
+            logger.warning(
+                f"[image_inputs] source image {_without_query(url)} not read: "
+                f"not read within {FETCH_TIMEOUT_SECONDS} seconds"
+            )
+            images.append(None)
+    return images

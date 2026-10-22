@@ -71,6 +71,38 @@ class _Handler(BaseHTTPRequestHandler):
             self.send_response(302)
             self.send_header("Location", "/photo.png")
             self.end_headers()
+        elif path == "/redirect-slow":
+            time.sleep(1.5)
+            self.send_response(302)
+            self.send_header("Location", "/slow.png")
+            self.end_headers()
+        elif path == "/drip.png":
+            # a byte every half second: no single read waits long
+            self.send_response(200)
+            self.send_header("Content-Length", "12")
+            self.end_headers()
+            try:
+                for _ in range(12):
+                    time.sleep(0.5)
+                    self.wfile.write(b"\0")
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+        elif path.startswith("/drip-hop/"):
+            # a redirect whose headers come in pieces, 1.2 s in all
+            hop = int(path.rsplit("/", 1)[1])
+            location = f"/drip-hop/{hop - 1}" if hop else "/photo.png"
+            pieces = [
+                b"HTTP/1.0 302 Found\r\n",
+                f"Location: {location}\r\n".encode(),
+                b"Content-Length: 0\r\n",
+                b"\r\n",
+            ]
+            try:
+                for piece in pieces:
+                    time.sleep(0.3)
+                    self.wfile.write(piece)
+            except (BrokenPipeError, ConnectionResetError):
+                pass
         else:
             self.send_response(404)
             self.end_headers()
@@ -154,6 +186,41 @@ def test_a_url_that_does_not_answer_is_logged(server, monkeypatch, caplog):
     assert "/slow.png not read" in caplog.text
     # a pre-signed query is a credential: it never reaches the log
     assert "s3cr3t" not in caplog.text
+
+
+def test_redirects_share_the_deadline(server, monkeypatch):
+    monkeypatch.setattr(image_inputs, "FETCH_TIMEOUT_SECONDS", 2)
+
+    started = time.monotonic()
+    # 1.5 s for the redirect: the image, 2 s more, has only the 0.5 s left
+    assert image_inputs.fetch_source_image(f"{server}/redirect-slow") is None
+
+    assert time.monotonic() - started < 3
+
+
+def test_the_deadline_is_checked_before_every_hop(server, monkeypatch, caplog):
+    monkeypatch.setattr(image_inputs, "FETCH_TIMEOUT_SECONDS", 2)
+
+    with caplog.at_level(logging.WARNING, logger="app.rag.image_inputs"):
+        started = time.monotonic()
+        # the second hop ends past the deadline, the third is never asked
+        assert image_inputs.fetch_source_image(f"{server}/drip-hop/3") is None
+
+    assert time.monotonic() - started < 3
+    assert "/drip-hop/3 not read: not read within 2 seconds" in caplog.text
+
+
+def test_a_server_that_drips_bytes_is_cut_at_the_deadline(server, monkeypatch, caplog):
+    monkeypatch.setattr(image_inputs, "FETCH_TIMEOUT_SECONDS", 2)
+
+    with caplog.at_level(logging.WARNING, logger="app.rag.image_inputs"):
+        started = time.monotonic()
+        # the drip lasts 6 s: the turn does not wait for it
+        images = image_inputs.fetch_source_images([f"{server}/drip.png"])
+
+    assert time.monotonic() - started < 4
+    assert images == [None]
+    assert "/drip.png not read: not read within 2 seconds" in caplog.text
 
 
 def test_images_are_read_together_in_their_order(server, monkeypatch):
