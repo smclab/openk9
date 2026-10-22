@@ -25,14 +25,18 @@ export default function Search({
   icon,
   chatbotSearchRef,
   describedById,
+  notice,
 }: {
-  handleSearch: (message: string) => void;
+  /** returns false when the message was not sent, so the input keeps it */
+  handleSearch: (message: string) => boolean;
   cancelAllResponses(): void;
   isChatting: boolean;
   icon: IconProps;
   chatbotSearchRef: React.MutableRefObject<HTMLHeadingElement | null>;
   /** id of the AI disclosure, announced when the input takes focus */
   describedById?: string;
+  /** shown above the input, e.g. why the last message was not sent */
+  notice?: React.ReactNode;
 }) {
   const [search, setSearch] = React.useState("");
   const theme = useTheme();
@@ -41,16 +45,18 @@ export default function Search({
       className="openk9-search-form"
       onSubmit={(event) => {
         event.preventDefault();
-        handleSearch(search);
+        if (!handleSearch(search)) return;
         setSearch("");
       }}
       style={{
         display: "flex",
-        gap: "15px",
+        flexDirection: "column",
+        gap: "8px",
         padding: "12px",
         borderTop: "1px solid #C7C7C7C7",
       }}
     >
+      {notice}
       <Box
         className="openk9-search-box"
         display={"flex"}

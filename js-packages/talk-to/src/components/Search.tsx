@@ -29,14 +29,18 @@ export default function Search({
 	isAuthenticated,
 	retrieveFromUploadedDocuments,
 	onSetRetrieveFromUploadedDocuments,
+	notice,
 }: {
-	handleSearch: (message: string, retrieveFromUploadedDocuments?: boolean) => void;
+	/** Returns false when the message was not sent, so the composer keeps it. */
+	handleSearch: (message: string, retrieveFromUploadedDocuments?: boolean) => boolean;
 	cancelAllResponses(): void;
 	isChatting: boolean;
 	onUploadFiles?: (files: File[]) => Promise<{ ok: boolean }>;
 	isAuthenticated?: boolean;
 	retrieveFromUploadedDocuments?: boolean;
 	onSetRetrieveFromUploadedDocuments?: (value: boolean) => void;
+	/** Shown above the input, e.g. why the last message was not sent. */
+	notice?: React.ReactNode;
 }) {
 	const [search, setSearch] = React.useState("");
 	const { t } = useTranslation();
@@ -106,6 +110,7 @@ export default function Search({
 
 	return (
 		<Box component="footer" p={2} bgcolor="background.paper" sx={{ borderRadius: "10px" }} zIndex={2} width={"100%"}>
+			{notice && <Box sx={{ mb: 1 }}>{notice}</Box>}
 			{(errors.length > 0 || uploadDone || uploading) && (
 				<Box sx={{ mb: 1 }}>
 					{uploading && (
@@ -137,7 +142,7 @@ export default function Search({
 						cancelAllResponses();
 					} else {
 						const flag = retrieveFromUploadedDocuments === true || uploadDone;
-						handleSearch(search, flag);
+						if (!handleSearch(search, flag)) return;
 						setSearch("");
 					}
 				}}

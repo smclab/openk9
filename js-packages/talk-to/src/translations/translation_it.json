@@ -9,6 +9,8 @@
 		"recents-chat": "Chat recenti",
 		"logout": "Esci",
 		"login": "Accedi",
+		"login-required": "Per usare la chat devi effettuare l'accesso.",
+		"close": "Chiudi",
 		"new-chat": "Nuova chat",
 		"no-chats": "Nessuna chat disponibile",
 		"write-a-message": "Scrivi un messaggio...",

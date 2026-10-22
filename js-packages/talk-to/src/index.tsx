@@ -18,6 +18,7 @@ declare global {
 		KEYCLOAK_REALM: string;
 		KEYCLOAK_CLIENT_ID: string;
 		tenant: string;
+		OPENK9_REQUIRE_LOGIN?: boolean;
 	}
 }
 

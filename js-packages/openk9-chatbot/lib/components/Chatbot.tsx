@@ -15,13 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import {
+  Alert,
   Box,
   Button,
   IconButton,
+  Link,
   Theme,
   ThemeProvider,
   useTheme,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import React from "react";
 import AiDisclosure from "./AiDisclosure";
 import Search from "./Search";
@@ -50,8 +54,9 @@ export type ChatbotHandle = {
   /**
    * sends `message` as if the user had typed and submitted it, opening the
    * panel. Returns `false` and sends nothing when the message is empty or
-   * whitespace only, when an answer is still streaming, or after the chatbot
-   * has unmounted.
+   * whitespace only, when an answer is still streaming, after the chatbot
+   * has unmounted, or when `requireLogin` is on and the user is anonymous: in
+   * that case the panel opens on the login notice.
    */
   send(message: string): boolean;
 };
@@ -72,6 +77,18 @@ type ChatbotProps = {
    * disclosure cannot be disabled.
    */
   aiDisclosureText?: React.ReactNode;
+  /**
+   * blocks sending while the user is anonymous: a notice asks them to log in and
+   * the typed message stays in the input. The user counts as anonymous when
+   * `callbackAuthorization` is missing or returns an empty value at send time.
+   * Off by default, so anonymous chat keeps working.
+   */
+  requireLogin?: boolean;
+  /**
+   * called by the "Log in" button of the `requireLogin` notice: the login flow
+   * belongs to the host page. Without it the notice shows the text only.
+   */
+  onLoginRequest?: () => void;
 };
 
 /**
@@ -109,6 +126,8 @@ const Chatbot = React.forwardRef<ChatbotHandle, ChatbotProps>(function Chatbot(
     callbackAuthorization,
     useSource = true,
     aiDisclosureText,
+    requireLogin,
+    onLoginRequest,
   },
   ref,
 ) {
@@ -126,6 +145,8 @@ const Chatbot = React.forwardRef<ChatbotHandle, ChatbotProps>(function Chatbot(
             callbackAuthorization={callbackAuthorization}
             useSource={useSource}
             aiDisclosureText={aiDisclosureText}
+            requireLogin={requireLogin}
+            onLoginRequest={onLoginRequest}
           />
         </LanguageProvider>
       </ThemeProvider>
@@ -149,8 +170,11 @@ const StructureChatbot: React.FC<StructureChatbotProps> = ({
   callbackAuthorization,
   useSource,
   aiDisclosureText,
+  requireLogin = false,
+  onLoginRequest,
 }) => {
   const [isView, setIsView] = React.useState(false);
+  const [loginNoticeOpen, setLoginNoticeOpen] = React.useState(false);
   const [welcomeMessageTime, setWelcomeMessageTime] = React.useState("");
   const chatbotSearchRef = React.useRef<HTMLInputElement | null>(null);
   const theme = useTheme();
@@ -178,12 +202,24 @@ const StructureChatbot: React.FC<StructureChatbotProps> = ({
   // lo vedrebbero entrambe a false. Il ref resta acceso finche' la richiesta
   // partita da `send` non e' finita (a fine stream, su errore o su annullamento)
   const isSending = React.useRef(false);
+
+  // same test as useGenerateResponse: no token at send time means anonymous.
+  // Returns the request, or null when the login notice blocked it
+  const startResponse = (message: string) => {
+    if (requireLogin && !callbackAuthorization?.()) {
+      setLoginNoticeOpen(true);
+      return null;
+    }
+    return generateResponse(message);
+  };
+  const handleSearch = (message: string) => startResponse(message) !== null;
+
   // l'handle e' creato una volta sola e legge da qui i valori dell'ultimo render:
   // `generateResponse` cambia a ogni chunk, e un handle ricreato ogni volta
   // resterebbe stantio in mano a chi lo ha salvato
-  const latest = React.useRef({ isChatting, generateResponse });
+  const latest = React.useRef({ isChatting, startResponse });
   React.useLayoutEffect(() => {
-    latest.current = { isChatting, generateResponse };
+    latest.current = { isChatting, startResponse };
   });
   // un handle tenuto da parte non deve inviare a chatbot smontato: la richiesta
   // partirebbe e nessuno vedrebbe la risposta
@@ -199,7 +235,7 @@ const StructureChatbot: React.FC<StructureChatbotProps> = ({
     handleRef,
     () => ({
       send(message) {
-        const { isChatting, generateResponse } = latest.current;
+        const { isChatting, startResponse } = latest.current;
         if (
           !isMounted.current ||
           isSending.current ||
@@ -207,9 +243,11 @@ const StructureChatbot: React.FC<StructureChatbotProps> = ({
           message.trim() === ""
         )
           return false;
-        isSending.current = true;
         setIsView(true);
-        generateResponse(message).finally(() => {
+        const request = startResponse(message);
+        if (request === null) return false;
+        isSending.current = true;
+        request.finally(() => {
           isSending.current = false;
         });
         return true;
@@ -292,12 +330,68 @@ const StructureChatbot: React.FC<StructureChatbotProps> = ({
             useSource={useSource}
           />
           <Search
-            handleSearch={generateResponse}
+            handleSearch={handleSearch}
             cancelAllResponses={cancelAllResponses}
             isChatting={isChatting}
             icon={icon}
             chatbotSearchRef={chatbotSearchRef}
             describedById={aiDisclosureId}
+            notice={
+              loginNoticeOpen && (
+                <Alert
+                  className="openk9-login-notice"
+                  severity="info"
+                  icon={<LockOutlinedIcon fontSize="small" />}
+                  sx={{
+                    alignItems: "center",
+                    py: 0,
+                    px: "10px",
+                    fontSize: "12px",
+                    borderRadius: 2,
+                    border: 1,
+                    borderColor: "divider",
+                    backgroundColor: "background.paper",
+                    color: "text.primary",
+                    "& .MuiAlert-icon": { color: "primary.main" },
+                    // the panel is narrow: the message can wrap, keep the actions centred
+                    "& .MuiAlert-action": {
+                      alignItems: "center",
+                      pt: 0,
+                      pl: 1,
+                    },
+                  }}
+                  action={
+                    <>
+                      {onLoginRequest && (
+                        <Link
+                          component="button"
+                          type="button"
+                          underline="hover"
+                          onClick={onLoginRequest}
+                          sx={{
+                            mr: 1,
+                            color: "primary.main",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {Translate({ label: "login" })}
+                        </Link>
+                      )}
+                      <IconButton
+                        size="small"
+                        aria-label={Translate({ label: "close" })}
+                        onClick={() => setLoginNoticeOpen(false)}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </>
+                  }
+                >
+                  {Translate({ label: "loginRequired" })}
+                </Alert>
+              )
+            }
           />
           <AiDisclosure
             id={aiDisclosureId}

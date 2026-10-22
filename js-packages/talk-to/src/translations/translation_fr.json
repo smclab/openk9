@@ -9,6 +9,8 @@
 		"recents-chat": "Chats récents",
 		"logout": "Se déconnecter",
 		"login": "Se connecter",
+		"login-required": "Vous devez vous connecter pour utiliser le chat.",
+		"close": "Fermer",
 		"new-chat": "Nouveau chat",
 		"no-chats": "Aucun chat disponible",
 		"write-a-message": "Écrire un message...",
