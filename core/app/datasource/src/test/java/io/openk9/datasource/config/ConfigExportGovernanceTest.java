@@ -130,6 +130,26 @@ public class ConfigExportGovernanceTest {
 				+ "entity; inconsistent: " + inconsistent);
 	}
 
+	@Test
+	void every_join_entity_declares_its_parent_reference() {
+		// A deep export follows a join from its parent endpoint only: a join type
+		// without a declared parent would be left out of the deep export of that
+		// parent, silently dropping the association it carries.
+		List<String> undeclared = new ArrayList<>();
+		for (ConfigEntityType type : ConfigEntityType.values()) {
+			if (ConfigMatcher.isJoinEntity(type.getEntityType())
+				&& !ConfigExporter.JOIN_PARENT_REFERENCES.containsKey(type)) {
+
+				undeclared.add(type.name());
+			}
+		}
+
+		assertTrue(
+			undeclared.isEmpty(),
+			"ConfigExporter.JOIN_PARENT_REFERENCES has no parent reference for: "
+				+ undeclared);
+	}
+
 	/**
 	 * Reads this module's Jandex index, pinned to the datasource output directory via
 	 * a datasource class' code source so a {@code jandex.idx} shipped by a dependency

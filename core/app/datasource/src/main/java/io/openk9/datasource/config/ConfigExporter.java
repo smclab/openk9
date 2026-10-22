@@ -100,6 +100,17 @@ public class ConfigExporter {
 	 */
 	private static final List<EdgeSpec> EDGE_SPECS = deriveEdges();
 
+	/**
+	 * For each composite-key join entity, the reference that points at its parent
+	 * endpoint: a pipeline owns its enrich items, a plugin driver its ACL
+	 * mappings. A deep export follows a join from the parent only, so selecting
+	 * the parent carries its joins and, through them, the far endpoint, while
+	 * selecting the far endpoint never climbs back to the parent.
+	 */
+	static final Map<ConfigEntityType, String> JOIN_PARENT_REFERENCES = Map.of(
+		ConfigEntityType.ENRICH_PIPELINE_ITEM, "enrichPipeline",
+		ConfigEntityType.ACL_MAPPING, "pluginDriver");
+
 	private final Mutiny.SessionFactory sessionFactory;
 	private final ConfigEntityMapper mapper;
 	private final ConfigRedactor redactor;
@@ -137,9 +148,10 @@ public class ConfigExporter {
 	 * The seed is every entity whose type is in {@code types}; an empty list means
 	 * "no filter" and exports the whole tenant, exactly like {@link #export(String)}.
 	 * When {@code includeDependencies} is {@code true} (deep export) the seed is
-	 * expanded with the transitive closure over its outgoing references, so the
-	 * package is self-contained; when {@code false} (shallow export) only the seed
-	 * is kept and dangling references are reported by the importer.
+	 * expanded with the transitive closure over its outgoing references and over
+	 * the joins its parents own, so the package is self-contained; when
+	 * {@code false} (shallow export) only the seed is kept and dangling references
+	 * are reported by the importer.
 	 *
 	 * @param tenantId the schema/tenant to export
 	 * @param types the entity types to seed the export with; empty exports all
@@ -433,10 +445,10 @@ public class ConfigExporter {
 	 * Narrows the collected entities to the requested selection, keeping their
 	 * original order: with no {@code types} the whole tenant is returned,
 	 * otherwise the seed is every entity whose type is selected, expanded
-	 * with the transitive closure of its outgoing references when
-	 * {@code includeDependencies} is set (deep export) or kept as-is (shallow).
-	 * Composite-key join entities are added last, only when every endpoint they
-	 * connect is already selected, since the forward closure never reaches them.
+	 * with the transitive closure of its outgoing references and of the joins its
+	 * parents own when {@code includeDependencies} is set (deep export) or kept
+	 * as-is (shallow). Composite-key join entities are settled last: a join is
+	 * exported exactly when every endpoint it connects is selected.
 	 */
 	private static List<ConfigEntity> select(
 		List<ConfigEntity> entities, List<ConfigEntityType> types,
@@ -460,10 +472,10 @@ public class ConfigExporter {
 		}
 
 		if (includeDependencies) {
-			expandForwardClosure(selected, byRef);
+			expandForwardClosure(selected, byRef, joinsByParent(entities));
 		}
 
-		addJoinEntities(entities, selected);
+		selectJoinEntities(entities, selected);
 
 		List<ConfigEntity> result = new ArrayList<>();
 		for (ConfigEntity entity : entities) {
@@ -475,19 +487,25 @@ public class ConfigExporter {
 	}
 
 	/**
-	 * Expands the selection with the transitive closure over outgoing references,
-	 * following only handles that resolve to an entity in the package.
+	 * Expands the selection with the transitive closure over outgoing references
+	 * and over the joins each parent owns, following only handles that resolve to
+	 * an entity in the package. A join reached from its parent brings in the far
+	 * endpoint through its own outgoing references.
 	 */
 	private static void expandForwardClosure(
-		Set<String> selected, Map<String, ConfigEntity> byRef) {
+		Set<String> selected, Map<String, ConfigEntity> byRef,
+		Map<String, List<String>> joinsByParent) {
 
 		Deque<String> pending = new ArrayDeque<>(selected);
 		while (!pending.isEmpty()) {
-			ConfigEntity entity = byRef.get(pending.poll());
+			String ref = pending.poll();
+			ConfigEntity entity = byRef.get(ref);
 			if (entity == null) {
 				continue;
 			}
-			for (String handle : targetHandles(entity)) {
+			List<String> handles = targetHandles(entity);
+			handles.addAll(joinsByParent.getOrDefault(ref, List.of()));
+			for (String handle : handles) {
 				if (byRef.containsKey(handle) && selected.add(handle)) {
 					pending.add(handle);
 				}
@@ -496,21 +514,47 @@ public class ConfigExporter {
 	}
 
 	/**
-	 * Adds every composite-key join entity whose endpoints are all already
-	 * selected, so a join is exported exactly when both sides travel with it.
+	 * Indexes every composite-key join entity under the handle of its parent
+	 * endpoint, read from the reference named in {@link #JOIN_PARENT_REFERENCES}.
 	 */
-	private static void addJoinEntities(
+	private static Map<String, List<String>> joinsByParent(
+		List<ConfigEntity> entities) {
+
+		Map<String, List<String>> joins = new HashMap<>();
+		for (ConfigEntity entity : entities) {
+			String parentReference = JOIN_PARENT_REFERENCES.get(entity.getType());
+			if (parentReference == null) {
+				continue;
+			}
+			for (String parent
+					: entity.getReferences().getOrDefault(parentReference, List.of())) {
+
+				joins.computeIfAbsent(parent, k -> new ArrayList<>())
+					.add(entity.getRef());
+			}
+		}
+		return joins;
+	}
+
+	/**
+	 * Settles the composite-key join entities: a join is exported exactly when
+	 * every endpoint it connects is selected. A join whose endpoints were both
+	 * selected is added; one seeded without its endpoints (a join type in a
+	 * shallow export) is dropped instead of dangling.
+	 */
+	private static void selectJoinEntities(
 		List<ConfigEntity> entities, Set<String> selected) {
 
 		for (ConfigEntity entity : entities) {
-			if (!ConfigMatcher.isJoinEntity(entity.getType().getEntityType())
-				|| selected.contains(entity.getRef())) {
-
+			if (!ConfigMatcher.isJoinEntity(entity.getType().getEntityType())) {
 				continue;
 			}
 			List<String> endpoints = targetHandles(entity);
 			if (!endpoints.isEmpty() && selected.containsAll(endpoints)) {
 				selected.add(entity.getRef());
+			}
+			else {
+				selected.remove(entity.getRef());
 			}
 		}
 	}
