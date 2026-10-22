@@ -188,6 +188,17 @@ def test_source_image_hosts_are_a_comma_separated_list(monkeypatch):
     ]
 
 
+def test_malformed_source_image_host_regexes_are_refused(monkeypatch):
+    """A glob is not a regex: it must stop the startup, not the first fetch."""
+    monkeypatch.setenv("SOURCE_IMAGE_HOST_REGEXES", r"photos\..*, *.smc.it")
+
+    with pytest.raises(ValidationError) as error:
+        _settings()
+
+    assert "source_image_host_regexes" in _error_fields(error.value)
+    assert "'*.smc.it' is not a regex" in str(error.value)
+
+
 def test_hosts_are_kept_as_configured(monkeypatch):
     """Hosts are passed through untouched: gRPC targets are host:port, and the
     OpenSearch host can be a comma-separated list of nodes."""

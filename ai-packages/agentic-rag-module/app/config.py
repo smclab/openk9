@@ -16,6 +16,7 @@
 #
 
 import json
+import re
 from pathlib import Path
 from typing import Annotated
 
@@ -102,6 +103,16 @@ class Settings(BaseSettings):
     def split_source_image_host_regexes(cls, value):
         if isinstance(value, str):
             return [regex.strip() for regex in value.split(",") if regex.strip()]
+        return value
+
+    @field_validator("source_image_host_regexes")
+    @classmethod
+    def compile_source_image_host_regexes(cls, value):
+        for regex in value:
+            try:
+                re.compile(regex)
+            except re.error as error:
+                raise ValueError(f"{regex!r} is not a regex: {error}") from error
         return value
 
     @field_validator("upload_file_extensions", mode="before")
