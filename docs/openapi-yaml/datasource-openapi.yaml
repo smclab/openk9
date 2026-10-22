@@ -5014,11 +5014,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SearchPipelineResponseDTO"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Configure Hybrid Search
       tags:
       - Search Config Resource
+      security:
+      - SecurityScheme:
+        - k9-admin
   /api/datasource/v1/trigger:
     post:
       deprecated: true
