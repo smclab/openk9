@@ -48,6 +48,7 @@ from app.utils.logger import content_fingerprint, debug_extra, get_logger, log_c
 logger = get_logger(__name__)
 
 GUARDRAIL_VIOLATION_MESSAGE = "Guardrail violation"
+SCOPE_GATE_REDIRECT_MESSAGE = "Posso aiutarti solo su temi di questo dominio."
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 RATE_LIMIT_MESSAGE = "Rate limit exceeded. Try again later."
 # The provider refuses the generation with its own filter (Azure content
@@ -93,6 +94,54 @@ async def resolve_conversation_title(
     return None, False
 
 
+def delivered_context(deps: AgenticDeps) -> str:
+    """The text of the documents delivered to the orchestrator in this turn, for the scope gate."""
+    return "\n\n".join(
+        deps.discovered[document_id].get("content", "")
+        for document_id in deps.delivered_ids
+        if document_id in deps.discovered
+    )
+
+
+def output_guardrail_options(guardrails_configuration, *, search_text: str, deps) -> dict:
+    """The options of :func:`streaming.stream_answer` for the output guardrail of the tenant:
+    none when it is disabled."""
+    output_config = (guardrails_configuration or {}).get("output_guardrail") or {}
+    if not output_config.get("enable_output_guardrail"):
+        return {}
+
+    async def output_check(answer: str, stage: str) -> str:
+        return await guardrails.output_guardrail(
+            answer=answer,
+            guardrails_configuration=guardrails_configuration,
+            model=deps.orchestrator_model,
+            deps=deps,
+            stage=stage,
+        )
+
+    async def scope_check(answer_prefix: str) -> str:
+        # read when the prefix arrives, after the tool round has delivered the documents
+        return await guardrails.scope_gate(
+            query=search_text,
+            context_text=delivered_context(deps),
+            answer_prefix=answer_prefix,
+            output_guardrail=output_config,
+            model=deps.orchestrator_model,
+            deps=deps,
+        )
+
+    return {
+        "output_guardrail_type": output_config.get("output_guardrail_type", 1),
+        "chunk_interval": output_config.get("output_guardrail_chunk_interval") or 10,
+        "output_check": output_check,
+        "scope_check": scope_check,
+        "scope_gate_prefix_chars": output_config.get("scope_gate_prefix_chars", 250),
+        "scope_gate_redirect_message": output_config.get(
+            "scope_gate_redirect_message", SCOPE_GATE_REDIRECT_MESSAGE
+        ),
+    }
+
+
 async def run_turn(
     *,
     rag_type: str,
@@ -112,7 +161,8 @@ async def run_turn(
     The input guardrail comes first: a blocked query gets only the GUARDRAIL and
     END events, and the turn is not saved. The history of the chat comes from
     ``store`` from the second turn on, and the turn is saved there with its
-    title once the answer has been delivered.
+    title once the answer has been delivered. An answer that the output
+    guardrail blocks ends with a CANCEL event and is not saved either.
 
     :param rag_type: The RAG type of the request.
     :param search_text: The question of the user.
@@ -135,6 +185,7 @@ async def run_turn(
     message_history = (
         store.load_message_history(chat_id) if chat_sequence_number > 1 else []
     )
+    guard = output_guardrail_options(guardrails_configuration, search_text=search_text, deps=deps)
 
     async def finish_turn(output, refs, result):
         """Title and save once the answer is complete: after the CHUNK events."""
@@ -188,6 +239,7 @@ async def run_turn(
             deltas=streaming.deltas_from_message(output.message),
             rag_type=rag_type,
             post_stream=post_stream,
+            **guard,
         ):
             yield event
         return
@@ -208,6 +260,7 @@ async def run_turn(
                 deltas=streaming.coalesce(orchestrator_stream.deltas()),
                 rag_type=rag_type,
                 post_stream=post_stream,
+                **guard,
             ):
                 events.put_nowait(event)
 
@@ -247,8 +300,8 @@ async def get_agentic_rag(
     Stream the answer to a RAG request, with the signature of ``chain.get_agentic_rag``.
 
     Every request leaves a ``[request] start`` record and a ``[request] end`` one
-    with its outcome (COMPLETED, BLOCKED_INPUT, BLOCKED_OUTPUT, ERROR) and its
-    duration.
+    with its outcome (COMPLETED, BLOCKED_INPUT, BLOCKED_OUTPUT, OFF_SCOPE, ERROR)
+    and its duration.
     """
     started_at = time.monotonic()
     outcome = "COMPLETED"
@@ -304,11 +357,14 @@ async def get_agentic_rag(
             enable_conversation_title=rag_configuration.get("enable_conversation_title"),
             guardrails_configuration=guardrails_configuration,
         ):
-            event_type = json.loads(event)["type"]
-            if event_type == "ERROR":
+            parsed = json.loads(event)
+            if parsed["type"] == "ERROR":
                 outcome = "ERROR"
-            elif event_type == "GUARDRAIL":
+            elif parsed["type"] == "GUARDRAIL":
                 outcome = "BLOCKED_INPUT"
+            elif parsed["type"] == "CANCEL":
+                blocked = parsed["chunk"] == streaming.OUTPUT_GUARDRAIL_CANCEL_MESSAGE
+                outcome = "BLOCKED_OUTPUT" if blocked else "OFF_SCOPE"
             yield event
 
     except Exception as e:  # noqa: BLE001
