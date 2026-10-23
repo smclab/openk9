@@ -45,7 +45,7 @@ def get_content(response, max_length=None, body_tag=None, excluded_body_tags=Non
     if body is not None:
         content = soup.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
         content = re.sub(' +', ' ', content)
-        if max_length is not None:
+        if max_length is not None and max_length >= 0:
             content = content[:max_length]
 
     return content
