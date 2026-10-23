@@ -23,13 +23,14 @@ from enum import Enum
 from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
 
 from IPython.display import Image
-from langchain_core.callbacks import UsageMetadataCallbackHandler
+from langchain_core.callbacks import BaseCallbackHandler, UsageMetadataCallbackHandler
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables.config import ensure_config, merge_configs
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
@@ -307,6 +308,18 @@ def _with_images(prompt_value, images: List[tuple]) -> List[Any]:
             {"type": "image", "base64": image.data, "mime_type": image.mime_type}
         )
     return messages[:-1] + [HumanMessage(content=content)]
+
+
+class _AnswerChunks(BaseCallbackHandler):
+    """Count the chunks of an answer that reached the client."""
+
+    def __init__(self) -> None:
+        self.count = 0
+
+    def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
+        # the stream forwards a chunk only when it has content
+        if token:
+            self.count += 1
 
 
 class GraphState(BaseModel):
@@ -2129,6 +2142,7 @@ class RagGraph:
                 f"unseen={len(unseen)} {self._log_context()}"
             )
 
+        streamed = _AnswerChunks()
         try:
             response = self._generate_response(
                 state,
@@ -2139,12 +2153,22 @@ class RagGraph:
                 query_image,
                 source_images,
                 unseen,
+                [streamed],
             )
         except Exception as error:
             if not (query_image or source_images) or not is_rejection(error):
                 raise
-            # The rejection comes before the first chunk: the client only
-            # ever sees the tokens of the text-only answer.
+            # The text-only retry runs only while no chunk of this answer has
+            # reached the client, which then sees just the text-only answer.
+            # After the first chunk the retry would be appended to the partial
+            # answer: the error goes up as today and the model is not marked.
+            if streamed.count:
+                logger.warning(
+                    "[llm_response] the provider rejected the images mid-stream, "
+                    f"after {streamed.count} chunks, text-only retry skipped: "
+                    f"{str(error)[:300]} {self._log_context()}"
+                )
+                raise
             logger.warning(
                 "[llm_response] the provider rejected the images, retrying "
                 f"with text only: {str(error)[:300]} {self._log_context()}"
@@ -2203,6 +2227,7 @@ class RagGraph:
         query_image: Optional[SourceImage],
         source_images: List[tuple],
         unseen: List[str],
+        callbacks: Optional[List[BaseCallbackHandler]] = None,
     ):
         """Ask the model for the answer, with the images it is meant to see.
 
@@ -2211,6 +2236,12 @@ class RagGraph:
         of a text-only chat.
         """
         context = state.context or []
+        config = None
+        if callbacks:
+            # The callbacks join the ones of the node, which stream the answer
+            # to the client, instead of replacing them.
+            merged = merge_configs(ensure_config(), {"callbacks": callbacks})
+            config = {"callbacks": merged["callbacks"]}
         if self._is_media_only_query(query):
             # Only the local query is replaced: state.current_query stays empty
             # so the later stages still see the turn for what it was.
@@ -2296,7 +2327,8 @@ class RagGraph:
                     "history": conversation_history,
                     "target_lang": target_lang,
                     "citations_instruction": citations_instruction,
-                }
+                },
+                config=config,
             )
         else:
             prompt_no_rag = escape_curly_braces(
@@ -2327,7 +2359,8 @@ class RagGraph:
                     "query": query,
                     "history": conversation_history,
                     "target_lang": target_lang,
-                }
+                },
+                config=config,
             )
 
         return response

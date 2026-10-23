@@ -26,6 +26,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from langchain_core.documents import Document
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import AIMessageChunk
+from langchain_core.outputs import ChatGenerationChunk
+from langgraph.graph import END, START, StateGraph
+from pydantic import Field
 
 from app.models.models import Media
 from app.rag import agentic_rag
@@ -406,6 +411,86 @@ def test_error_without_images_is_not_retried():
         _run(graph, _state())
 
     assert graph.llm.call_count == 1
+
+
+class _StreamingModel(BaseChatModel):
+    """Stream the answers in turn; an exception in an answer is raised there."""
+
+    answers: list
+    received: list = Field(default_factory=list)
+
+    @property
+    def _llm_type(self) -> str:
+        return "streaming-test"
+
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        raise NotImplementedError("the chat always streams the answer")
+
+    def _stream(self, messages, stop=None, run_manager=None, **kwargs):
+        self.received.append(messages)
+        for piece in self.answers.pop(0):
+            if isinstance(piece, Exception):
+                raise piece
+            yield ChatGenerationChunk(message=AIMessageChunk(content=piece))
+
+
+def _stream(graph, state: dict) -> tuple:
+    """Run the response node in a graph that streams its messages, as the chat
+    does: the chunks that reached the client, the error and the marking."""
+    builder = StateGraph(GraphState)
+    builder.add_node("llm_response", graph.llm_response_node)
+    builder.add_edge(START, "llm_response")
+    builder.add_edge("llm_response", END)
+
+    chunks, error = [], None
+    with (
+        patch.object(agentic_rag, "accepts_images", return_value=None),
+        patch.object(agentic_rag, "mark_text_only") as mark,
+    ):
+        try:
+            for chunk, _ in builder.compile().stream(state, stream_mode="messages"):
+                if chunk.content:
+                    chunks.append(chunk.content)
+        except Exception as raised:
+            error = raised
+    return chunks, error, mark
+
+
+def _sent_images(messages) -> list:
+    content = messages[-1].content
+    if not isinstance(content, list):
+        return []
+    return [block["base64"] for block in content if block["type"] == "image"]
+
+
+def test_rejection_before_the_first_chunk_retries_text_only():
+    graph = _graph()
+    graph.llm = _StreamingModel(
+        answers=[[_Rejected("image too large")], ["Risposta ", "solo testo"]]
+    )
+
+    chunks, error, mark = _stream(graph, {"current_query": "cosa raffigura?"})
+
+    assert error is None
+    assert chunks == ["Risposta ", "solo testo"]
+    assert [_sent_images(sent) for sent in graph.llm.received] == [[PHOTO], []]
+    mark.assert_called_once_with(graph.llm)
+
+
+def test_rejection_after_a_chunk_goes_up_without_retry(caplog):
+    graph = _graph()
+    rejected = _Rejected("image too large")
+    graph.llm = _StreamingModel(answers=[["Parte ", rejected], ["mai inviata"]])
+
+    with caplog.at_level(logging.WARNING, logger="app.rag.agentic_rag"):
+        chunks, error, mark = _stream(graph, {"current_query": "cosa raffigura?"})
+
+    assert error is rejected
+    assert chunks == ["Parte "]
+    assert len(graph.llm.received) == 1
+    mark.assert_not_called()
+    assert "rejected the images mid-stream" in caplog.text
+    assert "text-only retry skipped" in caplog.text
 
 
 def test_images_do_not_stay_in_state_history_or_logs(caplog):
