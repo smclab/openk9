@@ -23,6 +23,8 @@ llm_response`` di agentic-rag-module.
   delegation, conteggio cumulativo delle richieste);
 - tetto alle richieste del turno = ``UsageLimits`` da ``max_iterations`` (RAGConfiguration);
 - tetto alle deleghe del turno = :data:`MAX_DISCOVERIES_PER_TURN`;
+- ``parallel_discovery``: anche il tool ``discover_many``, che delega piu' sotto-domande in
+  parallelo, al massimo ``max_parallel_subtasks``;
 - ``bypass_rag``: l'orchestratore nasce **senza** il tool ``discover``, quindi il retrieval e'
   irraggiungibile per costruzione. Vedi :func:`build_orchestrator`;
 - ``enable_verifier``: un ``output_validator`` fa giudicare la risposta al Verifier e, se la
@@ -53,7 +55,8 @@ from app.utils.logger import (
 
 logger = get_logger(__name__)
 
-#: Vincolo di single-discovery del prompt: senza fan-out ogni passo delega una sola sotto-domanda.
+#: Vincolo di single-discovery del prompt: con ``parallel_discovery`` va tolto, altrimenti
+#: contraddice :data:`FANOUT_PROMPT_ADDENDUM`.
 SINGLE_DISCOVER_INSTRUCTION = (
     "\n   (In this configuration call `discover` once per step: once for the question, plus at most"
     "\n   one more for a missing fact or a rephrasing — do not fan out.)"
@@ -94,6 +97,15 @@ Procedure:
 Never use general knowledge to fill gaps. Never fabricate document ids or facts not present in the
 returned documents."""
 
+FANOUT_PROMPT_ADDENDUM = """
+
+Parallel discovery is enabled. When the question has SEVERAL independent parts (e.g. a comparison
+"X vs Y", or multiple distinct sub-topics), decompose it into self-contained sub-questions and issue
+a SINGLE `discover_many` call passing all of them at once — they run in parallel. Use the plain
+`discover` tool only for a genuinely single-topic question. Each sub-result comes back separately
+(labeled by its sub-question); synthesize the final answer across all of them and cite ids from any
+sub-result you used."""
+
 #: Prompt di default con ``bypass_rag`` attivo, quando il tenant non configura ``prompt_no_rag``.
 #: Stesso testo del ramo ``else`` di ``llm_response_node`` di agentic-rag-module, piu' le istruzioni per
 #: compilare ``OrchestratorOutput``: senza documenti ``used_document_ids`` resta vuoto.
@@ -105,9 +117,14 @@ Answer from your own knowledge: you have no document tools in this configuration
 Set `status` to "ok" and leave `used_document_ids` empty — there are no documents to cite."""
 
 
-#: Sotto-domande delegate al Discovery per turno: senza ``max_iterations`` non c'e'
-#: ``UsageLimits``, e ogni Discovery costa fino a ``discovery.MAX_RETRIEVER_CALLS`` ricerche piu'
-#: una selezione.
+#: Tetto di ``max_parallel_subtasks``: oltre questo numero di Discovery in parallelo il tenant viene
+#: riportato al limite (ogni Discovery costa le sue ricerche piu' una selezione).
+MAX_PARALLEL_SUBTASKS_LIMIT = 4
+
+#: Sotto-domande delegate al Discovery per turno, ``discover`` e ``discover_many`` insieme: senza
+#: ``max_iterations`` non c'e' ``UsageLimits``, e ogni Discovery costa fino a
+#: ``discovery.MAX_RETRIEVER_CALLS`` ricerche piu' una selezione. Sei coprono un fan-out pieno
+#: (:data:`MAX_PARALLEL_SUBTASKS_LIMIT`) piu' due deleghe di riparazione.
 MAX_DISCOVERIES_PER_TURN = 6
 
 #: Risposta del tool di delega a budget esaurito: l'orchestratore chiude con cio' che ha.
@@ -125,6 +142,18 @@ def verifier_enabled(rag_configuration: dict) -> bool:
     )
 
 
+def resolve_max_parallel_subtasks(rag_configuration: dict) -> int:
+    """``max_parallel_subtasks`` del jsonConfig (default 3) limitato a ``1..4``."""
+    configured = int(rag_configuration.get("max_parallel_subtasks", 3) or 3)
+    resolved = min(max(configured, 1), MAX_PARALLEL_SUBTASKS_LIMIT)
+    if resolved != configured:
+        logger.warning(
+            f"[orchestrator] max_parallel_subtasks={configured} fuori da "
+            f"1..{MAX_PARALLEL_SUBTASKS_LIMIT}: uso {resolved}"
+        )
+    return resolved
+
+
 def build_usage_limits(rag_configuration: dict) -> Optional[UsageLimits]:
     """``max_iterations`` (jsonConfig) -> ``UsageLimits``, un tetto alle richieste LLM del turno.
 
@@ -133,13 +162,16 @@ def build_usage_limits(rag_configuration: dict) -> Optional[UsageLimits]:
     richieste dell'orchestratore (delegare e comporre) e, se attivo, il Verifier. Ogni tentativo
     puo' delegare di nuovo: la riparazione dopo un rifiuto del Verifier cerca le affermazioni non
     supportate. Troppo stretto farebbe scattare ``UsageLimitExceeded`` gia' sul percorso felice;
-    resta comunque un tetto anti-runaway.
+    resta comunque un tetto anti-runaway. Con ``parallel_discovery`` un solo giro puo' delegare
+    fino a ``max_parallel_subtasks`` Discovery, quindi il tetto cresce con il fan-out.
     """
     max_iterations = rag_configuration.get("max_iterations")
     if not max_iterations:
         return None
     attempts = int(max_iterations) + 1  # tentativo iniziale + retry
     per_discovery = discovery.MAX_RETRIEVER_CALLS + 1  # ricerche + 1 selezione id
+    if rag_configuration.get("parallel_discovery"):
+        per_discovery *= resolve_max_parallel_subtasks(rag_configuration)
     per_orchestrator = 2  # 1 richiesta per delegare + 1 per comporre
     per_verifier = 1 if verifier_enabled(rag_configuration) else 0
     request_limit = attempts * (per_discovery + per_orchestrator + per_verifier) + 2  # + margine
@@ -165,11 +197,18 @@ def _serialize_discovery(outcome) -> dict:
     }
 
 
-def _build_system_prompt(*, bypass_rag: bool, prompt_no_rag: Optional[str]) -> str:
+def _build_system_prompt(
+    *, bypass_rag: bool, prompt_no_rag: Optional[str], parallel_discovery: bool = False
+) -> str:
     """System prompt dell'orchestratore. Con ``bypass_rag`` non ci sono tool, quindi il prompt di
     default (che istruisce a chiamare ``discover``) non va usato."""
     if bypass_rag:
         return (prompt_no_rag or DEFAULT_BYPASS_RAG_PROMPT) + BYPASS_RAG_OUTPUT_ADDENDUM
+    if parallel_discovery:
+        return (
+            ORCHESTRATOR_SYSTEM_PROMPT.replace(SINGLE_DISCOVER_INSTRUCTION, "")
+            + FANOUT_PROMPT_ADDENDUM
+        )
     return ORCHESTRATOR_SYSTEM_PROMPT
 
 
@@ -198,6 +237,17 @@ def repair_instructions(verdict: VerificationFailed) -> str:
 #: Temperatura 0: la scelta di cosa delegare deve essere stabile fra richieste uguali.
 ORCHESTRATOR_SETTINGS = {"temperature": 0}
 
+#: Con il fan-out il parallelismo passa solo da ``discover_many``, dove vale il tetto
+#: ``max_parallel_subtasks``: piu' ``discover`` nella stessa risposta del modello lo aggirerebbero.
+FANOUT_ORCHESTRATOR_SETTINGS = {**ORCHESTRATOR_SETTINGS, "parallel_tool_calls": False}
+
+#: Nota per l'orchestratore quando ``discover_many`` scarta delle sotto-domande: senza, comporrebbe
+#: la risposta credendo di avere coperto tutta la domanda.
+DROPPED_SUBTASKS_NOTE = (
+    "These sub-questions were NOT searched (limit reached). Do not answer them from your own "
+    "knowledge: say they could not be covered."
+)
+
 
 def build_orchestrator(
     model,
@@ -205,6 +255,8 @@ def build_orchestrator(
     enable_verifier: bool = False,
     verifier_model=None,
     retries: int = 1,
+    parallel_discovery: bool = False,
+    max_parallel_subtasks: int = 3,
     bypass_rag: bool = False,
     prompt_no_rag: Optional[str] = None,
 ) -> Agent:
@@ -213,6 +265,10 @@ def build_orchestrator(
     Con ``enable_verifier`` registra un ``output_validator`` che esegue il Verifier e, su
     ``VerificationFailed``, alza ``ModelRetry`` con le istruzioni di riparazione: un nuovo giro
     dell'orchestratore. ``retries`` limita i tentativi, oltre a ``UsageLimits``.
+
+    Con ``parallel_discovery`` registra anche ``discover_many``, che delega fino a
+    ``max_parallel_subtasks`` sotto-domande in parallelo, e aggiunge al prompt le istruzioni di
+    decomposizione.
 
     Con ``bypass_rag`` NESSUN tool di delega viene registrato: il retrieval e' irraggiungibile per
     costruzione (piu' forte di agentic-rag-module, dove ``rag_router_node`` forzava
@@ -226,9 +282,15 @@ def build_orchestrator(
         model,
         output_type=OrchestratorOutput,
         deps_type=AgenticDeps,
-        system_prompt=_build_system_prompt(bypass_rag=bypass_rag, prompt_no_rag=prompt_no_rag),
+        system_prompt=_build_system_prompt(
+            bypass_rag=bypass_rag,
+            prompt_no_rag=prompt_no_rag,
+            parallel_discovery=parallel_discovery,
+        ),
         retries=retries,
-        model_settings=ORCHESTRATOR_SETTINGS,
+        model_settings=(
+            FANOUT_ORCHESTRATOR_SETTINGS if parallel_discovery else ORCHESTRATOR_SETTINGS
+        ),
     )
 
     if bypass_rag:
@@ -250,6 +312,47 @@ def build_orchestrator(
             usage=ctx.usage,  # conteggio cumulativo condiviso
         )
         return _serialize_discovery(outcome)
+
+    if parallel_discovery:
+
+        @agent.tool
+        async def discover_many(ctx: RunContext[AgenticDeps], requests: list[SubAgentRequest]):
+            """Delega piu' sotto-domande indipendenti in PARALLELO (fan-out). Ritorna gli esiti
+            separati, uno per sotto-domanda."""
+            budget = MAX_DISCOVERIES_PER_TURN - ctx.deps.discoveries_run
+            if budget <= 0:
+                logger.info(
+                    f"[orchestrator] discover_many: budget di {MAX_DISCOVERIES_PER_TURN} esaurito"
+                )
+                return DISCOVERY_LIMIT_REACHED
+            capped = requests[: min(max_parallel_subtasks, budget)]
+            dropped = [request.question for request in requests[len(capped) :]]
+            ctx.deps.discoveries_run += len(capped)
+            ctx.deps.emit_status("discovering")
+            for request in capped:
+                _log_delegation(ctx.deps, request)
+            if dropped:
+                logger.info(
+                    f"[orchestrator] discover_many: {len(dropped)} sotto-domande scartate "
+                    f"(max_parallel_subtasks={max_parallel_subtasks}, budget={budget})"
+                )
+            outcomes = await discovery.run_parallel_discovery(
+                requests=capped,
+                deps=ctx.deps,
+                usage=ctx.usage,  # conteggio cumulativo condiviso
+                max_parallel=max_parallel_subtasks,
+            )
+            subtasks = [
+                {**_serialize_discovery(outcome), "subtask": request.question}
+                for request, outcome in zip(capped, outcomes)
+            ]
+            if not dropped:
+                return {"subtasks": subtasks}
+            return {
+                "subtasks": subtasks,
+                "dropped_subtasks": dropped,
+                "note": DROPPED_SUBTASKS_NOTE,
+            }
 
     if enable_verifier:
 
@@ -343,6 +446,8 @@ def _orchestrator_for(deps: AgenticDeps, model=None, *, enable_verifier=False) -
         model or deps.orchestrator_model,
         enable_verifier=enable_verifier,
         retries=int(cfg.get("max_iterations")) if cfg.get("max_iterations") else 1,
+        parallel_discovery=bool(cfg.get("parallel_discovery")),
+        max_parallel_subtasks=resolve_max_parallel_subtasks(cfg),
         bypass_rag=bool(cfg.get("bypass_rag")),
         prompt_no_rag=cfg.get("prompt_no_rag"),
     )

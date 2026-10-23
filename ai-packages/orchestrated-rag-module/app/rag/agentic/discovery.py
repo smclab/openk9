@@ -27,8 +27,10 @@ Due livelli (design §4.1):
    retriever), assembla il contenuto raggruppando i chunk, costruisce ``DiscoveryResult``.
 
 Il retrieval usa ``deps.retrieve_fn`` (iniettabile) → validabile offline con uno stub.
+:func:`run_parallel_discovery` esegue piu' Discovery in parallelo per ``discover_many``.
 """
 
+import asyncio
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -291,6 +293,44 @@ async def run_discovery(
         )
     )
     return selected
+
+
+async def run_parallel_discovery(
+    *,
+    requests: list[SubAgentRequest],
+    deps: AgenticDeps,
+    usage=None,
+    model=None,
+    max_parallel: int = 3,
+) -> list:
+    """Esegue piu' Discovery in **parallelo** e ritorna gli esiti separati, uno per richiesta e
+    nello stesso ordine (``DiscoveryResult`` oppure ``DiscoveryUnanswerable``).
+
+    - la concorrenza e' limitata da ``max_parallel``;
+    - ``usage`` e' condiviso: le richieste si sommano a quelle dell'orchestratore;
+    - un Discovery che fallisce diventa ``DiscoveryUnanswerable`` e non ferma gli altri.
+
+    Lo stato del turno in ``deps`` (``discovered``, ``delivered_ids``, budget di contesto) si
+    aggiorna senza ``await`` fra lettura e scrittura, quindi i Discovery concorrenti non si
+    pestano i piedi.
+    """
+    if not requests:
+        return []
+    semaphore = asyncio.Semaphore(max(1, int(max_parallel)))
+
+    async def _one(request: SubAgentRequest):
+        async with semaphore:
+            return await run_discovery(request=request, deps=deps, usage=usage, model=model)
+
+    settled = await asyncio.gather(*[_one(request) for request in requests], return_exceptions=True)
+    outcomes = []
+    for res in settled:
+        if isinstance(res, Exception):
+            logger.warning(f"[discovery] subtask failed: {res!r}")
+            outcomes.append(DiscoveryUnanswerable(reason=f"subtask failed: {res}"))
+        else:
+            outcomes.append(res)
+    return outcomes
 
 
 def resolve_document_refs(deps: AgenticDeps, used_document_ids: list[str]) -> list[DocumentRef]:
