@@ -173,6 +173,14 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "invalid-autocomplete";
 	private static final String INVALID_AUTOCOMPLETE_FIELD_NAME =
 		ENTITY_NAME_PREFIX + "invalid-autocomplete-field";
+	private static final String COPIED_AUTOCOMPLETE_NAME =
+		ENTITY_NAME_PREFIX + "copied-autocomplete";
+	private static final String AUTOCOMPLETE_COPY_NAME =
+		ENTITY_NAME_PREFIX + "autocomplete-copy";
+	private static final String COPIED_FIELD_ONE_NAME =
+		ENTITY_NAME_PREFIX + "copied-field-one";
+	private static final String COPIED_FIELD_TWO_NAME =
+		ENTITY_NAME_PREFIX + "copied-field-two";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -1569,6 +1577,66 @@ public class ConfigImporterTest {
 		// 2. Nothing was written, not even the field flushed before the failure
 		assertEquals(0, countByName("Autocomplete", INVALID_AUTOCOMPLETE_NAME));
 		assertEquals(0, countByName("DocTypeField", INVALID_AUTOCOMPLETE_FIELD_NAME));
+	}
+
+	@Test
+	void a_new_autocomplete_on_existing_fields_is_created() {
+		// A copy of an autocomplete whose fields already exist: the fields match
+		// and are skipped, so nothing loads them, yet the validator of the new
+		// autocomplete reads them when it is written.
+
+		// 1. An autocomplete with two fields
+		long sampleTextFieldId = EntitiesUtils.getSampleTextDocTypeFieldId(
+			docTypeFieldService, sessionFactory);
+		Long fieldOneId = EntitiesUtils.createSubField(
+			sampleTextFieldId,
+			searchAsYouTypeField(COPIED_FIELD_ONE_NAME, "sample.copiedone"),
+			docTypeFieldService).getId();
+		Long fieldTwoId = EntitiesUtils.createSubField(
+			sampleTextFieldId,
+			searchAsYouTypeField(COPIED_FIELD_TWO_NAME, "sample.copiedtwo"),
+			docTypeFieldService).getId();
+		EntitiesUtils.createEntity(
+			AutocompleteDTO.builder()
+				.name(COPIED_AUTOCOMPLETE_NAME)
+				.fieldIds(Set.of(fieldOneId, fieldTwoId))
+				.build(),
+			autocompleteService, sessionFactory);
+
+		// 2. A deep export of the autocompletes, with ours renamed into a copy
+		ConfigPackage pkg = configExporter
+			.export(TENANT_ID, List.of(ConfigEntityType.AUTOCOMPLETE), true)
+			.await().indefinitely();
+		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
+		entities.replaceAll(entity ->
+			entity.getType() == ConfigEntityType.AUTOCOMPLETE
+				&& COPIED_AUTOCOMPLETE_NAME.equals(entity.getKey())
+				? new ConfigEntity(
+					entity.getRef(), entity.getType(), AUTOCOMPLETE_COPY_NAME,
+					((AutocompleteDTO) entity.getAttributes()).toBuilder()
+						.name(AUTOCOMPLETE_COPY_NAME)
+						.build(),
+					entity.getReferences(), entity.getRedactedFields())
+				: entity);
+		ConfigPackage copy = new ConfigPackage(pkg.getSchemaVersion(), null, entities);
+
+		// 3. SKIP creates the copy on the same fields
+		ImportReport report =
+			configImporter.importConfig(TENANT_ID, copy, ImportMode.SKIP, false)
+				.await().indefinitely();
+
+		assertTrue(report.applied());
+		Autocomplete created = EntitiesUtils.getAutocomplete(
+			AUTOCOMPLETE_COPY_NAME, autocompleteService, sessionFactory);
+		assertEquals(Set.of(fieldOneId, fieldTwoId), idsOf(created.getFields()));
+
+		// 4. Clean up both autocompletes, then their fields
+		EntitiesUtils.removeEntity(
+			AUTOCOMPLETE_COPY_NAME, autocompleteService, sessionFactory);
+		EntitiesUtils.removeEntity(
+			COPIED_AUTOCOMPLETE_NAME, autocompleteService, sessionFactory);
+		EntitiesUtils.removeEntity(fieldOneId, docTypeFieldService, sessionFactory);
+		EntitiesUtils.removeEntity(fieldTwoId, docTypeFieldService, sessionFactory);
 	}
 
 	private Long seedCharFilter(String name, String jsonConfig) {

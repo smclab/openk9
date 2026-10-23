@@ -443,23 +443,23 @@ public class ConfigImporter {
 		};
 	}
 
-	private List<Object> resolveReferences(
-		Mutiny.Session s, K9Entity entity, String relationship,
-		Class<?> elementType, List<String> handles, Map<String, Long> resolvedIds) {
+	private List<Long> resolveReferences(
+		K9Entity entity, String relationship, List<String> handles,
+		Map<String, Long> resolvedIds) {
 
-		List<Object> targets = new ArrayList<>();
+		List<Long> ids = new ArrayList<>();
 		if (handles != null) {
 			for (String handle : handles) {
 				Long id = resolvedIds.get(handle);
 				if (id != null) {
-					targets.add(s.getReference(elementType, id));
+					ids.add(id);
 				}
 				else {
 					warnUnresolved(entity, relationship, handle);
 				}
 			}
 		}
-		return targets;
+		return ids;
 	}
 
 	/**
@@ -579,7 +579,7 @@ public class ConfigImporter {
 	/**
 	 * (Re)wires every owning association of the entity from the package references
 	 * to the real target ids resolved so far. To-one fields are set to a reference
-	 * proxy; to-many collections are replaced with the resolved targets (fetched
+	 * proxy; to-many collections are replaced with the loaded targets (fetched
 	 * first when overwriting a managed collection). Handles that resolve to nothing
 	 * (targets outside the package) are skipped. A target outside the package was
 	 * not carried, not removed: on overwrite, a to-one or to-many association with
@@ -602,12 +602,12 @@ public class ConfigImporter {
 			List<String> handles = reference.getValue();
 
 			if (Collection.class.isAssignableFrom(field.getType())) {
-				List<Object> targets = resolveReferences(
-					s, entity, reference.getKey(), elementType(field),
-					handles, resolvedIds);
-				boolean complete = handles == null || targets.size() == handles.size();
-				chain = chain.flatMap(ignore ->
-					setCollection(s, entity, field, targets, isNew, complete));
+				List<Long> ids = resolveReferences(
+					entity, reference.getKey(), handles, resolvedIds);
+				boolean complete = handles == null || ids.size() == handles.size();
+				chain = chain.flatMap(ignore -> loadTargets(s, elementType(field), ids)
+					.flatMap(targets ->
+						setCollection(s, entity, field, targets, isNew, complete)));
 			}
 			else if (handles != null && !handles.isEmpty()) {
 				String handle = handles.get(0);
@@ -825,6 +825,22 @@ public class ConfigImporter {
 	private static boolean isPlaceholder(JsonNode node) {
 		return node != null && node.isTextual()
 			&& ConfigRedactor.PLACEHOLDER.equals(node.asText());
+	}
+
+	/**
+	 * Loads the targets of a to-many in one query. Load, don't just reference: a
+	 * validator of the owner may read them when it is written (e.g. the type of the
+	 * autocomplete fields), and a reactive session cannot lazily fetch a bare
+	 * reference to a target that nothing else loaded, such as a skipped one.
+	 */
+	@SuppressWarnings("unchecked")
+	private static Uni<List<Object>> loadTargets(
+		Mutiny.Session s, Class<?> elementType, List<Long> ids) {
+
+		if (ids.isEmpty()) {
+			return Uni.createFrom().item(List.of());
+		}
+		return s.find((Class<Object>) elementType, ids.toArray());
 	}
 
 	private static Collection<Object> newCollection(Field field, List<Object> targets) {
