@@ -17,7 +17,11 @@
 import React from "react";
 import { useIncludeObscured } from "./useIncludeObscured";
 import { useTranslation } from "react-i18next";
-import { useInfiniteQuery } from "react-query";
+import {
+  infiniteQueryOptions,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { css } from "styled-components";
 import { ResultTitleTwo } from "../renderer-components";
 import { Logo } from "./Logo";
@@ -273,6 +277,7 @@ export function useInfiniteResults<E>(
   dynamicFilters: boolean = true,
 ) {
   const client = useOpenK9Client();
+  const queryClient = useQueryClient();
   const image = useSearchImage();
   const includeObscured = useIncludeObscured();
   const suppressIntermediate = React.useMemo(
@@ -289,10 +294,8 @@ export function useInfiniteResults<E>(
         )
       : searchQuery;
 
-  // TODO: hook after an early return (a disabled query would suspend the filters)
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const data = useInfiniteQuery(
-    [
+  const options = infiniteQueryOptions({
+    queryKey: [
       "results",
       searchQuery,
       image?.attachmentId ?? null,
@@ -304,7 +307,7 @@ export function useInfiniteResults<E>(
       overrideSearchWithCorrection?.renderingCorrection,
       includeObscured,
     ] as const,
-    async ({ queryKey }) => {
+    queryFn: async ({ queryKey }) => {
       const [
         ,
         qSearchQuery,
@@ -330,13 +333,23 @@ export function useInfiniteResults<E>(
         includeObscured,
       });
     },
-    {
-      enabled: elementForPage > 0 && !suppressIntermediate,
-      keepPreviousData: false,
-      suspense: true,
-      notifyOnChangeProps: ["isFetching"],
-    },
-  );
+    initialPageParam: 0,
+    getNextPageParam: () => undefined,
+    enabled: elementForPage > 0 && !suppressIntermediate,
+    // what react-query 3 did with suspense: true
+    staleTime: 1000,
+    throwOnError: true,
+    notifyOnChangeProps: ["isFetching"],
+  });
+  // TODO: hook after an early return (a disabled query would suspend the filters)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const data = useInfiniteQuery(options);
+  // like suspense: true in react-query 3: suspend while nothing can be shown, send a failure to the error boundary
+  if (data.isLoading) {
+    const state = queryClient.getQueryState(options.queryKey);
+    if (state?.status === "error") throw state.error;
+    throw queryClient.infiniteQuery(options).catch(() => undefined);
+  }
   if (overrideSearchWithCorrection?.isAutocorrection === false) {
     setOverrideSearchWithCorrection?.((ov) => ({
       ...ov,

@@ -22,7 +22,6 @@ export default defineConfig({
           "react-dom": "ReactDOM",
           "react/jsx-runtime": "jsxRuntime",
           "styled-components": "styled",
-          "react-query": "ReactQuery",
           i18next: "i18next",
           lodash: "_",
         },

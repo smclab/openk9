@@ -1,7 +1,7 @@
 import { css } from "styled-components";
-import { UseQueryResult } from "react-query";
+import { UseQueryResult } from "@tanstack/react-query";
 import React from "react";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { SortField, useOpenK9Client } from "../components/client";
 
 export function SortResultList({
@@ -16,8 +16,11 @@ export function SortResultList({
   color?: string;
 }) {
   const client = useOpenK9Client();
-  const options = useQuery(["date-label-sort-options", {}], async () => {
-    return await client.getLabelSort();
+  const options = useQuery({
+    queryKey: ["date-label-sort-options", {}],
+    queryFn: async () => {
+      return await client.getLabelSort();
+    },
   });
   return (
     <span className="openk9-container-sort-result-list-component">

@@ -1,26 +1,26 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
 import { css } from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons/faRightFromBracket";
 import { faRightToBracket } from "@fortawesome/free-solid-svg-icons/faRightToBracket";
 import { useOpenK9Client } from "./client";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { faUser } from "@fortawesome/free-solid-svg-icons/faUser";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
 import { useClickAway } from "./useClickAway";
@@ -43,13 +43,13 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
   React.useEffect(() => {
     if (client.authInit) client.authInit.then(setAuthenticated);
   }, []);
-  const userProfileQuery = useQuery<UserProfile, unknown>(
-    ["user-profile"],
-    async () => {
+  const userProfileQuery = useQuery<UserProfile, unknown>({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
       const data = await client.getUserProfile();
       return data as UserProfile;
     },
-  );
+  });
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement | null>(null);
   const { t } = useTranslation();
@@ -232,4 +232,3 @@ const buttonStyle = css`
   font-family: var(--openk9-embeddable-search--font-family, inherit);
   font-size: inherit;
 `;
-

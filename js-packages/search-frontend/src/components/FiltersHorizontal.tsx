@@ -21,10 +21,15 @@ import { SearchToken, SortField, SuggestionResult } from "./client";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useOpenK9Client } from "./client";
 import {
+  InfiniteData,
   UseInfiniteQueryResult,
+  infiniteQueryOptions,
+  keepPreviousData,
+  queryOptions,
   useInfiniteQuery,
   useQuery,
-} from "react-query";
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useInfiniteResults } from "./ResultList";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { Logo } from "./Logo";
@@ -83,7 +88,7 @@ function FiltersHorizontal({
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
-  const { data, isPreviousData } = useInfiniteResults(
+  const { data, isPlaceholderData } = useInfiniteResults(
     searchQuery,
     sort,
     language,
@@ -92,10 +97,10 @@ function FiltersHorizontal({
     memoryResults,
   );
   React.useEffect(() => {
-    if (!isPreviousData) {
+    if (!isPlaceholderData) {
       setLastSearchQueryWithResults(searchQuery);
     }
-  }, [isPreviousData, searchQuery]);
+  }, [isPlaceholderData, searchQuery]);
 
   const [filterSelect, setFilterSelect] =
     React.useState<Array<SearchToken>>(searchQuery);
@@ -344,10 +349,10 @@ function FiltersHorizontal({
     index: number,
     suggestion: { name: string; id: number; multiSelect: boolean },
     suggestions: UseInfiniteQueryResult<
-      {
+      InfiniteData<{
         result: SuggestionResult[];
         afterKey: string;
-      },
+      }>,
       unknown
     >,
   ) {
@@ -358,10 +363,10 @@ function FiltersHorizontal({
     index: number,
     suggestion: { name: string; id: number; multiSelect: boolean },
     suggestions: UseInfiniteQueryResult<
-      {
+      InfiniteData<{
         result: SuggestionResult[];
         afterKey: string;
-      },
+      }>,
       unknown
     >,
   ): React.JSX.Element | null {
@@ -648,17 +653,26 @@ const GridContainer = ({ children }: { children: React.ReactNode }) => (
 
 function useSuggestionCategories() {
   const client = useOpenK9Client();
-  return useQuery(
-    ["suggestion-categories"],
-    async ({ queryKey }) => {
+  const queryClient = useQueryClient();
+  const options = queryOptions({
+    queryKey: ["suggestion-categories"],
+    queryFn: async ({ queryKey }) => {
       const result = await client.getSuggestionCategories();
       return result;
     },
-    {
-      suspense: true,
-      keepPreviousData: true,
-    },
-  );
+    placeholderData: keepPreviousData,
+    // what react-query 3 did with suspense: true
+    staleTime: 1000,
+    throwOnError: true,
+  });
+  const query = useQuery(options);
+  // like suspense: true in react-query 3: suspend while nothing can be shown, send a failure to the error boundary
+  if (query.isLoading) {
+    const state = queryClient.getQueryState(options.queryKey);
+    if (state?.status === "error") throw state.error;
+    throw queryClient.query(options).catch(() => undefined);
+  }
+  return query;
 }
 
 export function useInfiniteSuggestions(
@@ -677,15 +691,19 @@ export function useInfiniteSuggestions(
     ? searchQueryParams
     : createSuggestion(searchQueryParams, isDynamicElement);
 
-  const suggestionCategories = useInfiniteQuery(
-    [
+  const queryClient = useQueryClient();
+  const options = infiniteQueryOptions({
+    queryKey: [
       "suggestions",
       searchQuery,
       suggestionCategoryId,
       false,
       includeObscured,
     ] as const,
-    async ({ queryKey: [_, searchQuery, suggestionCategoryId], pageParam }) => {
+    queryFn: async ({
+      queryKey: [_, searchQuery, suggestionCategoryId],
+      pageParam,
+    }) => {
       if (!searchQuery) throw new Error();
       const result = await client.getSuggestions({
         searchQuery,
@@ -701,17 +719,25 @@ export function useInfiniteSuggestions(
         afterKey: result.afterKey,
       };
     },
-    {
-      enabled: searchQuery !== null,
-      keepPreviousData: true,
-      getNextPageParam(lastPage, pages) {
-        if (!lastPage.afterKey) return undefined;
-        if (pages[pages.length - 1].result.length < pageSize) return undefined;
-        return lastPage.afterKey;
-      },
-      suspense: true,
+    initialPageParam: undefined as string | undefined,
+    enabled: searchQuery !== null,
+    placeholderData: keepPreviousData,
+    getNextPageParam(lastPage, pages) {
+      if (!lastPage.afterKey) return undefined;
+      if (pages[pages.length - 1].result.length < pageSize) return undefined;
+      return lastPage.afterKey;
     },
-  );
+    // what react-query 3 did with suspense: true
+    staleTime: 1000,
+    throwOnError: true,
+  });
+  const suggestionCategories = useInfiniteQuery(options);
+  // like suspense: true in react-query 3: suspend while nothing can be shown, send a failure to the error boundary
+  if (suggestionCategories.isLoading) {
+    const state = queryClient.getQueryState(options.queryKey);
+    if (state?.status === "error") throw state.error;
+    throw queryClient.infiniteQuery(options).catch(() => undefined);
+  }
 
   return suggestionCategories;
 }

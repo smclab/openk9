@@ -17,7 +17,12 @@
 import React from "react";
 import { useIncludeObscured } from "./useIncludeObscured";
 import { useTranslation } from "react-i18next";
-import { useInfiniteQuery } from "react-query";
+import {
+  infiniteQueryOptions,
+  keepPreviousData,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Virtuoso, Components } from "react-virtuoso";
 import styled, { css } from "styled-components";
 import { TemplatesProps } from "../embeddable/entry";
@@ -668,8 +673,9 @@ export function useInfiniteResults<E>(
   const hasSortData = sort && sort.length > 0;
   const sortData = hasSortData ? sort[0] : undefined;
 
-  const query = useInfiniteQuery(
-    [
+  const queryClient = useQueryClient();
+  const options = infiniteQueryOptions({
+    queryKey: [
       "results",
       searchQuery,
       image?.attachmentId ?? null,
@@ -678,7 +684,7 @@ export function useInfiniteResults<E>(
       overrideSearchWithCorrection?.renderingCorrection,
       includeObscured,
     ] as const,
-    async ({ queryKey: [, searchQuery, , sort], pageParam = 0 }) => {
+    queryFn: async ({ queryKey: [, searchQuery, , sort], pageParam }) => {
       const RangePage: [number, number] = !(sortData && sortAfterKey)
         ? [pageParam * pageSize, pageSize]
         : [0, pageSize];
@@ -707,25 +713,33 @@ export function useInfiniteResults<E>(
       }
       return data;
     },
-    {
-      keepPreviousData: true,
-      cacheTime: memoryResults ? Infinity : 0,
-      getNextPageParam(lastPage, pages) {
-        const totalDownloaded = pages.reduce(
-          (total, page) => total + page.result.length,
-          0,
-        );
-        if (totalDownloaded < lastPage.total) {
-          return pages.length;
-        }
-      },
-      suspense: true,
-      notifyOnChangeProps: ["isFetching"],
+    initialPageParam: 0,
+    getNextPageParam(lastPage, pages) {
+      const totalDownloaded = pages.reduce(
+        (total, page) => total + page.result.length,
+        0,
+      );
+      if (totalDownloaded < lastPage.total) {
+        return pages.length;
+      }
     },
-  );
+    placeholderData: keepPreviousData,
+    // what react-query 3 did with suspense: true
+    gcTime: memoryResults ? Infinity : 1000,
+    staleTime: 1000,
+    throwOnError: true,
+    notifyOnChangeProps: ["isFetching"],
+  });
+  const query = useInfiniteQuery(options);
+  // like suspense: true in react-query 3: suspend while nothing can be shown, send a failure to the error boundary
+  if (query.isLoading) {
+    const state = queryClient.getQueryState(options.queryKey);
+    if (state?.status === "error") throw state.error;
+    throw queryClient.infiniteQuery(options).catch(() => undefined);
+  }
 
   // the range follows the last page loaded; a new search starts from page 0
-  const lastPage = query.isPreviousData
+  const lastPage = query.isPlaceholderData
     ? 0
     : (query.data?.pages.length ?? 1) - 1;
   const rangeStart = !(sortData && sortAfterKey) ? lastPage * pageSize : 0;

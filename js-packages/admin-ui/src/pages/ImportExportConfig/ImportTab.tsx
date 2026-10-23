@@ -142,7 +142,7 @@ export function ImportTab() {
   const onImport = async () => {
     // Guarded here rather than by disabling the button: disabling it while the
     // request runs would drop the keyboard focus to the document body.
-    if (!file || importMutation.isLoading) return;
+    if (!file || importMutation.isPending) return;
     const input: ImportInput = { selected: file, mode, dryRun };
     // A dry-run writes nothing, so it needs no confirmation even in OVERWRITE.
     if (input.mode === "OVERWRITE" && !input.dryRun && !(await openConfirmModal())) return;
@@ -262,14 +262,14 @@ export function ImportTab() {
         <Button
           variant="contained"
           startIcon={
-            importMutation.isLoading ? (
+            importMutation.isPending ? (
               <CircularProgress size={16} color="inherit" aria-label={t("pages.admin-settings.import-export.import-in-progress-aria")} />
             ) : (
               <UploadOutlinedIcon />
             )
           }
           disabled={!file}
-          aria-busy={importMutation.isLoading}
+          aria-busy={importMutation.isPending}
           onClick={() => void onImport()}
         >
           {t("pages.admin-settings.import-export.import-button")}
@@ -283,7 +283,7 @@ export function ImportTab() {
       </Box>
       {/* Always rendered, so the change of content is announced. */}
       <Typography variant="body2" color="text.secondary" role="status" aria-live="polite" sx={{ minHeight: 20 }}>
-        {importMutation.isLoading ? t("pages.admin-settings.import-export.importing-status") : ""}
+        {importMutation.isPending ? t("pages.admin-settings.import-export.importing-status") : ""}
       </Typography>
 
       {report && <ImportReportPanel report={report} />}

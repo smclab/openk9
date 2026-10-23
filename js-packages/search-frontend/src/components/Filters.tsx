@@ -16,7 +16,12 @@
  */
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "react-query";
+import {
+  keepPreviousData,
+  queryOptions,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { css } from "styled-components";
 import { IconsCustom } from "../embeddable/entry";
 import { SearchToken, SortField, useOpenK9Client } from "./client";
@@ -101,7 +106,7 @@ function Filters({
     dynamicFilters,
   );
 
-  const isPreviousData = infiniteResults?.isPreviousData ?? false;
+  const isPreviousData = infiniteResults?.isPlaceholderData ?? false;
 
   React.useEffect(() => {
     if (!isPreviousData) {
@@ -168,17 +173,26 @@ export const FiltersMemo = React.memo(Filters);
 
 function useSuggestionCategories() {
   const client = useOpenK9Client();
-  return useQuery(
-    ["suggestion-categories"],
-    async ({ queryKey }) => {
+  const queryClient = useQueryClient();
+  const options = queryOptions({
+    queryKey: ["suggestion-categories"],
+    queryFn: async ({ queryKey }) => {
       const result = await client.getSuggestionCategories();
       return result;
     },
-    {
-      suspense: true,
-      keepPreviousData: true,
-    },
-  );
+    placeholderData: keepPreviousData,
+    // what react-query 3 did with suspense: true
+    staleTime: 1000,
+    throwOnError: true,
+  });
+  const query = useQuery(options);
+  // like suspense: true in react-query 3: suspend while nothing can be shown, send a failure to the error boundary
+  if (query.isLoading) {
+    const state = queryClient.getQueryState(options.queryKey);
+    if (state?.status === "error") throw state.error;
+    throw queryClient.query(options).catch(() => undefined);
+  }
+  return query;
 }
 
 type createLabel = {

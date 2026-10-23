@@ -23,7 +23,12 @@ import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { SearchToken, SuggestionResult } from "./client";
 import isEqual from "lodash/isEqual";
-import { useInfiniteQuery } from "react-query";
+import {
+  infiniteQueryOptions,
+  keepPreviousData,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useDebounce } from "./useDebounce";
 import { useOpenK9Client } from "./client";
 import { useTranslation } from "react-i18next";
@@ -554,8 +559,9 @@ export function useInfiniteSuggestions(
     searchQuery = searchQueryParams;
   }
 
-  const suggestionCategories = useInfiniteQuery(
-    [
+  const queryClient = useQueryClient();
+  const options = infiniteQueryOptions({
+    queryKey: [
       "suggestions",
       searchQuery,
       activeSuggestionCategory,
@@ -564,7 +570,7 @@ export function useInfiniteSuggestions(
       language,
       includeObscured,
     ] as const,
-    async ({
+    queryFn: async ({
       queryKey: [_, searchQuery, activeSuggestionCategory, suggestKeyword],
       pageParam,
     }) => {
@@ -584,17 +590,25 @@ export function useInfiniteSuggestions(
         afterKey: result.afterKey,
       };
     },
-    {
-      enabled: searchQuery !== null,
-      keepPreviousData: true,
-      getNextPageParam(lastPage, pages) {
-        if (!lastPage.afterKey) return undefined;
-        if (pages[pages.length - 1].result.length < pageSize) return undefined;
-        return lastPage.afterKey;
-      },
-      suspense: true,
+    initialPageParam: undefined as string | undefined,
+    enabled: searchQuery !== null,
+    placeholderData: keepPreviousData,
+    getNextPageParam(lastPage, pages) {
+      if (!lastPage.afterKey) return undefined;
+      if (pages[pages.length - 1].result.length < pageSize) return undefined;
+      return lastPage.afterKey;
     },
-  );
+    // what react-query 3 did with suspense: true
+    staleTime: 1000,
+    throwOnError: true,
+  });
+  const suggestionCategories = useInfiniteQuery(options);
+  // like suspense: true in react-query 3: suspend while nothing can be shown, send a failure to the error boundary
+  if (suggestionCategories.isLoading) {
+    const state = queryClient.getQueryState(options.queryKey);
+    if (state?.status === "error") throw state.error;
+    throw queryClient.infiniteQuery(options).catch(() => undefined);
+  }
 
   return suggestionCategories;
 }

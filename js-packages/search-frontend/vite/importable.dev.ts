@@ -37,7 +37,6 @@ export default defineConfig(() => {
           "react-dom",
           "react/jsx-runtime",
           "styled-components",
-          "react-query",
           "i18next",
           "lodash",
         ],

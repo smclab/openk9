@@ -90,8 +90,8 @@ export function useConfigureHybridSearchMutation({
   weights,
 }: ConfigureHybridSearchInterface) {
   const restClient = useRestClient();
-  return useMutation(
-    async ({
+  return useMutation({
+    mutationFn: async ({
       searchConfigId,
       normalizationTechnique,
       combinationTechnique,
@@ -108,7 +108,7 @@ export function useConfigureHybridSearchMutation({
         hybridSearchPipelineDTO,
       );
     },
-  );
+  });
 }
 
 export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {

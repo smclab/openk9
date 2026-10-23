@@ -2,7 +2,7 @@ import { Button, Menu, MenuItem } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import React from "react";
 import LanguageIcon from "@mui/icons-material/Language";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { OpenK9Client } from "./client";
 import { useUser } from "./ChatInfoContext";
 
@@ -31,26 +31,31 @@ const ChangeLanguage = () => {
 		queryKey: ["available-languages"],
 		queryFn: client.getAvailableLanguages,
 		staleTime: Infinity,
-		cacheTime: Infinity,
+		gcTime: Infinity,
 	});
 
-	useQuery({
+	const { error: defaultLanguageError } = useQuery({
 		queryKey: ["default-language"],
-		queryFn: client.getDefaultLanguage,
-		staleTime: Infinity,
-		cacheTime: Infinity,
-		onSuccess: (defaultLang) => {
+		// Applied on download only, as onSuccess did: an effect on data would reset the user's choice on remount.
+		queryFn: async () => {
+			const defaultLang = await client.getDefaultLanguage();
 			if (defaultLang) {
 				i18n.changeLanguage(defaultLang.value || "en");
 				setLanguage?.(defaultLang.value || "en");
 			}
+			return defaultLang;
 		},
-		onError: (error) => {
-			console.error("Error fetching default language:", error);
-			i18n.changeLanguage("en");
-		},
+		staleTime: Infinity,
+		gcTime: Infinity,
 		enabled: !!languagesTest.length,
 	});
+
+	React.useEffect(() => {
+		if (defaultLanguageError) {
+			console.error("Error fetching default language:", defaultLanguageError);
+			i18n.changeLanguage("en");
+		}
+	}, [defaultLanguageError, i18n]);
 
 	const languages: { label: string; value: string }[] = languagesTest
 		.map((lang: { name: string; value: string }) => {

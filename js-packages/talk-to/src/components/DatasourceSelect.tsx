@@ -1,7 +1,7 @@
 import { Button, Checkbox, ListItemText, Menu, MenuItem } from "@mui/material";
 import SourceOutlinedIcon from "@mui/icons-material/SourceOutlined";
 import React from "react";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { OpenK9Client } from "./client";
 
@@ -23,7 +23,7 @@ const DatasourceSelect = ({
 		queryKey: ["datasources"],
 		queryFn: client.getDatasources,
 		staleTime: Infinity,
-		cacheTime: Infinity,
+		gcTime: Infinity,
 	});
 
 	const handleClick = (event: React.MouseEvent<HTMLElement>) => {

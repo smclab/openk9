@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import React from "react";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { css } from "styled-components";
 import { SearchToken } from "./client";
 import { useOpenK9Client } from "./client";
@@ -233,12 +233,12 @@ export type Tab = {
 
 export function useTabTokens(): { tab: Array<Tab>; isLoading: boolean } {
   const client = useOpenK9Client();
-  const tabsByVirtualHostQuery = useQuery(
-    ["tabs-by-virtualhost"] as const,
-    ({ queryKey }) => {
+  const tabsByVirtualHostQuery = useQuery({
+    queryKey: ["tabs-by-virtualhost"] as const,
+    queryFn: ({ queryKey }) => {
       return client.getTabsByVirtualHost();
     },
-  );
+  });
   return {
     tab: tabsByVirtualHostQuery.data ?? [],
     isLoading: tabsByVirtualHostQuery.isLoading,

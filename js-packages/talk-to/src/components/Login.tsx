@@ -3,7 +3,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { Button } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { OpenK9Client } from "./client";
 
 export function Login({
@@ -20,13 +20,13 @@ export function Login({
 	const handleLogin = async () => {
 		await client.authenticate();
 		setAuthenticated(true);
-		queryClient.invalidateQueries(["user-profile"]);
+		queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 	};
 
 	const handleLogout = async () => {
 		await client.deauthenticate();
 		setAuthenticated(false);
-		queryClient.invalidateQueries(["user-profile"]);
+		queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 	};
 
 	return (

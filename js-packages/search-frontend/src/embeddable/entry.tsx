@@ -2,7 +2,7 @@ import React from "react";
 import type { Moment } from "moment";
 import type { FocusedInputShape } from "react-dates";
 import ReactDOM from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as RestApi from "../components/client";
 import {
   OpenK9Client,
@@ -58,6 +58,7 @@ export class OpenK9 {
         queries: {
           refetchOnWindowFocus: false,
           notifyOnChangeProps: ["data", "error"], // for better performance
+          retry: 3, // also for the fetches started while suspending, as in react-query 3
         },
       },
     });

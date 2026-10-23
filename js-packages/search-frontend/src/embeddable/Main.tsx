@@ -4,7 +4,7 @@ import isEqual from "lodash/isEqual";
 import React from "react";
 import ReactDOM from "react-dom";
 import { I18nextProvider, useTranslation } from "react-i18next";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ActiveFilter } from "../components/ActiveFilters";
 import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
@@ -1489,7 +1489,7 @@ function useSearch({
     Boolean(configuration.useQueryAnalysis),
   );
   const queryAnalysisSuggestions = !configuration.useQueryAnalysis
-    ? { data: undefined, isPreviousData: false }
+    ? { data: undefined, isPlaceholderData: false }
     : queryAnalysisSuggestionsQuery;
 
   const spansSuggestions = React.useMemo(
@@ -1511,7 +1511,7 @@ function useSearch({
     Boolean(configuration.useQueryAnalysis),
   );
   const queryAnalysisSearch = !configuration.useQueryAnalysis
-    ? { data: undefined, isPreviousData: false }
+    ? { data: undefined, isPlaceholderData: false }
     : queryAnalysisSearchQuery;
 
   const spansSearch = React.useMemo(
@@ -1660,7 +1660,7 @@ function useSearch({
   const isQueryAnalysisComplete =
     selectionsState.textOnChange === debouncedOnChange.textOnChange &&
     queryAnalysisSuggestions.data !== undefined &&
-    !queryAnalysisSuggestions.isPreviousData;
+    !queryAnalysisSuggestions.isPlaceholderData;
 
   const counterTotalFilters = React.useMemo(
     () =>
@@ -1772,7 +1772,7 @@ function useQueryAnalysisWithoutSearch({
     !configuration.useQueryAnalysis ||
     (selectionsState.textOnChange === debounced.textOnChange &&
       queryAnalysis.data !== undefined &&
-      !queryAnalysis.isPreviousData);
+      !queryAnalysis.isPlaceholderData);
 
   return {
     spansSuggestions: spans,
@@ -1856,20 +1856,29 @@ function useTabs(
 
 function useRecoveryDataBackEnd() {
   const client = useOpenK9Client();
-  const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
-    return await client.handle_dynamic_filters();
+  const dynamicFilters = useQuery({
+    queryKey: ["handle-dynamic-filters", {}],
+    queryFn: async () => {
+      return await client.handle_dynamic_filters();
+    },
   });
-  const languageQuery = useQuery(["language", {}], async () => {
-    return await client.getLanguageDefault();
+  const languageQuery = useQuery({
+    queryKey: ["language", {}],
+    queryFn: async () => {
+      return await client.getLanguageDefault();
+    },
   });
-  const whoIsDynamicResponse = useQuery(
-    ["refresh-components", {}],
-    async () => {
+  const whoIsDynamicResponse = useQuery({
+    queryKey: ["refresh-components", {}],
+    queryFn: async () => {
       return await client.getRefreshFilters();
     },
-  );
-  const languages = useQuery(["date-label-languages", {}], async () => {
-    return await client.getLanguages();
+  });
+  const languages = useQuery({
+    queryKey: ["date-label-languages", {}],
+    queryFn: async () => {
+      return await client.getLanguages();
+    },
   });
 
   return {
@@ -2214,21 +2223,21 @@ function calculateSpans(
 
 function useQueryAnalysis(request: AnalysisRequest, enabled: boolean) {
   const client = useOpenK9Client();
-  return useQuery(
-    ["query-anaylis", request] as const,
-    async ({ queryKey: [, request] }) =>
+  return useQuery({
+    queryKey: ["query-anaylis", request] as const,
+    queryFn: async ({ queryKey: [, request] }) =>
       fixQueryAnalysisResult(await client.fetchQueryAnalysis(request)),
-    { enabled },
-  );
+    enabled,
+  });
 }
 
 function useQueryAnalysisWithoutSearchData(request: AnalysisRequest) {
   const client = useOpenK9Client();
-  return useQuery(
-    ["query-anaylis", request] as const,
-    async ({ queryKey: [, request] }) =>
+  return useQuery({
+    queryKey: ["query-anaylis", request] as const,
+    queryFn: async ({ queryKey: [, request] }) =>
       fixQueryAnalysisResult(await client.fetchQueryAnalysis(request)),
-  );
+  });
 }
 // TODO: togliere una volta implementata gestione sugestion sovrapposte
 function fixQueryAnalysisResult(data: AnalysisResponse | null) {

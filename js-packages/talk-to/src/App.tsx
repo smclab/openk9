@@ -2,7 +2,7 @@ import { Box, Button, CssBaseline } from "@mui/material";
 import { keyframes, ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
 import "./App.css";
 import { getUserProfile } from "./components/authentication";
@@ -241,18 +241,16 @@ export default App;
 function useChatData(userId: string, chatId: { id: string | null; isNew: boolean } | null) {
 	const client = OpenK9Client();
 
-	const initialMessagesQuery = useQuery(
-		["initial-message", chatId?.id as string],
-		async () => {
+	const initialMessagesQuery = useQuery({
+		queryKey: ["initial-message", chatId?.id as string],
+		queryFn: async () => {
 			if (chatId?.isNew) {
 				return { messages: [], retrieve_from_uploaded_documents: undefined };
 			}
 			return await client.getInitialMessages(chatId?.id || "");
 		},
-		{
-			enabled: !!chatId?.id,
-		},
-	);
+		enabled: !!chatId?.id,
+	});
 
 	return {
 		initialMessages: {

@@ -1,4 +1,4 @@
-import { useQuery } from "react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOpenK9Client } from "./client";
 import groupBy from "lodash/groupBy";
 import mapValues from "lodash/mapValues";
@@ -15,9 +15,10 @@ export type Renderers = {
 
 export function useRenderers(): Renderers | undefined {
   const client = useOpenK9Client();
-  const { data: renderers } = useQuery(
-    ["renderers"],
-    async () => {
+  const queryClient = useQueryClient();
+  const options = queryOptions({
+    queryKey: ["renderers"],
+    queryFn: async () => {
       const templateIds = await client.getTemplatesByVirtualHost();
       const templates = (
         await Promise.all(
@@ -37,7 +38,16 @@ export function useRenderers(): Renderers | undefined {
       const detailRenderers = mapValues(byPriority, ([{ detail }]) => detail);
       return { resultRenderers, detailRenderers };
     },
-    { suspense: true },
-  );
-  return renderers;
+    // what react-query 3 did with suspense: true
+    staleTime: 1000,
+    throwOnError: true,
+  });
+  const query = useQuery(options);
+  // like suspense: true in react-query 3: suspend while nothing can be shown, send a failure to the error boundary
+  if (query.isLoading) {
+    const state = queryClient.getQueryState(options.queryKey);
+    if (state?.status === "error") throw state.error;
+    throw queryClient.query(options).catch(() => undefined);
+  }
+  return query.data;
 }

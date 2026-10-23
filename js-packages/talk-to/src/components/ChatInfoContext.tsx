@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { OpenK9Client } from "./client";
 
 /** Mirrors the backend `Bucket.RetrieveType` enum returned by `GET /api/datasource/buckets/current`. */
@@ -29,16 +29,14 @@ export const ChatInfoContext: React.FC<{ children: React.ReactNode }> = ({ child
 	const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 	const [language, setLanguage] = useState<string>("en_US");
 
-	const { data, isLoading, error } = useQuery(
-		"user-info",
-		async () => {
+	const { data, isLoading, error } = useQuery({
+		queryKey: ["user-info"],
+		queryFn: async () => {
 			return client.getUserInfo();
 		},
-		{
-			staleTime: Infinity,
-			cacheTime: Infinity,
-		},
-	);
+		staleTime: Infinity,
+		gcTime: Infinity,
+	});
 
 	useEffect(() => {
 		if (data) {

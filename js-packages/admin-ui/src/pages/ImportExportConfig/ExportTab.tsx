@@ -181,9 +181,9 @@ export function ExportTab() {
             <Button
               variant="contained"
               startIcon={
-                exportMutation.isLoading ? <CircularProgress size={16} color="inherit" /> : <DownloadOutlinedIcon />
+                exportMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <DownloadOutlinedIcon />
               }
-              disabled={exportMutation.isLoading}
+              disabled={exportMutation.isPending}
               onClick={() => exportMutation.mutate()}
             >
               {t("pages.admin-settings.import-export.export-button")}
