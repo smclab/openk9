@@ -66,6 +66,15 @@ def debug_extra(logger, **fields):
     return "".join(f" {key}={value!r}" for key, value in fields.items())
 
 
+def log_context(**identifiers):
+    """Render the identifiers every record of a request carries.
+
+    Only the ones actually set are rendered, so an unauthenticated turn does
+    not pad each line with empty fields.
+    """
+    return " ".join(f"{key}={value}" for key, value in identifiers.items() if value)
+
+
 def content_fingerprint(label, text):
     """Describe ``text`` without disclosing it, as ``<label>_chars`` and
     ``<label>_hash``.

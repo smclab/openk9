@@ -22,7 +22,7 @@ Sono normali ``pydantic.BaseModel`` (stesso stile di ``app/models/models.py``). 
 diventano ``output_type`` degli agent o parametri tipati dei tool.
 """
 
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -124,3 +124,20 @@ class DocumentRef(BaseModel):
     url: Optional[str] = None
     score: Optional[float] = None
     domain: Optional[str] = None
+
+
+# ── Orchestratore — output finale ──
+
+
+class OrchestratorOutput(BaseModel):
+    """Output finale dell'orchestratore (output_type dell'Agent)."""
+
+    status: Literal["ok", "unanswerable", "error"]
+    message: str
+    used_document_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "id effettivamente citati nel comporre la risposta; risolti a DocumentRef (via i "
+            "risultati Discovery accumulati) per l'evento SSE DOCUMENT"
+        ),
+    )

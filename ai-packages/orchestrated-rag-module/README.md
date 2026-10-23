@@ -13,8 +13,11 @@ The module is being built from the proof of concept of #2262, one issue at a
 time, under the roadmap #2193. For now it serves every route that does not
 generate an answer:
 
-- `/api/rag/generate`, `/api/rag/chat` and `/api/rag/chat-tool` answer with a
-  single `ERROR` event until the pipeline is wired;
+- `/api/rag/generate`, `/api/rag/chat` and `/api/rag/chat-tool` answer through
+  the orchestrator and the Discovery agent, in real streaming, citing only the
+  documents the answer uses. The conversation history, the guardrails, the
+  intent detection and the uploaded documents are not wired yet: every turn is
+  answered on its own;
 - `/api/rag/evaluate` answers `501 Not Implemented`;
 - chat management (`/api/rag/user-chats`, `/api/rag/chat/{chat_id}`), uploads,
   `embed-domains`, `embed-guardrails` and `/health` work as in

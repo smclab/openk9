@@ -68,6 +68,8 @@ class AgenticDeps:
     #: consegna: sono il contesto su cui il Verifier giudica la risposta. ``discovered`` contiene
     #: anche i candidati scartati, che l'orchestratore non ha mai visto.
     delivered_ids: list[str] = field(default_factory=list)
+    #: sotto-domande delegate al Discovery in questo turno (tetto: ``MAX_DISCOVERIES_PER_TURN``)
+    discoveries_run: int = 0
     #: token stimati dei documenti gia' consegnati all'orchestratore in questo turno
     delivered_tokens: float = 0.0
     def retrieve_top_k_args(self) -> dict:

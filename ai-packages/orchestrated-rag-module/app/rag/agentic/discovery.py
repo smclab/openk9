@@ -45,7 +45,7 @@ from app.rag.agentic.contracts import (
     SubAgentRequest,
 )
 from app.rag.agentic.deps import AgenticDeps
-from app.utils.logger import get_logger
+from app.utils.logger import get_logger, log_context
 
 logger = get_logger(__name__)
 
@@ -166,11 +166,10 @@ def _build_discovery_agent(model, store: _CandidateStore, deps: AgenticDeps) -> 
             f"[discovery] tool=retriever q={request.question!r} "
             f"domains={request.domains} -> {len(records)} candidati"
         )
-        logger.info(
-            f"[retriever] retrieved {len(records)} docs domains={domains} "
-            f"tenant_id={ctx.deps.tenant_id} user_id={ctx.deps.user_id} "
-            f"chat_id={ctx.deps.chat_id}"
+        context = log_context(
+            tenant_id=ctx.deps.tenant_id, user_id=ctx.deps.user_id, chat_id=ctx.deps.chat_id
         )
+        logger.info(f"[retriever] retrieved {len(records)} docs domains={domains} {context}")
         store.add_many(records)
 
         # espone all'LLM SOLO id + anteprima (niente score: confonde il modello, design §4)

@@ -15,18 +15,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""Until the orchestrated pipeline is wired, every RAG route answers with the
-ERROR event of an unexpected failure, so a client stops waiting at once."""
+"""A RAG request goes from the route to the orchestrator and back as a stream
+of SSE events. The LLM is a test model that answers without delegating, so
+neither OpenSearch nor a provider is reached."""
 
 import json
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic_ai.models.test import TestModel
 
 import app.server as server
+from app.rag.agentic import entrypoint
 
 HEADERS = {"x-tenant-id": "tenant-1"}
+ANSWER = "OpenK9 è un motore di ricerca. " * 4
 
 ROUTES = [
     (
@@ -60,13 +64,18 @@ ROUTES = [
 @pytest.fixture
 def client(monkeypatch):
     get_configurations = MagicMock(
-        return_value={"rag_configuration": {}, "llm_configuration": {}}
+        return_value={"rag_configuration": {}, "llm_configuration": {"context_window": 8192}}
     )
     monkeypatch.setattr(server, "get_configurations", get_configurations)
+    model = TestModel(
+        call_tools=[],
+        custom_output_args={"status": "ok", "message": ANSWER, "used_document_ids": []},
+    )
+    monkeypatch.setattr(entrypoint, "build_model", lambda _configuration: model)
     return TestClient(server.app)
 
 
-def _sse_events(response):
+def _events(response):
     return [
         json.loads(line.strip()[len("data:") :].strip())
         for line in response.text.splitlines()
@@ -75,10 +84,11 @@ def _sse_events(response):
 
 
 @pytest.mark.parametrize("path, body", ROUTES, ids=["generate", "chat", "chat-tool"])
-def test_rag_route_answers_with_a_single_error_event(path, body, client):
-    response = client.post(path, json=body, headers=HEADERS)
+def test_the_answer_is_streamed_as_chunks(path, body, client):
+    events = _events(client.post(path, json=body, headers=HEADERS))
 
-    assert response.status_code == 200
-    assert _sse_events(response) == [
-        {"chunk": "RAG pipeline not available yet", "type": "ERROR"}
-    ]
+    types = [event["type"] for event in events]
+    assert types[0] == "START"
+    assert set(types[1:-1]) == {"CHUNK"}
+    assert types[-1] == "END"
+    assert "".join(e["chunk"] for e in events if e["type"] == "CHUNK") == ANSWER

@@ -15,49 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import json
+from app.rag.agentic.entrypoint import get_agentic_rag
 
-from app.utils.logger import get_logger
-
-logger = get_logger(__name__)
-
-PIPELINE_NOT_AVAILABLE_MESSAGE = "RAG pipeline not available yet"
-
-
-def get_agentic_rag(
-    rag_type,
-    search_query,
-    datasource_ids,
-    after_key,
-    suggest_keyword,
-    suggestion_category_id,
-    jwt,
-    extra,
-    sort,
-    sort_after_key,
-    language,
-    search_text,
-    chat_id,
-    user_id,
-    tenant_id,
-    retrieve_from_uploaded_documents,
-    chat_history,
-    timestamp,
-    chat_sequence_number,
-    rag_configuration,
-    llm_configuration,
-    guardrails_configuration,
-    opensearch_host,
-    grpc_host_embedding,
-    grpc_host_datasource,
-    media=None,
-):
-    """
-    Stream the answer to a RAG request.
-
-    The orchestrated pipeline is not wired yet: every request gets the ERROR
-    event that agentic-rag-module sends on an unexpected failure, with a fixed
-    chunk, so that the routes and their contract already work.
-    """
-    logger.warning(f"{PIPELINE_NOT_AVAILABLE_MESSAGE}: rag_type={rag_type}")
-    yield json.dumps({"chunk": PIPELINE_NOT_AVAILABLE_MESSAGE, "type": "ERROR"})
+__all__ = ["get_agentic_rag"]
