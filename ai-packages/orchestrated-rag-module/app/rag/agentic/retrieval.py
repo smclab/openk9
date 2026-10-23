@@ -32,6 +32,7 @@ import requests
 
 from app.external_services.grpc.grpc_client import query_parser
 from app.rag.chunk_window import get_context_window_merged
+from app.utils.embedding import query_embedding
 from app.utils.logger import get_logger
 from app.utils.opensearch_client import get_opensearch_client
 
@@ -315,3 +316,44 @@ def retrieve_documents(
         )
 
     return documents
+
+
+def retrieve_guardrail_documents(
+    *,
+    opensearch_host: str,
+    grpc_host_embedding: str,
+    embedding_model_configuration: dict,
+    index: str,
+    search_text: str,
+) -> list[dict]:
+    """
+    Search ``search_text`` among the guardrail documents of a tenant.
+
+    Tenant isolation comes from ``index``: the query applies no filter. It is a
+    pure KNN query, so each score is an absolute similarity that the caller can
+    hold against a fixed threshold. A text with nothing to embed, or a missing
+    index, finds nothing.
+
+    :return: One dict per hit, with ``document_id``, ``score`` and ``content``.
+    """
+    vector = query_embedding(grpc_host_embedding, embedding_model_configuration, search_text)
+    if vector is None:
+        logger.debug(f"[guardrail_retriever] nothing to embed, search skipped index={index}")
+        return []
+    client = get_opensearch_client(opensearch_host)
+    if not client.indices.exists(index=index):
+        logger.debug(f"[guardrail_retriever] index missing, search skipped index={index}")
+        return []
+    response = client.search(
+        body={"query": {"knn": {"vector": {"vector": vector, "k": 10}}}}, index=index
+    )
+    hits = response["hits"]["hits"]
+    logger.debug(f"[guardrail_retriever] index={index} hits={len(hits)}")
+    return [
+        {
+            "document_id": hit["_source"].get("document_id"),
+            "score": hit.get("_score") or 0,
+            "content": hit["_source"].get("chunkText", ""),
+        }
+        for hit in hits
+    ]

@@ -35,7 +35,7 @@ import asyncio
 import json
 import time
 
-from app.rag.agentic import orchestrator, streaming
+from app.rag.agentic import guardrails, orchestrator, streaming
 from app.rag.agentic.deps import AgenticDeps
 from app.rag.agentic.models_factory import build_model
 from app.rag.agentic.persistence import (
@@ -104,19 +104,34 @@ async def run_turn(
     chat_sequence_number: int = 1,
     retrieve_from_uploaded_documents=None,
     enable_conversation_title=False,
+    guardrails_configuration=None,
 ):
     """
     Answer ``search_text`` and yield the SSE events of the answer as JSON strings.
 
-    The history of the chat comes from ``store`` from the second turn on, and
-    the turn is saved there with its title once the answer has been delivered.
+    The input guardrail comes first: a blocked query gets only the GUARDRAIL and
+    END events, and the turn is not saved. The history of the chat comes from
+    ``store`` from the second turn on, and the turn is saved there with its
+    title once the answer has been delivered.
 
     :param rag_type: The RAG type of the request.
     :param search_text: The question of the user.
     :param deps: The deps of the request.
     :param store: The conversation store: OpenSearch for a logged user, the
         history sent by the client for an anonymous one.
+    :param guardrails_configuration: The guardrails of the tenant.
     """
+    verdict = await guardrails.input_guardrail(
+        query=search_text,
+        guardrails_configuration=guardrails_configuration,
+        model=deps.orchestrator_model,
+        deps=deps,
+    )
+    if verdict not in (None, guardrails.SAFE):
+        yield json.dumps({"chunk": GUARDRAIL_VIOLATION_MESSAGE, "type": "GUARDRAIL"})
+        yield json.dumps({"chunk": "", "type": "END"})
+        return
+
     message_history = (
         store.load_message_history(chat_id) if chat_sequence_number > 1 else []
     )
@@ -232,7 +247,8 @@ async def get_agentic_rag(
     Stream the answer to a RAG request, with the signature of ``chain.get_agentic_rag``.
 
     Every request leaves a ``[request] start`` record and a ``[request] end`` one
-    with its outcome (COMPLETED, BLOCKED_OUTPUT, ERROR) and its duration.
+    with its outcome (COMPLETED, BLOCKED_INPUT, BLOCKED_OUTPUT, ERROR) and its
+    duration.
     """
     started_at = time.monotonic()
     outcome = "COMPLETED"
@@ -286,9 +302,13 @@ async def get_agentic_rag(
             chat_sequence_number=chat_sequence_number,
             retrieve_from_uploaded_documents=retrieve_from_uploaded_documents,
             enable_conversation_title=rag_configuration.get("enable_conversation_title"),
+            guardrails_configuration=guardrails_configuration,
         ):
-            if json.loads(event)["type"] == "ERROR":
+            event_type = json.loads(event)["type"]
+            if event_type == "ERROR":
                 outcome = "ERROR"
+            elif event_type == "GUARDRAIL":
+                outcome = "BLOCKED_INPUT"
             yield event
 
     except Exception as e:  # noqa: BLE001
