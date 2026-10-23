@@ -24,7 +24,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 # Define variables
-RAG_MODULE_DOCKER_IMAGE_NAME := agentic-rag-module
+RAG_MODULE_DOCKER_IMAGE_NAME := orchestrated-rag-module
 CONFIG_FILE := python_modules_config.txt
 GIT_REPO_ROOT := $(shell git rev-parse --show-toplevel 2>/dev/null)
 CONFIG_PATH := $(if $(GIT_REPO_ROOT),$(GIT_REPO_ROOT)/$(CONFIG_FILE),)
@@ -34,7 +34,7 @@ MODE := cpu
 help:
 	@echo "Usage: make [target]"
 	@echo ""
-	@echo "OpenK9 Agentic RAG Module Management"
+	@echo "OpenK9 Orchestrated RAG Module Management"
 	@echo ""
 	@echo "Targets:"
 	@echo "  check_commands              Verify required tools (git, docker) and environment"

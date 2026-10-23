@@ -92,7 +92,7 @@ def _rewritten_checkpoint(seq, original, rewritten, answer):
 
 
 def _document(document_id, title):
-    """A context document as langgraph serializes it into the checkpoint."""
+    """A context document as it is serialized into the checkpoint."""
     return {
         "kwargs": {
             "metadata": {

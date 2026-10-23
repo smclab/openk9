@@ -21,7 +21,6 @@ import secrets
 from contextlib import asynccontextmanager
 from enum import Enum
 from typing import Annotated
-from urllib.parse import urlparse, urlunparse
 
 import uvicorn
 from fastapi import (
@@ -47,7 +46,6 @@ from app.external_services.grpc.grpc_client import (
 )
 from app.models import models
 from app.rag.chain import get_agentic_rag
-from app.rag.evaluations import evaluations
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import decode_token, unauthorized_response
 from app.utils.embedding import documents_embedding
@@ -1230,51 +1228,11 @@ async def evaluate(
     request: Request,
     headers: Annotated[models.CommonHeaders, Header()],
 ):
-    limit = evaluation_request.limit
-    start_time = evaluation_request.start_time
-    end_time = evaluation_request.end_time
-    evaluate_rag_router = evaluation_request.evaluateRagRouter
-    evaluate_retriever = evaluation_request.evaluateRetriever
-    evaluate_response = evaluation_request.evaluateResponse
-
-    rag_type = RagType.SIMPLE_GENERATE.value
-
-    if headers.x_tenant_id:
-        tenant_id = headers.x_tenant_id
-    else:
-        logger.error("x_tenant_id header is missing or empty.")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_tenant_id header.",
-        )
-
-    configurations = get_configurations(
-        rag_type=rag_type,
-        grpc_host=GRPC_DATASOURCE_HOST,
-        tenant_id=tenant_id,
+    # The span evaluations are rebuilt on PydanticAI in a later issue.
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Evaluation not available yet.",
     )
-
-    rag_configuration = configurations["rag_configuration"]
-    llm_configuration = configurations["llm_configuration"]
-
-    parsed_url = urlparse(ARIZE_PHOENIX_ENDPOINT)
-    base_url = urlunparse((parsed_url.scheme, parsed_url.netloc, "", "", "", ""))
-
-    evaluated_spans = evaluations(
-        rag_configuration,
-        llm_configuration,
-        ARIZE_PHOENIX_PROJECT_NAME,
-        base_url,
-        limit,
-        start_time,
-        end_time,
-        evaluate_rag_router,
-        evaluate_retriever,
-        evaluate_response,
-    )
-
-    content = {"message": f"Spans evaluated: {evaluated_spans}", "status": "success"}
-    return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 
 SEARCH_PIPELINE = "nlp-guardrails-documents-search-pipeline"

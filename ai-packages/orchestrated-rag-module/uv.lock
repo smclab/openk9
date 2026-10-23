@@ -10,8 +10,8 @@ supported-markers = [
     "sys_platform == 'darwin'",
 ]
 conflicts = [[
-    { package = "agentic-rag-module", group = "cpu" },
-    { package = "agentic-rag-module", group = "gpu" },
+    { package = "orchestrated-rag-module", group = "cpu" },
+    { package = "orchestrated-rag-module", group = "gpu" },
 ]]
 
 [[package]]
@@ -25,162 +25,14 @@ dependencies = [
     { name = "psutil" },
     { name = "pyyaml" },
     { name = "safetensors" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f5/b5/1d3ed029ac71d3f2961346829a268da923698e9fd63f218f78841f216bfd/accelerate-1.15.0.tar.gz", hash = "sha256:5654f8c5eaa0d4fa68b33e287a97765da6849bf6d51dcac874e73fbbddfb6134", size = 422615, upload-time = "2026-09-09T13:04:49.078Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/4c/34f0450479d01195027260da68d8a3880683f1640c3ca5adf64acb3185f1/accelerate-1.15.0-py3-none-any.whl", hash = "sha256:97eacca0b73e45cb867dbf8c5d5d4dc32219544300e0c8992c7334dc2ef33cec", size = 394295, upload-time = "2026-09-09T13:04:47.331Z" },
-]
-
-[[package]]
-name = "agentic-rag-module"
-version = "2026.3.0.dev0"
-source = { editable = "." }
-default-groups = ["cpu", "dev"]
-dependencies = [
-    { name = "aiofiles" },
-    { name = "aiohttp" },
-    { name = "apscheduler" },
-    { name = "arize-phoenix" },
-    { name = "arize-phoenix-client" },
-    { name = "arize-phoenix-evals" },
-    { name = "arize-phoenix-otel" },
-    { name = "authlib" },
-    { name = "cryptography" },
-    { name = "fastapi" },
-    { name = "filelock" },
-    { name = "graphql-core" },
-    { name = "grpcio" },
-    { name = "grpcio-tools" },
-    { name = "h11" },
-    { name = "ipython" },
-    { name = "langchain" },
-    { name = "langchain-aws" },
-    { name = "langchain-classic" },
-    { name = "langchain-core" },
-    { name = "langchain-docling" },
-    { name = "langchain-google-community" },
-    { name = "langchain-google-genai" },
-    { name = "langchain-ibm" },
-    { name = "langchain-ollama" },
-    { name = "langchain-openai" },
-    { name = "langchain-text-splitters" },
-    { name = "langgraph" },
-    { name = "langgraph-checkpoint" },
-    { name = "langgraph-opensearch" },
-    { name = "langgraph-prebuilt" },
-    { name = "llama-index" },
-    { name = "llama-index-cli" },
-    { name = "llama-index-core" },
-    { name = "openinference-instrumentation-langchain" },
-    { name = "opensearch-py" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp" },
-    { name = "opentelemetry-exporter-otlp-proto-common" },
-    { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
-    { name = "opentelemetry-instrumentation" },
-    { name = "opentelemetry-proto" },
-    { name = "opentelemetry-sdk" },
-    { name = "opentelemetry-semantic-conventions" },
-    { name = "protobuf" },
-    { name = "pydantic-settings" },
-    { name = "pyjwt" },
-    { name = "python-dotenv" },
-    { name = "python-multipart" },
-    { name = "requests" },
-    { name = "setuptools" },
-    { name = "sse-starlette" },
-    { name = "starlette" },
-    { name = "uvicorn" },
-]
-
-[package.dev-dependencies]
-cpu = [
-    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torchvision", version = "0.29.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torchvision", version = "0.29.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-]
-dev = [
-    { name = "pytest" },
-]
-gpu = [
-    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux'" },
-    { name = "torchvision", version = "0.29.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux'" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiofiles", specifier = "==24.1.0" },
-    { name = "aiohttp", specifier = "==3.14.3" },
-    { name = "apscheduler", specifier = "==3.11.0" },
-    { name = "arize-phoenix", specifier = "==13.15.0" },
-    { name = "arize-phoenix-client", specifier = "==2.1.0" },
-    { name = "arize-phoenix-evals", specifier = "==2.11.0" },
-    { name = "arize-phoenix-otel", specifier = "==0.15.0" },
-    { name = "authlib", specifier = "==1.6.9" },
-    { name = "cryptography", specifier = "==50.0.0" },
-    { name = "fastapi", specifier = "==0.137.0" },
-    { name = "filelock", specifier = "==3.20.1" },
-    { name = "graphql-core", specifier = "==3.2.7" },
-    { name = "grpcio", specifier = "==1.78.0" },
-    { name = "grpcio-tools", specifier = "==1.78.0" },
-    { name = "h11", specifier = "==0.16.0" },
-    { name = "ipython", specifier = "==9.11.0" },
-    { name = "langchain", specifier = "==1.2.12" },
-    { name = "langchain-aws", specifier = "==1.4.0" },
-    { name = "langchain-classic", specifier = "==1.0.7" },
-    { name = "langchain-core", specifier = "==1.3.3" },
-    { name = "langchain-docling", specifier = "==2.0.0" },
-    { name = "langchain-google-community", specifier = "==3.0.5" },
-    { name = "langchain-google-genai", specifier = "==4.2.1" },
-    { name = "langchain-ibm", specifier = "==1.0.4" },
-    { name = "langchain-ollama", specifier = "==1.0.1" },
-    { name = "langchain-openai", specifier = "==1.1.11" },
-    { name = "langchain-text-splitters", specifier = "==1.1.2" },
-    { name = "langgraph", specifier = "==1.1.3" },
-    { name = "langgraph-checkpoint", specifier = "==2.1.2" },
-    { name = "langgraph-opensearch", specifier = "==0.1.5" },
-    { name = "langgraph-prebuilt", specifier = "==1.0.8" },
-    { name = "llama-index", specifier = "==0.14.18" },
-    { name = "llama-index-cli", specifier = "==0.5.6" },
-    { name = "llama-index-core", specifier = "==0.14.18" },
-    { name = "openinference-instrumentation-langchain", specifier = "==0.1.61" },
-    { name = "opensearch-py", specifier = "==3.1.0" },
-    { name = "opentelemetry-api", specifier = "==1.44.0" },
-    { name = "opentelemetry-exporter-otlp", specifier = "==1.44.0" },
-    { name = "opentelemetry-exporter-otlp-proto-common", specifier = "==1.44.0" },
-    { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = "==1.44.0" },
-    { name = "opentelemetry-exporter-otlp-proto-http", specifier = "==1.44.0" },
-    { name = "opentelemetry-instrumentation", specifier = "==0.65b0" },
-    { name = "opentelemetry-proto", specifier = "==1.44.0" },
-    { name = "opentelemetry-sdk", specifier = "==1.44.0" },
-    { name = "opentelemetry-semantic-conventions", specifier = "==0.65b0" },
-    { name = "protobuf", specifier = "==6.33.5" },
-    { name = "pydantic-settings", specifier = "==2.15.0" },
-    { name = "pyjwt", specifier = "==2.14.0" },
-    { name = "python-dotenv", specifier = "==1.2.2" },
-    { name = "python-multipart", specifier = "==0.0.30" },
-    { name = "requests", specifier = "==2.34.2" },
-    { name = "setuptools", specifier = "==82.0.1" },
-    { name = "sse-starlette", specifier = "==3.3.3" },
-    { name = "starlette", specifier = "==1.3.1" },
-    { name = "uvicorn", specifier = "==0.42.0" },
-]
-
-[package.metadata.requires-dev]
-cpu = [
-    { name = "torch", specifier = "==2.14.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "agentic-rag-module", group = "cpu" } },
-    { name = "torchvision", specifier = "==0.29.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "agentic-rag-module", group = "cpu" } },
-]
-dev = [{ name = "pytest", specifier = "==9.1.0" }]
-gpu = [
-    { name = "torch", marker = "sys_platform == 'linux'", specifier = "==2.14.1", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "agentic-rag-module", group = "gpu" } },
-    { name = "torchvision", marker = "sys_platform == 'linux'", specifier = "==0.29.1", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "agentic-rag-module", group = "gpu" } },
 ]
 
 [[package]]
@@ -503,34 +355,6 @@ wheels = [
 ]
 
 [[package]]
-name = "boto3"
-version = "1.43.110"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "botocore" },
-    { name = "jmespath" },
-    { name = "s3transfer" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/6e/fe973c8ce8fe4f59d6df6128600b9cc7c4ed75788bed5f5f615f88379529/boto3-1.43.110.tar.gz", hash = "sha256:0251b67d99cc0e7b958db48e7dd149094d453377fcd03299fde7329f975db2e6", size = 112658, upload-time = "2026-10-08T19:30:47.85Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1c/97/3295f3f87138c3647be183e08b4f585ae26e794e7ae9f3c44c24880483bd/boto3-1.43.110-py3-none-any.whl", hash = "sha256:74b811e6def4b30d685d4539a9ead3796f0e03a2112f00134e0f5e583ad8b098", size = 140042, upload-time = "2026-10-08T19:30:46.512Z" },
-]
-
-[[package]]
-name = "botocore"
-version = "1.43.110"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "jmespath" },
-    { name = "python-dateutil" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a7/d8/7a2320aabf1b1e62580e990f8a52760e396f4ec56e3ebcbce07d23acc031/botocore-1.43.110.tar.gz", hash = "sha256:888cd54d59502e2195dac30805e5c08dd1be5416932a3793373e81b8f463e006", size = 16317803, upload-time = "2026-10-08T19:30:43.376Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ca/6c/bea5940931819d2f8e4a467af8b40302846183bf1e280e31c5a4727c8476/botocore-1.43.110-py3-none-any.whl", hash = "sha256:9f5ae5685b4d7129e32f6084ae8683d5857a1d60d77528b8da77bb53b9dff48f", size = 16015248, upload-time = "2026-10-08T19:30:38.172Z" },
-]
-
-[[package]]
 name = "cachetools"
 version = "7.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -553,7 +377,7 @@ name = "cffi"
 version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser", marker = "implementation_name != 'PyPy' or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "pycparser", marker = "implementation_name != 'PyPy' or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9e/ef/008a1939e372c06329a3fce4279c02f328488f3526744906eeec3da7ad5f/cffi-2.1.1.tar.gz", hash = "sha256:dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be", size = 530807, upload-time = "2026-08-03T21:21:18.939Z" }
 wheels = [
@@ -656,7 +480,7 @@ name = "cryptography"
 version = "50.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/de/41/6cbdcf9142d00fe82836fbb51e503e58088575cf7a0fe1dbff6695bf0840/cryptography-50.0.0.tar.gz", hash = "sha256:eeac2acb5a20ed25e0ad6d1df9891a520b78b404266b6d11778f25d5d691a6c9", size = 880201, upload-time = "2026-07-31T14:25:10.11Z" }
 wheels = [
@@ -691,7 +515,7 @@ name = "cuda-bindings"
 version = "13.4.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cuda-pathfinder", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "cuda-pathfinder", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/65/11/1293429c1c3a3e19b551275e65efddd122a905bbe7e368816a59f3ef2a41/cuda_bindings-13.4.3-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:bfbd3f7d4ac04dd41dc49121b9e408c8283992f47124c2290ecb79bbbadcca8e", size = 6488226, upload-time = "2026-09-23T02:22:00.578Z" },
@@ -716,43 +540,43 @@ wheels = [
 
 [package.optional-dependencies]
 cublas = [
-    { name = "nvidia-cublas", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cublas", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 cudart = [
-    { name = "nvidia-cuda-runtime", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cuda-runtime", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 cufft = [
-    { name = "nvidia-cufft", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cufft", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 cufile = [
-    { name = "nvidia-cufile", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cufile", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 cupti = [
-    { name = "nvidia-cuda-cupti", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cuda-cupti", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 curand = [
-    { name = "nvidia-curand", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-curand", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 cusolver = [
-    { name = "nvidia-cublas", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-cusolver", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-cusparse", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cublas", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-cusolver", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-cusparse", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 cusparse = [
-    { name = "nvidia-cusparse", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cusparse", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 nvjitlink = [
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 nvrtc = [
-    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 nvtx = [
-    { name = "nvidia-nvtx", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-nvtx", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (platform_machine == 'aarch64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (platform_machine == 'x86_64' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 
 [[package]]
@@ -904,14 +728,14 @@ dependencies = [
     { name = "numpy" },
     { name = "pillow" },
     { name = "safetensors", extra = ["torch"] },
-    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torchvision", version = "0.29.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torchvision", version = "0.29.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "torchvision", version = "0.29.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torchvision", version = "0.29.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torchvision", version = "0.29.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torchvision", version = "0.29.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torchvision", version = "0.29.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torchvision", version = "0.29.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
     { name = "transformers" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/69/ee/7dd19487bf333320f0fc73eddcb42347d9f266310ebb1a605f120987f7c1/docling_ibm_models-4.0.3.tar.gz", hash = "sha256:509e89af75e06b48500977dca11ecb6022e81b1526c90dd54587a60ccc82bdb6", size = 77649, upload-time = "2026-09-18T16:15:36.731Z" }
@@ -981,14 +805,14 @@ standard = [
     { name = "rich" },
     { name = "rtree" },
     { name = "scipy" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torchvision", version = "0.29.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torchvision", version = "0.29.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "torchvision", version = "0.29.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torchvision", version = "0.29.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torchvision", version = "0.29.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torchvision", version = "0.29.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torchvision", version = "0.29.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torchvision", version = "0.29.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
     { name = "typer" },
     { name = "websockets" },
 ]
@@ -1107,123 +931,16 @@ wheels = [
 ]
 
 [[package]]
-name = "google-api-core"
-version = "2.42.0"
+name = "genai-prices"
+version = "0.1.13"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "google-auth" },
-    { name = "googleapis-common-protos" },
-    { name = "opentelemetry-api" },
-    { name = "proto-plus" },
-    { name = "protobuf" },
-    { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ac/aa/2aa84799e6920216f8aa2866d3b43daa20f7060dcb6efc8f0449e8be0ab0/google_api_core-2.42.0.tar.gz", hash = "sha256:82cf5daa2ef1b456d4e29ff1de1a5c2995c7be3ccf4fc608184326e03390c1ee", size = 273100, upload-time = "2026-10-08T18:12:37.477Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/28/ca/fb2a5b38366bcb12990c80384b920f04b968fd834cf98be67d306c374612/google_api_core-2.42.0-py3-none-any.whl", hash = "sha256:b1bdf4f72dc4f910736ce4ba49038352effbbc309579215107649b22973a1317", size = 221364, upload-time = "2026-10-08T18:12:04.618Z" },
-]
-
-[package.optional-dependencies]
-grpc = [
-    { name = "grpcio" },
-    { name = "grpcio-status" },
-]
-
-[[package]]
-name = "google-api-python-client"
-version = "2.201.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "google-api-core" },
-    { name = "google-auth" },
-    { name = "google-auth-httplib2" },
-    { name = "httplib2" },
-    { name = "uritemplate" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/47/077e889d3c618d971d3bce4ab198c645a607276b8d4bb151cfe78d2c92bb/google_api_python_client-2.201.0.tar.gz", hash = "sha256:d5691982abd7287f53cb0b0e0c6a9984d4103cf864ea0a88cb6e4347bbaf70de", size = 16211808, upload-time = "2026-09-30T22:06:21.223Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8b/c0/221313acdee33b8e5d3fe8a06ba398fc18cfd14627816764bb00318a6065/google_api_python_client-2.201.0-py3-none-any.whl", hash = "sha256:2d9bf1ba3f12eee8ed3d0f1791ce0605d163432f496baa72d3677faa2cf097d6", size = 16812656, upload-time = "2026-09-30T22:06:18.574Z" },
-]
-
-[[package]]
-name = "google-auth"
-version = "2.61.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cryptography" },
-    { name = "pyasn1-modules" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c7/0b/9788e913f2202da49068c27ce821eebcf96319240a89d7bb11f206d6471f/google_auth-2.61.0.tar.gz", hash = "sha256:37f0815967322e8c32b12bf422531e8b637cafdaae0acbb9141117cfe6a96f23", size = 398379, upload-time = "2026-10-07T20:13:14.827Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/68/c2ff6043d93fda69e5c12a834d0be3b3fa6c762e89732160532566be621b/google_auth-2.61.0-py3-none-any.whl", hash = "sha256:ca60266a37475ae68b63bac007272f46094b3d571abe92aded329b6cfb568025", size = 268021, upload-time = "2026-10-07T20:13:13.2Z" },
-]
-
-[package.optional-dependencies]
-requests = [
-    { name = "requests" },
-]
-
-[[package]]
-name = "google-auth-httplib2"
-version = "0.4.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "google-auth" },
-    { name = "httplib2" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/bb/6d/a511ca64d5412850e351bdec6bb224e5090749bd85c186135e8fdb4fd85a/google_auth_httplib2-0.4.4.tar.gz", hash = "sha256:b931de392c20cfaa351cd789274922bd8cdc001e0e9e96de31b39d71347f8e16", size = 11221, upload-time = "2026-10-01T18:14:25.38Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/de/ea/27cf5d623efdc1cdb2632b4c872ac5092cd3895671ba1d5004e73c3f1a7c/google_auth_httplib2-0.4.4-py3-none-any.whl", hash = "sha256:bbe5d7b2401bb3a4017f4720e1e91bd273ab9a2bb60b84e65edbc0de127852da", size = 9542, upload-time = "2026-10-01T18:07:31.699Z" },
-]
-
-[[package]]
-name = "google-cloud-core"
-version = "2.8.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "google-api-core" },
-    { name = "google-auth" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/55/71/d6081acadf55d4233271c39860f0d140ef61fbdb4bceb2075e9c2905d947/google_cloud_core-2.8.0.tar.gz", hash = "sha256:365f8e4518ae81c8101b8dea5fc1c32a960badedb8b511f19db2843cbbd285d2", size = 36605, upload-time = "2026-09-29T19:25:59.275Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/ed/1b09640a565e5d34d4e517463f65a67a11f9dcdeb6b6e8220f2d06aaf489/google_cloud_core-2.8.0-py3-none-any.whl", hash = "sha256:e235b0952f7ffe7b9c71a4cf96b506d9cfb557e22557c412f0df9b7068b5d007", size = 31048, upload-time = "2026-09-29T19:25:35.361Z" },
-]
-
-[[package]]
-name = "google-cloud-modelarmor"
-version = "0.7.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "google-api-core", extra = ["grpc"] },
-    { name = "google-auth" },
-    { name = "grpcio" },
-    { name = "proto-plus" },
-    { name = "protobuf" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/68/6a109ae46d3e22b9572996be85762cbed244d24165cc361214a0a2204043/google_cloud_modelarmor-0.7.2.tar.gz", hash = "sha256:31dff476580b7ea2eff3889e1169d6b4521aa51885a7abcc369e522b3ac22abf", size = 168839, upload-time = "2026-10-01T18:17:13.992Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/93/55/98723ed4e82678ee8c3928e2b769eb56c0d47314569f8b14ee2fff0294b8/google_cloud_modelarmor-0.7.2-py3-none-any.whl", hash = "sha256:fa98c39c3847fd653dc0c15662bbfc7ca00d23438d9a62c7c4048911b18c6a03", size = 144346, upload-time = "2026-10-01T18:11:05.111Z" },
-]
-
-[[package]]
-name = "google-genai"
-version = "1.75.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "anyio" },
-    { name = "distro" },
-    { name = "google-auth", extra = ["requests"] },
-    { name = "httpx" },
+    { name = "httpx2" },
     { name = "pydantic" },
-    { name = "requests" },
-    { name = "sniffio" },
-    { name = "tenacity" },
-    { name = "typing-extensions" },
-    { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/59/3ed61240ef20b3ae6ed54e82c6f8b6d1f194947bc6679679dd6cdb037594/google_genai-1.75.0.tar.gz", hash = "sha256:56bac3991b311c93f980c0a2abcd287b672146905df1fbd71c92ed633d5a07cf", size = 539039, upload-time = "2026-05-04T22:48:54.857Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/de/119c7ba00b9ddbf629de34cf390ab472da6d7bc5df0c51cdbec900280a74/genai_prices-0.1.13.tar.gz", hash = "sha256:76c9e2dd3917fdacdf3bc562297c4591384142ea2283c477e1512fafa4e3a384", size = 134622, upload-time = "2026-10-15T09:47:04.739Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/b6/552d40e96da22921eb1fead7c14b00b5b5473a20e45959488660fab35ee2/google_genai-1.75.0-py3-none-any.whl", hash = "sha256:8dc4c096e7d6288c3087f6893f582fe52468932464781edb8193bd92b9fefb2c", size = 793726, upload-time = "2026-05-04T22:48:53.033Z" },
+    { url = "https://files.pythonhosted.org/packages/41/5a/b6b7d55148d367d07bcd3efdf24e3086ad199ea5109d0c335a872dfaac95/genai_prices-0.1.13-py3-none-any.whl", hash = "sha256:6d2b40760a2f7f5e207bac9b98de0af80e60c58ead497872a5331a7cee610477", size = 142541, upload-time = "2026-10-15T09:47:03.424Z" },
 ]
 
 [[package]]
@@ -1330,20 +1047,6 @@ wheels = [
 ]
 
 [[package]]
-name = "grpcio-status"
-version = "1.78.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "googleapis-common-protos" },
-    { name = "grpcio" },
-    { name = "protobuf" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8a/cd/89ce482a931b543b92cdd9b2888805518c4620e0094409acb8c81dd4610a/grpcio_status-1.78.0.tar.gz", hash = "sha256:a34cfd28101bfea84b5aa0f936b4b423019e9213882907166af6b3bddc59e189", size = 13808, upload-time = "2026-02-06T10:01:48.034Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/83/8a/1241ec22c41028bddd4a052ae9369267b4475265ad0ce7140974548dc3fa/grpcio_status-1.78.0-py3-none-any.whl", hash = "sha256:b492b693d4bf27b47a6c32590701724f1d3b9444b36491878fb71f6208857f34", size = 14523, upload-time = "2026-02-06T10:01:32.584Z" },
-]
-
-[[package]]
 name = "grpcio-tools"
 version = "1.78.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1414,18 +1117,6 @@ wheels = [
 ]
 
 [[package]]
-name = "httplib2"
-version = "0.32.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyparsing" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/84/f5/ccf58de92d61e3ad921119668f54ed36ca1d0cf5dcc5c1657dfb164fd78b/httplib2-0.32.0.tar.gz", hash = "sha256:48a0ef30a42db65d8f3399045e1d09ab0ba66e3b9efc360d07f80ea55d286025", size = 254283, upload-time = "2026-06-26T10:13:56.265Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/33/a0/550eec327e5f5c7b732531c489f5307efec41f047b0d703bd4ca1e5ad2db/httplib2-0.32.0-py3-none-any.whl", hash = "sha256:dc6705cacdf3fb0a2aba7629fa33c90fd93e30035db0c157325826be177e4816", size = 93148, upload-time = "2026-06-26T10:13:54.985Z" },
-]
-
-[[package]]
 name = "httpx"
 version = "0.28.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1438,15 +1129,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc", size = 141406, upload-time = "2024-12-06T15:37:23.222Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad", size = 73517, upload-time = "2024-12-06T15:37:21.509Z" },
-]
-
-[[package]]
-name = "httpx-sse"
-version = "0.4.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/0f/4c/751061ffa58615a32c31b2d82e8482be8dd4a89154f003147acee90f2be9/httpx_sse-0.4.3.tar.gz", hash = "sha256:9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d", size = 15943, upload-time = "2025-10-10T21:48:22.271Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/fd/6668e5aec43ab844de6fc74927e155a3b37bf40d7c3790e49fc0406b6578/httpx_sse-0.4.3-py3-none-any.whl", hash = "sha256:0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc", size = 8960, upload-time = "2025-10-10T21:48:21.158Z" },
 ]
 
 [[package]]
@@ -1473,7 +1155,7 @@ dependencies = [
     { name = "click" },
     { name = "filelock" },
     { name = "fsspec" },
-    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64' or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64' or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
     { name = "httpx" },
     { name = "packaging" },
     { name = "pyyaml" },
@@ -1483,59 +1165,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/25/2a/484d112c0d8fc5f665d7b65137ac9cdb2953c982391598c3597968a12ee7/huggingface_hub-1.33.0.tar.gz", hash = "sha256:367be21a201db9523eddf8aeac7048f2602c1b308691c97640d5e72ed188007e", size = 1043548, upload-time = "2026-09-24T09:49:29.971Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fc/16/963096d224b80909432dc16561a615fd33d2d13beef3ce4c63fa25e40867/huggingface_hub-1.33.0-py3-none-any.whl", hash = "sha256:04e434b06e100eddbce9a6e817d72693a7884b10a79bd67ab48080d5c07eb899", size = 846435, upload-time = "2026-09-24T09:49:28.059Z" },
-]
-
-[[package]]
-name = "ibm-cos-sdk"
-version = "2.14.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "ibm-cos-sdk-core" },
-    { name = "ibm-cos-sdk-s3transfer" },
-    { name = "jmespath" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/98/b8/b99f17ece72d4bccd7e75539b9a294d0f73ace5c6c475d8f2631afd6f65b/ibm_cos_sdk-2.14.3.tar.gz", hash = "sha256:643b6f2aa1683adad7f432df23407d11ae5adb9d9ad01214115bee77dc64364a", size = 58831, upload-time = "2025-08-01T06:35:51.722Z" }
-
-[[package]]
-name = "ibm-cos-sdk-core"
-version = "2.14.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "jmespath" },
-    { name = "python-dateutil" },
-    { name = "requests" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/7e/45/80c23aa1e13175a9deefe43cbf8e853a3d3bfc8dfa8b6d6fe83e5785fe21/ibm_cos_sdk_core-2.14.3.tar.gz", hash = "sha256:85dee7790c92e8db69bf39dae4c02cac211e3c1d81bb86e64fa2d1e929674623", size = 1103637, upload-time = "2025-08-01T06:35:41.645Z" }
-
-[[package]]
-name = "ibm-cos-sdk-s3transfer"
-version = "2.14.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "ibm-cos-sdk-core" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/ff/c9baf0997266d398ae08347951a2970e5e96ed6232ed0252f649f2b9a7eb/ibm_cos_sdk_s3transfer-2.14.3.tar.gz", hash = "sha256:2251ebfc4a46144401e431f4a5d9f04c262a0d6f95c88a8e71071da056e55f72", size = 139594, upload-time = "2025-08-01T06:35:46.403Z" }
-
-[[package]]
-name = "ibm-watsonx-ai"
-version = "1.8.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cachetools" },
-    { name = "certifi" },
-    { name = "httpx" },
-    { name = "ibm-cos-sdk" },
-    { name = "lomond" },
-    { name = "packaging" },
-    { name = "pandas" },
-    { name = "requests" },
-    { name = "tabulate" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/c1/49489cbb417206e35b85250c8b03d8ac65ddf9ba521710f60175ce599134/ibm_watsonx_ai-1.8.0.tar.gz", hash = "sha256:e2a11b4146b5942a58ccbdb63bc64c18889969e73f80a31216bf683fa42419e3", size = 742250, upload-time = "2026-09-29T08:54:57.715Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/43/4b/cc5a3bbd795a03e653ea2fad6d26456107e3295b787439afdccd480268a7/ibm_watsonx_ai-1.8.0-py3-none-any.whl", hash = "sha256:26885d661679ffc032a4102d60b0cb34cc3dca3e9e61ffa29a3c6cac30e6eab4", size = 1130617, upload-time = "2026-09-29T08:54:56.189Z" },
 ]
 
 [[package]]
@@ -1723,76 +1352,6 @@ wheels = [
 ]
 
 [[package]]
-name = "langchain"
-version = "1.2.12"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langchain-core" },
-    { name = "langgraph" },
-    { name = "pydantic" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/d8/1d/1af2fc0ac084d4781778b7846b1aed62e05006bf2d73fdf84ac3a8f5225c/langchain-1.2.12.tar.gz", hash = "sha256:ed705b5b293799f7e3e394387f398a1b71707542758283206c8c21415759d991", size = 566444, upload-time = "2026-03-11T22:21:00.712Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ca/51/09bb1cfb0b57ae9440ca56cc576e4dc792f83d030eef7637d2c516dcb0a0/langchain-1.2.12-py3-none-any.whl", hash = "sha256:60eff184b8f92c2610f5a4c9a97ad339a891adb01901e83e4df8e6c9c69cf852", size = 112373, upload-time = "2026-03-11T22:20:59.508Z" },
-]
-
-[[package]]
-name = "langchain-aws"
-version = "1.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "boto3" },
-    { name = "langchain-core" },
-    { name = "numpy" },
-    { name = "pydantic" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/31/1d/9bc0e523b8d13dcaf301cdd85ae05ce0687fdbeff2000b50346410b260d0/langchain_aws-1.4.0.tar.gz", hash = "sha256:370dcba824d68af96372a1c979c94f8d7062d268615b5395d80d1562a05fca37", size = 435753, upload-time = "2026-03-09T20:02:54.472Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/5d/8a52c067137c26db4c0ff6c0847d75cc5f34c42d21dfb031f27fa705fd52/langchain_aws-1.4.0-py3-none-any.whl", hash = "sha256:68e07276cd85bb45dc4415e417e04fbe1c76c3cf029ddd6d96e2fa981dd29cc1", size = 174854, upload-time = "2026-03-09T20:02:53.381Z" },
-]
-
-[[package]]
-name = "langchain-classic"
-version = "1.0.7"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langchain-core" },
-    { name = "langchain-text-splitters" },
-    { name = "langsmith" },
-    { name = "pydantic" },
-    { name = "pyyaml" },
-    { name = "requests" },
-    { name = "sqlalchemy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9b/78/84b5065816f348c39fefa4316f209f0135e8410216340a953bec17d9e4e4/langchain_classic-1.0.7.tar.gz", hash = "sha256:debbec8065e69b95108d2652e8d5c44f4516e19aa8d716c02ed2211c3aee099d", size = 10554118, upload-time = "2026-05-07T15:46:56.8Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/78/2d9980d028ff0523eea503a77c200e2ff252a3a75eb6e7842bcf5f9c979b/langchain_classic-1.0.7-py3-none-any.whl", hash = "sha256:d9d9be38f7aa534ed0259c2410432e34a1f80b1d491e686749bb55af56479be3", size = 1041386, upload-time = "2026-05-07T15:46:54.845Z" },
-]
-
-[[package]]
-name = "langchain-community"
-version = "0.4.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "aiohttp" },
-    { name = "dataclasses-json" },
-    { name = "httpx-sse" },
-    { name = "langchain-classic" },
-    { name = "langchain-core" },
-    { name = "langsmith" },
-    { name = "numpy" },
-    { name = "pydantic-settings" },
-    { name = "pyyaml" },
-    { name = "requests" },
-    { name = "sqlalchemy" },
-    { name = "tenacity" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/53/97/a03585d42b9bdb6fbd935282d6e3348b10322a24e6ce12d0c99eb461d9af/langchain_community-0.4.1.tar.gz", hash = "sha256:f3b211832728ee89f169ddce8579b80a085222ddb4f4ed445a46e977d17b1e85", size = 33241144, upload-time = "2025-10-27T15:20:32.504Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/a4/c4fde67f193401512337456cabc2148f2c43316e445f5decd9f8806e2992/langchain_community-0.4.1-py3-none-any.whl", hash = "sha256:2135abb2c7748a35c84613108f7ebf30f8505b18c3c18305ffaecfc7651f6c6a", size = 2533285, upload-time = "2025-10-27T15:20:30.767Z" },
-]
-
-[[package]]
 name = "langchain-core"
 version = "1.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1826,81 +1385,6 @@ wheels = [
 ]
 
 [[package]]
-name = "langchain-google-community"
-version = "3.0.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "google-api-core" },
-    { name = "google-api-python-client" },
-    { name = "google-cloud-core" },
-    { name = "google-cloud-modelarmor" },
-    { name = "grpcio" },
-    { name = "langchain" },
-    { name = "langchain-community" },
-    { name = "langchain-core" },
-    { name = "langgraph" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/86/53/f96c2bf1164984dbf6887556b759e33ce27e34d262226e9c36486cdf8ce2/langchain_google_community-3.0.5.tar.gz", hash = "sha256:63fbfb30c9937137662d88d9db805daa455c60518abf4ad50a1f72dcef37fa14", size = 357242, upload-time = "2026-01-16T14:36:41.756Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/15/079e971437d09236368a9804ad575142af3c3733a1a7589889aff73f4d5a/langchain_google_community-3.0.5-py3-none-any.whl", hash = "sha256:ec16c57243a995792880e74687f383f9be42566216570ba91029f7101add1d9b", size = 148493, upload-time = "2026-01-16T14:36:40.791Z" },
-]
-
-[[package]]
-name = "langchain-google-genai"
-version = "4.2.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "filetype" },
-    { name = "google-genai" },
-    { name = "langchain-core" },
-    { name = "pydantic" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/14/63/e7d148f903cebfef50109da71378f411166f068d66f79b9e16a62dbacf41/langchain_google_genai-4.2.1.tar.gz", hash = "sha256:7f44487a0337535897e3bba9a1d6605d722629e034f757ffa8755af0aa85daa8", size = 278288, upload-time = "2026-02-19T19:29:19.416Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/7e/46c5973bd8b10a5c4c8a77136cf536e658796380a17c740246074901b038/langchain_google_genai-4.2.1-py3-none-any.whl", hash = "sha256:a7735289cf94ca3a684d830e09196aac8f6e75e647e3a0a1c3c9dc534ceb985e", size = 66500, upload-time = "2026-02-19T19:29:18.002Z" },
-]
-
-[[package]]
-name = "langchain-ibm"
-version = "1.0.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "ibm-watsonx-ai" },
-    { name = "langchain-core" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/bb/da/10860741c411e4d36ba36e02d6a927828121c50ef7550c84f2638e1f1697/langchain_ibm-1.0.4.tar.gz", hash = "sha256:a8045822774bf8af8747084705c2da0a987215963407a87825da2182a49827df", size = 62618, upload-time = "2026-02-11T08:34:44.814Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/36/0b148baa250ab823757723fc74b6faf964569afbf5c28efc4ffe852e5afb/langchain_ibm-1.0.4-py3-none-any.whl", hash = "sha256:c583e5af73394b679ab9091889cbff604e4113bedddda976d3bb27a62498eb67", size = 50910, upload-time = "2026-02-11T08:34:42.834Z" },
-]
-
-[[package]]
-name = "langchain-ollama"
-version = "1.0.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langchain-core" },
-    { name = "ollama" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/73/51/72cd04d74278f3575f921084f34280e2f837211dc008c9671c268c578afe/langchain_ollama-1.0.1.tar.gz", hash = "sha256:e37880c2f41cdb0895e863b1cfd0c2c840a117868b3f32e44fef42569e367443", size = 153850, upload-time = "2025-12-12T21:48:28.68Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e3/46/f2907da16dc5a5a6c679f83b7de21176178afad8d2ca635a581429580ef6/langchain_ollama-1.0.1-py3-none-any.whl", hash = "sha256:37eb939a4718a0255fe31e19fbb0def044746c717b01b97d397606ebc3e9b440", size = 29207, upload-time = "2025-12-12T21:48:27.832Z" },
-]
-
-[[package]]
-name = "langchain-openai"
-version = "1.1.11"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langchain-core" },
-    { name = "openai" },
-    { name = "tiktoken" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/40/cd/439be2b8deb8bd0d4c470c7c7f66698a84d823e583c3d36a322483cb7cab/langchain_openai-1.1.11.tar.gz", hash = "sha256:44b003a2960d1f6699f23721196b3b97d0c420d2e04444950869213214b7a06a", size = 1088560, upload-time = "2026-03-09T23:02:36.894Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/0f/e4cb42848c25f65969adfb500a06dea1a541831604250fd0d8aa6e54fef5/langchain_openai-1.1.11-py3-none-any.whl", hash = "sha256:a03596221405d38d6852fb865467cb0d9ff9e79f335905eb6a576e8c4874ac71", size = 87694, upload-time = "2026-03-09T23:02:35.651Z" },
-]
-
-[[package]]
 name = "langchain-protocol"
 version = "0.0.19"
 source = { registry = "https://pypi.org/simple" }
@@ -1913,93 +1397,12 @@ wheels = [
 ]
 
 [[package]]
-name = "langchain-text-splitters"
-version = "1.1.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langchain-core" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/26/9f/6c545900fefb7b00ddfa3f16b80d61338a0ec68c31c5451eeeab99082760/langchain_text_splitters-1.1.2.tar.gz", hash = "sha256:782a723db0a4746ac91e251c7c1d57fd23636e4f38ed733074e28d7a86f41627", size = 293580, upload-time = "2026-04-16T14:20:39.162Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d3/26/1ef06f56198d631296d646a6223de35bcc6cf9795ceb2442816bc963b84c/langchain_text_splitters-1.1.2-py3-none-any.whl", hash = "sha256:a2de0d799ff31886429fd6e2e0032df275b60ec817c19059a7b46181cc1c2f10", size = 35903, upload-time = "2026-04-16T14:20:38.243Z" },
-]
-
-[[package]]
 name = "langcodes"
 version = "3.5.1"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a9/75/f9edc5d72945019312f359e69ded9f82392a81d49c5051ed3209b100c0d2/langcodes-3.5.1.tar.gz", hash = "sha256:40bff315e01b01d11c2ae3928dd4f5cbd74dd38f9bd912c12b9a3606c143f731", size = 191084, upload-time = "2025-12-02T16:22:01.627Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/dd/c1/d10b371bcba7abce05e2b33910e39c33cfa496a53f13640b7b8e10bb4d2b/langcodes-3.5.1-py3-none-any.whl", hash = "sha256:b6a9c25c603804e2d169165091d0cdb23934610524a21d226e4f463e8e958a72", size = 183050, upload-time = "2025-12-02T16:21:59.954Z" },
-]
-
-[[package]]
-name = "langgraph"
-version = "1.1.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langchain-core" },
-    { name = "langgraph-checkpoint" },
-    { name = "langgraph-prebuilt" },
-    { name = "langgraph-sdk" },
-    { name = "pydantic" },
-    { name = "xxhash" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/d2/b2/e7db624e8b0ee063ecfbf7acc09467c0836a05914a78e819dfb3744a0fac/langgraph-1.1.3.tar.gz", hash = "sha256:ee496c297a9c93b38d8560be15cbb918110f49077d83abd14976cb13ac3b3370", size = 545120, upload-time = "2026-03-18T23:42:58.24Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/f7/221cc479e95e03e260496616e5ce6fb50c1ea01472e3a5bc481a9b8a2f83/langgraph-1.1.3-py3-none-any.whl", hash = "sha256:57cd6964ebab41cbd211f222293a2352404e55f8b2312cecde05e8753739b546", size = 168149, upload-time = "2026-03-18T23:42:56.967Z" },
-]
-
-[[package]]
-name = "langgraph-checkpoint"
-version = "2.1.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langchain-core" },
-    { name = "ormsgpack" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/29/83/6404f6ed23a91d7bc63d7df902d144548434237d017820ceaa8d014035f2/langgraph_checkpoint-2.1.2.tar.gz", hash = "sha256:112e9d067a6eff8937caf198421b1ffba8d9207193f14ac6f89930c1260c06f9", size = 142420, upload-time = "2025-10-07T17:45:17.129Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c4/f2/06bf5addf8ee664291e1b9ffa1f28fc9d97e59806dc7de5aea9844cbf335/langgraph_checkpoint-2.1.2-py3-none-any.whl", hash = "sha256:911ebffb069fd01775d4b5184c04aaafc2962fcdf50cf49d524cd4367c4d0c60", size = 45763, upload-time = "2025-10-07T17:45:16.19Z" },
-]
-
-[[package]]
-name = "langgraph-opensearch"
-version = "0.1.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langgraph-checkpoint" },
-    { name = "opensearch-py" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/1b/a9/0a68defaf65e0ba6a8e5d2baa2590e5e4c5f4b6f9e96ebadbe9d251a254f/langgraph_opensearch-0.1.5.tar.gz", hash = "sha256:a87f1a13029a5b4e93054c5c7006e650882d85eabf96ed8d39ab1cc1989605eb", size = 82719, upload-time = "2025-08-02T10:39:51.69Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/08/17/37b5f0c227ae7eae4c02a8294b5e7b0013912abcfda24aee92e44eb65f3e/langgraph_opensearch-0.1.5-py3-none-any.whl", hash = "sha256:bc31d77ecd2c86f4d2d651c25e69681581c17ec2a98a03c3b3855f58f019152b", size = 19098, upload-time = "2025-08-02T10:39:50.532Z" },
-]
-
-[[package]]
-name = "langgraph-prebuilt"
-version = "1.0.8"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langchain-core" },
-    { name = "langgraph-checkpoint" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0d/06/dd61a5c2dce009d1b03b1d56f2a85b3127659fdddf5b3be5d8f1d60820fb/langgraph_prebuilt-1.0.8.tar.gz", hash = "sha256:0cd3cf5473ced8a6cd687cc5294e08d3de57529d8dd14fdc6ae4899549efcf69", size = 164442, upload-time = "2026-02-19T18:14:39.083Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/dc/41/ec966424ad3f2ed3996d24079d3342c8cd6c0bd0653c12b2a917a685ec6c/langgraph_prebuilt-1.0.8-py3-none-any.whl", hash = "sha256:d16a731e591ba4470f3e313a319c7eee7dbc40895bcf15c821f985a3522a7ce0", size = 35648, upload-time = "2026-02-19T18:14:37.611Z" },
-]
-
-[[package]]
-name = "langgraph-sdk"
-version = "0.3.15"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "httpx" },
-    { name = "orjson" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/66/af/cdd4d6f3c05b3c1112ed3f12ef830faf15951b21d22cbc622a4becbbe25c/langgraph_sdk-0.3.15.tar.gz", hash = "sha256:29e805003d2c6e296823dd71992610976fd0428cefaa8b3304fd91f2247037de", size = 201924, upload-time = "2026-05-22T16:54:27.678Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/be/a5/0196d9c05749c25bc198e4909d68c998bc3120297e14944921baf2f4c384/langgraph_sdk-0.3.15-py3-none-any.whl", hash = "sha256:3838773acf7456d158165385d49f48f1e856f28b56ccd99ea139a8f27004815d", size = 98166, upload-time = "2026-05-22T16:54:26.013Z" },
 ]
 
 [[package]]
@@ -2010,7 +1413,7 @@ dependencies = [
     { name = "anyio" },
     { name = "distro" },
     { name = "httpx2" },
-    { name = "orjson", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "orjson", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
     { name = "packaging" },
     { name = "pydantic" },
     { name = "requests" },
@@ -2242,15 +1645,12 @@ wheels = [
 ]
 
 [[package]]
-name = "lomond"
-version = "0.3.4"
+name = "logfire-api"
+version = "5.2.0"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/76/98/8118ebb05b6f1a3c45e8ebf0b7a745ce818919cc2c47ed9f68d01cd84b9b/lomond-0.3.4.tar.gz", hash = "sha256:250202a83ba45e3b265bf5dfef4db54d9c46b981230579dbe3b453dad320ba71", size = 50858, upload-time = "2026-09-18T12:05:28.521Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3e/ef/302ecf3ea120d1ce127fae8a15ee5cfa6d178d956d253d332f49b7bc8f0c/logfire_api-5.2.0.tar.gz", hash = "sha256:06553f4a4b1b54d094dd01708f51cde69ccd5e8a06fc2664bece3491b593390d", size = 99170, upload-time = "2026-10-13T17:36:32.044Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/26/ce/2738e533c379bff586902763e62432f37782da955f68d7bcc0f131edffe9/lomond-0.3.4-py2.py3-none-any.whl", hash = "sha256:a63de62d1887e5038f51ce79b6aedbf31d4cac6e7cb135f592ddec9fff6a53cd", size = 37207, upload-time = "2026-09-18T12:05:26.783Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/5a/cd2d6e41b04c932c33dd027e119e3b6923c740e7b68da6f78cfb901040b4/logfire_api-5.2.0-py3-none-any.whl", hash = "sha256:f4bd56df590ba7e7a32adb0302c82af38dc4edb9eecd03b1bfa03ffa581eecf8", size = 151057, upload-time = "2026-10-13T17:36:29.201Z" },
 ]
 
 [[package]]
@@ -2512,7 +1912,7 @@ name = "nvidia-cublas"
 version = "13.1.1.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cuda-nvrtc", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cuda-nvrtc", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/a1/0bd24ee8c8d03adac032fd2909426a00c88f8c57961b1277ded97f91119f/nvidia_cublas-13.1.1.3-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:b7a210458267ac818974c53038fbec2e969d5c99f305ab15c72522fa9f001dd5", size = 542848918, upload-time = "2026-04-08T18:46:22.985Z" },
@@ -2551,7 +1951,7 @@ name = "nvidia-cudnn-cu13"
 version = "9.24.0.43"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cublas", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ca/30/7c257e3d5cb4fecb147b93895c66e29c93f8e76d74b45bb418ff0587c4ec/nvidia_cudnn_cu13-9.24.0.43-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:a6812a554a1ff0413e9c52b84c26c050380649ab9615f9c16bded368ce9f421f", size = 650976863, upload-time = "2026-07-02T16:23:39.248Z" },
@@ -2563,7 +1963,7 @@ name = "nvidia-cufft"
 version = "12.0.0.61"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8b/ae/f417a75c0259e85c1d2f83ca4e960289a5f814ed0cea74d18c353d3e989d/nvidia_cufft-12.0.0.61-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:2708c852ef8cd89d1d2068bdbece0aa188813a0c934db3779b9b1faa8442e5f5", size = 214053554, upload-time = "2025-09-04T08:31:38.196Z" },
@@ -2593,9 +1993,9 @@ name = "nvidia-cusolver"
 version = "12.0.4.66"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-cusparse", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-nvjitlink", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-cublas", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-cusparse", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/c3/b30c9e935fc01e3da443ec0116ed1b2a009bb867f5324d3f2d7e533e776b/nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:02c2457eaa9e39de20f880f4bd8820e6a1cfb9f9a34f820eb12a155aa5bc92d2", size = 223467760, upload-time = "2025-09-04T08:33:04.222Z" },
@@ -2607,7 +2007,7 @@ name = "nvidia-cusparse"
 version = "12.6.3.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "nvidia-nvjitlink", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f8/94/5c26f33738ae35276672f12615a64bd008ed5be6d1ebcb23579285d960a9/nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:80bcc4662f23f1054ee334a15c72b8940402975e0eab63178fc7e670aa59472c", size = 162155568, upload-time = "2025-09-04T08:33:42.864Z" },
@@ -2666,19 +2066,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/69/1b/077b508e3e500e1629d366249c3ccb32f95e50258b231705c09e3c7a4366/olefile-0.47.zip", hash = "sha256:599383381a0bf3dfbd932ca0ca6515acd174ed48870cbf7fee123d698c192c1c", size = 112240, upload-time = "2023-12-01T16:22:53.025Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/17/d3/b64c356a907242d719fc668b71befd73324e47ab46c8ebbbede252c154b2/olefile-0.47-py2.py3-none-any.whl", hash = "sha256:543c7da2a7adadf21214938bb79c83ea12b473a4b6ee4ad4bf854e7715e13d1f", size = 114565, upload-time = "2023-12-01T16:22:51.518Z" },
-]
-
-[[package]]
-name = "ollama"
-version = "0.6.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "httpx" },
-    { name = "pydantic" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b8/97/eeafe65594e4f4b25e443e068ef7d83aa3105b023e12e1c408c38669fc07/ollama-0.6.3.tar.gz", hash = "sha256:41fc49a8095c4a75939c4c1f8582e4d0671692fb6eac2a5a7ede8c9872b67096", size = 56868, upload-time = "2026-09-29T01:26:51.906Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4d/64/87505d9e006461233c21c8e66dc1ecee49c996090584b216abd0dd4a8322/ollama-0.6.3-py3-none-any.whl", hash = "sha256:6a20bc42c1a5f889295d7ec490d35e5132fc31f339561530f43a8abd4dbfe508", size = 16603, upload-time = "2026-09-29T01:26:50.451Z" },
 ]
 
 [[package]]
@@ -2743,23 +2130,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/56/ec/ef1ca7e409ee6bddb7278b9760e0941f65911748f5dc84d17c115f6648f1/openinference_instrumentation-0.1.71.tar.gz", hash = "sha256:4d267b6ce8e067572a740d6a0dbf6b4d4c6e386c5a52a7e7f61e3a714a49849d", size = 46600, upload-time = "2026-10-07T20:26:41.084Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7c/8c/330101bedf614dc937d8690462ed0ad4efd7f6c3248a76a5484ba6f885e3/openinference_instrumentation-0.1.71-py3-none-any.whl", hash = "sha256:07833fcf5d493a2ed15da16a0af70d6127d39f18ffa68f4d6827107e49fc6753", size = 54511, upload-time = "2026-10-07T20:26:39.634Z" },
-]
-
-[[package]]
-name = "openinference-instrumentation-langchain"
-version = "0.1.61"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "openinference-instrumentation" },
-    { name = "openinference-semantic-conventions" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-instrumentation" },
-    { name = "opentelemetry-semantic-conventions" },
-    { name = "wrapt" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/21/60/6c298fd6d6778fed0bf7cddf9c97c4391f1cdfc15fe44ddeb732bd09a695/openinference_instrumentation_langchain-0.1.61.tar.gz", hash = "sha256:210686a6cc42f8b16da1c450316025a11f6cf16f70b1a2dea7945dc16a98aa87", size = 75140, upload-time = "2026-02-26T17:51:55.078Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/85/9e/5c7fa64fe28de0b5a59df2fe3007a022e9cd263e7e3ed942a18f05e14c4b/openinference_instrumentation_langchain-0.1.61-py3-none-any.whl", hash = "sha256:0f80198cc5937c1a8e19f15143253d59b094f36b2b18308570b4c4ddeb506020", size = 24393, upload-time = "2026-02-26T17:51:54.181Z" },
 ]
 
 [[package]]
@@ -2959,6 +2329,126 @@ wheels = [
 ]
 
 [[package]]
+name = "orchestrated-rag-module"
+version = "2026.3.0.dev0"
+source = { editable = "." }
+default-groups = ["cpu", "dev"]
+dependencies = [
+    { name = "aiofiles" },
+    { name = "aiohttp" },
+    { name = "apscheduler" },
+    { name = "arize-phoenix" },
+    { name = "arize-phoenix-client" },
+    { name = "arize-phoenix-evals" },
+    { name = "arize-phoenix-otel" },
+    { name = "authlib" },
+    { name = "cryptography" },
+    { name = "fastapi" },
+    { name = "filelock" },
+    { name = "graphql-core" },
+    { name = "grpcio" },
+    { name = "grpcio-tools" },
+    { name = "h11" },
+    { name = "ipython" },
+    { name = "langchain-docling" },
+    { name = "llama-index" },
+    { name = "llama-index-cli" },
+    { name = "llama-index-core" },
+    { name = "opensearch-py" },
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-exporter-otlp" },
+    { name = "opentelemetry-exporter-otlp-proto-common" },
+    { name = "opentelemetry-exporter-otlp-proto-grpc" },
+    { name = "opentelemetry-exporter-otlp-proto-http" },
+    { name = "opentelemetry-instrumentation" },
+    { name = "opentelemetry-proto" },
+    { name = "opentelemetry-sdk" },
+    { name = "opentelemetry-semantic-conventions" },
+    { name = "protobuf" },
+    { name = "pydantic-ai-slim" },
+    { name = "pydantic-settings" },
+    { name = "pyjwt" },
+    { name = "python-dotenv" },
+    { name = "python-multipart" },
+    { name = "requests" },
+    { name = "setuptools" },
+    { name = "sse-starlette" },
+    { name = "starlette" },
+    { name = "uvicorn" },
+]
+
+[package.dev-dependencies]
+cpu = [
+    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torchvision", version = "0.29.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torchvision", version = "0.29.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+]
+dev = [
+    { name = "pytest" },
+]
+gpu = [
+    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux'" },
+    { name = "torchvision", version = "0.29.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiofiles", specifier = "==24.1.0" },
+    { name = "aiohttp", specifier = "==3.14.3" },
+    { name = "apscheduler", specifier = "==3.11.0" },
+    { name = "arize-phoenix", specifier = "==13.15.0" },
+    { name = "arize-phoenix-client", specifier = "==2.1.0" },
+    { name = "arize-phoenix-evals", specifier = "==2.11.0" },
+    { name = "arize-phoenix-otel", specifier = "==0.15.0" },
+    { name = "authlib", specifier = "==1.6.9" },
+    { name = "cryptography", specifier = "==50.0.0" },
+    { name = "fastapi", specifier = "==0.137.0" },
+    { name = "filelock", specifier = "==3.20.1" },
+    { name = "graphql-core", specifier = "==3.2.7" },
+    { name = "grpcio", specifier = "==1.78.0" },
+    { name = "grpcio-tools", specifier = "==1.78.0" },
+    { name = "h11", specifier = "==0.16.0" },
+    { name = "ipython", specifier = "==9.11.0" },
+    { name = "langchain-docling", specifier = "==2.0.0" },
+    { name = "llama-index", specifier = "==0.14.18" },
+    { name = "llama-index-cli", specifier = "==0.5.6" },
+    { name = "llama-index-core", specifier = "==0.14.18" },
+    { name = "opensearch-py", specifier = "==3.1.0" },
+    { name = "opentelemetry-api", specifier = "==1.44.0" },
+    { name = "opentelemetry-exporter-otlp", specifier = "==1.44.0" },
+    { name = "opentelemetry-exporter-otlp-proto-common", specifier = "==1.44.0" },
+    { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = "==1.44.0" },
+    { name = "opentelemetry-exporter-otlp-proto-http", specifier = "==1.44.0" },
+    { name = "opentelemetry-instrumentation", specifier = "==0.65b0" },
+    { name = "opentelemetry-proto", specifier = "==1.44.0" },
+    { name = "opentelemetry-sdk", specifier = "==1.44.0" },
+    { name = "opentelemetry-semantic-conventions", specifier = "==0.65b0" },
+    { name = "protobuf", specifier = "==6.33.5" },
+    { name = "pydantic-ai-slim", specifier = "==2.6.0" },
+    { name = "pydantic-settings", specifier = "==2.15.0" },
+    { name = "pyjwt", specifier = "==2.14.0" },
+    { name = "python-dotenv", specifier = "==1.2.2" },
+    { name = "python-multipart", specifier = "==0.0.30" },
+    { name = "requests", specifier = "==2.34.2" },
+    { name = "setuptools", specifier = "==82.0.1" },
+    { name = "sse-starlette", specifier = "==3.3.3" },
+    { name = "starlette", specifier = "==1.3.1" },
+    { name = "uvicorn", specifier = "==0.42.0" },
+]
+
+[package.metadata.requires-dev]
+cpu = [
+    { name = "torch", specifier = "==2.14.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "orchestrated-rag-module", group = "cpu" } },
+    { name = "torchvision", specifier = "==0.29.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "orchestrated-rag-module", group = "cpu" } },
+]
+dev = [{ name = "pytest", specifier = "==9.1.0" }]
+gpu = [
+    { name = "torch", marker = "sys_platform == 'linux'", specifier = "==2.14.1", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "orchestrated-rag-module", group = "gpu" } },
+    { name = "torchvision", marker = "sys_platform == 'linux'", specifier = "==0.29.1", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "orchestrated-rag-module", group = "gpu" } },
+]
+
+[[package]]
 name = "orjson"
 version = "3.13.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2972,21 +2462,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ea/8c/bb07c368abbf4021c4cd01c12edb526e00090f7f750ff1b88da6e6b6c7a6/orjson-3.13.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bceadfd314bd238f584fc229a4bbaf0e573597e7a026dec5429fbf29fd66c641", size = 130612, upload-time = "2026-10-07T14:08:30.041Z" },
     { url = "https://files.pythonhosted.org/packages/d2/8d/4b66d19619ed344ac000ffea7c006477d0061d580646e736ef0e203759e8/orjson-3.13.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:b74c30e56346aad067937d766846ee74c231d1d18aad3f324e9b9261de3b2d5e", size = 134632, upload-time = "2026-10-07T14:08:31.474Z" },
     { url = "https://files.pythonhosted.org/packages/ea/88/f8221f6593e37eb26ec4706e185b9ac6f38ff0c8f7bad5459844031ffd2d/orjson-3.13.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:4329c19b8a25693f60a77b867c9d2a3ab637b20e36f5b7bea7f5acb492b44b15", size = 126807, upload-time = "2026-10-07T14:08:32.914Z" },
-]
-
-[[package]]
-name = "ormsgpack"
-version = "1.12.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/12/0c/f1761e21486942ab9bb6feaebc610fa074f7c5e496e6962dea5873348077/ormsgpack-1.12.2.tar.gz", hash = "sha256:944a2233640273bee67521795a73cf1e959538e0dfb7ac635505010455e53b33", size = 39031, upload-time = "2026-01-18T20:55:28.023Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4c/36/16c4b1921c308a92cef3bf6663226ae283395aa0ff6e154f925c32e91ff5/ormsgpack-1.12.2-cp312-cp312-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:7a29d09b64b9694b588ff2f80e9826bdceb3a2b91523c5beae1fab27d5c940e7", size = 378618, upload-time = "2026-01-18T20:55:50.835Z" },
-    { url = "https://files.pythonhosted.org/packages/c0/68/468de634079615abf66ed13bb5c34ff71da237213f29294363beeeca5306/ormsgpack-1.12.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0b39e629fd2e1c5b2f46f99778450b59454d1f901bc507963168985e79f09c5d", size = 203186, upload-time = "2026-01-18T20:56:11.163Z" },
-    { url = "https://files.pythonhosted.org/packages/73/a9/d756e01961442688b7939bacd87ce13bfad7d26ce24f910f6028178b2cc8/ormsgpack-1.12.2-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:958dcb270d30a7cb633a45ee62b9444433fa571a752d2ca484efdac07480876e", size = 210738, upload-time = "2026-01-18T20:56:09.181Z" },
-    { url = "https://files.pythonhosted.org/packages/7b/ba/795b1036888542c9113269a3f5690ab53dd2258c6fb17676ac4bd44fcf94/ormsgpack-1.12.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:58d379d72b6c5e964851c77cfedfb386e474adee4fd39791c2c5d9efb53505cc", size = 212569, upload-time = "2026-01-18T20:56:06.135Z" },
-    { url = "https://files.pythonhosted.org/packages/6c/aa/bff73c57497b9e0cba8837c7e4bcab584b1a6dbc91a5dd5526784a5030c8/ormsgpack-1.12.2-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:8463a3fc5f09832e67bdb0e2fda6d518dc4281b133166146a67f54c08496442e", size = 387166, upload-time = "2026-01-18T20:55:36.738Z" },
-    { url = "https://files.pythonhosted.org/packages/d3/cf/f8283cba44bcb7b14f97b6274d449db276b3a86589bdb363169b51bc12de/ormsgpack-1.12.2-cp312-cp312-musllinux_1_2_armv7l.whl", hash = "sha256:eddffb77eff0bad4e67547d67a130604e7e2dfbb7b0cde0796045be4090f35c6", size = 482498, upload-time = "2026-01-18T20:55:29.626Z" },
-    { url = "https://files.pythonhosted.org/packages/05/be/71e37b852d723dfcbe952ad04178c030df60d6b78eba26bfd14c9a40575e/ormsgpack-1.12.2-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:fcd55e5f6ba0dbce624942adf9f152062135f991a0126064889f68eb850de0dd", size = 425518, upload-time = "2026-01-18T20:55:49.556Z" },
 ]
 
 [[package]]
@@ -3129,18 +2604,6 @@ wheels = [
 ]
 
 [[package]]
-name = "proto-plus"
-version = "1.29.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "protobuf" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/46/70/783e33ffbb4466cc154a94f79b869b92a451e2bd45605054e68ff68b7af6/proto_plus-1.29.0.tar.gz", hash = "sha256:cfb4e62ad7e13dd18f346cabbda00cab39930d36a05791fd81ddb074d6ee884f", size = 58592, upload-time = "2026-09-29T19:26:15.963Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b1/05/a3ef5b1161498e7b5a2a60288a9cf41b9149e94555423a43ec536737ac1a/proto_plus-1.29.0-py3-none-any.whl", hash = "sha256:8acd070469a7aaf43f440b022ef9757c8cac1a9f866e933f59ae98669ddc6c8b", size = 50786, upload-time = "2026-09-29T19:25:50.409Z" },
-]
-
-[[package]]
 name = "protobuf"
 version = "6.33.5"
 source = { registry = "https://pypi.org/simple" }
@@ -3209,18 +2672,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pyasn1-modules"
-version = "0.4.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyasn1" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e9/e6/78ebbb10a8c8e4b61a59249394a4a594c1a7af95593dc933a349c8d00964/pyasn1_modules-0.4.2.tar.gz", hash = "sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6", size = 307892, upload-time = "2025-03-28T02:41:22.17Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/47/8d/d529b5d697919ba8c11ad626e835d4039be708a35b0d22de83a269a6682c/pyasn1_modules-0.4.2-py3-none-any.whl", hash = "sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a", size = 181259, upload-time = "2025-03-28T02:41:19.028Z" },
-]
-
-[[package]]
 name = "pyclipper"
 version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3257,6 +2708,24 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-ai-slim"
+version = "2.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "genai-prices" },
+    { name = "griffelib" },
+    { name = "httpx" },
+    { name = "opentelemetry-api" },
+    { name = "pydantic" },
+    { name = "pydantic-graph" },
+    { name = "typing-inspection" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d8/ed/ead2f430f20e001408e1b91fa910cacf4a39271470d55093c1e01ac9ff4c/pydantic_ai_slim-2.6.0.tar.gz", hash = "sha256:d6b6a473eaf58d0b54cfd71e94e9ee27aa149a1f7899be6ee880f1dcfddd958f", size = 780428, upload-time = "2026-07-08T01:34:56.021Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c2/5b/9c135d22d641e7cda457e86f065a246232ed02b529a5ea66b2e62d3e4ed6/pydantic_ai_slim-2.6.0-py3-none-any.whl", hash = "sha256:133764bd45a72db1bad38a2eaf136c73b0b51130e50a95bf328fe03be0197dbe", size = 956698, upload-time = "2026-07-08T01:34:48.298Z" },
+]
+
+[[package]]
 name = "pydantic-core"
 version = "2.50.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3281,6 +2750,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/61/8c/b81c4139bff6305e7a98fa7845a99e05df1461d3c33d0fef417e02114ae7/pydantic_core-2.50.0-graalpy312-graalpy250_312_native-macosx_11_0_arm64.whl", hash = "sha256:732efbb50977ab7cf18f01d4c255834aeb14cb2425459f7bff681a1ba3a4ffa1", size = 2039121, upload-time = "2026-10-08T14:30:26.423Z" },
     { url = "https://files.pythonhosted.org/packages/0f/49/679293741809cf835290bccf80216aebfcf5d94cb84a34709f18b21abfd5/pydantic_core-2.50.0-graalpy312-graalpy250_312_native-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ad9185366893714cd4514ae5e1a098227704fa395cb41a7855d75968ecedc826", size = 2109280, upload-time = "2026-10-08T14:30:29.216Z" },
     { url = "https://files.pythonhosted.org/packages/f5/49/76f167aec9b9d77a82e38131539ca6c6fcf69d720965f76eda20b87b454d/pydantic_core-2.50.0-graalpy312-graalpy250_312_native-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0def1dc09802a790e4a1b3cbc4401f0b53c58f273ce3671df9867f7bdf1fbe20", size = 2269313, upload-time = "2026-10-08T14:30:32.096Z" },
+]
+
+[[package]]
+name = "pydantic-graph"
+version = "2.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "logfire-api" },
+    { name = "pydantic" },
+    { name = "typing-inspection" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f1/36/ffa7fd44e7ec25ac00e82392ea0466a0a2f366ae492e5d534baa1113ef57/pydantic_graph-2.6.0.tar.gz", hash = "sha256:208e85a8c4e3767c535ab0971c77d659880652b8c116d2e7c07bca1ac8b9d097", size = 43902, upload-time = "2026-07-08T01:34:58.566Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/eb/47/944a2d9b46160a8c34ff74e59dd4b586113dfcae445fd08b4fa4b6d80db0/pydantic_graph-2.6.0-py3-none-any.whl", hash = "sha256:28b06ca1d96f896b1e606760edf04b7db321c035eadeb0e9fbcccebddfe125eb", size = 51646, upload-time = "2026-07-08T01:34:51.67Z" },
 ]
 
 [[package]]
@@ -3322,15 +2806,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/52/45/ddb0fb04acf95fe9cf9c369814dbdd08651bd2c9ee455f142651e06f4488/pylatexenc-2.11.tar.gz", hash = "sha256:305a072a99ce736246049c9da05841b9d718c0f7ea8888f5f596cf15cb621053", size = 165743, upload-time = "2026-07-25T17:26:31.534Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e7/06/3d67bd912ef337aa4856b466121d03f304aa1bb4d804f9298b6227cd227e/pylatexenc-2.11-py2.py3-none-any.whl", hash = "sha256:e78e7391d6c104f1ed150e21cfaa58016cdb50aa54406a2eecb793649ffdfdd0", size = 137533, upload-time = "2026-07-25T17:26:30.141Z" },
-]
-
-[[package]]
-name = "pyparsing"
-version = "3.3.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e4/11/b213bebff182584360cb8d17c72c1677fec5c5c228de439e63bcf8ab1c8f/pyparsing-3.3.3.tar.gz", hash = "sha256:928ae7e20211f3b6f3915a72f06a0cfd29ab9d24279dd6346b6b1a7146397d36", size = 1050487, upload-time = "2026-09-20T20:59:05.609Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/bb/d215ee7c73b61497b28a5503f9f53523f294fcc936762b7caf90e0c1c2b5/pyparsing-3.3.3-py3-none-any.whl", hash = "sha256:ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4", size = 126420, upload-time = "2026-09-20T20:59:04.025Z" },
 ]
 
 [[package]]
@@ -3621,18 +3096,6 @@ wheels = [
 ]
 
 [[package]]
-name = "s3transfer"
-version = "0.19.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "botocore" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/76/43/35e4d8aa320bffe8287fe8f65f578fa2d2db0a64212f0e710dce58267854/s3transfer-0.19.2.tar.gz", hash = "sha256:ba0309fd86be3c27dbf78cdd813c13c5e1df16e5874b99d2535ebbdfb9892993", size = 165592, upload-time = "2026-07-22T19:30:44.432Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/e7/5c595c75e9f41a44f30e526eda465ea0b4eec93470e074e4a111b253f13a/s3transfer-0.19.2-py3-none-any.whl", hash = "sha256:d8168eccca828cbb2cd573675333f3bddd254313a9c42494b84c76b539e8ba25", size = 90216, upload-time = "2026-07-22T19:30:43.251Z" },
-]
-
-[[package]]
 name = "safetensors"
 version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3656,10 +3119,10 @@ wheels = [
 [package.optional-dependencies]
 torch = [
     { name = "numpy" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 
 [[package]]
@@ -3965,13 +3428,13 @@ resolution-markers = [
     "sys_platform == 'darwin'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "fsspec", marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "jinja2", marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "networkx", marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "setuptools", marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "sympy", marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "typing-extensions", marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "filelock", marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "fsspec", marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "jinja2", marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "networkx", marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "setuptools", marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "sympy", marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "typing-extensions", marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.14.1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:9cf3082d25560efb1eef921871595227c0cf305abb7761ca45b6b988ef6cdd45", upload-time = "2026-09-30T19:50:32Z" },
@@ -3986,20 +3449,20 @@ resolution-markers = [
     "sys_platform == 'darwin'",
 ]
 dependencies = [
-    { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "filelock", marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "fsspec", marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "jinja2", marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "networkx", marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-cudnn-cu13", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-cusparselt-cu13", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-nccl-cu13", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-nvshmem-cu13", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "setuptools", marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "sympy", marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "triton", marker = "(sys_platform == 'linux' and extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "typing-extensions", marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
+    { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "filelock", marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "fsspec", marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "jinja2", marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "networkx", marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-cudnn-cu13", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-cusparselt-cu13", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-nccl-cu13", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-nvshmem-cu13", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "setuptools", marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "sympy", marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "triton", marker = "(sys_platform == 'linux' and extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "typing-extensions", marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4b/3c/379349820e9a6e713826de3d0b88f07728541bdcabe2a3afd128871cdc4b/torch-2.14.1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:420dbf314c180ee4b86e9bc00aee5746a7d6e5bacdd7df925af671ed393f0b2e", size = 127307099, upload-time = "2026-09-30T17:44:10.421Z" },
@@ -4015,13 +3478,13 @@ resolution-markers = [
     "sys_platform == 'linux'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "fsspec", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "jinja2", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "networkx", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "setuptools", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "sympy", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "typing-extensions", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "filelock", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "fsspec", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "jinja2", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "networkx", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "setuptools", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "sympy", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "typing-extensions", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-linux_s390x.whl", hash = "sha256:6b06a7f6275c5fdecaf1dbf5546f0820b024a97785575bb99e3d9930d83cd86b", upload-time = "2026-09-30T19:47:30Z" },
@@ -4037,20 +3500,20 @@ resolution-markers = [
     "sys_platform == 'linux'",
 ]
 dependencies = [
-    { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "filelock", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "fsspec", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "jinja2", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "networkx", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-cudnn-cu13", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-cusparselt-cu13", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-nccl-cu13", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "nvidia-nvshmem-cu13", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "setuptools", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "sympy", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "triton", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "typing-extensions", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "filelock", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "fsspec", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "jinja2", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "networkx", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-cudnn-cu13", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-cusparselt-cu13", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-nccl-cu13", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "nvidia-nvshmem-cu13", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "setuptools", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "sympy", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "triton", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "typing-extensions", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cu130/torch-2.14.1%2Bcu130-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:6afc5e5944fb0bd927e08d32a11f71d19154001f1c81fa00a6ed81a217451795", upload-time = "2026-09-30T20:23:37Z" },
@@ -4065,9 +3528,9 @@ resolution-markers = [
     "sys_platform == 'darwin'",
 ]
 dependencies = [
-    { name = "numpy", marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "pillow", marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "numpy", marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "pillow", marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.29.1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:3b6eb9d2f8fe9b93d9d37637749df361efeed133d96ddd503184a1b5b12bb27f", upload-time = "2026-09-30T15:46:12Z" },
@@ -4082,9 +3545,9 @@ resolution-markers = [
     "sys_platform == 'darwin'",
 ]
 dependencies = [
-    { name = "numpy", marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "pillow", marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu') or (extra != 'group-18-agentic-rag-module-cpu' and extra != 'group-18-agentic-rag-module-gpu')" },
+    { name = "numpy", marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "pillow", marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and extra != 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra != 'group-23-orchestrated-rag-module-cpu' and extra != 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f3/f8/855c7b326ed17a8dac4a03e8e6fec33ef6728e4baa00d816cf1227bb6681/torchvision-0.29.1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:3b6eb9d2f8fe9b93d9d37637749df361efeed133d96ddd503184a1b5b12bb27f", size = 1813847, upload-time = "2026-09-30T17:57:01.009Z" },
@@ -4100,9 +3563,9 @@ resolution-markers = [
     "sys_platform == 'linux'",
 ]
 dependencies = [
-    { name = "numpy", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "pillow", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-cpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "numpy", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "pillow", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-cpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.29.1%2Bcpu-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:3058f855e65089330ec987b8cac1ccf5e7a26cd475f8cab20597b5577ddc8767", upload-time = "2026-09-30T15:46:11Z" },
@@ -4117,9 +3580,9 @@ resolution-markers = [
     "sys_platform == 'linux'",
 ]
 dependencies = [
-    { name = "numpy", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "pillow", marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
-    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-18-agentic-rag-module-gpu') or (extra == 'group-18-agentic-rag-module-cpu' and extra == 'group-18-agentic-rag-module-gpu')" },
+    { name = "numpy", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "pillow", marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
+    { name = "torch", version = "2.14.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "(sys_platform == 'linux' and extra == 'group-23-orchestrated-rag-module-gpu') or (extra == 'group-23-orchestrated-rag-module-cpu' and extra == 'group-23-orchestrated-rag-module-gpu')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cu130/torchvision-0.29.1%2Bcu130-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:3fe32cb76816c80355087a2e4d2a6d40ba01cc7b59a5732be57d1e71b4539f8e", upload-time = "2026-09-30T15:46:27Z" },
@@ -4315,15 +3778,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/81/5b/879b2f932adfa7a053c360d50bc896c977fa6426109185f7c12ebdd0cb9d/tzlocal-5.4.4.tar.gz", hash = "sha256:8dbb8660838688a7b6ba4fed31d18dedf842afb4d47ca050d6d891c2c15f3be4", size = 31170, upload-time = "2026-06-29T08:03:40.026Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9e/a4/017a7a6cbe387d961a688ec31364ae60a5c4e22c96ae9921b79a947c855d/tzlocal-5.4.4-py3-none-any.whl", hash = "sha256:aae09f0126a8a86fa736be266eb4a471380d26a0de3bc14844e7821fee3e2a15", size = 18115, upload-time = "2026-06-29T08:03:38.666Z" },
-]
-
-[[package]]
-name = "uritemplate"
-version = "4.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/98/60/f174043244c5306c9988380d2cb10009f91563fc4b31293d27e17201af56/uritemplate-4.2.0.tar.gz", hash = "sha256:480c2ed180878955863323eea31b0ede668795de182617fef9c6ca09e6ec9d0e", size = 33267, upload-time = "2025-06-02T15:12:06.318Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/99/3ae339466c9183ea5b8ae87b34c0b897eda475d2aec2307cae60e5cd4f29/uritemplate-4.2.0-py3-none-any.whl", hash = "sha256:962201ba1c4edcab02e60f9a0d3821e82dfc5d2d6662a21abd533879bdb8a686", size = 11488, upload-time = "2025-06-02T15:12:03.405Z" },
 ]
 
 [[package]]

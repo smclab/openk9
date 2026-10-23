@@ -16,7 +16,6 @@
 #
 
 
-import importlib.util
 import os
 import sys
 import tempfile
@@ -40,32 +39,13 @@ os.environ.setdefault(
 os.environ.setdefault("MAX_UPLOAD_FILE_SIZE", "10")
 os.environ.setdefault("MAX_UPLOAD_FILES_NUMBER", "5")
 
-# Stub the LLM layer (and the cloud SDKs it pulls in) so app modules import
-# without cloud credentials. Applied once, session-wide, and never removed:
+# Stub the LLM configuration layer so app modules import without reaching the
+# gRPC services. Applied once, session-wide, and never removed:
 # per-module stubbing that mutated sys.modules mid-session leaked mocks into
 # sibling test modules and made the suite order-dependent.
 _STUBBED_MODULES = [
-    "langchain_aws",
-    "langchain_classic",
-    "langchain_classic.chains",
-    "langchain_google_community",
-    "langchain_google_community.model_armor",
     "app.utils.llm",
 ]
 
 for module_name in _STUBBED_MODULES:
     sys.modules.setdefault(module_name, MagicMock())
-
-# The stub above also hides the provider -> structured output method mapping,
-# which is pure logic the graph and evaluation tests must exercise for real: a
-# MagicMock would make every assertion on the `method` kwarg tautological. Load
-# it from the source file (importing the module is cheap, only building a model
-# needs credentials) and put it back on the stub.
-_llm_spec = importlib.util.spec_from_file_location(
-    "_real_app_utils_llm", MODULE_ROOT / "app" / "utils" / "llm.py"
-)
-_real_llm = importlib.util.module_from_spec(_llm_spec)
-_llm_spec.loader.exec_module(_real_llm)
-sys.modules["app.utils.llm"].get_structured_output_method = (
-    _real_llm.get_structured_output_method
-)

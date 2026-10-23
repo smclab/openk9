@@ -114,8 +114,8 @@ def get_opensearch_client(hosts, **kwargs):
     TLS and basic authentication are configured from the environment, through
     ``OPENSEARCH_VERIFY_CERTS``, ``OPENSEARCH_CA_CERTS``, ``OPENSEARCH_USERNAME``
     and ``OPENSEARCH_PASSWORD``. The connection pool keeps ``POOL_MAXSIZE``
-    connections per host, because the LangGraph checkpointer sends concurrent
-    requests on the same client. Explicit keyword arguments take precedence.
+    connections per host, because concurrent requests share the same client.
+    Explicit keyword arguments take precedence.
 
     :param hosts: Comma-separated hosts string, or a list of hosts
     :type hosts: str | list | tuple | None

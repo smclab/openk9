@@ -12,7 +12,7 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH="/opt/venv/bin:$PATH"
 
-WORKDIR /agentic-rag-module/
+WORKDIR /orchestrated-rag-module/
 
 COPY --from=ghcr.io/astral-sh/uv:0.13.0@sha256:cdc6093146eb3ff6a40107b38f008b789e050e77ad87865e381d9917da55a168 /uv /uvx /bin/
 
@@ -60,10 +60,10 @@ EXPOSE 5000
 # arize-phoenix writes its working dir to $HOME/.phoenix, and libs that resolve
 # the user (getpwuid) crash if uid 1001 has no /etc/passwd entry. Register the
 # user, point HOME at the writable WORKDIR and set USER explicitly.
-RUN useradd -m -u 1001 -g 0 agentic-rag-module
-ENV HOME=/agentic-rag-module
-ENV USER=agentic-rag-module
-RUN mkdir -p /agentic-rag-module/.phoenix && chown -R 1001:0 /agentic-rag-module && chmod -R g=u /agentic-rag-module
+RUN useradd -m -u 1001 -g 0 orchestrated-rag-module
+ENV HOME=/orchestrated-rag-module
+ENV USER=orchestrated-rag-module
+RUN mkdir -p /orchestrated-rag-module/.phoenix && chown -R 1001:0 /orchestrated-rag-module && chmod -R g=u /orchestrated-rag-module
 
 USER 1001
 
