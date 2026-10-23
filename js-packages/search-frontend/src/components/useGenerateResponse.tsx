@@ -203,6 +203,9 @@ const useGenerateResponse = ({
                 setIsRequestLoading?.(false);
                 break;
               }
+              case "STATUS":
+                // the phase of the turn before the answer starts: not answer text
+                break;
               default:
                 if (typeof data.chunk === "string") {
                   if (!sawAnyChunk) {

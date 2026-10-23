@@ -271,6 +271,10 @@ const useGenerateResponse = ({
                       break;
                     }
 
+                    case "STATUS":
+                      // the phase of the turn before the answer starts: nothing to show
+                      break;
+
                     default:
                       console.warn(
                         "Tipo di chunk non riconosciuto:",

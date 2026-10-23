@@ -149,6 +149,29 @@ describe("the generated answer", () => {
     expect(view.result.current.isChatting).toBe(false);
   });
 
+  test("STATUS events of the orchestrated module are not answer text", async () => {
+    const view = renderGenerate(
+      vi.fn(async () =>
+        sse([
+          { type: "STATUS", chunk: "planning" },
+          { type: "STATUS", chunk: "discovering" },
+          { type: "STATUS", chunk: "retrieving" },
+          { type: "STATUS", chunk: "generating" },
+          { type: "START" },
+          { type: "CHUNK", chunk: "OpenK9 è un motore di ricerca." },
+          { type: "END" },
+        ]),
+      ),
+    );
+
+    await generate(view);
+
+    expect(view.result.current.message).toMatchObject({
+      status: "END",
+      answer: "OpenK9 è un motore di ricerca.",
+    });
+  });
+
   test("shows an error when the stream ends without any content", async () => {
     const view = renderGenerate(
       vi.fn(async () => sse([{ type: "START" }, { type: "END" }])),

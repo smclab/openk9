@@ -254,6 +254,9 @@ export function useCopilotChat({
                 }));
                 if (owns()) setIsChatting(false);
                 break;
+              case "STATUS":
+                // the phase of the turn before the answer starts: not answer text
+                break;
               default: {
                 const text = optionalString(data.chunk);
                 if (text !== undefined) {
