@@ -145,12 +145,6 @@ def test_bedrock_uses_the_configured_region_and_api_key():
     assert model.client._request_signer._auth_token.token == "bedrock-key"
 
 
-@pytest.mark.parametrize("model_type", ["ollama", "watsonx", "hugging-face-custom"])
-def test_custom_providers_are_refused_until_they_have_a_model(model_type):
-    with pytest.raises(ValueError, match=model_type):
-        build_model({"model_type": model_type, "api_url": "http://llm:8080"})
-
-
 def test_a_provider_without_its_sdk_says_which_extra_is_missing(monkeypatch):
     # Without google-genai the import of the PydanticAI model raises its own error.
     monkeypatch.setitem(sys.modules, "google.genai", None)

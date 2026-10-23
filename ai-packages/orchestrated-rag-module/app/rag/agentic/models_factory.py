@@ -22,6 +22,10 @@ It takes the same ``llm_configuration`` that agentic-rag-module hands to
 ``initialize_language_model`` and returns a ``pydantic_ai.models.Model``. The
 SDK of each provider is imported only when that provider is built.
 
+Ollama, watsonx and the custom Hugging Face endpoint have no PydanticAI model
+that matches what agentic-rag-module sends them: they use the models of
+``ollama_model``, ``watsonx_model`` and ``custom_hugging_face_model``.
+
 The temperature is not a property of the model in PydanticAI: it travels in
 the model settings of an agent or of a run, see :func:`build_model_settings`.
 """
@@ -52,15 +56,6 @@ class ModelType(Enum):
     AWS_BEDROCK = "aws_bedrock"
 
 
-#: Providers without a PydanticAI model: they get one of their own in a later
-#: issue. Until then they are refused rather than sent to OpenAI by default.
-CUSTOM_MODEL_TYPES = {
-    ModelType.OLLAMA.value,
-    ModelType.HUGGING_FACE_CUSTOM.value,
-    ModelType.IBM_WATSONX.value,
-}
-
-
 def build_model_settings(temperature: Optional[float] = None) -> Optional["ModelSettings"]:
     """
     Return the model settings for ``temperature``.
@@ -85,15 +80,15 @@ def build_model(configuration: dict) -> "Model":
 
     :param configuration: The ``llm_configuration`` of the tenant: ``model_type``,
         ``api_url``, ``api_key``, ``model`` and the provider keys
-        (``chat_vertex_ai_credentials``, ``chat_vertex_ai_model_garden``,
-        ``aws_bedrock``).
+        (``context_window``, ``num_gpu``, ``reasoning`` and ``keep_alive`` for
+        Ollama, ``watsonx_project_id``, ``chat_vertex_ai_credentials``,
+        ``chat_vertex_ai_model_garden``, ``aws_bedrock``).
     :type configuration: dict
 
     :return: The model of the provider. An unknown ``model_type`` falls back to
         OpenAI, as in agentic-rag-module.
     :rtype: pydantic_ai.models.Model
 
-    :raises ValueError: For a provider whose model is not available yet.
     :raises ImportError: When the SDK of the provider is not installed.
     """
     model_type = configuration.get("model_type") or DEFAULT_MODEL_TYPE
@@ -102,9 +97,6 @@ def build_model(configuration: dict) -> "Model":
     model = configuration.get("model") or DEFAULT_MODEL
 
     logger.debug(f"build_model model_type={model_type} model={model}")
-
-    if model_type in CUSTOM_MODEL_TYPES:
-        raise ValueError(f"LLM provider not supported yet: {model_type}")
 
     match model_type:
         case ModelType.OPENAI.value:
@@ -115,6 +107,39 @@ def build_model(configuration: dict) -> "Model":
             # while an empty base_url would fail on every request.
             provider = OpenAIProvider(base_url=api_url or None, api_key=api_key)
             return OpenAIChatModel(model, provider=provider)
+
+        case ModelType.OLLAMA.value:
+            # The native /api/chat endpoint: the OpenAI-compatible /v1 one
+            # drops the options, so num_ctx and num_gpu would never arrive.
+            from app.rag.agentic.ollama_model import OllamaNativeModel
+
+            num_gpu = configuration.get("num_gpu")
+            return OllamaNativeModel(
+                model,
+                api_url=api_url,
+                context_window=configuration.get("context_window"),
+                # Numbers of the jsonConfig arrive as floats
+                num_gpu=None if num_gpu is None else int(num_gpu),
+                reasoning=configuration.get("reasoning"),
+                keep_alive=configuration.get("keep_alive"),
+            )
+
+        case ModelType.IBM_WATSONX.value:
+            from app.rag.agentic.watsonx_model import WatsonxModel
+
+            return WatsonxModel(
+                model,
+                api_url=api_url,
+                api_key=api_key,
+                project_id=configuration["watsonx_project_id"],
+            )
+
+        case ModelType.HUGGING_FACE_CUSTOM.value:
+            from app.rag.agentic.custom_hugging_face_model import (
+                CustomHuggingFaceModel,
+            )
+
+            return CustomHuggingFaceModel(api_url, model_name=model)
 
         case ModelType.CHAT_VERTEX_AI.value:
             from pydantic_ai.models.google import GoogleModel

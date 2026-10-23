@@ -22,6 +22,7 @@ dependencies = [
     "grpcio-tools==1.78.0",
     "grpcio==1.78.0",
     "h11==0.16.0",
+    "ibm-watsonx-ai==1.8.0",
     "ipython==9.11.0",
     "langchain-docling==2.0.0",
     "llama-index-cli==0.5.6",
