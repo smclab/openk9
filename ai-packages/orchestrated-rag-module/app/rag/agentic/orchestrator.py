@@ -37,7 +37,7 @@ from typing import Optional
 from pydantic_ai import Agent, ModelRetry, RunContext
 from pydantic_ai.usage import UsageLimits
 
-from app.rag.agentic import discovery, verifier
+from app.rag.agentic import citations, discovery, verifier
 from app.rag.agentic.contracts import (
     DiscoveryResult,
     DiscoveryUnanswerable,
@@ -186,8 +186,10 @@ def build_usage_limits(rag_configuration: dict) -> Optional[UsageLimits]:
     return UsageLimits(request_limit=request_limit)
 
 
-def _serialize_discovery(outcome) -> dict:
-    """Esito Discovery → dict per l'orchestratore (id + contenuto, niente score; design §4)."""
+def _serialize_discovery(outcome, deps: AgenticDeps) -> dict:
+    """Esito Discovery → dict per l'orchestratore (id + contenuto, niente score; design §4). Ogni
+    documento porta il suo numero di fonte, assegnato qui, alla consegna: con ``discover_many`` gli
+    esiti si serializzano nell'ordine delle sotto-domande, quindi anche i numeri."""
     if isinstance(outcome, DiscoveryUnanswerable):
         return {"status": "unanswerable", "reason": outcome.reason, "documents": []}
     assert isinstance(outcome, DiscoveryResult)
@@ -195,6 +197,7 @@ def _serialize_discovery(outcome) -> dict:
         "status": "ok",
         "documents": [
             {
+                "source": citations.source_number(deps, d.document_id),
                 "document_id": d.document_id,
                 "content": d.content,
                 "title": d.title,
@@ -206,18 +209,20 @@ def _serialize_discovery(outcome) -> dict:
 
 
 def _build_system_prompt(
-    *, bypass_rag: bool, prompt_no_rag: Optional[str], parallel_discovery: bool = False
+    *,
+    bypass_rag: bool,
+    prompt_no_rag: Optional[str],
+    parallel_discovery: bool = False,
+    retrieve_citations: bool = False,
 ) -> str:
     """System prompt dell'orchestratore. Con ``bypass_rag`` non ci sono tool, quindi il prompt di
     default (che istruisce a chiamare ``discover``) non va usato."""
     if bypass_rag:
         return (prompt_no_rag or DEFAULT_BYPASS_RAG_PROMPT) + BYPASS_RAG_OUTPUT_ADDENDUM
+    prompt = ORCHESTRATOR_SYSTEM_PROMPT
     if parallel_discovery:
-        return (
-            ORCHESTRATOR_SYSTEM_PROMPT.replace(SINGLE_DISCOVER_INSTRUCTION, "")
-            + FANOUT_PROMPT_ADDENDUM
-        )
-    return ORCHESTRATOR_SYSTEM_PROMPT
+        prompt = prompt.replace(SINGLE_DISCOVER_INSTRUCTION, "") + FANOUT_PROMPT_ADDENDUM
+    return prompt + citations.instructions(retrieve_citations)
 
 
 def repair_instructions(verdict: VerificationFailed) -> str:
@@ -278,6 +283,7 @@ def build_orchestrator(
     max_parallel_subtasks: int = 3,
     bypass_rag: bool = False,
     prompt_no_rag: Optional[str] = None,
+    retrieve_citations: bool = False,
 ) -> Agent:
     """Crea l'Agent orchestratore con il tool di delega ``discover``.
 
@@ -305,6 +311,7 @@ def build_orchestrator(
             bypass_rag=bypass_rag,
             prompt_no_rag=prompt_no_rag,
             parallel_discovery=parallel_discovery,
+            retrieve_citations=retrieve_citations,
         ),
         retries=retries,
         model_settings=(
@@ -330,7 +337,7 @@ def build_orchestrator(
             deps=ctx.deps,
             usage=ctx.usage,  # conteggio cumulativo condiviso
         )
-        return _serialize_discovery(outcome)
+        return _serialize_discovery(outcome, ctx.deps)
 
     if parallel_discovery:
 
@@ -362,7 +369,7 @@ def build_orchestrator(
                 max_parallel=max_parallel_subtasks,
             )
             subtasks = [
-                {**_serialize_discovery(outcome), "subtask": request.question}
+                {**_serialize_discovery(outcome, ctx.deps), "subtask": request.question}
                 for request, outcome in zip(capped, outcomes)
             ]
             if not dropped:
@@ -453,9 +460,7 @@ class OrchestratorStream:
     async def finalize(self):
         """Da chiamare a delta esauriti: risolve output finale e ``DocumentRef``."""
         self.output = await self._streamed.get_output()
-        self.refs = discovery.resolve_document_refs(
-            self._deps, self.output.used_document_ids
-        )
+        self.refs = citations.cited_refs(self._deps, self.output)
         return self.output, self.refs, self.result
 
 
@@ -470,6 +475,7 @@ def _orchestrator_for(deps: AgenticDeps, model=None, *, enable_verifier=False) -
         max_parallel_subtasks=resolve_max_parallel_subtasks(cfg),
         bypass_rag=bool(cfg.get("bypass_rag")),
         prompt_no_rag=cfg.get("prompt_no_rag"),
+        retrieve_citations=bool(cfg.get("retrieve_citations")),
     )
 
 
@@ -520,7 +526,7 @@ async def run_orchestrator(
         usage_limits=build_usage_limits(deps.rag_configuration),
     )
     output = result.output
-    refs = discovery.resolve_document_refs(deps, output.used_document_ids)
+    refs = citations.cited_refs(deps, output)
     logger.debug(
         f"[orchestrator] done status={output.status} "
         f"used_ids={output.used_document_ids} refs={len(refs)}"

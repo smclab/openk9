@@ -73,6 +73,9 @@ class AgenticDeps:
     #: consegna: sono il contesto su cui il Verifier giudica la risposta. ``discovered`` contiene
     #: anche i candidati scartati, che l'orchestratore non ha mai visto.
     delivered_ids: list[str] = field(default_factory=list)
+    #: numero di fonte di ogni documento consegnato all'orchestratore (id -> n), assegnato alla
+    #: consegna e stabile nel turno: e' il ``[n]`` dei marcatori della risposta
+    source_ordinals: dict = field(default_factory=dict)
     #: sotto-domande delegate al Discovery in questo turno (tetto: ``MAX_DISCOVERIES_PER_TURN``)
     discoveries_run: int = 0
     #: token stimati dei documenti gia' consegnati all'orchestratore in questo turno

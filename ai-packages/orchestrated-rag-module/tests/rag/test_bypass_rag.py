@@ -108,4 +108,5 @@ def test_without_bypass_rag_prompt_is_the_orchestrator_one():
         bypass_rag=False, prompt_no_rag="ignorato"
     )
 
-    assert prompt == orchestrator.ORCHESTRATOR_SYSTEM_PROMPT
+    assert prompt.startswith(orchestrator.ORCHESTRATOR_SYSTEM_PROMPT)
+    assert "ignorato" not in prompt

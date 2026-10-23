@@ -16,10 +16,11 @@
 #
 
 """
-SSE events of an answer, with the protocol of agentic-rag-module: ``START``,
-``CHUNK``, ``DOCUMENT``, ``CANCEL``, ``ERROR`` and ``END``, plus ``STATUS``, the
-phase of the turn before the answer starts: ``planning``, ``discovering``,
-``retrieving``, ``evaluating`` (only with the Verifier), ``generating``.
+SSE events of an answer, with the protocol of agentic-rag-module: ``SOURCES``,
+``START``, ``CHUNK``, ``DOCUMENT``, ``CANCEL``, ``ERROR`` and ``END``, plus
+``STATUS``, the phase of the turn before the answer starts: ``planning``,
+``discovering``, ``retrieving``, ``evaluating`` (only with the Verifier),
+``generating``.
 
 :func:`stream_answer` consumes an async iterator of text deltas: the deltas of
 the provider while the orchestrator writes (:func:`coalesce`), or a complete
@@ -103,13 +104,15 @@ async def coalesce(deltas, size: int = CHUNK_SIZE):
 
 
 def document_events(refs) -> Iterable[str]:
-    """One DOCUMENT event per cited document, with the fields it has."""
+    """One DOCUMENT event per cited document, with the fields it has: the number the answer
+    marks it with, and the quotes taken from it, when there are any."""
     seen = set()
     for ref in refs:
         if not ref.document_id or ref.document_id in seen:
             continue
         seen.add(ref.document_id)
-        chunk = {"citations": []}
+        chunk = {} if ref.ordinal is None else {"ordinal": ref.ordinal}
+        chunk["citations"] = [{"quote": quote} for quote in ref.quotes or []]
         for field in ("score", "title", "url", "domain"):
             if (value := getattr(ref, field)) is not None:
                 chunk[field] = value
@@ -216,10 +219,11 @@ async def stream_answer(
     scope_check: Optional[Callable[[str], Awaitable[str]]] = None,
     scope_gate_prefix_chars: int = 250,
     scope_gate_redirect_message: str = "",
+    sources: Optional[Callable[[], list]] = None,
 ):
     """
-    Stream the answer: STATUS ``generating``, START, the CHUNK events, then
-    TITLE, DOCUMENT and END.
+    Stream the answer: STATUS ``generating``, SOURCES, START, the CHUNK events,
+    then TITLE, DOCUMENT and END.
 
     With the output guardrail the CHUNK events pass its checks first: an answer
     it blocks ends with a CANCEL event, and ``post_stream`` is not called, so
@@ -236,6 +240,9 @@ async def stream_answer(
         as 1, which holds the text back until it is checked.
     :param output_check: ``(answer, stage) -> category or NONE``, for types 1 and 2.
     :param scope_check: ``(answer prefix) -> VALID or OFF_SCOPE``, for type 3.
+    :param sources: Returns the numbered sources of the turn, read when the
+        answer starts: they are all known by then, since the tool round ends
+        before the model writes.
     """
     yield status_event("generating")
     if output_guardrail_type is not None and output_guardrail_type not in (1, 2, 3):
@@ -255,6 +262,8 @@ async def stream_answer(
         scope_gate_redirect_message=scope_gate_redirect_message,
     ):
         if start:
+            if sources is not None and (numbered := sources()):
+                yield _sse(numbered, "SOURCES")
             yield _sse("", "START")
             start = False
         yield event

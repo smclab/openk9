@@ -38,7 +38,7 @@ import time
 from fastapi import HTTPException
 
 from app.external_services.grpc.grpc_client import get_embedding_model_configuration
-from app.rag.agentic import guardrails, intent, orchestrator, retrieval, streaming
+from app.rag.agentic import citations, guardrails, intent, orchestrator, retrieval, streaming
 from app.rag.agentic.deps import AgenticDeps
 from app.rag.agentic.models_factory import build_model
 from app.rag.agentic.persistence import (
@@ -264,6 +264,7 @@ async def run_turn(
             deltas=streaming.deltas_from_message(output.message),
             rag_type=rag_type,
             post_stream=post_stream,
+            sources=lambda: citations.sources(deps),
             **guard,
         ):
             yield event
@@ -285,6 +286,7 @@ async def run_turn(
                 deltas=streaming.coalesce(orchestrator_stream.deltas()),
                 rag_type=rag_type,
                 post_stream=post_stream,
+                sources=lambda: citations.sources(deps),
                 **guard,
             ):
                 events.put_nowait(event)

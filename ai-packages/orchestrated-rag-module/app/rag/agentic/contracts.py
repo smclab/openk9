@@ -124,6 +124,10 @@ class DocumentRef(BaseModel):
     url: Optional[str] = None
     score: Optional[float] = None
     domain: Optional[str] = None
+    #: numero della fonte nei marcatori ``[n]`` della risposta; ``None`` se la risposta non ne ha
+    ordinal: Optional[int] = None
+    #: citazioni testuali prese dalla fonte, con ``retrieve_citations`` attivo
+    quotes: Optional[list[str]] = None
 
 
 # ── Orchestratore — output finale ──
@@ -139,6 +143,13 @@ class OrchestratorOutput(BaseModel):
         description=(
             "id effettivamente citati nel comporre la risposta; risolti a DocumentRef (via i "
             "risultati Discovery accumulati) per l'evento SSE DOCUMENT"
+        ),
+    )
+    citations: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description=(
+            "quotes per marked source number, copied verbatim from the source; "
+            "only when the instructions ask for them"
         ),
     )
 

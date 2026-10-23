@@ -207,6 +207,14 @@ def build_checkpoint(
         "context": serialize_context(used_document_refs),
         "messages": serialize_messages(message_history),
     }
+    # un turno con i marcatori salva, come agentic-rag-module, le citazioni per id (che get_chat
+    # usa per tenere solo le fonti citate) e il numero di ogni fonte (per i [n] della risposta)
+    numbered = [ref for ref in used_document_refs if ref.ordinal is not None]
+    if numbered:
+        channel_values["citations"] = {ref.document_id: ref.quotes or [] for ref in numbered}
+        channel_values["citation_ordinals"] = {
+            str(ref.ordinal): ref.document_id for ref in numbered
+        }
     return {
         "ts": ts or _now_iso(),
         "channel_values": channel_values,
