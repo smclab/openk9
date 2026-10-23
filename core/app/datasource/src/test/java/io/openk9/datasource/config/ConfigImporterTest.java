@@ -113,6 +113,10 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "secret-char-filter";
 	private static final String CREATED_CHAR_FILTER_NAME =
 		ENTITY_NAME_PREFIX + "created-char-filter";
+	private static final String EMPTIED_CHAR_FILTER_NAME =
+		ENTITY_NAME_PREFIX + "emptied-char-filter";
+	private static final String NESTED_CHAR_FILTER_NAME =
+		ENTITY_NAME_PREFIX + "nested-char-filter";
 	private static final String EXISTING_REF_FIELD_NAME =
 		ENTITY_NAME_PREFIX + "existing-ref-field";
 	private static final String RAG_CONFIGURATION_NAME =
@@ -463,7 +467,8 @@ public class ConfigImporterTest {
 		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
 
 		// A brand new entity whose secret arrives already redacted: there is no
-		// target to restore from, so the redacted path is dropped, never stored.
+		// target to restore from, so the redacted key is kept with an empty value,
+		// in its original position, and the placeholder is never stored.
 		ConfigEntity redacted = new ConfigEntity(
 			"CHAR_FILTER-NEW",
 			ConfigEntityType.CHAR_FILTER,
@@ -471,7 +476,9 @@ public class ConfigImporterTest {
 			CharFilterDTO.builder()
 				.name(CREATED_CHAR_FILTER_NAME)
 				.type("html_strip")
-				.jsonConfig("{\"password\":\"" + ConfigRedactor.PLACEHOLDER + "\"}")
+				.jsonConfig(
+					"{\"user\":\"u\",\"password\":\""
+						+ ConfigRedactor.PLACEHOLDER + "\",\"mapping\":\"a=>b\"}")
 				.build(),
 			new LinkedHashMap<>(),
 			List.of("jsonConfig.password"));
@@ -487,8 +494,96 @@ public class ConfigImporterTest {
 
 		Long id = result.resolvedIds().get("CHAR_FILTER-NEW");
 		assertNotNull(id, "the new char filter must have been created");
-		assertFalse(loadCharFilterJsonConfig(id).contains(ConfigRedactor.PLACEHOLDER),
-			"create must not persist the placeholder");
+		assertEquals(
+			"{\"user\":\"u\",\"password\":\"\",\"mapping\":\"a=>b\"}",
+			loadCharFilterJsonConfig(id),
+			"create must keep the key emptied, never persisting the placeholder");
+		assertTrue(
+			result.secretsToReenter().stream().anyMatch(secret ->
+				"CHAR_FILTER-NEW".equals(secret.ref())
+					&& secret.fields().contains("jsonConfig.password")),
+			"the emptied secret must still be listed to re-enter");
+
+		// Delete the char filter created by this method.
+		EntitiesUtils.removeEntity(id, charFilterService, sessionFactory);
+	}
+
+	@Test
+	void overwrite_creates_an_empty_secret_when_the_target_lacks_the_key() {
+		// 1. Seed a target whose jsonConfig has no value for the redacted key
+		Long id = seedCharFilter(
+			EMPTIED_CHAR_FILTER_NAME, "{\"mapping\":\"a=>b\"}");
+
+		// 2. Overwrite with a package carrying the secret already redacted
+		ConfigEntity redacted = new ConfigEntity(
+			"CHAR_FILTER-EMPTIED",
+			ConfigEntityType.CHAR_FILTER,
+			EMPTIED_CHAR_FILTER_NAME,
+			CharFilterDTO.builder()
+				.name(EMPTIED_CHAR_FILTER_NAME)
+				.type("html_strip")
+				.jsonConfig(
+					"{\"password\":\"" + ConfigRedactor.PLACEHOLDER
+						+ "\",\"mapping\":\"a=>b\"}")
+				.build(),
+			new LinkedHashMap<>(),
+			List.of("jsonConfig.password"));
+		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
+		// the export already carries the seeded char filter: replace it, since two
+		// entities on one natural key make the package ambiguous
+		entities.removeIf(entity ->
+			entity.getAttributes() instanceof CharFilterDTO dto
+				&& EMPTIED_CHAR_FILTER_NAME.equals(dto.getName()));
+		entities.add(redacted);
+		ConfigPackage augmented = new ConfigPackage(
+			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
+
+		configImporter.importConfig(
+			TENANT_ID, augmented, ImportMode.OVERWRITE, false
+		).await().indefinitely();
+
+		// the key is created empty instead of being omitted
+		assertEquals(
+			"{\"password\":\"\",\"mapping\":\"a=>b\"}",
+			loadCharFilterJsonConfig(id));
+
+		// Delete the char filter created by this method.
+		EntitiesUtils.removeEntity(id, charFilterService, sessionFactory);
+	}
+
+	@Test
+	void create_keeps_a_nested_secret_key_with_an_empty_value() {
+		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+
+		// A redacted secret nested inside an object of the jsonConfig
+		ConfigEntity redacted = new ConfigEntity(
+			"CHAR_FILTER-NESTED",
+			ConfigEntityType.CHAR_FILTER,
+			NESTED_CHAR_FILTER_NAME,
+			CharFilterDTO.builder()
+				.name(NESTED_CHAR_FILTER_NAME)
+				.type("html_strip")
+				.jsonConfig(
+					"{\"auth\":{\"user\":\"u\",\"password\":\""
+						+ ConfigRedactor.PLACEHOLDER + "\"}}")
+				.build(),
+			new LinkedHashMap<>(),
+			List.of("jsonConfig.auth.password"));
+		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
+		entities.add(redacted);
+		ConfigPackage augmented = new ConfigPackage(
+			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
+
+		ImportReport result =
+			configImporter.importConfig(TENANT_ID, augmented, ImportMode.SKIP, false)
+				.await().indefinitely();
+
+		Long id = result.resolvedIds().get("CHAR_FILTER-NESTED");
+		assertNotNull(id, "the new char filter must have been created");
+		assertEquals(
+			"{\"auth\":{\"user\":\"u\",\"password\":\"\"}}",
+			loadCharFilterJsonConfig(id));
 
 		// Delete the char filter created by this method.
 		EntitiesUtils.removeEntity(id, charFilterService, sessionFactory);

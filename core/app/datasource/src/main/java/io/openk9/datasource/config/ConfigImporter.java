@@ -95,7 +95,8 @@ import org.jboss.logging.Logger;
  * <p>
  * Secrets are never clobbered: the exporter replaces them with a placeholder and
  * records their paths, so on overwrite the target's current value is restored into
- * the incoming DTO, and on create the redacted paths are dropped (left unset).
+ * the incoming DTO, and on create the redacted paths are left unset (emptied
+ * inside {@code jsonConfig}, whose keys are kept).
  */
 @ApplicationScoped
 public class ConfigImporter {
@@ -540,7 +541,8 @@ public class ConfigImporter {
 	/**
 	 * Removes the redacted values from the attributes so the placeholder is never
 	 * persisted on create: top-level fields are dropped and secrets nested in
-	 * {@code jsonConfig} are stripped from the parsed config.
+	 * {@code jsonConfig} keep their key with an empty value, so the config
+	 * still matches the shape the connector expects.
 	 */
 	private Object stripRedacted(Object attributes, List<String> redactedFields) {
 		if (redactedFields == null || redactedFields.isEmpty()) {
@@ -902,7 +904,7 @@ public class ConfigImporter {
 						object.set(name, targetValue);
 					}
 					else {
-						object.remove(name);
+						object.put(name, "");
 					}
 				}
 				else {
@@ -938,7 +940,7 @@ public class ConfigImporter {
 			for (String name : names) {
 				JsonNode value = object.get(name);
 				if (isPlaceholder(value)) {
-					object.remove(name);
+					object.put(name, "");
 				}
 				else {
 					stripPlaceholders(value);
