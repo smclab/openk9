@@ -39,8 +39,12 @@ spec:
               value: {{ .Values.log.level | quote }}
             - name: PLAYWRIGHT_MAX_CONTEXTS
               value: {{ .Values.playwright.maxContexts | quote }}
+            - name: CONCURRENT_REQUESTS
+              value: {{ .Values.concurrentRequests | quote }}
+            {{- if .Values.playwright.maxPagesPerContext }}
             - name: PLAYWRIGHT_MAX_PAGES_PER_CONTEXT
               value: {{ .Values.playwright.maxPagesPerContext | quote }}
+            {{- end }}
           {{- if .Values.resources }}
           resources: {{- toYaml .Values.resources | nindent 12 }}
           {{- end }}
