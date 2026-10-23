@@ -59,8 +59,9 @@ In case you can configure number of context and pages per context using follwing
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `concurrentRequests`    | Maximum number of concurrent requests performed by the crawler                        | `8`            |
 | `playwright.maxContexts`    | Playwright max contexts                        | `1`            |
-| `playwright.maxPagesPerContext`    | Playwright max pages per context                         | `4`            |
+| `playwright.maxPagesPerContext`    | Playwright max pages per context. When empty it follows `concurrentRequests`; lower values are raised to `concurrentRequests` | `""`            |
 
 
 ### Service account and rbac
@@ -144,7 +145,21 @@ To configure probes appropriately you can use following parameters:
 
 Openk9 Web Crawler Connector chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.
 
-| `resources`                                         | Set container requests and limits for different resources like CPU or memory (essential for production workloads)                                                                                                 | `{}`             |
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `resources`                                         | Set container requests and limits for different resources like CPU or memory (essential for production workloads)                                                                                                 | `requests` and `limits`: `cpu: 2`, `memory: 4Gi` |
+
+The defaults are sized for a datasource with Playwright enabled and `concurrentRequests: 8`. Memory and CPU usage depend on the weight of the crawled pages, so adapt them to your sites.
+
+Measured on a real site with heavy pages (about 4 MB of HTML each), crawling 30 pages with Playwright, one run per value:
+
+| `concurrentRequests` | Peak memory | Peak CPU (cores) | Average memory |
+| -------------------- | ----------- | ---------------- | -------------- |
+| `2`                  | 2.05 GiB    | 2.8              | 1.25 GiB       |
+| `4`                  | 3.07 GiB    | 4.0              | 1.42 GiB       |
+| `8`                  | 3.48 GiB    | 3.2              | 2.08 GiB       |
+
+Average CPU stays under 1 core with short peaks. Without Playwright the same crawling uses about 300 MiB, and at the end of the job memory returns to about 90 MiB. Lower `concurrentRequests` to reduce the memory peak.
 
 ### Security
 

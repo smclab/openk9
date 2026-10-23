@@ -72,9 +72,15 @@ openk9:
 log:
   level: "INFO"
 
+## @param concurrentRequests Maximum number of concurrent requests performed by the crawler
+##
+concurrentRequests: "8"
+
 playwright:
   maxContexts: "1"
-  maxPagesPerContext: "4"
+  ## Maximum pages per Playwright context. When empty it follows `concurrentRequests`;
+  ## values lower than `concurrentRequests` are raised to it by the connector.
+  maxPagesPerContext: ""
 
 ## Database Connector pods ServiceAccount
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
@@ -124,16 +130,16 @@ hostAliases: []
 
 
 ## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
-## Example:
-## resources:
-##   requests:
-##     cpu: 2
-##     memory: 512Mi
-##   limits:
-##     cpu: 3
-##     memory: 1024Mi
+## The defaults are sized for a datasource with Playwright and `concurrentRequests: 8`;
+## memory usage depends on the weight of the crawled pages.
 ##
-resources: {}
+resources:
+  requests:
+    cpu: 2
+    memory: 4Gi
+  limits:
+    cpu: 2
+    memory: 4Gi
 
 autoscaling:
   enabled: false
