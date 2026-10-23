@@ -16,6 +16,7 @@ Domain → folders covered:
   - frontend:  js-packages/admin-ui/ + search-frontend/ + tenant-ui/
                + talk-to/ + openk9-chatbot/
   - ai:        ai-packages/rag-module/ + agentic-rag-module/
+               + orchestrated-rag-module/
                + embedding-modules/ + chunk-evaluation-module/
   - enricher:  enrichers/docling-processor/
   - unrelated: helm-charts/  (no trigger should fire)
@@ -65,7 +66,7 @@ FRONTEND_TRIGGERS = [
     "Trigger OpenK9-Chatbot",
 ]
 AI_TRIGGERS = [
-    "Trigger Agentic Rag Module",
+    "Trigger Agentic Rag Module", "Trigger Orchestrated Rag Module",
     "Trigger Embedding Modules", "Trigger Chunk Evaluation Module",
 ]
 ENRICHER_TRIGGERS = [
@@ -91,6 +92,7 @@ DOMAIN_FOLDERS = {
     ],
     "ai":        [
         "ai-packages/agentic-rag-module",
+        "ai-packages/orchestrated-rag-module",
         "ai-packages/embedding-modules",
         "ai-packages/chunk-evaluation-module",
     ],

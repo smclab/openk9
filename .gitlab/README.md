@@ -91,6 +91,7 @@ OpenK9 uses a **Parent-Child CI/CD pipeline** on GitLab. The parent pipeline act
 │
 │   # AI / enricher child pipelines
 ├── .gitlab-ci-agentic-rag-module.yaml
+├── .gitlab-ci-orchestrated-rag-module.yaml  ← no restart and no Docker Hub copy until the module has a chart
 ├── .gitlab-ci-embedding-module.yaml
 ├── .gitlab-ci-chunk-evaluation-module.yaml
 ├── .gitlab-ci-docling-processor.yaml
@@ -312,7 +313,7 @@ mvn package \
 
 ### Frontend & AI (Kaniko)
 
-Frontend (admin-ui, search-frontend, tenant-ui, talk-to) and AI modules (rag-module, agentic-rag-module, embedding-module, chunk-evaluation-module, docling-processor) use **Kaniko** to build Docker images without a Docker daemon.
+Frontend (admin-ui, search-frontend, tenant-ui, talk-to) and AI modules (rag-module, agentic-rag-module, orchestrated-rag-module, embedding-module, chunk-evaluation-module, docling-processor) use **Kaniko** to build Docker images without a Docker daemon.
 
 All Kaniko jobs use a pinned image (`gcr.io/kaniko-project/executor:v1.23.2-debug` via `$KANIKO_IMAGE`) and the following flags:
 

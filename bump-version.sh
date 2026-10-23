@@ -118,11 +118,12 @@ done
 
 # ---------------------------------------------------------------------------
 # 6) Python FastAPI — `version="..."` argument in the service entrypoints
-#    (agentic-rag-module server.py).
+#    (agentic-rag-module and orchestrated-rag-module server.py).
 # ---------------------------------------------------------------------------
 echo "==> [6/9] Python FastAPI version"
 for f in \
-  "$ROOT/ai-packages/agentic-rag-module/app/server.py"; do
+  "$ROOT/ai-packages/agentic-rag-module/app/server.py" \
+  "$ROOT/ai-packages/orchestrated-rag-module/app/server.py"; do
   [[ -f "$f" ]] || continue
   sed -i -E "s/(version[[:space:]]*=[[:space:]]*\")${OLD_RE}(\")/\1$NEW\2/g" "$f"
   echo "    $f"

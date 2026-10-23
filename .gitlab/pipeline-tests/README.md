@@ -59,7 +59,7 @@ La release line legacy `3.0.x` non è testata qui: vive su un branch separato co
 
 - Push su release branch con file backend → tutti i trigger backend scattano (incluso `Trigger K8S-Client`)
 - Push su release branch con file frontend → tutti i trigger frontend scattano (incluso `Trigger OpenK9-Chatbot`)
-- Push su release branch con file AI → tutti i trigger AI scattano (rag, agentic-rag, embedding, chunk-evaluation)
+- Push su release branch con file AI → tutti i trigger AI scattano (rag, agentic-rag, orchestrated-rag, embedding, chunk-evaluation)
 - Push su release branch con file enricher → `Trigger Docling Processor` scatta
 - Push su release branch con file connector → `Trigger Connectors Build` scatta (#2133, prima silenzioso)
 - Push su release branch con file unrelated → nessun trigger

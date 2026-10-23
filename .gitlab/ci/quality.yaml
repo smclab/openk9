@@ -220,6 +220,18 @@ Trivy FS agentic-rag-module:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: [ "ai-packages/agentic-rag-module/**/*" ]
 
+Trivy FS orchestrated-rag-module:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "ai-packages/orchestrated-rag-module"
+    IGNOREFILE: "ai-packages/.trivyignore.yaml"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "ai-packages/orchestrated-rag-module/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "ai-packages/orchestrated-rag-module/**/*" ]
+
 Trivy FS chunk-evaluation-module:
   extends: .trivy-fs-scan
   variables:
