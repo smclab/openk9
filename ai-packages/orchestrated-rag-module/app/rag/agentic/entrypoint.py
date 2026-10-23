@@ -35,7 +35,7 @@ import asyncio
 import json
 import time
 
-from app.rag.agentic import guardrails, orchestrator, streaming
+from app.rag.agentic import guardrails, intent, orchestrator, streaming
 from app.rag.agentic.deps import AgenticDeps
 from app.rag.agentic.models_factory import build_model
 from app.rag.agentic.persistence import (
@@ -142,6 +142,23 @@ def output_guardrail_options(guardrails_configuration, *, search_text: str, deps
     }
 
 
+async def detect_intent(*, rag_type: str, search_text: str, deps: AgenticDeps) -> None:
+    """Fill the domains of ``deps``: the ones of the tenant, which the Discovery may choose
+    from, and the ones detected for the question, its domain filter. Without intent detection
+    both stay empty, and the Discovery searches everything."""
+    context = log_context(tenant_id=deps.tenant_id, user_id=deps.user_id, chat_id=deps.chat_id)
+    if not intent.intent_detection_enabled(rag_type, deps.rag_configuration):
+        logger.info(f"[intent_detection] skipped rag_type={rag_type} {context}")
+        return
+    try:
+        deps.allowed_domains, deps.detected_domains = await intent.detect_domains(
+            query=search_text, deps=deps
+        )
+    except Exception as e:  # noqa: BLE001
+        # a failed detection costs the filter, not the answer: the Discovery searches everything
+        logger.warning(f"[intent_detection] failed, no domain filter: {e!r} {context}")
+
+
 async def run_turn(
     *,
     rag_type: str,
@@ -163,6 +180,9 @@ async def run_turn(
     ``store`` from the second turn on, and the turn is saved there with its
     title once the answer has been delivered. An answer that the output
     guardrail blocks ends with a CANCEL event and is not saved either.
+
+    After the input guardrail the intent detection gives the domains of the
+    question, which the Discovery searches in.
 
     :param rag_type: The RAG type of the request.
     :param search_text: The question of the user.
@@ -221,6 +241,7 @@ async def run_turn(
     events: asyncio.Queue = asyncio.Queue()
     deps.status_sink = lambda phase: events.put_nowait(streaming.status_event(phase))
     yield streaming.status_event("planning")
+    await detect_intent(rag_type=rag_type, search_text=search_text, deps=deps)
 
     if orchestrator.verifier_enabled(deps.rag_configuration):
         running = asyncio.ensure_future(

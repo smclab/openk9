@@ -84,8 +84,8 @@ def test_hits_carry_id_score_and_content(search):
     )
 
     assert search(client) == [
-        {"document_id": "doc-1", "score": 0.9, "content": "violenza"},
-        {"document_id": "doc-2", "score": 0, "content": ""},
+        {"document_id": "doc-1", "score": 0.9, "content": "violenza", "domain": None},
+        {"document_id": "doc-2", "score": 0, "content": "", "domain": None},
     ]
 
 

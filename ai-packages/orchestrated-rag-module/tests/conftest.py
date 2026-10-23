@@ -22,6 +22,8 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
+
 MODULE_ROOT = Path(__file__).resolve().parent.parent
 
 if str(MODULE_ROOT) not in sys.path:
@@ -49,3 +51,16 @@ _STUBBED_MODULES = [
 
 for module_name in _STUBBED_MODULES:
     sys.modules.setdefault(module_name, MagicMock())
+
+
+@pytest.fixture(autouse=True)
+def tenant_without_domains(monkeypatch):
+    """The test tenant has no domain documents, as a tenant that never embedded any.
+
+    Intent detection runs by default in every turn, and its first step reads the
+    domains of the tenant from OpenSearch: without this a turn under test would
+    try to reach a cluster. The intent detection tests set their own domains.
+    """
+    from app.rag.agentic import retrieval
+
+    monkeypatch.setattr(retrieval, "get_domains", lambda **_: [])

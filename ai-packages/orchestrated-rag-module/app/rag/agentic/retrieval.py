@@ -318,42 +318,71 @@ def retrieve_documents(
     return documents
 
 
-def retrieve_guardrail_documents(
+def _knn_documents(
     *,
     opensearch_host: str,
     grpc_host_embedding: str,
     embedding_model_configuration: dict,
     index: str,
     search_text: str,
+    label: str,
 ) -> list[dict]:
     """
-    Search ``search_text`` among the guardrail documents of a tenant.
+    Search ``search_text`` in the labelled documents of a tenant: guardrail or domain documents.
 
     Tenant isolation comes from ``index``: the query applies no filter. It is a
     pure KNN query, so each score is an absolute similarity that the caller can
     hold against a fixed threshold. A text with nothing to embed, or a missing
     index, finds nothing.
 
-    :return: One dict per hit, with ``document_id``, ``score`` and ``content``.
+    :return: One dict per hit, best first, with ``document_id``, ``score``,
+        ``content`` and ``domain``.
     """
     vector = query_embedding(grpc_host_embedding, embedding_model_configuration, search_text)
     if vector is None:
-        logger.debug(f"[guardrail_retriever] nothing to embed, search skipped index={index}")
+        logger.debug(f"[{label}] nothing to embed, search skipped index={index}")
         return []
     client = get_opensearch_client(opensearch_host)
     if not client.indices.exists(index=index):
-        logger.debug(f"[guardrail_retriever] index missing, search skipped index={index}")
+        logger.debug(f"[{label}] index missing, search skipped index={index}")
         return []
     response = client.search(
         body={"query": {"knn": {"vector": {"vector": vector, "k": 10}}}}, index=index
     )
     hits = response["hits"]["hits"]
-    logger.debug(f"[guardrail_retriever] index={index} hits={len(hits)}")
+    logger.debug(f"[{label}] index={index} hits={len(hits)}")
     return [
         {
             "document_id": hit["_source"].get("document_id"),
             "score": hit.get("_score") or 0,
             "content": hit["_source"].get("chunkText", ""),
+            "domain": hit["_source"].get("domain"),
         }
         for hit in hits
     ]
+
+
+def retrieve_guardrail_documents(**search) -> list[dict]:
+    """The guardrail documents of a tenant closest to a text: see :func:`_knn_documents`."""
+    return _knn_documents(**search, label="guardrail_retriever")
+
+
+def retrieve_domain_documents(**search) -> list[dict]:
+    """The domain documents of a tenant closest to a text, each with its ``domain``: see
+    :func:`_knn_documents`."""
+    return _knn_documents(**search, label="domain_retriever")
+
+
+def get_domains(*, opensearch_host: str, index: str, size: int = 1000) -> list[str]:
+    """The domains of the domain documents of a tenant: none if the index does not exist."""
+    client = get_opensearch_client(opensearch_host)
+    if not client.indices.exists(index=index):
+        return []
+    response = client.search(
+        index=index,
+        body={
+            "size": 0,
+            "aggs": {"distinct_domains": {"terms": {"field": "domain", "size": size}}},
+        },
+    )
+    return [bucket["key"] for bucket in response["aggregations"]["distinct_domains"]["buckets"]]
