@@ -386,3 +386,184 @@ def get_domains(*, opensearch_host: str, index: str, size: int = 1000) -> list[s
         },
     )
     return [bucket["key"] for bucket in response["aggregations"]["distinct_domains"]["buckets"]]
+
+
+def _search_pipeline(*, grpc_host: str, tenant_id: str, jwt) -> Optional[str]:
+    """Name of the search pipeline of the Search Config of the tenant, or None when the bucket
+    has none.
+
+    The datasource reports it only for a query with a hybrid token, and embeds
+    the text of the token to build that query: the token is sent without text,
+    since only the name of the pipeline is read back.
+    """
+    query_data = query_parser(
+        search_query=[
+            {
+                "entityType": "",
+                "entityName": "",
+                "tokenType": HYBRID_RETRIEVE_TYPE,
+                "keywordKey": "",
+                "values": [],
+                "extra": {},
+                "filter": True,
+            }
+        ],
+        range_values=[],
+        after_key=None,
+        suggest_keyword=None,
+        suggestion_category_id=None,
+        tenant_id=tenant_id,
+        jwt=jwt,
+        extra={},
+        sort=None,
+        sort_after_key=None,
+        language=None,
+        grpc_host=grpc_host,
+    )
+    return dict(query_data["query_parameters"]).get("search_pipeline")
+
+
+def retrieve_uploaded_documents(
+    *,
+    opensearch_host: str,
+    grpc_host_embedding: str,
+    embedding_model_configuration: dict,
+    index: str,
+    retrieve_type: str,
+    user_id: str,
+    chat_id: str,
+    search_text: str,
+    grpc_host: Optional[str] = None,
+    tenant_id: Optional[str] = None,
+    jwt=None,
+) -> list[dict]:
+    """
+    Search ``search_text`` among the documents the user uploaded in the chat, as
+    ``OpenSearchUploadedDocumentsRetriever`` of agentic-rag-module does.
+
+    Both branches of the query are restricted to the chat of the user while
+    scoring: an approximate KNN would pick its neighbours among every chat of
+    the tenant, and indices created on nmslib reject a KNN filter, so the vector
+    branch scores the chunks of the chat exactly, in the l2 space of the index.
+    A hybrid search goes through the search pipeline of the Search Config of
+    the tenant, which also ranks the documents found by meaning only.
+
+    :return: One dict per hit, with ``document_id``, ``filename``,
+        ``file_extension``, ``title``, ``score`` and ``content``.
+    """
+    vector = query_embedding(grpc_host_embedding, embedding_model_configuration, search_text)
+    if vector is None:
+        return []
+    client = get_opensearch_client(opensearch_host)
+    if not client.indices.exists(index=index):
+        return []
+    filters = [
+        {"term": {"user_id.keyword": user_id}},
+        {"term": {"chat_id.keyword": chat_id}},
+    ]
+    if retrieve_type in VECTORIAL_RETRIEVE_TYPES:
+        body = {
+            "query": {
+                # the text branch first, as the datasource builds it, so that the
+                # weights of a Search Config mean the same here
+                "hybrid": {
+                    "queries": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {"match": {"chunkText": {"query": search_text, "boost": 0.5}}}
+                                ],
+                                "filter": filters,
+                            }
+                        },
+                        {
+                            "script_score": {
+                                "query": {"bool": {"filter": filters}},
+                                "script": {
+                                    "source": "knn_score",
+                                    "lang": "knn",
+                                    "params": {
+                                        "field": "vector",
+                                        "query_value": vector,
+                                        "space_type": "l2",
+                                    },
+                                },
+                            }
+                        },
+                    ]
+                }
+            }
+        }
+    else:
+        body = {
+            "query": {
+                "bool": {
+                    "must": [{"match": {"chunkText": {"query": search_text}}}],
+                    "filter": filters,
+                }
+            }
+        }
+    pipeline = (
+        _search_pipeline(grpc_host=grpc_host, tenant_id=tenant_id, jwt=jwt)
+        if retrieve_type == HYBRID_RETRIEVE_TYPE and grpc_host and tenant_id
+        else None
+    )
+    if pipeline:
+        response = client.search(body=body, index=index, params={"search_pipeline": pipeline})
+    else:
+        response = client.search(body=body, index=index)
+    documents = []
+    for hit in response["hits"]["hits"]:
+        source = hit["_source"]
+        filename, extension = source.get("filename"), source.get("file_extension")
+        documents.append(
+            {
+                "document_id": source.get("document_id"),
+                "filename": filename,
+                "file_extension": extension,
+                "title": f"{filename or ''}{extension or ''}",
+                "score": hit.get("_score") or 0,
+                "content": source.get("chunkText", ""),
+            }
+        )
+    return documents
+
+
+def uploaded_documents_retrieve_fn(
+    *, user_id: str, chat_id: str, grpc_host_embedding: str, embedding_model_configuration: dict
+):
+    """
+    The ``retrieve_fn`` of a turn on the uploaded documents: the Discovery
+    searches only the documents the user uploaded in the chat, instead of the
+    documents of the tenant, as in agentic-rag-module.
+
+    It takes the arguments of :func:`retrieve_documents`, so that the retriever
+    tool of the Discovery does not change; the ones that belong to the documents
+    of the tenant (domains, datasources, chunk window) do not apply.
+    """
+
+    def retrieve(
+        *,
+        search_text: str,
+        opensearch_host: str,
+        retrieve_type: str,
+        tenant_id: str,
+        grpc_host: str,
+        jwt=None,
+        **_,
+    ) -> list[dict]:
+        return retrieve_uploaded_documents(
+            opensearch_host=opensearch_host,
+            grpc_host_embedding=grpc_host_embedding,
+            embedding_model_configuration=embedding_model_configuration,
+            index=f"{tenant_id}-uploaded-documents-index",
+            retrieve_type=retrieve_type,
+            user_id=user_id,
+            chat_id=chat_id,
+            search_text=search_text,
+            grpc_host=grpc_host,
+            tenant_id=tenant_id,
+            jwt=jwt,
+        )
+
+    return retrieve

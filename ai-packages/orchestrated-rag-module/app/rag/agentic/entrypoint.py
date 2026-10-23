@@ -35,13 +35,15 @@ import asyncio
 import json
 import time
 
-from app.rag.agentic import guardrails, intent, orchestrator, streaming
+from app.external_services.grpc.grpc_client import get_embedding_model_configuration
+from app.rag.agentic import guardrails, intent, orchestrator, retrieval, streaming
 from app.rag.agentic.deps import AgenticDeps
 from app.rag.agentic.models_factory import build_model
 from app.rag.agentic.persistence import (
     FrontendConversationStore,
     OpenSearchConversationStore,
 )
+from app.utils.authentication import unauthorized_response
 from app.utils.error_events import error_event
 from app.utils.logger import content_fingerprint, debug_extra, get_logger, log_context
 
@@ -320,6 +322,9 @@ async def get_agentic_rag(
     """
     Stream the answer to a RAG request, with the signature of ``chain.get_agentic_rag``.
 
+    With ``retrieve_from_uploaded_documents`` the Discovery searches only the
+    documents the user uploaded in the chat; an anonymous user gets a 401 ERROR.
+
     Every request leaves a ``[request] start`` record and a ``[request] end`` one
     with its outcome (COMPLETED, BLOCKED_INPUT, BLOCKED_OUTPUT, OFF_SCOPE, ERROR)
     and its duration.
@@ -357,6 +362,19 @@ async def get_agentic_rag(
             # writes the text it searches
             filter_tokens=[token for token in search_query or [] if token.filter],
         )
+        if retrieve_from_uploaded_documents:
+            # the uploaded documents belong to a user and a chat: an anonymous
+            # user has none to search
+            if not user_id:
+                unauthorized_response()
+            deps.retrieve_fn = retrieval.uploaded_documents_retrieve_fn(
+                user_id=user_id,
+                chat_id=chat_id,
+                grpc_host_embedding=grpc_host_embedding,
+                embedding_model_configuration=get_embedding_model_configuration(
+                    grpc_host=grpc_host_datasource, tenant_id=tenant_id
+                ),
+            )
 
         # A logged user keeps the chat on OpenSearch; for an anonymous one the
         # client sends the history with every request.
