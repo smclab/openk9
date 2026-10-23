@@ -65,6 +65,7 @@ import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.base.ResultAclConfigDTO;
 import io.openk9.datasource.model.dto.base.SearchConfigDTO;
 import io.openk9.datasource.model.dto.base.SortingDTO;
+import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.base.TabDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.AutocompleteService;
@@ -76,6 +77,7 @@ import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.ResultAclConfigService;
 import io.openk9.datasource.service.SortingService;
+import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -163,6 +165,10 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "replaced-tabs";
 	private static final String PARTIAL_TABS_BUCKET_NAME =
 		ENTITY_NAME_PREFIX + "partial-tabs";
+	private static final String BLOCKED_AUTOCOMPLETE_NAME =
+		ENTITY_NAME_PREFIX + "blocked-autocomplete";
+	private static final String OPTIONAL_REFERENCE_CATEGORY_NAME =
+		ENTITY_NAME_PREFIX + "optional-reference-category";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -205,6 +211,9 @@ public class ConfigImporterTest {
 
 	@Inject
 	TabService tabService;
+
+	@Inject
+	SuggestionCategoryService suggestionCategoryService;
 
 	private static final String COUNT_JOIN_ROWS =
 		"select count(i) from EnrichPipelineItem i";
@@ -1432,6 +1441,84 @@ public class ConfigImporterTest {
 
 		// 4. Clean up the bucket and its tabs
 		removeBucketWithTabs(PARTIAL_TABS_BUCKET_NAME);
+	}
+
+	@Test
+	void create_without_a_required_reference_is_blocked() {
+		// A new autocomplete whose fields are not in the package: written, it would
+		// break the non-empty constraint on fields, so the plan is rejected before
+		// any write, in the preview and in the apply alike.
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put("fields", List.of("DOC_TYPE_FIELD-MISSING"));
+		ConfigEntity autocomplete = new ConfigEntity(
+			"AUTOCOMPLETE-BLOCKED",
+			ConfigEntityType.AUTOCOMPLETE,
+			BLOCKED_AUTOCOMPLETE_NAME,
+			AutocompleteDTO.builder().name(BLOCKED_AUTOCOMPLETE_NAME).build(),
+			refs,
+			null);
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(autocomplete));
+
+		// 1. The preview names the entity, the reference and the missing target
+		ImportReport preview =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, true)
+				.await().indefinitely();
+
+		assertEquals(1, preview.blockingErrors().size());
+		String error = preview.blockingErrors().getFirst();
+		assertTrue(error.contains("AUTOCOMPLETE-BLOCKED"), error);
+		assertTrue(error.contains("'fields'"), error);
+		assertTrue(error.contains("DOC_TYPE_FIELD-MISSING"), error);
+
+		// 2. The apply is refused with the same error and writes nothing
+		ImportReport applied =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+				.await().indefinitely();
+
+		assertFalse(applied.applied());
+		assertEquals(preview.blockingErrors(), applied.blockingErrors());
+		assertEquals(0, countByName("Autocomplete", BLOCKED_AUTOCOMPLETE_NAME));
+	}
+
+	@Test
+	void create_without_an_optional_reference_is_applied() {
+		// A new suggestion category whose field is not in the package: the field is
+		// optional, so the category is created without it and only reported.
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put("docTypeField", List.of("DOC_TYPE_FIELD-MISSING"));
+		ConfigEntity category = new ConfigEntity(
+			"SUGGESTION_CATEGORY-OPTIONAL",
+			ConfigEntityType.SUGGESTION_CATEGORY,
+			OPTIONAL_REFERENCE_CATEGORY_NAME,
+			SuggestionCategoryDTO.builder()
+				.name(OPTIONAL_REFERENCE_CATEGORY_NAME)
+				.priority(1f)
+				.build(),
+			refs,
+			null);
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(category));
+
+		// 1. The category is created, with the field reported as missing
+		ImportReport report =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, false)
+				.await().indefinitely();
+
+		assertTrue(report.applied());
+		assertTrue(report.blockingErrors().isEmpty());
+		assertTrue(
+			report.missingReferences().stream().anyMatch(missing ->
+				"SUGGESTION_CATEGORY-OPTIONAL".equals(missing.fromRef())
+					&& "DOC_TYPE_FIELD-MISSING".equals(missing.targetHandle())),
+			"the unresolved field must be reported as missing");
+		assertEquals(
+			1, countByName("SuggestionCategory", OPTIONAL_REFERENCE_CATEGORY_NAME));
+
+		// 2. Clean up the category
+		EntitiesUtils.removeEntity(
+			OPTIONAL_REFERENCE_CATEGORY_NAME, suggestionCategoryService,
+			sessionFactory);
 	}
 
 	private Long seedCharFilter(String name, String jsonConfig) {

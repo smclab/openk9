@@ -34,6 +34,12 @@ import java.util.function.Predicate;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigMetadata;
@@ -122,8 +128,9 @@ public class ConfigImporter {
 	 * the resulting plan in a single transaction. The report is always fully
 	 * populated (actions, counts, missing references, secrets to re-enter); on a
 	 * dry-run nothing is written and {@code applied} is {@code false}, on apply the
-	 * writes are committed and {@code resolvedIds} is returned. A cyclic package, or
-	 * one whose natural keys are ambiguous, is rejected cleanly into
+	 * writes are committed and {@code resolvedIds} is returned. A cyclic package,
+	 * one whose natural keys are ambiguous, or a plan that would create an entity
+	 * without a target for a required association is rejected cleanly into
 	 * {@code blockingErrors} without writing anything.
 	 *
 	 * @param tenantId the target schema/tenant
@@ -140,10 +147,11 @@ public class ConfigImporter {
 		return sessionFactory.withTransaction(tenantId, (s, t) ->
 				matcher.plan(s, pkg, mode).flatMap(plan -> {
 					List<SecretToReenter> secrets = secretsToReenter(pkg, plan);
-					if (dryRun) {
+					List<String> blockingErrors = blockingErrors(pkg, plan);
+					if (dryRun || !blockingErrors.isEmpty()) {
 						return Uni.createFrom().item(report(
-							true, false, mode, plan, missingReferences, secrets,
-							List.of(), Map.of()));
+							dryRun, false, mode, plan, missingReferences, secrets,
+							blockingErrors, Map.of()));
 					}
 					return doApply(s, pkg, plan).map(resolvedIds -> report(
 						false, true, mode, plan, missingReferences, secrets,
@@ -707,6 +715,43 @@ public class ConfigImporter {
 		return secrets;
 	}
 
+	/**
+	 * The entities the plan would create without a target for a required
+	 * association: no handle of that reference is in the package, so the entity
+	 * would fail validation when written. Join entities are planned from their
+	 * endpoints, so they never match.
+	 */
+	private static List<String> blockingErrors(ConfigPackage pkg, ImportPlan plan) {
+		Map<String, PlannedAction> byRef = plan.byRef();
+
+		List<String> errors = new ArrayList<>();
+		for (ConfigEntity entity : pkg.getEntities()) {
+			Class<?> entityClass = entity.getType().getEntityType();
+			PlannedAction action = byRef.get(entity.getRef());
+			if (action == null
+				|| action.action() != PlannedAction.Action.CREATE
+				|| ConfigMatcher.isJoinEntity(entityClass)) {
+
+				continue;
+			}
+			Map<String, List<String>> references = entity.getReferences();
+			for (String relationship : requiredAssociations(entityClass)) {
+				List<String> handles =
+					references == null ? null : references.get(relationship);
+				if (handles == null) {
+					handles = List.of();
+				}
+				if (handles.stream().noneMatch(byRef::containsKey)) {
+					errors.add(String.format(
+						"%s (%s): the required reference '%s' has no target in the "
+							+ "package: %s",
+						entity.getRef(), entity.getKey(), relationship, handles));
+				}
+			}
+		}
+		return errors;
+	}
+
 	private static Class<?> elementType(Field field) {
 		Type generic = field.getGenericType();
 		if (generic instanceof ParameterizedType parameterized) {
@@ -780,6 +825,29 @@ public class ConfigImporter {
 				"Cannot read '" + property + "' from "
 					+ bean.getClass().getSimpleName(), e);
 		}
+	}
+
+	/**
+	 * The associations an entity cannot be written without: to-one fields marked
+	 * {@code @NotNull} and to-many fields marked {@code @NotEmpty}. A to-many
+	 * marked only {@code @NotNull} is satisfied by an empty collection.
+	 */
+	private static List<String> requiredAssociations(Class<?> entityClass) {
+		List<String> required = new ArrayList<>();
+		for (Class<?> c = entityClass; c != null && c != Object.class; c = c.getSuperclass()) {
+			for (Field field : c.getDeclaredFields()) {
+				boolean toOne = field.isAnnotationPresent(ManyToOne.class)
+					|| field.isAnnotationPresent(OneToOne.class);
+				boolean toMany = field.isAnnotationPresent(OneToMany.class)
+					|| field.isAnnotationPresent(ManyToMany.class);
+				if ((toOne && field.isAnnotationPresent(NotNull.class))
+					|| (toMany && field.isAnnotationPresent(NotEmpty.class))) {
+
+					required.add(field.getName());
+				}
+			}
+		}
+		return required;
 	}
 
 	private static void restorePlaceholders(JsonNode source, JsonNode target) {
