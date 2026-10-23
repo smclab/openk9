@@ -169,6 +169,10 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "blocked-autocomplete";
 	private static final String OPTIONAL_REFERENCE_CATEGORY_NAME =
 		ENTITY_NAME_PREFIX + "optional-reference-category";
+	private static final String INVALID_AUTOCOMPLETE_NAME =
+		ENTITY_NAME_PREFIX + "invalid-autocomplete";
+	private static final String INVALID_AUTOCOMPLETE_FIELD_NAME =
+		ENTITY_NAME_PREFIX + "invalid-autocomplete-field";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -1519,6 +1523,52 @@ public class ConfigImporterTest {
 		EntitiesUtils.removeEntity(
 			OPTIONAL_REFERENCE_CATEGORY_NAME, suggestionCategoryService,
 			sessionFactory);
+	}
+
+	@Test
+	void a_validation_failure_at_flush_is_reported_as_a_blocking_error() {
+		// A new autocomplete on a new text field: the reference resolves, so the
+		// plan sees nothing wrong, but a text field cannot serve an autocomplete
+		// and validation fails when the entity is written. The whole import is
+		// rolled back and the failure reported, instead of an unmapped error.
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put("fields", List.of("DOC_TYPE_FIELD-TEXT"));
+		ConfigEntity field = new ConfigEntity(
+			"DOC_TYPE_FIELD-TEXT",
+			ConfigEntityType.DOC_TYPE_FIELD,
+			INVALID_AUTOCOMPLETE_FIELD_NAME,
+			DocTypeFieldDTO.builder()
+				.name(INVALID_AUTOCOMPLETE_FIELD_NAME)
+				.fieldName(INVALID_AUTOCOMPLETE_FIELD_NAME + "-fn")
+				.fieldType(FieldType.TEXT)
+				.build(),
+			new LinkedHashMap<>(),
+			null);
+		ConfigEntity autocomplete = new ConfigEntity(
+			"AUTOCOMPLETE-INVALID",
+			ConfigEntityType.AUTOCOMPLETE,
+			INVALID_AUTOCOMPLETE_NAME,
+			AutocompleteDTO.builder().name(INVALID_AUTOCOMPLETE_NAME).build(),
+			refs,
+			null);
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(field, autocomplete));
+
+		// 1. The apply is reported as not applied, with the failed property
+		ImportReport report =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, false)
+				.await().indefinitely();
+
+		assertFalse(report.applied());
+		assertTrue(
+			report.blockingErrors().stream()
+				.anyMatch(error -> error.contains("Autocomplete.fields")),
+			() -> "the violation on fields must be reported: "
+				+ report.blockingErrors());
+
+		// 2. Nothing was written, not even the field flushed before the failure
+		assertEquals(0, countByName("Autocomplete", INVALID_AUTOCOMPLETE_NAME));
+		assertEquals(0, countByName("DocTypeField", INVALID_AUTOCOMPLETE_FIELD_NAME));
 	}
 
 	private Long seedCharFilter(String name, String jsonConfig) {

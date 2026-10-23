@@ -39,7 +39,9 @@ import java.util.Map;
  * @param missingReferences references in the package pointing outside it
  * @param secretsToReenter  redacted secrets on created entities the operator must
  *                          re-enter (on overwrite the target's secret survives)
- * @param blockingErrors    reasons the import cannot proceed (e.g. a cycle)
+ * @param blockingErrors    reasons the import cannot proceed: a cycle, a created
+ *                          entity with no target for a required association, or
+ *                          an entity that fails validation when written
  * @param resolvedIds       package handle to the target-tenant id it resolved to,
  *                          populated only on apply
  */

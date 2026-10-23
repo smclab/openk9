@@ -38,6 +38,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -131,7 +133,9 @@ public class ConfigImporter {
 	 * writes are committed and {@code resolvedIds} is returned. A cyclic package,
 	 * one whose natural keys are ambiguous, or a plan that would create an entity
 	 * without a target for a required association is rejected cleanly into
-	 * {@code blockingErrors} without writing anything.
+	 * {@code blockingErrors} without writing anything. An apply that fails
+	 * validation when an entity is written is rolled back and reported the same
+	 * way.
 	 *
 	 * @param tenantId the target schema/tenant
 	 * @param pkg      the configuration package to import
@@ -162,7 +166,11 @@ public class ConfigImporter {
 					|| failure instanceof ConfigMatcher.AmbiguousMatchException)
 			.recoverWithItem(failure -> report(
 				dryRun, false, mode, null, missingReferences, List.of(),
-				blockingErrors(failure), Map.of()));
+				blockingErrors(failure), Map.of()))
+			.onFailure(failure -> constraintViolation(failure) != null)
+			.recoverWithItem(failure -> report(
+				dryRun, false, mode, null, missingReferences, List.of(),
+				violationErrors(constraintViolation(failure)), Map.of()));
 	}
 
 	/**
@@ -752,6 +760,20 @@ public class ConfigImporter {
 		return errors;
 	}
 
+	/**
+	 * The bean validation failure behind an apply error, or {@code null}: Hibernate
+	 * may wrap the {@link ConstraintViolationException} raised when an entity is
+	 * written.
+	 */
+	private static ConstraintViolationException constraintViolation(Throwable failure) {
+		for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+			if (cause instanceof ConstraintViolationException violation) {
+				return violation;
+			}
+		}
+		return null;
+	}
+
 	private static Class<?> elementType(Field field) {
 		Type generic = field.getGenericType();
 		if (generic instanceof ParameterizedType parameterized) {
@@ -912,6 +934,22 @@ public class ConfigImporter {
 				stripPlaceholders(element);
 			}
 		}
+	}
+
+	/**
+	 * One blocking error per violation, naming the entity class and, for a
+	 * property constraint, the property.
+	 */
+	private static List<String> violationErrors(ConstraintViolationException exception) {
+		List<String> errors = new ArrayList<>();
+		for (ConstraintViolation<?> violation : exception.getConstraintViolations()) {
+			String property = violation.getPropertyPath().toString();
+			String target = violation.getRootBeanClass().getSimpleName()
+				+ (property.isEmpty() ? "" : "." + property);
+			errors.add(
+				"Validation failed on " + target + ": " + violation.getMessage());
+		}
+		return errors;
 	}
 
 	private static void warnUnresolved(
