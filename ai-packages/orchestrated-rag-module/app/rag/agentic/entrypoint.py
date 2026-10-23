@@ -25,7 +25,10 @@ Entrypoint of the orchestrated pipeline: from a RAG request to its SSE events.
   delegates to :func:`run_turn`.
 
 The orchestrator answers in real streaming: the CHUNK events leave while the
-provider writes the ``message`` field of the structured output.
+provider writes the ``message`` field of the structured output. With the
+Verifier enabled the answer is buffered instead: it is verified, possibly
+repaired, and only then streamed in pieces, since a streamed run cannot retry
+and the frontends have no event to take back text already shown.
 """
 
 import json
@@ -117,33 +120,52 @@ async def run_turn(
         store.load_message_history(chat_id) if chat_sequence_number > 1 else []
     )
 
+    async def finish_turn(output, refs, result):
+        """Title and save once the answer is complete: after the CHUNK events."""
+        title, emit_title = await resolve_conversation_title(
+            deps.orchestrator_model,
+            enabled=enable_conversation_title,
+            chat_sequence_number=chat_sequence_number,
+            user_id=user_id,
+            chat_id=chat_id,
+            question=search_text,
+            answer=output.message,
+        )
+        store.save_turn(
+            chat_id=chat_id,
+            chat_sequence_number=chat_sequence_number,
+            original_query=search_text,
+            current_query=search_text,
+            response=output.message,
+            conversation_title=title,
+            retrieve_from_uploaded_documents=retrieve_from_uploaded_documents,
+            used_document_refs=refs,
+            message_history=result.all_messages(),
+        )
+        return title, emit_title, refs
+
+    if deps.rag_configuration.get("enable_verifier"):
+        output, refs, result = await orchestrator.run_orchestrator(
+            question=search_text, deps=deps, message_history=message_history
+        )
+
+        async def post_stream():
+            return await finish_turn(output, refs, result)
+
+        async for event in streaming.stream_answer(
+            deltas=streaming.deltas_from_message(output.message),
+            rag_type=rag_type,
+            post_stream=post_stream,
+        ):
+            yield event
+        return
+
     async with orchestrator.stream_orchestrator(
         question=search_text, deps=deps, message_history=message_history
     ) as orchestrator_stream:
 
         async def post_stream():
-            output, refs, result = await orchestrator_stream.finalize()
-            title, emit_title = await resolve_conversation_title(
-                deps.orchestrator_model,
-                enabled=enable_conversation_title,
-                chat_sequence_number=chat_sequence_number,
-                user_id=user_id,
-                chat_id=chat_id,
-                question=search_text,
-                answer=output.message,
-            )
-            store.save_turn(
-                chat_id=chat_id,
-                chat_sequence_number=chat_sequence_number,
-                original_query=search_text,
-                current_query=search_text,
-                response=output.message,
-                conversation_title=title,
-                retrieve_from_uploaded_documents=retrieve_from_uploaded_documents,
-                used_document_refs=refs,
-                message_history=result.all_messages(),
-            )
-            return title, emit_title, refs
+            return await finish_turn(*await orchestrator_stream.finalize())
 
         async for event in streaming.stream_answer(
             deltas=streaming.coalesce(orchestrator_stream.deltas()),

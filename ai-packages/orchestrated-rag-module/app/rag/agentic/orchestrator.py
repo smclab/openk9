@@ -24,21 +24,24 @@ llm_response`` di agentic-rag-module.
 - tetto alle richieste del turno = ``UsageLimits`` da ``max_iterations`` (RAGConfiguration);
 - tetto alle deleghe del turno = :data:`MAX_DISCOVERIES_PER_TURN`;
 - ``bypass_rag``: l'orchestratore nasce **senza** il tool ``discover``, quindi il retrieval e'
-  irraggiungibile per costruzione. Vedi :func:`build_orchestrator`.
+  irraggiungibile per costruzione. Vedi :func:`build_orchestrator`;
+- ``enable_verifier``: un ``output_validator`` fa giudicare la risposta al Verifier e, se la
+  boccia, rimanda all'orchestratore le affermazioni da cercare o da togliere (self-correction).
 """
 
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent, ModelRetry, RunContext
 from pydantic_ai.usage import UsageLimits
 
-from app.rag.agentic import discovery
+from app.rag.agentic import discovery, verifier
 from app.rag.agentic.contracts import (
     DiscoveryResult,
     DiscoveryUnanswerable,
     OrchestratorOutput,
     SubAgentRequest,
+    VerificationFailed,
 )
 from app.rag.agentic.deps import AgenticDeps
 from app.utils.logger import (
@@ -117,10 +120,12 @@ DISCOVERY_LIMIT_REACHED = (
 def build_usage_limits(rag_configuration: dict) -> Optional[UsageLimits]:
     """``max_iterations`` (jsonConfig) -> ``UsageLimits``, un tetto alle richieste LLM del turno.
 
-    Il tetto deve coprire, per ogni tentativo (1 + retry), la delega al Discovery (ricerche e
-    selezione, che condividono ``ctx.usage`` con l'orchestratore) e le due richieste
-    dell'orchestratore: delegare e comporre. Troppo stretto farebbe scattare
-    ``UsageLimitExceeded`` gia' sul percorso felice; resta comunque un tetto anti-runaway.
+    Il tetto deve coprire, per ogni tentativo (1 + retry di self-correction), la delega al
+    Discovery (ricerche e selezione, che condividono ``ctx.usage`` con l'orchestratore), le due
+    richieste dell'orchestratore (delegare e comporre) e, se attivo, il Verifier. Ogni tentativo
+    puo' delegare di nuovo: la riparazione dopo un rifiuto del Verifier cerca le affermazioni non
+    supportate. Troppo stretto farebbe scattare ``UsageLimitExceeded`` gia' sul percorso felice;
+    resta comunque un tetto anti-runaway.
     """
     max_iterations = rag_configuration.get("max_iterations")
     if not max_iterations:
@@ -128,7 +133,8 @@ def build_usage_limits(rag_configuration: dict) -> Optional[UsageLimits]:
     attempts = int(max_iterations) + 1  # tentativo iniziale + retry
     per_discovery = discovery.MAX_RETRIEVER_CALLS + 1  # ricerche + 1 selezione id
     per_orchestrator = 2  # 1 richiesta per delegare + 1 per comporre
-    request_limit = attempts * (per_discovery + per_orchestrator) + 2  # + margine
+    per_verifier = 1 if rag_configuration.get("enable_verifier") else 0
+    request_limit = attempts * (per_discovery + per_orchestrator + per_verifier) + 2  # + margine
     return UsageLimits(request_limit=request_limit)
 
 
@@ -159,6 +165,28 @@ def _build_system_prompt(*, bypass_rag: bool, prompt_no_rag: Optional[str]) -> s
     return ORCHESTRATOR_SYSTEM_PROMPT
 
 
+def repair_instructions(verdict: VerificationFailed) -> str:
+    """Rifiuto del Verifier → messaggio di riprova per l'orchestratore: cosa fare di ogni
+    affermazione non supportata, invece del solo motivo (con il quale riscriveva la stessa
+    risposta)."""
+    lines = [f"The verifier rejected your answer: {verdict.reason}"]
+    if verdict.unsupported_claims:
+        lines.append("Unsupported claims and how to repair them:")
+        for item in verdict.unsupported_claims:
+            if item.action == "search":
+                lines.append(
+                    f'- "{item.claim}": call `discover` with a sub-question targeted at this '
+                    "claim; keep it only if the new documents support it, otherwise remove it."
+                )
+            else:
+                lines.append(f'- "{item.claim}": remove it from the answer.')
+    lines.append(
+        "Do not repeat an unsupported claim without new supporting documents. "
+        "Then return the corrected answer."
+    )
+    return "\n".join(lines)
+
+
 #: Temperatura 0: la scelta di cosa delegare deve essere stabile fra richieste uguali.
 ORCHESTRATOR_SETTINGS = {"temperature": 0}
 
@@ -166,17 +194,25 @@ ORCHESTRATOR_SETTINGS = {"temperature": 0}
 def build_orchestrator(
     model,
     *,
+    enable_verifier: bool = False,
+    verifier_model=None,
     retries: int = 1,
     bypass_rag: bool = False,
     prompt_no_rag: Optional[str] = None,
 ) -> Agent:
     """Crea l'Agent orchestratore con il tool di delega ``discover``.
 
+    Con ``enable_verifier`` registra un ``output_validator`` che esegue il Verifier e, su
+    ``VerificationFailed``, alza ``ModelRetry`` con le istruzioni di riparazione: un nuovo giro
+    dell'orchestratore. ``retries`` limita i tentativi, oltre a ``UsageLimits``.
+
     Con ``bypass_rag`` NESSUN tool di delega viene registrato: il retrieval e' irraggiungibile per
     costruzione (piu' forte di agentic-rag-module, dove ``rag_router_node`` forzava
     ``use_rag=False`` ma la catena restava capace di recuperare). Il system prompt diventa
     ``prompt_no_rag`` del tenant, o :data:`DEFAULT_BYPASS_RAG_PROMPT`, perche' quello di default
-    istruirebbe il modello a chiamare un tool inesistente.
+    istruirebbe il modello a chiamare un tool inesistente. Il Verifier viene disattivato: giudica
+    il grounding sui documenti consegnati, che senza retrieval non ci sono, quindi boccerebbe
+    sempre, con retry fino al tetto.
     """
     agent = Agent(
         model,
@@ -206,7 +242,33 @@ def build_orchestrator(
         )
         return _serialize_discovery(outcome)
 
+    if enable_verifier:
+
+        @agent.output_validator
+        async def _verify(ctx: RunContext[AgenticDeps], output: OrchestratorOutput):
+            return await _verified(ctx, output, verifier_model)
+
     return agent
+
+
+async def _verified(ctx: RunContext[AgenticDeps], output: OrchestratorOutput, verifier_model):
+    """Gate finale: Verifier → ModelRetry con le istruzioni di riparazione (self-correction).
+    A riprove esaurite restituisce l'ultima risposta: l'esito resta nel log."""
+    # non verificare gli esiti non-ok (unanswerable/error passano)
+    if output.status != "ok":
+        return output
+    verdict = await verifier.verify(
+        output=output, deps=ctx.deps, usage=ctx.usage, model=verifier_model
+    )
+    if not isinstance(verdict, VerificationFailed):
+        return output
+    if ctx.retry >= ctx.max_retries:
+        logger.warning(
+            f"[orchestrator] verifier: riprove esaurite ({ctx.max_retries}), "
+            f"risposta non verificata restituita: {verdict.reason!r}"
+        )
+        return output
+    raise ModelRetry(repair_instructions(verdict))
 
 
 def _log_delegation(deps: AgenticDeps, request: SubAgentRequest) -> None:
@@ -263,11 +325,12 @@ class OrchestratorStream:
         return self.output, self.refs, self.result
 
 
-def _orchestrator_for(deps: AgenticDeps, model=None) -> Agent:
+def _orchestrator_for(deps: AgenticDeps, model=None, *, enable_verifier=False) -> Agent:
     """L'orchestratore configurato dalla RAGConfiguration del tenant."""
     cfg = deps.rag_configuration
     return build_orchestrator(
         model or deps.orchestrator_model,
+        enable_verifier=enable_verifier,
         retries=int(cfg.get("max_iterations")) if cfg.get("max_iterations") else 1,
         bypass_rag=bool(cfg.get("bypass_rag")),
         prompt_no_rag=cfg.get("prompt_no_rag"),
@@ -282,7 +345,12 @@ async def stream_orchestrator(
     message_history=None,
     model=None,
 ):
-    """Variante **streaming** di :func:`run_orchestrator`: cede un :class:`OrchestratorStream`."""
+    """Variante **streaming** di :func:`run_orchestrator`: cede un :class:`OrchestratorStream`.
+
+    Presuppone il Verifier **disattivato**: ``run_stream()`` non supporta i retry degli
+    ``output_validator``, e ritrattare token gia' inviati richiederebbe un evento SSE che i
+    frontend non gestiscono. Con il Verifier attivo l'entrypoint usa :func:`run_orchestrator`.
+    """
     async with _orchestrator_for(deps, model).run_stream(
         question,
         deps=deps,
@@ -306,7 +374,12 @@ async def run_orchestrator(
     ``used_document_ids`` sui candidati Discovery accumulati (per l'evento SSE DOCUMENT).
     ``message_history`` = history PydanticAI (ripresa conversazione). ``model`` override per i test.
     """
-    result = await _orchestrator_for(deps, model).run(
+    deps.question = question
+    deps.message_history = list(message_history or [])
+    cfg = deps.rag_configuration
+    # senza retrieval il Verifier non ha documenti su cui giudicare il grounding: boccerebbe sempre
+    enable_verifier = bool(cfg.get("enable_verifier")) and not cfg.get("bypass_rag")
+    result = await _orchestrator_for(deps, model, enable_verifier=enable_verifier).run(
         question,
         deps=deps,
         message_history=message_history,

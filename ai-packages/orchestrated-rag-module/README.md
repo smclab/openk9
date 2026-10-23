@@ -17,8 +17,10 @@ generate an answer:
   the orchestrator and the Discovery agent, in real streaming, citing only the
   documents the answer uses. A chat keeps its history, on OpenSearch for a
   logged user and in the request for an anonymous one, in the same documents
-  as agentic-rag-module. The guardrails, the intent detection and the uploaded
-  documents are not wired yet;
+  as agentic-rag-module. With `enable_verifier` a Verifier checks every claim of
+  the answer against the documents and has the orchestrator repair it, and the
+  answer is streamed only once verified. The guardrails, the intent detection
+  and the uploaded documents are not wired yet;
 - `/api/rag/evaluate` answers `501 Not Implemented`;
 - chat management (`/api/rag/user-chats`, `/api/rag/chat/{chat_id}`), uploads,
   `embed-domains`, `embed-guardrails` and `/health` work as in

@@ -44,6 +44,11 @@ class AgenticDeps:
     discovery_model: Any = None
     user_id: Optional[str] = None
     chat_id: Optional[str] = None
+    #: domanda utente corrente (impostata da run_orchestrator; usata dal Verifier per il giudizio)
+    question: Optional[str] = None
+    #: storia della conversazione prima del turno (impostata da run_orchestrator): il Verifier la
+    #: legge per capire una domanda di follow-up, che da sola non ha senso
+    message_history: list = field(default_factory=list)
     #: domini ammessi (get_domains) iniettati nel prompt del Discovery e validati a runtime
     allowed_domains: list[str] = field(default_factory=list)
     #: domini rilevati dall'intent detection per QUESTA query (equivalente di ``state.domain``):

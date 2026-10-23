@@ -141,3 +141,42 @@ class OrchestratorOutput(BaseModel):
             "risultati Discovery accumulati) per l'evento SSE DOCUMENT"
         ),
     )
+
+
+# ── Verifier (opzionale) — output dell'LLM che valuta OrchestratorOutput ──
+
+
+class VerificationOk(BaseModel):
+    """La verifica passa: l'output dell'orchestratore e' adeguato."""
+
+    status: Literal["ok"] = "ok"
+
+
+class UnsupportedClaim(BaseModel):
+    """Affermazione della risposta che i documenti non supportano, con l'azione per ripararla."""
+
+    claim: str = Field(..., description="The answer's claim, quoted as written")
+    action: Literal["search", "remove"] = Field(
+        ...,
+        description=(
+            "search: the documents do not mention it, a further search may find it; "
+            "remove: the documents contradict it, or it cannot come from documents at all"
+        ),
+    )
+
+
+class VerificationFailed(BaseModel):
+    """La verifica fallisce: diventa il messaggio di ``ModelRetry`` con le istruzioni di
+    riparazione per l'orchestratore (vedi ``orchestrator.repair_instructions``)."""
+
+    reason: str = Field(
+        ..., description="Perche' la risposta non e' adeguata → alimenta ModelRetry"
+    )
+    unsupported_claims: list[UnsupportedClaim] = Field(
+        default_factory=list,
+        description="Every claim of the answer that the documents do not support",
+    )
+
+
+#: output_type del Verifier (union tipata)
+VerifierOutput = Union[VerificationOk, VerificationFailed]

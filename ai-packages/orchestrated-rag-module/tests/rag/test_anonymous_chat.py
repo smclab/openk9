@@ -137,7 +137,7 @@ def _drive_anonymous_turns(monkeypatch):
         async for _ in entrypoint.run_turn(
             rag_type="CHAT_RAG",
             search_text=search_text,
-            deps=MagicMock(),
+            deps=MagicMock(rag_configuration={}),
             store=store,
             chat_id=None,
             user_id=None,
