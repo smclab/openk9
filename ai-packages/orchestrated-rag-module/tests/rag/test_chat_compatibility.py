@@ -31,7 +31,7 @@ from app.rag.agentic.persistence import OpenSearchConversationStore
 
 #: Two messages as agentic-rag-module saves them in the ``messages`` channel
 #: of the checkpoint.
-LANGCHAIN_MESSAGES = [
+AGENTIC_RAG_MESSAGES = [
     {
         "lc": 1,
         "type": "constructor",
@@ -151,7 +151,7 @@ def test_a_chat_of_agentic_rag_module_goes_on_with_its_messages(monkeypatch):
             "original_query": "Che cos'è OpenK9?",
             "response": "Un motore di ricerca.",
             "chat_sequence_number": 1,
-            "messages": LANGCHAIN_MESSAGES,
+            "messages": AGENTIC_RAG_MESSAGES,
         },
     }
     client = FakeOpenSearch(
@@ -172,7 +172,7 @@ def test_a_chat_of_agentic_rag_module_goes_on_with_its_messages(monkeypatch):
     assert history[1].parts[0].content == "Un motore di ricerca."
 
 
-def test_langchain_messages_other_than_the_exchange_are_skipped():
+def test_agentic_rag_messages_other_than_the_exchange_are_skipped():
     system = {
         "lc": 1,
         "type": "constructor",
@@ -180,14 +180,14 @@ def test_langchain_messages_other_than_the_exchange_are_skipped():
         "kwargs": {"content": "Sei un assistente.", "type": "system"},
     }
 
-    history = persistence.deserialize_messages([system, *LANGCHAIN_MESSAGES])
+    history = persistence.deserialize_messages([system, *AGENTIC_RAG_MESSAGES])
 
     assert [type(message) for message in history] == [ModelRequest, ModelResponse]
 
 
-def test_multimodal_langchain_content_keeps_its_text():
+def test_multimodal_agentic_rag_content_keeps_its_text():
     message = {
-        **LANGCHAIN_MESSAGES[0],
+        **AGENTIC_RAG_MESSAGES[0],
         "kwargs": {
             "content": [
                 {"type": "text", "text": "Cosa mostra "},

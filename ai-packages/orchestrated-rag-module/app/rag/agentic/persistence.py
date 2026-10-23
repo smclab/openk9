@@ -134,7 +134,7 @@ def serialize_messages(message_history) -> list:
     return to_jsonable_python(message_history or [])
 
 
-def _is_langchain_message(message) -> bool:
+def _is_agentic_rag_message(message) -> bool:
     """Un messaggio nel formato ``{"lc": 1, "id": [...], "kwargs": {...}}``, quello che
     agentic-rag-module salva nel canale ``messages`` del checkpoint."""
     return isinstance(message, dict) and "lc" in message and "kwargs" in message
@@ -149,7 +149,7 @@ def _text_of(content) -> str:
     )
 
 
-def messages_from_langchain(data) -> list:
+def messages_from_agentic_rag(data) -> list:
     """Messaggi di agentic-rag-module → ``list[ModelMessage]`` PydanticAI.
 
     Una chat cominciata con agentic-rag-module e continuata con questo modulo porta nel checkpoint
@@ -179,8 +179,8 @@ def deserialize_messages(data) -> list:
 
     if not data:
         return []
-    if _is_langchain_message(data[0]):
-        return messages_from_langchain(data)
+    if _is_agentic_rag_message(data[0]):
+        return messages_from_agentic_rag(data)
     return list(ModelMessagesTypeAdapter.validate_python(data))
 
 
