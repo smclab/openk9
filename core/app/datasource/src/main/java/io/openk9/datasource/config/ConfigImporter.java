@@ -492,12 +492,15 @@ public class ConfigImporter {
 	/**
 	 * On create the entity is transient, so a fresh collection is set directly; on
 	 * overwrite the managed collection is fetched, then replaced in place so
-	 * Hibernate can compute the difference at flush.
+	 * Hibernate can compute the difference at flush. An overwrite whose targets
+	 * are not {@code complete} (some handle did not resolve) keeps the collection
+	 * as it is, but still fetches it: validators read it at flush, and a reactive
+	 * session cannot load it lazily.
 	 */
 	@SuppressWarnings("unchecked")
 	private Uni<Void> setCollection(
 		Mutiny.Session s, K9Entity entity, Field field, List<Object> targets,
-		boolean isNew) {
+		boolean isNew, boolean complete) {
 
 		if (isNew) {
 			setField(entity, field, newCollection(field, targets));
@@ -510,9 +513,11 @@ public class ConfigImporter {
 			return Uni.createFrom().voidItem();
 		}
 		return s.fetch(current).invoke(fetched -> {
-			Collection<Object> collection = (Collection<Object>) fetched;
-			collection.clear();
-			collection.addAll(targets);
+			if (complete) {
+				Collection<Object> collection = (Collection<Object>) fetched;
+				collection.clear();
+				collection.addAll(targets);
+			}
 		}).replaceWithVoid();
 	}
 
@@ -560,7 +565,9 @@ public class ConfigImporter {
 	 * to the real target ids resolved so far. To-one fields are set to a reference
 	 * proxy; to-many collections are replaced with the resolved targets (fetched
 	 * first when overwriting a managed collection). Handles that resolve to nothing
-	 * (targets outside the package) are skipped.
+	 * (targets outside the package) are skipped. A target outside the package was
+	 * not carried, not removed: on overwrite, a to-one or to-many association with
+	 * such a handle keeps its current value instead of losing the missing target.
 	 */
 	private Uni<Void> wireAssociations(
 		Mutiny.Session s, K9Entity entity, Map<String, List<String>> references,
@@ -582,8 +589,9 @@ public class ConfigImporter {
 				List<Object> targets = resolveReferences(
 					s, entity, reference.getKey(), elementType(field),
 					handles, resolvedIds);
+				boolean complete = handles == null || targets.size() == handles.size();
 				chain = chain.flatMap(ignore ->
-					setCollection(s, entity, field, targets, isNew));
+					setCollection(s, entity, field, targets, isNew, complete));
 			}
 			else if (handles != null && !handles.isEmpty()) {
 				String handle = handles.get(0);

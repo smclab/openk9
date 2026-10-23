@@ -36,6 +36,8 @@ import io.openk9.datasource.config.model.PlannedAction;
 import io.openk9.datasource.config.model.representation.AclMappingRepresentation;
 import io.openk9.datasource.config.model.representation.EnrichPipelineItemRepresentation;
 import io.openk9.datasource.model.AclMapping;
+import io.openk9.datasource.model.Autocomplete;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
@@ -52,6 +54,8 @@ import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.ResultAclConfig;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.UserField;
+import io.openk9.datasource.model.dto.base.AutocompleteDTO;
+import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.CharFilterDTO;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
@@ -61,7 +65,10 @@ import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.base.ResultAclConfigDTO;
 import io.openk9.datasource.model.dto.base.SearchConfigDTO;
 import io.openk9.datasource.model.dto.base.SortingDTO;
+import io.openk9.datasource.model.dto.base.TabDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
+import io.openk9.datasource.service.AutocompleteService;
+import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.CharFilterService;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
@@ -69,6 +76,7 @@ import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.ResultAclConfigService;
 import io.openk9.datasource.service.SortingService;
+import io.openk9.datasource.service.TabService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -143,6 +151,18 @@ public class ConfigImporterTest {
 
 	private static final Float SEEDED_SORTING_PRIORITY = 1f;
 	private static final Float IMPORTED_SORTING_PRIORITY = 9f;
+	private static final String UNRESOLVED_AUTOCOMPLETE_NAME =
+		ENTITY_NAME_PREFIX + "unresolved-autocomplete";
+	private static final String UNRESOLVED_FIELD_ONE_NAME =
+		ENTITY_NAME_PREFIX + "unresolved-field-one";
+	private static final String UNRESOLVED_FIELD_TWO_NAME =
+		ENTITY_NAME_PREFIX + "unresolved-field-two";
+	private static final String SHALLOW_LANGUAGES_BUCKET_NAME =
+		ENTITY_NAME_PREFIX + "shallow-languages";
+	private static final String REPLACED_TABS_BUCKET_NAME =
+		ENTITY_NAME_PREFIX + "replaced-tabs";
+	private static final String PARTIAL_TABS_BUCKET_NAME =
+		ENTITY_NAME_PREFIX + "partial-tabs";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -176,6 +196,15 @@ public class ConfigImporterTest {
 
 	@Inject
 	SortingService sortingService;
+
+	@Inject
+	AutocompleteService autocompleteService;
+
+	@Inject
+	BucketService bucketService;
+
+	@Inject
+	TabService tabService;
 
 	private static final String COUNT_JOIN_ROWS =
 		"select count(i) from EnrichPipelineItem i";
@@ -1232,6 +1261,179 @@ public class ConfigImporterTest {
 		assertEquals(1024, dto.getVectorSize());
 	}
 
+	@Test
+	void overwrite_keeps_a_to_many_whose_references_do_not_resolve() {
+		// A shallow package carries an existing autocomplete but not its fields:
+		// the handle that cannot resolve means "not carried", not "removed", so
+		// the collection survives the overwrite while the scalars are applied.
+
+		// 1. An autocomplete with two fields
+		long sampleTextFieldId = EntitiesUtils.getSampleTextDocTypeFieldId(
+			docTypeFieldService, sessionFactory);
+		Long fieldOneId = EntitiesUtils.createSubField(
+			sampleTextFieldId,
+			searchAsYouTypeField(UNRESOLVED_FIELD_ONE_NAME, "sample.unresolvedone"),
+			docTypeFieldService).getId();
+		Long fieldTwoId = EntitiesUtils.createSubField(
+			sampleTextFieldId,
+			searchAsYouTypeField(UNRESOLVED_FIELD_TWO_NAME, "sample.unresolvedtwo"),
+			docTypeFieldService).getId();
+		EntitiesUtils.createEntity(
+			AutocompleteDTO.builder()
+				.name(UNRESOLVED_AUTOCOMPLETE_NAME)
+				.fieldIds(Set.of(fieldOneId, fieldTwoId))
+				.build(),
+			autocompleteService, sessionFactory);
+		Integer resultSizeBefore = EntitiesUtils.getAutocomplete(
+			UNRESOLVED_AUTOCOMPLETE_NAME, autocompleteService, sessionFactory)
+			.getResultSize();
+
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put("fields", List.of("DOC_TYPE_FIELD-MISSING"));
+		ConfigEntity shallow = new ConfigEntity(
+			"AUTOCOMPLETE-SHALLOW",
+			ConfigEntityType.AUTOCOMPLETE,
+			UNRESOLVED_AUTOCOMPLETE_NAME,
+			AutocompleteDTO.builder()
+				.name(UNRESOLVED_AUTOCOMPLETE_NAME)
+				.resultSize(resultSizeBefore + 1)
+				.build(),
+			refs,
+			null);
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(shallow));
+
+		// 2. SKIP leaves the autocomplete untouched
+		configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, false)
+			.await().indefinitely();
+
+		Autocomplete skipped = EntitiesUtils.getAutocomplete(
+			UNRESOLVED_AUTOCOMPLETE_NAME, autocompleteService, sessionFactory);
+		assertEquals(resultSizeBefore, skipped.getResultSize());
+		assertEquals(Set.of(fieldOneId, fieldTwoId), idsOf(skipped.getFields()));
+
+		// 3. OVERWRITE applies the scalars and keeps the fields
+		ImportReport report =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+				.await().indefinitely();
+
+		assertTrue(report.applied());
+		assertTrue(
+			report.missingReferences().stream().anyMatch(missing ->
+				"AUTOCOMPLETE-SHALLOW".equals(missing.fromRef())
+					&& "fields".equals(missing.relationship())
+					&& "DOC_TYPE_FIELD-MISSING".equals(missing.targetHandle())),
+			"the unresolved field must be reported as missing");
+
+		Autocomplete overwritten = EntitiesUtils.getAutocomplete(
+			UNRESOLVED_AUTOCOMPLETE_NAME, autocompleteService, sessionFactory);
+		assertEquals(resultSizeBefore + 1, overwritten.getResultSize());
+		assertEquals(
+			Set.of(fieldOneId, fieldTwoId), idsOf(overwritten.getFields()),
+			"an unresolved reference must not shrink the collection");
+
+		// 4. Clean up the autocomplete, then its fields
+		EntitiesUtils.removeEntity(
+			UNRESOLVED_AUTOCOMPLETE_NAME, autocompleteService, sessionFactory);
+		EntitiesUtils.removeEntity(fieldOneId, docTypeFieldService, sessionFactory);
+		EntitiesUtils.removeEntity(fieldTwoId, docTypeFieldService, sessionFactory);
+	}
+
+	@Test
+	void overwrite_keeps_the_languages_of_a_shallow_bucket() {
+		// The same on a collection with no non-empty constraint: nothing would
+		// fail there, so an emptied collection would go unnoticed.
+
+		// 1. A bucket bound to two languages of the tenant
+		EntitiesUtils.createBucket(
+			SHALLOW_LANGUAGES_BUCKET_NAME, bucketService, sessionFactory);
+		Long bucketId = EntitiesUtils.getEntity(
+			SHALLOW_LANGUAGES_BUCKET_NAME, bucketService, sessionFactory).getId();
+		List<Long> languageIds = firstIds("Language", 2);
+		for (Long languageId : languageIds) {
+			bucketService.addLanguage(bucketId, languageId).await().indefinitely();
+		}
+
+		// 2. Overwrite from a package that does not carry the languages
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put(
+			"availableLanguages",
+			List.of("LANGUAGE-MISSING-1", "LANGUAGE-MISSING-2"));
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null,
+			List.of(bucketNode(
+				"BUCKET-SHALLOW", SHALLOW_LANGUAGES_BUCKET_NAME, refs)));
+
+		configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+			.await().indefinitely();
+
+		// 3. Both languages are still bound
+		assertEquals(
+			Set.copyOf(languageIds), bucketLanguageIds(bucketId),
+			"an unresolved reference must not unbind the languages");
+
+		// 4. Clean up the bucket
+		removeBucket(SHALLOW_LANGUAGES_BUCKET_NAME);
+	}
+
+	@Test
+	void overwrite_replaces_a_fully_resolved_to_many_with_its_removals() {
+		// A collection the package carries in full is replaced: a link removed at
+		// the source is removed at the destination too.
+
+		// 1. A bucket with two tabs
+		Long bucketId = seedBucketWithTabs(REPLACED_TABS_BUCKET_NAME);
+		String firstTabName = tabName(REPLACED_TABS_BUCKET_NAME, 1);
+
+		// 2. Overwrite from a package that carries only the first tab
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put("tabs", List.of("TAB-FIRST"));
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null,
+			List.of(
+				tabNode("TAB-FIRST", firstTabName),
+				bucketNode("BUCKET-TABS", REPLACED_TABS_BUCKET_NAME, refs)));
+
+		configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+			.await().indefinitely();
+
+		// 3. Only the first tab is left
+		assertEquals(Set.of(firstTabName), bucketTabNames(bucketId));
+
+		// 4. Clean up the bucket and its tabs
+		removeBucketWithTabs(REPLACED_TABS_BUCKET_NAME);
+	}
+
+	@Test
+	void overwrite_keeps_a_partially_resolved_to_many() {
+		// A hand-crafted package where only one of the two tabs resolves: the
+		// collection is not carried in full, so it is left as it is.
+
+		// 1. A bucket with two tabs
+		Long bucketId = seedBucketWithTabs(PARTIAL_TABS_BUCKET_NAME);
+		String firstTabName = tabName(PARTIAL_TABS_BUCKET_NAME, 1);
+
+		// 2. Overwrite from a package where the second tab does not resolve
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put("tabs", List.of("TAB-FIRST", "TAB-MISSING"));
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null,
+			List.of(
+				tabNode("TAB-FIRST", firstTabName),
+				bucketNode("BUCKET-TABS", PARTIAL_TABS_BUCKET_NAME, refs)));
+
+		configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+			.await().indefinitely();
+
+		// 3. Both tabs are still bound
+		assertEquals(
+			Set.of(firstTabName, tabName(PARTIAL_TABS_BUCKET_NAME, 2)),
+			bucketTabNames(bucketId));
+
+		// 4. Clean up the bucket and its tabs
+		removeBucketWithTabs(PARTIAL_TABS_BUCKET_NAME);
+	}
+
 	private Long seedCharFilter(String name, String jsonConfig) {
 		return sessionFactory.withTransaction(TENANT_ID, (s, t) -> {
 			CharFilter charFilter = new CharFilter();
@@ -1404,6 +1606,103 @@ public class ConfigImporterTest {
 			s.find(EnrichPipelineItem.class, key)
 				.onItem().ifNotNull().call(item -> s.remove(item))
 		).await().indefinitely();
+	}
+
+	private List<Long> firstIds(String jpqlEntity, int count) {
+		List<Long> ids = sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.createQuery(
+					"select e.id from " + jpqlEntity + " e order by e.id", Long.class)
+				.setMaxResults(count)
+				.getResultList()
+		).await().indefinitely();
+		if (ids.size() < count) {
+			throw new IllegalStateException(
+				"the test tenant must have " + count + " " + jpqlEntity + " rows");
+		}
+		return ids;
+	}
+
+	private Set<Long> bucketLanguageIds(Long bucketId) {
+		return Set.copyOf(sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.createQuery(
+					"select l.id from Bucket b join b.availableLanguages l "
+						+ "where b.id = :id",
+					Long.class)
+				.setParameter("id", bucketId)
+				.getResultList()
+		).await().indefinitely());
+	}
+
+	private Set<String> bucketTabNames(Long bucketId) {
+		return Set.copyOf(sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.createQuery(
+					"select tab.name from Bucket b join b.tabs tab where b.id = :id",
+					String.class)
+				.setParameter("id", bucketId)
+				.getResultList()
+		).await().indefinitely());
+	}
+
+	private Long seedBucketWithTabs(String bucketName) {
+		EntitiesUtils.createBucket(bucketName, bucketService, sessionFactory);
+		Long bucketId = EntitiesUtils.getEntity(
+			bucketName, bucketService, sessionFactory).getId();
+		for (int index = 1; index <= 2; index++) {
+			String name = tabName(bucketName, index);
+			EntitiesUtils.createEntity(
+				TabDTO.builder().name(name).priority(index).build(),
+				tabService, sessionFactory);
+			Long tabId = EntitiesUtils.getEntity(
+				name, tabService, sessionFactory).getId();
+			bucketService.addTabToBucket(bucketId, tabId).await().indefinitely();
+		}
+		return bucketId;
+	}
+
+	private void removeBucket(String name) {
+		Bucket bucket = EntitiesUtils.getEntity(name, bucketService, sessionFactory);
+		EntitiesUtils.cleanBucket(bucket, bucketService);
+		EntitiesUtils.removeEntity(name, bucketService, sessionFactory);
+	}
+
+	private void removeBucketWithTabs(String bucketName) {
+		removeBucket(bucketName);
+		for (int index = 1; index <= 2; index++) {
+			EntitiesUtils.removeEntity(
+				tabName(bucketName, index), tabService, sessionFactory);
+		}
+	}
+
+	private static ConfigEntity bucketNode(
+		String ref, String name, Map<String, List<String>> references) {
+
+		return new ConfigEntity(
+			ref, ConfigEntityType.BUCKET, name,
+			BucketDTO.builder().name(name).build(),
+			references, null);
+	}
+
+	private static Set<Long> idsOf(Set<DocTypeField> fields) {
+		return fields.stream().map(DocTypeField::getId).collect(Collectors.toSet());
+	}
+
+	private static DocTypeFieldDTO searchAsYouTypeField(String name, String fieldName) {
+		return DocTypeFieldDTO.builder()
+			.name(name)
+			.fieldName(fieldName)
+			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
+			.build();
+	}
+
+	private static String tabName(String bucketName, int index) {
+		return bucketName + " tab-" + index;
+	}
+
+	private static ConfigEntity tabNode(String ref, String name) {
+		return new ConfigEntity(
+			ref, ConfigEntityType.TAB, name,
+			TabDTO.builder().name(name).priority(1).build(),
+			new LinkedHashMap<>(), null);
 	}
 
 	/**
