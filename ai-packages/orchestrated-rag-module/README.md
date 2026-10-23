@@ -15,9 +15,10 @@ generate an answer:
 
 - `/api/rag/generate`, `/api/rag/chat` and `/api/rag/chat-tool` answer through
   the orchestrator and the Discovery agent, in real streaming, citing only the
-  documents the answer uses. The conversation history, the guardrails, the
-  intent detection and the uploaded documents are not wired yet: every turn is
-  answered on its own;
+  documents the answer uses. A chat keeps its history, on OpenSearch for a
+  logged user and in the request for an anonymous one, in the same documents
+  as agentic-rag-module. The guardrails, the intent detection and the uploaded
+  documents are not wired yet;
 - `/api/rag/evaluate` answers `501 Not Implemented`;
 - chat management (`/api/rag/user-chats`, `/api/rag/chat/{chat_id}`), uploads,
   `embed-domains`, `embed-guardrails` and `/health` work as in
