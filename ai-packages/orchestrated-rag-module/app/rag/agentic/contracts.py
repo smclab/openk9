@@ -1,0 +1,126 @@
+#
+# Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+"""
+Contratti tipati tra i livelli dell'orchestrazione agentica (design §4).
+
+Sono normali ``pydantic.BaseModel`` (stesso stile di ``app/models/models.py``). In PydanticAI
+diventano ``output_type`` degli agent o parametri tipati dei tool.
+"""
+
+from typing import Optional, Union
+
+from pydantic import BaseModel, Field
+
+# ── Orchestratore → sub-agent (contratto comune a TUTTI i sub-agent-tool) ──
+
+
+class SubAgentRequest(BaseModel):
+    """Richiesta dell'orchestratore verso un sub-agent (oggi: Discovery Agent)."""
+
+    question: str = Field(
+        ..., description="Sotto-domanda autoconsistente per il sub-agent"
+    )
+    hints: str = Field(
+        "",
+        description="Indicazioni dell'orchestratore: dominio atteso, vincoli, cosa cercare",
+    )
+
+
+# ── Discovery Agent → Retriever (funzione vera) ──
+
+
+class RetrieveRequest(BaseModel):
+    """Parametri di retrieval scelti dal Discovery Agent.
+
+    ``top_k`` / ``range`` / ``chunk_window`` NON stanno qui: vengono da ``RAGConfiguration``.
+    """
+
+    question: str = Field(..., description="Query di retrieval")
+    domains: Optional[list[str]] = Field(
+        None,
+        description=(
+            "Filtro dominio. I valori ammessi sono iniettati come XML <domains> nel system "
+            "prompt del Discovery e validati a runtime contro get_domains(). Un dominio "
+            "inventato viene scartato (= nessun filtro)."
+        ),
+    )
+
+
+# ── Discovery Agent — output dell'LLM (sceglie SOLO gli id) ──
+
+
+class DiscoveryUnanswerable(BaseModel):
+    """L'LLM del Discovery dichiara che i documenti trovati non permettono di rispondere."""
+
+    reason: str = Field(
+        ..., description="Perche' non e' rispondibile dai documenti trovati"
+    )
+
+
+class DiscoverySelection(BaseModel):
+    """L'LLM del Discovery seleziona gli id pertinenti tra i risultati del retriever."""
+
+    document_ids: list[str] = Field(
+        ..., description="document_id scelti tra i risultati del retriever"
+    )
+
+
+#: output_type del Discovery Agent (union tipata)
+DiscoveryLLMOutput = Union[DiscoveryUnanswerable, DiscoverySelection]
+
+
+# ── Post-processing del Discovery: id → contenuto (chunk raggruppati per document_id) ──
+
+
+class DiscoveredDocument(BaseModel):
+    """Documento assemblato dal post-processing deterministico del Discovery.
+
+    Niente ``score``: confonde il modello (design §4).
+    """
+
+    document_id: str
+    content: str = Field(
+        ..., description="chunk uniti (riuso di get_context_window_merged)"
+    )
+    title: Optional[str] = Field(
+        None, description="opzionale: dipende dal dynamic_metadata del tenant"
+    )
+    domain: Optional[str] = None
+
+
+class DiscoveryResult(BaseModel):
+    """Cio' che l'orchestratore riceve dal Discovery Agent: id + chunk dei doc scelti."""
+
+    documents: list[DiscoveredDocument] = Field(default_factory=list)
+
+
+#: Ciò che arriva effettivamente all'orchestratore dal tool di delega
+DiscoveryOutcome = Union[DiscoveryUnanswerable, DiscoveryResult]
+
+
+# ── Documenti citati, per l'evento SSE DOCUMENT ──
+
+
+class DocumentRef(BaseModel):
+    """Riferimento a un documento citato, per l'evento SSE DOCUMENT."""
+
+    document_id: str
+    title: Optional[str] = None
+    url: Optional[str] = None
+    score: Optional[float] = None
+    domain: Optional[str] = None
