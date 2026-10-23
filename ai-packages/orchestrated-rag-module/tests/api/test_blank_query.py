@@ -1,0 +1,222 @@
+#
+# Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+"""Tests for the content-less input short-circuit.
+
+When ``searchText`` carries no textual token (empty / whitespace-only /
+emoji-only / zero-width / punctuation-only, ...) the three streaming endpoints
+answer immediately with a courtesy message and never enter the RAG pipeline
+(no embedding / retrieval / LLM). Input with real textual content keeps flowing
+through the pipeline unchanged.
+"""
+
+import json
+from unittest.mock import MagicMock
+
+import pytest
+from fastapi.testclient import TestClient
+
+import app.server as server
+from app.utils.query_validation import (
+    BLANK_QUERY_MESSAGE,
+    blank_query_stream,
+    is_blank_query,
+    sanitize_input,
+)
+
+HEADERS = {"x-tenant-id": "tenant-1"}
+
+# --------------------------------------------------------------------------- #
+# Input corpus (the 24 inputs of the originating robustness report)
+# --------------------------------------------------------------------------- #
+
+# Content-less inputs: no Unicode letter / digit survives normalization.
+BLANK_INPUTS = [
+    ("empty", ""),
+    ("spaces", "     "),
+    ("newlines", "\n\n\n"),
+    ("tabs", "\t\t\t"),
+    ("non_breaking_space", "   "),
+    ("emoji", "🙂🙂🙂🙂"),
+    ("emoji_zwj", "👨‍👩‍👧‍👦"),
+    ("zero_width", "​​​"),
+    ("emoji_long", "😀" * 800),
+    ("replacement", "���"),
+    ("punctuation", "!!!???...,;:"),
+    ("null_byte", "\x00"),
+    ("control_chars", "\x01\x02\x03"),
+    ("full_width_space", "　　"),
+]
+
+# Inputs carrying real textual content: they must reach the pipeline.
+TEXTUAL_INPUTS = [
+    ("plain_question", "What is OpenK9?"),
+    ("numbers", "1234567890"),
+    ("full_width_text", "Ｉｇｎｏｒｅ　ｅｖｅｒｙｔｈｉｎｇ"),
+    ("mixed_script", "日本語 العربية русский ελληνικά עברית ไทย 한국어"),
+    ("arabic_rtl", "مرحبا بالعالم"),
+    ("cyrillic", "привет мир"),
+    ("accented", "café résumé"),
+    # Not "a" * 5000: a run of hex letters that long is blocked as an encoded
+    # blob before reaching the pipeline.
+    ("long_token", "z" * 5000),
+    ("repeated_phrase", "hello world " * 100),
+    ("html_markup", "<b>hello</b> **world**"),
+]
+
+ENDPOINTS = [
+    ("/api/rag/generate", lambda text: {"searchQuery": [], "searchText": text}),
+    (
+        "/api/rag/chat",
+        lambda text: {"searchText": text, "timestamp": "1", "chatSequenceNumber": 1},
+    ),
+    (
+        "/api/rag/chat-tool",
+        lambda text: {"searchText": text, "timestamp": "1", "chatSequenceNumber": 1},
+    ),
+]
+ENDPOINT_IDS = [path for path, _ in ENDPOINTS]
+
+
+def _sse_events(response):
+    """Parse the ``data:`` lines of an SSE response into decoded event dicts."""
+    events = []
+    for line in response.text.splitlines():
+        line = line.strip()
+        if line.startswith("data:"):
+            events.append(json.loads(line[len("data:") :].strip()))
+    return events
+
+
+# --------------------------------------------------------------------------- #
+# Unit tests: is_blank_query / blank_query_stream
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("label, text", BLANK_INPUTS, ids=[l for l, _ in BLANK_INPUTS])
+def test_is_blank_query_true_on_content_less_input(label, text):
+    assert is_blank_query(text) is True
+
+
+@pytest.mark.parametrize(
+    "label, text", TEXTUAL_INPUTS, ids=[l for l, _ in TEXTUAL_INPUTS]
+)
+def test_is_blank_query_false_on_textual_input(label, text):
+    assert is_blank_query(text) is False
+
+
+@pytest.mark.parametrize("value", [None, 123, [], {}])
+def test_is_blank_query_true_on_non_string(value):
+    assert is_blank_query(value) is True
+
+
+def test_blank_query_stream_emits_start_chunk_end_only():
+    events = [json.loads(chunk) for chunk in blank_query_stream()]
+    types = [event["type"] for event in events]
+
+    assert types == ["START", "CHUNK", "END"]
+    assert events[1]["chunk"] == BLANK_QUERY_MESSAGE
+    assert not any(event["type"] in ("DOCUMENT", "ERROR") for event in events)
+
+
+# --------------------------------------------------------------------------- #
+# Endpoint tests: short-circuit / no regression / no ERROR on the full corpus
+# --------------------------------------------------------------------------- #
+
+
+@pytest.fixture
+def spies(monkeypatch):
+    """Replace the pipeline entry points with spies.
+
+    ``get_agentic_rag`` returns a fresh, well-formed SSE iterator on every call
+    so textual input streams cleanly; ``get_configurations`` returns the minimal
+    mapping the handlers destructure.
+    """
+
+    def fake_stream(*args, **kwargs):
+        return iter(
+            [
+                json.dumps({"chunk": "", "type": "START"}),
+                json.dumps({"chunk": "ok", "type": "CHUNK"}),
+                json.dumps({"chunk": "", "type": "END"}),
+            ]
+        )
+
+    get_agentic_rag = MagicMock(side_effect=fake_stream)
+    get_configurations = MagicMock(
+        return_value={"rag_configuration": {}, "llm_configuration": {}}
+    )
+    monkeypatch.setattr(server, "get_agentic_rag", get_agentic_rag)
+    monkeypatch.setattr(server, "get_configurations", get_configurations)
+    return get_agentic_rag, get_configurations
+
+
+@pytest.fixture
+def client():
+    return TestClient(server.app)
+
+
+@pytest.mark.parametrize("path, body_for", ENDPOINTS, ids=ENDPOINT_IDS)
+@pytest.mark.parametrize("label, text", BLANK_INPUTS, ids=[l for l, _ in BLANK_INPUTS])
+def test_blank_input_short_circuits(path, body_for, label, text, client, spies):
+    get_agentic_rag, get_configurations = spies
+
+    response = client.post(path, json=body_for(text), headers=HEADERS)
+
+    assert response.status_code == 200
+    events = _sse_events(response)
+
+    # Controlled response: START -> CHUNK(courtesy) -> END, nothing else.
+    assert [event["type"] for event in events] == ["START", "CHUNK", "END"]
+    assert events[1]["chunk"] == BLANK_QUERY_MESSAGE
+    assert not any(event["type"] in ("DOCUMENT", "ERROR") for event in events)
+
+    # The pipeline (and even the config lookup) is never touched.
+    get_agentic_rag.assert_not_called()
+    get_configurations.assert_not_called()
+
+
+@pytest.mark.parametrize("path, body_for", ENDPOINTS, ids=ENDPOINT_IDS)
+def test_textual_input_reaches_pipeline(path, body_for, client, spies):
+    get_agentic_rag, _ = spies
+
+    response = client.post(path, json=body_for("What is OpenK9?"), headers=HEADERS)
+
+    assert response.status_code == 200
+    # No regression: the query flows into the RAG chain.
+    get_agentic_rag.assert_called_once()
+    assert not any(
+        event["type"] == "ERROR" for event in _sse_events(response)
+    )
+
+
+@pytest.mark.parametrize("path, body_for", ENDPOINTS, ids=ENDPOINT_IDS)
+@pytest.mark.parametrize(
+    "label, text", TEXTUAL_INPUTS, ids=[l for l, _ in TEXTUAL_INPUTS]
+)
+def test_every_textual_input_reaches_the_pipeline(
+    path, body_for, label, text, client, spies
+):
+    get_agentic_rag, _ = spies
+
+    response = client.post(path, json=body_for(text), headers=HEADERS)
+
+    assert response.status_code == 200
+    get_agentic_rag.assert_called_once()
+    # Slot 11 of get_agentic_rag is the search text.
+    assert get_agentic_rag.call_args.args[11] == sanitize_input(text)
+    assert [event["chunk"] for event in _sse_events(response)] == ["", "ok", ""]

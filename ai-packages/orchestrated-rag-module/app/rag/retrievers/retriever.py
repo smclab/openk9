@@ -1,0 +1,291 @@
+#
+# Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+import logging
+from typing import List, Optional
+
+import requests
+from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
+from langchain_core.documents import Document
+from langchain_core.retrievers import BaseRetriever
+from app.external_services.grpc.grpc_client import query_parser
+from app.rag.chunk_window import get_context_window_merged
+from app.utils.logger import get_logger
+from app.utils.opensearch_client import get_opensearch_client
+
+logger = get_logger(__name__)
+
+TOKEN_SIZE = 3.5
+MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
+HYBRID_RETRIEVE_TYPE = "HYBRID"
+VECTORIAL_RETRIEVE_TYPES = ["KNN", "HYBRID"]
+
+
+def _token_to_dict(token) -> dict:
+    """Convert a search token to the dict ``ParseDict`` expects.
+
+    The fields are listed by name rather than dumped wholesale so an unmapped
+    model field can never reach the proto conversion. ``media`` is added only
+    when the token carries one: ``ParseDict`` would accept an explicit null and
+    leave the field unset just the same, so this is about keeping a text query's
+    payload exactly the shape it had before rather than about correctness.
+    """
+    token_dict = {
+        "entityType": token.entityType,
+        "entityName": token.entityName,
+        "tokenType": token.tokenType,
+        "keywordKey": token.keywordKey,
+        "values": token.values,
+        "extra": token.extra,
+        "filter": token.filter,
+    }
+
+    if token.media:
+        token_dict["media"] = token.media.model_dump()
+
+    return token_dict
+
+
+class OpenSearchRetriever(BaseRetriever):
+    """Retriever that uses OpenSearch's store for retrieving documents."""
+
+    search_query: Optional[list] = None
+    search_text: str
+    rerank: Optional[bool] = False
+    reranker_api_url: Optional[str] = ""
+    chunk_window: Optional[int] = 0
+    range_values: list
+    after_key: Optional[str] = None
+    suggest_keyword: Optional[str] = None
+    suggestion_category_id: Optional[int] = None
+    tenant_id: str
+    jwt: Optional[str] = None
+    extra: Optional[dict] = None
+    sort: Optional[list] = None
+    sort_after_key: Optional[str] = None
+    language: Optional[str] = None
+    context_window: int
+    metadata: Optional[dict] = None
+    retrieve_type: str
+    score_threshold: Optional[float] = None
+    opensearch_host: str
+    grpc_host: str
+
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> List[Document]:
+        search_query = (
+            [_token_to_dict(query_element) for query_element in self.search_query]
+            if self.search_query
+            else [
+                {
+                    "entityType": "",
+                    "entityName": "",
+                    "tokenType": self.retrieve_type,
+                    "keywordKey": "",
+                    "values": [query],
+                    "extra": {},
+                    "filter": True,
+                }
+            ]
+        )
+
+        query_data = query_parser(
+            search_query=search_query,
+            range_values=self.range_values,
+            after_key=self.after_key,
+            suggest_keyword=self.suggest_keyword,
+            suggestion_category_id=self.suggestion_category_id,
+            tenant_id=self.tenant_id,
+            jwt=self.jwt,
+            extra=self.extra,
+            sort=self.sort,
+            sort_after_key=self.sort_after_key,
+            language=self.language,
+            grpc_host=self.grpc_host,
+        )
+
+        query = query_data["query"]
+        index_name = list(query_data["index_name"])
+        params = (
+            dict(query_data["query_parameters"])
+            if self.retrieve_type == HYBRID_RETRIEVE_TYPE
+            else None
+        )
+
+        if logger.isEnabledFor(logging.DEBUG):
+            query_body = query.decode("utf-8") if isinstance(query, bytes) else query
+            logger.debug(
+                f"[opensearch_query] retrieve_type={self.retrieve_type}, "
+                f"chunk_window={self.chunk_window}, "
+                f"index_name={index_name}, "
+                f"params={params}, "
+                f"body={query_body}"
+            )
+
+        documents = []
+
+        if len(index_name) == 0:
+            logger.debug("[opensearch_query] empty index list, search skipped")
+
+        if len(index_name) > 0:
+            client = get_opensearch_client(self.opensearch_host)
+
+            response = client.search(
+                body=query,
+                index=index_name,
+                params=params,
+            )
+
+            max_tokens = self.context_window * MAX_CONTEXT_WINDOW_PERCENTAGE
+            total_tokens = 0
+
+            hits = response["hits"]["hits"]
+
+            # The cutoff is relative to the best score of this result set: a
+            # custom sort can override relevance ordering, so the top score is
+            # taken across all hits rather than from the first one.
+            top_score = max((hit.get("_score") or 0 for hit in hits), default=0)
+            score_cutoff = top_score * (self.score_threshold or 0)
+
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    f"[opensearch_query] score_threshold={self.score_threshold}, "
+                    f"top_score={top_score}, score_cutoff={score_cutoff}"
+                )
+
+            for row in hits:
+                # The .get default only covers a missing key: OpenSearch reports
+                # an explicit "_score": null when the query carries a field sort,
+                # and comparing that None raises TypeError.
+                if (score := row.get("_score") or 0) < score_cutoff:
+                    continue
+
+                document_source = row.get("_source")
+                document_id = document_source.get("contentId")
+                document_types = document_source.get("documentTypes", [])
+                document_domain = document_source.get("domain")
+                dynamic_metadata = {}
+
+                for document_type in document_types:
+                    if self.metadata and document_type in self.metadata.keys():
+                        source_section = document_source.get(document_type)
+                        if not source_section:
+                            continue
+                        for key, value in self.metadata[document_type].items():
+                            if metadata_value := source_section.get(value):
+                                dynamic_metadata[key] = metadata_value
+
+                if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
+                    page_content = document_source.get("chunkText", "")
+                    chunk_idx = document_source.get("number")
+                    previous_chunks = document_source.get("previous") or []
+                    previous_chunk = [
+                        element.get("chunkText") for element in previous_chunks
+                    ]
+                    next_chunks = document_source.get("next") or []
+                    next_chunk = [element.get("chunkText") for element in next_chunks]
+                    metadata = {
+                        "document_id": document_id,
+                        "score": score,
+                        "chunk_idx": chunk_idx,
+                        "prev": previous_chunk,
+                        "next": next_chunk,
+                        "domain": document_domain,
+                    }
+
+                else:
+                    page_content = document_source.get("rawContent", "")
+                    metadata = {
+                        "document_id": document_id,
+                    }
+
+                document_tokens_number = len(page_content) / TOKEN_SIZE
+                total_tokens += document_tokens_number
+
+                if total_tokens < max_tokens:
+                    metadata.update(dynamic_metadata)
+                    document = Document(
+                        page_content,
+                        metadata=metadata,
+                    )
+                    documents.append(document)
+
+        if self.rerank:
+            documents_to_rerank = [
+                {
+                    "document_id": doc.metadata.get("document_id"),
+                    "content": doc.page_content,
+                }
+                for doc in documents
+            ]
+
+            response = requests.get(
+                self.reranker_api_url,
+                json={
+                    "query": self.search_text,
+                    "context": documents_to_rerank,
+                    "limit": len(documents_to_rerank),
+                    "threshold": 0,
+                    "max_length": 512,
+                },
+                timeout=None,
+            )
+
+            reranked_documents_dict = response.json()["context"]
+            reranked_documents_ids = [
+                doc["document_id"] for doc in reranked_documents_dict
+            ]
+            reranked_documents = sorted(
+                documents,
+                key=lambda x: reranked_documents_ids.index(x.metadata["document_id"]),
+            )
+            documents = reranked_documents
+
+        # only the vectorial retrieve types carry the per-chunk metadata the
+        # merge needs
+        if self.chunk_window > 0 and self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
+            documents_to_merge = [
+                {
+                    "document_id": doc.metadata["document_id"],
+                    "chunk_idx": doc.metadata["chunk_idx"],
+                    "prev": doc.metadata["prev"],
+                    "next": doc.metadata["next"],
+                    # carried over to the merged document: the per-chunk keys
+                    # describe a single chunk, not the enlarged window
+                    "metadata": {
+                        key: value
+                        for key, value in doc.metadata.items()
+                        if key not in ("chunk_idx", "prev", "next")
+                    },
+                    "content": doc.page_content,
+                }
+                for doc in documents
+            ]
+            merged_documents = get_context_window_merged(
+                documents_to_merge, window_size=self.chunk_window
+            )
+
+            documents = [
+                Document(
+                    merged_document["content"],
+                    metadata=merged_document["metadata"],
+                )
+                for merged_document in merged_documents
+            ]
+
+        return documents
