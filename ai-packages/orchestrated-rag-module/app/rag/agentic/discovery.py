@@ -156,6 +156,7 @@ def _build_discovery_agent(model, store: _CandidateStore, deps: AgenticDeps) -> 
             domains = valid or None
 
         ctx.deps.emit_status("retrieving")
+        filter_domains = resolve_filter_domains(ctx.deps, domains)
         # NB: top_k/range/chunk_window vengono da RAGConfiguration, non dall'LLM
         records = ctx.deps.retrieve_fn(
             query=request.question,
@@ -163,7 +164,7 @@ def _build_discovery_agent(model, store: _CandidateStore, deps: AgenticDeps) -> 
             tenant_id=ctx.deps.tenant_id,
             opensearch_host=ctx.deps.opensearch_host,
             grpc_host=ctx.deps.grpc_host_datasource,
-            domains=resolve_filter_domains(ctx.deps, domains),
+            domains=filter_domains,
             datasource_ids=ctx.deps.datasource_ids,
             filter_tokens=ctx.deps.filter_tokens,
             **ctx.deps.request_search_args,
@@ -176,7 +177,9 @@ def _build_discovery_agent(model, store: _CandidateStore, deps: AgenticDeps) -> 
         context = log_context(
             tenant_id=ctx.deps.tenant_id, user_id=ctx.deps.user_id, chat_id=ctx.deps.chat_id
         )
-        logger.info(f"[retriever] retrieved {len(records)} docs domains={domains} {context}")
+        logger.info(
+            f"[retriever] retrieved {len(records)} docs domains={filter_domains} {context}"
+        )
         store.add_many(records)
 
         # espone all'LLM SOLO id + anteprima (niente score: confonde il modello, design §4)
