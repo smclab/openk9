@@ -31,6 +31,7 @@ repaired, and only then streamed in pieces, since a streamed run cannot retry
 and the frontends have no event to take back text already shown.
 """
 
+import asyncio
 import json
 import time
 
@@ -144,10 +145,26 @@ async def run_turn(
         )
         return title, emit_title, refs
 
+    # One queue for the events produced outside this generator: the phases the
+    # tools publish and, on the streaming path, the whole answer. A single queue
+    # keeps the order by construction: the phases of the tools always come
+    # before the first CHUNK, because the tool round ends before the model
+    # starts writing. "planning" is the only phase that is true before the run
+    # starts; the tools publish "discovering" and "retrieving" when they really
+    # run, so a turn that does not search does not announce a search.
+    events: asyncio.Queue = asyncio.Queue()
+    deps.status_sink = lambda phase: events.put_nowait(streaming.status_event(phase))
+    yield streaming.status_event("planning")
+
     if orchestrator.verifier_enabled(deps.rag_configuration):
-        output, refs, result = await orchestrator.run_orchestrator(
-            question=search_text, deps=deps, message_history=message_history
+        running = asyncio.ensure_future(
+            orchestrator.run_orchestrator(
+                question=search_text, deps=deps, message_history=message_history
+            )
         )
+        async for event in streaming.relay_until(events, running):
+            yield event
+        output, refs, result = await running
 
         async def post_stream():
             return await finish_turn(output, refs, result)
@@ -160,19 +177,27 @@ async def run_turn(
             yield event
         return
 
-    async with orchestrator.stream_orchestrator(
-        question=search_text, deps=deps, message_history=message_history
-    ) as orchestrator_stream:
+    # ``run_stream`` runs the whole tool round inside ``__aenter__``: entering it
+    # here would block this generator until the search is over, and the phases
+    # would come out all together, after the fact. The whole stream, context
+    # manager included, runs in a task, and this generator relays the queue.
+    async def produce():
+        async with orchestrator.stream_orchestrator(
+            question=search_text, deps=deps, message_history=message_history
+        ) as orchestrator_stream:
 
-        async def post_stream():
-            return await finish_turn(*await orchestrator_stream.finalize())
+            async def post_stream():
+                return await finish_turn(*await orchestrator_stream.finalize())
 
-        async for event in streaming.stream_answer(
-            deltas=streaming.coalesce(orchestrator_stream.deltas()),
-            rag_type=rag_type,
-            post_stream=post_stream,
-        ):
-            yield event
+            async for event in streaming.stream_answer(
+                deltas=streaming.coalesce(orchestrator_stream.deltas()),
+                rag_type=rag_type,
+                post_stream=post_stream,
+            ):
+                events.put_nowait(event)
+
+    async for event in streaming.relay_until(events, asyncio.ensure_future(produce())):
+        yield event
 
 
 async def get_agentic_rag(

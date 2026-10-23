@@ -130,4 +130,4 @@ def test_post_stream_runs_after_chunks_and_provides_tail():
     tipi = asyncio.run(scenario())
 
     assert ordine == ["delta-esauriti", "post_stream"]
-    assert tipi == ["START", "CHUNK", "CHUNK", "CHUNK", "TITLE", "END"]
+    assert tipi == ["STATUS", "START", "CHUNK", "CHUNK", "CHUNK", "TITLE", "END"]

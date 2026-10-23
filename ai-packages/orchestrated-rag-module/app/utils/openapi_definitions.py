@@ -38,7 +38,35 @@ LICENSE_INFO = {
     "url": "https://github.com/smclab/openk9/blob/main/LICENSE",
 }
 
+#: The 200 response of the RAG routes: a stream of Server-Sent Events.
+API_RAG_STREAM_RESPONSE = {
+    "description": (
+        "Stream of Server-Sent Events, each a JSON object with `chunk` and `type`. "
+        "Before the answer, `STATUS` events give the phase of the turn in `chunk`: "
+        "`planning`, `discovering` (a search is delegated), `retrieving` (OpenSearch "
+        "is queried), `generating`; a phase is sent at most once, and none after "
+        "`START`. Then `START`, the `CHUNK` events of the answer, `TITLE` on the "
+        "first turn of a chat, one `DOCUMENT` per cited document and `END`. "
+        "`GUARDRAIL` reports a blocked request and `ERROR` a failed one."
+    ),
+    "content": {
+        "text/event-stream": {
+            "example": (
+                'data: {"chunk": "planning", "type": "STATUS"}\n\n'
+                'data: {"chunk": "discovering", "type": "STATUS"}\n\n'
+                'data: {"chunk": "retrieving", "type": "STATUS"}\n\n'
+                'data: {"chunk": "generating", "type": "STATUS"}\n\n'
+                'data: {"chunk": "", "type": "START"}\n\n'
+                'data: {"chunk": "OpenK9 is a search engine.", "type": "CHUNK"}\n\n'
+                'data: {"chunk": {"citations": [], "title": "OpenK9"}, "type": "DOCUMENT"}\n\n'
+                'data: {"chunk": "", "type": "END"}\n\n'
+            )
+        }
+    },
+}
+
 API_RAG_GENERATE_RESPONSES = {
+    status.HTTP_200_OK: API_RAG_STREAM_RESPONSE,
     status.HTTP_401_UNAUTHORIZED: {
         "description": "Unauthorized - Invalid token.",
         "content": {
@@ -132,6 +160,7 @@ API_RAG_GENERATE_OPENAPI_EXTRA = {
 }
 
 API_RAG_CHAT_RESPONSES = {
+    status.HTTP_200_OK: API_RAG_STREAM_RESPONSE,
     status.HTTP_401_UNAUTHORIZED: {
         "description": "Unauthorized - Invalid token.",
         "content": {
@@ -305,6 +334,7 @@ API_RAG_CHAT_OPENAPI_EXTRA = {
 }
 
 API_RAG_CHAT_TOOL_RESPONSES = {
+    status.HTTP_200_OK: API_RAG_STREAM_RESPONSE,
     status.HTTP_401_UNAUTHORIZED: {
         "description": "Unauthorized - Invalid token.",
         "content": {

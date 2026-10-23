@@ -50,6 +50,12 @@
 		"image-not-readable": "Image could not be read",
 		"question-with-image": "Question asked with an image",
 		"send-message": "Send message",
-		"stop-generating": "Stop generating"
+		"stop-generating": "Stop generating",
+		"status-fallback": "Processing...",
+		"status-planning": "Analysing the question...",
+		"status-retrieving": "Querying the indexes...",
+		"status-discovering": "Discovering sources...",
+		"status-evaluating": "Evaluating the answer...",
+		"status-generating": "Generating the answer..."
 	}
 }

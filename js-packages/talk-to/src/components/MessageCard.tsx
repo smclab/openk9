@@ -13,7 +13,7 @@ import { Logo } from "../Svg/Logo";
 import type { Source } from "./useGenerateResponse";
 import { useDocumentPreview } from "./DocumentPreview";
 import { ArtifactCard, extractDocumentFromAnswer, richMarkdownComponents } from "./MarkdownRenderer";
-import { Message } from "./useGenerateResponse";
+import { GenerationStatus, Message } from "./useGenerateResponse";
 import { isSafeExternalUrl } from "../../../shared/safe-external-url/safeExternalUrl";
 
 type Theme = "light" | "dark";
@@ -78,10 +78,7 @@ export function MessageCard({
 	theme = "light",
 }: {
 	message: Message;
-	isGenerateMessage: {
-		isLoading: boolean;
-		id: string;
-	} | null;
+	isGenerateMessage: GenerationStatus | null;
 	numberOfSources?: number;
 	theme?: Theme;
 }) {
@@ -358,6 +355,15 @@ export function MessageCard({
 						isGenerateMessage?.id === message.id && isGenerateMessage?.isLoading === true ? (
 							<>
 								<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+									{isGenerateMessage?.phase && (
+										<Typography
+											variant="body2"
+											aria-live="polite"
+											sx={{ color: "#757575", fontStyle: "italic", marginBottom: "5px" }}
+										>
+											{t(`status-${isGenerateMessage?.phase}`, { defaultValue: t("status-fallback") })}
+										</Typography>
+									)}
 									<Skeleton variant="rectangular" width="100%" height={35} sx={{ background: "#ffe6e6" }} />
 									<Skeleton variant="rectangular" width="100%" height={35} sx={{ background: "#ffe6e6" }} />
 									<Skeleton variant="rectangular" width="100%" height={35} sx={{ background: "#ffe6e6" }} />

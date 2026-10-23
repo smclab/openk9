@@ -200,8 +200,8 @@ def test_with_the_verifier_the_answer_is_verified_before_it_streams(monkeypatch)
     events = asyncio.run(collect())
 
     assert order == ["run_orchestrator"]
-    assert [e["type"] for e in events] == ["START", "CHUNK", "END"]
-    assert events[1]["chunk"] == "risposta verificata"
+    assert [e["type"] for e in events] == ["STATUS", "STATUS", "START", "CHUNK", "END"]
+    assert events[3]["chunk"] == "risposta verificata"
 
 
 def test_with_bypass_rag_the_answer_streams_even_with_the_verifier_on(monkeypatch):
@@ -239,5 +239,6 @@ def test_with_bypass_rag_the_answer_streams_even_with_the_verifier_on(monkeypatc
 
     events = asyncio.run(collect())
 
-    assert [e["type"] for e in events] == ["START", "CHUNK", "END"]
-    assert events[1]["chunk"] == "risposta libera"
+    answer = [e for e in events if e["type"] != "STATUS"]
+    assert [e["type"] for e in answer] == ["START", "CHUNK", "END"]
+    assert answer[1]["chunk"] == "risposta libera"

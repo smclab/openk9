@@ -17,13 +17,16 @@
 
 """
 SSE events of an answer, with the protocol of agentic-rag-module: ``START``,
-``CHUNK``, ``DOCUMENT``, ``ERROR`` and ``END``.
+``CHUNK``, ``DOCUMENT``, ``ERROR`` and ``END``, plus ``STATUS``, the phase of
+the turn before the answer starts: ``planning``, ``discovering``,
+``retrieving``, ``generating``.
 
 :func:`stream_answer` consumes an async iterator of text deltas: the deltas of
 the provider while the orchestrator writes (:func:`coalesce`), or a complete
 message cut in pieces (:func:`deltas_from_message`).
 """
 
+import asyncio
 import json
 from typing import Awaitable, Callable, Iterable
 
@@ -32,6 +35,39 @@ CHUNK_SIZE = 40
 
 def _sse(chunk, event_type: str) -> str:
     return json.dumps({"chunk": chunk, "type": event_type})
+
+
+def status_event(phase: str) -> str:
+    """The STATUS event of ``phase``."""
+    return _sse(phase, "STATUS")
+
+
+async def relay_until(queue, producer):
+    """
+    Relay the SSE events that ``producer`` queues until that task ends.
+
+    The ``discover`` and ``retriever`` tools run inside ``agent.run``, several
+    frames below this generator: they cannot yield an event, so they queue it.
+    The whole work stays in the ``producer`` task, because ``agent.run_stream``
+    opens an anyio cancel scope that must be closed in the task that opened it.
+
+    If the generator is closed early (the client went away) the producer is
+    cancelled, rather than left filling a queue nobody reads.
+    """
+    try:
+        while not producer.done():
+            getter = asyncio.ensure_future(queue.get())
+            done, _ = await asyncio.wait({getter, producer}, return_when=asyncio.FIRST_COMPLETED)
+            if getter in done:
+                yield getter.result()
+            else:
+                getter.cancel()
+        while not queue.empty():
+            yield queue.get_nowait()
+    finally:
+        if not producer.done():
+            producer.cancel()
+    await producer  # raise the exception of the producer instead of swallowing it
 
 
 async def deltas_from_message(message: str, size: int = CHUNK_SIZE):
@@ -80,7 +116,8 @@ async def stream_answer(
     post_stream: Callable[[], Awaitable[tuple]],
 ):
     """
-    Stream the answer: START, the CHUNK events, then TITLE, DOCUMENT and END.
+    Stream the answer: STATUS ``generating``, START, the CHUNK events, then
+    TITLE, DOCUMENT and END.
 
     :param deltas: The async iterator of the text of the answer.
     :param rag_type: The RAG type of the request; ``SIMPLE_GENERATE`` sends no
@@ -89,6 +126,7 @@ async def stream_answer(
         ``(title, emit_title, refs)``: with real deltas the title and the cited
         documents are known only at the end.
     """
+    yield status_event("generating")
     start = True
     async for piece in deltas:
         if start:

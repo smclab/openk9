@@ -54,11 +54,18 @@ export interface Message {
 	questionImage?: { url: string; filename: string };
 }
 
+/** Fase corrente della pipeline agentica, dall'evento SSE `STATUS` (es. "discovering", "generating"). */
+export interface GenerationStatus {
+	isLoading: boolean;
+	id: string;
+	phase?: string;
+}
+
 const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }) => {
 	const [messages, setMessages] = useState<Message[]>(initialMessages);
 	const [abortControllers, setAbortControllers] = useState<Map<string, AbortController>>(new Map());
 	const [isChatting, setIsChatting] = useState<boolean>(false);
-	const [isLoading, setIsLoading] = useState<{ isLoading: boolean; id: string } | null>(null);
+	const [isLoading, setIsLoading] = useState<GenerationStatus | null>(null);
 	const { userInfo, loading } = useUser();
 	const client = React.useMemo(() => OpenK9Client(), []);
 	const { language } = useUser();
@@ -204,6 +211,12 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 														: msg,
 												),
 											);
+											break;
+
+										case "STATUS":
+											// le fasi arrivano solo prima di START: aggiornano l'indicatore di
+											// caricamento del messaggio in corso, senza riattivarlo se e' gia' chiuso
+											setIsLoading((prev) => (prev?.id === id ? { ...prev, phase: data.chunk } : prev));
 											break;
 
 										case "START":

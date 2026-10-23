@@ -50,6 +50,12 @@
 		"image-not-readable": "Image illisible",
 		"question-with-image": "Question posée avec une image",
 		"send-message": "Envoyer le message",
-		"stop-generating": "Arrêter la génération"
+		"stop-generating": "Arrêter la génération",
+		"status-fallback": "Traitement en cours...",
+		"status-planning": "Analyse de la question...",
+		"status-retrieving": "Interrogation des index...",
+		"status-discovering": "Recherche des sources...",
+		"status-evaluating": "Évaluation de la réponse...",
+		"status-generating": "Génération de la réponse..."
 	}
 }

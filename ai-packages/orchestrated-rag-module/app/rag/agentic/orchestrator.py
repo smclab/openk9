@@ -242,6 +242,7 @@ def build_orchestrator(
             logger.info(f"[orchestrator] discover: budget di {MAX_DISCOVERIES_PER_TURN} esaurito")
             return DISCOVERY_LIMIT_REACHED
         ctx.deps.discoveries_run += 1
+        ctx.deps.emit_status("discovering")
         _log_delegation(ctx.deps, request)
         outcome = await discovery.run_discovery(
             request=request,

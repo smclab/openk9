@@ -88,7 +88,9 @@ def test_the_answer_is_streamed_as_chunks(path, body, client):
     events = _events(client.post(path, json=body, headers=HEADERS))
 
     types = [event["type"] for event in events]
-    assert types[0] == "START"
-    assert set(types[1:-1]) == {"CHUNK"}
+    phases = [event["chunk"] for event in events if event["type"] == "STATUS"]
+    assert phases == ["planning", "generating"]  # the test model does not search
+    assert types[:3] == ["STATUS", "STATUS", "START"]
+    assert set(types[3:-1]) == {"CHUNK"}
     assert types[-1] == "END"
     assert "".join(e["chunk"] for e in events if e["type"] == "CHUNK") == ANSWER

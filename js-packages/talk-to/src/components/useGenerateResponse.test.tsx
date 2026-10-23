@@ -134,6 +134,69 @@ describe("useGenerateResponse", () => {
 		});
 	});
 
+	test("STATUS events update the phase shown by the loading indicator", async () => {
+		mockGenerateResponse.mockResolvedValue(
+			createSSEResponse([
+				{ type: "STATUS", chunk: "discovering" },
+				{ type: "STATUS", chunk: "generating" },
+			]),
+		);
+
+		const { result } = renderHook(() => useGenerateResponse({ initialMessages }));
+
+		await act(async () => {
+			await result.current.generateResponse("normal query", "chat-1");
+		});
+
+		await waitFor(() => {
+			expect(result.current.isLoading?.phase).toBe("generating");
+		});
+	});
+
+	test("START clears the phase together with the loading indicator", async () => {
+		mockGenerateResponse.mockResolvedValue(
+			createSSEResponse([
+				{ type: "STATUS", chunk: "discovering" },
+				{ type: "START", chunk: "" },
+				{ type: "CHUNK", chunk: "Hello" },
+				{ type: "END", chunk: "" },
+			]),
+		);
+
+		const { result } = renderHook(() => useGenerateResponse({ initialMessages }));
+
+		await act(async () => {
+			await result.current.generateResponse("normal query", "chat-1");
+		});
+
+		await waitFor(() => {
+			expect(result.current.isLoading).toBeNull();
+		});
+	});
+
+	test("STATUS after START does not reopen the loading indicator", async () => {
+		mockGenerateResponse.mockResolvedValue(
+			createSSEResponse([
+				{ type: "START", chunk: "" },
+				{ type: "STATUS", chunk: "generating" },
+				{ type: "CHUNK", chunk: "Hello" },
+				{ type: "END", chunk: "" },
+			]),
+		);
+
+		const { result } = renderHook(() => useGenerateResponse({ initialMessages }));
+
+		await act(async () => {
+			await result.current.generateResponse("normal query", "chat-1");
+		});
+
+		await waitFor(() => {
+			expect(result.current.isLoading).toBeNull();
+			const lastMessage = result.current.messages[result.current.messages.length - 1];
+			expect(lastMessage.answer).toBe("Hello");
+		});
+	});
+
 	test("regular stream still accumulates chunks and completes", async () => {
 		mockGenerateResponse.mockResolvedValue(
 			createSSEResponse([

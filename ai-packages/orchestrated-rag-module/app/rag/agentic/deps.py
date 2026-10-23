@@ -77,6 +77,27 @@ class AgenticDeps:
     discoveries_run: int = 0
     #: token stimati dei documenti gia' consegnati all'orchestratore in questo turno
     delivered_tokens: float = 0.0
+    #: sink delle fasi STATUS, iniettato dall'entrypoint. I tool (``discover``, ``retriever``)
+    #: girano dentro ``agent.run``, parecchi frame sotto il generator che produce gli eventi SSE:
+    #: non possono cederli direttamente, quindi li consegnano qui. ``None`` (default) = nessun
+    #: sink → :meth:`emit_status` no-op, per i test offline.
+    status_sink: Optional[Callable[[str], None]] = None
+    #: fasi già pubblicate in questa run (vedi :meth:`emit_status`)
+    emitted_phases: set = field(default_factory=set)
+
+    def emit_status(self, phase: str) -> None:
+        """Consegna una fase al sink, **al massimo una volta per run**.
+
+        Un turno invoca ``discover``/``retriever`` piu' volte: senza la deduplica il frontend
+        riceverebbe eventi identici e l'indicatore, che mostra una sola label, sfarfallerebbe tra
+        le stesse due fasi. Una fase sola per run rende la progressione monotona (planning →
+        discovering → retrieving → generating).
+        """
+        if self.status_sink is None or phase in self.emitted_phases:
+            return
+        self.emitted_phases.add(phase)
+        self.status_sink(phase)
+
     def retrieve_top_k_args(self) -> dict:
         """Parametri di retrieval derivati da RAGConfiguration (NON scelti dall'LLM)."""
         cfg = self.rag_configuration

@@ -153,6 +153,7 @@ def _build_discovery_agent(model, store: _CandidateStore, deps: AgenticDeps) -> 
             valid = [d for d in request.domains if d in ctx.deps.allowed_domains]
             domains = valid or None
 
+        ctx.deps.emit_status("retrieving")
         # NB: top_k/range/chunk_window vengono da RAGConfiguration, non dall'LLM
         records = ctx.deps.retrieve_fn(
             query=request.question,
