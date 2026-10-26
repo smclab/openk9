@@ -31,7 +31,7 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic_ai.messages import ModelResponse, TextPart, ToolCallPart, ToolReturnPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
-from pydantic_ai.usage import RunUsage
+from pydantic_ai.usage import RequestUsage, RunUsage
 
 from app.rag.agentic import discovery, entrypoint, guardrails, intent, orchestrator, retrieval
 from app.rag.agentic.contracts import DiscoveryUnanswerable, OrchestratorOutput, SubAgentRequest
@@ -179,6 +179,31 @@ def test_the_other_agents_of_the_turn_add_to_the_same_bill():
     asyncio.run(entrypoint.generate_title(title_model, QUERY, ANSWER, usage=deps.usage))
 
     assert deps.usage.requests == 4
+
+
+def test_the_tokens_of_an_openai_response_are_counted():
+    """The usage of a real OpenAI response, as the OpenAI model reads it. genai-prices 0.1 returns
+    reasoning tokens that this PydanticAI does not take, and every token of the turn was lost."""
+    response = {
+        "model": "gpt-4o-mini",
+        "usage": {
+            "prompt_tokens": 13,
+            "completion_tokens": 2,
+            "total_tokens": 15,
+            "completion_tokens_details": {"reasoning_tokens": 0, "audio_tokens": 0},
+            "prompt_tokens_details": {"cached_tokens": 0, "audio_tokens": 0},
+        },
+    }
+
+    usage = RequestUsage.extract(
+        response,
+        provider="openai",
+        provider_url="https://api.openai.com/v1/",
+        provider_fallback="openai",
+        api_flavor="chat",
+    )
+
+    assert (usage.input_tokens, usage.output_tokens) == (13, 2)
 
 
 # --------------------------------------------------------------------------- #
