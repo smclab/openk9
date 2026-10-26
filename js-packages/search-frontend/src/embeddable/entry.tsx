@@ -1,6 +1,5 @@
 import React from "react";
-import type { Moment } from "moment";
-import type { FocusedInputShape } from "react-dates";
+import type { FocusedInput } from "../components/dateRange";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as RestApi from "../components/client";
@@ -237,29 +236,27 @@ type CalendarMobileConfiguration = {
   element: Element | string | null;
   isVisible: boolean;
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  startDate: Moment | null;
-  setStartDate: React.Dispatch<React.SetStateAction<Moment | null>>;
-  endDate: Moment | null;
-  setEndDate: React.Dispatch<React.SetStateAction<Moment | null>>;
-  focusedInput: FocusedInputShape | null;
-  setFocusedInput: React.Dispatch<
-    React.SetStateAction<FocusedInputShape | null>
-  >;
+  startDate: Date | null;
+  setStartDate: React.Dispatch<React.SetStateAction<Date | null>>;
+  endDate: Date | null;
+  setEndDate: React.Dispatch<React.SetStateAction<Date | null>>;
+  focusedInput: FocusedInput | null;
+  setFocusedInput: React.Dispatch<React.SetStateAction<FocusedInput | null>>;
   isCLickReset: boolean;
   setIsCLickReset: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 type DataRangePickerProps = {
   element: Element | string | null;
-  start?: Moment | null;
-  end?: Moment | null;
+  start?: Date | null;
+  end?: Date | null;
 };
 
 type DataRangePickerVerticalProps = {
   element: Element | string | null;
   // NOTA: dichiarate nella configurazione ma non lette dal picker verticale.
-  start?: Moment | null;
-  end?: Moment | null;
+  start?: Date | null;
+  end?: Date | null;
   readOnly?: boolean;
   internationalLabel?: {
     labelStart?: string;

@@ -1,0 +1,324 @@
+/* Rules adapted from react-dates 21.8.0 (MIT, Airbnb): the look the date
+   pickers had with react-dates/lib/css/_datepicker.css */
+
+/* calendar */
+.rdp-root {
+  --rdp-accent-color: #00a699;
+  --rdp-day_button-width: 100%;
+  --rdp-day_button-height: 100%;
+  --rdp-day_button-border-radius: 0;
+  --rdp-day_button-border: 0;
+  --rdp-disabled-opacity: 1;
+  --rdp-nav-height: auto;
+  background: #fff;
+  color: #484848;
+  font-size: 14px;
+}
+.rdp-months {
+  gap: 0;
+  max-width: none;
+  flex-wrap: nowrap;
+}
+.rdp-month {
+  position: relative;
+  text-align: center;
+  user-select: none;
+}
+/* react-dates drew the weekdays inside the caption bottom padding (37px),
+   here they are a 20px row of the table */
+.rdp-month_caption {
+  justify-content: center;
+  height: auto;
+  color: #484848;
+  font-size: 18px;
+  font-weight: bold;
+  padding-top: 22px;
+  padding-bottom: 17px;
+}
+.rdp-caption_label {
+  font-size: 18px;
+}
+.rdp-month_grid {
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin: 0 auto;
+}
+.rdp-weekday {
+  box-sizing: border-box;
+  height: 20px;
+  padding: 4px 0 0;
+  color: #757575;
+  font-size: 11.62px;
+  font-weight: normal;
+  opacity: 1;
+  vertical-align: top;
+}
+.rdp-day {
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid #e4e7e7;
+  background: #fff;
+  color: #484848;
+  font-size: 14px;
+  text-align: center;
+}
+.rdp-day:hover {
+  background: #e4e7e7;
+}
+.rdp-day_button {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.rdp-today:not(.rdp-outside) {
+  color: inherit;
+}
+.rdp-selected {
+  font-size: 14px;
+  font-weight: normal;
+}
+.rdp-selected .rdp-day_button {
+  border: 0;
+}
+.rdp-range_start,
+.rdp-range_end,
+.rdp-range_middle {
+  background: none;
+}
+.rdp-range_start .rdp-day_button,
+.rdp-range_end .rdp-day_button {
+  background: none;
+  color: inherit;
+}
+.rdp-range_middle .rdp-day_button {
+  color: inherit;
+}
+/* same order as in _datepicker.css: a later state wins; ".rdp-day" makes them
+   as specific as the react-day-picker rules on two classes (one-day range, today) */
+.rdp-day.rdp-disabled,
+.rdp-day.rdp-disabled:hover {
+  background: #fff;
+  border: 1px solid #eceeee;
+  color: #cacccd;
+}
+.rdp-disabled .rdp-day_button {
+  cursor: default;
+}
+.rdp-day.rdp-range_middle,
+.rdp-day.rdp-range_middle:hover {
+  background: #66e2da;
+  border: 1px double #33dacd;
+  color: #fff;
+}
+.rdp-day.rdp-range_middle:hover {
+  background: #33dacd;
+}
+.rdp-day.rdp-selected,
+.rdp-day.rdp-selected:hover {
+  background: #00a699;
+  border: 1px double #00a699;
+  color: #fff;
+}
+.rdp-day.rdp-hovered_span,
+.rdp-day.rdp-hovered_span:hover {
+  background: #b2f1ec;
+  border: 1px double #80e8e0;
+  color: #007a87;
+}
+/* days of other months are empty cells, as in react-dates */
+.rdp-day.rdp-hidden,
+.rdp-day.rdp-hidden:hover {
+  border: 0;
+  background: none;
+}
+.rdp-nav {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  display: block;
+}
+.rdp-button_previous,
+.rdp-button_next {
+  position: absolute;
+  top: 18px;
+  width: auto;
+  height: auto;
+  padding: 6px 9px;
+  border: 1px solid #e4e7e7;
+  border-radius: 3px;
+  background-color: #fff;
+  color: #757575;
+  line-height: 0.78;
+  cursor: pointer;
+}
+.rdp-button_previous:hover,
+.rdp-button_next:hover,
+.rdp-button_previous:focus,
+.rdp-button_next:focus {
+  border: 1px solid #c4c4c4;
+}
+.rdp-button_previous:active,
+.rdp-button_next:active {
+  background: #f2f2f2;
+}
+.rdp-button_previous {
+  left: 22px;
+}
+.rdp-button_next {
+  right: 22px;
+}
+.rdp-chevron {
+  display: block;
+  width: 19px;
+  height: 19px;
+  fill: #82888a;
+}
+
+/* range picker inputs and popup */
+.DayPicker {
+  background: #fff;
+  position: relative;
+  text-align: left;
+}
+.DayPicker__horizontal {
+  background: #fff;
+}
+.DayPicker__withBorder {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.07);
+  border-radius: 3px;
+}
+.DateInput {
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  position: relative;
+  display: inline-block;
+  width: 130px;
+  vertical-align: middle;
+}
+.DateInput_input {
+  font-weight: 200;
+  font-size: 19px;
+  line-height: 24px;
+  color: #484848;
+  background-color: #fff;
+  width: 100%;
+  padding: 11px 11px 9px;
+  border: 0;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 2px solid transparent;
+  border-left: 0;
+  border-radius: 0;
+}
+.DateInput_input__focused {
+  outline: 0;
+  background: #fff;
+  border: 0;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 2px solid #008489;
+  border-left: 0;
+}
+.DateInput_fang {
+  position: absolute;
+  width: 20px;
+  height: 10px;
+  left: 22px;
+  z-index: 2;
+}
+.DateInput_fangShape {
+  fill: #fff;
+}
+.DateInput_fangStroke {
+  stroke: #dbdbdb;
+  fill: transparent;
+}
+.DateInput_screenReaderMessage {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+.DateRangePickerInput {
+  background-color: #fff;
+  display: inline-block;
+}
+.DateRangePickerInput__withBorder {
+  border-radius: 2px;
+  border: 1px solid #dbdbdb;
+}
+.DateRangePickerInput_arrow {
+  display: inline-block;
+  vertical-align: middle;
+  color: #484848;
+}
+.DateRangePickerInput_arrow_svg {
+  vertical-align: middle;
+  fill: #484848;
+  height: 24px;
+  width: 24px;
+}
+.DateRangePicker {
+  position: relative;
+  display: inline-block;
+}
+.DateRangePicker_picker {
+  z-index: 1;
+  background-color: #fff;
+  position: absolute;
+}
+.DateRangePicker_picker__directionLeft {
+  left: 0;
+}
+
+/* single date picker icon and popup */
+.SingleDatePickerInput {
+  display: inline-block;
+  background-color: #fff;
+}
+.SingleDatePickerInput__withBorder {
+  border-radius: 2px;
+  border: 1px solid #dbdbdb;
+}
+.SingleDatePickerInput_calendarIcon {
+  background: 0 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  overflow: visible;
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 10px;
+  margin: 0 5px 0 10px;
+}
+.SingleDatePickerInput_calendarIcon_svg {
+  fill: #82888a;
+  height: 15px;
+  width: 14px;
+  vertical-align: middle;
+}
+.SingleDatePicker {
+  position: relative;
+  display: inline-block;
+}
+.SingleDatePicker_picker {
+  z-index: 1;
+  background-color: #fff;
+  position: absolute;
+}
+.SingleDatePicker_picker__directionLeft {
+  left: 0;
+}

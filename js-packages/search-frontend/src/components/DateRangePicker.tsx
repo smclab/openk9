@@ -1,66 +1,70 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
 import { SearchDateRange } from "../embeddable/Main";
 import { useTranslation } from "react-i18next";
-import "react-dates/initialize";
-import { DateRangePicker, FocusedInputShape } from "react-dates";
+import {
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  endOfYear,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from "date-fns";
 import { CreateLabel } from "./Filters";
-import moment, { Moment } from "moment";
 import { DeleteLogo } from "./DeleteLogo";
 import { CalendarLogo } from "./CalendarLogo";
 import { css } from "styled-components";
-import "moment/locale/de";
-import "moment/locale/it";
-import "moment/locale/es";
-import { mappingNameLanguage } from "./CalendarModal";
+import { FocusedInput } from "./dateRange";
+import { RangePicker } from "./RangePicker";
 
 export function DataRangePicker({
   onChange,
   calendarDate,
   start,
   end,
-  language,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
-  start?: Moment | null;
-  end?: Moment | null;
+  start?: Date | null;
+  end?: Date | null;
   language: string;
 }) {
-  const [startDate, setStartDate] = React.useState<Moment | null>(null);
-  const [endDate, setEndDate] = React.useState<Moment | null>(null);
-  const [focusedInput, setFocusedInput] = React.useState<FocusedInputShape | null>(null);
+  const [startDate, setStartDate] = React.useState<Date | null>(null);
+  const [endDate, setEndDate] = React.useState<Date | null>(null);
+  const [focusedInput, setFocusedInput] = React.useState<FocusedInput | null>(
+    null,
+  );
   const { t } = useTranslation();
-  const languageCalendar = mappingNameLanguage(language);
-  moment.locale(languageCalendar);
 
   const handleDatesChange = ({
     startDate,
     endDate,
   }: {
-    startDate: Moment | null;
-    endDate: Moment | null;
+    startDate: Date | null;
+    endDate: Date | null;
   }) => {
     setStartDate(startDate);
     setEndDate(endDate);
   };
 
-  const handleFocusChange = (focusedInput: FocusedInputShape | null) => {
+  const handleFocusChange = (focusedInput: FocusedInput | null) => {
     setFocusedInput(focusedInput);
   };
   const renderCalendarInfo = () => (
@@ -78,8 +82,8 @@ export function DataRangePicker({
         padding="10px 6px"
         label={t("today")}
         action={() => {
-          setStartDate(moment().startOf("day"));
-          setEndDate(moment().endOf("day"));
+          setStartDate(startOfDay(new Date()));
+          setEndDate(endOfDay(new Date()));
         }}
       />
 
@@ -87,8 +91,8 @@ export function DataRangePicker({
         padding="10px 6px"
         label={t("this-week")}
         action={() => {
-          setStartDate(moment().startOf("week"));
-          setEndDate(moment().endOf("week"));
+          setStartDate(startOfWeek(new Date()));
+          setEndDate(endOfWeek(new Date()));
         }}
       />
 
@@ -96,8 +100,8 @@ export function DataRangePicker({
         padding="10px 6px"
         label={t("this-month")}
         action={() => {
-          setStartDate(moment().startOf("month"));
-          setEndDate(moment().endOf("month"));
+          setStartDate(startOfMonth(new Date()));
+          setEndDate(endOfMonth(new Date()));
         }}
       />
 
@@ -105,8 +109,8 @@ export function DataRangePicker({
         padding="10px 6px"
         label={t("this-year")}
         action={() => {
-          setStartDate(moment().startOf("year"));
-          setEndDate(moment().endOf("year"));
+          setStartDate(startOfYear(new Date()));
+          setEndDate(endOfYear(new Date()));
         }}
       />
       <div
@@ -136,8 +140,8 @@ export function DataRangePicker({
           padding="10px 6px"
           action={() =>
             onChange({
-              startDate: startDate?.toDate() || undefined,
-              endDate: endDate?.toDate() || undefined,
+              startDate: startDate || undefined,
+              endDate: endDate || undefined,
               keywordKey: undefined,
             })
           }
@@ -181,7 +185,7 @@ export function DataRangePicker({
         >
           <CalendarLogo size={"20px"} />
         </div>
-        <DateRangePicker
+        <RangePicker
           startDate={start || startDate}
           endDate={end || endDate}
           onDatesChange={handleDatesChange}
@@ -190,17 +194,14 @@ export function DataRangePicker({
           startDateId="startDate"
           endDateId="endDate"
           openDirection="down"
-          hideKeyboardShortcutsPanel
           renderCalendarInfo={renderCalendarInfo}
-          customInputIcon={null}
           keepOpenOnDateSelect={true}
-          isOutsideRange={() => false}
           startDatePlaceholderText={t("start-day") || "Start day"}
           endDatePlaceholderText={t("end-day") || "Start day"}
           onClose={() => {
             if (calendarDate.startDate && calendarDate.endDate) {
-              setStartDate(moment(calendarDate.startDate));
-              setEndDate(moment(calendarDate.endDate));
+              setStartDate(new Date(calendarDate.startDate));
+              setEndDate(new Date(calendarDate.endDate));
             }
           }}
         />
@@ -257,4 +258,3 @@ export function resetFilterCalendar() {
     });
   }
 }
-

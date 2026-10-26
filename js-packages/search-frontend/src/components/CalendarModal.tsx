@@ -39,19 +39,22 @@ import { SelectionsState } from "./useSelections";
 import { SearchDateRange } from "../embeddable/Main";
 import { CalendarLogo } from "./CalendarLogo";
 import { DataRangePicker } from "./DateRangePicker";
-import { DateRangePicker } from "react-dates";
 import { CalendarMobileSvg } from "../svgElement/CalendarMobileSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
 import { TrashSvg } from "../svgElement/TrashSvg";
-import moment, { Moment } from "moment";
-import { FocusedInputShape } from "react-dates";
-import "moment/locale/it";
-import "moment/locale/es";
-import "moment/locale/fr";
+import {
+  endOfMonth,
+  endOfWeek,
+  endOfYear,
+  format,
+  isValid,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from "date-fns";
 import { useTranslation } from "react-i18next";
-import "moment/locale/de";
-import "moment/locale/it";
-import "moment/locale/es";
+import { FocusedInput } from "./dateRange";
+import { RangePicker } from "./RangePicker";
 
 export function CalendarMobile({
   onChange,
@@ -77,13 +80,13 @@ export function CalendarMobile({
     | undefined;
   // La configurazione `calendarMobile` e' opzionale: queste prop possono mancare,
   // come gia' avviene per `setIsVisibleCalendar`.
-  startDate: Moment | null | undefined;
-  endDate: Moment | null | undefined;
-  focusedInput: FocusedInputShape | null | undefined;
-  setStartDate: React.Dispatch<React.SetStateAction<Moment | null>> | undefined;
-  setEndDate: React.Dispatch<React.SetStateAction<Moment | null>> | undefined;
+  startDate: Date | null | undefined;
+  endDate: Date | null | undefined;
+  focusedInput: FocusedInput | null | undefined;
+  setStartDate: React.Dispatch<React.SetStateAction<Date | null>> | undefined;
+  setEndDate: React.Dispatch<React.SetStateAction<Date | null>> | undefined;
   setFocusedInput:
-    | React.Dispatch<React.SetStateAction<FocusedInputShape | null>>
+    | React.Dispatch<React.SetStateAction<FocusedInput | null>>
     | undefined;
   activeLanguage?: string;
   isCLickReset: boolean;
@@ -94,13 +97,13 @@ export function CalendarMobile({
     startDate,
     endDate,
   }: {
-    startDate: Moment | null;
-    endDate: Moment | null;
+    startDate: Date | null;
+    endDate: Date | null;
   }) => {
     setStartDate?.(startDate);
     setEndDate?.(endDate);
   };
-  const handleFocusChange = (focusedInput: FocusedInputShape | null) => {
+  const handleFocusChange = (focusedInput: FocusedInput | null) => {
     setFocusedInput?.(focusedInput);
   };
 
@@ -113,8 +116,6 @@ export function CalendarMobile({
     });
     if (setIsCLickReset) setIsCLickReset(false);
   }, [isCLickReset]);
-  const languageCalendar = mappingNameLanguage(language);
-  moment.locale(languageCalendar);
 
   const componet = (
     <React.Fragment>
@@ -234,8 +235,8 @@ export function CalendarMobile({
             white-space: nowrap;
           `}
           onClick={() => {
-            setStartDate?.(moment());
-            setEndDate?.(moment());
+            setStartDate?.(new Date());
+            setEndDate?.(new Date());
           }}
         >
           {t("today")}
@@ -256,8 +257,8 @@ export function CalendarMobile({
             white-space: nowrap;
           `}
           onClick={() => {
-            setStartDate?.(moment().startOf("week"));
-            setEndDate?.(moment().endOf("week"));
+            setStartDate?.(startOfWeek(new Date()));
+            setEndDate?.(endOfWeek(new Date()));
           }}
         >
           {t("this-week")}
@@ -278,8 +279,8 @@ export function CalendarMobile({
             white-space: nowrap;
           `}
           onClick={() => {
-            setStartDate?.(moment().startOf("month"));
-            setEndDate?.(moment().endOf("month"));
+            setStartDate?.(startOfMonth(new Date()));
+            setEndDate?.(endOfMonth(new Date()));
           }}
         >
           {t("this-month")}
@@ -300,8 +301,8 @@ export function CalendarMobile({
             white-space: nowrap;
           `}
           onClick={() => {
-            setStartDate?.(moment().startOf("year"));
-            setEndDate?.(moment().endOf("year"));
+            setStartDate?.(startOfYear(new Date()));
+            setEndDate?.(endOfYear(new Date()));
           }}
         >
           {t("this-year")}
@@ -313,7 +314,7 @@ export function CalendarMobile({
           margin-top: 360px;
         `}
       >
-        <DateRangePicker
+        <RangePicker
           startDate={startDate ?? null}
           endDate={endDate ?? null}
           onDatesChange={handleDatesChange}
@@ -321,13 +322,10 @@ export function CalendarMobile({
           onFocusChange={handleFocusChange}
           keepOpenOnDateSelect={true}
           startDateId="startDate"
-          hideKeyboardShortcutsPanel={true}
           numberOfMonths={1}
-          isOutsideRange={() => false}
           endDateId="endDate"
           openDirection="up"
           noBorder={true}
-          verticalHeight={32}
           startDatePlaceholderText={t("start-day") || "Start day"}
           endDatePlaceholderText={t("end-day") || "Start day"}
         />
@@ -354,21 +352,19 @@ export function CalendarMobile({
               --openk9-embeddable-search--font-weight-semibold,
               600
             );
-            color: ${startDate && moment(startDate).isValid()
-              ? "#c0272b"
-              : "#a1a1aa"};
-            background: ${startDate && moment(startDate).isValid()
+            color: ${startDate && isValid(startDate) ? "#c0272b" : "#a1a1aa"};
+            background: ${startDate && isValid(startDate)
               ? "rgba(214, 1, 46, 0.08)"
               : "#f4f4f5"};
             border: 1px solid
-              ${startDate && moment(startDate).isValid()
+              ${startDate && isValid(startDate)
                 ? "rgba(214, 1, 46, 0.2)"
                 : "#e4e4e7"};
             white-space: nowrap;
           `}
         >
-          {startDate && moment(startDate).isValid()
-            ? moment(startDate).format(formatterLanguage(language))
+          {startDate && isValid(startDate)
+            ? format(startDate, formatterLanguage(language))
             : t("start-day") || "Start day"}
         </span>
         <span
@@ -391,21 +387,19 @@ export function CalendarMobile({
               --openk9-embeddable-search--font-weight-semibold,
               600
             );
-            color: ${endDate && moment(endDate).isValid()
-              ? "#c0272b"
-              : "#a1a1aa"};
-            background: ${endDate && moment(endDate).isValid()
+            color: ${endDate && isValid(endDate) ? "#c0272b" : "#a1a1aa"};
+            background: ${endDate && isValid(endDate)
               ? "rgba(214, 1, 46, 0.08)"
               : "#f4f4f5"};
             border: 1px solid
-              ${endDate && moment(endDate).isValid()
+              ${endDate && isValid(endDate)
                 ? "rgba(214, 1, 46, 0.2)"
                 : "#e4e4e7"};
             white-space: nowrap;
           `}
         >
-          {endDate && moment(endDate).isValid()
-            ? moment(endDate).format(formatterLanguage(language))
+          {endDate && isValid(endDate)
+            ? format(endDate, formatterLanguage(language))
             : t("end-day") || "End day"}
         </span>
       </div>
@@ -551,8 +545,8 @@ export function CalendarMobile({
           onClick={() => {
             if (setIsVisibleCalendar) setIsVisibleCalendar(false);
             onChange({
-              startDate: startDate?.toDate() || undefined,
-              endDate: endDate?.toDate() || undefined,
+              startDate: startDate || undefined,
+              endDate: endDate || undefined,
               keywordKey: undefined,
             });
           }}
@@ -580,29 +574,15 @@ export function CalendarMobile({
 export function formatterLanguage(language: string) {
   switch (language) {
     case "it_IT":
-      return "DD MMMM YYYY"; // Formato italiano
+      return "dd MMMM yyyy"; // Formato italiano
     case "es_ES":
-      return "DD [de] MMMM [de] YYYY"; // Formato spagnolo
+      return "dd 'de' MMMM 'de' yyyy"; // Formato spagnolo
     case "fr_FR":
-      return "DD MMMM YYYY"; // Formato francese
+      return "dd MMMM yyyy"; // Formato francese
     case "de_DE":
-      return "DD.MMMM.YYYY"; // Formato tedesco
+      return "dd.MMMM.yyyy"; // Formato tedesco
     default:
-      return "MMMM DD, YYYY"; // Formato predefinito (inglese)
-  }
-}
-export function mappingNameLanguage(language: string) {
-  switch (language) {
-    case "it_IT":
-      return "it";
-    case "es_ES":
-      return "es";
-    case "fr_FR":
-      return "fr";
-    case "de_DE":
-      return "de";
-    default:
-      return "en";
+      return "MMMM dd, yyyy"; // Formato predefinito (inglese)
   }
 }
 export const CalendarMobileMemo = React.memo(CalendarMobile);

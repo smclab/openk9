@@ -1,35 +1,29 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
-import { SingleDatePicker } from "react-dates";
 import { SearchDateRange } from "../embeddable/Main";
-import moment, { Moment } from "moment";
+import { endOfDay, format, isAfter } from "date-fns";
 import { useTranslation } from "react-i18next";
-import { mappingNameLanguage } from "./CalendarModal";
-import "moment/locale/de";
-import "moment/locale/it";
-import "moment/locale/es";
-import "moment/locale/fr";
-import { DateRangePickerPhrases } from "react-dates/lib/defaultPhrases";
+import { parseDate } from "./dateRange";
+import { SinglePicker } from "./SinglePicker";
 import { css } from "styled-components";
 export function DataRangePickerVertical({
   onChange,
   calendarDate,
-  language,
   start,
   end,
   classTab,
@@ -41,8 +35,8 @@ export function DataRangePickerVertical({
   calendarDate: SearchDateRange;
   language: string;
   // NOTA: ricevute come prop ma non lette dal corpo del componente.
-  start?: Moment | null;
-  end?: Moment | null;
+  start?: Date | null;
+  end?: Date | null;
   classTab?: string;
   readOnly?: boolean;
   isOpenFilter?: boolean;
@@ -59,13 +53,11 @@ export function DataRangePickerVertical({
       }
     | undefined;
 }) {
-  const languageCalendar = mappingNameLanguage(language);
-  moment.locale(languageCalendar);
   const { t } = useTranslation();
 
-  const [startDate, setStartDate] = React.useState<Moment | null>(null);
+  const [startDate, setStartDate] = React.useState<Date | null>(null);
   const [focusedStartInput, setFocusedStartInput] = React.useState(false);
-  const [endDate, setEndDate] = React.useState<Moment | null>(null);
+  const [endDate, setEndDate] = React.useState<Date | null>(null);
   const [focusedEndInput, setFocusedEndInput] = React.useState(false);
   const [dataEnd, setDataEnd] = React.useState("");
   const [dataStart, setDataStart] = React.useState("");
@@ -73,21 +65,21 @@ export function DataRangePickerVertical({
   const [validationEnd, setValidationEnd] = React.useState("");
   React.useEffect(() => {
     if (startDate) {
-      startDate.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+      startDate.setHours(0, 0, 0, 0);
     }
     if (endDate) {
-      endDate.set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
+      endDate.setHours(23, 59, 59, 999);
     }
 
     if (endDate) {
-      setDataEnd(endDate.format("DD/MM/YYYY"));
+      setDataEnd(format(endDate, "dd/MM/yyyy"));
       setValidationEnd("");
     } else {
       setDataEnd("");
     }
 
     if (startDate) {
-      setDataStart(startDate.format("DD/MM/YYYY"));
+      setDataStart(format(startDate, "dd/MM/yyyy"));
       setValidationStart("");
     } else {
       setDataStart("");
@@ -96,46 +88,40 @@ export function DataRangePickerVertical({
 
   React.useEffect(() => {
     const nextStart = calendarDate?.startDate
-      ? moment(calendarDate.startDate)
+      ? new Date(calendarDate.startDate)
       : null;
-    const nextEnd = calendarDate?.endDate ? moment(calendarDate.endDate) : null;
+    const nextEnd = calendarDate?.endDate
+      ? new Date(calendarDate.endDate)
+      : null;
 
     setStartDate(nextStart);
     setEndDate(nextEnd);
 
-    setDataStart(nextStart ? nextStart.format("DD/MM/YYYY") : "");
-    setDataEnd(nextEnd ? nextEnd.format("DD/MM/YYYY") : "");
+    setDataStart(nextStart ? format(nextStart, "dd/MM/yyyy") : "");
+    setDataEnd(nextEnd ? format(nextEnd, "dd/MM/yyyy") : "");
 
     setValidationStart("");
     setValidationEnd("");
   }, [calendarDate?.startDate, calendarDate?.endDate]);
 
-  const customPhrasesStart = {
-    ...DateRangePickerPhrases,
-    clearDates: t("remove-dates"),
-    focusStartDate: startDate
-      ? t("remove-data-start") || "remove start date"
-      : t("open-calendar-start-date") || "open calendar start date",
-  };
-  const customPhrasesEndDate = {
-    ...DateRangePickerPhrases,
-    clearDates: t("remove-dates"),
-    focusStartDate: endDate
-      ? t("remove-data-end") || "remove end date"
-      : t("open-calendar-end-date") || "open calendar end date",
-  };
+  const startIconLabel = startDate
+    ? t("remove-data-start") || "remove start date"
+    : t("open-calendar-start-date") || "open calendar start date";
+  const endIconLabel = endDate
+    ? t("remove-data-end") || "remove end date"
+    : t("open-calendar-end-date") || "open calendar end date";
 
   function handleEndDateChange(event: React.ChangeEvent<HTMLInputElement>) {
     const inputValue = event.target.value;
-    const dateObject = moment(inputValue, "DD/MM/YYYY", true);
-    if (dateObject.isValid() && (!startDate || dateObject >= startDate)) {
+    const dateObject = parseDate(inputValue, ["dd/MM/yyyy"]);
+    if (dateObject && (!startDate || dateObject >= startDate)) {
       setEndDate(dateObject);
       setValidationEnd("");
     } else {
       setEndDate(null);
       setDataEnd("");
       if (inputValue !== "") {
-        if (!dateObject.isValid()) {
+        if (!dateObject) {
           setValidationEnd(
             translationLabel?.errorFormatData ||
               t("invalid-date-format") ||
@@ -153,15 +139,15 @@ export function DataRangePickerVertical({
 
   function handleStartDateChange(event: React.ChangeEvent<HTMLInputElement>) {
     const inputValue = event.target.value;
-    const dateObject = moment(inputValue, "DD/MM/YYYY", true);
-    if (dateObject.isValid() && (!endDate || dateObject <= endDate)) {
+    const dateObject = parseDate(inputValue, ["dd/MM/yyyy"]);
+    if (dateObject && (!endDate || dateObject <= endDate)) {
       setStartDate(dateObject);
       setValidationStart("");
     } else {
       setStartDate(null);
       setDataStart("");
       if (inputValue !== "") {
-        if (!dateObject.isValid()) {
+        if (!dateObject) {
           setValidationStart(
             translationLabel?.errorFormatData ||
               t("invalid-date-format") ||
@@ -283,15 +269,14 @@ export function DataRangePickerVertical({
             `}
           >
             <div className="openk9-calendar-button">
-              <SingleDatePicker
+              <SinglePicker
                 date={start || startDate}
-                numberOfMonths={1}
                 readOnly={readOnly}
                 onDateChange={(d) => {
                   setStartDate(d);
                   onChange({
-                    startDate: d?.toDate() || undefined,
-                    endDate: endDate?.toDate() || undefined,
+                    startDate: d ? new Date(d) : undefined,
+                    endDate: endDate ? new Date(endDate) : undefined,
                     keywordKey: undefined,
                   });
                 }}
@@ -299,14 +284,11 @@ export function DataRangePickerVertical({
                 onFocusChange={({ focused } = { focused: false }) =>
                   setFocusedStartInput(!!focused)
                 }
-                hideKeyboardShortcutsPanel
                 id="startDate"
-                showDefaultInputIcon
-                inputIconPosition="after"
                 isOutsideRange={(day) => {
                   return (
-                    day.isAfter(moment().endOf("day")) ||
-                    Boolean(endDate && day.isAfter(endDate))
+                    isAfter(day, endOfDay(new Date())) ||
+                    Boolean(endDate && isAfter(day, endDate))
                   );
                 }}
                 placeholder={
@@ -315,7 +297,7 @@ export function DataRangePickerVertical({
                   "Start day"
                 }
                 openDirection="up"
-                phrases={customPhrasesStart}
+                iconAriaLabel={startIconLabel}
               />
             </div>
             {startDate && (
@@ -327,7 +309,7 @@ export function DataRangePickerVertical({
                   setDataStart("");
                   onChange({
                     startDate: undefined,
-                    endDate: endDate?.toDate() || undefined,
+                    endDate: endDate ? new Date(endDate) : undefined,
                     keywordKey: undefined,
                   });
                 }}
@@ -476,15 +458,14 @@ export function DataRangePickerVertical({
             `}
           >
             <div className="openk9-calendar-button">
-              <SingleDatePicker
+              <SinglePicker
                 date={end || endDate}
-                numberOfMonths={1}
                 readOnly={readOnly}
                 onDateChange={(d) => {
                   setEndDate(d);
                   onChange({
-                    startDate: startDate?.toDate() || undefined,
-                    endDate: d?.toDate() || undefined,
+                    startDate: startDate ? new Date(startDate) : undefined,
+                    endDate: d ? new Date(d) : undefined,
                     keywordKey: undefined,
                   });
                 }}
@@ -492,21 +473,18 @@ export function DataRangePickerVertical({
                 onFocusChange={({ focused } = { focused: false }) =>
                   setFocusedEndInput(!!focused)
                 }
-                hideKeyboardShortcutsPanel
                 id="endDate"
-                showDefaultInputIcon
-                inputIconPosition="after"
                 isOutsideRange={(day) => {
                   return (
-                    day.isAfter(moment().endOf("day")) ||
-                    Boolean(startDate && startDate.isAfter(day))
+                    isAfter(day, endOfDay(new Date())) ||
+                    Boolean(startDate && isAfter(startDate, day))
                   );
                 }}
                 placeholder={
                   translationLabel?.placeholderEnd || t("end-day") || "End day"
                 }
                 openDirection="up"
-                phrases={customPhrasesEndDate}
+                iconAriaLabel={endIconLabel}
               />
             </div>
             {endDate && (
@@ -517,7 +495,7 @@ export function DataRangePickerVertical({
                   setEndDate(null);
                   setDataEnd("");
                   onChange({
-                    startDate: startDate?.toDate() || undefined,
+                    startDate: startDate ? new Date(startDate) : undefined,
                     endDate: undefined,
                     keywordKey: undefined,
                   });
@@ -572,4 +550,3 @@ export function DataRangePickerVertical({
     </div>
   );
 }
-

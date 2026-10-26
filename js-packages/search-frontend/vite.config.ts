@@ -81,7 +81,6 @@ export default defineConfig(({ mode }) => {
         "react/jsx-runtime",
         "styled-components",
         "lodash",
-        "moment",
       ],
       esbuildOptions: {
         target: "esnext",

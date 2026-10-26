@@ -17,27 +17,36 @@
 
 // Filtro per intervallo di date pensato per stare accanto al numero dei
 // risultati: un pulsante compatto apre un popover con il calendario
-// (`DayPickerRangeController` di react-dates, selezione range inline), e una
+// (`RangeCalendar`, selezione range inline), e una
 // volta scelto l'intervallo il pulsante mostra "dal X al Y". Componente
 // self-contained: riceve `calendarDate`/`onChange` dal widget (stato date in
 // Main), quindi sa sempre l'intervallo attivo. Lascia invariato
 // `DateRangePickerVertical`.
 import React from "react";
-import "react-dates/initialize";
-// stili base di react-dates (senza, il calendario renderizza senza layout)
-import "react-dates/lib/css/_datepicker.css";
-import { DayPickerRangeController, FocusedInputShape } from "react-dates";
-import { DateRangePickerPhrases } from "react-dates/lib/defaultPhrases";
-import moment, { Moment } from "moment";
+// stili base del calendario (senza, il calendario renderizza senza layout)
+import "react-day-picker/style.css";
+import "./datePickers.css";
+import { MonthCaptionProps, useDayPicker } from "react-day-picker";
+import {
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  endOfYear,
+  format,
+  isSameDay,
+  setMonth,
+  setYear,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from "date-fns";
 import { css } from "styled-components";
 import { useTranslation } from "react-i18next";
 import { SearchDateRange } from "../embeddable/Main";
-import { mappingNameLanguage } from "./CalendarModal";
+import { FocusedInput } from "./dateRange";
+import { RangeCalendar } from "./RangeCalendar";
 import { useClickAway } from "./useClickAway";
-import "moment/locale/de";
-import "moment/locale/it";
-import "moment/locale/es";
-import "moment/locale/fr";
 
 const RED = "var(--openk9-embeddable-search--primary-color, #c0272b)";
 const BORDER = "var(--openk9-embeddable-search--border-color, #ced4da)";
@@ -72,22 +81,95 @@ const CalendarIcon = () => (
   </svg>
 );
 
+const selectStyle = css`
+  height: 28px;
+  max-width: 96px;
+  padding: 0 var(--openk9-embeddable-search--spacing-xs, 4px);
+  border: 1px solid ${BORDER};
+  border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
+  background: var(--openk9-embeddable-search--primary-background-color, #fff);
+  color: ${INK};
+  font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
+  font-weight: var(--openk9-embeddable-search--font-weight-semibold, 600);
+  cursor: pointer;
+  &:focus {
+    outline: none;
+    border-color: ${RED};
+  }
+`;
+
+// selettori mese/anno nel caption del calendario: permettono di saltare
+// rapidamente agli anni precedenti senza cliccare mese per mese.
+function MonthCaption({
+  calendarMonth,
+  displayIndex,
+  ...props
+}: MonthCaptionProps) {
+  const { t } = useTranslation();
+  const { goToMonth } = useDayPicker();
+  const month = calendarMonth.date;
+  const thisYear = new Date().getFullYear();
+  const years: number[] = [];
+  for (let y = thisYear + 10; y >= thisYear - 100; y--) years.push(y);
+
+  return (
+    <div {...props}>
+      <div
+        css={css`
+          display: flex;
+          justify-content: center;
+          gap: var(--openk9-embeddable-search--spacing-sm, 8px);
+          /* lascia spazio alle frecce di navigazione ai lati del caption */
+          padding: 0 34px;
+        `}
+      >
+        <select
+          aria-label={t("select-month") || "Mese"}
+          value={month.getMonth()}
+          onChange={(event) =>
+            goToMonth(setMonth(month, Number(event.target.value)))
+          }
+          css={selectStyle}
+        >
+          {Array.from({ length: 12 }, (_, value) => (
+            <option key={value} value={value}>
+              {format(setMonth(month, value), "LLLL")}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label={t("select-year") || "Anno"}
+          value={month.getFullYear()}
+          onChange={(event) =>
+            goToMonth(setYear(month, Number(event.target.value)))
+          }
+          css={selectStyle}
+        >
+          {years.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export function DateRangeFilter({
   onChange,
   calendarDate,
-  language,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
   language: string;
 }) {
   const { t } = useTranslation();
-  moment.locale(mappingNameLanguage(language));
 
-  const [startDate, setStartDate] = React.useState<Moment | null>(null);
-  const [endDate, setEndDate] = React.useState<Moment | null>(null);
+  const [startDate, setStartDate] = React.useState<Date | null>(null);
+  const [endDate, setEndDate] = React.useState<Date | null>(null);
   const [focusedInput, setFocusedInput] =
-    React.useState<FocusedInputShape>("startDate");
+    React.useState<FocusedInput>("startDate");
   const [isOpen, setIsOpen] = React.useState(false);
 
   const rootRef = React.useRef<HTMLDivElement | null>(null);
@@ -99,18 +181,16 @@ export function DateRangeFilter({
   // sincronizza con lo stato esterno (reset globale, ripristino da URL, ecc.)
   React.useEffect(() => {
     setStartDate(
-      calendarDate?.startDate ? moment(calendarDate.startDate) : null,
+      calendarDate?.startDate ? new Date(calendarDate.startDate) : null,
     );
-    setEndDate(calendarDate?.endDate ? moment(calendarDate.endDate) : null);
+    setEndDate(calendarDate?.endDate ? new Date(calendarDate.endDate) : null);
   }, [calendarDate?.startDate, calendarDate?.endDate]);
 
   const emit = React.useCallback(
-    (nextStart: Moment | null, nextEnd: Moment | null) => {
+    (nextStart: Date | null, nextEnd: Date | null) => {
       onChange({
-        startDate: nextStart
-          ? nextStart.clone().startOf("day").toDate()
-          : undefined,
-        endDate: nextEnd ? nextEnd.clone().endOf("day").toDate() : undefined,
+        startDate: nextStart ? startOfDay(nextStart) : undefined,
+        endDate: nextEnd ? endOfDay(nextEnd) : undefined,
         keywordKey: undefined,
       });
     },
@@ -121,8 +201,8 @@ export function DateRangeFilter({
     startDate: nextStart,
     endDate: nextEnd,
   }: {
-    startDate: Moment | null;
-    endDate: Moment | null;
+    startDate: Date | null;
+    endDate: Date | null;
   }) => {
     setStartDate(nextStart);
     setEndDate(nextEnd);
@@ -137,7 +217,7 @@ export function DateRangeFilter({
   };
 
   const hasSelection = Boolean(startDate || endDate);
-  const fmt = (day: Moment) => day.format("DD/MM/YYYY");
+  const fmt = (day: Date) => format(day, "dd/MM/yyyy");
   const triggerLabel =
     startDate && endDate
       ? `${fmt(startDate)} – ${fmt(endDate)}`
@@ -148,82 +228,13 @@ export function DateRangeFilter({
       : t("filter-by-date") || "Filtra per data";
 
   const phrases = {
-    ...DateRangePickerPhrases,
-    chooseAvailableStartDate: ({ date }: { date: string }) =>
+    chooseAvailableStartDate: (date: string) =>
       `${t("start-day") || "Data inizio"}, ${date}`,
-    chooseAvailableEndDate: ({ date }: { date: string }) =>
+    chooseAvailableEndDate: (date: string) =>
       `${t("end-day") || "Data fine"}, ${date}`,
   };
 
-  // selettori mese/anno nel caption del calendario: permettono di saltare
-  // rapidamente agli anni precedenti senza cliccare mese per mese.
-  const thisYear = moment().year();
-  const years: number[] = [];
-  for (let y = thisYear + 10; y >= thisYear - 100; y--) years.push(y);
-
-  const selectStyle = css`
-    height: 28px;
-    max-width: 96px;
-    padding: 0 var(--openk9-embeddable-search--spacing-xs, 4px);
-    border: 1px solid ${BORDER};
-    border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
-    background: var(--openk9-embeddable-search--primary-background-color, #fff);
-    color: ${INK};
-    font-size: var(--openk9-embeddable-search--font-size-xs, 12px);
-    font-weight: var(--openk9-embeddable-search--font-weight-semibold, 600);
-    cursor: pointer;
-    &:focus {
-      outline: none;
-      border-color: ${RED};
-    }
-  `;
-
-  const renderMonthElement = ({
-    month,
-    onMonthSelect,
-    onYearSelect,
-  }: {
-    month: Moment;
-    onMonthSelect: (currentMonth: Moment, newMonthVal: string) => void;
-    onYearSelect: (currentMonth: Moment, newYearVal: string) => void;
-  }) => (
-    <div
-      css={css`
-        display: flex;
-        justify-content: center;
-        gap: var(--openk9-embeddable-search--spacing-sm, 8px);
-        /* lascia spazio alle frecce di navigazione ai lati del caption */
-        padding: 0 34px;
-      `}
-    >
-      <select
-        aria-label={t("select-month") || "Mese"}
-        value={month.month()}
-        onChange={(event) => onMonthSelect(month, event.target.value)}
-        css={selectStyle}
-      >
-        {moment.months().map((label, value) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <select
-        aria-label={t("select-year") || "Anno"}
-        value={month.year()}
-        onChange={(event) => onYearSelect(month, event.target.value)}
-        css={selectStyle}
-      >
-        {years.map((year) => (
-          <option key={year} value={year}>
-            {year}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-
-  const applyPreset = (nextStart: Moment, nextEnd: Moment) => {
+  const applyPreset = (nextStart: Date, nextEnd: Date) => {
     setStartDate(nextStart);
     setEndDate(nextEnd);
     setFocusedInput("startDate");
@@ -234,27 +245,27 @@ export function DateRangeFilter({
   const presets: {
     key: string;
     label: string;
-    range: () => [Moment, Moment];
+    range: () => [Date, Date];
   }[] = [
     {
       key: "today",
       label: t("today") || "Oggi",
-      range: () => [moment().startOf("day"), moment().endOf("day")],
+      range: () => [startOfDay(new Date()), endOfDay(new Date())],
     },
     {
       key: "this-week",
       label: t("this-week") || "Questa settimana",
-      range: () => [moment().startOf("week"), moment().endOf("week")],
+      range: () => [startOfWeek(new Date()), endOfWeek(new Date())],
     },
     {
       key: "this-month",
       label: t("this-month") || "Questo mese",
-      range: () => [moment().startOf("month"), moment().endOf("month")],
+      range: () => [startOfMonth(new Date()), endOfMonth(new Date())],
     },
     {
       key: "this-year",
       label: t("this-year") || "Quest'anno",
-      range: () => [moment().startOf("year"), moment().endOf("year")],
+      range: () => [startOfYear(new Date()), endOfYear(new Date())],
     },
   ];
 
@@ -382,67 +393,72 @@ export function DateRangeFilter({
             box-shadow: 0 16px 40px -14px rgba(0, 0, 0, 0.3);
             padding: var(--openk9-embeddable-search--spacing-md, 12px);
 
-            /* --- tema react-dates sul brand rosso (scoped) --- */
-            .CalendarDay__default {
+            /* --- tema del calendario sul brand rosso (scoped) --- */
+            .rdp-day:not(.rdp-hidden) {
               border: 1px solid #eef0f2;
               color: ${INK};
             }
-            .CalendarDay__default:hover {
+            .rdp-day:not(.rdp-hidden):hover {
               background: #f1f3f5;
               border-color: #e5e7eb;
               color: ${INK};
             }
-            .CalendarDay__selected_span {
+            .rdp-range_middle {
               background: ${RED_SOFT} !important;
               border-color: ${RED_TINT} !important;
               color: ${RED} !important;
             }
-            .CalendarDay__hovered_span,
-            .CalendarDay__hovered_span:hover {
+            .rdp-hovered_span,
+            .rdp-hovered_span:hover {
               background: ${RED_SOFT} !important;
               border-color: ${RED_TINT} !important;
               color: ${RED} !important;
             }
-            .CalendarDay__selected,
-            .CalendarDay__selected:hover,
-            .CalendarDay__selected:active {
+            .rdp-selected,
+            .rdp-selected:hover,
+            .rdp-selected:active {
               background: ${RED} !important;
               border-color: ${RED} !important;
               color: #fff !important;
             }
-            .CalendarDay__today {
+            .rdp-today {
               font-weight: var(
                 --openk9-embeddable-search--font-weight-bold,
                 700
               );
             }
-            .CalendarMonth_caption {
+            .rdp-month_caption {
               color: ${INK};
               font-size: var(--openk9-embeddable-search--font-size-md, 16px);
               padding-top: var(--openk9-embeddable-search--spacing-lg, 16px);
-              padding-bottom: 38px;
+              /* 38px with react-dates, less the 20px weekday row */
+              padding-bottom: 18px;
             }
-            .DayPicker_weekHeader {
+            .rdp-weekday {
               color: ${MUTED};
             }
-            .DayPickerNavigation_button__default {
+            .rdp-button_previous,
+            .rdp-button_next {
               border-color: ${BORDER};
               border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
             }
-            .DayPickerNavigation_button__default:focus,
-            .DayPickerNavigation_button__default:hover {
+            .rdp-button_previous:focus,
+            .rdp-button_previous:hover,
+            .rdp-button_next:focus,
+            .rdp-button_next:hover {
               border-color: ${RED};
             }
             /* frecce spinte ai bordi, così non toccano i select mese/anno */
-            .DayPickerNavigation_button__horizontalDefault {
+            .rdp-button_previous,
+            .rdp-button_next {
               padding: var(--openk9-embeddable-search--spacing-xs, 4px)
                 var(--openk9-embeddable-search--spacing-sm, 8px);
               top: 15px;
             }
-            .DayPickerNavigation_leftButton__horizontalDefault {
+            .rdp-button_previous {
               left: 2px;
             }
-            .DayPickerNavigation_rightButton__horizontalDefault {
+            .rdp-button_next {
               right: 2px;
             }
           `}
@@ -488,20 +504,18 @@ export function DateRangeFilter({
             </button>
           </div>
 
-          <DayPickerRangeController
+          <RangeCalendar
             startDate={startDate}
             endDate={endDate}
             onDatesChange={handleDatesChange}
             focusedInput={focusedInput}
             onFocusChange={(next) => setFocusedInput(next || "startDate")}
             numberOfMonths={1}
-            daySize={34}
             minimumNights={0}
-            noBorder
-            hideKeyboardShortcutsPanel
-            isOutsideRange={() => false}
-            initialVisibleMonth={() => startDate || endDate || moment()}
-            renderMonthElement={renderMonthElement}
+            keepOpenOnDateSelect={false}
+            daySize={34}
+            initialVisibleMonth={startDate || endDate || new Date()}
+            components={{ MonthCaption }}
             phrases={phrases}
           />
 
@@ -521,8 +535,8 @@ export function DateRangeFilter({
               const active = Boolean(
                 startDate &&
                   endDate &&
-                  startDate.isSame(presetStart, "day") &&
-                  endDate.isSame(presetEnd, "day"),
+                  isSameDay(startDate, presetStart) &&
+                  isSameDay(endDate, presetEnd),
               );
               return (
                 <button
