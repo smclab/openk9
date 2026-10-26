@@ -1,0 +1,28 @@
+# Runs orchestrated-rag-module in place of agentic-rag-module, on top of the
+# gen-ai services: ./k9.sh up --with=gen-ai --with=orchestrated-rag
+#
+# An installation uses one RAG module, never both: agentic-rag-module moves to
+# a compose profile that k9.sh never enables, and the API Gateway sends the
+# RAG requests to the new module.
+services:
+  orchestrated-rag-module:
+    image: ${IMAGE_GROUP:-openk9}/openk9-orchestrated-rag-module:${IMAGE_TAG:-2026.3.0-SNAPSHOT}
+    container_name: openk9-orchestrated-rag-module
+    hostname: openk9-orchestrated-rag-module
+    environment:
+      ORIGINS: "*"
+      OPENSEARCH_USERNAME: "opensearch"
+      OPENSEARCH_HOST: "opensearch:9200"
+      GRPC_DATASOURCE_HOST: "openk9-datasource:9000"
+      GRPC_TENANT_MANAGER_HOST: "openk9-tenant-manager:9000"
+      GRPC_EMBEDDING_MODULE_HOST: "openk9-embedding-module:5000"
+      UPLOAD_DIR: "uploads"
+      UPLOAD_FILE_EXTENSIONS: "[\".pdf\",\".md\",\".docx\",\".xlsx\",\".pptx\",\".csv\"]"
+      MAX_UPLOAD_FILE_SIZE: "10"
+      MAX_UPLOAD_FILES_NUMBER: "5"
+      OPENK9_SECURITY_ADMIN_PASSWORD: "admin"
+  agentic-rag-module:
+    profiles: ["agentic-rag-module"]
+  api-gateway:
+    environment:
+      IO_OPENK9_APIGW_RAG_URL: "http://openk9-orchestrated-rag-module:5000"

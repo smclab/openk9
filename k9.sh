@@ -17,6 +17,9 @@ set -e
 #   ./k9.sh up                            # start core services (pulls images)
 #   ./k9.sh up --build                    # build from source, then start
 #   ./k9.sh up --with=gen-ai --build      # build and start with AI services
+#   ./k9.sh up --with=gen-ai --with=orchestrated-rag --build
+#                                         # the same, with orchestrated-rag-module
+#                                         # in place of agentic-rag-module
 #
 # Run ./k9.sh without arguments for full usage information.
 #
@@ -99,11 +102,12 @@ profile_to_file() {
         file-handling)  echo "compose-with-file-handling.yaml" ;;
         gen-ai)         echo "compose-with-gen-ai.yaml" ;;
         oauth2)         echo "compose-with-oauth2-server.yaml" ;;
+        orchestrated-rag) echo "compose-with-orchestrated-rag.yaml" ;;
         *)              return 1 ;;
     esac
 }
 
-VALID_PROFILES="core file-handling gen-ai oauth2 all"
+VALID_PROFILES="core file-handling gen-ai oauth2 orchestrated-rag all"
 
 # --- Profile to services mapping ---
 
@@ -113,9 +117,11 @@ CORE_SERVICES=(
 )
 GEN_AI_SERVICES=(embedding-module talk-to agentic-rag-module evaluator evaluator-offline)
 FILE_HANDLING_SERVICES=(tika s3-connector docling-processor)
+ORCHESTRATED_RAG_SERVICES=(orchestrated-rag-module)
 
 VALID_SERVICES=(
     "${CORE_SERVICES[@]}" "${GEN_AI_SERVICES[@]}" "${FILE_HANDLING_SERVICES[@]}"
+    "${ORCHESTRATED_RAG_SERVICES[@]}"
 )
 
 services_for_profile() {
@@ -123,6 +129,7 @@ services_for_profile() {
         core)           echo "${CORE_SERVICES[*]}" ;;
         gen-ai)         echo "${GEN_AI_SERVICES[*]}" ;;
         file-handling)  echo "${FILE_HANDLING_SERVICES[*]}" ;;
+        orchestrated-rag) echo "${ORCHESTRATED_RAG_SERVICES[*]}" ;;
     esac
 }
 
@@ -211,6 +218,14 @@ parse_args() {
             linux/arm64) JIB_ARCH="arm64" ;;
         esac
     fi
+
+    # orchestrated-rag replaces a service of gen-ai: it needs gen-ai underneath
+    for p in "${PROFILES[@]}"; do
+        if [ "$p" == "orchestrated-rag" ]; then
+            PROFILES=(gen-ai "${PROFILES[@]}")
+            break
+        fi
+    done
 
     # Deduplicate profiles
     local unique=()
@@ -385,6 +400,7 @@ build_by_profiles() {
             core)           build_core ;;
             gen-ai)         build_gen_ai ;;
             file-handling)  build_file_handling ;;
+            orchestrated-rag) build_single orchestrated-rag-module ;;
         esac
     done
 
@@ -448,6 +464,9 @@ build_single() {
             ;;
         agentic-rag-module)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-agentic-rag-module:$TAG" -f ai-packages/agentic-rag-module/Dockerfile ai-packages/agentic-rag-module
+            ;;
+        orchestrated-rag-module)
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-orchestrated-rag-module:$TAG" -f ai-packages/orchestrated-rag-module/Dockerfile ai-packages/orchestrated-rag-module
             ;;
         evaluator)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-evaluator:$TAG" -f ai-packages/chunk-evaluation-module/Dockerfile ai-packages/chunk-evaluation-module
@@ -718,6 +737,9 @@ Profiles (--with):
   file-handling  Core + file handling: SeaweedFS, Tika, Docling, S3 Connector
   gen-ai         Core + AI services: Agentic RAG module, Embedding, Talk-To
   oauth2         Core + Keycloak OAuth2/OIDC identity provider
+  orchestrated-rag
+                 With gen-ai: orchestrated-rag-module in place of
+                 agentic-rag-module, with the API Gateway pointed at it
 
   Profiles are additive. Combine multiple --with flags to
   compose the stack you need.
@@ -726,6 +748,7 @@ Services (for targeted build/restart):
   api-gateway  tenant-manager  datasource  ingestion  searcher
   search-frontend  admin-ui  tenant-ui  web-connector
   agentic-rag-module  embedding-module  talk-to
+  orchestrated-rag-module
   tika  s3-connector
 
 Build details:
@@ -735,6 +758,9 @@ Build details:
   ./k9.sh build                       Build core images
   ./k9.sh build --with=gen-ai         Build core + AI images
   ./k9.sh build --with=file-handling  Build core + file images
+  ./k9.sh build --with=gen-ai --with=orchestrated-rag
+                                      Build core + AI images, with
+                                      orchestrated-rag-module
   ./k9.sh build --all                 Build everything
 
   Java core shared dependencies (root POM, hibernate-rx-
