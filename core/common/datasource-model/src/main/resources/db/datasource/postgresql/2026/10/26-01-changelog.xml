@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2026/10/26-01-changelog.xml">
+
+	<changeSet id="1793009947-1" author="openk9">
+		<comment>Rename duplicate sorting names, keeping the oldest, then add the unique constraint on name</comment>
+		<sql>
+			WITH duplicate_names AS (
+			SELECT id,
+			       ROW_NUMBER() OVER (PARTITION BY name ORDER BY id) AS rn
+			FROM sorting
+			)
+			UPDATE sorting s
+			SET name = LEFT(s.name, 255 - LENGTH(' - Copy ' || (dn.rn - 1)))
+				|| ' - Copy ' || (dn.rn - 1)
+			FROM duplicate_names dn
+			WHERE s.id = dn.id AND dn.rn > 1;
+		</sql>
+		<addUniqueConstraint tableName="sorting"
+							 columnNames="name"
+							 constraintName="uk_sorting_name"/>
+	</changeSet>
+
+	<changeSet id="1793009947-2" author="openk9">
+		<comment>Rename duplicate autocomplete names, keeping the oldest, then add the unique constraint on name</comment>
+		<sql>
+			WITH duplicate_names AS (
+			SELECT id,
+			       ROW_NUMBER() OVER (PARTITION BY name ORDER BY id) AS rn
+			FROM autocomplete
+			)
+			UPDATE autocomplete a
+			SET name = LEFT(a.name, 255 - LENGTH(' - Copy ' || (dn.rn - 1)))
+				|| ' - Copy ' || (dn.rn - 1)
+			FROM duplicate_names dn
+			WHERE a.id = dn.id AND dn.rn > 1;
+		</sql>
+		<addUniqueConstraint tableName="autocomplete"
+							 columnNames="name"
+							 constraintName="uk_autocomplete_name"/>
+	</changeSet>
+
+	<changeSet id="1793009947-3" author="openk9">
+		<comment>Rename duplicate autocorrection names, keeping the oldest, then add the unique constraint on name</comment>
+		<sql>
+			WITH duplicate_names AS (
+			SELECT id,
+			       ROW_NUMBER() OVER (PARTITION BY name ORDER BY id) AS rn
+			FROM autocorrection
+			)
+			UPDATE autocorrection a
+			SET name = LEFT(a.name, 255 - LENGTH(' - Copy ' || (dn.rn - 1)))
+				|| ' - Copy ' || (dn.rn - 1)
+			FROM duplicate_names dn
+			WHERE a.id = dn.id AND dn.rn > 1;
+		</sql>
+		<addUniqueConstraint tableName="autocorrection"
+							 columnNames="name"
+							 constraintName="uk_autocorrection_name"/>
+	</changeSet>
+
+</databaseChangeLog>
