@@ -214,15 +214,21 @@ def _build_system_prompt(
     prompt_no_rag: Optional[str],
     parallel_discovery: bool = False,
     retrieve_citations: bool = False,
+    tenant_prompt: Optional[str] = None,
 ) -> str:
     """System prompt dell'orchestratore. Con ``bypass_rag`` non ci sono tool, quindi il prompt di
-    default (che istruisce a chiamare ``discover``) non va usato."""
+    default (che istruisce a chiamare ``discover``) non va usato; ``prompt_no_rag`` ha gia' le
+    istruzioni del tenant. Altrimenti ``tenant_prompt`` si aggiunge in coda."""
     if bypass_rag:
         return (prompt_no_rag or DEFAULT_BYPASS_RAG_PROMPT) + BYPASS_RAG_OUTPUT_ADDENDUM
     prompt = ORCHESTRATOR_SYSTEM_PROMPT
     if parallel_discovery:
         prompt = prompt.replace(SINGLE_DISCOVER_INSTRUCTION, "") + FANOUT_PROMPT_ADDENDUM
-    return prompt + citations.instructions(retrieve_citations)
+    return (
+        prompt
+        + citations.instructions(retrieve_citations)
+        + discovery.tenant_instructions(tenant_prompt)
+    )
 
 
 def repair_instructions(verdict: VerificationFailed) -> str:
@@ -284,6 +290,7 @@ def build_orchestrator(
     bypass_rag: bool = False,
     prompt_no_rag: Optional[str] = None,
     retrieve_citations: bool = False,
+    tenant_prompt: Optional[str] = None,
 ) -> Agent:
     """Crea l'Agent orchestratore con il tool di delega ``discover``.
 
@@ -315,6 +322,7 @@ def build_orchestrator(
             prompt_no_rag=prompt_no_rag,
             parallel_discovery=parallel_discovery,
             retrieve_citations=retrieve_citations,
+            tenant_prompt=tenant_prompt,
         ),
         retries=retries,
         model_settings=(
@@ -479,6 +487,7 @@ def _orchestrator_for(deps: AgenticDeps, model=None, *, enable_verifier=False) -
         bypass_rag=bool(cfg.get("bypass_rag")),
         prompt_no_rag=cfg.get("prompt_no_rag"),
         retrieve_citations=bool(deps.llm_configuration.get("retrieve_citations")),
+        tenant_prompt=cfg.get("orchestrator_prompt"),
     )
 
 

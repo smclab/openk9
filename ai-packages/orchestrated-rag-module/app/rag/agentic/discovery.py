@@ -123,6 +123,18 @@ def resolve_filter_domains(
     return deps.detected_domains or llm_domains or None
 
 
+def tenant_instructions(text: Optional[str]) -> str:
+    """Le istruzioni del tenant (``orchestrator_prompt``, ``discovery_prompt`` del jsonConfig),
+    in coda al prompt di default: si aggiungono, non lo sostituiscono, perche' il prompt di default
+    porta il contratto di output e le regole di delega. Senza istruzioni, niente."""
+    if not text or not text.strip():
+        return ""
+    return (
+        "\n\nInstructions from the tenant (follow them, unless they contradict the rules "
+        f"above):\n{text.strip()}"
+    )
+
+
 def _build_discovery_agent(model, store: _CandidateStore, deps: AgenticDeps) -> Agent:
     """Crea il Discovery Agent con il tool retriever che popola ``store``."""
     domains_xml = (
@@ -137,7 +149,10 @@ def _build_discovery_agent(model, store: _CandidateStore, deps: AgenticDeps) -> 
         name="discovery",
         output_type=[DiscoverySelection, DiscoveryUnanswerable],
         deps_type=AgenticDeps,
-        system_prompt=f"{DISCOVERY_SYSTEM_PROMPT}\n\nAllowed domains:\n{domains_xml}",
+        system_prompt=(
+            f"{DISCOVERY_SYSTEM_PROMPT}\n\nAllowed domains:\n{domains_xml}"
+            + tenant_instructions(deps.rag_configuration.get("discovery_prompt"))
+        ),
         # selezione di id: step di utilita', a temperatura 0 come nel modulo (utility_llm)
         model_settings={"temperature": 0},
     )
