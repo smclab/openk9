@@ -3,6 +3,9 @@
 # ================================
 # NOTE: YAML Anchors (&name) are used to define change lists once,
 # and Aliases (*name) are used to reuse them in subsequent rules.
+# Each list also carries the parent POMs the module inherits from and the
+# in-repo libraries it uses outside its folder, so a change there rebuilds
+# every service that depends on it (#2544).
 #
 # Each trigger has three feature-branch rules:
 #
@@ -31,6 +34,10 @@ Trigger Datasource:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &datasource_changes
         - core/app/datasource/**/*
+        - core/pom.xml
+        - core/app/pom.xml
+        - core/app/quarkus-app/pom.xml
+        - vendor/hibernate-rx-multitenancy/**/*
         - core/service/**/*
         - core/common/graphql-util/**/*
         - core/common/model/**/*
@@ -79,6 +86,9 @@ Trigger Searcher:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &searcher_changes
         - core/app/searcher/**/*
+        - core/pom.xml
+        - core/app/pom.xml
+        - core/app/quarkus-app/pom.xml
         - core/service/**/*
         - core/common/resources-common/**/*
         - core/client/common/**/*
@@ -122,6 +132,9 @@ Trigger Ingestion:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &ingestion_changes
         - core/app/ingestion/**/*
+        - core/pom.xml
+        - core/app/pom.xml
+        - core/app/quarkus-app/pom.xml
         - core/common/util/**/*
         - core/common/resources-common/**/*
     - if: '$CI_COMMIT_TAG'
@@ -162,6 +175,9 @@ Trigger K8S-Client:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &k8s_client_changes
         - core/app/k8s-client/**/*
+        - core/pom.xml
+        - core/app/pom.xml
+        - core/app/quarkus-app/pom.xml
         - core/service/**/*
         - core/client/grpc/**/*
         - core/common/k8s-manifest/**/*
@@ -208,6 +224,10 @@ Trigger Tenant-Manager:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &tenant_manager_changes
         - core/app/tenant-manager/**/*
+        - core/pom.xml
+        - core/app/pom.xml
+        - core/app/quarkus-app/pom.xml
+        - core/tenant-events/**/*
         - core/common/graphql-util/**/*
         - core/common/model/**/*
         - core/common/resources-common/**/*
@@ -255,6 +275,9 @@ Trigger API-Gateway:
       changes: &api_gateway_changes
         - core/app/api-gateway/**/*
         - core/app/spring-boot-app/**/*
+        - core/pom.xml
+        - core/app/pom.xml
+        - core/tenant-events/**/*
         - core/common/resources-common/**/*
         - core/service/**/*
     - if: '$CI_COMMIT_TAG'
@@ -295,6 +318,9 @@ Trigger Tika:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &tika_changes
         - core/app/tika/**/*
+        - core/pom.xml
+        - core/app/pom.xml
+        - core/app/quarkus-app/pom.xml
         - core/common/resources-common/**/*
     - if: '$CI_COMMIT_TAG'
     # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
@@ -334,6 +360,9 @@ Trigger Resources-Validator:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &resources_validator_changes
         - core/app/resources-validator/**/*
+        - core/pom.xml
+        - core/app/pom.xml
+        - core/app/quarkus-app/pom.xml
         - core/common/resources-common/**/*
     - if: '$CI_COMMIT_TAG'
     # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
