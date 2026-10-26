@@ -19,17 +19,24 @@ package io.openk9.datasource.filter;
 
 import io.openk9.common.model.dto.Problem;
 import io.openk9.common.util.web.InternalHeaders;
+import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.pipeline.resource.PipelineResource;
 import io.openk9.datasource.web.Problems;
 
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
 import io.quarkus.vertx.web.RouteFilter;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 public class RouteFilters {
@@ -37,6 +44,12 @@ public class RouteFilters {
 	private static final Logger log = Logger.getLogger(RouteFilters.class);
 	// same regex as TenantNameValidator in tenant-manager
 	private static final String TENANT_ID_PATTERN = "^[a-z][a-z0-9]{0,62}$";
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
+
+	@CacheName("tenant-ids")
+	Cache tenantCache;
 
 	@ConfigProperty(name = "quarkus.http.root-path")
 	String rootPath;
@@ -68,8 +81,52 @@ public class RouteFilters {
 			log.debugf("Setting '_tenantId' to %s in routingContext", tenantId);
 		}
 
+		// set before the check: opening the session resolves the tenant
+		// from the routing context, even when it is passed explicitly.
 		rc.put("_tenantId", tenantId);
-		rc.next();
+
+		tenantExists(tenantId)
+			.subscribe()
+			.with(exists -> {
+					if (!exists) {
+						endsWithProblem(rc, Problems.invalidTenantId(tenantId));
+						return;
+					}
+
+					rc.next();
+				},
+				rc::fail
+			);
+	}
+
+	// a tenant exists when its schema holds the datasource tables. Any
+	// failure of the query rejects the tenant, and only the tenants that
+	// exist stay in the cache.
+	private Uni<Boolean> tenantExists(String tenantId) {
+		return tenantCache
+			.getAsync(tenantId, key -> sessionFactory
+				.withSession(key, session -> session
+					.createQuery(tenantBindingProbe())
+					.setMaxResults(1)
+					.getResultList())
+				.replaceWith(true)
+				.onFailure().invoke(failure -> log.warnf(
+					"Rejecting tenant '%s': its schema cannot be queried: %s",
+					key, failure.getMessage()))
+				.onFailure().recoverWithItem(false))
+			.call(exists -> exists
+				? Uni.createFrom().voidItem()
+				: tenantCache.invalidate(tenantId));
+	}
+
+	// selects a constant, not the entity: the check needs the table only, so
+	// a change to its columns does not turn into an unknown tenant.
+	private CriteriaQuery<Integer> tenantBindingProbe() {
+		var criteriaBuilder = sessionFactory.getCriteriaBuilder();
+		var query = criteriaBuilder.createQuery(Integer.class);
+		query.from(TenantBinding.class);
+
+		return query.select(criteriaBuilder.literal(1));
 	}
 
 	private String callbackPath() {
