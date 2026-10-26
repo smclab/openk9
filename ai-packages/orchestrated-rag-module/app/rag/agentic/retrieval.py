@@ -82,12 +82,24 @@ TOKEN_FIELDS = (
 )
 
 
+def _media_dict(media) -> dict:
+    """A ``models.Media``, or a dict with the same keys, as ``query_parser`` expects it."""
+    return media.model_dump() if hasattr(media, "model_dump") else dict(media)
+
+
 def _token_dict(token) -> dict:
     """Turn a search token, a ``models.SearchToken`` or a dict with the same
-    keys, into the dict ``query_parser`` expects."""
+    keys, into the dict ``query_parser`` expects. ``media`` is added only when
+    the token carries one, so that a text query keeps exactly its shape."""
     if isinstance(token, dict):
-        return {key: token.get(key) for key in TOKEN_FIELDS}
-    return {key: getattr(token, key, None) for key in TOKEN_FIELDS}
+        token_dict = {key: token.get(key) for key in TOKEN_FIELDS}
+        media = token.get("media")
+    else:
+        token_dict = {key: getattr(token, key, None) for key in TOKEN_FIELDS}
+        media = getattr(token, "media", None)
+    if media:
+        token_dict["media"] = _media_dict(media)
+    return token_dict
 
 
 def _filter_token(token_type: str, keyword_key: str, values: list) -> dict:
@@ -129,6 +141,7 @@ def retrieve_documents(
     domains: Optional[list] = None,
     datasource_ids: Optional[list] = None,
     filter_tokens: Optional[list] = None,
+    media=None,
 ) -> list:
     """
     Search OpenSearch for ``query`` and return the chunks that fit the context.
@@ -144,6 +157,9 @@ def retrieve_documents(
         a filter token (#1883).
     :param filter_tokens: The filters of the search query of the request, added
         as they are.
+    :param media: The image of the request (#2500): it goes on the query token,
+        which searches the image and the text together, or the image alone
+        when there is no text.
     :param score_threshold: The share of the best score a hit must reach
         (#2274); ``None`` or ``0`` keeps every hit.
 
@@ -156,11 +172,15 @@ def retrieve_documents(
         keep the metadata of their first chunk.
     :rtype: list
     """
-    parsed_query = (
-        [_token_dict(token) for token in search_query]
-        if search_query
-        else [_filter_token(retrieve_type, "", [query])]
-    )
+    if search_query:
+        parsed_query = [_token_dict(token) for token in search_query]
+    else:
+        # with an image and no text there is no term to search for: the image alone drives it
+        image_only = media and not query.strip()
+        token = _filter_token(retrieve_type, "", [] if image_only else [query])
+        if media:
+            token["media"] = _media_dict(media)
+        parsed_query = [token]
 
     if filter_tokens:
         parsed_query += [_token_dict(token) for token in filter_tokens]

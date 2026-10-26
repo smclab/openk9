@@ -38,7 +38,16 @@ import time
 from fastapi import HTTPException
 
 from app.external_services.grpc.grpc_client import get_embedding_model_configuration
-from app.rag.agentic import citations, guardrails, intent, orchestrator, retrieval, streaming
+from app.rag.agentic import (
+    citations,
+    discovery,
+    guardrails,
+    intent,
+    orchestrator,
+    retrieval,
+    streaming,
+)
+from app.rag.agentic.contracts import OrchestratorOutput
 from app.rag.agentic.deps import AgenticDeps
 from app.rag.agentic.models_factory import build_model
 from app.rag.agentic.persistence import (
@@ -47,11 +56,26 @@ from app.rag.agentic.persistence import (
 )
 from app.utils.authentication import unauthorized_response
 from app.utils.error_events import error_event
+from app.utils.query_validation import is_blank_query
 from app.utils.logger import content_fingerprint, debug_extra, get_logger, log_context
 
 logger = get_logger(__name__)
 
 GUARDRAIL_VIOLATION_MESSAGE = "Guardrail violation"
+# The image never reaches the model, which only sees the text of the documents
+# found: any visual detail it wrote would be invented. And a document found by
+# visual similarity can be an image, whose text is a caption, a file name or
+# nothing at all.
+MEDIA_ONLY_QUERY_INSTRUCTION = (
+    "The user submitted an image instead of a written question. "
+    "The documents in the context are the closest matches to that "
+    "image, and some may themselves be images whose text is a "
+    "caption, a file name or nothing at all. Summarise what the "
+    "matches contain and what connects them, using only the text "
+    "present in the context: the image itself is not part of it, so "
+    "do not describe visual details. If the matches carry no usable "
+    "text, say so plainly instead of guessing."
+)
 SCOPE_GATE_REDIRECT_MESSAGE = "Posso aiutarti solo su temi di questo dominio."
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 RATE_LIMIT_MESSAGE = "Rate limit exceeded. Try again later."
@@ -163,6 +187,57 @@ async def detect_intent(*, rag_type: str, search_text: str, deps: AgenticDeps) -
         logger.warning(f"[intent_detection] failed, no domain filter: {e!r} {context}")
 
 
+async def media_only_turn(
+    *, rag_type: str, deps: AgenticDeps, message_history, finish_turn, guard
+):
+    """
+    A turn with an image and no text, as in agentic-rag-module: the guardrail,
+    the intent detection and the orchestrator read the written question, and
+    there is none. The image goes straight to a single search, and the model
+    sums up the text of what it found with :data:`MEDIA_ONLY_QUERY_INSTRUCTION`.
+    The answer cites every document found.
+    """
+    from pydantic_ai import Agent
+
+    context = log_context(tenant_id=deps.tenant_id, user_id=deps.user_id, chat_id=deps.chat_id)
+    logger.info(f"[media_only] guardrail, intent detection and orchestrator skipped {context}")
+    yield streaming.status_event("retrieving")
+    records = deps.retrieve_fn(
+        query="",
+        search_text="",
+        tenant_id=deps.tenant_id,
+        opensearch_host=deps.opensearch_host,
+        grpc_host=deps.grpc_host_datasource,
+        datasource_ids=deps.datasource_ids,
+        filter_tokens=deps.filter_tokens,
+        media=deps.media,
+        **deps.request_search_args,
+        **deps.retrieve_top_k_args(),
+    )
+    for record in records:
+        discovery.merge_record(deps.discovered, record)
+    document_ids = list(deps.discovered)
+    deps.delivered_ids.extend(document_ids)
+    documents = "\n\n".join(deps.discovered[i].get("content", "") for i in document_ids)
+    agent = Agent(
+        deps.orchestrator_model, output_type=str, system_prompt=MEDIA_ONLY_QUERY_INSTRUCTION
+    )
+    result = await agent.run(f"Context:\n{documents}", message_history=message_history)
+    output = OrchestratorOutput(status="ok", message=result.output, used_document_ids=document_ids)
+
+    async def post_stream():
+        refs = discovery.resolve_document_refs(deps, document_ids)
+        return await finish_turn(output, refs, result)
+
+    async for event in streaming.stream_answer(
+        deltas=streaming.deltas_from_message(output.message),
+        rag_type=rag_type,
+        post_stream=post_stream,
+        **guard,
+    ):
+        yield event
+
+
 async def run_turn(
     *,
     rag_type: str,
@@ -186,7 +261,8 @@ async def run_turn(
     guardrail blocks ends with a CANCEL event and is not saved either.
 
     After the input guardrail the intent detection gives the domains of the
-    question, which the Discovery searches in.
+    question, which the Discovery searches in. A question made of an image
+    alone skips both, and the orchestrator too: see :func:`media_only_turn`.
 
     :param rag_type: The RAG type of the request.
     :param search_text: The question of the user.
@@ -195,16 +271,18 @@ async def run_turn(
         history sent by the client for an anonymous one.
     :param guardrails_configuration: The guardrails of the tenant.
     """
-    verdict = await guardrails.input_guardrail(
-        query=search_text,
-        guardrails_configuration=guardrails_configuration,
-        model=deps.orchestrator_model,
-        deps=deps,
-    )
-    if verdict not in (None, guardrails.SAFE):
-        yield json.dumps({"chunk": GUARDRAIL_VIOLATION_MESSAGE, "type": "GUARDRAIL"})
-        yield json.dumps({"chunk": "", "type": "END"})
-        return
+    media_only = bool(deps.media) and is_blank_query(search_text)
+    if not media_only:
+        verdict = await guardrails.input_guardrail(
+            query=search_text,
+            guardrails_configuration=guardrails_configuration,
+            model=deps.orchestrator_model,
+            deps=deps,
+        )
+        if verdict not in (None, guardrails.SAFE):
+            yield json.dumps({"chunk": GUARDRAIL_VIOLATION_MESSAGE, "type": "GUARDRAIL"})
+            yield json.dumps({"chunk": "", "type": "END"})
+            return
 
     message_history = (
         store.load_message_history(chat_id) if chat_sequence_number > 1 else []
@@ -234,6 +312,17 @@ async def run_turn(
             message_history=result.all_messages(),
         )
         return title, emit_title, refs
+
+    if media_only:
+        async for event in media_only_turn(
+            rag_type=rag_type,
+            deps=deps,
+            message_history=message_history,
+            finish_turn=finish_turn,
+            guard=guard,
+        ):
+            yield event
+        return
 
     # One queue for the events produced outside this generator: the phases the
     # tools publish and, on the streaming path, the whole answer. A single queue
@@ -365,6 +454,7 @@ async def get_agentic_rag(
             # of the tokens of the search UI only the filters: the Discovery
             # writes the text it searches
             filter_tokens=[token for token in search_query or [] if token.filter],
+            media=media,
         )
         if retrieve_from_uploaded_documents:
             # the uploaded documents belong to a user and a chat: an anonymous

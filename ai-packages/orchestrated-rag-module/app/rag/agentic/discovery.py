@@ -85,10 +85,10 @@ class _CandidateStore:
 
     def add_many(self, records: list[dict]) -> None:
         for rec in records:
-            _merge_record(self.by_id, rec)
+            merge_record(self.by_id, rec)
 
 
-def _merge_record(by_id: dict, rec: dict) -> None:
+def merge_record(by_id: dict, rec: dict) -> None:
     """Aggiunge ``rec`` a ``by_id``. Se lo stesso id torna piu' volte, concatena il contenuto
     (chunk gia' merge-ati a monte), ma non lo stesso chunk ritrovato da un'altra ricerca."""
     doc_id = rec.get("document_id")
@@ -167,6 +167,7 @@ def _build_discovery_agent(model, store: _CandidateStore, deps: AgenticDeps) -> 
             domains=filter_domains,
             datasource_ids=ctx.deps.datasource_ids,
             filter_tokens=ctx.deps.filter_tokens,
+            media=ctx.deps.media,
             **ctx.deps.request_search_args,
             **ctx.deps.retrieve_top_k_args(),
         )
@@ -269,7 +270,7 @@ async def run_discovery(
     # gia' consegnato da un'altra delega del turno unisce i chunk, non li sostituisce: il Verifier
     # giudica su questo testo, e l'orchestratore li ha letti tutti.
     for rec in store.by_id.values():
-        _merge_record(deps.discovered, rec)
+        merge_record(deps.discovered, rec)
 
     if isinstance(output, DiscoveryUnanswerable):
         logger.debug(f"[discovery] esito=UNANSWERABLE reason={output.reason!r}")

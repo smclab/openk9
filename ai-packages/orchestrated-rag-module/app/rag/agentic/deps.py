@@ -64,6 +64,8 @@ class AgenticDeps:
     request_search_args: dict = field(default_factory=dict)
     #: token ``filter=True`` di ``searchQuery`` (faccette, date): si aggiungono al testo cercato
     filter_tokens: list = field(default_factory=list)
+    #: immagine della richiesta (#2500): va nel token di ogni ricerca, insieme al testo
+    media: Any = None
     #: funzione di retrieval principale; iniettabile per i test (default: OpenSearch reale)
     retrieve_fn: Callable[..., list[dict]] = retrieval.retrieve_documents
     #: accumulatore run-scoped dei candidati scoperti (id -> record) per risolvere used_document_ids
