@@ -91,7 +91,7 @@ CONTENT_POLICY_MARKERS = (
 )
 
 
-async def generate_title(model, question: str, answer: str) -> str:
+async def generate_title(model, question: str, answer: str, usage=None) -> str:
     """A short title for the first exchange of a chat."""
     from pydantic_ai import Agent
 
@@ -103,12 +103,20 @@ async def generate_title(model, question: str, answer: str) -> str:
             "the user provides. Reply with the title only."
         ),
     )
-    result = await agent.run(f"User: {question}\nAI: {answer}")
+    result = await agent.run(f"User: {question}\nAI: {answer}", usage=usage)
     return (result.output or "").strip()
 
 
 async def resolve_conversation_title(
-    model, *, enabled, chat_sequence_number: int, user_id, chat_id, question: str, answer: str
+    model,
+    *,
+    enabled,
+    chat_sequence_number: int,
+    user_id,
+    chat_id,
+    question: str,
+    answer: str,
+    usage=None,
 ):
     """
     Return ``(title, emit_title)`` for a turn.
@@ -118,7 +126,7 @@ async def resolve_conversation_title(
     question, or the chat list would show the chat without one.
     """
     if enabled and chat_sequence_number == 1 and user_id and chat_id:
-        return await generate_title(model, question, answer), True
+        return await generate_title(model, question, answer, usage), True
     if chat_sequence_number == 1 and user_id:
         return question.strip('"'), False
     return None, False
@@ -225,7 +233,9 @@ async def media_only_turn(
     # of the past turns are not sent again, so neither lost after the first turn nor left to the
     # orchestrator of the next one
     agent = Agent(deps.orchestrator_model, output_type=str, instructions=MEDIA_ONLY_QUERY_INSTRUCTION)
-    result = await agent.run(f"Context:\n{documents}", message_history=message_history)
+    result = await agent.run(
+        f"Context:\n{documents}", message_history=message_history, usage=deps.usage
+    )
     output = OrchestratorOutput(status="ok", message=result.output, used_document_ids=document_ids)
 
     async def post_stream():
@@ -309,6 +319,7 @@ async def run_turn(
             chat_id=chat_id,
             question=search_text,
             answer=output.message,
+            usage=deps.usage,
         )
         store.save_turn(
             chat_id=chat_id,
@@ -415,6 +426,18 @@ async def run_turn(
         yield event
 
 
+def render_token_usage(usage, model_name) -> str:
+    """The tokens a request spent, as agentic-rag-module records them. A provider that reports
+    no usage leaves it empty, and the record says so rather than claiming a free request."""
+    if usage is None or not usage.has_values():
+        return "tokens=unavailable"
+    spent = f"{usage.input_tokens}/{usage.output_tokens}"
+    return (
+        f"tokens_in={usage.input_tokens} tokens_out={usage.output_tokens} "
+        f"by_model[{model_name}={spent}]"
+    )
+
+
 async def get_agentic_rag(
     rag_type,
     search_query,
@@ -450,11 +473,12 @@ async def get_agentic_rag(
     documents the user uploaded in the chat; an anonymous user gets a 401 ERROR.
 
     Every request leaves a ``[request] start`` record and a ``[request] end`` one
-    with its outcome (COMPLETED, BLOCKED_INPUT, BLOCKED_OUTPUT, OFF_SCOPE, ERROR)
-    and its duration.
+    with its outcome (COMPLETED, BLOCKED_INPUT, BLOCKED_OUTPUT, OFF_SCOPE, ERROR),
+    its duration and the tokens it spent on the model of the tenant.
     """
     started_at = time.monotonic()
     outcome = "COMPLETED"
+    deps = None
     context = log_context(tenant_id=tenant_id, user_id=user_id, chat_id=chat_id)
     logger.info(
         f"[request] start rag_type={rag_type} "
@@ -551,7 +575,8 @@ async def get_agentic_rag(
         # the detail of the exception stays in the logs
         yield json.dumps(error_event(e, UNEXPECTED_ERROR_MESSAGE))
     finally:
+        tokens = render_token_usage(deps and deps.usage, llm_configuration.get("model"))
         logger.info(
             f"[request] end outcome={outcome} "
-            f"duration_ms={int((time.monotonic() - started_at) * 1000)} {context}"
+            f"duration_ms={int((time.monotonic() - started_at) * 1000)} {context} {tokens}"
         )

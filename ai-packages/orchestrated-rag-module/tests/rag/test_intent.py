@@ -61,7 +61,7 @@ def tenant(monkeypatch):
         state["calls"].append(("retrieve", kwargs))
         return state["documents"]
 
-    async def fake_classify(model, query, possible_domains):
+    async def fake_classify(model, query, possible_domains, usage=None):
         state["calls"].append(("llm", list(possible_domains)))
         return state["llm"]
 

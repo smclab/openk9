@@ -137,12 +137,14 @@ def build_output_instruction(categories: Optional[str]) -> str:
     )
 
 
-async def classify_with_llm(model, instruction: str, text: str, *, model_settings=None) -> str:
+async def classify_with_llm(
+    model, instruction: str, text: str, *, model_settings=None, usage=None
+) -> str:
     """The category the model gives to ``text``, or ``NONE`` for an empty answer."""
     from pydantic_ai import Agent
 
     agent = Agent(model, output_type=str, system_prompt=instruction, model_settings=model_settings)
-    result = await agent.run(text)
+    result = await agent.run(text, usage=usage)
     return (result.output or "").strip() or SAFE
 
 
@@ -216,7 +218,9 @@ def check_model_armor(config: dict, text: str, *, response: bool = False) -> str
     return UNSAFE if match_state == modelarmor_v1.FilterMatchState.MATCH_FOUND else SAFE
 
 
-async def classify_input(*, input_guardrail: dict, categories: Optional[str], model, query: str):
+async def classify_input(
+    *, input_guardrail: dict, categories: Optional[str], model, query: str, usage=None
+):
     """The category of ``query`` for the provider of the tenant."""
     provider = input_guardrail.get("input_guardrail_provider")
     if provider == GuardrailType.AWS_BEDROCK.value:
@@ -233,10 +237,12 @@ async def classify_input(*, input_guardrail: dict, categories: Optional[str], mo
         return check_openai_moderation(
             input_guardrail.get("input_guardrail_openai_moderation") or {}, query
         )
-    return await classify_with_llm(model, build_input_instruction(categories), query)
+    return await classify_with_llm(model, build_input_instruction(categories), query, usage=usage)
 
 
-async def classify_output(*, output_guardrail: dict, categories: Optional[str], model, answer: str):
+async def classify_output(
+    *, output_guardrail: dict, categories: Optional[str], model, answer: str, usage=None
+):
     """The category of ``answer`` for the provider of the tenant."""
     provider = output_guardrail.get("output_guardrail_provider")
     if provider == GuardrailType.AWS_BEDROCK.value:
@@ -255,7 +261,9 @@ async def classify_output(*, output_guardrail: dict, categories: Optional[str], 
         return check_openai_moderation(
             output_guardrail.get("output_guardrail_openai_moderation") or {}, answer
         )
-    return await classify_with_llm(model, build_output_instruction(categories), answer)
+    return await classify_with_llm(
+        model, build_output_instruction(categories), answer, usage=usage
+    )
 
 
 def _guardrail_documents(text: str, deps) -> list[dict]:
@@ -307,6 +315,7 @@ async def input_guardrail(
             categories=format_categories(guardrails_configuration.get("guardrail_categories")),
             model=model,
             query=query,
+            usage=deps.usage,
         )
     if outcome != SAFE:
         logger.warning(
@@ -346,6 +355,7 @@ async def output_guardrail(
         categories=format_categories(guardrails_configuration.get("guardrail_categories")),
         model=model,
         answer=answer,
+        usage=deps.usage,
     )
     if outcome and outcome != SAFE:
         context = log_context(
@@ -410,7 +420,7 @@ async def scope_gate(
         context_text=context_text,
         answer_prefix=answer_prefix,
     )
-    result = await Agent(model, output_type=str).run(prompt)
+    result = await Agent(model, output_type=str).run(prompt, usage=deps.usage)
     verdict = "OFF_SCOPE" if "OFF_SCOPE" in (result.output or "").upper() else "VALID"
     context = log_context(tenant_id=deps.tenant_id, user_id=deps.user_id, chat_id=deps.chat_id)
     if verdict == "OFF_SCOPE":

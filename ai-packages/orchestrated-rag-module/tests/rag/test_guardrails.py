@@ -122,7 +122,7 @@ def test_bedrock_classifies_with_the_guardrail_policy_on_top(monkeypatch):
     monkeypatch.setitem(sys.modules, "pydantic_ai.providers.bedrock", providers)
     captured = {}
 
-    async def fake_classify(model, instruction, text, *, model_settings=None):
+    async def fake_classify(model, instruction, text, *, model_settings=None, usage=None):
         captured.update(model=model, instruction=instruction, settings=model_settings)
         return "VIOLENCE/WEAPONS"
 
@@ -239,7 +239,7 @@ def test_each_provider_gets_its_own_configuration(monkeypatch):
 def test_without_a_provider_the_tenant_model_classifies(monkeypatch):
     captured = {}
 
-    async def fake_classify(model, instruction, text, *, model_settings=None):
+    async def fake_classify(model, instruction, text, *, model_settings=None, usage=None):
         captured.update(model=model, instruction=instruction, text=text)
         return "SPAM"
 

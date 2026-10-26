@@ -462,6 +462,7 @@ class OrchestratorStream:
     async def finalize(self):
         """Da chiamare a delta esauriti: risolve output finale e ``DocumentRef``."""
         self.output = await self._streamed.get_output()
+        self._deps.usage.incr(self._streamed.usage)
         self.refs = citations.cited_refs(self._deps, self.output)
         return self.output, self.refs, self.result
 
@@ -528,6 +529,9 @@ async def run_orchestrator(
         usage_limits=build_usage_limits(deps.rag_configuration),
     )
     output = result.output
+    # Discovery and Verifier share the usage of the run: it is the whole bill of the orchestrator.
+    # Added here, not passed in, so that its request limit counts its own requests only.
+    deps.usage.incr(result.usage)
     refs = citations.cited_refs(deps, output)
     logger.debug(
         f"[orchestrator] done status={output.status} "

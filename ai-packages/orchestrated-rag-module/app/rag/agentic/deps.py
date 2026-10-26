@@ -26,6 +26,8 @@ Portano config per-richiesta (RAGConfiguration, LLM config, host servizi, tenant
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
+from pydantic_ai.usage import RunUsage
+
 from app.rag.agentic import retrieval
 
 
@@ -66,6 +68,8 @@ class AgenticDeps:
     filter_tokens: list = field(default_factory=list)
     #: immagine della richiesta (#2500): va nel token di ogni ricerca, insieme al testo
     media: Any = None
+    #: token spesi dalla richiesta sul modello del tenant, sommati su tutti gli agenti del turno
+    usage: RunUsage = field(default_factory=RunUsage)
     #: funzione di retrieval principale; iniettabile per i test (default: OpenSearch reale)
     retrieve_fn: Callable[..., list[dict]] = retrieval.retrieve_documents
     #: accumulatore run-scoped dei candidati scoperti (id -> record) per risolvere used_document_ids

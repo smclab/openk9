@@ -85,7 +85,7 @@ def intent_detection_enabled(rag_type: str, rag_configuration: dict) -> bool:
     return bool(rag_configuration.get("enable_intent_detection", True))
 
 
-async def classify_domain_with_llm(model, query: str, possible_domains) -> List[str]:
+async def classify_domain_with_llm(model, query: str, possible_domains, usage=None) -> List[str]:
     """The domains the model gives to ``query`` among ``possible_domains``. A name
     that is not among them is dropped: as a filter it would match no document."""
     from pydantic_ai import Agent
@@ -95,7 +95,7 @@ async def classify_domain_with_llm(model, query: str, possible_domains) -> List[
         output_type=Domain,
         system_prompt=DOMAIN_INSTRUCTION.format(possible_domains=list(possible_domains)),
     )
-    result = await agent.run(query)
+    result = await agent.run(query, usage=usage)
     answer = result.output.domain or []
     domains = [d for d in answer if d in possible_domains]
     if domains != answer:
@@ -138,7 +138,9 @@ async def detect_domains(*, query: str, deps: AgenticDeps) -> tuple[list[str], l
     source = "threshold"
     if not detected:
         logger.debug(f"[input_domain] no domain above threshold, model among {configured}")
-        detected = await classify_domain_with_llm(deps.orchestrator_model, query, configured)
+        detected = await classify_domain_with_llm(
+            deps.orchestrator_model, query, configured, usage=deps.usage
+        )
         source = "llm"
     logger.info(f"[input_domain] domain={detected or None} source={source} {context}")
     return configured, detected

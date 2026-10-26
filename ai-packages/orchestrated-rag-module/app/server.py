@@ -39,6 +39,8 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from opensearchpy.exceptions import NotFoundError
 from phoenix.otel import register
+from pydantic_ai import Agent
+from pydantic_ai.models.instrumented import InstrumentationSettings
 from sse_starlette.sse import EventSourceResponse
 
 from app.config import settings
@@ -100,6 +102,8 @@ if ARIZE_PHOENIX_ENABLED:
         endpoint=ARIZE_PHOENIX_ENDPOINT,
         auto_instrument=True,
     )
+    # every agent of the turn traces its runs, tool calls and model requests
+    Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
 
 
 class RagType(Enum):
