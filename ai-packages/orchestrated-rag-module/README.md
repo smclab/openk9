@@ -3,34 +3,99 @@
 The **Orchestrated RAG Module** is the successor of `agentic-rag-module`: a
 Retrieval-Augmented Generation service in which an orchestrator agent delegates
 the search to a Discovery agent, possibly more than once, and answers only from
-the documents it receives. The agents run on PydanticAI; the HTTP API, the chat
-storage and the configuration are those of `agentic-rag-module`, so an
-installation uses one module or the other behind the same gateway.
+the documents it receives. The agents run on PydanticAI; the HTTP API and the
+chat storage are those of `agentic-rag-module`, and so is most of the RAG
+configuration, so an installation uses one module or the other behind the same
+gateway.
 
-## Status
+## How it answers
 
-The module is being built from the proof of concept of #2262, one issue at a
-time, under the roadmap #2193. For now it serves every route that does not
-generate an answer:
+`/api/rag/generate`, `/api/rag/chat` and `/api/rag/chat-tool` answer through
+the orchestrator: input guardrail, intent detection, then the orchestrator,
+which delegates each search to a Discovery agent, possibly more than once, and
+answers only from the documents delivered to it, marking each sentence with the
+number of its source. The answer is streamed as it is written, through the
+output guardrail. The architecture page of the documentation,
+`docs/docs/architecture/orchestrated-rag-module.md`, describes the turn.
 
-- `/api/rag/generate`, `/api/rag/chat` and `/api/rag/chat-tool` answer through
-  the orchestrator and the Discovery agent, in real streaming, citing only the
-  documents the answer uses. A chat keeps its history, on OpenSearch for a
-  logged user and in the request for an anonymous one, in the same documents
-  as agentic-rag-module. With `enable_verifier` a Verifier checks every claim of
-  the answer against the documents and has the orchestrator repair it, and the
-  answer is streamed only once verified. Before the answer, `STATUS` events give
-  the phase of the turn (`planning`, `discovering`, `retrieving`, `evaluating`
-  with the Verifier, `generating`).
-  The guardrails, the intent detection and the uploaded documents are not wired
-  yet;
-- `/api/rag/evaluate` answers `501 Not Implemented`;
-- chat management (`/api/rag/user-chats`, `/api/rag/chat/{chat_id}`), uploads,
-  `embed-domains`, `embed-guardrails` and `/health` work as in
-  `agentic-rag-module`.
+Chat management (`/api/rag/user-chats`, `/api/rag/chat/{chat_id}`), uploads,
+`embed-domains`, `embed-guardrails`, `/api/rag/evaluate` and `/health` work as
+in `agentic-rag-module`.
 
-No chart installs the module yet.
+### Choosing the module
 
+An installation uses this module or `agentic-rag-module`, never both. The API
+Gateway sends the RAG requests to the host of its `openk9.rag.host` Helm value
+(`io.openk9.apigw.rag-url`): the README of the
+`helm-charts/03-gen-ai/openk9-orchestrated-rag-module` chart explains how to
+switch and how to go back. Locally, `./k9.sh up --with=gen-ai
+--with=orchestrated-rag` starts this module in place of the other one.
+
+## SSE events
+
+Each event is a JSON object with a `chunk` and a `type`.
+
+| Type        | When                                  | `chunk`                                                        |
+|-------------|---------------------------------------|----------------------------------------------------------------|
+| `STATUS`    | before `START`, once per phase        | the phase of the turn, see below                               |
+| `SOURCES`   | before `START`, when sources were delivered | every delivered source: `ordinal`, `document_id`, `title`, `url` |
+| `START`     | before the first piece of the answer  | empty                                                          |
+| `CHUNK`     | while the answer is written           | a piece of the answer, with the `[n]` markers of its sources   |
+| `TITLE`     | after the answer, first turn of a logged user's chat | the generated title                             |
+| `DOCUMENT`  | after the answer, one per cited source | `ordinal`, `citations` (quotes), `score`, `title`, `url`, `domain` |
+| `GUARDRAIL` | instead of the answer, when the input guardrail blocks the question | `Guardrail violation`            |
+| `CANCEL`    | instead of the rest of the answer, when the output guardrail or the scope gate blocks it; no `END` follows | `Inappropriate content`, or the redirect message of the scope gate |
+| `ERROR`     | on a failure                          | an opaque message; `message` carries the reason of a refusal   |
+| `END`       | at the end                            | empty                                                          |
+
+The `STATUS` phases, in the order they can come:
+
+| Phase         | Meaning                                                       |
+|---------------|---------------------------------------------------------------|
+| `planning`    | the orchestrator decides whether and what to search           |
+| `discovering` | a search is delegated to the Discovery                        |
+| `retrieving`  | the Discovery searches OpenSearch                             |
+| `evaluating`  | the Verifier or the real-time evaluation judges the answer    |
+| `generating`  | the answer is about to start                                  |
+
+A turn that does not search does not announce `discovering` or `retrieving`.
+These names differ from the ones the roadmap #2193 anticipated (`planning`,
+`retrieving`, `querying_data`, `evaluating`).
+
+## RAG configuration
+
+The module reads the RAG configuration of the tenant (`CHAT_RAG`,
+`CHAT_RAG_TOOL`, `SIMPLE_GENERATE`). The fields of its own live in the
+`jsonConfig`.
+
+Fields of this module:
+
+| Field                   | Default | Effect |
+|-------------------------|---------|--------|
+| `max_iterations`        | none    | Retries of the orchestrator after a rejection of the Verifier, and the request limit of the turn derived from them; without it there is no request limit, only the six delegations per turn |
+| `enable_verifier`       | `false` | The Verifier checks every claim against the delivered documents and has the orchestrator repair the answer; the answer is buffered until verified |
+| `parallel_discovery`    | `false` | The orchestrator can delegate independent sub-questions in parallel (`discover_many`) |
+| `max_parallel_subtasks` | `3`     | Sub-questions searched in parallel, between 1 and 4 |
+| `enable_intent_detection` | `true` | Detect the domains of the question and filter the searches on them; skipped anyway for a tenant without domain documents |
+| `orchestrator_prompt`   | none    | Instructions of the tenant added after the default prompt of the orchestrator |
+| `discovery_prompt`      | none    | Instructions of the tenant added after the default prompt of every Discovery |
+
+Fields shared with `agentic-rag-module`, with the same meaning: `bypass_rag`
+and `prompt_no_rag`, `retrieve_citations` (quotes in the `DOCUMENT` events;
+the `[n]` markers are always there), `chunk_window`, `range_values`,
+`metadata`, `rerank`, `score_threshold`, `domain_threshold`,
+`enable_conversation_title`, `enable_real_time_evaluation` and the guardrails
+configuration. One difference on the output guardrail: the answer streams in
+pieces of 40 characters rather than in the tokens of the provider, so the same
+`output_guardrail_chunk_interval` checks about ten times less often; lower it
+to keep the frequency.
+
+Fields of `agentic-rag-module` this module ignores: `prompt` (use
+`orchestrator_prompt` and `discovery_prompt`), `reformulate`,
+`rephrase_prompt` and `analyze_query_prompt` (the orchestrator resolves
+follow-up questions by itself), `answer_only_with_context` (the answer always
+comes from the documents). `rag_tool_description` is used only by the routing
+judge of the evaluations.
 
 ## Configuration
 
