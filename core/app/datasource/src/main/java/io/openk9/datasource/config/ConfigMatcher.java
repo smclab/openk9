@@ -72,6 +72,11 @@ import org.hibernate.reactive.mutiny.Mutiny;
  * {@code AclMapping}) have no natural key: they are planned after their
  * endpoints and follow the action of their parent, the side holding the
  * collection of joins.
+ * <p>
+ * A natural key must identify one entity on both sides: two package entities
+ * sharing it, or one package entity matching several tenant rows, would make
+ * the importer apply only one of them. Every such ambiguity is collected and
+ * the plan fails with an {@link AmbiguousMatchException} listing them all.
  */
 @ApplicationScoped
 public class ConfigMatcher {
@@ -131,6 +136,8 @@ public class ConfigMatcher {
 	 * tenant on the same session and folding the results into the plan; ancestor
 	 * ids resolved along the way feed the matching of their dependents. A join
 	 * entity comes after both its endpoints, so its action derives from theirs.
+	 * Fails with an {@link AmbiguousMatchException} when any natural key is
+	 * ambiguous.
 	 */
 	private Uni<ImportPlan> doPlan(
 		Mutiny.Session s, ConfigPackage pkg, ImportMode mode) {
@@ -141,6 +148,8 @@ public class ConfigMatcher {
 		for (ConfigEntity entity : ordered) {
 			packageRefs.add(entity.getRef());
 		}
+		Map<List<Object>, List<ConfigEntity>> entitiesByKey = new LinkedHashMap<>();
+		List<String> ambiguities = new ArrayList<>();
 
 		Uni<List<PlannedAction>> acc =
 			Uni.createFrom().item(new ArrayList<PlannedAction>());
@@ -156,8 +165,21 @@ public class ConfigMatcher {
 						}));
 				continue;
 			}
-			acc = acc.flatMap(actions -> matchExisting(s, entity, matchedIds)
-				.map(existingId -> {
+			acc = acc.flatMap(actions -> {
+				// Computed here, once the ancestors' ids have been resolved.
+				entitiesByKey
+					.computeIfAbsent(
+						packageKey(entity, matchedIds), key -> new ArrayList<>())
+					.add(entity);
+
+				return matchExisting(s, entity, matchedIds).map(existingIds -> {
+					if (existingIds.size() > 1) {
+						ambiguities.add(entity.getRef() + " matches "
+							+ existingIds.size() + " rows in the target tenant: "
+							+ existingIds);
+						return actions;
+					}
+					Long existingId = existingIds.isEmpty() ? null : existingIds.get(0);
 					PlannedAction.Action action;
 					if (existingId == null) {
 						action = PlannedAction.Action.CREATE;
@@ -171,10 +193,56 @@ public class ConfigMatcher {
 					actions.add(new PlannedAction(
 						entity.getRef(), entity.getType(), action, existingId));
 					return actions;
-				}));
+				});
+			});
 		}
 
-		return acc.map(ImportPlan::new);
+		return acc.map(actions -> {
+			for (List<ConfigEntity> sharing : entitiesByKey.values()) {
+				if (sharing.size() > 1) {
+					ConfigEntity first = sharing.get(0);
+					ambiguities.add(first.getType() + " '" + first.getKey()
+						+ "' appears " + sharing.size() + " times in the package: "
+						+ sharing.stream().map(ConfigEntity::getRef).toList());
+				}
+			}
+			if (!ambiguities.isEmpty()) {
+				throw new AmbiguousMatchException(ambiguities);
+			}
+			return new ImportPlan(actions);
+		});
+	}
+
+	/**
+	 * The natural key of the package entity as the matching query sees it:
+	 * strings lower-cased, an association by its resolved ancestor id, or by its
+	 * handle when the ancestor is going to be created. Two entities with equal
+	 * keys would match the same tenant row.
+	 */
+	private List<Object> packageKey(
+		ConfigEntity entity, Map<String, Long> matchedIds) {
+
+		Class<?> entityClass = entity.getType().getEntityType();
+
+		List<Object> key = new ArrayList<>();
+		key.add(entity.getType());
+		for (KeyComponent component : naturalKeyOf(entityClass)) {
+			String fieldName = component.field().getName();
+
+			if (component.association()) {
+				String handle = referenceHandle(entity, fieldName);
+				Long ancestorId = handle == null ? null : matchedIds.get(handle);
+				key.add(ancestorId != null ? ancestorId : handle);
+			}
+			else {
+				Object value = readProperty(entity.getAttributes(), fieldName);
+				boolean enumField = component.field().getType().isEnum();
+				key.add(value instanceof String text && !enumField
+					? text.toLowerCase()
+					: value);
+			}
+		}
+		return key;
 	}
 
 	/**
@@ -195,12 +263,12 @@ public class ConfigMatcher {
 	}
 
 	/**
-	 * Finds the id of the existing entity that matches this package entity by its
-	 * natural key, or {@code null} when none exists (a {@code CREATE}). Returns
-	 * {@code null} early when an identity-composing ancestor is itself going to be
-	 * created, since the entity cannot then match anything existing.
+	 * Finds the ids of the existing entities that match this package entity by
+	 * its natural key: none is a {@code CREATE}, more than one is an ambiguity.
+	 * Returns no ids early when an identity-composing ancestor is itself going to
+	 * be created, since the entity cannot then match anything existing.
 	 */
-	private Uni<Long> matchExisting(
+	private Uni<List<Long>> matchExisting(
 		Mutiny.Session s, ConfigEntity entity, Map<String, Long> matchedIds) {
 
 		Class<?> entityClass = entity.getType().getEntityType();
@@ -224,7 +292,7 @@ public class ConfigMatcher {
 					Long ancestorId = matchedIds.get(handle);
 					if (ancestorId == null) {
 						// The ancestor will be created, so no existing row can match.
-						return Uni.createFrom().nullItem();
+						return Uni.createFrom().item(List.of());
 					}
 					predicates.add(cb.equal(root.get(fieldName).get("id"), ancestorId));
 				}
@@ -253,10 +321,7 @@ public class ConfigMatcher {
 
 		query.where(predicates.toArray(new Predicate[0]));
 
-		return s.createQuery(query)
-			.setMaxResults(1)
-			.getResultList()
-			.map(ids -> ids.isEmpty() ? null : ids.get(0));
+		return s.createQuery(query).getResultList();
 	}
 
 	/**
@@ -462,6 +527,33 @@ public class ConfigMatcher {
 				default -> throw new IllegalStateException(
 					"not a join type: " + type);
 			};
+		}
+
+	}
+
+	/**
+	 * Raised when natural keys do not identify one entity on each side: the
+	 * import is rejected before any write, listing every ambiguity found.
+	 */
+	public static class AmbiguousMatchException extends RuntimeException {
+
+		private final List<String> ambiguities;
+
+		/**
+		 * @param ambiguities one human-readable line per ambiguous natural key
+		 */
+		public AmbiguousMatchException(List<String> ambiguities) {
+			super("Ambiguous natural keys: " + ambiguities);
+			this.ambiguities = List.copyOf(ambiguities);
+		}
+
+		/**
+		 * One human-readable line per ambiguous natural key.
+		 *
+		 * @return the ambiguities, in plan order
+		 */
+		public List<String> getAmbiguities() {
+			return ambiguities;
 		}
 
 	}

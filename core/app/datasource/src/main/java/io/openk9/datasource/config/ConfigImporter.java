@@ -122,8 +122,9 @@ public class ConfigImporter {
 	 * the resulting plan in a single transaction. The report is always fully
 	 * populated (actions, counts, missing references, secrets to re-enter); on a
 	 * dry-run nothing is written and {@code applied} is {@code false}, on apply the
-	 * writes are committed and {@code resolvedIds} is returned. A cyclic package is
-	 * rejected cleanly into {@code blockingErrors} without writing anything.
+	 * writes are committed and {@code resolvedIds} is returned. A cyclic package, or
+	 * one whose natural keys are ambiguous, is rejected cleanly into
+	 * {@code blockingErrors} without writing anything.
 	 *
 	 * @param tenantId the target schema/tenant
 	 * @param pkg      the configuration package to import
@@ -148,10 +149,23 @@ public class ConfigImporter {
 						false, true, mode, plan, missingReferences, secrets,
 						List.of(), resolvedIds));
 				}))
-			.onFailure(ConfigEntitySorter.CyclicDependencyException.class)
+			.onFailure(failure ->
+				failure instanceof ConfigEntitySorter.CyclicDependencyException
+					|| failure instanceof ConfigMatcher.AmbiguousMatchException)
 			.recoverWithItem(failure -> report(
 				dryRun, false, mode, null, missingReferences, List.of(),
-				List.of(failure.getMessage()), Map.of()));
+				blockingErrors(failure), Map.of()));
+	}
+
+	/**
+	 * The blocking errors of a rejected package: one per ambiguity, or the
+	 * failure message itself.
+	 */
+	private static List<String> blockingErrors(Throwable failure) {
+		if (failure instanceof ConfigMatcher.AmbiguousMatchException ambiguous) {
+			return ambiguous.getAmbiguities();
+		}
+		return List.of(failure.getMessage());
 	}
 
 	private Uni<Void> applyAction(

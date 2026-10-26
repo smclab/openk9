@@ -49,6 +49,7 @@ import io.openk9.datasource.model.PluginDriverDocTypeFieldKey;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.ResultAclConfig;
+import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.dto.base.CharFilterDTO;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
@@ -56,6 +57,7 @@ import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
 import io.openk9.datasource.model.dto.base.ResultAclConfigDTO;
+import io.openk9.datasource.model.dto.base.SortingDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.CharFilterService;
 import io.openk9.datasource.service.DocTypeFieldService;
@@ -63,6 +65,7 @@ import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.ResultAclConfigService;
+import io.openk9.datasource.service.SortingService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,6 +126,15 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "created-pipeline";
 	private static final String OLD_EMBEDDING_MODEL_NAME =
 		ENTITY_NAME_PREFIX + "old-embedding-model";
+	private static final String SHARED_SORTING_NAME =
+		ENTITY_NAME_PREFIX + "Shared-Sorting";
+	private static final String CASE_SORTING_NAME =
+		ENTITY_NAME_PREFIX + "Case-Sorting";
+	private static final String SKIP_SORTING_NAME =
+		ENTITY_NAME_PREFIX + "Skip-Sorting";
+
+	private static final Float SEEDED_SORTING_PRIORITY = 1f;
+	private static final Float IMPORTED_SORTING_PRIORITY = 9f;
 
 	@Inject
 	ConfigExporter configExporter;
@@ -153,6 +165,9 @@ public class ConfigImporterTest {
 
 	@Inject
 	ObjectMapper objectMapper;
+
+	@Inject
+	SortingService sortingService;
 
 	private static final String COUNT_JOIN_ROWS =
 		"select count(i) from EnrichPipelineItem i";
@@ -423,15 +438,15 @@ public class ConfigImporterTest {
 
 	@Test
 	void an_error_during_apply_rolls_back_the_whole_import() {
-		// Two new char filters share a name; the name column is unique, so the second
-		// CREATE violates the constraint at flush. The whole apply runs in one
+		// A new char filter is followed by one whose name exceeds the varchar(255)
+		// column, so the second CREATE fails at flush. The whole apply runs in one
 		// transaction, so the first (already flushed) insert must be rolled back:
-		// afterwards no row carries the shared name.
+		// afterwards no row carries its name.
 		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
 
 		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
 		entities.add(charFilterNode("CHAR_FILTER-ROLLBACK-A", ROLLBACK_CHAR_FILTER_NAME));
-		entities.add(charFilterNode("CHAR_FILTER-ROLLBACK-B", ROLLBACK_CHAR_FILTER_NAME));
+		entities.add(charFilterNode("CHAR_FILTER-ROLLBACK-B", "x".repeat(256)));
 		ConfigPackage augmented = new ConfigPackage(
 			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
 
@@ -442,6 +457,117 @@ public class ConfigImporterTest {
 		assertEquals(
 			0L, countCharFilterByName(ROLLBACK_CHAR_FILTER_NAME),
 			"a failed apply must roll back the flushed insert: no row keeps the name");
+	}
+
+	@Test
+	void a_natural_key_shared_in_the_package_rejects_the_import() {
+		// Three package sortings share a name, differing only in case. The match
+		// is case-insensitive, so all three would resolve to the one seeded row
+		// and overwrite it in turn. The import must be rejected naming all three,
+		// and leave the row untouched.
+		Long seededId = seedSorting(SHARED_SORTING_NAME);
+
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(
+				sortingNode("SORTING-SHARED-A", SHARED_SORTING_NAME),
+				sortingNode("SORTING-SHARED-B", SHARED_SORTING_NAME.toUpperCase()),
+				sortingNode("SORTING-SHARED-C", SHARED_SORTING_NAME.toLowerCase())));
+
+		ImportReport report =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+				.await().indefinitely();
+
+		// 1. One blocking error names all three package entities
+		assertFalse(report.applied());
+		assertEquals(1, report.blockingErrors().size(),
+			report.blockingErrors().toString());
+		String error = report.blockingErrors().get(0);
+		assertTrue(
+			error.contains("SORTING-SHARED-A")
+				&& error.contains("SORTING-SHARED-B")
+				&& error.contains("SORTING-SHARED-C"),
+			error);
+
+		// 2. The seeded row is untouched
+		assertEquals(SEEDED_SORTING_PRIORITY, loadSortingPriority(seededId));
+
+		// 3. Clean up the sorting seeded by this method
+		EntitiesUtils.removeEntity(seededId, sortingService, sessionFactory);
+	}
+
+	@Test
+	void a_natural_key_shared_in_the_package_rejects_the_import_in_skip_mode() {
+		// Three package sortings share a name, differing only in case, and none
+		// exists in the tenant. SKIP still creates what is missing, so all three
+		// would be created as duplicates. The import must be rejected naming all
+		// three, and create nothing.
+		List<String> names = List.of(
+			SKIP_SORTING_NAME,
+			SKIP_SORTING_NAME.toUpperCase(),
+			SKIP_SORTING_NAME.toLowerCase());
+
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(
+				sortingNode("SORTING-SKIP-A", names.get(0)),
+				sortingNode("SORTING-SKIP-B", names.get(1)),
+				sortingNode("SORTING-SKIP-C", names.get(2))));
+
+		ImportReport report =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, false)
+				.await().indefinitely();
+
+		// 1. One blocking error names all three package entities
+		assertFalse(report.applied());
+		assertEquals(1, report.blockingErrors().size(),
+			report.blockingErrors().toString());
+		String error = report.blockingErrors().get(0);
+		assertTrue(
+			error.contains("SORTING-SKIP-A")
+				&& error.contains("SORTING-SKIP-B")
+				&& error.contains("SORTING-SKIP-C"),
+			error);
+
+		// 2. No sorting was created
+		for (String name : names) {
+			assertEquals(0, countByName("Sorting", name), name);
+		}
+	}
+
+	@Test
+	void a_package_entity_matching_several_tenant_rows_rejects_the_import() {
+		// The tenant holds two sortings whose names differ only in case, which a
+		// unique name constraint allows, so the case-insensitive match finds both
+		// for the one package sorting. The import must be rejected naming both
+		// rows, and leave them untouched.
+		Long upperId = seedSorting(CASE_SORTING_NAME.toUpperCase());
+		Long lowerId = seedSorting(CASE_SORTING_NAME.toLowerCase());
+
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null,
+			List.of(sortingNode("SORTING-CASE", CASE_SORTING_NAME)));
+
+		ImportReport report =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+				.await().indefinitely();
+
+		// 1. One blocking error names the package entity and both tenant rows
+		assertFalse(report.applied());
+		assertEquals(1, report.blockingErrors().size(),
+			report.blockingErrors().toString());
+		String error = report.blockingErrors().get(0);
+		assertTrue(
+			error.contains("SORTING-CASE")
+				&& error.contains(String.valueOf(upperId))
+				&& error.contains(String.valueOf(lowerId)),
+			error);
+
+		// 2. Both tenant rows are untouched
+		assertEquals(SEEDED_SORTING_PRIORITY, loadSortingPriority(upperId));
+		assertEquals(SEEDED_SORTING_PRIORITY, loadSortingPriority(lowerId));
+
+		// 3. Clean up the sortings seeded by this method
+		EntitiesUtils.removeEntity(upperId, sortingService, sessionFactory);
+		EntitiesUtils.removeEntity(lowerId, sortingService, sessionFactory);
 	}
 
 	@Test
@@ -623,6 +749,33 @@ public class ConfigImporterTest {
 			ref, ConfigEntityType.CHAR_FILTER, name,
 			CharFilterDTO.builder().name(name).type("html_strip").build(),
 			new LinkedHashMap<>(), null);
+	}
+
+	private static ConfigEntity sortingNode(String ref, String name) {
+		return new ConfigEntity(
+			ref, ConfigEntityType.SORTING, name,
+			SortingDTO.builder()
+				.name(name)
+				.priority(IMPORTED_SORTING_PRIORITY)
+				.type(Sorting.SortingType.ASC)
+				.build(),
+			new LinkedHashMap<>(), null);
+	}
+
+	private Long seedSorting(String name) {
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) -> {
+			Sorting sorting = new Sorting();
+			sorting.setName(name);
+			sorting.setPriority(SEEDED_SORTING_PRIORITY);
+			sorting.setType(Sorting.SortingType.ASC);
+			return s.persist(sorting).call(s::flush).replaceWith(sorting);
+		}).await().indefinitely().getId();
+	}
+
+	private Float loadSortingPriority(Long id) {
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.find(Sorting.class, id).map(Sorting::getPriority)
+		).await().indefinitely();
 	}
 
 	private long countCharFilterByName(String name) {
