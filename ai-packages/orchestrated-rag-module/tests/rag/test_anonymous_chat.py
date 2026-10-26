@@ -31,6 +31,7 @@ from unittest.mock import MagicMock
 
 from app.rag.agentic import entrypoint, orchestrator
 from app.rag.agentic.contracts import OrchestratorOutput
+from app.rag.agentic.deps import AgenticDeps
 from app.rag.agentic.persistence import (
     FrontendConversationStore,
     messages_from_chat_history,
@@ -137,7 +138,14 @@ def _drive_anonymous_turns(monkeypatch):
         async for _ in entrypoint.run_turn(
             rag_type="CHAT_RAG",
             search_text=search_text,
-            deps=MagicMock(rag_configuration={}),
+            deps=AgenticDeps(
+                rag_configuration={},
+                llm_configuration={},
+                opensearch_host="http://os",
+                grpc_host_datasource="ds:9000",
+                grpc_host_embedding="em:9000",
+                tenant_id="t1",
+            ),
             store=store,
             chat_id=None,
             user_id=None,

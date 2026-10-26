@@ -206,6 +206,7 @@ def build_checkpoint(
     used_document_refs: list[DocumentRef],
     message_history,
     ts: Optional[str] = None,
+    evaluation_fields: Optional[dict] = None,
 ) -> dict:
     """The checkpoint dictionary, before JSON serialization."""
     channel_values = {
@@ -226,6 +227,8 @@ def build_checkpoint(
         channel_values["citation_ordinals"] = {
             str(ref.ordinal): ref.document_id for ref in numbered
         }
+    # gli esiti della valutazione in tempo reale, nei campi di agentic-rag-module
+    channel_values.update(evaluation_fields or {})
     return {
         "ts": ts or _now_iso(),
         "channel_values": channel_values,
@@ -273,6 +276,7 @@ class OpenSearchConversationStore:
         used_document_refs: list[DocumentRef],
         message_history,
         ts: Optional[str] = None,
+        evaluation_fields: Optional[dict] = None,
     ) -> None:
         self._ensure_index()
         latest = self._latest_doc(chat_id)
@@ -292,6 +296,7 @@ class OpenSearchConversationStore:
             used_document_refs=used_document_refs,
             message_history=message_history,
             ts=ts,
+            evaluation_fields=evaluation_fields,
         )
         document = {
             "thread_id": chat_id,

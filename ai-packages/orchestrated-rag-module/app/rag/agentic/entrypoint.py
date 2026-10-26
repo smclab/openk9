@@ -41,6 +41,7 @@ from app.external_services.grpc.grpc_client import get_embedding_model_configura
 from app.rag.agentic import (
     citations,
     discovery,
+    evaluation,
     guardrails,
     intent,
     orchestrator,
@@ -54,6 +55,7 @@ from app.rag.agentic.persistence import (
     FrontendConversationStore,
     OpenSearchConversationStore,
 )
+from app.rag.evaluations import record_turn
 from app.utils.authentication import unauthorized_response
 from app.utils.error_events import error_event
 from app.utils.query_validation import is_blank_query
@@ -265,6 +267,11 @@ async def run_turn(
     question, which the Discovery searches in. A question made of an image
     alone skips both, and the orchestrator too: see :func:`media_only_turn`.
 
+    With ``enable_real_time_evaluation`` the turn runs as the evaluation graph
+    of agentic-rag-module: without input guardrail and intent detection, and
+    with the judges of :mod:`evaluation` on the complete answer, before it is
+    streamed. Every turn leaves its span for the offline evaluation.
+
     :param rag_type: The RAG type of the request.
     :param search_text: The question of the user.
     :param deps: The deps of the request.
@@ -272,8 +279,10 @@ async def run_turn(
         history sent by the client for an anonymous one.
     :param guardrails_configuration: The guardrails of the tenant.
     """
+    started_ns = time.time_ns()
+    real_time_evaluation = bool(deps.rag_configuration.get("enable_real_time_evaluation"))
     media_only = bool(deps.media) and is_blank_query(search_text)
-    if not media_only:
+    if not media_only and not real_time_evaluation:
         verdict = await guardrails.input_guardrail(
             query=search_text,
             guardrails_configuration=guardrails_configuration,
@@ -290,7 +299,7 @@ async def run_turn(
     )
     guard = output_guardrail_options(guardrails_configuration, search_text=search_text, deps=deps)
 
-    async def finish_turn(output, refs, result):
+    async def finish_turn(output, refs, result, evaluation_fields=None):
         """Title and save once the answer is complete: after the CHUNK events."""
         title, emit_title = await resolve_conversation_title(
             deps.orchestrator_model,
@@ -311,6 +320,14 @@ async def run_turn(
             retrieve_from_uploaded_documents=retrieve_from_uploaded_documents,
             used_document_refs=refs,
             message_history=result.all_messages(),
+            evaluation_fields=evaluation_fields,
+        )
+        record_turn(
+            started_ns=started_ns,
+            question=search_text,
+            response=output.message,
+            deps=deps,
+            used_rag=deps.discoveries_run > 0,
         )
         return title, emit_title, refs
 
@@ -335,9 +352,10 @@ async def run_turn(
     events: asyncio.Queue = asyncio.Queue()
     deps.status_sink = lambda phase: events.put_nowait(streaming.status_event(phase))
     yield streaming.status_event("planning")
-    await detect_intent(rag_type=rag_type, search_text=search_text, deps=deps)
+    if not real_time_evaluation:
+        await detect_intent(rag_type=rag_type, search_text=search_text, deps=deps)
 
-    if orchestrator.verifier_enabled(deps.rag_configuration):
+    if orchestrator.verifier_enabled(deps.rag_configuration) or real_time_evaluation:
         running = asyncio.ensure_future(
             orchestrator.run_orchestrator(
                 question=search_text, deps=deps, message_history=message_history
@@ -347,8 +365,18 @@ async def run_turn(
             yield event
         output, refs, result = await running
 
+        evaluation_fields = None
+        if real_time_evaluation:
+            yield streaming.status_event("evaluating")
+            evaluation_fields = await evaluation.run_evaluations(
+                question=search_text,
+                output=output,
+                deps=deps,
+                used_rag=deps.discoveries_run > 0,
+            )
+
         async def post_stream():
-            return await finish_turn(output, refs, result)
+            return await finish_turn(output, refs, result, evaluation_fields)
 
         async for event in streaming.stream_answer(
             deltas=streaming.deltas_from_message(output.message),
