@@ -67,7 +67,8 @@ public class BucketDatasourcesResourceTest {
 	private static final String VIRTUAL_HOST = "test.openk9.local";
 
 	// two tenants served by the same instance: the test tenant resolver maps
-	// both on the same schema, so only the cache can tell them apart
+	// both on the same schema, so only the cache can tell them apart. Each
+	// still needs a schema of its own to pass the tenant guard.
 	private static final String TENANT_A = "tenanta";
 	private static final String TENANT_B = "tenantb";
 	private static final String SEEDED_NAME = PREFIX + "Seeded for tenant B";
@@ -88,6 +89,10 @@ public class BucketDatasourcesResourceTest {
 	@Test
 	@Order(1)
 	void setup() {
+		// 0. Give each tenant a schema the tenant guard can query
+		createTenantSchema(TENANT_A);
+		createTenantSchema(TENANT_B);
+
 		// 1. Create three datasources: two to link, one to leave unlinked
 		createDatasource(DATASOURCE_ONE_NAME);
 		createDatasource(DATASOURCE_TWO_NAME);
@@ -207,6 +212,30 @@ public class BucketDatasourcesResourceTest {
 			DATASOURCE_TWO_NAME, datasourceService, sessionFactory);
 		EntitiesUtils.removeEntity(
 			DATASOURCE_UNLINKED_NAME, datasourceService, sessionFactory);
+
+		dropTenantSchema(TENANT_A);
+		dropTenantSchema(TENANT_B);
+	}
+
+	// the tenant guard selects from tenant_binding in the tenant schema: an
+	// empty copy of the table is enough
+	private void createTenantSchema(String tenantId) {
+		executeUpdate("CREATE SCHEMA IF NOT EXISTS " + tenantId);
+		executeUpdate(
+			"CREATE TABLE IF NOT EXISTS " + tenantId + ".tenant_binding"
+			+ " (LIKE public.tenant_binding)");
+	}
+
+	private void dropTenantSchema(String tenantId) {
+		executeUpdate("DROP SCHEMA IF EXISTS " + tenantId + " CASCADE");
+	}
+
+	private void executeUpdate(String sql) {
+		sessionFactory.withTransaction(session -> session
+				.createNativeQuery(sql)
+				.executeUpdate())
+			.await()
+			.indefinitely();
 	}
 
 	private void createDatasource(String name) {
