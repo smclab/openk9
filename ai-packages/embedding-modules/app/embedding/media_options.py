@@ -41,6 +41,11 @@ class MediaOptions:
     page_resolution: int = 1568
 
 
+# above it a rasterized page takes too much memory: an A4 at 20000 pixels is
+# over 1 GB
+PAGE_RESOLUTION_MAX = 4096
+
+
 def _valid(value, default):
     """The option a jsonConfig value stands for, or None: a bool for a bool
     option, a whole number of at least 1 for a number one. The gRPC Struct
@@ -67,6 +72,9 @@ def split_media_options(json_config: dict) -> tuple[MediaOptions, dict]:
 
         configured = rest.pop(field.name)
         value = _valid(configured, field.default)
+
+        if field.name == "page_resolution" and value is not None:
+            value = value if value <= PAGE_RESOLUTION_MAX else None
 
         if value is None:
             logger.warning(

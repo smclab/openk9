@@ -21,6 +21,8 @@ The media options and the model decide whether the PDF is embedded at all."""
 
 import io
 import logging
+import weakref
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from PIL import Image
@@ -203,11 +205,11 @@ def test_a_page_that_cannot_be_rasterized_is_skipped(
     render = router._render_page
     rendered = []
 
-    def failing_second_page(page, resolution):
-        rendered.append(page)
+    def failing_second_page(pdf, index, resolution):
+        rendered.append(index)
         if len(rendered) == 2:
             raise ValueError("broken page")
-        return render(page, resolution)
+        return render(pdf, index, resolution)
 
     monkeypatch.setattr(router, "_render_page", failing_second_page)
     pipelines = make_pipelines(storage={URL: (data, "application/pdf")})
@@ -217,6 +219,77 @@ def test_a_page_that_cannot_be_rasterized_is_skipped(
 
     assert [piece.metadata for piece in pieces] == [{"page": 1}]
     assert "Skipping page 2 of PDF fileId=manual-1: broken page" in caplog.text
+
+
+def test_an_object_orphaned_by_a_failing_render_is_finalized_under_the_lock(
+    make_pipelines, pdf_samples, monkeypatch, caplog
+):
+    # stands for a native object pypdfium2 allocates and loses when it
+    # raises: only the traceback references it, so it is finalized when the
+    # exception dies, which must happen under the lock
+    data = pdf_samples.build(pdf_samples.text_page("Pagina uno"))
+    finalized_under_lock = []
+
+    class Orphan:
+        pass
+
+    def failing_render(page, **kwargs):
+        orphan = Orphan()
+        weakref.finalize(
+            orphan,
+            lambda: finalized_under_lock.append(router._PDFIUM_LOCK._is_owned()),
+        )
+        raise RuntimeError("render failed")
+
+    monkeypatch.setattr(router.pdfium.PdfPage, "render", failing_render)
+    pipelines = make_pipelines(storage={URL: (data, "application/pdf")})
+
+    with caplog.at_level(logging.WARNING, logger=router.logger.name):
+        pieces = ref_pieces(_ref(), pipelines)
+
+    assert pieces == []
+    assert finalized_under_lock == [True]
+    assert "Skipping page 1 of PDF fileId=manual-1: render failed" in caplog.text
+
+
+def test_pdfs_embedded_on_many_threads_at_once_keep_their_pages(
+    make_pipelines, pdf_samples
+):
+    # pdfium is not thread-safe: without the lock this crashes the process
+    urls = [f"https://signed/manual-{number}" for number in range(10)]
+    storage = {
+        url: (
+            pdf_samples.build(
+                *(
+                    pdf_samples.text_page(f"Manuale {number} pagina {page}")
+                    for page in range(1, 11)
+                )
+            ),
+            "application/pdf",
+        )
+        for number, url in enumerate(urls)
+    }
+    pipelines = make_pipelines(storage=storage)
+
+    def embed(url):
+        return [
+            piece
+            for group in ref_piece_batches(
+                {"url": url, "fileId": url, "contentType": "application/pdf"},
+                pipelines,
+                MediaOptions(),
+                batch_size=3,
+            )
+            for piece in group
+        ]
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        results = list(executor.map(embed, urls))
+
+    for number, pieces in enumerate(results):
+        assert [piece.text for piece in pieces] == [
+            f"Manuale {number} pagina {page}" for page in range(1, 11)
+        ]
 
 
 def test_the_response_content_type_routes_a_pdf_ref_without_one(

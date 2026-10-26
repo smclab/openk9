@@ -62,6 +62,7 @@ def test_the_media_keys_are_read_and_taken_out_of_the_chunker_config():
         ("max_pages", 2.5),
         ("page_resolution", True),
         ("page_resolution", "1568"),
+        ("page_resolution", 4097.0),
     ],
 )
 def test_an_invalid_value_falls_back_to_the_default_with_a_warning(key, value, caplog):
@@ -71,3 +72,9 @@ def test_an_invalid_value_falls_back_to_the_default_with_a_warning(key, value, c
     assert options == MediaOptions()
     assert rest == {}
     assert f"Ignoring {key} {value!r}" in caplog.text
+
+
+def test_page_resolution_is_accepted_up_to_its_maximum():
+    options, _ = split_media_options({"page_resolution": 4096.0})
+
+    assert options.page_resolution == 4096

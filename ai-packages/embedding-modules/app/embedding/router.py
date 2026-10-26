@@ -33,6 +33,7 @@ without network or models.
 
 import io
 import logging
+import threading
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 
@@ -151,32 +152,97 @@ def _image_ref_pieces(data, content_type, pipelines, file_id):
     return [Piece(vector=vector, file_id=file_id)]
 
 
-def _render_page(page, resolution: int) -> tuple[bytes, str]:
-    """Rasterizes a page with its long side at resolution pixels, as PNG, and
-    reads its text, cleaned like the inline text."""
-    width, height = page.get_size()
-    bitmap = page.render(scale=resolution / max(width, height))
-    buffer = io.BytesIO()
-    bitmap.to_pil().save(buffer, format="PNG")
+# pdfium is not thread-safe and the server embeds up to 10 contents at once:
+# every pdfium call goes through this lock, the embedding of a page does not.
+# No pdfium object outlives a locked section, so the GC never finalizes one
+# outside it. Reentrant all the same: code run by the GC on a thread that
+# holds the lock can take it again instead of hanging the thread forever
+_PDFIUM_LOCK = threading.RLock()
 
-    textpage = page.get_textpage()
+
+class _PdfiumFailed(Exception):
+    """A failure under the pdfium lock, raised again outside it."""
+
+    def __init__(self, message: str, unreadable: bool):
+        super().__init__(message)
+        self.unreadable = unreadable
+
+
+def _with_pdfium(work):
+    """Runs work under the pdfium lock. An exception dies inside the lock,
+    with its traceback: that may hold the last reference to an object
+    pypdfium2 created but did not return, which is then finalized under the
+    lock too. A _PdfiumFailed with the same message comes out instead."""
+    failure = None
+    with _PDFIUM_LOCK:
+        try:
+            return work()
+        except Exception as error:
+            failure = _PdfiumFailed(
+                str(error), isinstance(error, pdfium.PdfiumError)
+            )
+
+    raise failure
+
+
+def _page_count(data) -> int:
+    pdf = pdfium.PdfDocument(data)
     try:
-        text = textpage.get_text_bounded()
+        return len(pdf)
     finally:
-        textpage.close()
+        pdf.close()
+
+
+def _render_page(pdf, index: int, resolution: int):
+    """Rasterizes the page at index with its long side at resolution pixels
+    and reads its text. The caller holds the pdfium lock."""
+    page = pdf[index]
+    try:
+        width, height = page.get_size()
+        bitmap = page.render(scale=resolution / max(width, height))
+        try:
+            image = bitmap.to_pil()
+        finally:
+            bitmap.close()
+
+        textpage = page.get_textpage()
+        try:
+            text = textpage.get_text_bounded()
+        finally:
+            textpage.close()
+    finally:
+        page.close()
+
+    return image, text
+
+
+def _open_and_render_page(data, index: int, resolution: int):
+    pdf = pdfium.PdfDocument(data)
+    try:
+        return _render_page(pdf, index, resolution)
+    finally:
+        pdf.close()
+
+
+def _rasterize_page(data, index: int, resolution: int) -> tuple[bytes, str]:
+    """Opens the PDF, rasterizes the page at index and closes the PDF under
+    the pdfium lock, then encodes the page as PNG and cleans its text like
+    the inline text."""
+    image, text = _with_pdfium(
+        lambda: _open_and_render_page(data, index, resolution)
+    )
+
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
 
     return buffer.getvalue(), clean_text(text)
 
 
-def _page_piece(pdf, index: int, pipelines, file_id, options) -> Piece | None:
+def _page_piece(data, index: int, pipelines, file_id, options) -> Piece | None:
     """Embeds the page at index (from 0) as an image, or returns None when the
     page cannot be rasterized: the other pages go on."""
     try:
-        page = pdf[index]
-        try:
-            image, text = _render_page(page, options.page_resolution)
-        finally:
-            page.close()
+        image, text = _rasterize_page(data, index, options.page_resolution)
     except Exception as error:
         logger.warning(
             "Skipping page %d of PDF fileId=%s: %s", index + 1, file_id, error
@@ -198,37 +264,37 @@ def _pdf_page_batches(
 ) -> Iterator[list[Piece]]:
     """Embeds the pages of a PDF, up to max_pages, batch_size at a time,
     yielding the Pieces of each batch so the caller can emit them before the
-    next is rasterized: the PDF stays in memory, the page images do not."""
+    next is rasterized: the PDF bytes stay in memory, the page images do not.
+    Every page opens the PDF again, in milliseconds, so no pdfium object is
+    left open across a yield."""
     try:
-        pdf = pdfium.PdfDocument(data)
-    except pdfium.PdfiumError as error:
-        raise SkipRef(f"PDF not readable: {error}") from error
+        total = _with_pdfium(lambda: _page_count(data))
+    except _PdfiumFailed as failure:
+        if failure.unreadable:
+            raise SkipRef(f"PDF not readable: {failure}") from None
+        raise
 
-    try:
-        total = len(pdf)
-        pages = min(total, options.max_pages)
+    pages = min(total, options.max_pages)
 
-        if pages < total:
-            logger.warning(
-                "PDF fileId=%s has %d pages: embedding the first %d (max_pages), "
-                "skipping %d",
-                file_id,
-                total,
-                pages,
-                total - pages,
-            )
+    if pages < total:
+        logger.warning(
+            "PDF fileId=%s has %d pages: embedding the first %d (max_pages), "
+            "skipping %d",
+            file_id,
+            total,
+            pages,
+            total - pages,
+        )
 
-        for start in range(0, pages, batch_size):
-            group = []
-            for index in range(start, min(start + batch_size, pages)):
-                piece = _page_piece(pdf, index, pipelines, file_id, options)
-                if piece is not None:
-                    group.append(piece)
+    for start in range(0, pages, batch_size):
+        group = []
+        for index in range(start, min(start + batch_size, pages)):
+            piece = _page_piece(data, index, pipelines, file_id, options)
+            if piece is not None:
+                group.append(piece)
 
-            if group:
-                yield group
-    finally:
-        pdf.close()
+        if group:
+            yield group
 
 
 def _one_group(handler):
