@@ -36,6 +36,7 @@ Read more about compatibility matrix on Github.
 5. [Openk9 Gen Ai components installation](#gen-ai-components-installation)
     - [Embedding Module](#embedding-module)
     - [Agentic Rag Module](#agentic-rag-module)
+    - [Orchestrated Rag Module](#orchestrated-rag-module)
     - [Talk To](#talk-to)
     - [Chunk Evaluation Module](#chunk-evaluation-module)
 6. [Openk9 File Handling components installation](#file-handling-components)
@@ -1263,6 +1264,43 @@ For Openshift execute:
 
 ```bash
 oc -n openk9 port-forward svc/openk9-agentic-rag-module 5000:5000
+```
+
+Go to url [http://localhost:5000/docs](http://localhost:5000/docs). If page is reachable is ok.
+
+
+### Orchestrated Rag Module
+
+Orchestrated Rag Module exposes the same Apis as the Agentic Rag Module, answering with an orchestrator that delegates the search to Discovery agents. An installation uses one of the two modules, never both: install this one in place of the Agentic Rag Module and point the API Gateway at it, as [README.md](./03-gen-ai/openk9-orchestrated-rag-module/README.md) inside the chart folder explains.
+
+#### Installation
+
+For kubernetes/K3s execute:
+
+```bash
+helm upgrade -i orchestrated-rag-module 03-gen-ai/openk9-orchestrated-rag-module -n openk9 -f 03-gen-ai/openk9-orchestrated-rag-module/scenarios/local-runtime.yaml
+helm upgrade -i api-gateway 01-base-core/openk9-api-gateway -n openk9 --reuse-values --set openk9.rag.host=openk9-orchestrated-rag-module
+```
+
+For Openshift execute:
+
+```bash
+helm upgrade -i orchestrated-rag-module 03-gen-ai/openk9-orchestrated-rag-module -n openk9 -f 03-gen-ai/openk9-orchestrated-rag-module/scenarios/local-crc.yaml
+helm upgrade -i api-gateway 01-base-core/openk9-api-gateway -n openk9 --reuse-values --set openk9.rag.host=openk9-orchestrated-rag-module
+```
+
+#### Verify Installation
+
+For Kubernetes/K3s execute:
+
+```bash
+kubectl -n openk9 port-forward svc/openk9-orchestrated-rag-module 5000:5000
+```
+
+For Openshift execute:
+
+```bash
+oc -n openk9 port-forward svc/openk9-orchestrated-rag-module 5000:5000
 ```
 
 Go to url [http://localhost:5000/docs](http://localhost:5000/docs). If page is reachable is ok.

@@ -1,0 +1,440 @@
+# Helm package for Openk9 Orchestrated Rag Module
+
+## Introduction
+
+This chart bootstraps Openk9 Orchestrated Rag Module deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+
+## Prerequisites
+
+- Kubernetes 1.23+
+- Helm 3.8.0+
+- PV provisioner support in the underlying infrastructure
+
+## Installing the Chart
+
+Add in your local environment Openk9 Helm repo:
+
+```bash
+helm repo add openk9 https://registry.smc.it/repository/helm-private/
+```
+
+Then install using following command:
+
+```bash
+helm upgrade -i orchestrated-rag-module openk9/openk9-orchestrated-rag-module
+```
+
+The command deploys Openk9 Orchestrated Rag Module on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+
+The image is published on the OpenK9 registry, not on Docker Hub: set `image.registry` to it.
+
+## Use it in place of the Agentic Rag Module
+
+An installation uses one RAG module or the other, never both. The two modules answer the same API, and the API Gateway sends the RAG requests (`/api/rag/*`) to the host of its `openk9.rag.host` value, `openk9-agentic-rag-module` by default.
+
+To switch to this module:
+
+1. install this chart, as above;
+2. point the API Gateway at it, upgrading its chart with `--set openk9.rag.host=openk9-orchestrated-rag-module` (or the same key in its values file);
+3. uninstall the Agentic Rag Module chart.
+
+To go back, reinstall the Agentic Rag Module chart, set `openk9.rag.host` back to `openk9-agentic-rag-module` and uninstall this chart. The saved chats stay readable by both modules: this module saves them in the same documents as the Agentic Rag Module.
+
+## Parameters
+
+### Configure Image
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `image.registry`    | Openk9 Orchestrated Rag Module image registry                                                                                  | `REGISTRY_NAME`            |
+| `image.repository`  | Openk9 Orchestrated Rag Module image repository                                                                                | `REPOSITORY_NAME/openk9` |
+| `image.digest`      | Openk9 Orchestrated Rag Module image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                       |
+| `image.pullPolicy`  | Openk9 Orchestrated Rag Module image pull policy                                                                               | `IfNotPresent`             |
+| `image.pullSecrets` | Specify docker-registry secret names as an array                                                         | `[]`                       |
+| `image.debug`       | Set to true if you would like to see extra information on logs                                           | `false`                    |
+
+### Common parameters
+
+| Name                                         | Description                                                                                                                                                             | Value                                             |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `nameOverride`                               | String to partially override ingestion.fullname template (will maintain the release name)                                                                                | `""`                                              |
+| `fullnameOverride`                           | String to fully override ingestion.fullname template                                                                                                                     | `""`                                              |
+| `commonAnnotations`                          | Annotations to add to all deployed objects                                                                                                                              | `{}`                                              |
+| `hostAliases`                                | Deployment pod host aliases                                                                                                                                             | `[]`                                              |
+
+### Retention configurations
+
+Openk9 Orchestrated Rag Module service handles retention mechanism to handle saved conversations. Following parameters allow to handle in better possible way.
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `retention.schedule`    | Enable the retention of saved conversations: `true`/`false` (also `1`/`0`, `yes`/`no`, `on`/`off`). Any other non-empty value blocks the startup     | `""`    |
+| `retention.cronexpression`  | Cron expression to specify when retention job runs      | `0 0 * ? * *` |
+| `retention.interval`      | Interval in days to specify age of conversations to retain | `30`    |     
+
+### Retention configurations
+
+Openk9 Orchestrated Rag Module service handles possibility to load documents from external and use during chat. Following parameters allow to handle in better possible way.
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `uploadDocuments.uploadDir`    | Directory where upload documents     | `uploads`    |
+| `uploadDocuments.uploadFileExtensions`  | List of file extensions allowed      | `[".pdf",".md",".docx",".xlsx",".pptx",".csv"]` |
+| `uploadDocuments.maxUploadFileSize`      | Limit for documents to upload in MB | `10`    |     
+| `uploadDocuments.maxUploadFilesNumber`      | Max number of documents can be uploaded during chat | `5`    |     
+
+
+### Configure Opensearch
+
+Openk9 Datasource needs Opensearch to work. 
+
+To configure connection to Opensearch following parameters are available:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `opensearch.protocol`    | Scheme used to reach Opensearch, `http` or `https`. Applied to `opensearch.host` and to every `opensearch.hosts` entry that does not already carry a scheme                             | `http`            |
+| `opensearch.host`    | Opensearch host. Ignored when `opensearch.hosts` is set                             | `opensearch-cluster-master-headless`            |
+| `opensearch.port`  | Port where Opensearch is exposed. Ignored when `opensearch.hosts` is set                                    | `9200` |
+| `opensearch.hosts`  | List of `host:port` entries for a multi-node Opensearch cluster. When set, it takes precedence over `opensearch.host`/`opensearch.port`                                    | `[]` |
+| `opensearch.username`  | Opensearch user                                                                               | `opensearch`             |
+| `opensearch.passwordSecretName` | Name of the secret where password is stored                            | `opensearch-password`                       |
+| `opensearch.keyPasswordSecret`       | Name of the key inside the secret where password is stored               | `OPENSEARCH_INITIAL_ADMIN_PASSWORD`                    |
+| `opensearch.keyPasswordEnvName`       | Name of environment variable where password is set       | `OPENSEARCH_PASSWORD`   |
+| `opensearch.verifyCerts`       | Verify the Opensearch TLS certificate. Only honoured when the scheme is `https`       | `true`   |
+| `opensearch.caCerts.secretName`       | Name of the secret holding the CA bundle used to verify the Opensearch certificate. Empty verifies against the system authorities and mounts nothing       | `""`   |
+| `opensearch.caCerts.key`       | Name of the key inside the secret holding the CA bundle. The file is mounted read-only under `/etc/opensearch-certs`       | `""`   |
+
+To connect to a multi-node Opensearch cluster, list every node under `opensearch.hosts`:
+
+```yaml
+opensearch:
+  hosts:
+    - "opensearch-node-1:9200"
+    - "opensearch-node-2:9200"
+    - "opensearch-node-3:9200"
+```
+
+The module distributes requests across the configured nodes and keeps working
+through the remaining ones when a node is unreachable.
+
+To reach a cluster exposed in HTTPS, set the scheme and, when the certificate is
+signed by an internal authority, the secret holding the CA bundle:
+
+```yaml
+opensearch:
+  protocol: "https"
+  caCerts:
+    secretName: "opensearch-ca"
+    key: "ca.pem"
+```
+
+Basic authentication is applied only when `opensearch.username` and the password
+taken from `opensearch.passwordSecretName` are both set.
+
+If the connection fails on a hostname mismatch, the certificate is trusted but was
+issued for a name other than the one in `opensearch.host`. Reissue it with a SAN
+covering that name, or point `opensearch.host` at a name the certificate already
+covers. Inspect what the cluster presents with:
+
+```bash
+openssl s_client -connect <host>:9200 -showcerts </dev/null 2>/dev/null \
+  | openssl x509 -noout -subject -ext subjectAltName
+```
+
+Turning `opensearch.verifyCerts` off is not the fix for that case: it also drops the
+trust chain, so any certificate is accepted. Keep it for development and for a
+self-signed certificate that no bundle can validate.
+
+
+### Configure connections to other Openk9 services
+
+Openk9 Datasource needs to communicate with other components to work. 
+In particular Openk9 Orchestrated Rag Module need to communicate with Datasource and Tenant Manager.
+
+To configure connection to Datasource following parameters are available:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `openk9.datasource.host`    | Datasource host                         | `openk9-datasource`            |
+| `openk9.tenantManager.host`    | Tenant Manager host                         | `openk9-tenant-manager`            |
+
+
+### Configure admin password (Security)
+
+Openk9 Orchestrated Rag Module requires an admin password to protect privileged endpoints. The password is injected as the `OPENK9_SECURITY_ADMIN_PASSWORD` environment variable, read from a Kubernetes Secret.
+
+| Name                                | Description                                                       | Value                                  |
+| ----------------------------------- | ----------------------------------------------------------------- | -------------------------------------- |
+| `security.adminPasswordSecretName`  | Name of the Secret holding the admin password                     | `openk9-admin-password`    |
+| `security.adminPasswordSecretKey`   | Key inside the Secret containing the password                     | `password`                             |
+
+The referenced Secret must exist in the release namespace before deploying the chart.
+
+### Configure Phoenix Arize
+
+Openk9 Orchestrated Rag Module supports collecting metrics e tracing about traffic using [Phoenix Arize](https://phoenix.arize.com/).
+
+To enable this feature you need an active instance of Phoenix Arize.
+
+Once install you need to configure appropriately some parameters on this Helm Chart.
+
+To activate and set pointing to Phoenix Arize istance use following parameters.
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `phoenix.enabled`    | If tracing to Phoenix Arize is enabled     | `false`            |
+| `phoenix.endpoint`  | Phoenix Arize endpoint instance                                   | `http://127.0.0.1:6006/v1/traces` |
+| `phoenix.projectName`  | Phoenix Arize project                                 | `default` |
+
+### Service account and rbac
+
+Openk9 Orchestrated Rag Module doesn't need particular Service Account or rbac. 
+
+But if you want for some reasons associate a pre-created Service Account to Openk9 Orchestrated Rag Module you can do using following parameters:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `serviceAccount.create`    | If create a default Service Account     | `false`            |
+| `serviceAccount.annotations`  | Service Account annotations                                    | `{}` |
+| `serviceAccount.name`  | Name of pre created Service Account                                    | `` |
+
+
+### RBAC parameters
+
+| Name                                          | Description                                                                                | Value   |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------ | ------- |
+| `serviceAccount.create`                       | Enable creation of ServiceAccount for Ingestion pods                                        | `true`  |
+| `serviceAccount.name`                         | Name of the created serviceAccount                                                         | `""`    |
+| `serviceAccount.automountServiceAccountToken` | Auto-mount the service account token in the pod                                            | `false` |
+| `serviceAccount.annotations`                  | Annotations for service account. Evaluated as a template. Only used if `create` is `true`. | `{}`    |
+| `rbac.create`                                 | Whether RBAC rules should be created                                                       | `true`  |
+| `rbac.rules`                                  | Custom RBAC rules                                                                          | `[]`    |                              |
+
+### Configure ingress or route
+
+Openk9 Orchestrated Rag Module doesn't need to openk9 Apis externally.
+
+For Ingress creation presente of an Ingress Controller is mandatory on your cluster. Check [Kubernets Documentation](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) for availables Ingress Controllers.
+
+But if you want for some reasons you can modifying following parameters:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `ingress.enabled`    | If enable Ingress creation     | `false`            |
+| `ingress.host`  | Ingress host                                    | `{}` |
+| `ingress.annotations`  | Ingress annotations                                    | `{}` |
+| `ingress.tls.enabled`  | If enable tls on Ingress                                    | `` |
+| `ingress.tls.secretName`  | Secret with tls certificate to associate to Ingress                                    | `` |
+
+To configure Route for Openshift use:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `route.enabled`    | If enable Route creation     | `false`            |
+| `route.host`  | Route host                                    | `{}` |
+| `route.annotations`  | Route annotations                                    | `{}` |
+| `route.tls.enabled`  | If enable tls on Route                                     | `` |
+| `route.tls.secretName`  | Secret with tls certificate to associate to Route                                       | `` |
+
+### Startup, readiness and liveness probes
+
+Openk9 Orchestrated Rag Module supports Readiness, Liveness and Startup Probes.
+
+It uses [Quarkus health check endpoint](https://quarkus.io/guides/smallrye-health#running-the-health-check) to perform healht check actions. 
+
+To configure probes appropriately you can use following parameters:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `livenessProbe.enabled`                             | Enable livenessProbe                                                                                                                                                                                              | `true`           |
+| `livenessProbe.initialDelaySeconds`                 | Initial delay seconds for livenessProbe                                                                                                                                                                           | `120`            |
+| `livenessProbe.periodSeconds`                       | Period seconds for livenessProbe                                                                                                                                                                                  | `30`             |
+| `livenessProbe.timeoutSeconds`                      | Timeout seconds for livenessProbe                                                                                                                                                                                 | `20`             |
+| `livenessProbe.failureThreshold`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
+| `livenessProbe.successThreshold`                    | Success threshold for livenessProbe                                                                                                                                                                               | `1`              |
+| `readinessProbe.enabled`                            | Enable readinessProbe                                                                                                                                                                                             | `true`           |
+| `readinessProbe.initialDelaySeconds`                | Initial delay seconds for readinessProbe                                                                                                                                                                          | `10`             |
+| `readinessProbe.periodSeconds`                      | Period seconds for readinessProbe                                                                                                                                                                                 | `30`             |
+| `readinessProbe.timeoutSeconds`                     | Timeout seconds for readinessProbe                                                                                                                                                                                | `20`             |
+| `readinessProbe.failureThreshold`                   | Failure threshold for readinessProbe                                                                                                                                                                              | `3`              |
+| `readinessProbe.successThreshold`                   | Success threshold for readinessProbe                                                                                                                                                                              | `1`              |
+| `startupProbe.enabled`                              | Enable startupProbe                                                                                                                                                                                               | `false`          |
+| `startupProbe.initialDelaySeconds`                  | Initial delay seconds for startupProbe                                                                                                                                                                            | `10`             |
+| `startupProbe.periodSeconds`                        | Period seconds for startupProbe                                                                                                                                                                                   | `30`             |
+| `startupProbe.timeoutSeconds`                       | Timeout seconds for startupProbe                                                                                                                                                                                  | `20`             |
+| `startupProbe.failureThreshold`                     | Failure threshold for startupProbe                                                                                                                                                                                | `3`              |
+| `startupProbe.successThreshold`                     | Success threshold for startupProbe                                                                                                                                                                                | `1`              |
+
+### Resource requests and limits
+
+Openk9 Orchestrated Rag Module chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.
+
+| `resources`                                         | Set container requests and limits for different resources like CPU or memory (essential for production workloads)                                                                                                 | `{}`             |
+
+### Security
+
+You can use security context settings when you need to handle permissions on your cluster.
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `podSecurityContext.enabled`                        | Enable Admin Ui pods' Security Context                                                                                                                                                                            | `true`           |
+| `podSecurityContext.fsGroupChangePolicy`            | Set filesystem group change policy                                                                                                                                                                                | `Always`         |
+| `podSecurityContext.sysctls`                        | Set kernel settings using the sysctl interface                                                                                                                                                                    | `[]`             |
+| `podSecurityContext.supplementalGroups`             | Set filesystem extra groups                                                                                                                                                                                       | `[]`             |
+| `podSecurityContext.fsGroup`                        | Set Admin Ui pod's Security Context fsGroup                                                                                                                                                                       | `1001`           |
+| `podSecurityContext.enabled`                  | Enabled Admin Ui containers' Security Context                                                                                                                                                                     | `true`           |
+| `podSecurityContext.runAsUser`                | Set Admin Ui containers' Security Context runAsUser                                                                                                                                                               | `1001`           |
+| `podSecurityContext.runAsGroup`               | Set Admin Ui containers' Security Context runAsGroup                                                                                                                                                              | `1001`           |
+| `podSecurityContext.runAsNonRoot`             | Set Admin Ui container's Security Context runAsNonRoot                                                                                                                                                            | `true`           |
+| `podSecurityContext.allowPrivilegeEscalation` | Set container's privilege escalation                                                                                                                                                                              | `false`          |
+| `podSecurityContext.readOnlyRootFilesystem`   | Set container's Security Context readOnlyRootFilesystem                                                                                                                                                           | `true`           |
+| `podSecurityContext.capabilities.drop`        | Set container's Security Context runAsNonRoot                                                                                                                                                                     | `["ALL"]`        |
+
+### Prometheus metrics
+
+This chart can be integrated with Prometheus by setting `metrics.enabled` to `true`.
+
+#### Prometheus requirements
+
+It is necessary to have a working installation of Prometheus for the integration to work.
+
+| Name                                                 | Description                                                                                        | Value                 |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------- |
+| `metrics.enabled`                                    | Enable exposing Datasource metrics to be gathered by Prometheus                                      | `false`               |
+| `metrics.serviceMonitor.namespace`                   | Specify the namespace in which the serviceMonitor resource will be created                         | `""`                  |
+| `metrics.serviceMonitor.jobLabel`                    | The name of the label on the target service to use as the job name in prometheus.                  | `""`                  |
+| `metrics.serviceMonitor.targetLabels`                | Used to keep given service's labels in target                                                      | `{}`                  |
+| `metrics.serviceMonitor.podTargetLabels`             | Used to keep given pod's labels in target                                                          | `{}`                  |
+| `metrics.serviceMonitor.selector`                    | ServiceMonitor selector labels                                                                     | `{}`                  |
+| `metrics.serviceMonitor.labels`                      | Extra labels for the ServiceMonitor                                                                | `{}`                  |
+| `metrics.serviceMonitor.annotations`                 | Extra annotations for the ServiceMonitor                                                           | `{}`                  |
+| `metrics.serviceMonitor.enabled`                     | Deprecated. Please use `metrics.serviceMonitor.{default/perObject/detailed}` instead.              | `false`               |
+| `metrics.serviceMonitor.interval`                    | Deprecated. Please use `metrics.serviceMonitor.{default/perObject/detailed}` instead.              | `30s`                 |
+| `metrics.serviceMonitor.scrapeTimeout`               | Deprecated. Please use `metrics.serviceMonitor.{default/perObject/detailed}` instead.              | `""`                  |
+| `metrics.serviceMonitor.relabelings`                 | Deprecated. Please use `metrics.serviceMonitor.{default/perObject/detailed}` instead.              | `[]`                  |
+| `metrics.serviceMonitor.metricRelabelings`           | Deprecated. Please use `metrics.serviceMonitor.{default/perObject/detailed}` instead.              | `[]`                  |
+| `metrics.serviceMonitor.honorLabels`                 | Deprecated. Please use `metrics.serviceMonitor.{default/perObject/detailed}` instead.              | `false`               |
+| `metrics.serviceMonitor.path`                        | Deprecated. Please use `metrics.serviceMonitor.{default/perObject/detailed}` instead.              | `""`                  |
+| `metrics.serviceMonitor.params`                      | Deprecated. Please use `metrics.serviceMonitor.{default/perObject/detailed}` instead.              | `{}`                  |
+| `metrics.prometheusRule.enabled`                     | Set this to true to create prometheusRules for Prometheus operator                                 | `false`               |
+| `metrics.prometheusRule.additionalLabels`            | Additional labels that can be used so prometheusRules will be discovered by Prometheus             | `{}`                  |
+| `metrics.prometheusRule.namespace`                   | namespace where prometheusRules resource should be created                                         | `""`                  |
+| `metrics.prometheusRule.rules`                       | List of rules, used as template by Helm.                                                           | `[]`                  |
+
+### Scale horizontally
+
+To horizontally scale this chart once it has been deployed, two options are available:
+
+- Use the `kubectl scale` command.
+- Upgrade the chart modifying the `replicaCount` parameter.
+
+```text
+    replicaCount=3
+```
+
+When scaling down the solution, unnecessary Ingestion nodes are automatically stopped. 
+
+Is possible also to set autoscaling using following parameters:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `autoscaling.enabled`                             | Enable livenessProbe                                                                                                                                                                                              | `true`           |
+| `autoscaling.minReplicas`                 | Initial delay seconds for livenessProbe                                                                                                                                                                           | `120`            |
+| `autoscaling.maxReplicas`                       | Period seconds for livenessProbe                                                                                                                                                                                  | `30`             |
+| `autoscaling.averageCpuUtilizationPercentage`                      | Timeout seconds for livenessProbe                                                                                                                                                                                 | `20`             |
+| `autoscaling.averageMemoryUtilizationPercentage`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
+
+
+## Advanced logging
+
+In case you want to configure Openk9 Orchestrated Rag Module logging you can set up following parameters:
+
+| Name                   | Description                                                                                                 | Value    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- | -------- |
+| `log.level`            | Logging level of the module, set as the `LOGGING_LEVEL` environment variable                                  | `INFO`   |
+| `log.dependenciesLevel` | Logging level of the third-party libraries, set as the `DEPENDENCIES_LOGGING_LEVEL` environment variable      | `INFO`   |
+
+An example:
+
+```yaml
+log:
+  level: "INFO" ## change log level
+  dependenciesLevel: "INFO" ## change the level of the third-party libraries
+```
+
+### Level semantics
+
+| Level     | What it reports                                                                                                                    |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `INFO`    | Start and end of each request with its outcome (`COMPLETED`, `BLOCKED_INPUT`, `BLOCKED_OUTPUT`, `OFF_SCOPE`, `ERROR`) and duration, routing decisions, number of retrieved documents, and every non-blocking guardrail decision |
+| `WARNING` | Every block: input guardrail, output guardrail, scope gate, and the two pre-pipeline rejections (blank query is `INFO`, encoded blob is `WARNING`) |
+| `ERROR`   | Failures of the pipeline and of the guardrail providers                                                                            |
+| `DEBUG`   | Everything above, plus the per-document scores and the user query and the answer in clear                                          |
+
+At `INFO` no user query and no answer is ever written: the query is identified
+by its length and by a truncated hash (`query_chars`, `query_hash`), which is
+enough to recognise the same query across requests. Lowering the level to
+`DEBUG` adds the content to those same records, so it discloses the
+conversations and must not be left on in production.
+
+Records are formatted as `%(asctime)s - %(levelname)s - %(name)s - %(message)s`:
+any automated parsing of the previous format, which carried no logger name,
+has to be adapted.
+
+`log.level` governs the loggers of the module (`app.*`) and
+`log.dependenciesLevel` those of the libraries it uses. Raising the second one
+to `DEBUG` is rarely what is wanted: measured on three requests, it takes the
+output from 106 to 548 lines, and it discloses the conversation through
+libraries the module does not control, as the provider SDK prints the body of
+the request it sends to the model and the SSE layer prints every chunk of the
+answer.
+
+
+## Known issues
+
+No Known issues
+
+## Troubleshooting
+
+Find more information about how to deal with common errors related to Openk9's Helm charts in [this troubleshooting guide](https://staging-site.openk9.io/docs/monitoring/troubleshooting).
+
+
+## Upgrading
+
+
+### To 3.1.0
+
+- remove from values references to keycloak from your scenario values file
+
+- add to values configurations to control new feature about loading documents during chat
+
+```yaml
+uploadDocuments:
+  uploadDir: "uploads"
+  uploadFileExtensions: '[".pdf",".md",".docx",".xlsx",".pptx",".csv"]'
+  maxUploadFileSize: "10"
+  maxUploadFilesNumber: "5"
+```
+
+### Previous versions
+
+No details present
+
+
+## License
+
+
+Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.

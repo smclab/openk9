@@ -96,6 +96,7 @@ openk9:
     host: "openk9-datasource"
     port: "8080"
   rag:
+    ## the RAG module of the installation: openk9-agentic-rag-module or openk9-orchestrated-rag-module
     host: "openk9-agentic-rag-module"
     port: "5000"
   ingestion:
