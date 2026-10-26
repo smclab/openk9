@@ -29,7 +29,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 from pydantic_ai.messages import ModelResponse, ToolCallPart, ToolReturnPart
-from pydantic_ai.models.function import AgentInfo, FunctionModel
+from pydantic_ai.models.function import AgentInfo, DeltaToolCall, FunctionModel
 
 import app.server as server
 from app.rag.agentic import citations, discovery, orchestrator, streaming
@@ -211,6 +211,56 @@ def test_only_the_quotes_really_in_the_source_are_kept():
 # --------------------------------------------------------------------------- #
 # What the client receives                                                     #
 # --------------------------------------------------------------------------- #
+def test_a_quote_given_as_a_string_counts_as_one_quote():
+    output = OrchestratorOutput.model_validate(
+        {"status": "ok", "message": "Dal 1995 [1].", "citations": {"1": "Sede a Treviso"}}
+    )
+
+    assert output.citations == {"1": ["Sede a Treviso"]}
+
+
+def test_malformed_quotes_are_dropped_not_rejected():
+    assert OrchestratorOutput.model_validate(
+        {"status": "ok", "message": "m", "citations": "Dati Societari - DGS"}
+    ).citations == {}
+    assert OrchestratorOutput.model_validate(
+        {"status": "ok", "message": "m", "citations": {"1": 3, "2": ["a", None, "b"]}}
+    ).citations == {"1": [], "2": ["a", "b"]}
+
+
+def test_a_streamed_answer_survives_malformed_quotes():
+    """gpt-4o-mini, told to leave ``citations`` empty, filled it with the titles of the
+    sources: a streamed run cannot retry, so the turn died after part of the answer."""
+    output_args = json.dumps(
+        {
+            "status": "ok",
+            "message": "SMC fa parte del gruppo DGS [1].",
+            "citations": {"1": "Dati Societari - DGS"},
+        }
+    )
+
+    async def stream_function(messages, info: AgentInfo):
+        yield {0: DeltaToolCall(name=info.output_tools[0].name, json_args=output_args)}
+
+    deps = _deps()
+    _delivered(deps, ("a", "Dati Societari - DGS. SMC fa parte del gruppo DGS."))
+
+    async def run():
+        async with orchestrator.stream_orchestrator(
+            question="Di che gruppo fa parte SMC?",
+            deps=deps,
+            model=FunctionModel(stream_function=stream_function),
+        ) as stream:
+            async for _ in stream.deltas():
+                pass
+            return await stream.finalize()
+
+    output, refs, _ = asyncio.run(run())
+
+    assert output.message == "SMC fa parte del gruppo DGS [1]."
+    assert [r.document_id for r in refs] == ["a"]
+
+
 def test_document_events_carry_the_number_and_the_quotes():
     refs = [
         DocumentRef(document_id="a", title="A", ordinal=1, quotes=["dal 1995"]),

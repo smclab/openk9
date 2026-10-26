@@ -24,7 +24,7 @@ diventano ``output_type`` degli agent o parametri tipati dei tool.
 
 from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ── Orchestratore → sub-agent (contratto comune a TUTTI i sub-agent-tool) ──
 
@@ -152,6 +152,18 @@ class OrchestratorOutput(BaseModel):
             "only when the instructions ask for them"
         ),
     )
+
+    @field_validator("citations", mode="before")
+    @classmethod
+    def lenient_citations(cls, v):
+        # a streamed run cannot ask the model to fix its output: malformed quotes are dropped,
+        # not allowed to fail the turn (the quotes are checked against the sources anyway)
+        if not isinstance(v, dict):
+            return {}
+        return {
+            str(key): [q for q in (raw if isinstance(raw, list) else [raw]) if isinstance(q, str)]
+            for key, raw in v.items()
+        }
 
 
 # ── Verifier (opzionale) — output dell'LLM che valuta OrchestratorOutput ──
