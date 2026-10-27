@@ -42,7 +42,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  *   <li>any {@code apiKey} field (today only {@code EmbeddingModel} and
  *       {@code LargeLanguageModel} carry one);</li>
  *   <li>any denylisted key found, at any depth, inside a {@code jsonConfig}
- *       string (the seven entities that have a {@code jsonConfig}).</li>
+ *       string (the seven entities that have a {@code jsonConfig});</li>
+ *   <li>any denylisted key found, at any depth, inside an
+ *       {@code embeddingJsonConfig} string (the datasource).</li>
  * </ul>
  * Each redacted value is replaced by {@link #PLACEHOLDER} and its path recorded
  * in {@link ConfigEntity#getRedactedFields()}. Re-applying the placeholder on
@@ -54,7 +56,8 @@ public class ConfigRedactor {
 	public static final String PLACEHOLDER = "__REDACTED__";
 
 	private static final String API_KEY_FIELD = "apiKey";
-	private static final String JSON_CONFIG_FIELD = "jsonConfig";
+	private static final List<String> JSON_CONFIG_FIELDS =
+		List.of("jsonConfig", "embeddingJsonConfig");
 
 	@Inject
 	ObjectMapper objectMapper;
@@ -93,7 +96,9 @@ public class ConfigRedactor {
 		List<String> redacted = new ArrayList<>();
 
 		redactApiKey(tree, redacted);
-		redactJsonConfig(tree, redacted);
+		for (String field : JSON_CONFIG_FIELDS) {
+			redactJsonConfig(tree, field, redacted);
+		}
 
 		if (redacted.isEmpty()) {
 			return;
@@ -127,8 +132,10 @@ public class ConfigRedactor {
 		return false;
 	}
 
-	private void redactJsonConfig(ObjectNode tree, List<String> redacted) {
-		JsonNode jsonConfig = tree.get(JSON_CONFIG_FIELD);
+	private void redactJsonConfig(
+		ObjectNode tree, String field, List<String> redacted) {
+
+		JsonNode jsonConfig = tree.get(field);
 		if (jsonConfig == null || !jsonConfig.isTextual()) {
 			return;
 		}
@@ -142,9 +149,9 @@ public class ConfigRedactor {
 		redactObject((ObjectNode) parsed, "", keys);
 
 		if (!keys.isEmpty()) {
-			tree.put(JSON_CONFIG_FIELD, writeString(parsed));
+			tree.put(field, writeString(parsed));
 			for (String key : keys) {
-				redacted.add(JSON_CONFIG_FIELD + "." + key);
+				redacted.add(field + "." + key);
 			}
 		}
 	}

@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.EntitiesUtils;
+import io.openk9.datasource.Initializer;
 import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigEntityType;
 import io.openk9.datasource.config.model.ConfigPackage;
@@ -39,8 +40,10 @@ import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.CharFilter;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
@@ -53,10 +56,13 @@ import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.ResultAclConfig;
 import io.openk9.datasource.model.Sorting;
+import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.dto.base.AutocompleteDTO;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.CharFilterDTO;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
+import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
@@ -71,9 +77,12 @@ import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.AutocompleteService;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.CharFilterService;
+import io.openk9.datasource.service.DatasourceConnectionObjects;
+import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.EnrichPipelineService;
+import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.ResultAclConfigService;
 import io.openk9.datasource.service.SortingService;
@@ -133,6 +142,10 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "result-acl-doc-type";
 	private static final String ACL_TITLE_NAME =
 		ENTITY_NAME_PREFIX + "result-acl-title";
+	private static final String INDEX_DATASOURCE_NAME =
+		ENTITY_NAME_PREFIX + "index-datasource";
+	private static final String NEW_DATASOURCE_NAME =
+		ENTITY_NAME_PREFIX + "new-datasource";
 	private static final String ACL_DATE_NAME =
 		ENTITY_NAME_PREFIX + "result-acl-date";
 	private static final String SKIP_JOINS_PIPELINE_NAME =
@@ -232,6 +245,12 @@ public class ConfigImporterTest {
 
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
+
+	@Inject
+	DatasourceService datasourceService;
+
+	@Inject
+	PluginDriverService pluginDriverService;
 
 	private static final String COUNT_JOIN_ROWS =
 		"select count(i) from EnrichPipelineItem i";
@@ -1757,6 +1776,299 @@ public class ConfigImporterTest {
 			COPIED_AUTOCOMPLETE_NAME, autocompleteService, sessionFactory);
 		EntitiesUtils.removeEntity(fieldOneId, docTypeFieldService, sessionFactory);
 		EntitiesUtils.removeEntity(fieldTwoId, docTypeFieldService, sessionFactory);
+	}
+
+	@Test
+	void overwrite_keeps_the_index_configuration_the_package_does_not_write() {
+		// 1. A datasource whose first index asks for a chunk window
+		createDatasource(INDEX_DATASOURCE_NAME, 3, "{\"batch\": 8}");
+
+		try {
+			// 2. A package that does not write the index configuration, as one
+			// exported before it existed does not
+			ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+			ConfigEntity entity = datasourceEntity(pkg, INDEX_DATASOURCE_NAME);
+			entity.setAttributes(DatasourceDTO.builder()
+				.name(INDEX_DATASOURCE_NAME)
+				.build());
+			entity.setAttributeKeys(Set.of("name"));
+
+			ImportReport report = configImporter
+				.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+				.await().indefinitely();
+
+			// 3. The datasource keeps what it had
+			assertTrue(report.applied());
+
+			Datasource datasource = loadDatasource(INDEX_DATASOURCE_NAME);
+			assertEquals(3, datasource.getChunkWindowSize());
+			assertEquals("{\"batch\": 8}", datasource.getEmbeddingJsonConfig());
+		}
+		finally {
+			removeDatasource(INDEX_DATASOURCE_NAME);
+		}
+	}
+
+	@Test
+	void overwrite_resets_the_index_configuration_the_package_writes_as_null() {
+		// 1. A datasource whose first index asks for a chunk window
+		createDatasource(INDEX_DATASOURCE_NAME, 3, "{\"batch\": 8}");
+
+		try {
+			// 2. A package that writes those keys as null
+			ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+			ConfigEntity entity = datasourceEntity(pkg, INDEX_DATASOURCE_NAME);
+			entity.setAttributes(DatasourceDTO.builder()
+				.name(INDEX_DATASOURCE_NAME)
+				.build());
+			entity.setAttributeKeys(Set.of(
+				"name", "chunkWindowSize", "embeddingJsonConfig"));
+
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+				.await().indefinitely();
+
+			// 3. The datasource goes back to the defaults
+			Datasource datasource = loadDatasource(INDEX_DATASOURCE_NAME);
+			assertEquals(0, datasource.getChunkWindowSize());
+			assertEquals("{}", datasource.getEmbeddingJsonConfig());
+		}
+		finally {
+			removeDatasource(INDEX_DATASOURCE_NAME);
+		}
+	}
+
+	@Test
+	void overwrite_keeps_the_secret_of_the_embedding_configuration() {
+		// 1. A datasource whose first index embeds with a model that needs a secret
+		createDatasource(
+			INDEX_DATASOURCE_NAME, 3, "{\"url\":\"https://x\",\"password\":\"secret\"}");
+
+		try {
+			// 2. The export redacts the secret
+			ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+			ConfigEntity entity = datasourceEntity(pkg, INDEX_DATASOURCE_NAME);
+
+			assertTrue(
+				entity.getRedactedFields().contains("embeddingJsonConfig.password"),
+				"the secret must be redacted: " + entity.getRedactedFields());
+			assertFalse(
+				((DatasourceDTO) entity.getAttributes()).getEmbeddingJsonConfig()
+					.contains("secret"));
+
+			// 3. Importing it back overwrites the datasource without losing it
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
+				.await().indefinitely();
+
+			assertTrue(
+				loadDatasource(INDEX_DATASOURCE_NAME).getEmbeddingJsonConfig()
+					.contains("secret"));
+		}
+		finally {
+			removeDatasource(INDEX_DATASOURCE_NAME);
+		}
+	}
+
+	@Test
+	void a_knn_datasource_without_a_field_to_embed_blocks_the_import() {
+		// a datasource that asks for a knn index but says nothing of the field
+		ConfigPackage pkg = packageWithNewDatasource(
+			DatasourceDTO.builder()
+				.name(NEW_DATASOURCE_NAME)
+				.knnIndex(true)
+				.build(),
+			Set.of("name", "knnIndex"),
+			Map.of());
+
+		for (boolean dryRun : List.of(true, false)) {
+			ImportReport report = configImporter
+				.importConfig(TENANT_ID, pkg, ImportMode.SKIP, dryRun)
+				.await().indefinitely();
+
+			// the reason names the datasource and nothing is written
+			assertTrue(
+				report.blockingErrors().stream().anyMatch(error ->
+					error.contains(NEW_DATASOURCE_NAME)
+						&& error.contains("embeddingDocTypeField")),
+				"the missing field must be reported: " + report.blockingErrors());
+			assertFalse(report.applied());
+			assertEquals(0, countByName("Datasource", NEW_DATASOURCE_NAME));
+		}
+	}
+
+	@Test
+	void a_knn_datasource_without_an_embedding_model_blocks_the_import() {
+		// 1. A tenant that has no embedding model enabled
+		Long modelId = setTenantEmbeddingModel(null);
+
+		try {
+			// 2. A package that asks for a knn index and brings no model
+			ConfigPackage pkg = packageWithNewDatasource(
+				DatasourceDTO.builder()
+					.name(NEW_DATASOURCE_NAME)
+					.knnIndex(true)
+					.build(),
+				Set.of("name", "knnIndex"),
+				Map.of("embeddingDocTypeField", List.of("DOC_TYPE_FIELD-ANY")));
+
+			ImportReport report = configImporter
+				.importConfig(TENANT_ID, pkg, ImportMode.SKIP, true)
+				.await().indefinitely();
+
+			// 3. The import is refused, naming the datasource
+			assertTrue(
+				report.blockingErrors().stream().anyMatch(error ->
+					error.contains(NEW_DATASOURCE_NAME)
+						&& error.contains("embedding model")),
+				"the missing model must be reported: " + report.blockingErrors());
+		}
+		finally {
+			setTenantEmbeddingModel(modelId);
+		}
+	}
+
+	@Test
+	void a_datasource_without_a_knn_index_does_not_block_the_import() {
+		ConfigPackage pkg = packageWithNewDatasource(
+			DatasourceDTO.builder()
+				.name(NEW_DATASOURCE_NAME)
+				.knnIndex(false)
+				.build(),
+			Set.of("name", "knnIndex"),
+			Map.of());
+
+		ImportReport report = configImporter
+			.importConfig(TENANT_ID, pkg, ImportMode.SKIP, true)
+			.await().indefinitely();
+
+		assertTrue(report.blockingErrors().isEmpty());
+		assertTrue(report.warnings().isEmpty());
+	}
+
+	@Test
+	void a_datasource_from_a_package_without_index_configuration_is_reported() {
+		// a package exported before the index configuration existed
+		ConfigPackage pkg = packageWithNewDatasource(
+			DatasourceDTO.builder().name(NEW_DATASOURCE_NAME).build(),
+			Set.of("name"),
+			Map.of());
+
+		ImportReport report = configImporter
+			.importConfig(TENANT_ID, pkg, ImportMode.SKIP, true)
+			.await().indefinitely();
+
+		assertTrue(
+			report.warnings().stream().anyMatch(warning ->
+				warning.contains(NEW_DATASOURCE_NAME)
+					&& warning.contains("no index configuration")),
+			"the missing configuration must be reported: " + report.warnings());
+		assertTrue(report.blockingErrors().isEmpty());
+	}
+
+	@Test
+	void overwrite_reports_an_index_configuration_that_differs_from_the_data_index() {
+		// 1. A datasource that already has a dataIndex, which is not a knn index
+		createDatasource(INDEX_DATASOURCE_NAME, 3, "{}");
+
+		try {
+			// 2. A package that asks for another chunk window
+			ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+			ConfigEntity entity = datasourceEntity(pkg, INDEX_DATASOURCE_NAME);
+			DatasourceDTO dto = (DatasourceDTO) entity.getAttributes();
+			dto.setChunkWindowSize(7);
+
+			ImportReport report = configImporter
+				.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, true)
+				.await().indefinitely();
+
+			// 3. The report says the dataIndex it has is kept
+			assertTrue(
+				report.warnings().stream().anyMatch(warning ->
+					warning.contains(INDEX_DATASOURCE_NAME)
+						&& warning.contains("chunkWindowSize")),
+				"the difference must be reported: " + report.warnings());
+			assertTrue(report.blockingErrors().isEmpty());
+		}
+		finally {
+			removeDatasource(INDEX_DATASOURCE_NAME);
+		}
+	}
+
+	private ConfigPackage packageWithNewDatasource(
+		DatasourceDTO attributes, Set<String> attributeKeys,
+		Map<String, List<String>> references) {
+
+		ConfigEntity entity = new ConfigEntity(
+			"DATASOURCE-NEW",
+			ConfigEntityType.DATASOURCE,
+			NEW_DATASOURCE_NAME,
+			attributes,
+			new LinkedHashMap<>(references),
+			null);
+		entity.setAttributeKeys(attributeKeys);
+
+		return new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(entity));
+	}
+
+	private static ConfigEntity datasourceEntity(ConfigPackage pkg, String name) {
+		return pkg.getEntities().stream()
+			.filter(entity -> entity.getType() == ConfigEntityType.DATASOURCE)
+			.filter(entity -> name.equals(entity.getKey()))
+			.findFirst()
+			.orElseThrow();
+	}
+
+	private void createDatasource(
+		String name, int chunkWindowSize, String embeddingJsonConfig) {
+
+		var pluginDriver = pluginDriverService
+			.findByName(TENANT_ID, Initializer.INIT_DATASOURCE_PLUGIN)
+			.await().indefinitely();
+
+		datasourceService.createDatasourceConnection(
+			DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
+				.name(name)
+				.pluginDriverId(pluginDriver.getId())
+				.chunkWindowSize(chunkWindowSize)
+				.embeddingJsonConfig(embeddingJsonConfig)
+				.dataIndex(DataIndexDTO.builder()
+					.name(name + " - dataIndex")
+					.build())
+				.build()
+		).await().indefinitely();
+	}
+
+	private Datasource loadDatasource(String name) {
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) -> s
+			.createQuery("select d from Datasource d where d.name = :name", Datasource.class)
+			.setParameter("name", name)
+			.getSingleResult()
+		).await().indefinitely();
+	}
+
+	private void removeDatasource(String name) {
+		datasourceService.findByName(TENANT_ID, name)
+			.flatMap(datasource -> datasourceService.deleteById(datasource.getId()))
+			.await().indefinitely();
+	}
+
+	/**
+	 * Binds the tenant to the given embedding model, or to none when it is null,
+	 * and returns the id of the one it was bound to.
+	 */
+	private Long setTenantEmbeddingModel(Long embeddingModelId) {
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.find(TenantBinding.class, 1L).flatMap(binding -> {
+				Long previous = binding.getEmbeddingModel() == null
+					? null
+					: binding.getEmbeddingModel().getId();
+				binding.setEmbeddingModel(embeddingModelId == null
+					? null
+					: s.getReference(EmbeddingModel.class, embeddingModelId));
+
+				return s.persist(binding).call(s::flush).replaceWith(previous);
+			})
+		).await().indefinitely();
 	}
 
 	private Long seedCharFilter(String name, String jsonConfig) {

@@ -19,11 +19,14 @@ package io.openk9.datasource.config.model;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * A single configuration entity inside a {@link ConfigPackage}.
@@ -42,10 +45,14 @@ import lombok.NoArgsConstructor;
  *   <li>{@code redactedFields} — names of fields whose secret value was replaced
  *       by the redaction placeholder.</li>
  * </ul>
+ * An exported package always writes every attribute, a {@code null} included: a
+ * key that is missing from {@code attributes} is a field the package does not
+ * manage, as opposed to a key set to {@code null}, which asks for it to be reset.
+ * The typed {@code attributes} cannot tell the two apart, so the keys that were
+ * present are kept in {@code attributeKeys} when the entity is read.
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @JsonDeserialize(using = ConfigEntityDeserializer.class)
 public class ConfigEntity {
 
@@ -55,5 +62,30 @@ public class ConfigEntity {
 	private Object attributes;
 	private Map<String, List<String>> references;
 	private List<String> redactedFields;
+
+	/**
+	 * The keys the package wrote in {@code attributes}, or {@code null} when the
+	 * entity was not read from a package, in which case every attribute counts as
+	 * written. It is never serialized.
+	 */
+	@JsonIgnore
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private Set<String> attributeKeys;
+
+	/**
+	 * Builds an entity whose every attribute counts as written.
+	 */
+	public ConfigEntity(
+		String ref, ConfigEntityType type, String key, Object attributes,
+		Map<String, List<String>> references, List<String> redactedFields) {
+
+		this.ref = ref;
+		this.type = type;
+		this.key = key;
+		this.attributes = attributes;
+		this.references = references;
+		this.redactedFields = redactedFields;
+	}
 
 }

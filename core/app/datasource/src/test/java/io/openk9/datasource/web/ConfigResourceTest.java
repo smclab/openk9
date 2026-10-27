@@ -81,6 +81,26 @@ public class ConfigResourceTest {
 
 	@Test
 	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void export_writes_every_attribute_of_a_datasource_even_when_null() {
+		// a null is written as a key set to null: an import tells it from a key the
+		// package does not write, which is a field the package does not manage
+		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
+			.accept(ContentType.JSON)
+			.when()
+			.get("/export")
+			.then()
+			.statusCode(200)
+			.body("entities.findAll { it.type == 'DATASOURCE' }.size()", greaterThan(0))
+			.body(
+				"entities.findAll { it.type == 'DATASOURCE' }"
+					+ ".every { it.attributes.containsKey('settings') "
+					+ "&& it.attributes.containsKey('knnIndex') }",
+				equalTo(true));
+	}
+
+	@Test
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
 	void default_import_is_a_dry_run_preview() {
 		// 1. Export the current tenant's configuration over HTTP
 		String exported = given()

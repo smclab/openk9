@@ -124,6 +124,33 @@ class ConfigRedactorTest {
 	}
 
 	@Test
+	void shouldRedactDenylistedKeysInsideTheEmbeddingJsonConfig() throws Exception {
+		// a datasource whose first index embeds with a model that needs a secret
+		DatasourceDTO datasource = DatasourceDTO.builder()
+			.name("indexed-connector")
+			.embeddingJsonConfig(
+				"{\"url\":\"https://x\",\"auth\":{\"password\":\"p\"}}")
+			.chunkWindowSize(2)
+			.build();
+
+		ConfigEntity entity = entity(ConfigEntityType.DATASOURCE, datasource);
+
+		redactor.redact(entity);
+
+		// the secret is replaced and its path recorded, the rest is untouched
+		DatasourceDTO redacted =
+			assertInstanceOf(DatasourceDTO.class, entity.getAttributes());
+		JsonNode config = objectMapper.readTree(redacted.getEmbeddingJsonConfig());
+
+		assertEquals("https://x", config.get("url").asText());
+		assertEquals(
+			ConfigRedactor.PLACEHOLDER, config.get("auth").get("password").asText());
+		assertEquals(2, redacted.getChunkWindowSize());
+		assertTrue(entity.getRedactedFields()
+			.contains("embeddingJsonConfig.auth.password"));
+	}
+
+	@Test
 	void shouldLeaveSecretFreeEntityUntouched() {
 		RuleDTO rule = RuleDTO.builder()
 			.name("a-rule")

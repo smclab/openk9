@@ -19,16 +19,20 @@ package io.openk9.datasource.config.model;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.openk9.datasource.config.model.representation.EnrichPipelineItemRepresentation;
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pure unit round-trip (no Quarkus, no Docker) demonstrating that a
@@ -98,6 +102,55 @@ class ConfigPackageRoundTripTest {
 			EnrichPipelineItemRepresentation.class, restoredItem.getAttributes());
 		assertEquals(2.0f, weightRep.getWeight());
 		assertNull(restoredItem.getKey());
+	}
+
+	@Test
+	void shouldTellAnAbsentAttributeFromANullOne() throws Exception {
+		// a package written before the index configuration existed has no key for
+		// it, while one that resets a value writes the key as null
+		String json = """
+			{
+			  "ref": "ds-1",
+			  "type": "DATASOURCE",
+			  "key": "github-connector",
+			  "attributes": {"name": "github-connector", "settings": null}
+			}""";
+
+		ConfigEntity entity = mapper.readValue(json, ConfigEntity.class);
+
+		// the typed attributes can not tell them apart
+		DatasourceDTO dto = assertInstanceOf(DatasourceDTO.class, entity.getAttributes());
+		assertNull(dto.getSettings());
+		assertNull(dto.getKnnIndex());
+
+		// the keys that were written can
+		assertEquals(Set.of("name", "settings"), entity.getAttributeKeys());
+	}
+
+	@Test
+	void shouldWriteEveryAttributeEvenWhenNull() throws Exception {
+		ConfigEntity entity = new ConfigEntity(
+			"ds-1",
+			ConfigEntityType.DATASOURCE,
+			"github-connector",
+			DatasourceDTO.builder().name("github-connector").build(),
+			Map.of(),
+			null
+		);
+
+		JsonNode attributes = mapper.readTree(mapper.writeValueAsString(entity))
+			.get("attributes");
+
+		// a null is written as a key set to null, so that a reset can be told
+		// from a field the package does not manage
+		assertTrue(attributes.has("knnIndex"));
+		assertTrue(attributes.get("knnIndex").isNull());
+		assertTrue(attributes.has("settings"));
+		assertTrue(attributes.get("settings").isNull());
+
+		// and the keys the entity was read with are not part of the package
+		assertFalse(mapper.readTree(mapper.writeValueAsString(entity))
+			.has("attributeKeys"));
 	}
 
 }

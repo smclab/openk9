@@ -18,8 +18,10 @@
 package io.openk9.datasource.config.model;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -73,6 +75,9 @@ public class ConfigEntityDeserializer extends JsonDeserializer<ConfigEntity> {
 		if (type != null && attributesNode != null && !attributesNode.isNull()) {
 			entity.setAttributes(
 				mapper.treeToValue(attributesNode, type.getAttributesType()));
+			Set<String> attributeKeys = new HashSet<>();
+			attributesNode.fieldNames().forEachRemaining(attributeKeys::add);
+			entity.setAttributeKeys(attributeKeys);
 		}
 
 		JsonNode referencesNode = node.get("references");

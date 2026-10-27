@@ -29,6 +29,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -111,6 +112,9 @@ public class ConfigImporter {
 
 	// Caches of the reflectively-resolved ConfigEntityMapper import methods,
 	// keyed by entity type.
+	private static final List<String> JSON_FIELDS =
+		List.of("jsonConfig", "embeddingJsonConfig");
+
 	private final Map<Class<?>, Method> entityMethods = new ConcurrentHashMap<>();
 	private final Map<Class<?>, Method> updateMethods = new ConcurrentHashMap<>();
 
@@ -151,24 +155,27 @@ public class ConfigImporter {
 		List<MissingReference> missingReferences = missingReferences(pkg);
 
 		return sessionFactory.withTransaction(tenantId, (s, t) ->
-				matcher.plan(s, pkg, mode).flatMap(plan -> {
-					List<SecretToReenter> secrets = secretsToReenter(pkg, plan);
-					List<String> blockingErrors = blockingErrors(pkg, plan);
-					if (dryRun || !blockingErrors.isEmpty()) {
-						return Uni.createFrom().item(report(
-							dryRun, false, mode, plan, missingReferences, secrets,
-							blockingErrors, Map.of()));
-					}
-					return doApply(s, pkg, plan).map(resolvedIds -> report(
-						false, true, mode, plan, missingReferences, secrets,
-						List.of(), resolvedIds));
-				}))
+				matcher.plan(s, pkg, mode).flatMap(plan ->
+					IndexIntentChecker.check(s, pkg, plan).flatMap(findings -> {
+						List<SecretToReenter> secrets = secretsToReenter(pkg, plan);
+						List<String> blockingErrors =
+							new ArrayList<>(blockingErrors(pkg, plan));
+						blockingErrors.addAll(findings.errors());
+						if (dryRun || !blockingErrors.isEmpty()) {
+							return Uni.createFrom().item(report(
+								dryRun, false, mode, plan, missingReferences, secrets,
+								blockingErrors, findings.warnings(), Map.of()));
+						}
+						return doApply(s, pkg, plan).map(resolvedIds -> report(
+							false, true, mode, plan, missingReferences, secrets,
+							List.of(), findings.warnings(), resolvedIds));
+					})))
 			.onFailure(failure ->
 				failure instanceof ConfigEntitySorter.CyclicDependencyException
 					|| failure instanceof ConfigMatcher.AmbiguousMatchException)
 			.recoverWithItem(failure -> report(
 				dryRun, false, mode, null, missingReferences, List.of(),
-				blockingErrors(failure), Map.of()))
+				blockingErrors(failure), List.of(), Map.of()))
 			.onFailure(failure -> constraintViolation(failure) != null)
 			.recoverWithItem(failure -> {
 				ApplyViolation violation = applyViolation(failure);
@@ -177,7 +184,7 @@ public class ConfigImporter {
 					violation == null ? null : violation.plan,
 					missingReferences, List.of(),
 					violationErrors(constraintViolation(failure), violation),
-					Map.of());
+					List.of(), Map.of());
 			});
 	}
 
@@ -218,7 +225,7 @@ public class ConfigImporter {
 				K9Entity target = (K9Entity) found;
 				written.put(target, entity);
 				Object dto = restoreRedacted(
-					entity.getAttributes(), entity.getRedactedFields(), target);
+					keepUnmanaged(entity, target), entity.getRedactedFields(), target);
 				updateEntity(entityClass, target, dto);
 				return wireAssociations(
 						s, target, entity.getReferences(), resolvedIds, false)
@@ -343,12 +350,73 @@ public class ConfigImporter {
 		}
 	}
 
-	private JsonNode parsedJsonConfig(ObjectNode tree) {
-		JsonNode jsonConfig = tree.get("jsonConfig");
+	private JsonNode parsedJson(ObjectNode tree, String field) {
+		JsonNode jsonConfig = tree.get(field);
 		if (jsonConfig == null || !jsonConfig.isTextual()) {
 			return null;
 		}
 		return tryParse(jsonConfig.asText());
+	}
+
+	/**
+	 * The JSON-in-a-string field a redacted path points into, e.g.
+	 * {@code embeddingJsonConfig} for {@code embeddingJsonConfig.auth.token}, or
+	 * {@code null} when the path names a field of its own.
+	 */
+	private static String jsonFieldOf(String path) {
+		for (String field : JSON_FIELDS) {
+			if (path.startsWith(field + ".")) {
+				return field;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Fills the attributes the package does not manage with the values the target
+	 * already has, so that overwriting does not reset a field the package never
+	 * wrote. A key written as {@code null} is not filled: it asks for the reset.
+	 * Only plain values are copied.
+	 */
+	private Object keepUnmanaged(ConfigEntity entity, K9Entity target) {
+		Object attributes = entity.getAttributes();
+		Set<String> written = entity.getAttributeKeys();
+		if (attributes == null || written == null) {
+			return attributes;
+		}
+
+		ObjectNode tree = objectMapper.valueToTree(attributes);
+		List<String> properties = new ArrayList<>();
+		tree.fieldNames().forEachRemaining(properties::add);
+
+		boolean filled = false;
+		for (String property : properties) {
+			if (written.contains(property)) {
+				continue;
+			}
+			Optional<Object> current = plainValue(target, property);
+			if (current.isPresent()) {
+				tree.set(property, objectMapper.valueToTree(current.get()));
+				filled = true;
+			}
+		}
+		return filled ? bindBack(tree, attributes.getClass()) : attributes;
+	}
+
+	private static Optional<Object> plainValue(Object bean, String property) {
+		String getter = "get"
+			+ Character.toUpperCase(property.charAt(0)) + property.substring(1);
+		try {
+			Object value = bean.getClass().getMethod(getter).invoke(bean);
+			boolean plain = value instanceof CharSequence
+				|| value instanceof Number
+				|| value instanceof Boolean
+				|| value instanceof Enum<?>;
+			return plain ? Optional.of(value) : Optional.empty();
+		}
+		catch (ReflectiveOperationException e) {
+			return Optional.empty();
+		}
 	}
 
 	/**
@@ -489,10 +557,11 @@ public class ConfigImporter {
 		}
 
 		ObjectNode tree = objectMapper.valueToTree(attributes);
-		boolean jsonConfigRedacted = false;
+		Set<String> redactedJsonFields = new LinkedHashSet<>();
 		for (String path : redactedFields) {
-			if (path.startsWith("jsonConfig.")) {
-				jsonConfigRedacted = true;
+			String jsonField = jsonFieldOf(path);
+			if (jsonField != null) {
+				redactedJsonFields.add(jsonField);
 			}
 			else {
 				Object value = readProperty(target, path);
@@ -504,15 +573,15 @@ public class ConfigImporter {
 				}
 			}
 		}
-		if (jsonConfigRedacted) {
-			JsonNode config = parsedJsonConfig(tree);
+		for (String jsonField : redactedJsonFields) {
+			JsonNode config = parsedJson(tree, jsonField);
 			if (config != null) {
-				Object targetConfig = readProperty(target, "jsonConfig");
+				Object targetConfig = readProperty(target, jsonField);
 				JsonNode targetTree = targetConfig == null
 					? null
 					: tryParse(targetConfig.toString());
 				restorePlaceholders(config, targetTree);
-				tree.put("jsonConfig", writeString(config));
+				tree.put(jsonField, writeString(config));
 			}
 		}
 		return bindBack(tree, attributes.getClass());
@@ -562,20 +631,21 @@ public class ConfigImporter {
 		}
 
 		ObjectNode tree = objectMapper.valueToTree(attributes);
-		boolean jsonConfigRedacted = false;
+		Set<String> redactedJsonFields = new LinkedHashSet<>();
 		for (String path : redactedFields) {
-			if (path.startsWith("jsonConfig.")) {
-				jsonConfigRedacted = true;
+			String jsonField = jsonFieldOf(path);
+			if (jsonField != null) {
+				redactedJsonFields.add(jsonField);
 			}
 			else {
 				tree.remove(path);
 			}
 		}
-		if (jsonConfigRedacted) {
-			JsonNode config = parsedJsonConfig(tree);
+		for (String jsonField : redactedJsonFields) {
+			JsonNode config = parsedJson(tree, jsonField);
 			if (config != null) {
 				stripPlaceholders(config);
-				tree.put("jsonConfig", writeString(config));
+				tree.put(jsonField, writeString(config));
 			}
 		}
 		return bindBack(tree, attributes.getClass());
@@ -663,7 +733,7 @@ public class ConfigImporter {
 		boolean dryRun, boolean applied, ImportMode mode, ImportPlan plan,
 		List<MissingReference> missingReferences,
 		List<SecretToReenter> secretsToReenter, List<String> blockingErrors,
-		Map<String, Long> resolvedIds) {
+		List<String> warnings, Map<String, Long> resolvedIds) {
 
 		List<PlannedAction> actions = plan == null ? List.of() : plan.getActions();
 		int created =
@@ -675,7 +745,7 @@ public class ConfigImporter {
 
 		return new ImportReport(
 			dryRun, applied, mode, actions, created, overwritten, skipped,
-			missingReferences, secretsToReenter, blockingErrors, resolvedIds);
+			missingReferences, secretsToReenter, blockingErrors, warnings, resolvedIds);
 	}
 
 	/**

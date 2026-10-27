@@ -40,8 +40,12 @@ import java.util.Map;
  * @param secretsToReenter  redacted secrets on created entities the operator must
  *                          re-enter (on overwrite the target's secret survives)
  * @param blockingErrors    reasons the import cannot proceed: a cycle, a created
- *                          entity with no target for a required association, or
- *                          an entity that fails validation when written
+ *                          entity with no target for a required association, an
+ *                          entity that fails validation when written, or a knn
+ *                          datasource that could not create its first index
+ * @param warnings          what the operator should know without the import being
+ *                          stopped (e.g. an index configuration that does not
+ *                          change the dataIndex a datasource already has)
  * @param resolvedIds       package handle to the target-tenant id it resolved to,
  *                          populated only on apply
  */
@@ -56,6 +60,7 @@ public record ImportReport(
 	List<MissingReference> missingReferences,
 	List<SecretToReenter> secretsToReenter,
 	List<String> blockingErrors,
+	List<String> warnings,
 	Map<String, Long> resolvedIds) {
 
 	public ImportReport {
@@ -63,6 +68,7 @@ public record ImportReport(
 		missingReferences = List.copyOf(missingReferences);
 		secretsToReenter = List.copyOf(secretsToReenter);
 		blockingErrors = List.copyOf(blockingErrors);
+		warnings = List.copyOf(warnings);
 		resolvedIds = Map.copyOf(resolvedIds);
 	}
 

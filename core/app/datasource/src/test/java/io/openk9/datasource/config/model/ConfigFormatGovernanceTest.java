@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
  */
 class ConfigFormatGovernanceTest {
 
-	private static final String EXPECTED_SCHEMA_VERSION = "1.1";
+	private static final String EXPECTED_SCHEMA_VERSION = "1.2";
 
 	private static final Set<String> EXPECTED_TYPES = Set.of(
 		"BUCKET",
