@@ -21,6 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
@@ -44,17 +45,45 @@ public interface SchedulerMapper {
 		@Mapping(source = "scheduler.oldDataIndex.name", target = "oldDataIndexName"),
 		@Mapping(source = "scheduler.newDataIndex.id", target = "newDataIndexId"),
 		@Mapping(source = "scheduler.newDataIndex.name", target = "newDataIndexName"),
-		@Mapping(source = "scheduler.datasource", target = "schedulingType"),
+		@Mapping(source = "scheduler", target = "schedulingType"),
 		@Mapping(source = "tenantId", target = "tenantId")
 	})
 	SchedulerDTO map(Scheduler scheduler, String tenantId);
 
 	EnrichItemDTO map(EnrichItem source);
 
+	/**
+	 * Chooses the kind of scheduling from the dataIndex the documents are
+	 * written to: the one being created when there is one, because a
+	 * datasource that has never been indexed does not point at any yet.
+	 *
+	 * @param scheduler the scheduler to choose the scheduling for
+	 * @return the kind of scheduling
+	 */
+	default SchedulingType map(Scheduler scheduler) {
+
+		var dataIndex = scheduler.getNewDataIndex() != null
+			? scheduler.getNewDataIndex()
+			: scheduler.getDatasource().getDataIndex();
+
+		return schedulingTypeOf(scheduler.getDatasource(), dataIndex);
+	}
+
+	/**
+	 * Chooses the kind of scheduling from the dataIndex the datasource
+	 * currently points at.
+	 *
+	 * @param datasource the datasource to choose the scheduling for
+	 * @return the kind of scheduling
+	 */
 	default SchedulingType map(Datasource datasource) {
+		return schedulingTypeOf(datasource, datasource.getDataIndex());
+	}
+
+	private static SchedulingType schedulingTypeOf(
+		Datasource datasource, DataIndex dataIndex) {
 
 		boolean isEnrich = datasource.getEnrichPipeline() != null;
-		var dataIndex = datasource.getDataIndex();
 		boolean isEmbedding = dataIndex != null
 			&& dataIndex.getKnnIndex() != null && dataIndex.getKnnIndex();
 

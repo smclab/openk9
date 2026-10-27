@@ -26,10 +26,12 @@ import java.util.Set;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolationException;
 
-import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.EntitiesUtils;
+import io.openk9.datasource.Initializer;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.base.AnalyzerDTO;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 
@@ -39,6 +41,8 @@ import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 public class DocTypeServiceTest {
+
+	private static final String ENTITY_NAME_PREFIX = "DocTypeServiceTest - ";
 
 	@Inject
 	AnalyzerService analyzerService;
@@ -50,7 +54,53 @@ public class DocTypeServiceTest {
 	DocTypeFieldService docTypeFieldService;
 
 	@Inject
+	DatasourceService datasourceService;
+
+	@Inject
+	PluginDriverService pluginDriverService;
+
+	@Inject
 	Mutiny.SessionFactory sessionFactory;
+
+	@Test
+	void should_delete_docType_used_by_the_shape_of_a_datasource() {
+		// 1. A datasource that asks for its first dataIndex to use the docType
+		var docType = docTypeService.create(DocTypeDTO.builder()
+				.name(ENTITY_NAME_PREFIX + "docType")
+				.build())
+			.await().indefinitely();
+
+		var pluginDriver = pluginDriverService
+			.findByName("public", Initializer.INIT_DATASOURCE_PLUGIN)
+			.await().indefinitely();
+
+		var datasourceId = datasourceService.createDatasourceConnection(
+				DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
+					.name(ENTITY_NAME_PREFIX + "datasource")
+					.pluginDriverId(pluginDriver.getId())
+					.docTypeIds(Set.of(docType.getId()))
+					.dataIndex(DataIndexDTO.builder()
+						.name(ENTITY_NAME_PREFIX + "dataIndex")
+						.build())
+					.build())
+			.await().indefinitely().getEntity().getId();
+
+		// 2. The docType can be deleted
+		docTypeService.deleteById(docType.getId()).await().indefinitely();
+
+		assertNull(docTypeService.findById(docType.getId()).await().indefinitely());
+
+		// 3. And the datasource no longer asks for it
+		var datasource = sessionFactory.withSession(session -> datasourceService
+			.findById(session, datasourceId)
+			.call(found -> session.fetch(found.getDocTypes()))
+		).await().indefinitely();
+
+		assertEquals(0, datasource.getDocTypes().size());
+
+		// cleanup
+		datasourceService.deleteById(datasourceId).await().indefinitely();
+	}
 
 	@Test
 	void should_delete_docType() {

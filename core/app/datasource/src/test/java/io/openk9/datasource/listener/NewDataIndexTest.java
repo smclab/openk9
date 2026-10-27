@@ -119,4 +119,60 @@ class NewDataIndexTest {
 		assertTrue(newDataIndex.getChunkHeaderFields().isEmpty());
 	}
 
+	@Test
+	@DisplayName("Should take the shape the datasource asks for on a first indexing")
+	void should_take_the_shape_of_the_datasource_for_a_first_indexing() {
+		// a datasource configured away from the defaults, never indexed
+		var embeddingDocTypeField = new DocTypeField();
+		var docType = new DocType();
+
+		var datasource = new Datasource();
+		datasource.setKnnIndex(true);
+		datasource.setChunkType(
+			EmbeddingOuterClass.ChunkType.CHUNK_TYPE_TEXT_SPLITTER);
+		datasource.setChunkWindowSize(3);
+		datasource.setEmbeddingJsonConfig(EMBEDDING_JSON_CONFIG);
+		datasource.setEmbeddingDocTypeField(embeddingDocTypeField);
+		datasource.setSettings(SETTINGS);
+		datasource.setDocTypes(new LinkedHashSet<>(Set.of(docType)));
+
+		// the dataIndex of the first indexing
+		var newDataIndex = JobScheduler.newDataIndex(
+			NEW_DATA_INDEX_NAME, datasource, null);
+
+		// it is created the way the datasource asks for
+		assertTrue(newDataIndex.getKnnIndex());
+		assertEquals(
+			EmbeddingOuterClass.ChunkType.CHUNK_TYPE_TEXT_SPLITTER,
+			newDataIndex.getChunkType()
+		);
+		assertEquals(3, newDataIndex.getChunkWindowSize());
+		assertEquals(EMBEDDING_JSON_CONFIG, newDataIndex.getEmbeddingJsonConfig());
+		assertEquals(embeddingDocTypeField, newDataIndex.getEmbeddingDocTypeField());
+		assertEquals(SETTINGS, newDataIndex.getSettings());
+		assertEquals(Set.of(docType), newDataIndex.getDocTypes());
+
+		// the docTypes are copied, not shared with the datasource
+		assertNotSame(datasource.getDocTypes(), newDataIndex.getDocTypes());
+	}
+
+	@Test
+	@DisplayName("Should ignore the shape of the datasource when there is a dataIndex")
+	void should_ignore_the_shape_of_the_datasource_when_replacing_a_data_index() {
+		// the datasource asks for a knn index, but the one it has is not
+		var datasource = new Datasource();
+		datasource.setKnnIndex(true);
+		datasource.setChunkWindowSize(9);
+
+		var oldDataIndex = new DataIndex();
+		oldDataIndex.setDatasource(datasource);
+
+		var newDataIndex = JobScheduler.newDataIndex(
+			NEW_DATA_INDEX_NAME, datasource, oldDataIndex);
+
+		// a reindex changes the index and not its configuration
+		assertFalse(newDataIndex.getKnnIndex());
+		assertEquals(0, newDataIndex.getChunkWindowSize());
+	}
+
 }

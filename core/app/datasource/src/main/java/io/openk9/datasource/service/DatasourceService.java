@@ -18,6 +18,7 @@
 package io.openk9.datasource.service;
 
 import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -39,10 +40,13 @@ import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import io.openk9.datasource.model.dto.request.CreateDatasourceDTO;
 import io.openk9.datasource.model.dto.request.UpdateDatasourceDTO;
@@ -63,6 +67,8 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 	@Inject
 	DataIndexService dataIndexService;
+	@Inject
+	DocTypeService docTypeService;
 	@Inject
 	EnrichPipelineService enrichPipelineService;
 	@Inject
@@ -140,6 +146,9 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					).flatMap(enrichPipeline -> {
 						var datasource = mapper.create(datasourceConnection);
 
+						setFirstDataIndexShape(
+							session, datasource, firstDataIndexOf(datasourceConnection));
+
 						var pluginDriverId = datasourceConnection.getPluginDriverId();
 						var pluginDriver = session.getReference(PluginDriver.class, pluginDriverId);
 
@@ -150,7 +159,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					}).flatMap(datasource -> {
 
 						var datasourceId = datasource.getId();
-						var dataIndexDTO = createDatasourceDTO.getDataIndex();
+						var dataIndexDTO = firstDataIndexOf(createDatasourceDTO);
 
 						return dataIndexService.create(session, datasourceId, dataIndexDTO)
 							.invoke(datasource::setDataIndex)
@@ -167,6 +176,93 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.transform(BaseK9EntityService::toResponse)
 			.onFailure()
 			.transform(K9Error::new);
+	}
+
+	/**
+	 * Composes the dataIndex a datasource is created with. Its name and
+	 * description are the ones of the nested dataIndex, while what shapes it
+	 * is the datasource's own configuration when it specifies one, and the
+	 * nested dataIndex's otherwise, so that a client that only describes the
+	 * dataIndex keeps working.
+	 */
+	private static DataIndexDTO firstDataIndexOf(CreateDatasourceDTO dto) {
+		var nested = dto.getDataIndex();
+
+		return nested.toBuilder()
+			.knnIndex(firstNonNull(dto.getKnnIndex(), nested.getKnnIndex()))
+			.chunkType(firstNonNull(dto.getChunkType(), nested.getChunkType()))
+			.chunkWindowSize(
+				firstNonNull(dto.getChunkWindowSize(), nested.getChunkWindowSize()))
+			.embeddingJsonConfig(firstNonNull(
+				dto.getEmbeddingJsonConfig(), nested.getEmbeddingJsonConfig()))
+			.embeddingDocTypeFieldId(firstNonNull(
+				dto.getEmbeddingDocTypeFieldId(), nested.getEmbeddingDocTypeFieldId()))
+			.docTypeIds(firstNonNull(dto.getDocTypeIds(), nested.getDocTypeIds()))
+			.settings(firstNonNull(dto.getSettings(), nested.getSettings()))
+			.build();
+	}
+
+	private static <T> T firstNonNull(T value, T fallback) {
+		return value != null ? value : fallback;
+	}
+
+	/**
+	 * Records on a datasource the shape of its first dataIndex, so that it
+	 * is exported with the datasource and a datasource that is imported
+	 * without a dataIndex creates one the same way.
+	 */
+	private static void setFirstDataIndexShape(
+		Mutiny.Session session, Datasource datasource, DataIndexDTO dataIndex) {
+
+		datasource.setKnnIndex(dataIndex.getKnnIndex());
+		datasource.setChunkType(dataIndex.getChunkType());
+		datasource.setChunkWindowSize(dataIndex.getChunkWindowSize());
+		datasource.setEmbeddingJsonConfig(dataIndex.getEmbeddingJsonConfig());
+		datasource.setSettings(dataIndex.getSettings());
+
+		setFirstDataIndexAssociations(
+			session,
+			datasource,
+			dataIndex.getEmbeddingDocTypeFieldId(),
+			dataIndex.getDocTypeIds()
+		);
+	}
+
+	/**
+	 * Refuses an intent that could never produce a valid dataIndex: a knn
+	 * dataIndex needs the field to embed. It is checked on the resulting
+	 * state of the datasource, so what an update omits counts as it was.
+	 *
+	 * @throws ValidationException if knnIndex is true and no field is defined
+	 */
+	private static void checkKnnIntent(Datasource datasource) {
+		if (Boolean.TRUE.equals(datasource.getKnnIndex())
+			&& datasource.getEmbeddingDocTypeField() == null) {
+
+			throw new ValidationException(
+				"Ambiguous Request: knnIndex is set to true but embeddingDocTypeFieldId" +
+				" is not defined. Add an embeddingDocTypeFieldId or disable knnIndex");
+		}
+	}
+
+	/**
+	 * Records on a datasource the field and the docTypes its first dataIndex
+	 * is made of. What is not given is left as it is.
+	 */
+	private static void setFirstDataIndexAssociations(
+		Mutiny.Session session, Datasource datasource,
+		Long embeddingDocTypeFieldId, Set<Long> docTypeIds) {
+
+		if (embeddingDocTypeFieldId != null) {
+			datasource.setEmbeddingDocTypeField(session.getReference(
+				DocTypeField.class, embeddingDocTypeFieldId));
+		}
+
+		if (docTypeIds != null) {
+			datasource.setDocTypes(docTypeIds.stream()
+				.map(docTypeId -> session.getReference(DocType.class, docTypeId))
+				.collect(Collectors.toCollection(LinkedHashSet::new)));
+		}
 	}
 
 	@Override
@@ -284,6 +380,44 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			s,
 			datasourceId
 		).flatMap(datasource -> s.fetch(datasource.getDataIndex())));
+	}
+
+	/**
+	 * Reads the docTypes the first dataIndex of a datasource is composed of.
+	 *
+	 * @param id the id of the datasource
+	 * @return the connection of the docTypes, or of the ones that are not
+	 * bound when {@code notEqual} is true
+	 */
+	public Uni<Connection<DocType>> getDocTypesConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id,
+			Datasource_.DOC_TYPES,
+			DocType.class,
+			docTypeService.getSearchFields(),
+			after,
+			before,
+			first,
+			last,
+			searchText,
+			sortByList,
+			notEqual
+		);
+	}
+
+	/**
+	 * Reads the field the first dataIndex of a datasource embeds.
+	 *
+	 * @param id the id of the datasource
+	 * @return the field, {@code null} when the datasource has none
+	 */
+	public Uni<DocTypeField> getEmbeddingDocTypeField(long id) {
+		return sessionFactory.withTransaction((s, t) -> findById(s, id)
+			.flatMap(datasource -> s.fetch(datasource.getEmbeddingDocTypeField()))
+		);
 	}
 
 	public Uni<Connection<DataIndex>> getDataIndexConnection(
@@ -493,6 +627,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 		return getCurrentTenant(s)
 			.flatMap(tenantId -> super.update(s, datasourceId, datasourceDTO)
+				.invoke(DatasourceService::checkKnnIntent)
 				.invoke(datasource -> eventBus.send(
 						SchedulerInitializer.UPDATE_SCHEDULER,
 						new SchedulerInitializer.SchedulerRequest(
@@ -575,6 +710,13 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 						DataIndex.class, updateConnectionDTO.getDataIndexId()))
 					.invoke(datasource::setDataIndex)
 					.map(__ -> mapper.update(datasource, updateConnectionDTO))
+					.invoke(updated -> setFirstDataIndexAssociations(
+						s,
+						updated,
+						updateConnectionDTO.getEmbeddingDocTypeFieldId(),
+						updateConnectionDTO.getDocTypeIds()
+					))
+					.invoke(DatasourceService::checkKnnIntent)
 					.chain(newState -> merge(s, newState)))
 				.invoke(datasource -> getProcessor().onNext(K9EntityEvent.of(
 					K9EntityEvent.EventType.UPDATE, datasource)
@@ -661,6 +803,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 		return getCurrentTenant(s)
 			.flatMap(tenantId -> super.patch(s, datasourceId, datasourceDTO)
+				.invoke(DatasourceService::checkKnnIntent)
 				.invoke(datasource -> eventBus.send(
 						SchedulerInitializer.UPDATE_SCHEDULER,
 						new SchedulerInitializer.SchedulerRequest(

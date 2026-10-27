@@ -299,7 +299,9 @@ public class JobScheduler {
 	 * <p>
 	 * Everything that describes how documents are indexed is inherited from
 	 * the dataIndex being replaced, so that a reindex changes the index and
-	 * not its configuration. The dataIndex is only built here: creating it,
+	 * not its configuration. A datasource that has never been indexed has
+	 * nothing to inherit from, so it takes the shape its own configuration
+	 * asks for. The dataIndex is only built here: creating it,
 	 * validating it and generating its index template belong to
 	 * {@code DataIndexService}.
 	 *
@@ -327,6 +329,20 @@ public class JobScheduler {
 				new ArrayList<>(oldDataIndex.getChunkHeaderFields()));
 
 			Set<DocType> docTypes = oldDataIndex.getDocTypes();
+
+			if (docTypes != null) {
+				newDataIndex.setDocTypes(new LinkedHashSet<>(docTypes));
+			}
+		}
+		else {
+			newDataIndex.setKnnIndex(datasource.getKnnIndex());
+			newDataIndex.setChunkType(datasource.getChunkType());
+			newDataIndex.setChunkWindowSize(datasource.getChunkWindowSize());
+			newDataIndex.setEmbeddingJsonConfig(datasource.getEmbeddingJsonConfig());
+			newDataIndex.setEmbeddingDocTypeField(datasource.getEmbeddingDocTypeField());
+			newDataIndex.setSettings(datasource.getSettings());
+
+			Set<DocType> docTypes = datasource.getDocTypes();
 
 			if (docTypes != null) {
 				newDataIndex.setDocTypes(new LinkedHashSet<>(docTypes));

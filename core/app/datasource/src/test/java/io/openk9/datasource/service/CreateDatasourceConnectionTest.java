@@ -23,12 +23,18 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
 
 import io.openk9.datasource.Initializer;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.exception.K9Error;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -57,6 +63,12 @@ class CreateDatasourceConnectionTest {
 
 	@InjectSpy(delegate = true)
 	DataIndexService dataIndexService;
+
+	@Inject
+	DocTypeFieldService docTypeFieldService;
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
 
 	private Long pluginDriverId;
 	private Long enrichPipelineId;
@@ -229,6 +241,109 @@ class CreateDatasourceConnectionTest {
 		);
 	}
 
+	@Test
+	void should_record_the_shape_of_the_first_data_index_on_the_datasource() {
+		// 1. The shape is given on the datasource
+		var docTypeField = sampleTextDocTypeField();
+		var docTypeId = docTypeField.getDocType().getId();
+
+		var response = datasourceService.createDatasourceConnection(
+			DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
+				.name(DATASOURCE_NAME)
+				.pluginDriverId(pluginDriverId)
+				.chunkWindowSize(3)
+				.embeddingJsonConfig("{\"batch\": 8}")
+				.embeddingDocTypeFieldId(docTypeField.getId())
+				.docTypeIds(Set.of(docTypeId))
+				.dataIndex(DataIndexDTO.builder()
+					.name(DATA_INDEX_NAME)
+					.build())
+				.build()
+		).await().indefinitely();
+
+		var datasourceId = response.getEntity().getId();
+
+		// 2. The datasource records it
+		var datasource = sessionFactory.withSession(session -> datasourceService
+			.findById(session, datasourceId)
+			.call(found -> session.fetch(found.getDocTypes()))
+			.call(found -> session.fetch(found.getEmbeddingDocTypeField()))
+		).await().indefinitely();
+
+		Assertions.assertFalse(datasource.getKnnIndex());
+		Assertions.assertEquals(3, datasource.getChunkWindowSize());
+		Assertions.assertEquals("{\"batch\": 8}", datasource.getEmbeddingJsonConfig());
+		Assertions.assertEquals(
+			docTypeField.getId(), datasource.getEmbeddingDocTypeField().getId());
+		Assertions.assertEquals(
+			Set.of(docTypeId),
+			datasource.getDocTypes().stream()
+				.map(K9Entity::getId)
+				.collect(Collectors.toSet())
+		);
+
+		// 3. And the first dataIndex is created with it
+		then(dataIndexService).should().create(
+			anySession(),
+			eq(datasourceId),
+			argThat((DataIndexDTO dto) ->
+				dto.getName().equals(DATA_INDEX_NAME)
+					&& dto.getChunkWindowSize() == 3
+					&& dto.getEmbeddingDocTypeFieldId().equals(docTypeField.getId())
+					&& dto.getDocTypeIds().equals(Set.of(docTypeId)))
+		);
+	}
+
+	@Test
+	void should_take_the_shape_from_the_nested_data_index_when_not_given() {
+		// a client that only describes the dataIndex
+		var response = datasourceService.createDatasourceConnection(
+			DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
+				.name(DATASOURCE_NAME)
+				.pluginDriverId(pluginDriverId)
+				.dataIndex(DataIndexDTO.builder()
+					.name(DATA_INDEX_NAME)
+					.chunkWindowSize(5)
+					.build())
+				.build()
+		).await().indefinitely();
+
+		var datasourceId = response.getEntity().getId();
+
+		// the datasource records what the nested dataIndex asked for
+		var datasource = datasourceService.findById(datasourceId)
+			.await().indefinitely();
+
+		Assertions.assertEquals(5, datasource.getChunkWindowSize());
+
+		then(dataIndexService).should().create(
+			anySession(),
+			eq(datasourceId),
+			argThat((DataIndexDTO dto) -> dto.getChunkWindowSize() == 5)
+		);
+	}
+
+	@Test
+	void should_prefer_the_shape_of_the_datasource_over_the_nested_data_index() {
+		var response = datasourceService.createDatasourceConnection(
+			DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
+				.name(DATASOURCE_NAME)
+				.pluginDriverId(pluginDriverId)
+				.chunkWindowSize(2)
+				.dataIndex(DataIndexDTO.builder()
+					.name(DATA_INDEX_NAME)
+					.chunkWindowSize(5)
+					.build())
+				.build()
+		).await().indefinitely();
+
+		var datasource = datasourceService
+			.findById(response.getEntity().getId())
+			.await().indefinitely();
+
+		Assertions.assertEquals(2, datasource.getChunkWindowSize());
+	}
+
 	@AfterEach
 	void tearDown() {
 		this.pluginDriverId = null;
@@ -253,6 +368,17 @@ class CreateDatasourceConnectionTest {
 		catch (NoResultException e) {
 			// enrichPipeline already does not exist
 		}
+	}
+
+	private DocTypeField sampleTextDocTypeField() {
+		return sessionFactory.withSession(session -> docTypeFieldService
+			.findAll(session)
+			.map(docTypeFields -> docTypeFields.stream()
+				.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
+				.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
+				.findFirst()
+				.orElseThrow())
+		).await().indefinitely();
 	}
 
 	private static Mutiny.Session anySession() {

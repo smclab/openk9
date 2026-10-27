@@ -23,12 +23,15 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
+import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
+import jakarta.validation.ValidationException;
 
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
+import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
 import io.openk9.datasource.model.dto.request.UpdateDatasourceDTO;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
@@ -62,6 +65,8 @@ class UpdateDatasourceConnectionTest {
 	DataIndexService dataIndexService;
 	@Inject
 	DocTypeService docTypeService;
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
 
 	private long datasourceId;
 	private long pipelineId;
@@ -174,6 +179,99 @@ class UpdateDatasourceConnectionTest {
 
 	}
 
+	// First dataIndex shape tests
+
+	@Test
+	void shape_should_be_updated_when_given() {
+		// 1. The datasource asks for another shape of its first dataIndex
+		var docTypeId = datasourceDocTypeIds().iterator().next();
+
+		datasourceService.updateDatasourceConnection(
+			UpdateDatasourceDTO.builder()
+				.name(DATASOURCE)
+				.datasourceId(datasourceId)
+				.dataIndexId(dataIndexId)
+				.chunkType(EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT)
+				.chunkWindowSize(4)
+				.embeddingJsonConfig("{\"batch\": 8}")
+				.docTypeIds(Set.of(docTypeId))
+				.build()
+		).await().indefinitely();
+
+		// 2. The datasource records it
+		var datasource = datasourceService.findById(datasourceId)
+			.await().indefinitely();
+
+		Assertions.assertEquals(
+			EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT, datasource.getChunkType());
+		Assertions.assertEquals(4, datasource.getChunkWindowSize());
+		Assertions.assertEquals("{\"batch\": 8}", datasource.getEmbeddingJsonConfig());
+		Assertions.assertEquals(Set.of(docTypeId), datasourceDocTypeIds());
+	}
+
+	@Test
+	void shape_should_be_kept_when_omitted() {
+		// the datasource was created with a shape
+		var docTypeIds = datasourceDocTypeIds();
+
+		Assertions.assertFalse(docTypeIds.isEmpty());
+
+		// an update that says nothing about it
+		datasourceService.updateDatasourceConnection(
+			UpdateDatasourceDTO.builder()
+				.name(DATASOURCE)
+				.datasourceId(datasourceId)
+				.dataIndexId(dataIndexId)
+				.build()
+		).await().indefinitely();
+
+		// leaves it as it is
+		var datasource = datasourceService.findById(datasourceId)
+			.await().indefinitely();
+
+		Assertions.assertEquals(
+			EmbeddingOuterClass.ChunkType.CHUNK_TYPE_TEXT_SPLITTER,
+			datasource.getChunkType()
+		);
+		Assertions.assertEquals(docTypeIds, datasourceDocTypeIds());
+	}
+
+	@Test
+	void knn_should_be_refused_without_embedding_field() {
+		var response = datasourceService.updateDatasourceConnection(
+			UpdateDatasourceDTO.builder()
+				.name(DATASOURCE)
+				.datasourceId(datasourceId)
+				.dataIndexId(dataIndexId)
+				.knnIndex(true)
+				.build()
+		).await().indefinitely();
+
+		Assertions.assertNull(response.getEntity());
+		Assertions.assertFalse(response.getFieldValidators().isEmpty());
+
+		Assertions.assertFalse(datasourceService.findById(datasourceId)
+			.await().indefinitely().getKnnIndex());
+	}
+
+	@Test
+	void knn_should_be_refused_on_plain_update_without_embedding_field() {
+		var failure = Assertions.assertThrows(
+			ValidationException.class,
+			() -> datasourceService.update(
+				datasourceId,
+				DatasourceDTO.builder()
+					.name(DATASOURCE)
+					.knnIndex(true)
+					.build()
+			).await().indefinitely()
+		);
+
+		Assertions.assertTrue(failure.getMessage().contains("knnIndex"));
+		Assertions.assertFalse(datasourceService.findById(datasourceId)
+			.await().indefinitely().getKnnIndex());
+	}
+
 	@BeforeEach
 	void setup() {
 
@@ -260,6 +358,16 @@ class UpdateDatasourceConnectionTest {
 	}
 
 	// Utils
+	private Set<Long> datasourceDocTypeIds() {
+		return sessionFactory.withSession(session -> datasourceService
+			.findById(session, datasourceId)
+			.call(found -> session.fetch(found.getDocTypes()))
+			.map(found -> found.getDocTypes().stream()
+				.map(DocType::getId)
+				.collect(Collectors.toSet()))
+		).await().indefinitely();
+	}
+
 	private static boolean hasEnrichPipeline(Datasource datasource) {
 		return datasource != null && datasource.getEnrichPipeline() != null;
 	}

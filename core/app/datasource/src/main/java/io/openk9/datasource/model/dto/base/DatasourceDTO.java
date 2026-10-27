@@ -19,7 +19,9 @@ package io.openk9.datasource.model.dto.base;
 
 import io.openk9.datasource.validation.ValidQuartzCron;
 import io.openk9.datasource.validation.json.Json;
+import io.openk9.ml.grpc.EmbeddingOuterClass;
 
+import io.smallrye.graphql.api.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -54,5 +56,27 @@ public class DatasourceDTO extends K9EntityDTO {
 	@ValidQuartzCron
 	@Description("Cron quartz expression to define scheduling of datasource")
 	private String scheduling;
+	@Nullable
+	@Description("""
+		Define if the first dataIndex is a knn index, this property enables
+		vector similarity search features on it. It and the other properties
+		that shape the first dataIndex are read only when the datasource has
+		no dataIndex to inherit from. When omitted on update, the current
+		value is kept.""")
+	private Boolean knnIndex;
+	@Nullable
+	@Description("The number of chunks before and after every chunk.")
+	private Integer chunkWindowSize;
+	@Nullable
+	@Description("The chunk strategy to apply.")
+	private EmbeddingOuterClass.ChunkType chunkType;
+	@Json
+	@Nullable
+	@Description("The configurations used by the embedding model, if needed.")
+	private String embeddingJsonConfig;
+	@Json
+	@Nullable
+	@Description("The settings that will be used when the associated indexTemplate is created.")
+	private String settings;
 
 }

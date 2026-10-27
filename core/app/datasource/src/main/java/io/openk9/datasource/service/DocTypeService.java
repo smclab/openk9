@@ -42,6 +42,8 @@ import io.openk9.datasource.model.AclMapping_;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
@@ -137,7 +139,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	 *   <li>Removes parent and analyzer references from DocTypeFields</li>
 	 *   <li>Deletes all DocTypeFields associated with the DocType</li>
 	 *   <li>Dereferences any DocTypeTemplate connection</li>
-	 *   <li>Removes the DocType from associated DataIndex entities</li>
+	 *   <li>Removes the DocType from associated DataIndex and Datasource entities</li>
 	 *   <li>Finally deletes the DocType itself</li>
 	 * </ol>
 	 *
@@ -225,7 +227,24 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		SetJoin<DataIndex, DocType> join = dataIndexFrom.join(DataIndex_.docTypes, JoinType.INNER);
 		dataIndexQuery.where(cb.equal(join.get(DocType_.id), entityId));
 
+		// queries datasource
+		CriteriaQuery<Datasource> datasourceQuery = cb.createQuery(Datasource.class);
+		Root<Datasource> datasourceFrom = datasourceQuery.from(Datasource.class);
+		datasourceFrom.fetch(Datasource_.docTypes, JoinType.INNER);
+		SetJoin<Datasource, DocType> datasourceJoin =
+			datasourceFrom.join(Datasource_.docTypes, JoinType.INNER);
+		datasourceQuery.where(cb.equal(datasourceJoin.get(DocType_.id), entityId));
+
 		return sessionFactory.withTransaction((s, t) -> findById(s, entityId)
+			.call(docType -> s.createQuery(datasourceQuery)
+				.getResultList()
+				.flatMap(datasources -> {
+					for (Datasource datasource : datasources) {
+						datasource.getDocTypes().remove(docType);
+					}
+					return s.mergeAll(datasources.toArray());
+				})
+			)
 			.call(docType -> s.createQuery(dataIndexQuery)
 				.getResultList()
 				.flatMap(dataIndices -> {

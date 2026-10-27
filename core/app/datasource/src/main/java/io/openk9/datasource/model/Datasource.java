@@ -24,6 +24,8 @@ import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -35,6 +37,7 @@ import jakarta.persistence.Table;
 
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.validation.ValidQuartzCron;
+import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
@@ -53,6 +56,11 @@ import org.hibernate.type.SqlTypes;
 @RequiredArgsConstructor
 public class Datasource extends K9Entity {
 
+	private static final Boolean DEFAULT_KNN_INDEX = false;
+	private static final Integer DEFAULT_CHUNK_WINDOW_SIZE = 0;
+	private static final String DEFAULT_EMBEDDING_JSON_CONFIG = "{}";
+	private static final EmbeddingOuterClass.ChunkType DEFAULT_CHUNK_TYPE =
+		EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT;
 	private static final Boolean DEFAULT_PURGEABLE = false;
 	private static final String DEFAULT_PURGING = "0 0 1 * * ?";
 	private static final String DEFAULT_PURGE_MAX_AGE = "2d";
@@ -162,6 +170,58 @@ public class Datasource extends K9Entity {
 	@Column(name = "scheduling", nullable = false)
 	@ValidQuartzCron
 	private String scheduling = DEFAULT_SCHEDULING;
+
+	@Description("""
+		Whether the first dataIndex is a knn index. This and the other fields
+		of the shape of the first dataIndex are read only when the datasource
+		has no dataIndex to inherit from.""")
+	@Column(name = "knn_index", nullable = false)
+	private Boolean knnIndex = DEFAULT_KNN_INDEX;
+	@Description("The chunk strategy of the first dataIndex")
+	@Column(name = "chunk_type")
+	@Enumerated(EnumType.STRING)
+	private EmbeddingOuterClass.ChunkType chunkType = DEFAULT_CHUNK_TYPE;
+	@Description("The number of chunks before and after every chunk")
+	@Column(name = "chunk_window_size")
+	private Integer chunkWindowSize = DEFAULT_CHUNK_WINDOW_SIZE;
+	@Description("The configurations used by the embedding model, if needed")
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "embedding_json_config")
+	private String embeddingJsonConfig = DEFAULT_EMBEDDING_JSON_CONFIG;
+	@Description("The custom settings of the first dataIndex, as a JSON object")
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "settings")
+	private String settings;
+	@ToString.Exclude
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "embedding_doc_type_field_id", referencedColumnName = "id")
+	@JsonIgnore
+	private DocTypeField embeddingDocTypeField;
+	@ManyToMany
+	@JoinTable(name = "datasource_doc_types",
+		joinColumns = @JoinColumn(name = "datasource_id", referencedColumnName = "id"),
+		inverseJoinColumns = @JoinColumn(name = "doc_types_id", referencedColumnName = "id"))
+	@ToString.Exclude
+	@JsonIgnore
+	private Set<DocType> docTypes = new LinkedHashSet<>();
+
+	public void setKnnIndex(Boolean knnIndex) {
+		this.knnIndex = Objects.requireNonNullElse(knnIndex, DEFAULT_KNN_INDEX);
+	}
+
+	public void setChunkType(EmbeddingOuterClass.ChunkType chunkType) {
+		this.chunkType = Objects.requireNonNullElse(chunkType, DEFAULT_CHUNK_TYPE);
+	}
+
+	public void setChunkWindowSize(Integer chunkWindowSize) {
+		this.chunkWindowSize =
+			Objects.requireNonNullElse(chunkWindowSize, DEFAULT_CHUNK_WINDOW_SIZE);
+	}
+
+	public void setEmbeddingJsonConfig(String embeddingJsonConfig) {
+		this.embeddingJsonConfig = Objects.requireNonNullElse(
+			embeddingJsonConfig, DEFAULT_EMBEDDING_JSON_CONFIG);
+	}
 
 	public void setPurgeable(Boolean purgeable) {
 		this.purgeable = Objects.requireNonNullElse(purgeable, DEFAULT_PURGEABLE);

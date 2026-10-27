@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.model.dto.request;
 
+import java.util.Set;
+
 import jakarta.validation.constraints.Positive;
 
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
@@ -51,5 +53,17 @@ public class UpdateDatasourceDTO extends DatasourceDTO {
 	@Positive
 	@Description("The dataIndex's id related to this datasource")
 	private long dataIndexId;
+
+	@Nullable
+	@Description("""
+		The field used during the text embedding of the first dataIndex,
+		must be a valid docTypeFieldId. When omitted, the current one is kept.""")
+	private Long embeddingDocTypeFieldId;
+
+	@Nullable
+	@Description("""
+		The list of documentType ids that the first dataIndex is composed of.
+		When omitted, the current ones are kept.""")
+	private Set<Long> docTypeIds;
 
 }

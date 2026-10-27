@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.model.dto.request;
 
+import java.util.Set;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -51,7 +53,21 @@ public class CreateDatasourceDTO extends DatasourceDTO {
 	private PipelineWithItemsDTO pipeline;
 
 	@NotNull
-	@Description("Configurations used to create the dataIndex")
+	@Description("""
+		The dataIndex to create. Its name and description are used as given;
+		the knnIndex, chunkType, chunkWindowSize, embeddingDocTypeFieldId,
+		embeddingJsonConfig, docTypeIds and settings it carries are the ones
+		the datasource does not specify.""")
 	private DataIndexDTO dataIndex;
+
+	@Nullable
+	@Description("""
+		The field used during the text embedding of the first dataIndex,
+		must be a valid docTypeFieldId.""")
+	private Long embeddingDocTypeFieldId;
+
+	@Nullable
+	@Description("The list of documentType ids that the first dataIndex is composed of.")
+	private Set<Long> docTypeIds;
 
 }

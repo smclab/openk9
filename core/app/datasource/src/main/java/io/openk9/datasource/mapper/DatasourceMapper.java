@@ -21,10 +21,42 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(
 	config = K9EntityMapper.class
 )
 public interface DatasourceMapper extends
 	K9EntityMapper<Datasource, DatasourceDTO> {
+
+	/**
+	 * Updates the datasource with what the request says. The properties that
+	 * shape its first dataIndex are optional in a request, and an omitted one
+	 * keeps its current value instead of going back to the default.
+	 */
+	@Override
+	@Mapping(
+		target = "knnIndex",
+		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+	)
+	@Mapping(
+		target = "chunkType",
+		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+	)
+	@Mapping(
+		target = "chunkWindowSize",
+		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+	)
+	@Mapping(
+		target = "embeddingJsonConfig",
+		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+	)
+	@Mapping(
+		target = "settings",
+		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+	)
+	Datasource update(@MappingTarget Datasource entity, DatasourceDTO dto);
+
 }

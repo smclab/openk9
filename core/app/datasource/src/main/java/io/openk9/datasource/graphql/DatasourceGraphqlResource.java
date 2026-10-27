@@ -26,6 +26,8 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.web.Response;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
@@ -113,6 +115,25 @@ public class DatasourceGraphqlResource {
 
 		return datasourceService.getDataIndexConnection(
 			datasource.getId(), after, before, first, last, searchText, sortByList, notEqual);
+	}
+
+	public Uni<Connection<DocType>> docTypes(
+		@Source Datasource datasource,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities")
+		@DefaultValue("false") boolean notEqual) {
+
+		return datasourceService.getDocTypesConnection(
+			datasource.getId(), after, before, first, last, searchText, sortByList,
+			notEqual);
+	}
+
+	public Uni<DocTypeField> embeddingDocTypeField(@Source Datasource datasource) {
+		return datasourceService.getEmbeddingDocTypeField(datasource.getId());
 	}
 
 	@Mutation

@@ -173,6 +173,8 @@ public class JobSchedulerService {
 						"select d " +
 						"from Datasource d " +
 						"join fetch d.pluginDriver " +
+						"left join fetch d.embeddingDocTypeField " +
+						"left join fetch d.docTypes " +
 						"left join fetch d.dataIndex di " +
 						"left join fetch di.embeddingDocTypeField edtf " +
 						"left join fetch di.docTypes " +
