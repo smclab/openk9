@@ -56,6 +56,7 @@ import {
   useCreateDataIndexMutation,
   useDataIndexQuery,
   useDataSourcesQuery,
+  useDatasourceIndexConfigLazyQuery,
   useDocumentTypesQuery,
   useUpdateIndexSettingsMutation,
 } from "../../graphql-generated";
@@ -158,6 +159,8 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   });
 
   const documentTypesQuery = useDocumentTypesQuery();
+
+  const [loadDatasourceIndexConfig] = useDatasourceIndexConfigLazyQuery({ fetchPolicy: "network-only" });
 
   const chunkTypeOptions = useMemo(
     () =>
@@ -298,6 +301,54 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         form.inputProps("docTypeIds").value?.includes(Number(edge?.node?.id)),
       ) || [],
     [documentTypesQuery.data, form.inputProps("docTypeIds").value],
+  );
+
+  /**
+   * Starts a new dataIndex from the configuration its datasource asks for. Only the
+   * fields still at their default are filled, so that what was already typed is
+   * never overwritten.
+   */
+  const prefillFromDatasource = useCallback(
+    async (datasourceId: string) => {
+      if (!isNew || !datasourceId) return;
+
+      const { data } = await loadDatasourceIndexConfig({ variables: { id: datasourceId } });
+      const config = data?.datasource;
+      if (!config) return;
+
+      const isDefault = <T,>(value: T | null | undefined, defaultValue: T) =>
+        value == null || JSON.stringify(value) === JSON.stringify(defaultValue);
+
+      if (isDefault(form.inputProps("knnIndex").value, DEFAULT_DATAINDEX_VALUES.knnIndex)) {
+        form.inputProps("knnIndex").onChange(config.knnIndex ?? false);
+      }
+      if (isDefault(form.inputProps("chunkType").value, DEFAULT_DATAINDEX_VALUES.chunkType) && config.chunkType) {
+        form.inputProps("chunkType").onChange(config.chunkType);
+      }
+      if (isDefault(form.inputProps("chunkWindowSize").value, DEFAULT_DATAINDEX_VALUES.chunkWindowSize)) {
+        form.inputProps("chunkWindowSize").onChange(config.chunkWindowSize ?? 0);
+      }
+      if (isDefault(form.inputProps("embeddingJsonConfig").value, DEFAULT_DATAINDEX_VALUES.embeddingJsonConfig)) {
+        form.inputProps("embeddingJsonConfig").onChange(config.embeddingJsonConfig || "{}");
+      }
+      if (isDefault(form.inputProps("settings").value, DEFAULT_DATAINDEX_VALUES.customSettings) && config.settings) {
+        setCustomSettings(prettyJson(config.settings));
+      }
+      if (!form.inputProps("embeddingDocTypeFieldId").value && config.embeddingDocTypeField) {
+        form.inputProps("embeddingDocTypeFieldId").onChange({
+          id: config.embeddingDocTypeField.id || "",
+          name: config.embeddingDocTypeField.name || "",
+        });
+      }
+      if (!form.inputProps("docTypeIds").value?.length) {
+        form.inputProps("docTypeIds").onChange(
+          config.docTypes?.edges
+            ?.map((edge) => (edge?.node?.id ? Number(edge.node.id) : null))
+            .filter((id): id is number => id !== null) || [],
+        );
+      }
+    },
+    [form, isNew, loadDatasourceIndexConfig],
   );
 
   const resetOptionalFields = useCallback(() => {
@@ -547,7 +598,10 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                   />
                   <AutocompleteDropdown
                     label={t("fields.associate-datasource")}
-                    onChange={(val) => form.inputProps("datasourceId").onChange({ id: val.id, name: val.name })}
+                    onChange={(val) => {
+                      form.inputProps("datasourceId").onChange({ id: val.id, name: val.name });
+                      prefillFromDatasource(val.id);
+                    }}
                     value={form.inputProps("datasourceId").value || { id: "", name: "" }}
                     disabled={isReadOnly}
                     onClear={() => form.inputProps("datasourceId").onChange(null)}

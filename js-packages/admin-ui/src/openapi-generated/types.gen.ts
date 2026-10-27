@@ -120,6 +120,7 @@ export type ImportReport = {
     missingReferences?: Array<MissingReference>;
     secretsToReenter?: Array<SecretToReenter>;
     blockingErrors?: Array<string>;
+    warnings?: Array<string>;
     resolvedIds?: {
         [key: string]: number;
     };

@@ -36,6 +36,7 @@ const REPORT: ImportReport = JSON.parse(`{
   "missingReferences": [],
   "secretsToReenter": [],
   "blockingErrors": [],
+  "warnings": ["Datasource 'ds' already has a dataIndex, which is kept as it is"],
   "resolvedIds": {}
 }`);
 
@@ -46,5 +47,14 @@ describe("the planned actions of the report", () => {
     expect(screen.getByText(/ENRICH_ITEM-82/)).toHaveTextContent("(existing id 82)");
     expect(screen.getByText(/ENRICH_PIPELINE_ITEM-83-82/)).not.toHaveTextContent("existing id");
     expect(screen.getByText(/ENRICH_PIPELINE-84/)).not.toHaveTextContent("existing id");
+  });
+});
+
+describe("the warnings of the report", () => {
+  test("are listed without turning the report into an error", () => {
+    render(<ImportReportPanel report={REPORT} />);
+
+    expect(screen.getByText(/already has a dataIndex/)).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveClass("MuiAlert-standardInfo");
   });
 });

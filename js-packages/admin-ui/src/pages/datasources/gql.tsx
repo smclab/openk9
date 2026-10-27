@@ -124,6 +124,12 @@ export const createDatasource = gql`
     $purging: String!
     $purgeMaxAge: String!
     $dataIndex: DataIndexDTOInput!
+    $knnIndex: Boolean
+    $chunkType: ChunkType
+    $chunkWindowSize: Int
+    $embeddingJsonConfig: String
+    $embeddingDocTypeFieldId: BigInteger
+    $docTypeIds: [BigInteger]
   ) {
     createDatasourceConnection(
       datasourceConnection: {
@@ -141,6 +147,12 @@ export const createDatasource = gql`
         purging: $purging
         purgeMaxAge: $purgeMaxAge
         dataIndex: $dataIndex
+        knnIndex: $knnIndex
+        chunkType: $chunkType
+        chunkWindowSize: $chunkWindowSize
+        embeddingJsonConfig: $embeddingJsonConfig
+        embeddingDocTypeFieldId: $embeddingDocTypeFieldId
+        docTypeIds: $docTypeIds
       }
     ) {
       entity {

@@ -350,6 +350,7 @@
           "missing-references": "Missing references (missingReferences)",
           "errors": "Blocking errors"
         },
+        "report-warnings-heading": "Warnings — the import goes on, but check what follows",
         "report-secrets-heading": "Secrets to enter again — they were not copied and have to be set by hand",
         "report-missing-heading": "Missing references — the package points outside itself",
         "report-title": {

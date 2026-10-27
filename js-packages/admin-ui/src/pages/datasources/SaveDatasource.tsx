@@ -219,23 +219,23 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           ...commonVariables,
           dataIndex: {
             ...(formValues.dataIndex?.description && { description: formValues.dataIndex.description }),
-            knnIndex: formValues?.vectorIndex?.knnIndex || false,
-            ...(formValues.vectorIndex?.docTypeIds && { docTypeIds: formValues.vectorIndex.docTypeIds }),
             name: formValues.dataIndex?.name || "",
-            ...(formValues?.vectorIndex?.chunkType && { chunkType: formValues?.vectorIndex?.chunkType }),
-            ...(formValues?.vectorIndex?.chunkWindowSize && {
-              chunkWindowSize: formValues?.vectorIndex?.chunkWindowSize,
-            }),
-            ...(formValues.vectorIndex?.embeddingDocTypeFieldId?.id && {
-              embeddingDocTypeFieldId: formValues.vectorIndex.embeddingDocTypeFieldId.id,
-            }),
             ...(formValues.vectorIndex?.chunkHeaderFields?.length && {
               chunkHeaderFieldIds: formValues.vectorIndex.chunkHeaderFields.map((field) => field.id),
             }),
-            ...(formValues.vectorIndex?.embeddingJsonConfig && {
-              embeddingJsonConfig: formValues.vectorIndex.embeddingJsonConfig,
-            }),
           },
+          knnIndex: formValues?.vectorIndex?.knnIndex || false,
+          ...(formValues.vectorIndex?.docTypeIds && { docTypeIds: formValues.vectorIndex.docTypeIds }),
+          ...(formValues?.vectorIndex?.chunkType && { chunkType: formValues?.vectorIndex?.chunkType }),
+          ...(formValues?.vectorIndex?.chunkWindowSize && {
+            chunkWindowSize: formValues?.vectorIndex?.chunkWindowSize,
+          }),
+          ...(formValues.vectorIndex?.embeddingDocTypeFieldId?.id && {
+            embeddingDocTypeFieldId: formValues.vectorIndex.embeddingDocTypeFieldId.id,
+          }),
+          ...(formValues.vectorIndex?.embeddingJsonConfig && {
+            embeddingJsonConfig: formValues.vectorIndex.embeddingJsonConfig,
+          }),
         },
         refetchQueries: ["DataSources"],
         onCompleted: () => {

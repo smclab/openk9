@@ -706,11 +706,37 @@ export type Connection_Tokenizer = {
 };
 
 export type CreateDatasourceDtoInput = {
-  /** Configurations used to create the dataIndex */
+  /** The chunk strategy to apply. */
+  chunkType?: InputMaybe<ChunkType>;
+  /** The number of chunks before and after every chunk. */
+  chunkWindowSize?: InputMaybe<Scalars['Int']>;
+  /**
+   * The dataIndex to create. Its name and description are used as given;
+   * the knnIndex, chunkType, chunkWindowSize, embeddingDocTypeFieldId,
+   * embeddingJsonConfig, docTypeIds and settings it carries are the ones
+   * the datasource does not specify.
+   */
   dataIndex: DataIndexDtoInput;
   description?: InputMaybe<Scalars['String']>;
+  /** The list of documentType ids that the first dataIndex is composed of. */
+  docTypeIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+  /**
+   * The field used during the text embedding of the first dataIndex,
+   * must be a valid docTypeFieldId.
+   */
+  embeddingDocTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
+  /** The configurations used by the embedding model, if needed. */
+  embeddingJsonConfig?: InputMaybe<Scalars['String']>;
   /** Json configuration with custom fields for datasource */
   jsonConfig?: InputMaybe<Scalars['String']>;
+  /**
+   * Define if the first dataIndex is a knn index, this property enables
+   * vector similarity search features on it. It and the other properties
+   * that shape the first dataIndex are read only when the datasource has
+   * no dataIndex to inherit from. When omitted on update, the current
+   * value is kept.
+   */
+  knnIndex?: InputMaybe<Scalars['Boolean']>;
   name: Scalars['String'];
   /** Pipeline to be created and associated (optional) */
   pipeline?: InputMaybe<PipelineWithItemsDtoInput>;
@@ -732,6 +758,8 @@ export type CreateDatasourceDtoInput = {
   schedulable?: InputMaybe<Scalars['Boolean']>;
   /** Cron quartz expression to define scheduling of datasource */
   scheduling?: InputMaybe<Scalars['String']>;
+  /** The settings that will be used when the associated indexTemplate is created. */
+  settings?: InputMaybe<Scalars['String']>;
 };
 
 export type CreateRagConfigurationDtoInput = {
@@ -849,14 +877,28 @@ export type DataIndexDtoInput = {
 
 export type Datasource = {
   __typename?: 'Datasource';
+  /** The chunk strategy of the first dataIndex */
+  chunkType?: Maybe<ChunkType>;
+  /** The number of chunks before and after every chunk */
+  chunkWindowSize?: Maybe<Scalars['Int']>;
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   dataIndex?: Maybe<DataIndex>;
   dataIndexes?: Maybe<Connection_DataIndex>;
   description?: Maybe<Scalars['String']>;
+  docTypes?: Maybe<Connection_DocType>;
+  embeddingDocTypeField?: Maybe<DocTypeField>;
+  /** The configurations used by the embedding model, if needed */
+  embeddingJsonConfig?: Maybe<Scalars['String']>;
   enrichPipeline?: Maybe<EnrichPipeline>;
   id?: Maybe<Scalars['ID']>;
   jsonConfig?: Maybe<Scalars['String']>;
+  /**
+   * Whether the first dataIndex is a knn index. This and the other fields
+   * of the shape of the first dataIndex are read only when the datasource
+   * has no dataIndex to inherit from.
+   */
+  knnIndex?: Maybe<Scalars['Boolean']>;
   /** Last ingestion date of data for current datasource (ISO-8601) */
   lastIngestionDate?: Maybe<Scalars['DateTime']>;
   /** ISO-8601 */
@@ -878,10 +920,23 @@ export type Datasource = {
   schedulers?: Maybe<Connection_Scheduler>;
   /** Chron quartz expression to define scheduling of datasource */
   scheduling?: Maybe<Scalars['String']>;
+  /** The custom settings of the first dataIndex, as a JSON object */
+  settings?: Maybe<Scalars['String']>;
 };
 
 
 export type DatasourceDataIndexesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  notEqual?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+export type DatasourceDocTypesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -903,9 +958,23 @@ export type DatasourceSchedulersArgs = {
 };
 
 export type DatasourceDtoInput = {
+  /** The chunk strategy to apply. */
+  chunkType?: InputMaybe<ChunkType>;
+  /** The number of chunks before and after every chunk. */
+  chunkWindowSize?: InputMaybe<Scalars['Int']>;
   description?: InputMaybe<Scalars['String']>;
+  /** The configurations used by the embedding model, if needed. */
+  embeddingJsonConfig?: InputMaybe<Scalars['String']>;
   /** Json configuration with custom fields for datasource */
   jsonConfig?: InputMaybe<Scalars['String']>;
+  /**
+   * Define if the first dataIndex is a knn index, this property enables
+   * vector similarity search features on it. It and the other properties
+   * that shape the first dataIndex are read only when the datasource has
+   * no dataIndex to inherit from. When omitted on update, the current
+   * value is kept.
+   */
+  knnIndex?: InputMaybe<Scalars['Boolean']>;
   name: Scalars['String'];
   /** The duration to identify orphaned Dataindex. */
   purgeMaxAge?: InputMaybe<Scalars['String']>;
@@ -921,6 +990,8 @@ export type DatasourceDtoInput = {
   schedulable?: InputMaybe<Scalars['Boolean']>;
   /** Cron quartz expression to define scheduling of datasource */
   scheduling?: InputMaybe<Scalars['String']>;
+  /** The settings that will be used when the associated indexTemplate is created. */
+  settings?: InputMaybe<Scalars['String']>;
 };
 
 export type DefaultConnection_Analyzer = Connection_Analyzer & {
@@ -5841,13 +5912,37 @@ export type Tuple2_TokenTab_DocTypeField = {
 };
 
 export type UpdateDatasourceDtoInput = {
+  /** The chunk strategy to apply. */
+  chunkType?: InputMaybe<ChunkType>;
+  /** The number of chunks before and after every chunk. */
+  chunkWindowSize?: InputMaybe<Scalars['Int']>;
   /** The dataIndex's id related to this datasource */
   dataIndexId: Scalars['BigInteger'];
   /** The datasource's id that needs to be updated */
   datasourceId: Scalars['BigInteger'];
   description?: InputMaybe<Scalars['String']>;
+  /**
+   * The list of documentType ids that the first dataIndex is composed of.
+   * When omitted, the current ones are kept.
+   */
+  docTypeIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+  /**
+   * The field used during the text embedding of the first dataIndex,
+   * must be a valid docTypeFieldId. When omitted, the current one is kept.
+   */
+  embeddingDocTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
+  /** The configurations used by the embedding model, if needed. */
+  embeddingJsonConfig?: InputMaybe<Scalars['String']>;
   /** Json configuration with custom fields for datasource */
   jsonConfig?: InputMaybe<Scalars['String']>;
+  /**
+   * Define if the first dataIndex is a knn index, this property enables
+   * vector similarity search features on it. It and the other properties
+   * that shape the first dataIndex are read only when the datasource has
+   * no dataIndex to inherit from. When omitted on update, the current
+   * value is kept.
+   */
+  knnIndex?: InputMaybe<Scalars['Boolean']>;
   name: Scalars['String'];
   /** Pipeline to be created and associated (optional) */
   pipeline?: InputMaybe<PipelineWithItemsDtoInput>;
@@ -5867,6 +5962,8 @@ export type UpdateDatasourceDtoInput = {
   schedulable?: InputMaybe<Scalars['Boolean']>;
   /** Cron quartz expression to define scheduling of datasource */
   scheduling?: InputMaybe<Scalars['String']>;
+  /** The settings that will be used when the associated indexTemplate is created. */
+  settings?: InputMaybe<Scalars['String']>;
 };
 
 export enum UserField {
@@ -7531,6 +7628,13 @@ export type DataIndexQueryVariables = Exact<{
 
 export type DataIndexQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', name?: string | null, description?: string | null, settings?: string | null, customSettings?: string | null, chunkType?: ChunkType | null, chunkWindowSize?: number | null, embeddingJsonConfig?: string | null, knnIndex?: boolean | null, datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null, embeddingDocTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null, chunkHeaderFields?: Array<{ __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null> | null, docTypes?: { __typename?: 'DefaultConnection_DocType', edges?: Array<{ __typename?: 'DefaultEdge_DocType', node?: { __typename?: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null, cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, storeSize: any } | null } | null };
 
+export type DatasourceIndexConfigQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DatasourceIndexConfigQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', knnIndex?: boolean | null, chunkType?: ChunkType | null, chunkWindowSize?: number | null, embeddingJsonConfig?: string | null, settings?: string | null, embeddingDocTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null, docTypes?: { __typename?: 'DefaultConnection_DocType', edges?: Array<{ __typename?: 'DefaultEdge_DocType', node?: { __typename?: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+
 export type DeleteDataIndexMutationVariables = Exact<{
   dataIndexId: Scalars['ID'];
   dataIndexName: Scalars['String'];
@@ -7611,6 +7715,12 @@ export type CreateDatasourceConnectionMutationVariables = Exact<{
   purging: Scalars['String'];
   purgeMaxAge: Scalars['String'];
   dataIndex: DataIndexDtoInput;
+  knnIndex?: InputMaybe<Scalars['Boolean']>;
+  chunkType?: InputMaybe<ChunkType>;
+  chunkWindowSize?: InputMaybe<Scalars['Int']>;
+  embeddingJsonConfig?: InputMaybe<Scalars['String']>;
+  embeddingDocTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
+  docTypeIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
 }>;
 
 
@@ -16238,6 +16348,57 @@ export function useDataIndexLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type DataIndexQueryHookResult = ReturnType<typeof useDataIndexQuery>;
 export type DataIndexLazyQueryHookResult = ReturnType<typeof useDataIndexLazyQuery>;
 export type DataIndexQueryResult = Apollo.QueryResult<DataIndexQuery, DataIndexQueryVariables>;
+export const DatasourceIndexConfigDocument = gql`
+    query DatasourceIndexConfig($id: ID!) {
+  datasource(id: $id) {
+    knnIndex
+    chunkType
+    chunkWindowSize
+    embeddingJsonConfig
+    settings
+    embeddingDocTypeField {
+      id
+      name
+    }
+    docTypes {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useDatasourceIndexConfigQuery__
+ *
+ * To run a query within a React component, call `useDatasourceIndexConfigQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDatasourceIndexConfigQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDatasourceIndexConfigQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDatasourceIndexConfigQuery(baseOptions: Apollo.QueryHookOptions<DatasourceIndexConfigQuery, DatasourceIndexConfigQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DatasourceIndexConfigQuery, DatasourceIndexConfigQueryVariables>(DatasourceIndexConfigDocument, options);
+      }
+export function useDatasourceIndexConfigLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DatasourceIndexConfigQuery, DatasourceIndexConfigQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DatasourceIndexConfigQuery, DatasourceIndexConfigQueryVariables>(DatasourceIndexConfigDocument, options);
+        }
+export type DatasourceIndexConfigQueryHookResult = ReturnType<typeof useDatasourceIndexConfigQuery>;
+export type DatasourceIndexConfigLazyQueryHookResult = ReturnType<typeof useDatasourceIndexConfigLazyQuery>;
+export type DatasourceIndexConfigQueryResult = Apollo.QueryResult<DatasourceIndexConfigQuery, DatasourceIndexConfigQueryVariables>;
 export const DeleteDataIndexDocument = gql`
     mutation DeleteDataIndex($dataIndexId: ID!, $dataIndexName: String!) {
   deleteDataIndex(dataIndexId: $dataIndexId, dataIndexName: $dataIndexName) {
@@ -16596,9 +16757,9 @@ export type DataSourceQueryHookResult = ReturnType<typeof useDataSourceQuery>;
 export type DataSourceLazyQueryHookResult = ReturnType<typeof useDataSourceLazyQuery>;
 export type DataSourceQueryResult = Apollo.QueryResult<DataSourceQuery, DataSourceQueryVariables>;
 export const CreateDatasourceConnectionDocument = gql`
-    mutation createDatasourceConnection($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $pluginDriverId: BigInteger!, $pipeline: PipelineWithItemsDTOInput, $pipelineId: BigInteger, $reindexable: Boolean!, $reindexing: String!, $purgeable: Boolean!, $purging: String!, $purgeMaxAge: String!, $dataIndex: DataIndexDTOInput!) {
+    mutation createDatasourceConnection($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $pluginDriverId: BigInteger!, $pipeline: PipelineWithItemsDTOInput, $pipelineId: BigInteger, $reindexable: Boolean!, $reindexing: String!, $purgeable: Boolean!, $purging: String!, $purgeMaxAge: String!, $dataIndex: DataIndexDTOInput!, $knnIndex: Boolean, $chunkType: ChunkType, $chunkWindowSize: Int, $embeddingJsonConfig: String, $embeddingDocTypeFieldId: BigInteger, $docTypeIds: [BigInteger]) {
   createDatasourceConnection(
-    datasourceConnection: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, pluginDriverId: $pluginDriverId, pipeline: $pipeline, pipelineId: $pipelineId, reindexable: $reindexable, reindexing: $reindexing, purgeable: $purgeable, purging: $purging, purgeMaxAge: $purgeMaxAge, dataIndex: $dataIndex}
+    datasourceConnection: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, pluginDriverId: $pluginDriverId, pipeline: $pipeline, pipelineId: $pipelineId, reindexable: $reindexable, reindexing: $reindexing, purgeable: $purgeable, purging: $purging, purgeMaxAge: $purgeMaxAge, dataIndex: $dataIndex, knnIndex: $knnIndex, chunkType: $chunkType, chunkWindowSize: $chunkWindowSize, embeddingJsonConfig: $embeddingJsonConfig, embeddingDocTypeFieldId: $embeddingDocTypeFieldId, docTypeIds: $docTypeIds}
   ) {
     entity {
       id
@@ -16640,6 +16801,12 @@ export type CreateDatasourceConnectionMutationFn = Apollo.MutationFunction<Creat
  *      purging: // value for 'purging'
  *      purgeMaxAge: // value for 'purgeMaxAge'
  *      dataIndex: // value for 'dataIndex'
+ *      knnIndex: // value for 'knnIndex'
+ *      chunkType: // value for 'chunkType'
+ *      chunkWindowSize: // value for 'chunkWindowSize'
+ *      embeddingJsonConfig: // value for 'embeddingJsonConfig'
+ *      embeddingDocTypeFieldId: // value for 'embeddingDocTypeFieldId'
+ *      docTypeIds: // value for 'docTypeIds'
  *   },
  * });
  */

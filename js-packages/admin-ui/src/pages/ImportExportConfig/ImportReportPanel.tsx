@@ -72,6 +72,7 @@ export function ImportReportPanel({ report }: { report: ImportReport }) {
   const missingReferences = report.missingReferences ?? [];
   const secretsToReenter = report.secretsToReenter ?? [];
   const blockingErrors = report.blockingErrors ?? [];
+  const warnings = report.warnings ?? [];
 
   return (
     <Alert severity={severity(report)} sx={{ mt: 2.5 }}>
@@ -89,6 +90,16 @@ export function ImportReportPanel({ report }: { report: ImportReport }) {
           {blockingErrors.map((error) => (
             <Typography component="li" variant="body2" key={error}>
               {error}
+            </Typography>
+          ))}
+        </Section>
+      )}
+
+      {warnings.length > 0 && (
+        <Section heading={t("pages.admin-settings.import-export.report-warnings-heading")}>
+          {warnings.map((warning) => (
+            <Typography component="li" variant="body2" key={warning}>
+              {warning}
             </Typography>
           ))}
         </Section>

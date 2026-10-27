@@ -120,6 +120,30 @@ export const DataIndexQuery = gql`
   }
 `;
 
+export const DatasourceIndexConfigQuery = gql`
+  query DatasourceIndexConfig($id: ID!) {
+    datasource(id: $id) {
+      knnIndex
+      chunkType
+      chunkWindowSize
+      embeddingJsonConfig
+      settings
+      embeddingDocTypeField {
+        id
+        name
+      }
+      docTypes {
+        edges {
+          node {
+            id
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const DeleteDataIndexMutation = gql`
   mutation DeleteDataIndex($dataIndexId: ID!, $dataIndexName: String!) {
     deleteDataIndex(dataIndexId: $dataIndexId, dataIndexName: $dataIndexName) {
