@@ -24,6 +24,13 @@
   },
   "resolutions": {
     "lodash": "4.18.1",
+    "**/@ardatan/relay-compiler/immutable": "^3.8.4",
+    "**/@graphql-tools/executor-graphql-ws/ws": "^8.21.0",
+    "**/@graphql-tools/executor-legacy-ws/ws": "^8.21.0",
+    "**/@hey-api/json-schema-ref-parser/js-yaml": "^4.3.2",
+    "**/eslint-plugin-react-hooks/zod": "^4.6.6",
+    "**/graphql-config/minimatch": "^4.2.5",
+    "**/jsdom/undici": "^7.30.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "react": "^19.2.0",
