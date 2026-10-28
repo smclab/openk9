@@ -131,7 +131,8 @@ def build_model(configuration: dict) -> "Model":
         case ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value:
             # Model Garden serves an OpenAI-compatible endpoint behind an OAuth
             # token of the service account.
-            from google.auth import default, transport
+            from google.auth import default
+            from google.auth.transport.requests import Request
             from pydantic_ai.models.openai import OpenAIChatModel
             from pydantic_ai.providers.openai import OpenAIProvider
 
@@ -143,7 +144,7 @@ def build_model(configuration: dict) -> "Model":
             location = model_garden["location"]
 
             credentials, _ = default()
-            credentials.refresh(transport.requests.Request())
+            credentials.refresh(Request())
             base_url = (
                 f"https://{endpoint_id}/v1/projects/{project_id}"
                 f"/locations/{location}/endpoints/openapi"

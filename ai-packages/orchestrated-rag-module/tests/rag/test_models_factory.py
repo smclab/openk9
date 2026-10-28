@@ -18,10 +18,11 @@
 """build_model turns the tenant LLM configuration into the PydanticAI model of
 its provider, without reaching the network."""
 
-import builtins
 import sys
 from unittest.mock import MagicMock
 
+import google.auth
+import google.auth.transport
 import pytest
 from pydantic_ai.models.bedrock import BedrockConverseModel
 from pydantic_ai.models.google import GoogleModel
@@ -99,9 +100,12 @@ def test_vertex_model_garden_calls_the_endpoint_with_the_oauth_token(
     monkeypatch, saved_credentials
 ):
     credentials = MagicMock(token="oauth-token")
-    google_auth = MagicMock()
-    google_auth.default.return_value = (credentials, "project-1")
-    monkeypatch.setitem(sys.modules, "google.auth", google_auth)
+    monkeypatch.setattr(
+        google.auth, "default", lambda *args, **kwargs: (credentials, "project-1")
+    )
+    # As in a fresh process, where nothing has imported the transport yet.
+    monkeypatch.delitem(sys.modules, "google.auth.transport.requests", raising=False)
+    monkeypatch.delattr(google.auth.transport, "requests", raising=False)
 
     model = build_model(
         {
@@ -137,6 +141,8 @@ def test_bedrock_uses_the_configured_region_and_api_key():
 
     assert isinstance(model, BedrockConverseModel)
     assert model.client.meta.region_name == "eu-central-1"
+    assert model.client.meta.config.signature_version == "bearer"
+    assert model.client._request_signer._auth_token.token == "bedrock-key"
 
 
 @pytest.mark.parametrize("model_type", ["ollama", "watsonx", "hugging-face-custom"])
@@ -146,17 +152,9 @@ def test_custom_providers_are_refused_until_they_have_a_model(model_type):
 
 
 def test_a_provider_without_its_sdk_says_which_extra_is_missing(monkeypatch):
-    real_import = builtins.__import__
-
-    def import_without_google(name, *args, **kwargs):
-        if name == "pydantic_ai.models.google":
-            raise ImportError(
-                'Please install `google-genai` to use the Google model, you can use '
-                'the `google` optional group — `pip install "pydantic-ai-slim[google]"`'
-            )
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", import_without_google)
+    # Without google-genai the import of the PydanticAI model raises its own error.
+    monkeypatch.setitem(sys.modules, "google.genai", None)
+    monkeypatch.delitem(sys.modules, "pydantic_ai.models.google")
 
     with pytest.raises(ImportError, match=r"pydantic-ai-slim\[google\]"):
         build_model(
