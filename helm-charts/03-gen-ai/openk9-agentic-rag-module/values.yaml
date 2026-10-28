@@ -118,6 +118,17 @@ log:
 cors:
   origins: "*"
 
+## Source images configuration
+## @param sourceImages.hostRegexes Comma-separated regexes, mapped to the
+## SOURCE_IMAGE_HOST_REGEXES environment variable. Before it gives the image
+## of a retrieved source to the model, the module downloads it from
+## binary.sourceUrl, and one of the regexes must match the whole host of that
+## URL. The default ".*" accepts any host, internal services of the cluster
+## included: in production, list only the hosts that serve the images, e.g.
+## "minio\\.example\\.com,images\\..*".
+sourceImages:
+  hostRegexes: ".*"
+
 ## Retention configuration
 retention:
   schedule: ""

@@ -101,6 +101,23 @@ In this area, prompting configurations for RAG and question reformulation can be
 
 Prompting allows you to constrain the conversational assistant to respond according to specific rules, helping avoid hallucinations, for example.
 
+### Images to the model
+
+With the rag types `CHAT_RAG` and `CHAT_RAG_TOOL` the conversational assistant
+can show images to the chat model, when the model accepts them. Two keys of the
+RAG configuration (jsonConfig) control it:
+
+| Key | Default | Effect |
+|-----|---------|--------|
+| `query_image_to_llm` | `true` | The image the user attaches to the question goes to the model |
+| `source_images_to_llm` | `true` | The image of the first retrieved sources (four at most) goes to the model |
+
+With `false` the model gets only the text. The images of the sources are
+downloaded from their `binary.sourceUrl`, only from the hosts allowed by the
+`SOURCE_IMAGE_HOST_REGEXES` variable of the agentic-rag module (Helm value
+`sourceImages.hostRegexes`). Its default accepts any host: restrict it in
+production, as the README of the module explains.
+
 ## Ollama Tuning
 
 When the Large Language Model or the Embedding Model uses Ollama as its provider, three keys of the `jsonConfig` of the entity tune the Ollama client. They apply to the `ollama` provider only and are ignored by every other one, except `reasoning`, which the `openai` provider reads too (see [Reasoning on OpenAI](#reasoning-on-openai)).

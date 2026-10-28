@@ -9,6 +9,7 @@ data:
   ORIGINS: {{ .Values.cors.origins | quote }}
   LOGGING_LEVEL:  {{ .Values.log.level | quote }}
   DEPENDENCIES_LOGGING_LEVEL:  {{ .Values.log.dependenciesLevel | quote }}
+  SOURCE_IMAGE_HOST_REGEXES: {{ .Values.sourceImages.hostRegexes | quote }}
 
   # Opensearch env variables
   {{- $protocol := .Values.opensearch.protocol | default "http" }}

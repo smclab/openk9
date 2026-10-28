@@ -331,6 +331,30 @@ Is possible also to set autoscaling using following parameters:
 | `autoscaling.averageMemoryUtilizationPercentage`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
 
 
+## Source images
+
+When a retrieved source carries an image, the module downloads it from
+`binary.sourceUrl` and gives it to the chat model (rag types `CHAT_RAG` and
+`CHAT_RAG_TOOL`). `sourceImages.hostRegexes` is the whitelist of the hosts it
+may download from.
+
+| Name                       | Description                                                                                          | Value |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- | ----- |
+| `sourceImages.hostRegexes` | Comma-separated regexes, set as the `SOURCE_IMAGE_HOST_REGEXES` environment variable; one must match the whole host of the URL | `.*`  |
+
+The default `.*` accepts any host, internal services of the cluster included:
+the pod sends a GET to whatever host a connector writes in `binary.sourceUrl`.
+In production, list only the hosts that serve the images:
+
+```yaml
+sourceImages:
+  hostRegexes: "minio\\.example\\.com,images\\..*"
+```
+
+Whatever the whitelist, the module only uses `http` and `https`, checks the
+whitelist again on every redirect, keeps the response only if it is an image,
+and stops at 20 MB or 10 seconds per image.
+
 ## Advanced logging
 
 In case you want to configure Openk9 Agentic Rag Module logging you can set up following parameters:

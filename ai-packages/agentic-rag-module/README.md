@@ -125,6 +125,10 @@ DEPENDENCIES_LOGGING_LEVEL=INFO
 
 # Security
 OPENK9_ACL_HEADER=OPENK9_ACL
+
+# Hosts the module may download source images from: comma-separated
+# regexes, one must match the whole host (default .*, any host)
+SOURCE_IMAGE_HOST_REGEXES=.*
 ```
 
 ### Headers
@@ -134,6 +138,27 @@ OPENK9_ACL_HEADER=OPENK9_ACL
 | `X-Forwarded-Host` | Tenant identification | Optional |
 | `OPENK9_ACL` | Access control list | Optional |
 | `X-Tenant-ID` | Tenant override | Optional |
+
+## Source images
+
+With the rag types `CHAT_RAG` and `CHAT_RAG_TOOL` the module gives the chat
+model the image of the first retrieved sources (four at most), downloaded from
+`binary.sourceUrl`. `SOURCE_IMAGE_HOST_REGEXES` is the whitelist of the hosts
+it may download from: comma-separated regexes, one of which must match the
+whole host of the URL.
+
+The default `.*` accepts any host, internal services of the cluster included.
+In production, list only the hosts that serve the images, e.g.
+`SOURCE_IMAGE_HOST_REGEXES=minio\.example\.com,images\..*`.
+
+Whatever the whitelist, the download only uses `http` and `https`, checks the
+whitelist again on every redirect, keeps the response only if it is an image,
+and stops at 20 MB or 10 seconds per image. The URL goes to the log without
+its query, which may hold the credentials of a pre-signed URL.
+
+The tenant RAG configuration can turn the images off: see
+`query_image_to_llm` and `source_images_to_llm` in
+`docs/docs/ai/gen-ai-features.md`.
 
 ## Logging
 
