@@ -158,9 +158,9 @@ To configure Route for OpenShift use:
 | `route.tls.enabled`                         | If enable tls on Route                                                                                   | `false`                    |
 | `route.tls.secretName`                      | Secret with tls certificate to associate to Route                                                        | `openk9-tls-star-secret`   |
 
-### Readiness and liveness probes
+### Startup, readiness and liveness probes
 
-Openk9 API Gateway supports Readiness and Liveness Probes.
+Openk9 API Gateway supports Startup, Readiness and Liveness Probes. While the startup probe runs, liveness and readiness are not executed, so a slow start does not restart the container.
 
 It uses Spring Boot Actuator health check endpoints to perform health check actions. 
 
@@ -168,6 +168,13 @@ To configure probes appropriately you can use following parameters:
 
 | Name                                        | Description                                                                                              | Value                      |
 | ------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `startupProbe.enabled`                      | Enable startupProbe                                                                                      | `true`                     |
+| `startupProbe.path`                         | Path for startupProbe                                                                                    | `/actuator/health/liveness`|
+| `startupProbe.initialDelaySeconds`          | Initial delay seconds for startupProbe                                                                   | `0`                        |
+| `startupProbe.periodSeconds`                | Period seconds for startupProbe                                                                          | `5`                        |
+| `startupProbe.timeoutSeconds`               | Timeout seconds for startupProbe                                                                         | `3`                        |
+| `startupProbe.failureThreshold`             | Failure threshold for startupProbe                                                                       | `30`                       |
+| `startupProbe.successThreshold`             | Success threshold for startupProbe                                                                       | `1`                        |
 | `livenessProbe.enabled`                     | Enable livenessProbe                                                                                     | `true`                     |
 | `livenessProbe.path`                        | Path for livenessProbe                                                                                   | `/actuator/health/liveness`|
 | `livenessProbe.initialDelaySeconds`         | Initial delay seconds for livenessProbe                                                                  | `30`                       |
