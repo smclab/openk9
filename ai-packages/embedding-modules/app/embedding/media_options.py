@@ -33,12 +33,15 @@ logger = logging.getLogger(__name__)
 class MediaOptions:
     """embed_images false skips images and PDF pages, rasterize_pages false
     skips PDF pages only; max_pages caps the pages of one PDF and
-    page_resolution is the long side of a rasterized page, in pixels."""
+    page_resolution is the long side of a rasterized page, in pixels.
+    header_on_images false embeds images and PDF pages without the chunk
+    header, leaving it on the text."""
 
     embed_images: bool = True
     rasterize_pages: bool = True
     max_pages: int = 200
     page_resolution: int = 1568
+    header_on_images: bool = True
 
 
 # above it a rasterized page takes too much memory: an A4 at 20000 pixels is

@@ -86,3 +86,17 @@ def test_embed_mixed_applies_output_dimension():
     embedder.embed_mixed("un gatto", b"png-bytes", "image/png")
 
     assert client.calls[-1][1]["output_dimension"] == 8
+
+
+def test_embed_mixed_takes_the_document_input_type_for_indexing():
+    client = _FakeMixedClient(dimension=8)
+    embedder = BedrockMultimodalEmbedder(
+        "cohere.embed-v4:0", region_name="us-east-1", client=client
+    )
+
+    embedder.embed_mixed(
+        "title: Manuale\n", b"png-bytes", "image/png", input_type="search_document"
+    )
+
+    _, request = client.calls[-1]
+    assert request["input_type"] == "search_document"

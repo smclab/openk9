@@ -37,7 +37,7 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
 from app.config import settings
-from app.embedding import chunking, query, router, vertex_batching
+from app.embedding import chunk_header, chunking, query, router, vertex_batching
 from app.embedding.fetch import fetch_url
 from app.embedding.media_options import split_media_options
 from app.embedding.multimodal import find_model, find_multimodal_embedder
@@ -415,12 +415,23 @@ def build_pipelines(configuration, chunker):
     """
     _, embedder = resolve_embedder(configuration)
 
+    embed_mixed = getattr(embedder, "embed_mixed", None)
+
     return Pipelines(
         # the whole chunk list in one request
         embed_texts=_text_embedding(configuration, embedder, "search_document"),
         chunk=lambda text: chunking.chunk_text(chunker, text),
         fetch=fetch_url,
         embed_image=embedder.embed_image if embedder is not None else None,
+        embed_mixed=(
+            (
+                lambda text, data, content_type: embed_mixed(
+                    text, data, content_type, input_type="search_document"
+                )
+            )
+            if embed_mixed is not None
+            else None
+        ),
     )
 
 
@@ -672,6 +683,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         vector_data_type = request.vectorDataType
         number = 0
         batch_size = resolve_batch_size(configuration)
+        header_stats = chunk_header.HeaderStats()
 
         # Text first, fail-fast: an error building the model/chunker or
         # embedding the text ends the whole RPC with INTERNAL, the same as
@@ -683,8 +695,16 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             media_options, chunker_config = split_media_options(
                 json_format.MessageToDict(chunk.jsonConfig)
             )
-            chunker = chunking.build_chunker(chunk.type, chunker_config)
-            pipelines = build_pipelines(configuration, chunker)
+            header = chunk_header.compose_header(request.chunkHeader)
+            chunker = chunking.build_header_chunker(
+                chunk.type, chunker_config, header.text, header.fields
+            )
+            pipelines = chunk_header.with_header(
+                build_pipelines(configuration, chunker),
+                header,
+                media_options,
+                header_stats,
+            )
 
             if has_text:
                 chunks = pipelines.chunk(clean_text(request.text))
@@ -694,6 +714,8 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                     for piece in pieces:
                         number += 1
                         yield to_chunk_message(piece, number, total, vector_data_type)
+        except chunking.HeaderTooLong as error:
+            context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(error))
         except Exception as error:
             logger.exception("EmbedContent text error")
             context.abort(grpc.StatusCode.INTERNAL, str(error))
@@ -755,6 +777,16 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                     ref.contentType,
                 )
                 continue
+
+        if header_stats.media_without_header:
+            logger.warning(
+                "EmbedContent: %d images and PDF pages embedded without the "
+                "chunk header: model %s does not embed text and image in one "
+                "vector (tenantId=%s)",
+                header_stats.media_without_header,
+                configuration.get("model"),
+                tenant_id,
+            )
 
         _log_served(
             "EmbedContent",

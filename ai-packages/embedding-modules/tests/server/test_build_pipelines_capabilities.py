@@ -55,6 +55,10 @@ class _FakeMultimodalEmbedder:
         self.calls.append(("embed_image", data, content_type))
         return [0.0, 1.0]
 
+    def embed_mixed(self, text, data, content_type, input_type="search_query"):
+        self.calls.append(("embed_mixed", text, data, content_type, input_type))
+        return [1.0, 1.0]
+
 
 class _FakeLangchainEmbeddings:
     def __init__(self, calls):
@@ -125,6 +129,19 @@ def test_a_multimodal_model_indexes_through_the_direct_client(calls):
     assert pipelines.fetch is server_module.fetch_url
 
 
+def test_a_fusing_model_embeds_header_and_image_as_a_document(calls):
+    pipelines = server_module.build_pipelines(
+        MULTIMODAL_CONFIGURATION, _RecordingChunker()
+    )
+    calls.clear()
+
+    assert pipelines.embed_mixed("title: a\n", b"png", "image/png") == [1.0, 1.0]
+    # indexing: the document input type, not the query one of the default
+    assert calls == [
+        ("embed_mixed", "title: a\n", b"png", "image/png", "search_document")
+    ]
+
+
 def test_a_text_only_model_indexes_through_langchain_without_images(calls):
     chunker = _RecordingChunker()
     pipelines = server_module.build_pipelines(TEXT_ONLY_CONFIGURATION, chunker)
@@ -136,6 +153,7 @@ def test_a_text_only_model_indexes_through_langchain_without_images(calls):
     assert calls == [("embed_documents", ["uno"])]
     # no image input: the router skips the image refs
     assert pipelines.embed_image is None
+    assert pipelines.embed_mixed is None
 
     assert pipelines.chunk("uno due") == ["uno", "due"]
     assert chunker.texts == ["uno due"]

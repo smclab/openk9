@@ -233,6 +233,7 @@ Indexes text and/or binaries into the same vector space and streams one
 | `vectorDataType` | `VectorDataType`    | Output encoding: `FLOAT32` (0), `BYTE` (1), `BINARY` (2)            |
 | `text`           | `string` (optional) | Inline text to embed                                                |
 | `refs`           | `MediaRef` repeated | Binaries to fetch and embed                                         |
+| `chunkHeader`    | `ChunkHeaderField` repeated | Document header, `name`/`value` pairs in order (see Chunk header) |
 
 At least one of `text` / `refs` must be set, otherwise the RPC fails with
 `INVALID_ARGUMENT`.
@@ -241,6 +242,27 @@ At least one of `text` / `refs` must be set, otherwise the RPC fails with
 a plain GET, no storage credentials), `fileId` (copied onto every chunk derived
 from it), `contentType` (drives the modality; the HTTP `Content-Type` is used as
 a fallback when absent).
+
+#### Chunk header
+
+With a non-empty `chunkHeader` every chunk is embedded as the header plus the
+chunk: one `name: value` line per field, then the chunk. Each value goes
+through the same cleaning as the text; a value empty after cleaning is
+skipped. The `text` of the returned chunk is the original chunk, without the
+header. Queries (`EmbedQuery`) are embedded as they are.
+
+- The header length is subtracted from `chunk_size`, in the unit of the
+  chunker (tokens, characters or UTF-8 bytes); without `chunk_size` in the
+  configuration the default of the chunker applies.
+- A header longer than 25% of `chunk_size` fails the request with
+  `INVALID_ARGUMENT`, with the header length, the limit and the fields.
+- A chunker without `chunk_size` (`NEURAL_CHUNKER`) takes the header as it is,
+  with a warning that its length is not checked.
+- Textual refs take the same header. Images and PDF pages take it in one vector
+  when the model fuses text and image (Cohere Embed v4 on Bedrock, with the
+  `search_document` input type); with other models they are embedded as before
+  and one warning per request counts them. `header_on_images` turns the header
+  off on images and pages.
 
 #### Response: stream of EmbeddedChunk
 
@@ -408,6 +430,7 @@ warning and the default applies.
 | `rasterize_pages` | `true`  | With `false` PDF pages are skipped             |
 | `max_pages`       | `200`   | Pages per PDF; the log says how many are skipped |
 | `page_resolution` | `1568`  | Long side of a rasterized page, in pixels      |
+| `header_on_images` | `true` | With `false` images and PDF pages are embedded without the chunk header |
 
 
 

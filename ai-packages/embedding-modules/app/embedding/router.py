@@ -79,6 +79,9 @@ class Pipelines:
     chunk: Callable  # (str) -> list[str]
     fetch: Callable = None  # (url) -> (bytes, content_type | None)
     embed_image: Callable = None  # (bytes, content_type) -> list[float]
+    # (text, bytes, content_type) -> list[float]: text and image in one
+    # vector, only on models that fuse them
+    embed_mixed: Callable = None
 
 
 def classify(content_type) -> str:

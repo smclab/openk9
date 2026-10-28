@@ -23,10 +23,12 @@ deployments that only use the light splitters. Argument selection reuses
 build_chunk_arguments; GetMessages (v1) and EmbedContent share it.
 """
 
+import logging
 from typing import get_type_hints
 
 from app.utils.chunk_arguments import build_chunk_arguments
 
+logger = logging.getLogger(__name__)
 
 SUPPORTED_CHUNK_TYPES = frozenset(range(11))
 
@@ -40,6 +42,24 @@ LEGACY_DEFAULTS = {
 
 class UnsupportedChunkType(ValueError):
     pass
+
+
+# the share of chunk_size a chunk header may take: above it the chunks would
+# keep little text and a vector ruled by the header
+HEADER_SHARE_MAX = 0.25
+
+
+class HeaderTooLong(ValueError):
+    """A chunk header longer than HEADER_SHARE_MAX of chunk_size."""
+
+    def __init__(
+        self, length: int, limit: int, unit: str, chunk_size: int, fields: list[str]
+    ):
+        super().__init__(
+            f"The chunk header is {length} {unit} long, over the limit of "
+            f"{limit} {unit} (25% of chunk_size {chunk_size}); "
+            f"header fields: {', '.join(fields)}"
+        )
 
 
 def is_supported(chunk_type):
@@ -114,3 +134,71 @@ def build_chunker(chunk_type, json_config):
 def chunk_text(chunker, text):
     """Splits text into a list of chunk strings."""
     return [chunk.text for chunk in chunker.chunk(text)]
+
+
+def effective_chunk_size(chunker) -> int | None:
+    """The chunk_size the chunker applies, its default when the jsonConfig
+    sets none, or None for a chunker without one."""
+    for name in ("chunk_size", "_chunk_size"):
+        size = getattr(chunker, name, None)
+        if isinstance(size, int):
+            return size
+
+    return None
+
+
+def header_length(chunk_type: int, chunker, header: str) -> int:
+    """The length of header in the unit of the chunker: characters for the
+    text splitter, UTF-8 bytes for the fast chunker, tokens of its tokenizer
+    for the others."""
+    if chunk_type == 1:
+        return len(header)
+    if chunk_type == 10:
+        return len(header.encode("utf-8"))
+
+    return chunker.tokenizer.count_tokens(header)
+
+
+def header_unit(chunk_type: int) -> str:
+    """The unit of header_length for chunk_type."""
+    if chunk_type == 1:
+        return "characters"
+    if chunk_type == 10:
+        return "bytes"
+
+    return "tokens"
+
+
+def build_header_chunker(
+    chunk_type: int, json_config: dict, header: str, fields: list[str]
+):
+    """Builds the chunker of build_chunker with room for the chunk header:
+    its chunk_size is reduced by the length of the header, so header plus
+    chunk stays within chunk_size. Raises HeaderTooLong when the header
+    takes more than HEADER_SHARE_MAX of chunk_size. A chunker without
+    chunk_size is built as it is, with a warning."""
+    if not header:
+        return build_chunker(chunk_type, json_config)
+
+    chunker_class, arguments, signature = chunker_arguments(chunk_type, json_config)
+    chunker = chunker_class(**arguments)
+    size = effective_chunk_size(chunker) if "chunk_size" in signature else None
+
+    if size is None:
+        logger.warning(
+            "Chunk type %s has no chunk_size: the chunk header (%s) is "
+            "embedded with every chunk and its length is not checked",
+            chunk_type,
+            ", ".join(fields),
+        )
+        return chunker
+
+    length = header_length(chunk_type, chunker, header)
+    limit = int(size * HEADER_SHARE_MAX)
+
+    if length > limit:
+        raise HeaderTooLong(length, limit, header_unit(chunk_type), size, fields)
+
+    # semantic and late chunkers load their model twice here: accepted, the
+    # header is known only per request
+    return chunker_class(**{**arguments, "chunk_size": size - length})
