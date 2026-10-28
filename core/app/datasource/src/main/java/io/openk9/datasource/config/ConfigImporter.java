@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -169,9 +170,15 @@ public class ConfigImporter {
 				dryRun, false, mode, null, missingReferences, List.of(),
 				blockingErrors(failure), Map.of()))
 			.onFailure(failure -> constraintViolation(failure) != null)
-			.recoverWithItem(failure -> report(
-				dryRun, false, mode, null, missingReferences, List.of(),
-				violationErrors(constraintViolation(failure)), Map.of()));
+			.recoverWithItem(failure -> {
+				ApplyViolation violation = applyViolation(failure);
+				return report(
+					dryRun, false, mode,
+					violation == null ? null : violation.plan,
+					missingReferences, List.of(),
+					violationErrors(constraintViolation(failure), violation),
+					Map.of());
+			});
 	}
 
 	/**
@@ -187,7 +194,7 @@ public class ConfigImporter {
 
 	private Uni<Void> applyAction(
 		Mutiny.Session s, ConfigEntity entity, PlannedAction action,
-		Map<String, Long> resolvedIds) {
+		Map<String, Long> resolvedIds, Map<Object, ConfigEntity> written) {
 
 		Class<?> entityClass = action.type().getEntityType();
 		String ref = action.ref();
@@ -201,6 +208,7 @@ public class ConfigImporter {
 				Object dto = stripRedacted(
 					entity.getAttributes(), entity.getRedactedFields());
 				K9Entity created = toEntity(entityClass, dto);
+				written.put(created, entity);
 				yield wireAssociations(
 						s, created, entity.getReferences(), resolvedIds, true)
 					.flatMap(ignore -> s.persist(created).call(s::flush))
@@ -208,6 +216,7 @@ public class ConfigImporter {
 			}
 			case OVERWRITE -> s.find(entityClass, action.existingId()).flatMap(found -> {
 				K9Entity target = (K9Entity) found;
+				written.put(target, entity);
 				Object dto = restoreRedacted(
 					entity.getAttributes(), entity.getRedactedFields(), target);
 				updateEntity(entityClass, target, dto);
@@ -237,6 +246,7 @@ public class ConfigImporter {
 			byRef.put(entity.getRef(), entity);
 		}
 		Map<String, Long> resolvedIds = new HashMap<>();
+		Map<Object, ConfigEntity> written = new IdentityHashMap<>();
 
 		Uni<Void> chain = Uni.createFrom().voidItem();
 		for (PlannedAction action : plan.getActions()) {
@@ -247,13 +257,15 @@ public class ConfigImporter {
 					s, entity, action.action(), resolvedIds);
 				case ACL_MAPPING -> rebuildAclMapping(
 					s, entity, action.action(), resolvedIds);
-				default -> applyAction(s, entity, action, resolvedIds);
+				default -> applyAction(s, entity, action, resolvedIds, written);
 			});
 		}
 
 		return chain
 			.flatMap(ignore -> rebindTenantBinding(s, pkg.getMetadata(), resolvedIds))
-			.replaceWith(resolvedIds);
+			.replaceWith(resolvedIds)
+			.onFailure(failure -> constraintViolation(failure) != null)
+			.transform(failure -> new ApplyViolation(failure, plan, written));
 	}
 
 	/**
@@ -776,6 +788,19 @@ public class ConfigImporter {
 		return null;
 	}
 
+	/**
+	 * The {@link ApplyViolation} in the cause chain of an apply error, or
+	 * {@code null} when the violation was raised outside the apply of the plan.
+	 */
+	private static ApplyViolation applyViolation(Throwable failure) {
+		for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+			if (cause instanceof ApplyViolation violation) {
+				return violation;
+			}
+		}
+		return null;
+	}
+
 	private static Class<?> elementType(Field field) {
 		Type generic = field.getGenericType();
 		if (generic instanceof ParameterizedType parameterized) {
@@ -956,16 +981,27 @@ public class ConfigImporter {
 
 	/**
 	 * One blocking error per violation, naming the entity class and, for a
-	 * property constraint, the property.
+	 * property constraint, the property. When the violated bean is one of the
+	 * package entities being written, the error is prefixed with its ref and key:
+	 * the violation can surface at a later flush than the write that caused it, so
+	 * the bean, not the action in progress, says which entity failed.
 	 */
-	private static List<String> violationErrors(ConstraintViolationException exception) {
+	private static List<String> violationErrors(
+		ConstraintViolationException exception, ApplyViolation applied) {
+
 		List<String> errors = new ArrayList<>();
 		for (ConstraintViolation<?> violation : exception.getConstraintViolations()) {
 			String property = violation.getPropertyPath().toString();
 			String target = violation.getRootBeanClass().getSimpleName()
 				+ (property.isEmpty() ? "" : "." + property);
+			ConfigEntity entity =
+				applied == null ? null : applied.written.get(violation.getRootBean());
+			String prefix = entity == null
+				? ""
+				: entity.getRef() + " (" + entity.getKey() + "): ";
 			errors.add(
-				"Validation failed on " + target + ": " + violation.getMessage());
+				prefix + "Validation failed on " + target + ": "
+					+ violation.getMessage());
 		}
 		return errors;
 	}
@@ -977,6 +1013,26 @@ public class ConfigImporter {
 			"Import: reference '%s' -> '%s' on %s could not be resolved "
 				+ "(target not in package); skipping",
 			relationship, handle, entity.getClass().getSimpleName());
+	}
+
+	/**
+	 * A validation failure raised while applying the plan, carrying the plan and
+	 * the package entities written so far, so the report can name what failed and
+	 * what was about to happen.
+	 */
+	private static final class ApplyViolation extends RuntimeException {
+
+		private final ImportPlan plan;
+		private final Map<Object, ConfigEntity> written;
+
+		private ApplyViolation(
+			Throwable cause, ImportPlan plan, Map<Object, ConfigEntity> written) {
+
+			super(cause);
+			this.plan = plan;
+			this.written = written;
+		}
+
 	}
 
 }

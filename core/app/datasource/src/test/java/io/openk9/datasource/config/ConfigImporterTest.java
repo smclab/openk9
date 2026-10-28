@@ -177,6 +177,8 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "invalid-autocomplete";
 	private static final String INVALID_AUTOCOMPLETE_FIELD_NAME =
 		ENTITY_NAME_PREFIX + "invalid-autocomplete-field";
+	private static final String VALID_CATEGORY_NAME =
+		ENTITY_NAME_PREFIX + "valid-category-after-invalid-autocomplete";
 	private static final String COPIED_AUTOCOMPLETE_NAME =
 		ENTITY_NAME_PREFIX + "copied-autocomplete";
 	private static final String AUTOCOMPLETE_COPY_NAME =
@@ -1654,8 +1656,24 @@ public class ConfigImporterTest {
 			AutocompleteDTO.builder().name(INVALID_AUTOCOMPLETE_NAME).build(),
 			refs,
 			null);
+		// A valid category that depends on the autocomplete, so it is written
+		// after it: the violation may surface at its flush, but it is the
+		// autocomplete that must be named.
+		Map<String, List<String>> categoryRefs = new LinkedHashMap<>();
+		categoryRefs.put("docTypeField", List.of("DOC_TYPE_FIELD-TEXT"));
+		ConfigEntity category = new ConfigEntity(
+			"SUGGESTION_CATEGORY-VALID",
+			ConfigEntityType.SUGGESTION_CATEGORY,
+			VALID_CATEGORY_NAME,
+			SuggestionCategoryDTO.builder()
+				.name(VALID_CATEGORY_NAME)
+				.priority(1f)
+				.build(),
+			categoryRefs,
+			null);
 		ConfigPackage pkg = new ConfigPackage(
-			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(field, autocomplete));
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null,
+			List.of(field, autocomplete, category));
 
 		// 1. The apply is reported as not applied, with the failed property
 		ImportReport report =
@@ -1668,9 +1686,16 @@ public class ConfigImporterTest {
 				.anyMatch(error -> error.contains("Autocomplete.fields")),
 			() -> "the violation on fields must be reported: "
 				+ report.blockingErrors());
+		assertTrue(
+			report.blockingErrors().stream().anyMatch(error -> error.startsWith(
+				"AUTOCOMPLETE-INVALID (" + INVALID_AUTOCOMPLETE_NAME + "): ")),
+			() -> "the failed entity must be named: " + report.blockingErrors());
+		assertEquals(
+			3, report.created(), "the report keeps the plan that was rolled back");
 
 		// 2. Nothing was written, not even the field flushed before the failure
 		assertEquals(0, countByName("Autocomplete", INVALID_AUTOCOMPLETE_NAME));
+		assertEquals(0, countByName("SuggestionCategory", VALID_CATEGORY_NAME));
 		assertEquals(0, countByName("DocTypeField", INVALID_AUTOCOMPLETE_FIELD_NAME));
 	}
 
