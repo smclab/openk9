@@ -602,7 +602,7 @@ async function main() {
     {
       name: 'Minio Connector',
       description: 'Docker Compose Minio Connector',
-      resourceUri: { baseUri: 'http://openk9-minio-connector:5000' }
+      resourceUri: { baseUri: 'http://openk9-minio-connector:5000', path: '/execute' }
     }
   ];
 
