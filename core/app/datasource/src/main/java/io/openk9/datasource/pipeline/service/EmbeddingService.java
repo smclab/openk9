@@ -19,6 +19,7 @@ package io.openk9.datasource.pipeline.service;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -29,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -36,6 +38,7 @@ import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.processor.payload.BinaryPayload;
@@ -85,6 +88,7 @@ public class EmbeddingService {
 	private static final String BINARY_FIELD = "binary";
 
 	private static final Logger log = Logger.getLogger(EmbeddingService.class);
+	private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -306,6 +310,10 @@ public class EmbeddingService {
 
 		var docTypeFieldJsonPath = "$." + docTypeField.getPath();
 
+		// read before the text field is removed from the document
+		var chunkHeader =
+			readChunkHeader(documentContext, config.chunkHeaderFields());
+
 		String text;
 		try {
 			text = documentContext.read(docTypeFieldJsonPath);
@@ -366,7 +374,8 @@ public class EmbeddingService {
 			.setChunk(config.requestChunk())
 			.setEmbeddingModel(config.embeddingModel())
 			.setVectorDataType(config.vectorDataType())
-			.addAllRefs(refs);
+			.addAllRefs(refs)
+			.addAllChunkHeader(chunkHeader);
 
 		if (hasText) {
 			requestBuilder.setText(text);
@@ -986,6 +995,123 @@ public class EmbeddingService {
 		return components;
 	}
 
+	/**
+	 * Turns the header fields of a dataIndex into names and paths, while the
+	 * session that loaded them is open: the configuration is cached, so it
+	 * holds only strings. The name is the path with spaces instead of dots,
+	 * so two docTypes with a field of the same name stay apart. An I18N field
+	 * holds an object per language, not a value, so it is left out.
+	 */
+	static List<HeaderField> toHeaderFields(List<DocTypeField> docTypeFields) {
+		if (docTypeFields == null || docTypeFields.isEmpty()) {
+			return List.of();
+		}
+
+		var headerFields = new ArrayList<HeaderField>(docTypeFields.size());
+
+		for (DocTypeField docTypeField : docTypeFields) {
+			var path = docTypeField.getPath();
+
+			if (docTypeField.getFieldType() == FieldType.I18N) {
+				log.warnf(
+					"The header field %s is an I18N field and is left out of" +
+					" the chunk header.",
+					path
+				);
+
+				continue;
+			}
+
+			headerFields.add(new HeaderField(path.replace('.', ' '), path));
+		}
+
+		return List.copyOf(headerFields);
+	}
+
+	/**
+	 * Reads the header values of a document, in the order of the header.
+	 * <p>
+	 * Strings are taken as they are, numbers, booleans and dates as text,
+	 * lists joined by {@code ", "}; spaces and line breaks are squeezed into
+	 * one space. Absent or empty fields are skipped, and so are objects, with
+	 * a warning.
+	 */
+	static List<EmbeddingOuterClass.ChunkHeaderField> readChunkHeader(
+		DocumentContext documentContext, List<HeaderField> headerFields) {
+
+		if (headerFields == null || headerFields.isEmpty()) {
+			return List.of();
+		}
+
+		var chunkHeader =
+			new ArrayList<EmbeddingOuterClass.ChunkHeaderField>(headerFields.size());
+
+		for (HeaderField headerField : headerFields) {
+			Object value;
+			try {
+				value = documentContext.read("$." + headerField.path());
+			}
+			catch (PathNotFoundException e) {
+				continue;
+			}
+
+			var text = headerValue(value);
+
+			if (text == null) {
+				log.warnf(
+					"The header field %s holds an object and is left out of" +
+					" the chunk header.",
+					headerField.path()
+				);
+
+				continue;
+			}
+
+			if (!text.isEmpty()) {
+				chunkHeader.add(EmbeddingOuterClass.ChunkHeaderField.newBuilder()
+					.setName(headerField.name())
+					.setValue(text)
+					.build());
+			}
+		}
+
+		return chunkHeader;
+	}
+
+	/**
+	 * Flattens a header value into one line of text: {@code null} when it is
+	 * an object, an empty string when it has nothing to say.
+	 */
+	private static String headerValue(Object value) {
+		if (value == null) {
+			return "";
+		}
+
+		if (value instanceof Map<?, ?>) {
+			return null;
+		}
+
+		if (value instanceof Collection<?> values) {
+			var parts = new ArrayList<String>(values.size());
+
+			for (Object item : values) {
+				var part = headerValue(item);
+
+				if (part == null) {
+					return null;
+				}
+
+				if (!part.isEmpty()) {
+					parts.add(part);
+				}
+			}
+
+			return String.join(", ", parts);
+		}
+
+		return WHITESPACE.matcher(value.toString()).replaceAll(" ").strip();
+	}
+
 	@ConsumeEvent(GET_EMBEDDING_CHUNKS_CONFIGURATION)
 	Uni<EmbeddingChunksRequest> getEmbeddingChunksConfigurations(
 		GetConfigurationRequest configurationRequest) {
@@ -1025,7 +1151,8 @@ public class EmbeddingService {
 									embeddingModelRequest,
 									requestChunk,
 									toGrpcVectorDataType(
-										embeddingModel.getVectorDataType())
+										embeddingModel.getVectorDataType()),
+									toHeaderFields(dataIndex.getChunkHeaderFields())
 								);
 							})
 						)
@@ -1156,8 +1283,15 @@ public class EmbeddingService {
 		int chunkWindowSize,
 		EmbeddingOuterClass.EmbeddingModel embeddingModel,
 		EmbeddingOuterClass.RequestChunk requestChunk,
-		EmbeddingOuterClass.VectorDataType vectorDataType
+		EmbeddingOuterClass.VectorDataType vectorDataType,
+		List<HeaderField> chunkHeaderFields
 	) {}
+
+	/**
+	 * A field of the document header: the name written in front of its value,
+	 * and the JSON path its value is read from.
+	 */
+	record HeaderField(String name, String path) {}
 
 	private record GetConfigurationRequest(String tenantId, String scheduleId) {}
 

@@ -31,6 +31,7 @@ import java.util.Set;
 import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.ProviderModel;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
@@ -432,7 +433,152 @@ public class EmbeddingServiceUtilsTest {
 		}
 	}
 
+	@Test
+	void composeRequest_should_send_no_header_without_header_fields() {
+
+		// a data index without chunkHeaderFields
+		var payload = """
+			{
+				"contentId": "content-1",
+				"datasourceId": 1,
+				"rawContent": "some text to embed",
+				"title": "a title"
+			}""".getBytes();
+
+		var request = EmbeddingService.composeRequest(
+			"tenant", textOnlyConfig(), payload).request();
+
+		// the request is the one sent before the header existed
+		assertEquals(0, request.getChunkHeaderCount());
+		assertEquals("some text to embed", request.getText());
+	}
+
+	@Test
+	void composeRequest_should_send_the_header_in_the_chosen_order() {
+
+		// header [title, category] on a document that has both
+		var payload = """
+			{
+				"contentId": "content-1",
+				"datasourceId": 1,
+				"rawContent": "some text to embed",
+				"category": "Barche",
+				"title": "Manuale motore"
+			}""".getBytes();
+
+		var config = headerConfig(
+			new EmbeddingService.HeaderField("title", "title"),
+			new EmbeddingService.HeaderField("category", "category"));
+
+		var request = EmbeddingService.composeRequest(
+			"tenant", config, payload).request();
+
+		// names and values, in the order of the header, and the text as it is
+		assertEquals(
+			List.of("title: Manuale motore", "category: Barche"),
+			headerLines(request));
+		assertEquals("some text to embed", request.getText());
+	}
+
+	@Test
+	void composeRequest_should_flatten_lists_and_line_breaks_and_skip_empty() {
+
+		// title with a line break, no category, tags as a list
+		var payload = """
+			{
+				"contentId": "content-1",
+				"datasourceId": 1,
+				"rawContent": "some text to embed",
+				"title": "Manuale\\n  motore",
+				"tags": ["vela", "motore"],
+				"subtitle": "   "
+			}""".getBytes();
+
+		var config = headerConfig(
+			new EmbeddingService.HeaderField("title", "title"),
+			new EmbeddingService.HeaderField("category", "category"),
+			new EmbeddingService.HeaderField("subtitle", "subtitle"),
+			new EmbeddingService.HeaderField("tags", "tags"));
+
+		var request = EmbeddingService.composeRequest(
+			"tenant", config, payload).request();
+
+		// absent and blank fields are skipped, the list is joined
+		assertEquals(
+			List.of("title: Manuale motore", "tags: vela, motore"),
+			headerLines(request));
+	}
+
+	@Test
+	void composeRequest_should_write_scalars_as_text_and_skip_objects() {
+
+		// a number, a boolean, a nested field and an object
+		var payload = """
+			{
+				"contentId": "content-1",
+				"datasourceId": 1,
+				"rawContent": "some text to embed",
+				"year": 2024,
+				"published": true,
+				"web": {"title": "Pagina", "meta": {"lang": "it"}}
+			}""".getBytes();
+
+		var config = headerConfig(
+			new EmbeddingService.HeaderField("year", "year"),
+			new EmbeddingService.HeaderField("published", "published"),
+			new EmbeddingService.HeaderField("web meta", "web.meta"),
+			new EmbeddingService.HeaderField("web title", "web.title"));
+
+		var request = EmbeddingService.composeRequest(
+			"tenant", config, payload).request();
+
+		// the object is left out, the others become text
+		assertEquals(
+			List.of("year: 2024", "published: true", "web title: Pagina"),
+			headerLines(request));
+	}
+
+	@Test
+	void toHeaderFields_should_name_by_path_and_leave_out_i18n() {
+
+		// a field of the default docType, one of the web docType, an I18N one
+		var title = headerDocTypeField("title", FieldType.TEXT);
+		var webTitle = headerDocTypeField("web.title", FieldType.TEXT);
+		var i18n = headerDocTypeField("label", FieldType.I18N);
+
+		var headerFields =
+			EmbeddingService.toHeaderFields(List.of(webTitle, i18n, title));
+
+		// dots become spaces, the order is kept, the I18N field is left out
+		assertEquals(
+			List.of(
+				new EmbeddingService.HeaderField("web title", "web.title"),
+				new EmbeddingService.HeaderField("title", "title")),
+			headerFields);
+	}
+
+	private static DocTypeField headerDocTypeField(String path, FieldType fieldType) {
+		var docTypeField = Mockito.mock(DocTypeField.class);
+		Mockito.when(docTypeField.getPath()).thenReturn(path);
+		Mockito.when(docTypeField.getFieldType()).thenReturn(fieldType);
+
+		return docTypeField;
+	}
+
+	private static List<String> headerLines(
+		EmbeddingOuterClass.EmbedContentRequest request) {
+
+		return request.getChunkHeaderList().stream()
+			.map(field -> field.getName() + ": " + field.getValue())
+			.toList();
+	}
+
 	private static EmbeddingService.EmbeddingChunksRequest textOnlyConfig() {
+		return headerConfig();
+	}
+
+	private static EmbeddingService.EmbeddingChunksRequest headerConfig(
+		EmbeddingService.HeaderField... headerFields) {
 
 		// the docTypeField only contributes its path here
 		var docTypeField = Mockito.mock(DocTypeField.class);
@@ -443,7 +589,8 @@ public class EmbeddingServiceUtilsTest {
 			2,
 			EmbeddingOuterClass.EmbeddingModel.getDefaultInstance(),
 			EmbeddingOuterClass.RequestChunk.getDefaultInstance(),
-			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BYTE);
+			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BYTE,
+			List.of(headerFields));
 	}
 
 }

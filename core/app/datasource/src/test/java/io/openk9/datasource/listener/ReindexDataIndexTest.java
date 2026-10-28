@@ -34,6 +34,7 @@ import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Scheduler;
@@ -191,6 +192,12 @@ class ReindexDataIndexTest {
 		assertEquals(SETTINGS, newDataIndex.getSettings());
 		assertNotNull(newDataIndex.getEmbeddingDocTypeField());
 		assertFalse(newDataIndex.getDocTypes().isEmpty());
+		assertEquals(
+			headerFieldIds(),
+			newDataIndex.getChunkHeaderFields().stream()
+				.map(DocTypeField::getId)
+				.toList()
+		);
 
 		// and the inherited settings reach its index template
 		assertEquals(
@@ -866,7 +873,23 @@ class ReindexDataIndexTest {
 			.chunkWindowSize(CHUNK_WINDOW_SIZE)
 			.embeddingJsonConfig(EMBEDDING_JSON_CONFIG)
 			.settings(SETTINGS)
-			.docTypeIds(allDocTypeIds());
+			.docTypeIds(allDocTypeIds())
+			.chunkHeaderFieldIds(headerFieldIds());
+	}
+
+	/**
+	 * Two fields other than the one to embed, in reverse id order, so that a
+	 * header that loses its order on the way does not pass unnoticed.
+	 */
+	private List<Long> headerFieldIds() {
+		return sessionFactory.withTransaction((s, t) -> s
+				.createQuery("select f.id from DocTypeField f order by f.id", Long.class)
+				.setMaxResults(3)
+				.getResultList()
+				.map(ids -> List.of(ids.get(2), ids.get(1)))
+			)
+			.await()
+			.indefinitely();
 	}
 
 	/**
@@ -916,6 +939,7 @@ class ReindexDataIndexTest {
 				dataIndexService.findByName(s, name)
 					.call(dataIndex -> Mutiny.fetch(dataIndex.getDocTypes()))
 					.call(dataIndex -> Mutiny.fetch(dataIndex.getEmbeddingDocTypeField()))
+					.call(dataIndex -> Mutiny.fetch(dataIndex.getChunkHeaderFields()))
 			)
 			.await()
 			.indefinitely();

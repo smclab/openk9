@@ -17,7 +17,9 @@
 
 package io.openk9.datasource.model;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import jakarta.persistence.Column;
@@ -30,6 +32,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import io.openk9.datasource.model.util.ExportIgnore;
@@ -140,6 +143,22 @@ public class DataIndex extends K9Entity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "embedding_doc_type_field_id", referencedColumnName = "id")
 	private DocTypeField embeddingDocTypeField;
+
+	/**
+	 * The fields of the document header, in the order chosen by the Admin.
+	 * <p>
+	 * Their values are prepended to every chunk before embedding, while the
+	 * chunk text in the index stays the original one. Empty means no header.
+	 */
+	@ManyToMany
+	@JoinTable(name = "data_index_chunk_header_fields",
+		joinColumns = @JoinColumn(name = "data_index_id", referencedColumnName = "id"),
+		inverseJoinColumns =
+			@JoinColumn(name = "doc_type_field_id", referencedColumnName = "id"))
+	@OrderColumn(name = "position")
+	@ToString.Exclude
+	@JsonIgnore
+	private List<DocTypeField> chunkHeaderFields = new ArrayList<>();
 
 	@Column(name = "chunk_type")
 	@Enumerated(EnumType.STRING)

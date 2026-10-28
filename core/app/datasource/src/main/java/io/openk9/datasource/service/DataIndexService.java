@@ -20,10 +20,12 @@ package io.openk9.datasource.service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.openk9.datasource.index.exception.DeleteDataIndexException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -276,7 +278,20 @@ public class DataIndexService
 	public Uni<DataIndex> create(
 		Mutiny.Session session, DataIndex dataIndex, DataIndex oldDataIndex) {
 
-		return resolveEmbeddingModel(session, dataIndex)
+		var embeddedInHeader = embeddingDocTypeFieldInHeader(dataIndex);
+
+		if (embeddedInHeader != null) {
+			return Uni.createFrom().failure(new ValidationException(String.format(
+				"Cannot create the dataIndex %s: the field %s is the" +
+				" embeddingDocTypeField, the text split into chunks, and" +
+				" cannot be in chunkHeaderFields.",
+				dataIndex.getName(),
+				embeddedInHeader.getName()
+			)));
+		}
+
+		return attachChunkHeaderFields(session, dataIndex)
+			.flatMap(unused -> resolveEmbeddingModel(session, dataIndex))
 			.flatMap(embeddingModel -> merge(session, dataIndex)
 				.call(merged -> createDataIndexTemplate(
 					session, merged, oldDataIndex, embeddingModel))
@@ -505,6 +520,18 @@ public class DataIndexService
 	public Uni<DocTypeField> getEmbeddingDocTypeField(long id) {
 		return sessionFactory.withTransaction((s, t) -> findById(s, id)
 			.flatMap(dataIndex -> s.fetch(dataIndex.getEmbeddingDocTypeField()))
+		);
+	}
+
+	/**
+	 * Returns the fields of the document header of a dataIndex, in order.
+	 *
+	 * @param id the id of the dataIndex
+	 * @return the header fields, empty when the dataIndex has no header
+	 */
+	public Uni<List<DocTypeField>> getChunkHeaderFields(long id) {
+		return sessionFactory.withTransaction((s, t) -> findById(s, id)
+			.flatMap(dataIndex -> s.fetch(dataIndex.getChunkHeaderFields()))
 		);
 	}
 
@@ -1200,7 +1227,11 @@ public class DataIndexService
 			Objects.requireNonNullElseGet(dto.getDocTypeIds(), Set::of);
 
 		return docTypeService.getDocTypesAndDocTypeFields(session, docTypeIds)
-			.map(docTypes -> {
+			.flatMap(docTypes -> findChunkHeaderFields(
+					session, dto.getChunkHeaderFieldIds())
+				.map(chunkHeaderFields -> Tuple2.of(docTypes, chunkHeaderFields)))
+			.map(tuple -> {
+				var docTypes = tuple.left;
 
 				// mapping basic field
 				var dataIndex = mapper.create(dto);
@@ -1221,8 +1252,93 @@ public class DataIndexService
 					);
 				}
 
+				// mapping chunkHeaderFields
+				dataIndex.setChunkHeaderFields(tuple.right);
+
 				return dataIndex;
 			});
+	}
+
+	/**
+	 * Loads the fields of the document header, in the order they were asked
+	 * for, refusing an id that matches no docTypeField.
+	 */
+	private Uni<List<DocTypeField>> findChunkHeaderFields(
+		Mutiny.Session session, List<Long> chunkHeaderFieldIds) {
+
+		if (chunkHeaderFieldIds == null || chunkHeaderFieldIds.isEmpty()) {
+			return Uni.createFrom().item(new ArrayList<>());
+		}
+
+		return docTypeFieldService
+			.findByIds(session, new LinkedHashSet<>(chunkHeaderFieldIds))
+			.map(found -> {
+				// find puts a null in the place of an id that matches no field
+				var byId = found.stream()
+					.filter(Objects::nonNull)
+					.collect(Collectors.toMap(DocTypeField::getId, field -> field));
+
+				var missing = chunkHeaderFieldIds.stream()
+					.filter(id -> !byId.containsKey(id))
+					.toList();
+
+				if (!missing.isEmpty()) {
+					throw new ValidationException(String.format(
+						"chunkHeaderFieldIds %s do not match any docTypeField.",
+						missing
+					));
+				}
+
+				return new ArrayList<>(chunkHeaderFieldIds.stream()
+					.distinct()
+					.map(byId::get)
+					.toList());
+			});
+	}
+
+	/**
+	 * Loads the header fields in the session the dataIndex is merged in. On a
+	 * reindex they come from the old dataIndex, loaded in another session, and
+	 * the merge of a collection without cascade would load a detached element
+	 * with a blocking access to the database.
+	 */
+	private Uni<Void> attachChunkHeaderFields(
+		Mutiny.Session session, DataIndex dataIndex) {
+
+		var chunkHeaderFields = dataIndex.getChunkHeaderFields();
+
+		if (session == null || chunkHeaderFields == null
+			|| chunkHeaderFields.isEmpty()) {
+
+			return Uni.createFrom().voidItem();
+		}
+
+		var ids = chunkHeaderFields.stream()
+			.map(DocTypeField::getId)
+			.toList();
+
+		return findChunkHeaderFields(session, ids)
+			.invoke(dataIndex::setChunkHeaderFields)
+			.replaceWithVoid();
+	}
+
+	/**
+	 * Returns the header field that is the embeddingDocTypeField, if any: that
+	 * field is the text split into chunks, so it cannot also be the header.
+	 */
+	private static DocTypeField embeddingDocTypeFieldInHeader(DataIndex dataIndex) {
+		var embeddingDocTypeField = dataIndex.getEmbeddingDocTypeField();
+		var chunkHeaderFields = dataIndex.getChunkHeaderFields();
+
+		if (embeddingDocTypeField == null || chunkHeaderFields == null) {
+			return null;
+		}
+
+		return chunkHeaderFields.stream()
+			.filter(field -> Objects.equals(
+				field.getId(), embeddingDocTypeField.getId()))
+			.findFirst()
+			.orElse(null);
 	}
 
 	/**

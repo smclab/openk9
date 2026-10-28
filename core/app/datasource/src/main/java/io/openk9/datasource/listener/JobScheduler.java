@@ -323,6 +323,8 @@ public class JobScheduler {
 			newDataIndex.setEmbeddingJsonConfig(oldDataIndex.getEmbeddingJsonConfig());
 			newDataIndex.setEmbeddingDocTypeField(oldDataIndex.getEmbeddingDocTypeField());
 			newDataIndex.setSettings(oldDataIndex.getSettings());
+			newDataIndex.setChunkHeaderFields(
+				new ArrayList<>(oldDataIndex.getChunkHeaderFields()));
 
 			Set<DocType> docTypes = oldDataIndex.getDocTypes();
 

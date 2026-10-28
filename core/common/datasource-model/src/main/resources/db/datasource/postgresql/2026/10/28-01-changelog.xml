@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2026/10/28-01-changelog.xml">
+
+	<!--
+	  The fields of the document header of a data index, in the order chosen
+	  by the Admin: position is the index in that list. A data index without
+	  rows here has no header, so existing data needs no migration.
+	  Like data_index_doc_types, the foreign key on doc_type_field blocks the
+	  deletion of a field that is still used in a header.
+	-->
+	<changeSet id="1793187724-1" author="openk9">
+		<createTable tableName="data_index_chunk_header_fields">
+			<column name="data_index_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="data_index_chunk_header_pk"/>
+			</column>
+			<column name="position" type="INTEGER">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="data_index_chunk_header_pk"/>
+			</column>
+			<column name="doc_type_field_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1793187724-2" author="openk9">
+		<addForeignKeyConstraint baseTableName="data_index_chunk_header_fields"
+								 baseColumnNames="data_index_id"
+								 constraintName="fk_chunk_header_data_index"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedTableName="data_index"
+								 referencedColumnNames="id"/>
+	</changeSet>
+
+	<changeSet id="1793187724-3" author="openk9">
+		<addForeignKeyConstraint baseTableName="data_index_chunk_header_fields"
+								 baseColumnNames="doc_type_field_id"
+								 constraintName="fk_chunk_header_doc_type_field"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedTableName="doc_type_field"
+								 referencedColumnNames="id"/>
+	</changeSet>
+
+</databaseChangeLog>

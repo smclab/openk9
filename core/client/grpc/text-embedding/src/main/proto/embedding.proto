@@ -114,6 +114,14 @@ message FloatVector {
   repeated float values = 1;
 }
 
+// A field of the document header, prepended to every chunk before
+// embedding. The name is the doc type field path with spaces instead
+// of dots; the value is already flattened to text by the Core.
+message ChunkHeaderField {
+  string name = 1;
+  string value = 2;
+}
+
 message EmbedContentRequest {
   string tenantId = 1;
   RequestChunk chunk = 2;
@@ -124,6 +132,11 @@ message EmbedContentRequest {
   //   text | refs | text + refs (at least one, else INVALID_ARGUMENT).
   optional string text = 5;
   repeated MediaRef refs = 6;
+
+  // Document header, in the order chosen by the Admin. The module
+  // embeds header + chunk and returns the original chunk as text.
+  // Empty: no header, the request is embedded as before.
+  repeated ChunkHeaderField chunkHeader = 7;
 }
 
 message EmbedQueryRequest {

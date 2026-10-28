@@ -69,6 +69,10 @@ import org.hibernate.type.SqlTypes;
 					@NamedAttributeNode(
 						value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD,
 						subgraph = "docTypeField-subgraph"
+					),
+					@NamedAttributeNode(
+						value = DataIndex_.CHUNK_HEADER_FIELDS,
+						subgraph = "docTypeField-subgraph"
 					)
 				}
 			),

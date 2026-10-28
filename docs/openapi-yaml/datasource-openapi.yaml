@@ -145,6 +145,11 @@ components:
         embeddingDocTypeFieldId:
           type: integer
           format: int64
+        chunkHeaderFieldIds:
+          type: array
+          items:
+            type: integer
+            format: int64
         embeddingJsonConfig:
           type: string
         docTypeIds:

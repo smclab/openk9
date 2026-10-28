@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model.dto.base;
 
+import java.util.List;
 import java.util.Set;
 
 import io.openk9.datasource.validation.json.Json;
@@ -60,6 +61,13 @@ public class DataIndexDTO extends K9EntityDTO {
 		The field used during the text embedding,
 		must be a valid docTypeFieldId.""")
 	private Long embeddingDocTypeFieldId;
+
+	@Nullable
+	@Description("""
+		The docTypeField ids whose values form the header prepended to every
+		chunk before embedding, in this order. Cannot hold the
+		embeddingDocTypeFieldId. Empty or absent means no header.""")
+	private List<Long> chunkHeaderFieldIds;
 
 	@Json
 	@Nullable

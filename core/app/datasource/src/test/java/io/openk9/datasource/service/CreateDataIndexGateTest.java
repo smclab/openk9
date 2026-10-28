@@ -28,6 +28,7 @@ import io.openk9.datasource.IndexTemplateUtils;
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
 import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.opensearch.client.Request;
 import org.opensearch.client.RestHighLevelClient;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -63,6 +65,9 @@ class CreateDataIndexGateTest {
 
 	@Inject
 	DatasourceService datasourceService;
+
+	@Inject
+	DocTypeFieldService docTypeFieldService;
 
 	@Inject
 	EmbeddingModelService embeddingModelService;
@@ -190,6 +195,145 @@ class CreateDataIndexGateTest {
 			indexTemplate.composedOf().isEmpty(),
 			"the index template of a plain dataIndex composes something"
 		);
+	}
+
+	@Test
+	@DisplayName("Should refuse a header that holds the embeddingDocTypeField")
+	void should_refuse_the_embedding_field_in_the_header() {
+		// the field to embed is also asked as a header field
+		var fieldIds = docTypeFieldIds(2);
+		var embeddingFieldId = fieldIds.getFirst();
+		var embeddingFieldName = docTypeFieldName(embeddingFieldId);
+
+		var dto = DataIndexDTO.builder()
+			.name(KNN_DATA_INDEX)
+			.knnIndex(true)
+			.embeddingDocTypeFieldId(embeddingFieldId)
+			.chunkHeaderFieldIds(List.of(fieldIds.get(1), embeddingFieldId))
+			.build();
+
+		// the creation is refused
+		var exception = assertThrows(
+			ValidationException.class,
+			() -> createDataIndex(dto)
+		);
+
+		// the error names the field
+		assertTrue(
+			exception.getMessage().contains(embeddingFieldName),
+			exception.getMessage()
+		);
+	}
+
+	@Test
+	@DisplayName("Should refuse a header field id that matches no docTypeField")
+	void should_refuse_an_unknown_header_field_id() {
+		// one existing field and one id that matches no field
+		var fieldIds = docTypeFieldIds(2);
+		var unknownId = Long.MAX_VALUE;
+
+		var dto = DataIndexDTO.builder()
+			.name(KNN_DATA_INDEX)
+			.knnIndex(true)
+			.embeddingDocTypeFieldId(fieldIds.getFirst())
+			.chunkHeaderFieldIds(List.of(fieldIds.get(1), unknownId))
+			.build();
+
+		// the creation is refused
+		var exception = assertThrows(
+			ValidationException.class,
+			() -> createDataIndex(dto)
+		);
+
+		// the error names the unknown id
+		assertTrue(
+			exception.getMessage().contains(String.valueOf(unknownId)),
+			exception.getMessage()
+		);
+	}
+
+	@Test
+	@DisplayName("Should keep the header fields in the order they were chosen")
+	void should_persist_the_header_in_the_chosen_order() {
+		// three fields: the first one to embed, the other two as header in
+		// reverse id order
+		var fieldIds = docTypeFieldIds(3);
+		var headerFieldIds = List.of(fieldIds.get(2), fieldIds.get(1));
+
+		var dto = DataIndexDTO.builder()
+			.name(KNN_DATA_INDEX)
+			.knnIndex(true)
+			.embeddingDocTypeFieldId(fieldIds.getFirst())
+			.chunkHeaderFieldIds(headerFieldIds)
+			.build();
+
+		var dataIndex = createDataIndex(dto);
+
+		// the header is read back in the same order
+		var savedIds = dataIndexService.getChunkHeaderFields(dataIndex.getId())
+			.await()
+			.indefinitely()
+			.stream()
+			.map(DocTypeField::getId)
+			.toList();
+
+		assertEquals(headerFieldIds, savedIds);
+	}
+
+	@Test
+	@DisplayName("Should keep a header field from being deleted")
+	void should_keep_a_header_field_from_being_deleted() {
+		// a header field of a saved dataIndex
+		var fieldIds = docTypeFieldIds(2);
+		var headerFieldId = fieldIds.get(1);
+
+		var dto = DataIndexDTO.builder()
+			.name(KNN_DATA_INDEX)
+			.knnIndex(true)
+			.embeddingDocTypeFieldId(fieldIds.getFirst())
+			.chunkHeaderFieldIds(List.of(headerFieldId))
+			.build();
+
+		createDataIndex(dto);
+
+		// its deletion fails on the foreign key
+		assertThrows(
+			Exception.class,
+			() -> docTypeFieldService.deleteById(headerFieldId).await().indefinitely()
+		);
+
+		// and the field is still there
+		assertNotNull(docTypeFieldName(headerFieldId));
+	}
+
+	private List<Long> docTypeFieldIds(int count) {
+		return sessionFactory.withTransaction((s, t) -> s
+				.createQuery("select f.id from DocTypeField f order by f.id", Long.class)
+				.setMaxResults(count)
+				.getResultList()
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private String docTypeFieldName(long id) {
+		return sessionFactory.withTransaction((s, t) -> s
+				.find(DocTypeField.class, id)
+				.map(DocTypeField::getName)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private DataIndex createDataIndex(DataIndexDTO dto) {
+		var datasource = EntitiesUtils.getEntity(
+			Initializer.INIT_DATASOURCE_CONNECTION, datasourceService, sessionFactory);
+
+		return sessionFactory.withTransaction((s, t) ->
+				dataIndexService.create(s, datasource.getId(), dto)
+			)
+			.await()
+			.indefinitely();
 	}
 
 	private long anyDocTypeFieldId() {

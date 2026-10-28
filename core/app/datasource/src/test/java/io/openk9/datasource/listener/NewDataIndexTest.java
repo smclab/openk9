@@ -17,7 +17,9 @@
 
 package io.openk9.datasource.listener;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import io.openk9.datasource.model.DataIndex;
@@ -52,6 +54,10 @@ class NewDataIndexTest {
 		var datasource = new Datasource();
 		var embeddingDocTypeField = new DocTypeField();
 		var docType = new DocType();
+		var category = new DocTypeField();
+		category.setName("category");
+		var title = new DocTypeField();
+		title.setName("title");
 
 		var oldDataIndex = new DataIndex();
 		oldDataIndex.setName("7-data-an-older-schedule-id");
@@ -64,6 +70,7 @@ class NewDataIndexTest {
 		oldDataIndex.setEmbeddingDocTypeField(embeddingDocTypeField);
 		oldDataIndex.setSettings(SETTINGS);
 		oldDataIndex.setDocTypes(new LinkedHashSet<>(Set.of(docType)));
+		oldDataIndex.setChunkHeaderFields(new ArrayList<>(List.of(category, title)));
 
 		// the dataIndex the reindex will create
 		var newDataIndex = JobScheduler.newDataIndex(
@@ -85,8 +92,13 @@ class NewDataIndexTest {
 		assertEquals(SETTINGS, newDataIndex.getSettings());
 		assertEquals(Set.of(docType), newDataIndex.getDocTypes());
 
-		// the docTypes are copied, not shared with the replaced dataIndex
+		assertEquals(List.of(category, title), newDataIndex.getChunkHeaderFields());
+
+		// the docTypes and the header are copied, not shared with the replaced
+		// dataIndex
 		assertNotSame(oldDataIndex.getDocTypes(), newDataIndex.getDocTypes());
+		assertNotSame(
+			oldDataIndex.getChunkHeaderFields(), newDataIndex.getChunkHeaderFields());
 	}
 
 	@Test
@@ -104,6 +116,7 @@ class NewDataIndexTest {
 		assertNull(newDataIndex.getEmbeddingDocTypeField());
 		assertNull(newDataIndex.getSettings());
 		assertTrue(newDataIndex.getDocTypes().isEmpty());
+		assertTrue(newDataIndex.getChunkHeaderFields().isEmpty());
 	}
 
 }

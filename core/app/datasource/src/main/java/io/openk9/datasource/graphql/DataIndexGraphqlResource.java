@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.List;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -186,6 +187,13 @@ public class DataIndexGraphqlResource {
 
 	public Uni<DocTypeField> getEmbeddingDocTypeField(@Source DataIndex dataIndex) {
 		return dataIndexService.getEmbeddingDocTypeField(dataIndex.getId());
+	}
+
+	@Description("""
+		The fields whose values form the header prepended to every chunk
+		before embedding, in the order they were chosen.""")
+	public Uni<List<DocTypeField>> getChunkHeaderFields(@Source DataIndex dataIndex) {
+		return dataIndexService.getChunkHeaderFields(dataIndex.getId());
 	}
 
 	public Uni<String> mappings(@Source DataIndex dataIndex) {

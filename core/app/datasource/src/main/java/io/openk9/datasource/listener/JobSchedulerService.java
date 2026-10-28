@@ -176,6 +176,7 @@ public class JobSchedulerService {
 						"left join fetch d.dataIndex di " +
 						"left join fetch di.embeddingDocTypeField edtf " +
 						"left join fetch di.docTypes " +
+						"left join fetch di.chunkHeaderFields " +
 						"where d.id = :id", Datasource.class)
 					.setParameter("id", request.datasourceId())
 					.getSingleResult()
