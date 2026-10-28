@@ -644,7 +644,12 @@
       "mappings-fetch-error": "Error while fetching the mappings.",
       "settings-title": "Data Index settings",
       "custom-settings": "Custom settings",
-      "index-mapping": "Index Mapping"
+      "index-mapping": "Index Mapping",
+      "chunk-header-fields": "Chunk header fields",
+      "chunk-header-fields-description": "Fields whose values are written, in this order, in front of every chunk before embedding. The text to embed cannot be one of them.",
+      "chunk-header-fields-empty": "No header: chunks are embedded as they are.",
+      "chunk-header-fields-add": "Add a header field",
+      "chunk-header-fields-remove": "Remove"
     },
     "datasources": {
       "title": "Datasources",

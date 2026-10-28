@@ -27,6 +27,7 @@ import {
   useToast,
 } from "@components/Form";
 import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
+import { OrderedAutocompleteSelect } from "@components/Form/Select/OrderedAutocompleteSelect";
 import { useRestClient } from "@components/queryClient";
 import {
   Box,
@@ -73,6 +74,7 @@ export type DataindexData = {
   chunkType: string | null;
   chunkWindowSize: number | null;
   embeddingDocTypeFieldId: { id: string; name: string } | null;
+  chunkHeaderFields: { id: string; name: string }[];
   settings: string | null;
   customSettings: string | null;
   embeddingJsonConfig: string | null;
@@ -123,6 +125,7 @@ const DEFAULT_DATAINDEX_VALUES: DataindexData = {
   chunkType: ChunkType.ChunkTypeCharacterTextSplitter,
   chunkWindowSize: 0,
   embeddingDocTypeFieldId: null,
+  chunkHeaderFields: [],
   settings: "{}",
   customSettings: "{}",
   embeddingJsonConfig: "{}",
@@ -188,6 +191,10 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
       embeddingDocTypeFieldId: data.embeddingDocTypeField
         ? { id: data.embeddingDocTypeField.id || "", name: data.embeddingDocTypeField.name || "" }
         : null,
+      chunkHeaderFields:
+        data.chunkHeaderFields
+          ?.filter((field): field is NonNullable<typeof field> => !!field?.id)
+          .map((field) => ({ id: field.id || "", name: field.name || "" })) || [],
       settings: data.settings || "{}",
       customSettings: data.customSettings || "{}",
       embeddingJsonConfig: data.embeddingJsonConfig || "{}",
@@ -243,6 +250,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         chunkWindowSize: dataindexData.chunkWindowSize,
         embeddingJsonConfig: dataindexData.embeddingJsonConfig,
         embeddingDocTypeFieldId: dataindexData.embeddingDocTypeFieldId,
+        chunkHeaderFields: dataindexData.chunkHeaderFields,
         settings: dataindexData.customSettings,
       }),
       [dataindexData],
@@ -265,6 +273,10 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
       if (values.embeddingDocTypeFieldId?.id) {
         variables.embeddingDocTypeFieldId = values.embeddingDocTypeFieldId.id;
+      }
+
+      if (values.chunkHeaderFields?.length) {
+        variables.chunkHeaderFieldIds = values.chunkHeaderFields.map((field) => field.id);
       }
 
       if (values.chunkType) {
@@ -406,6 +418,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                     { key: "chunkWindowSize" },
                     { key: "embeddingJsonConfig", jsonView: true },
                     { key: "embeddingDocTypeFieldId" },
+                    { key: "chunkHeaderFields", label: t("pages.data-indices.chunk-header-fields") },
                   ]
                 : []),
             ],
@@ -419,6 +432,9 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         valueOverride: {
           datasourceId: form.inputProps("datasourceId").value?.name || "",
           embeddingDocTypeFieldId: form.inputProps("embeddingDocTypeFieldId").value?.name || "",
+          chunkHeaderFields: (form.inputProps("chunkHeaderFields").value || [])
+            .map((field, index) => `${index + 1}. ${field.name}`)
+            .join(", "),
           mappings,
         },
       }),
@@ -598,6 +614,17 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                         disabled={isReadOnly}
                         onClear={() => form.inputProps("embeddingDocTypeFieldId").onChange({ id: "", name: "" })}
                         useOptions={useDocTypeOptions}
+                      />
+                      <OrderedAutocompleteSelect
+                        label={t("pages.data-indices.chunk-header-fields")}
+                        description={t("pages.data-indices.chunk-header-fields-description")}
+                        addLabel={t("pages.data-indices.chunk-header-fields-add")}
+                        removeLabel={t("pages.data-indices.chunk-header-fields-remove")}
+                        emptyLabel={t("pages.data-indices.chunk-header-fields-empty")}
+                        value={form.inputProps("chunkHeaderFields").value || []}
+                        onChange={(fields) => form.inputProps("chunkHeaderFields").onChange(fields)}
+                        useOptions={useDocTypeOptions}
+                        disabled={isReadOnly}
                       />
                     </>
                   )}

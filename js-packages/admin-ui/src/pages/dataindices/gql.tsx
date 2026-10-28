@@ -27,6 +27,7 @@ export const CreateDataIndexMutation = gql`
     $chunkWindowSize: Int
     $embeddingJsonConfig: String
     $embeddingDocTypeFieldId: BigInteger
+    $chunkHeaderFieldIds: [BigInteger]
     $settings: String
   ) {
     dataIndex(
@@ -40,6 +41,7 @@ export const CreateDataIndexMutation = gql`
         chunkWindowSize: $chunkWindowSize
         embeddingJsonConfig: $embeddingJsonConfig
         embeddingDocTypeFieldId: $embeddingDocTypeFieldId
+        chunkHeaderFieldIds: $chunkHeaderFieldIds
         settings: $settings
       }
     ) {
@@ -94,6 +96,10 @@ export const DataIndexQuery = gql`
         name
       }
       embeddingDocTypeField {
+        id
+        name
+      }
+      chunkHeaderFields {
         id
         name
       }

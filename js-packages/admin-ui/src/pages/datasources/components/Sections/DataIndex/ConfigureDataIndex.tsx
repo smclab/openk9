@@ -16,6 +16,7 @@
 */
 import { CodeInput, NumberInput } from "@components/Form";
 import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
+import { OrderedAutocompleteSelect } from "@components/Form/Select/OrderedAutocompleteSelect";
 import { useRestClient } from "@components/queryClient";
 import {
   Box,
@@ -87,6 +88,7 @@ type DataIndexFormsourceProps = {
     chunkWindowSize?: number | null | undefined;
     embeddingJsonConfig?: string | null | undefined;
     embeddingDocTypeFieldId?: { id: string; name: string } | null | undefined;
+    chunkHeaderFields?: { id: string; name: string }[];
   };
   changeExtraParamsDataIndex: (
     key:
@@ -95,8 +97,9 @@ type DataIndexFormsourceProps = {
       | "chunkWindowSize"
       | "embeddingJsonConfig"
       | "embeddingDocTypeFieldId"
+      | "chunkHeaderFields"
       | "docTypeIds",
-    value: string | number | boolean | number[] | { id: string; name: string } | null,
+    value: string | number | boolean | number[] | { id: string; name: string } | { id: string; name: string }[] | null,
   ) => void;
 };
 
@@ -304,6 +307,8 @@ export default function DataIndexFormsource({
                         changeExtraParamsDataIndex("chunkType", null);
                         changeExtraParamsDataIndex("chunkWindowSize", null);
                         changeExtraParamsDataIndex("embeddingJsonConfig", null);
+                        changeExtraParamsDataIndex("embeddingDocTypeFieldId", null);
+                        changeExtraParamsDataIndex("chunkHeaderFields", []);
                       }
                     }}
                   />
@@ -350,25 +355,36 @@ export default function DataIndexFormsource({
                     label={t("pages.datasources.data-index-section.embedding-json-config")}
                     validationMessages={[]}
                   />
+                  <AutocompleteDropdown
+                    label={t("pages.datasources.data-index-section.doc-type-field")}
+                    onChange={(val) =>
+                      changeExtraParamsDataIndex("embeddingDocTypeFieldId", { id: val.id, name: val.name })
+                    }
+                    value={
+                      !extraParamsDataIndex?.embeddingDocTypeFieldId?.id
+                        ? undefined
+                        : {
+                            id: extraParamsDataIndex.embeddingDocTypeFieldId?.id ?? "",
+                            name: extraParamsDataIndex.embeddingDocTypeFieldId?.name ?? "",
+                          }
+                    }
+                    onClear={() => changeExtraParamsDataIndex("embeddingDocTypeFieldId", null)}
+                    disabled={isDisabled}
+                    useOptions={useDocTypeOptions}
+                  />
+                  <OrderedAutocompleteSelect
+                    label={t("pages.data-indices.chunk-header-fields")}
+                    description={t("pages.data-indices.chunk-header-fields-description")}
+                    addLabel={t("pages.data-indices.chunk-header-fields-add")}
+                    removeLabel={t("pages.data-indices.chunk-header-fields-remove")}
+                    emptyLabel={t("pages.data-indices.chunk-header-fields-empty")}
+                    value={extraParamsDataIndex.chunkHeaderFields || []}
+                    onChange={(fields) => changeExtraParamsDataIndex("chunkHeaderFields", fields)}
+                    useOptions={useDocTypeOptions}
+                    disabled={isDisabled}
+                  />
                 </>
               )}
-              <AutocompleteDropdown
-                label={t("pages.datasources.data-index-section.doc-type-field")}
-                onChange={(val) =>
-                  changeExtraParamsDataIndex("embeddingDocTypeFieldId", { id: val.id, name: val.name })
-                }
-                value={
-                  !extraParamsDataIndex?.embeddingDocTypeFieldId?.id
-                    ? undefined
-                    : {
-                        id: extraParamsDataIndex.embeddingDocTypeFieldId?.id ?? "",
-                        name: extraParamsDataIndex.embeddingDocTypeFieldId?.name ?? "",
-                      }
-                }
-                onClear={() => changeExtraParamsDataIndex("embeddingDocTypeFieldId", null)}
-                disabled={isDisabled}
-                useOptions={useDocTypeOptions}
-              />
             </FormControl>
           </div>
         </FormControl>

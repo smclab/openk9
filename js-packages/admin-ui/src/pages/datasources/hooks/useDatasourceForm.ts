@@ -60,6 +60,7 @@ export const initializeConnectionData = (datasourceId: string | undefined | null
     chunkWindowSize: 0,
     chunkType: null,
     embeddingDocTypeFieldId: { id: "", name: "" },
+    chunkHeaderFields: [],
     embeddingJsonConfig: "",
     docTypeIds: [],
   },

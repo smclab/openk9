@@ -774,6 +774,11 @@ export type CreateRagConfigurationDtoInput = {
 export type DataIndex = {
   __typename?: 'DataIndex';
   cat?: Maybe<CatResponse>;
+  /**
+   * The fields whose values form the header prepended to every chunk
+   * before embedding, in the order they were chosen.
+   */
+  chunkHeaderFields?: Maybe<Array<Maybe<DocTypeField>>>;
   chunkType?: Maybe<ChunkType>;
   chunkWindowSize?: Maybe<Scalars['Int']>;
   /** ISO-8601 */
@@ -812,6 +817,12 @@ export type DataIndexDocTypesArgs = {
 };
 
 export type DataIndexDtoInput = {
+  /**
+   * The docTypeField ids whose values form the header prepended to every
+   * chunk before embedding, in this order. Cannot hold the
+   * embeddingDocTypeFieldId. Empty or absent means no header.
+   */
+  chunkHeaderFieldIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
   /** The chunk strategy to apply. */
   chunkType?: InputMaybe<ChunkType>;
   /** The number of chunks before and after every chunk. */
@@ -1695,6 +1706,8 @@ export type EmbeddingModel = {
   jsonConfig?: Maybe<Scalars['String']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
+  /** Deprecated and ignored: the embedding module tells a multimodal model from its provider and model (Cohere Embed v4 on AWS Bedrock, multimodalembedding on Vertex AI). It will be removed. */
+  multimodal: Scalars['Boolean'];
   name?: Maybe<Scalars['String']>;
   providerModel?: Maybe<ProviderModel>;
   vectorDataType?: Maybe<VectorDataType>;
@@ -1717,6 +1730,12 @@ export type EmbeddingModelDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
   jsonConfig?: InputMaybe<Scalars['String']>;
+  /**
+   * Deprecated and ignored: the embedding module tells a multimodal
+   * model from its provider and model (Cohere Embed v4 on AWS Bedrock,
+   * multimodalembedding on Vertex AI). It will be removed.
+   */
+  multimodal?: InputMaybe<Scalars['Boolean']>;
   name: Scalars['String'];
   providerModel: ProviderModelDtoInput;
   /**
@@ -7489,6 +7508,7 @@ export type CreateDataIndexMutationVariables = Exact<{
   chunkWindowSize?: InputMaybe<Scalars['Int']>;
   embeddingJsonConfig?: InputMaybe<Scalars['String']>;
   embeddingDocTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
+  chunkHeaderFieldIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
   settings?: InputMaybe<Scalars['String']>;
 }>;
 
@@ -7509,7 +7529,7 @@ export type DataIndexQueryVariables = Exact<{
 }>;
 
 
-export type DataIndexQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', name?: string | null, description?: string | null, settings?: string | null, customSettings?: string | null, chunkType?: ChunkType | null, chunkWindowSize?: number | null, embeddingJsonConfig?: string | null, knnIndex?: boolean | null, datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null, embeddingDocTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null, docTypes?: { __typename?: 'DefaultConnection_DocType', edges?: Array<{ __typename?: 'DefaultEdge_DocType', node?: { __typename?: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null, cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, storeSize: any } | null } | null };
+export type DataIndexQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', name?: string | null, description?: string | null, settings?: string | null, customSettings?: string | null, chunkType?: ChunkType | null, chunkWindowSize?: number | null, embeddingJsonConfig?: string | null, knnIndex?: boolean | null, datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null, embeddingDocTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null, chunkHeaderFields?: Array<{ __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null> | null, docTypes?: { __typename?: 'DefaultConnection_DocType', edges?: Array<{ __typename?: 'DefaultEdge_DocType', node?: { __typename?: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null, cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, storeSize: any } | null } | null };
 
 export type DeleteDataIndexMutationVariables = Exact<{
   dataIndexId: Scalars['ID'];
@@ -16047,10 +16067,10 @@ export type AutocompletesOptionsQueryHookResult = ReturnType<typeof useAutocompl
 export type AutocompletesOptionsLazyQueryHookResult = ReturnType<typeof useAutocompletesOptionsLazyQuery>;
 export type AutocompletesOptionsQueryResult = Apollo.QueryResult<AutocompletesOptionsQuery, AutocompletesOptionsQueryVariables>;
 export const CreateDataIndexDocument = gql`
-    mutation CreateDataIndex($name: String!, $datasourceId: ID!, $description: String, $knnIndex: Boolean, $docTypeIds: [BigInteger], $chunkType: ChunkType, $chunkWindowSize: Int, $embeddingJsonConfig: String, $embeddingDocTypeFieldId: BigInteger, $settings: String) {
+    mutation CreateDataIndex($name: String!, $datasourceId: ID!, $description: String, $knnIndex: Boolean, $docTypeIds: [BigInteger], $chunkType: ChunkType, $chunkWindowSize: Int, $embeddingJsonConfig: String, $embeddingDocTypeFieldId: BigInteger, $chunkHeaderFieldIds: [BigInteger], $settings: String) {
   dataIndex(
     datasourceId: $datasourceId
-    dataIndexDTO: {name: $name, description: $description, knnIndex: $knnIndex, docTypeIds: $docTypeIds, chunkType: $chunkType, chunkWindowSize: $chunkWindowSize, embeddingJsonConfig: $embeddingJsonConfig, embeddingDocTypeFieldId: $embeddingDocTypeFieldId, settings: $settings}
+    dataIndexDTO: {name: $name, description: $description, knnIndex: $knnIndex, docTypeIds: $docTypeIds, chunkType: $chunkType, chunkWindowSize: $chunkWindowSize, embeddingJsonConfig: $embeddingJsonConfig, embeddingDocTypeFieldId: $embeddingDocTypeFieldId, chunkHeaderFieldIds: $chunkHeaderFieldIds, settings: $settings}
   ) {
     entity {
       name
@@ -16086,6 +16106,7 @@ export type CreateDataIndexMutationFn = Apollo.MutationFunction<CreateDataIndexM
  *      chunkWindowSize: // value for 'chunkWindowSize'
  *      embeddingJsonConfig: // value for 'embeddingJsonConfig'
  *      embeddingDocTypeFieldId: // value for 'embeddingDocTypeFieldId'
+ *      chunkHeaderFieldIds: // value for 'chunkHeaderFieldIds'
  *      settings: // value for 'settings'
  *   },
  * });
@@ -16166,6 +16187,10 @@ export const DataIndexDocument = gql`
       name
     }
     embeddingDocTypeField {
+      id
+      name
+    }
+    chunkHeaderFields {
       id
       name
     }
@@ -17448,4 +17473,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-10-19T17:12:36+02:00
+// Generated on 2026-10-28T12:03:11+00:00

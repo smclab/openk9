@@ -19,3 +19,4 @@ export * from "./CustomSelect";
 export * from "./MultiSelectSimple";
 export * from "./SearchSelect";
 
+export * from "./OrderedAutocompleteSelect";

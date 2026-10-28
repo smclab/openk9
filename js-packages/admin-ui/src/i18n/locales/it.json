@@ -644,7 +644,12 @@
       "mappings-fetch-error": "Errore nel recupero dei mapping.",
       "settings-title": "Impostazioni Data Index",
       "custom-settings": "Impostazioni personalizzate",
-      "index-mapping": "Mapping dell'indice"
+      "index-mapping": "Mapping dell'indice",
+      "chunk-header-fields": "Campi dell'intestazione dei chunk",
+      "chunk-header-fields-description": "Campi i cui valori si scrivono, in quest'ordine, davanti a ogni chunk prima dell'embedding. Il testo da vettorizzare non può essere fra questi.",
+      "chunk-header-fields-empty": "Nessuna intestazione: i chunk si vettorizzano come sono.",
+      "chunk-header-fields-add": "Aggiungi un campo dell'intestazione",
+      "chunk-header-fields-remove": "Rimuovi"
     },
     "datasources": {
       "title": "Sorgenti dati",

@@ -126,6 +126,7 @@ export interface ConnectionData {
     textEmbeddingField?: string;
     chunkWindowSize?: number;
     embeddingDocTypeFieldId: { id: string; name: string } | null;
+    chunkHeaderFields?: { id: string; name: string }[];
     embeddingJsonConfig: string | null;
     chunkType?: ChunkType | null;
     knnIndex?: boolean | null | undefined;

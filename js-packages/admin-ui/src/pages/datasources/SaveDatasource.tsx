@@ -229,6 +229,9 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
             ...(formValues.vectorIndex?.embeddingDocTypeFieldId?.id && {
               embeddingDocTypeFieldId: formValues.vectorIndex.embeddingDocTypeFieldId.id,
             }),
+            ...(formValues.vectorIndex?.chunkHeaderFields?.length && {
+              chunkHeaderFieldIds: formValues.vectorIndex.chunkHeaderFields.map((field) => field.id),
+            }),
             ...(formValues.vectorIndex?.embeddingJsonConfig && {
               embeddingJsonConfig: formValues.vectorIndex.embeddingJsonConfig,
             }),
@@ -305,6 +308,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           embeddingJsonConfig: formValues.vectorIndex?.embeddingJsonConfig || "",
           knnIndex: formValues.vectorIndex?.knnIndex || false,
           embeddingDocTypeFieldId: formValues.vectorIndex?.embeddingDocTypeFieldId || { id: "", name: "" },
+          chunkHeaderFields: formValues.vectorIndex?.chunkHeaderFields || [],
           docTypeIds: formValues.vectorIndex?.docTypeIds || [],
         },
         dataIndices: formValues.dataIndices || [],
@@ -438,10 +442,16 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           { key: "vectorIndex.embeddingJsonConfig", label: t("pages.datasources.embedding-json-config") },
           { key: "vectorIndex.knnIndex", label: t("pages.datasources.embedding-knn-index") },
           { key: "vectorIndex.embeddingDocTypeFieldId.name", label: t("fields.doc-type") },
+          { key: "vectorIndex.chunkHeaderFields", label: t("pages.data-indices.chunk-header-fields") },
           { key: "dataIndices", label: t("pages.data-indices.title") },
         ],
       },
     ],
+    valueOverride: {
+      "vectorIndex.chunkHeaderFields": (formValues.vectorIndex?.chunkHeaderFields || [])
+        .map((field, index) => `${index + 1}. ${field.name}`)
+        .join(", "),
+    },
   });
 
   const recapSections: RecapSingleSection[] = [

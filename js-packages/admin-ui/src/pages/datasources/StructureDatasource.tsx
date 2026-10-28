@@ -172,6 +172,7 @@ export const TabsSection = ({
               id: formValues.vectorIndex?.embeddingDocTypeFieldId?.id || "",
               name: formValues.vectorIndex?.embeddingDocTypeFieldId?.name || "",
             },
+            chunkHeaderFields: formValues.vectorIndex?.chunkHeaderFields || [],
             embeddingJsonConfig: formValues?.vectorIndex?.embeddingJsonConfig || "",
             chunkType: formValues?.vectorIndex?.chunkType,
           }}
