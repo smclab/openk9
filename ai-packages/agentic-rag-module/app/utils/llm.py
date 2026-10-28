@@ -182,7 +182,9 @@ def initialize_language_model(configuration, temperature=None):
             - "aws_bedrock": dict
                 Configurations for AWS Bedrock (required if using AWS_BEDROCK).
             - "reasoning": bool
-                Whether the model thinks before answering (OLLAMA only, default False).
+                Whether the model thinks before answering. OLLAMA defaults to False;
+                on OPENAI only an explicit False is sent, as reasoning_effort "none",
+                and without it the model keeps its own default.
             - "keep_alive": int
                 Seconds the model stays resident in Ollama after a call (OLLAMA only,
                 defaults to DEFAULT_KEEP_ALIVE).
@@ -208,6 +210,11 @@ def initialize_language_model(configuration, temperature=None):
     model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
     match model_type:
         case ModelType.OPENAI.value:
+            # Some models reason by default and then reject function tools on
+            # chat completions, which every structured output call sends; others
+            # reject reasoning_effort altogether, "none" included. So it is sent
+            # only when the tenant turns reasoning off.
+            reasoning_off = configuration.get("reasoning") is False
             llm = ChatOpenAI(
                 model=model,
                 openai_api_key=api_key,
@@ -215,6 +222,7 @@ def initialize_language_model(configuration, temperature=None):
                 stream_usage=True,
                 max_retries=0,
                 temperature=temperature,
+                reasoning_effort="none" if reasoning_off else None,
             )
         case ModelType.OLLAMA.value:
             context_window = configuration["context_window"]

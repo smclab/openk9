@@ -103,7 +103,7 @@ Prompting allows you to constrain the conversational assistant to respond accord
 
 ## Ollama Tuning
 
-When the Large Language Model or the Embedding Model uses Ollama as its provider, three keys of the `jsonConfig` of the entity tune the Ollama client. They apply to the `ollama` provider only and are ignored by every other one.
+When the Large Language Model or the Embedding Model uses Ollama as its provider, three keys of the `jsonConfig` of the entity tune the Ollama client. They apply to the `ollama` provider only and are ignored by every other one, except `reasoning`, which the `openai` provider reads too (see [Reasoning on OpenAI](#reasoning-on-openai)).
 
 | Key | Type | Default | Entity |
 |---|---|---|---|
@@ -140,6 +140,18 @@ Two defaults differ from those of Ollama, and change the behaviour of an existin
 
 - `keep_alive` is thirty minutes instead of the five of Ollama. The model stays resident longer and holds VRAM or RAM with the chat idle: on an Ollama shared with other workloads this is worth a thought, and the previous behaviour is `"keep_alive": 300`.
 - `reasoning` is off instead of following the model. On the models that turn thinking on by themselves both the answer and the latency change; `"reasoning": true` brings it back.
+
+### Reasoning on OpenAI
+
+On a Large Language Model with the `openai` provider, `"reasoning": false` sends `reasoning_effort: "none"` with every request. Without the key, or with `true`, nothing is sent and the model keeps its own default.
+
+The key is needed by the models that reason by default and then refuse function tools on `/v1/chat/completions`, such as `gpt-6-luna` and `gpt-5.6-luna`: the RAG asks for structured output through function tools, and without the key every classification fails with a 400. Other models must be left without it, because they reject the parameter: `gpt-4o` does not accept `reasoning_effort` at all, and `gpt-5` does not accept `"none"`.
+
+```json
+{
+  "reasoning": false
+}
+```
 
 ## Embedding Batch Size
 
