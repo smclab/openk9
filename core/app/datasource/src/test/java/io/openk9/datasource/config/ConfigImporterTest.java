@@ -46,6 +46,7 @@ import io.openk9.datasource.model.EnrichPipelineItemKey;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.PluginDriverDocTypeFieldKey;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.ResultAclConfig;
@@ -56,7 +57,9 @@ import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.base.ResultAclConfigDTO;
+import io.openk9.datasource.model.dto.base.SearchConfigDTO;
 import io.openk9.datasource.model.dto.base.SortingDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.CharFilterService;
@@ -132,6 +135,11 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "Case-Sorting";
 	private static final String SKIP_SORTING_NAME =
 		ENTITY_NAME_PREFIX + "Skip-Sorting";
+
+	private static final String SHARED_FIELD_NAME =
+		ENTITY_NAME_PREFIX + "shared-field";
+	private static final String SHARED_SEARCH_CONFIG_NAME =
+		ENTITY_NAME_PREFIX + "shared-search-config";
 
 	private static final Float SEEDED_SORTING_PRIORITY = 1f;
 	private static final Float IMPORTED_SORTING_PRIORITY = 9f;
@@ -571,6 +579,101 @@ public class ConfigImporterTest {
 	}
 
 	@Test
+	void a_field_name_shared_under_one_doc_type_rejects_the_import() {
+		// The doc type field key is its fieldName under its doc type. Two pairs
+		// share a fieldName under an existing doc type, matched by its id, and
+		// under a new one, matched by its handle; a third field has the same
+		// fieldName under the other doc type. Each pair must be rejected on its
+		// own, the parent keeping the third field apart. A dry-run plans like an
+		// apply, so it must be rejected as well.
+		ConfigPackage exported =
+			configExporter.export(TENANT_ID).await().indefinitely();
+
+		ConfigEntity existingDocType = exported.getEntities().stream()
+			.filter(entity -> entity.getType() == ConfigEntityType.DOC_TYPE)
+			.findFirst()
+			.orElseThrow(() ->
+				new IllegalStateException("the default tenant must have doc types"));
+		String existingRef = existingDocType.getRef();
+
+		ConfigEntity newDocType = new ConfigEntity(
+			"DOC_TYPE-SHARED", ConfigEntityType.DOC_TYPE, DOC_TYPE_NAME,
+			DocTypeDTO.builder().name(DOC_TYPE_NAME).build(),
+			new LinkedHashMap<>(), null);
+
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(
+				existingDocType,
+				newDocType,
+				fieldNode("FIELD-EXISTING-A", existingRef),
+				fieldNode("FIELD-EXISTING-B", existingRef),
+				fieldNode("FIELD-NEW-A", "DOC_TYPE-SHARED"),
+				fieldNode("FIELD-NEW-B", "DOC_TYPE-SHARED")));
+
+		ImportReport report =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, true)
+				.await().indefinitely();
+
+		// 1. One blocking error for each pair, naming only that pair
+		assertFalse(report.applied());
+		List<String> errors = report.blockingErrors();
+		assertEquals(2, errors.size(), errors.toString());
+		assertTrue(errors.stream().anyMatch(error ->
+				error.contains("FIELD-EXISTING-A")
+					&& error.contains("FIELD-EXISTING-B")
+					&& !error.contains("FIELD-NEW")),
+			errors.toString());
+		assertTrue(errors.stream().anyMatch(error ->
+				error.contains("FIELD-NEW-A")
+					&& error.contains("FIELD-NEW-B")
+					&& !error.contains("FIELD-EXISTING")),
+			errors.toString());
+
+		// 2. The dry-run wrote nothing
+		assertEquals(0, countByName("DocTypeField", SHARED_FIELD_NAME));
+	}
+
+	@Test
+	void a_query_parser_type_shared_under_one_search_config_rejects_the_import() {
+		// The query parser key is its enum type under its search config. Two
+		// parsers share the type, a third has another one. The pair must be
+		// rejected, the third parser left out of the error.
+		ConfigEntity searchConfig = new ConfigEntity(
+			"SEARCH_CONFIG-SHARED", ConfigEntityType.SEARCH_CONFIG,
+			SHARED_SEARCH_CONFIG_NAME,
+			SearchConfigDTO.builder()
+				.name(SHARED_SEARCH_CONFIG_NAME)
+				.minScore(0f)
+				.build(),
+			new LinkedHashMap<>(), null);
+
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(
+				searchConfig,
+				queryParserNode("PARSER-DATE-A", QueryParserType.DATE),
+				queryParserNode("PARSER-DATE-B", QueryParserType.DATE),
+				queryParserNode("PARSER-TEXT", QueryParserType.TEXT)));
+
+		ImportReport report =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, true)
+				.await().indefinitely();
+
+		// 1. One blocking error names the pair, not the third parser
+		assertFalse(report.applied());
+		List<String> errors = report.blockingErrors();
+		assertEquals(1, errors.size(), errors.toString());
+		String error = errors.get(0);
+		assertTrue(
+			error.contains("PARSER-DATE-A")
+				&& error.contains("PARSER-DATE-B")
+				&& !error.contains("PARSER-TEXT"),
+			error);
+
+		// 2. The dry-run wrote nothing
+		assertEquals(0, countByName("SearchConfig", SHARED_SEARCH_CONFIG_NAME));
+	}
+
+	@Test
 	void the_tenant_binding_is_rebound_and_the_virtual_host_preserved() {
 		// After an import the destination TenantBinding must point at the imported
 		// bucket and models (resolved from the package metadata) and keep its own
@@ -760,6 +863,34 @@ public class ConfigImporterTest {
 				.type(Sorting.SortingType.ASC)
 				.build(),
 			new LinkedHashMap<>(), null);
+	}
+
+	private static ConfigEntity fieldNode(String ref, String docTypeRef) {
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put("docType", List.of(docTypeRef));
+
+		return new ConfigEntity(
+			ref, ConfigEntityType.DOC_TYPE_FIELD, SHARED_FIELD_NAME,
+			DocTypeFieldDTO.builder()
+				.name(SHARED_FIELD_NAME)
+				.fieldName(SHARED_FIELD_NAME)
+				.fieldType(FieldType.TEXT)
+				.build(),
+			refs, null);
+	}
+
+	private static ConfigEntity queryParserNode(String ref, QueryParserType type) {
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put("searchConfig", List.of("SEARCH_CONFIG-SHARED"));
+
+		return new ConfigEntity(
+			ref, ConfigEntityType.QUERY_PARSER_CONFIG, ref,
+			QueryParserConfigDTO.builder()
+				.name(ref)
+				.description(ref)
+				.type(type.name())
+				.build(),
+			refs, null);
 	}
 
 	private Long seedSorting(String name) {
