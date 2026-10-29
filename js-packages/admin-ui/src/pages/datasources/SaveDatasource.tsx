@@ -211,7 +211,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           dataIndexId: formValues.dataIndex?.id,
         },
         onError: (error) => {
-          setActiveTab("recap");
+          setActiveTab("datasource");
           toast({
             title: t("pages.datasources.error-updating-datasource"),
             content: error.message || t("common.generic-error"),
@@ -245,7 +245,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         },
         refetchQueries: ["DataSources"],
         onError: (error) => {
-          setActiveTab("recap");
+          setActiveTab("datasource");
           toast({
             title: t("pages.datasources.error-creating-datasource"),
             content: error.message || t("common.generic-error"),
