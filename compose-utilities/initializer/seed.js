@@ -439,19 +439,26 @@ async function configureSearchFeatures(schemaName) {
 
   // Autocorrection on web.content.suggest: the term suggester proposes the
   // terms of its field, so the field gets an analyzer without stemmer and
-  // stays out of the search (not searchable).
-  const suggestFieldId = await ensureSubField(schemaName, fieldMap, 'web.content', 'suggest', 'TEXT', false);
-  const suggestAnalyzerId = await ensureAnalyzer(schemaName, 'autocorrection_standard', 'standard');
-  const suggestReady = suggestFieldId != null
-    && suggestAnalyzerId != null
-    && await bindAnalyzer(schemaName, suggestFieldId, suggestAnalyzerId, 'web.content.suggest');
-  if (!suggestReady) {
-    console.warn('  web.content.suggest unavailable, skipping Autocorrection.');
+  // stays out of the search (not searchable). A tenant that already has the
+  // autocorrection keeps its field: the sub-field would be indexed for nothing.
+  const autocorrectionId = await findEntityIdByName(schemaName, 'autocorrections', 'Default Autocorrection', 'Query Autocorrections');
+  if (autocorrectionId != null) {
+    console.log('  Autocorrection "Default Autocorrection": already exists, skipping.');
   }
   else {
-    const id = await ensureAutocorrection(schemaName, 'Default Autocorrection', suggestFieldId);
-    if (id != null) {
-      await bindToBucket(schemaName, 'bindAutocorrectionToBucket', 'autocorrectionId', bucketId, id, 'Autocorrection');
+    const suggestFieldId = await ensureSubField(schemaName, fieldMap, 'web.content', 'suggest', 'TEXT', false);
+    const suggestAnalyzerId = await ensureAnalyzer(schemaName, 'autocorrection_standard', 'standard');
+    const suggestReady = suggestFieldId != null
+      && suggestAnalyzerId != null
+      && await bindAnalyzer(schemaName, suggestFieldId, suggestAnalyzerId, 'web.content.suggest');
+    if (!suggestReady) {
+      console.warn('  web.content.suggest unavailable, skipping Autocorrection.');
+    }
+    else {
+      const id = await ensureAutocorrection(schemaName, 'Default Autocorrection', suggestFieldId);
+      if (id != null) {
+        await bindToBucket(schemaName, 'bindAutocorrectionToBucket', 'autocorrectionId', bucketId, id, 'Autocorrection');
+      }
     }
   }
 
