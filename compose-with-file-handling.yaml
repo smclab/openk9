@@ -15,6 +15,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+  seaweedfs-admin:
+    image: chrislusf/seaweedfs:4.47
+    container_name: seaweedfs-admin
+    hostname: seaweedfs-admin
+    # -ip=0.0.0.0: by default the console listens on loopback only, unreachable from the host.
+    command: admin -master=seaweedfs:9333 -port=23646 -ip=0.0.0.0 -adminUser=openk9 -adminPassword=openk9-secret
+    ports:
+      - "23646:23646"
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
   tika:
     image: ${IMAGE_GROUP:-openk9}/openk9-tika:${IMAGE_TAG:-2026.3.0-SNAPSHOT}
     container_name: openk9-tika

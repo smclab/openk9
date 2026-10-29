@@ -42,7 +42,7 @@ proxy). Additional capabilities are available as optional profiles:
 
 | Profile | Compose file | What it adds |
 |---|---|---|
-| `file-handling` | `compose-with-file-handling.yaml` | SeaweedFS, Tika, Docling Processor, S3 Connector |
+| `file-handling` | `compose-with-file-handling.yaml` | SeaweedFS with admin console, Tika, Docling Processor, S3 Connector |
 | `gen-ai` | `compose-with-gen-ai.yaml` | RAG module, Embedding module, Talk-To chat |
 | `oauth2` | `compose-with-oauth2-server.yaml` | Keycloak identity provider |
 
@@ -66,6 +66,9 @@ docker compose \
 
 With the Gen AI profile, conversational search is available at
 [https://demo.openk9.localhost/chat](https://demo.openk9.localhost/chat).
+
+With the File Handling profile, the SeaweedFS admin console is available at
+[http://localhost:23646](http://localhost:23646) (`openk9` / `openk9-secret`).
 
 ## Development with k9.sh
 
@@ -112,7 +115,7 @@ Profiles are additive. Core services are always included.
 | Profile | Services added |
 |---|---|
 | `core` (default) | PostgreSQL, OpenSearch, RabbitMQ, API Gateway, Datasource, Tenant Manager, Ingestion, Searcher, frontends, Caddy |
-| `file-handling` | SeaweedFS, Tika, Docling Processor, S3 Connector |
+| `file-handling` | SeaweedFS with admin console, Tika, Docling Processor, S3 Connector |
 | `gen-ai` | RAG module, Embedding module, Talk-To |
 | `oauth2` | Keycloak OAuth2/OIDC identity provider |
 
