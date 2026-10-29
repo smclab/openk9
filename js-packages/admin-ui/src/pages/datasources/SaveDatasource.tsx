@@ -21,7 +21,9 @@ export function SaveDatasource() {
     { label: string | null | undefined; action(): void } | null | undefined
   >(undefined);
   const navigate = useNavigate();
-  const { updateDatasource, createDatasource } = useDatasourceMutations(datasourceId, navigate);
+  const { updateDatasource, createDatasource } = useDatasourceMutations(datasourceId, navigate, () =>
+    setActiveTab("datasource"),
+  );
   const datasourceQuery = useDataSourceQuery({
     variables: { id: datasourceId, searchText: "" },
     skip: datasourceId === "new",
@@ -194,7 +196,7 @@ export function SaveDatasource() {
           dataIndexId: formValues.dataIndex?.id,
         },
         onError: (error) => {
-          setActiveTab("recap");
+          setActiveTab("datasource");
           toast({
             title: "Error Updating Datasource",
             content: error.message || "An error occurred while updating the datasource",
@@ -225,7 +227,7 @@ export function SaveDatasource() {
         },
         refetchQueries: ["DataSources"],
         onError: (error) => {
-          setActiveTab("recap");
+          setActiveTab("datasource");
           toast({
             title: "Error Creating Datasource",
             content: error.message || "An error occurred while creating the datasource",
