@@ -40,7 +40,9 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     { label: string | null | undefined; action(): void } | null | undefined
   >(undefined);
   const navigate = useNavigate();
-  const { updateDatasource, createDatasource } = useDatasourceMutations(datasourceId, navigate);
+  const { updateDatasource, createDatasource } = useDatasourceMutations(datasourceId, navigate, () =>
+    setActiveTab("datasource"),
+  );
   const datasourceQuery = useDataSourceQuery({
     variables: { id: datasourceId, searchText: "" },
     skip: datasourceId === "new",
@@ -204,7 +206,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           dataIndexId: formValues.dataIndex?.id,
         },
         onError: (error) => {
-          setActiveTab("recap");
+          setActiveTab("datasource");
           toast({
             title: "Error Updating Datasource",
             content: error.message || "An error occurred while updating the datasource",
@@ -234,16 +236,8 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           },
         },
         refetchQueries: ["DataSources"],
-        onCompleted: () => {
-          toast({
-            title: `Datasource ${isNewDatasource ? "Created" : "Updated"}`,
-            content: `The datasource has been ${isNewDatasource ? "created" : "updated"} successfully.`,
-            displayType: "success",
-          });
-          navigate(`/data-sources/`, { replace: true });
-        },
         onError: (error) => {
-          setActiveTab("recap");
+          setActiveTab("datasource");
           toast({
             title: "Error Creating Datasource",
             content: error.message || "An error occurred while creating the datasource",
