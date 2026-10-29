@@ -44,7 +44,9 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     { label: string | null | undefined; action(): void } | null | undefined
   >(undefined);
   const navigate = useNavigate();
-  const { updateDatasource, createDatasource } = useDatasourceMutations(datasourceId, navigate);
+  const { updateDatasource, createDatasource } = useDatasourceMutations(datasourceId, navigate, () =>
+    setActiveTab("datasource"),
+  );
   const datasourceQuery = useDataSourceQuery({
     variables: { id: datasourceId, searchText: "" },
     skip: datasourceId === "new",
@@ -242,14 +244,6 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           }),
         },
         refetchQueries: ["DataSources"],
-        onCompleted: () => {
-          toast({
-            title: isNewDatasource ? t("pages.datasources.created-title") : t("pages.datasources.updated-title"),
-            content: isNewDatasource ? t("pages.datasources.created-content") : t("pages.datasources.updated-content"),
-            displayType: "success",
-          });
-          navigate(`/data-sources/`, { replace: true });
-        },
         onError: (error) => {
           setActiveTab("recap");
           toast({

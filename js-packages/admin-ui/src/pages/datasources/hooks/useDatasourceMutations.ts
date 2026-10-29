@@ -16,23 +16,32 @@
 */
 import { useTranslation } from "react-i18next";
 import { NavigateFunction } from "react-router-dom";
-import { useModal, useToast } from "@components/Form";
+import { combineErrorMessages, useModal, useToast } from "@components/Form";
 import {
   useCreateDatasourceConnectionMutation,
   useUpdateDatasourceConnectionMutation,
 } from "../../../graphql-generated";
 import { DataSourceQuery } from "../gql";
 
-export const useDatasourceMutations = (datasourceId: string, navigate: NavigateFunction) => {
+export const useDatasourceMutations = (datasourceId: string, navigate: NavigateFunction, onRefused: () => void) => {
   const { t } = useTranslation();
   const toast = useToast();
   const modal = useModal();
 
   const [updateDatasource] = useUpdateDatasourceConnectionMutation({
     refetchQueries: ["DataSources", "EnrichPipelineOptions", DataSourceQuery],
-    onCompleted() {
-      navigate("/data-sources");
-      modal({ title: t("pages.datasources.updated-title"), displayType: "success" });
+    onCompleted(data) {
+      if (data.updateDatasourceConnection?.entity) {
+        navigate("/data-sources");
+        modal({ title: t("pages.datasources.updated-title"), displayType: "success" });
+      } else {
+        toast({
+          title: t("pages.datasources.error-updating-datasource"),
+          content: combineErrorMessages(data.updateDatasourceConnection?.fieldValidators) || t("common.generic-error"),
+          displayType: "error",
+        });
+        onRefused();
+      }
     },
     onError() {
       modal({ title: t("pages.datasources.error-updating-datasource"), displayType: "error" });
@@ -49,7 +58,14 @@ export const useDatasourceMutations = (datasourceId: string, navigate: NavigateF
           content: isNewDatasource ? t("pages.datasources.created-content") : t("pages.datasources.updated-content"),
           displayType: "success",
         });
-        navigate("/data-sources");
+        navigate("/data-sources", { replace: true });
+      } else {
+        toast({
+          title: t("pages.datasources.error-creating-datasource"),
+          content: combineErrorMessages(data.createDatasourceConnection?.fieldValidators) || t("common.generic-error"),
+          displayType: "error",
+        });
+        onRefused();
       }
     },
     onError() {
