@@ -79,7 +79,7 @@ def _request(monkeypatch, caplog, events, spent=None, level=logging.INFO):
             yield json.dumps(event)
 
     monkeypatch.setattr(entrypoint, "run_turn", fake_run_turn)
-    monkeypatch.setattr(entrypoint, "build_model", lambda _: "MODEL")
+    monkeypatch.setattr(entrypoint, "build_model", lambda _: MagicMock())
 
     async def collect():
         async for _ in entrypoint.get_agentic_rag(

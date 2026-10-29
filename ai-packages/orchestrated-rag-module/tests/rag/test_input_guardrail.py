@@ -202,7 +202,7 @@ def test_blocked_query_is_logged_as_blocked_input(monkeypatch):
         return "VIOLENZA"
 
     monkeypatch.setattr(guardrails, "input_guardrail", blocked)
-    monkeypatch.setattr(entrypoint, "build_model", lambda _: "MODEL")
+    monkeypatch.setattr(entrypoint, "build_model", lambda _: MagicMock())
     records = []
     monkeypatch.setattr(entrypoint.logger, "info", records.append)
 

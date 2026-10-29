@@ -335,7 +335,7 @@ def test_a_cancelled_answer_ends_the_request_with_its_outcome(monkeypatch, cance
         yield json.dumps({"chunk": cancel, "type": "CANCEL"})
 
     monkeypatch.setattr(entrypoint, "run_turn", fake_run_turn)
-    monkeypatch.setattr(entrypoint, "build_model", lambda _: "MODEL")
+    monkeypatch.setattr(entrypoint, "build_model", lambda _: MagicMock())
     records = []
     monkeypatch.setattr(entrypoint.logger, "info", records.append)
 

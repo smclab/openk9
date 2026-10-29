@@ -259,7 +259,7 @@ def _request(monkeypatch, *, uploaded, user_id):
         yield json.dumps({"chunk": "", "type": "END"})
 
     monkeypatch.setattr(entrypoint, "run_turn", fake_run_turn)
-    monkeypatch.setattr(entrypoint, "build_model", lambda _: "MODEL")
+    monkeypatch.setattr(entrypoint, "build_model", lambda _: MagicMock())
     monkeypatch.setattr(entrypoint, "get_embedding_model_configuration", lambda **_: {})
 
     async def collect():

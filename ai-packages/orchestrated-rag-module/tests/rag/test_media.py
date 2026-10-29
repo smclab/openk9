@@ -330,7 +330,7 @@ def test_the_image_of_the_request_reaches_the_deps(monkeypatch):
         yield json.dumps({"chunk": "", "type": "END"})
 
     monkeypatch.setattr(entrypoint, "run_turn", fake_run_turn)
-    monkeypatch.setattr(entrypoint, "build_model", lambda _: "MODEL")
+    monkeypatch.setattr(entrypoint, "build_model", lambda _: MagicMock())
 
     async def collect():
         async for _ in entrypoint.get_agentic_rag(

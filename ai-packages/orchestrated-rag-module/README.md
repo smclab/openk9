@@ -31,6 +31,15 @@ Gateway sends the RAG requests to the host of its `openk9.rag.host` Helm value
 switch and how to go back. Locally, `./k9.sh up --with=gen-ai
 --with=orchestrated-rag` starts this module in place of the other one.
 
+### Language models
+
+The documents are found only through tools, so the model of the tenant must
+support tool calling. `hugging-face-custom` does not: its endpoint takes only
+`input_str`. A tenant that uses it gets a single `ERROR` event, and the log
+says which provider cannot call tools. An endpoint with tool calling and an
+OpenAI-compatible API works through the `openai` provider. With `bypass_rag`
+the orchestrator has no tools, and `hugging-face-custom` answers.
+
 ## SSE events
 
 Each event is a JSON object with a `chunk` and a `type`.

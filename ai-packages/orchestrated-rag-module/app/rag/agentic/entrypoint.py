@@ -81,6 +81,8 @@ MEDIA_ONLY_QUERY_INSTRUCTION = (
 SCOPE_GATE_REDIRECT_MESSAGE = "Posso aiutarti solo su temi di questo dominio."
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 RATE_LIMIT_MESSAGE = "Rate limit exceeded. Try again later."
+# The user cannot fix the configuration: the detail goes to the log.
+MODEL_WITHOUT_TOOLS_MESSAGE = "The configured language model cannot search the documents."
 # The provider refuses the generation with its own filter (Azure content
 # policy, #2253): a block, reported as one.
 CONTENT_POLICY_MARKERS = (
@@ -493,6 +495,20 @@ async def get_agentic_rag(
     )
     try:
         model = build_model(llm_configuration)
+        # The documents are found only through tools, and PydanticAI drops the
+        # tools of a model that cannot call them: the orchestrator would answer
+        # without documents. With bypass_rag it has no tools, so any model answers.
+        if not model.profile.get("supports_tools", True) and not rag_configuration.get(
+            "bypass_rag"
+        ):
+            logger.warning(
+                f"[request] model_type={llm_configuration.get('model_type')} cannot call "
+                "tools: configure an OpenAI-compatible endpoint with tool calling, "
+                f"or enable bypass_rag {context}"
+            )
+            outcome = "ERROR"
+            yield json.dumps({"chunk": MODEL_WITHOUT_TOOLS_MESSAGE, "type": "ERROR"})
+            return
         deps = AgenticDeps(
             rag_configuration=rag_configuration,
             llm_configuration=llm_configuration,
