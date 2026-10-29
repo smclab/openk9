@@ -34,26 +34,3 @@ vulnerabilities:
       False positive: same pip/_vendor.txt cause as GHSA-6v7p-g79w-8964 above
       (not an installed application package, not reachable via connector code
       or untrusted input). Re-evaluate under the same conditions.
-  - id: CVE-2023-30861
-    # Flask 2.0.0 — openk9-crawler (scrapydweb)
-    statement: >-
-      Flask==2.0.0 is hard-pinned by scrapydweb==1.6.0's own requirements
-      (Requires-Dist: Flask==2.0.0). Bumping this project's requirements.txt
-      has no effect: scrapydweb's own exact pin wins during its separate pip
-      install step and reinstalls the old version. scrapydweb is an
-      internal-network admin UI, not internet-facing, in the current
-      deployment. Re-evaluate if scrapydweb publishes a release with newer
-      Flask/Werkzeug pins.
-    expired_at: 2026-10-28
-  - id: CVE-2023-25577
-    # Werkzeug 2.0.0 — openk9-crawler (scrapydweb)
-    statement: >-
-      Werkzeug==2.0.0 hard-pinned by scrapydweb==1.6.0, same cause and
-      mitigation as CVE-2023-30861.
-    expired_at: 2026-10-28
-  - id: CVE-2024-34069
-    # Werkzeug 2.0.0 — openk9-crawler (scrapydweb)
-    statement: >-
-      Werkzeug==2.0.0 hard-pinned by scrapydweb==1.6.0, same cause and
-      mitigation as CVE-2023-30861.
-    expired_at: 2026-10-28
