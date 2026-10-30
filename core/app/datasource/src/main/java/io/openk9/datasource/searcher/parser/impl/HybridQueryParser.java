@@ -59,6 +59,16 @@ import java.util.List;
 public class HybridQueryParser implements QueryParser {
 
 	static final String CHUNK_TEXT = "chunkText";
+	static final int DEFAULT_PAGINATION_DEPTH = 100;
+	/**
+	 * The default {@code index.max_result_window} of OpenSearch, above which
+	 * it rejects the pagination depth.
+	 */
+	static final int MAX_PAGINATION_DEPTH = 10000;
+	/**
+	 * The page size OpenSearch applies when the request sets none.
+	 */
+	private static final int DEFAULT_PAGE_SIZE = 10;
 
 	@Inject
 	EmbeddingService embeddingService;
@@ -142,6 +152,9 @@ public class HybridQueryParser implements QueryParser {
 			? parserContext.getMutableQuery()
 			: QueryBuilders.boolQuery();
 
+		var paginationDepth = getPaginationDepth(
+			parserSearchToken, jsonConfig, searchSourceBuilder);
+
 		if (values.hasNext()) {
 			var value = values.next();
 
@@ -156,7 +169,8 @@ public class HybridQueryParser implements QueryParser {
 
 			return embeddingService.getEmbeddedText(tenantId, value)
 				.map(embeddedText -> KnnQueryParser.toKnnQuery(embeddedText, kNeighbors))
-				.map(knnQuery -> toHybridQuery(baseQuery, textQuery, knnQuery))
+				.map(knnQuery -> toHybridQuery(
+					baseQuery, textQuery, knnQuery, paginationDepth))
 				.map(searchSourceBuilder::query);
 
 		}
@@ -176,19 +190,53 @@ public class HybridQueryParser implements QueryParser {
 	 * @param baseQuery the filters and the ACL of the request
 	 * @param textQuery the textual query of the token
 	 * @param knnQuery  the knn query of the token, without filter
+	 * @param paginationDepth the hits each branch collects per shard
 	 * @return the wrapper query holding the hybrid query
 	 */
 	static WrapperQueryBuilder toHybridQuery(
-		BoolQueryBuilder baseQuery, Query textQuery, Query knnQuery) {
+		BoolQueryBuilder baseQuery, Query textQuery, Query knnQuery,
+		int paginationDepth) {
 
 		var queries = new JsonArray()
 			.add(toTextBranch(baseQuery, textQuery))
 			.add(toKnnBranch(baseQuery, knnQuery));
 
 		var hybridQuery = new JsonObject()
-			.put("hybrid", new JsonObject().put("queries", queries));
+			.put("hybrid", new JsonObject()
+				.put("queries", queries)
+				.put("pagination_depth", paginationDepth));
 
 		return QueryBuilders.wrapperQuery(hybridQuery.encode());
+	}
+
+	/**
+	 * Decides how many hits each branch of the hybrid query collects per
+	 * shard, before the scores are normalized and combined.
+	 * <p>
+	 * OpenSearch requires the depth to serve any page after the first one,
+	 * and normalizes the scores over the hits collected: the depth stays the
+	 * same across the pages, so that the pages follow one another without
+	 * duplicates or gaps. It grows only for the pages beyond it, and stops at
+	 * the result window of OpenSearch.
+	 *
+	 * @param searchSourceBuilder the search source holding the page requested
+	 * @return the pagination depth of the hybrid query
+	 */
+	static int getPaginationDepth(
+		ParserSearchToken parserSearchToken, JsonObject jsonConfig,
+		SearchSourceBuilder searchSourceBuilder) {
+
+		var paginationDepth = ParserContext.getInteger(
+			parserSearchToken, jsonConfig, "paginationDepth"
+		).orElse(DEFAULT_PAGINATION_DEPTH);
+
+		var from = Math.max(searchSourceBuilder.from(), 0);
+		var size = searchSourceBuilder.size() < 0
+			? DEFAULT_PAGE_SIZE
+			: searchSourceBuilder.size();
+
+		return Math.min(
+			Math.max(paginationDepth, from + size), MAX_PAGINATION_DEPTH);
 	}
 
 	/**
