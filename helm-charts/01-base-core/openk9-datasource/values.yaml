@@ -95,7 +95,11 @@ quarkus:
 
 ## Datasource configuration
 datasource:
-  aclQueryExtraParamsEnabled: true
+  # Adds to the ACL filter the roles a trusted caller of the searcher sends
+  # in the internal headers X-K9-ROLES / OPENK9_ACL, bypassing the gateway.
+  # Turn on only for such an integration, and keep the searcher reachable
+  # only from it.
+  aclQueryExtraParamsEnabled: false
   # Lists of allowed regex patterns for baseUri host validation.
   # Comma-separated regexes; full-match on URI host.
   # An empty list rejects ALL hosts — never leave these empty in a deployed env.
