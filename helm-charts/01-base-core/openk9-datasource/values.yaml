@@ -95,7 +95,11 @@ quarkus:
 
 ## Datasource configuration
 datasource:
-  aclQueryExtraParamsEnabled: true
+  # Adds to the ACL filter the roles a trusted caller of the searcher sends
+  # in the internal header OPENK9_ACL, bypassing the gateway.
+  # Turn on only for such an integration, and keep the searcher reachable
+  # only from it.
+  aclQueryExtraParamsEnabled: false
 
 ## QueryParser configuration
 queryParser:
