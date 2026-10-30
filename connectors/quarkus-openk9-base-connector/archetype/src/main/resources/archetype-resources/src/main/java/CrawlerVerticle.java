@@ -29,7 +29,10 @@ public class CrawlerVerticle extends AbstractVerticle {
     public void start() {
         DeliveryOptions options = new DeliveryOptions().setCodecName("ingestionDTOCodec");
         MessageProducer<IngestionDTO> producer = vertx.eventBus().publisher(ADDRESS, options);
-        vertx.executeBlocking(promise -> worker.work(promise, producer), result -> {
+        vertx.executeBlocking(() -> {
+            worker.work(producer);
+            return null;
+        }).onComplete(result -> {
             if (result.succeeded()) {
                 producer.write(createLastIngestionDTO(invokeRequest));
                 undeployVerticle();

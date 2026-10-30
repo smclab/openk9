@@ -154,8 +154,8 @@ $h2 Connector Base Classes
   This verticle is deployed for each `InvokeRequest`.  
   A `Worker` instance, created via `WorkerFactoryImpl` injected in `CrawlingService`, is passed to its constructor.  
   It sets up the producer using the IngestionDTOCodec to send data to `HttpPublisherVerticle`.  
-  The _work_ method of `WorkerImpl` is executed on a worker thread via a promise.  
-  If the promise completes successfully, the verticle is undeployed.
+  The _work_ method of `WorkerImpl` is executed on a worker thread via `executeBlocking`: returning normally completes it, throwing an exception fails it.  
+  If it completes successfully, the verticle is undeployed.
 
 
 - **HttpPublisherVerticle**  
@@ -299,31 +299,28 @@ Changes need to be made to the connector to create a concrete implementation(**I
    You have to transform raw data retrieved into structured `IngestionDTO` instances to send via `IngestionDTOCodec` to `HttpPublisherVerticle`;
    ```java
    @Override
-    public void work(Promise<?> promise, MessageProducer<IngestionDTO> producer) {
-        strapi.getStrapiData()
-                .onComplete(res -> {
-                    JsonObject jsonObject = res.result();
-                    JsonArray strapiData = jsonObject.getJsonArray("data");
+    public void work(MessageProducer<IngestionDTO> producer) throws Exception {
+        // work runs on a worker thread, so it can wait for the data
+        JsonObject jsonObject = strapi.getStrapiData().toCompletionStage().toCompletableFuture().get();
+        JsonArray strapiData = jsonObject.getJsonArray("data");
 
-                    // Setting up IngestionDTO instance for each DatasourcePayload (strapiData) received
-                    for (int i = 0; i < strapiData.size(); i++) {
-                        JsonObject singleStrapiData = strapiData.getJsonObject(i);
-                        IngestionDTO ingestionDTO = new IngestionDTO();
-                        DatasourcePayload datasourcePayload = new DatasourcePayload();
+        // Setting up IngestionDTO instance for each DatasourcePayload (strapiData) received
+        for (int i = 0; i < strapiData.size(); i++) {
+            JsonObject singleStrapiData = strapiData.getJsonObject(i);
+            IngestionDTO ingestionDTO = new IngestionDTO();
+            DatasourcePayload datasourcePayload = new DatasourcePayload();
 
-                        ingestionDTO.setContentId(UUID.randomUUID());
-                        ingestionDTO.setDatasourceId(invokeRequest.getDatasourceId());
-                        ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
-                        ingestionDTO.setTenantId(invokeRequest.getTenantId());
-                        ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
-                        ingestionDTO.setRawContent(singleStrapiData.toString());
-                        datasourcePayload.setAdditionalProperty("data", singleStrapiData);
-                        datasourcePayload.setAdditionalProperty("meta", jsonObject.getValue("meta"));
-                        ingestionDTO.setDatasourcePayload(datasourcePayload);
-                        ingestionDTO.setType(PayloadType.DOCUMENT);
-                        producer.write(ingestionDTO);
-                    }
-                    promise.complete();
-                });
+            ingestionDTO.setContentId(UUID.randomUUID());
+            ingestionDTO.setDatasourceId(invokeRequest.getDatasourceId());
+            ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
+            ingestionDTO.setTenantId(invokeRequest.getTenantId());
+            ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
+            ingestionDTO.setRawContent(singleStrapiData.toString());
+            datasourcePayload.setAdditionalProperty("data", singleStrapiData);
+            datasourcePayload.setAdditionalProperty("meta", jsonObject.getValue("meta"));
+            ingestionDTO.setDatasourcePayload(datasourcePayload);
+            ingestionDTO.setType(PayloadType.DOCUMENT);
+            producer.write(ingestionDTO);
+        }
     }
    ```

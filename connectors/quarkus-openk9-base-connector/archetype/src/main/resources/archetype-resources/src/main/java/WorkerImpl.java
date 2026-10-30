@@ -5,7 +5,6 @@ import io.openk9.connector.api.beans.IngestionDTO;
 import io.openk9.connector.api.beans.InvokeRequest;
 import io.openk9.connector.api.beans.PayloadType;
 import io.openk9.connector.api.beans.ResourcesDTO;
-import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageProducer;
 
 import java.util.ArrayList;
@@ -20,13 +19,9 @@ public class WorkerImpl implements Worker {
     }
 
     @Override
-    public void work(Promise<?> promise, MessageProducer<IngestionDTO> producer) {
+    public void work(MessageProducer<IngestionDTO> producer) throws InterruptedException {
         // Simulate an I/O-bound delay condition
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        Thread.sleep(10000);
         // Setting up an IngestionDTO example
         IngestionDTO ingestionDTO = new IngestionDTO();
         ingestionDTO.setContentId(UUID.randomUUID());
@@ -43,6 +38,5 @@ public class WorkerImpl implements Worker {
 
         ingestionDTO.setType(PayloadType.DOCUMENT);
         producer.write(ingestionDTO);
-        promise.complete();
     }
 }
