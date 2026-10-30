@@ -229,8 +229,13 @@ public class HybridQueryParser implements QueryParser {
 	static int getPaginationDepth(
 		JsonObject jsonConfig, SearchSourceBuilder searchSourceBuilder) {
 
-		var paginationDepth = jsonConfig.getInteger(
-			"paginationDepth", DEFAULT_PAGINATION_DEPTH);
+		// the configuration may hold the depth as a number or as a string
+		var paginationDepth = switch (jsonConfig.getValue("paginationDepth")) {
+			case Number number -> number.intValue();
+			case String string when !string.isBlank() ->
+				Integer.parseInt(string.trim());
+			case null, default -> DEFAULT_PAGINATION_DEPTH;
+		};
 
 		var from = Math.max(searchSourceBuilder.from(), 0);
 		var size = searchSourceBuilder.size() < 0
