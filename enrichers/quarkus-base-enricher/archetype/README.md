@@ -27,11 +27,31 @@ These classes implement the REST classes from the library and adapt their behavi
   It exposes `/process` endpoint, it is invoked from OpenK9 to start the enrichment of data.
   ```json
   {
-    "payload": {},
+    "payload": {
+      "contentId": "8e581f12-eb61-33b4-945e-19c3749fe66d",
+      "datasourceId": 104,
+      "tenantId": "demo",
+      "rawContent": "Text of the document",
+      "resources": {
+        "binaries": [
+          {
+            "id": "4f24558d-a312-3ff4-a6c4-ee09582f5421",
+            "name": "report.pdf",
+            "contentType": "application/pdf",
+            "stagingUrl": "<pre-signed URL>"
+          }
+        ]
+      }
+    },
     "enrichItemConfig": {},
     "replyTo": "1577489"
   }
   ```
+  `payload` is the document being indexed, with the other fields set by the connector and by the enrichers before this one.
+  OpenK9 takes the payload returned by the enricher as the new document, so the result of the enrichment goes into the payload.  
+  Each binary can be read from its `stagingUrl`, a pre-signed URL valid for a few minutes: it is a credential, never log it.
+  Binaries also carry `sourceUrl` and `metadata` when the connector sets them.  
+  `replyTo` is set only for async enrichers: it is the token to send back with the enriched payload.
 
 
 - **FormResourceImpl.java**  
@@ -85,17 +105,9 @@ These classes implement the REST classes from the library and adapt their behavi
 These base classes are required in all enrichers.
 
 - **CallBackClient.java**  
-Class used to send the enriched data when asynchronous approach is set during the enricher configuration.  
-It must use the token received in `ProcessResourceImpl` to notify OpenK9 which payload the enriched data refers to.
+Class used by async enrichers to send the enriched payload to OpenK9, as `{"payload": ...}`,  
+with the token received in `replyTo` to notify OpenK9 which document the payload refers to.
 
-- **Base64Client.java**  
-Class used to get the binary payload as base 64 format.  
-It must use a `resourceId` and a `schemaName` to get the correct payload.
-
-- **ByteArrayClient.java**  
-Class used to get the binary payload as byte array format.  
-It must use a `resourceId` and a `schemaName` to get the correct payload.
-  
 ---
 
 ## Install
@@ -184,82 +196,42 @@ After generating it, changes need to be made to the enricher to create a concret
           return formFieldValueList;
       }
    ```
-2. Update Openk9 configurations in _application.properties_ to set the correct host and port;
-3. If you use an async implementation, update `ProcessResourceImpl` to set your logic implementation and then call `CallBackClient`;
+2. In an async enricher, update the callback host and port in _application.properties_ to reach the OpenK9 datasource;
+3. Replace the example enrichment in `ProcessResourceImpl` with your logic: read what you need from the payload,
+   the binaries through their `stagingUrl`, and add your result to the payload;
    ```java
-    @Inject
-    CallBackClient callBackClient;
-   
-    @Override
-    public ProcessResponseDTO process(@NotNull OpenK9Input data) {
-        if (data.getReplyTo() != null && !data.getReplyTo().isEmpty()) {
-            ProcessResponseDTO responseDTO = new ProcessResponseDTO();
-            LOGGER.info("Starting enrichment of data...");
-            // Simulate call back endpoint
-            EnrichData enrichData = readAndReply(data);
-            callBackClient.callback(enrichData, data.getReplyTo());
-            responseDTO.setPayload("OK");
-            return responseDTO;
-        }
-        else {
-            throw new IllegalArgumentException("replyTo is null or empty");
-        }
-    }
-
-    private EnrichData readAndReply(OpenK9Input data) {
-        EnrichData enrichData = new EnrichData();
-        enrichData.setPayload(data.getPayload());
-        enrichData.setEnrichData("reply", "Hi, I have received your payload. Thanks for using me!");
-        return enrichData;
+    private Payload enrich(Payload payload) {
+        // Read the document, e.g. its text or its binaries through stagingUrl
+        Object rawContent = payload.getAdditionalProperties().get("rawContent");
+        // Add the result to the payload: OpenK9 takes it as the new document
+        payload.setAdditionalProperty("myEnrichment", Map.of("length", String.valueOf(rawContent).length()));
+        return payload;
     }
    ```
-4. If you use a sync implementation, update `ProcessResourceImpl` to set your logic implementation;
+4. Keep the `process` method of your implementation type: a sync enricher returns the enriched payload,
+   an async enricher accepts the request at once and sends the enriched payload through `CallBackClient` when it is ready.
    ```java
+    // sync
     @Override
     public ProcessResponseDTO process(@NotNull OpenK9Input data) {
         ProcessResponseDTO responseDTO = new ProcessResponseDTO();
-        // Simulate sync operations
-        EnrichData enrichData = readAndReply(data);
-        responseDTO.setPayload(enrichData);
+        responseDTO.setPayload(enrich(data.getPayload()));
         return responseDTO;
     }
-
-    private EnrichData readAndReply(OpenK9Input data) {
-        EnrichData enrichData = new EnrichData();
-        enrichData.setPayload(data.getPayload());
-        enrichData.setEnrichData("reply", "Hi, I have received your payload. Thanks for using me!");
-        return enrichData;
-    }
-   ```
-5. Update `onSuccess` callback to set a concrete implementation for getting binaries from `Base64Client` and `ByteArrayClient`;
-   ```java
-    public Future<String> getBase64(String resourceId, String schemaName) {
-        WebClient client = WebClient.create(vertx);
-        return client
-                .get(port, host, path + resourceId + "/" + schemaName)
-                .as(BodyCodec.string())
-                .send()
-                .map(HttpResponse::body)
-                .onSuccess(res -> {
-                    LOGGER.info("Result from base64 endpoint: " + res);
-                    // Add here your implementation
-                })
-                .onFailure(res -> LOGGER.error("Error requesting base64 binaries: " + res.getMessage()));
-    }
    ```
 
    ```java
-    public Future<Buffer> getByteArray(String resourceId, String schemaName) {
-        WebClient client = WebClient.create(vertx);
-        return client
-                .get(port, host, path + resourceId + "/" + schemaName)
-                .as(BodyCodec.buffer())
-                .send()
-                .map(HttpResponse::body)
-                .onSuccess(res -> {
-                    LOGGER.info("Result from byte array endpoint: " + res.getBytes());
-                    // Add here your implementation
-                })
-                .onFailure(res -> LOGGER.error("Error requesting byte array binaries: " + res.getMessage()));
+    // async
+    @Override
+    public ProcessResponseDTO process(@NotNull OpenK9Input data) {
+        if (data.getReplyTo() == null || data.getReplyTo().isEmpty()) {
+            throw new IllegalArgumentException("replyTo is null or empty");
+        }
+        vertx.executeBlocking(() -> enrich(data.getPayload()))
+                .onSuccess(payload -> callBackClient.callback(payload, data.getReplyTo()))
+                .onFailure(e -> LOGGER.error("Error enriching data", e));
+        ProcessResponseDTO responseDTO = new ProcessResponseDTO();
+        responseDTO.setPayload("OK");
+        return responseDTO;
     }
    ```
