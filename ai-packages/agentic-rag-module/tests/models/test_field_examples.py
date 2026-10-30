@@ -23,9 +23,12 @@ the OpenAPI document and in the structured output schema the judge reads.
 
 The deprecation fires when a model class is defined, that is on the first
 import, so the check runs in a fresh interpreter rather than by reloading
-modules the rest of the suite already holds.
+modules the rest of the suite already holds. It is recognised by its class
+and by the file it points at, not by its wording: the ones raised from
+inside pydantic, such as the dependencies' ``json_encoders``, are not ours.
 """
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -38,26 +41,33 @@ from app.rag import agentic_rag, evaluations
 
 MODULE_ROOT = Path(__file__).resolve().parent.parent.parent
 
+# Reports the pydantic deprecations raised from the application code while
+# its models are defined.
 PROBE = f"""
-import sys
+import json, sys, warnings
 sys.path.insert(0, {str(MODULE_ROOT)!r})
-import app.models.models
-import app.rag.agentic_rag
-import app.rag.evaluations
+from pydantic.warnings import PydanticDeprecatedSince20
+
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter("always")
+    import app.models.models
+    import app.rag.agentic_rag
+    import app.rag.evaluations
+
+print(json.dumps([
+    f"{{w.filename}}:{{w.lineno}}: {{w.message}}"
+    for w in caught
+    if issubclass(w.category, PydanticDeprecatedSince20)
+    and w.filename.startswith({str(MODULE_ROOT / "app")!r})
+]))
 """
 
 
-def test_models_import_without_deprecated_field_keywords():
+def test_models_import_without_pydantic_deprecations():
     # The module's .env is kept out by running from an empty directory.
     with tempfile.TemporaryDirectory() as empty_directory:
         completed = subprocess.run(
-            [
-                sys.executable,
-                "-W",
-                "error:Using extra keyword arguments on `Field`",
-                "-c",
-                PROBE,
-            ],
+            [sys.executable, "-c", PROBE],
             capture_output=True,
             check=False,
             text=True,
@@ -70,6 +80,7 @@ def test_models_import_without_deprecated_field_keywords():
         )
 
     assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout.splitlines()[-1]) == []
 
 
 @pytest.mark.parametrize(
