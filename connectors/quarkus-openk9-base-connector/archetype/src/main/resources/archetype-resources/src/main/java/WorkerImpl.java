@@ -1,5 +1,6 @@
 package ${package};
 
+import io.openk9.connector.api.beans.DatasourcePayload;
 import io.openk9.connector.api.beans.IngestionDTO;
 import io.openk9.connector.api.beans.InvokeRequest;
 import io.openk9.connector.api.beans.PayloadType;
@@ -34,7 +35,7 @@ public class WorkerImpl implements Worker {
         ingestionDTO.setTenantId(invokeRequest.getTenantId());
         ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
         ingestionDTO.setRawContent("Test-Ingestion-Payload");
-        ingestionDTO.setDatasourcePayload(null);
+        ingestionDTO.setDatasourcePayload(new DatasourcePayload());
 
         ResourcesDTO resourcesDTO = new ResourcesDTO();
         resourcesDTO.setBinaries(new ArrayList<>());
