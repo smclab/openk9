@@ -1,5 +1,6 @@
 package ${package};
 
+import io.openk9.connector.api.beans.DatasourcePayload;
 import io.openk9.connector.api.beans.IngestionDTO;
 import io.openk9.connector.api.beans.InvokeRequest;
 import io.openk9.connector.api.beans.PayloadType;
@@ -51,6 +52,7 @@ public class CrawlerVerticle extends AbstractVerticle {
         ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
         ingestionDTO.setTenantId(invokeRequest.getTenantId());
         ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
+        ingestionDTO.setDatasourcePayload(new DatasourcePayload());
         ingestionDTO.setType(PayloadType.HALT);
         return ingestionDTO;
     }
@@ -62,6 +64,7 @@ public class CrawlerVerticle extends AbstractVerticle {
         ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
         ingestionDTO.setTenantId(invokeRequest.getTenantId());
         ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
+        ingestionDTO.setDatasourcePayload(new DatasourcePayload());
         ingestionDTO.setType(PayloadType.LAST);
         return ingestionDTO;
     }
