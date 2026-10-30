@@ -221,6 +221,26 @@ class HybridQueryBranchesTest {
 	}
 
 	@Test
+	void should_read_a_depth_stored_as_a_string() {
+		var jsonConfig = new JsonObject().put("paginationDepth", "50");
+
+		assertEquals(50, pagination(0, 10, jsonConfig));
+	}
+
+	@Test
+	void should_fall_back_to_the_default_depth() {
+		var nullDepth = new JsonObject().putNull("paginationDepth");
+		var blankDepth = new JsonObject().put("paginationDepth", "");
+
+		assertEquals(
+			HybridQueryParser.DEFAULT_PAGINATION_DEPTH,
+			pagination(0, 10, nullDepth));
+		assertEquals(
+			HybridQueryParser.DEFAULT_PAGINATION_DEPTH,
+			pagination(0, 10, blankDepth));
+	}
+
+	@Test
 	void should_stop_the_depth_at_the_result_window() {
 		var jsonConfig = new JsonObject().put("paginationDepth", 50_000);
 
