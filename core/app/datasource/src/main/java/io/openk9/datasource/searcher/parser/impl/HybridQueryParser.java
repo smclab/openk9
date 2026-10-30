@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @ApplicationScoped
 @Named("HybridQueryParser")
@@ -133,8 +134,8 @@ public class HybridQueryParser implements QueryParser {
 	 * filters and the ACL built from the other tokens of the request.
 	 * <p>
 	 * A token without text sets the base query alone, so that the filters
-	 * and the ACL still apply. A context without a base query applies no
-	 * filter.
+	 * and the ACL still apply. A context without a base query fails: the
+	 * search would run without the ACL.
 	 */
 	public Uni<SearchSourceBuilder> apply(
 		ParserContext parserContext, SearchSourceBuilder searchSourceBuilder) {
@@ -150,9 +151,9 @@ public class HybridQueryParser implements QueryParser {
 
 		var values = parserSearchToken.getValues().iterator();
 
-		var baseQuery = parserContext.getMutableQuery() != null
-			? parserContext.getMutableQuery()
-			: QueryBuilders.boolQuery();
+		var baseQuery = Objects.requireNonNull(
+			parserContext.getMutableQuery(),
+			"A hybrid search needs the base query holding the ACL.");
 
 		var paginationDepth = getPaginationDepth(jsonConfig, searchSourceBuilder);
 
