@@ -107,7 +107,7 @@ Openk9 Datasource service has specific configurations that can be customized to 
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `datasource.aclQueryExtraParamsEnabled`    | Enable extra parameters for ACL queries                             | `true`            |
+| `datasource.aclQueryExtraParamsEnabled`    | Add to the ACL filter the roles a trusted caller of the searcher sends in the internal headers `X-K9-ROLES` / `OPENK9_ACL`, bypassing the gateway. Turn on only for such an integration, and keep the searcher reachable only from it | `false`            |
 
 
 ### JVM configuration
