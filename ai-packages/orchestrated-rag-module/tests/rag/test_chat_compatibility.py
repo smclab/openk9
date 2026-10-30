@@ -29,7 +29,7 @@ from app.rag.agentic import persistence
 from app.rag.agentic.contracts import DocumentRef
 from app.rag.agentic.persistence import OpenSearchConversationStore
 
-#: Two messages as agentic-rag-module saves them in the ``messages`` channel
+#: Two turns as agentic-rag-module saves them in the ``messages`` channel
 #: of the checkpoint.
 AGENTIC_RAG_MESSAGES = [
     {
@@ -44,6 +44,23 @@ AGENTIC_RAG_MESSAGES = [
         "id": ["langchain", "schema", "messages", "AIMessage"],
         "kwargs": {
             "content": "Un motore di ricerca.",
+            "type": "ai",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+        },
+    },
+    {
+        "lc": 1,
+        "type": "constructor",
+        "id": ["langchain", "schema", "messages", "HumanMessage"],
+        "kwargs": {"content": "Chi lo sviluppa?", "type": "human"},
+    },
+    {
+        "lc": 1,
+        "type": "constructor",
+        "id": ["langchain", "schema", "messages", "AIMessage"],
+        "kwargs": {
+            "content": "SMC Treviso.",
             "type": "ai",
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -148,9 +165,9 @@ def test_a_chat_of_agentic_rag_module_goes_on_with_its_messages(monkeypatch):
     legacy_checkpoint = {
         "ts": "2026-10-01T10:00:00+00:00",
         "channel_values": {
-            "original_query": "Che cos'è OpenK9?",
-            "response": "Un motore di ricerca.",
-            "chat_sequence_number": 1,
+            "original_query": "Chi lo sviluppa?",
+            "response": "SMC Treviso.",
+            "chat_sequence_number": 2,
             "messages": AGENTIC_RAG_MESSAGES,
         },
     }
@@ -167,9 +184,13 @@ def test_a_chat_of_agentic_rag_module_goes_on_with_its_messages(monkeypatch):
 
     history = _store(monkeypatch, client).load_message_history("chat-1")
 
-    assert [type(message) for message in history] == [ModelRequest, ModelResponse]
-    assert history[0].parts[0].content == "Che cos'è OpenK9?"
-    assert history[1].parts[0].content == "Un motore di ricerca."
+    assert [type(message) for message in history] == [ModelRequest, ModelResponse] * 2
+    assert [message.parts[0].content for message in history] == [
+        "Che cos'è OpenK9?",
+        "Un motore di ricerca.",
+        "Chi lo sviluppa?",
+        "SMC Treviso.",
+    ]
 
 
 def test_agentic_rag_messages_other_than_the_exchange_are_skipped():
@@ -182,7 +203,7 @@ def test_agentic_rag_messages_other_than_the_exchange_are_skipped():
 
     history = persistence.deserialize_messages([system, *AGENTIC_RAG_MESSAGES])
 
-    assert [type(message) for message in history] == [ModelRequest, ModelResponse]
+    assert [type(message) for message in history] == [ModelRequest, ModelResponse] * 2
 
 
 def test_multimodal_agentic_rag_content_keeps_its_text():
