@@ -73,6 +73,10 @@ class SearcherServiceResultAclTest {
 		// a request with a knn token stays filtered, even with the flag
 		assertFalse(SearcherService.mayObscure(asking, TEXT_AND_KNN));
 
+		// a hybrid request too, so that its suggestions count what it returns
+		assertFalse(SearcherService.mayObscure(
+			asking, Map.of(QueryParserType.HYBRID, List.of())));
+
 		// a request without tokens, as the one that lists every document
 		assertTrue(SearcherService.mayObscure(asking, Map.of()));
 	}
