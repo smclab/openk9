@@ -1229,19 +1229,40 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							QueryParserType.HYBRID
 						);
 
-						return hybridQueryParser
-							.apply(
+						// the other tokens build the base query that both
+						// branches of the hybrid query apply
+						var baseTokenGroup = new HashMap<>(tokenGroup);
+						baseTokenGroup.remove(QueryParserType.HYBRID);
+
+						if (baseTokenGroup.remove(QueryParserType.KNN) != null) {
+							log.debug(
+								"The knn tokens of a hybrid search are ignored.");
+						}
+
+						// a hybrid search is always filtered by the ACLs: the
+						// obscured results rely on the named queries of the
+						// hits, which the hybrid query does not guarantee
+						return createBoolQuery(
+							baseTokenGroup,
+							tenantWithBucket,
+							jwt,
+							extraParams,
+							language,
+							ParserContext.AclMode.FILTER
+						)
+							.flatMap(baseQuery -> hybridQueryParser.apply(
 								ParserContext
 									.builder()
 									.tenantWithBucket(tenantWithBucket)
 									.queryParserConfig(queryParserConfig)
 									.tokenTypeGroup(searchTokens)
+									.mutableQuery(baseQuery)
 									.jwt(jwt)
 									.extraParams(extraParams)
 									.language(language)
 									.build(),
 								searchSourceBuilder
-							)
+							))
 							.map(searchSource -> QueryParserResponse.newBuilder()
 								.setQuery(searchSourceBuilderToOutput(searchSource))
 								.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))

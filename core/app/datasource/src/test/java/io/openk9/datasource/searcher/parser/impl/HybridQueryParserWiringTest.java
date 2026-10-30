@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
 class HybridQueryParserWiringTest {
@@ -42,20 +41,15 @@ class HybridQueryParserWiringTest {
 	@Test
 	void should_build_the_semantic_component_via_embedQuery_text() {
 
-		// 1. a hybrid parser with a mocked embedding service and acl parser
+		// 1. a hybrid parser with a mocked embedding service
 		var embeddingService = Mockito.mock(EmbeddingService.class);
 		Mockito.when(embeddingService.embedQuery(
 				Mockito.anyString(), Mockito.any(), Mockito.any()))
 			.thenReturn(Uni.createFrom().item(
 				new EmbeddingService.QueryVector(QUERY_VECTOR)));
 
-		var aclQueryParser = Mockito.mock(AclQueryParser.class);
-		Mockito.when(aclQueryParser.getBoolQuery(Mockito.any()))
-			.thenReturn(new BoolQueryBuilder());
-
 		var parser = new HybridQueryParser();
 		parser.embeddingService = embeddingService;
-		parser.aclQueryParser = aclQueryParser;
 
 		var bucket = new Bucket();
 		bucket.setName("bucket test");
