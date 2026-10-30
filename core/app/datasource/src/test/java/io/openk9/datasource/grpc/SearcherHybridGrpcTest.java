@@ -297,6 +297,40 @@ public class SearcherHybridGrpcTest {
 	}
 
 	@Test
+	void should_score_with_the_must_clauses_of_the_base_query() {
+		// action — a text token next to the hybrid one, as the filters of the
+		// frontend send, makes the base query score with a must clause
+		var search = search(request(false, ROLE_FINANCE).toBuilder()
+			.addSearchQuery(SearchTokenRequest.newBuilder()
+				.setTokenType("TEXT")
+				.addValues("riservato")
+				.build())
+			.build());
+
+		// assertion — the must clause restricts both branches
+		assertEquals(Set.of(FINANCE_ID), search.ids());
+	}
+
+	@Test
+	void should_filter_a_hybrid_token_without_text() {
+		// action — a hybrid token with no value, sent as a filter so that no
+		// minimum score applies
+		var search = search(QueryParserRequest.newBuilder()
+			.setTenantId(TENANT_ID)
+			.addRange(0)
+			.addRange(10)
+			.setJwt(jwt())
+			.addSearchQuery(SearchTokenRequest.newBuilder()
+				.setTokenType("HYBRID")
+				.setFilter(true)
+				.build())
+			.build());
+
+		// assertion — the ACLs still apply
+		assertEquals(Set.of(OWN_ID, OTHER_ID), search.ids());
+	}
+
+	@Test
 	void should_filter_by_the_acls() {
 		// action
 		var userIds = search(request(false)).ids();
