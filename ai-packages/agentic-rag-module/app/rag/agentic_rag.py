@@ -443,7 +443,7 @@ class RetrieverEvaluationResponse(BaseModel):
     chunk_id: str = Field(
         ...,
         description="Unique identifier chunk",
-        example="9460035979983399",
+        examples=["9460035979983399"],
     )
     judgment: RetrieverEvaluationEnum = Field(
         RetrieverEvaluationEnum.relevant,

@@ -29,12 +29,14 @@ class Media(BaseModel):
     """
 
     data: str = Field(
-        ..., description="Base64-encoded raw bytes of the media", example="iVBORw0KGgo="
+        ...,
+        description="Base64-encoded raw bytes of the media",
+        examples=["iVBORw0KGgo="],
     )
     contentType: str = Field(
         ...,
         description="Content type of the media; must be image/*",
-        example="image/png",
+        examples=["image/png"],
     )
 
 
@@ -45,20 +47,20 @@ class SearchToken(BaseModel):
 
     tokenType: str = Field(..., description="Type of the search token")
     keywordKey: Optional[str] = Field(
-        "", description="Keyword key for the token", example=""
+        "", description="Keyword key for the token", examples=[""]
     )
     values: list[str] = Field(..., description="List of values for the token")
     filter: Optional[bool] = Field(
-        False, description="Whether this token is used for filtering", example=False
+        False, description="Whether this token is used for filtering", examples=[False]
     )
     entityType: Optional[str] = Field(
-        "", description="Type of entity for the token", example=""
+        "", description="Type of entity for the token", examples=[""]
     )
     entityName: Optional[str] = Field(
-        "", description="Name of the entity for the token", example=""
+        "", description="Name of the entity for the token", examples=[""]
     )
     extra: Optional[dict[str, str]] = Field(
-        {}, description="Additional metadata for the token", example={}
+        {}, description="Additional metadata for the token", examples=[{}]
     )
     media: Optional[Media] = Field(
         None, description="Inline media for image-as-query; only on KNN tokens"
@@ -70,42 +72,42 @@ class SearchQuery(BaseModel):
 
     searchQuery: list[SearchToken] = Field(..., description="List of search tokens")
     afterKey: Optional[str] = Field(
-        None, description="Pagination key for subsequent requests", example="page_2"
+        None, description="Pagination key for subsequent requests", examples=["page_2"]
     )
     suggestKeyword: Optional[str] = Field(
         None,
         description="Partial keyword for suggestion autocomplete",
-        example="OpenK9",
+        examples=["OpenK9"],
     )
     suggestionCategoryId: Optional[int] = Field(
-        None, description="Category ID to filter suggestions", example=1
+        None, description="Category ID to filter suggestions", examples=[1]
     )
     extra: Optional[dict[str, list]] = Field(
         default_factory=dict,
         description="Additional filter parameters",
-        example={"filter": ["example"]},
+        examples=[{"filter": ["example"]}],
     )
     sort: Optional[list] = Field(
         None,
         description="Sorting criteria with field:direction format",
-        example=["field1:asc"],
+        examples=[["field1:asc"]],
     )
     sortAfterKey: Optional[str] = Field(
-        None, description="Pagination key for sorted results", example="sort-key"
+        None, description="Pagination key for sorted results", examples=["sort-key"]
     )
     language: Optional[str] = Field(
-        None, description="Language code for localized results", example="it_IT"
+        None, description="Language code for localized results", examples=["it_IT"]
     )
     searchText: str = Field(
-        ..., description="Primary search text input", example="What is OpenK9?"
+        ..., description="Primary search text input", examples=["What is OpenK9?"]
     )
     reformulate: Optional[bool] = Field(
-        True, description="Enable query reformulation", example=True
+        True, description="Enable query reformulation", examples=[True]
     )
     datasourceIds: Optional[list[int]] = Field(
         None,
         description="Restrict retrieval to these datasource ids",
-        example=[1, 2],
+        examples=[[1, 2]],
     )
 
 
@@ -115,77 +117,81 @@ class SearchQueryChat(BaseModel):
     chatId: Optional[str] = Field(
         None,
         description="Unique identifier for chat session",
-        example="chat_abc123def456",
+        examples=["chat_abc123def456"],
     )
     retrieveFromUploadedDocuments: Optional[bool] = Field(
-        False, description="Whether to retrieve from uploaded documents", example=False
+        False,
+        description="Whether to retrieve from uploaded documents",
+        examples=[False],
     )
     afterKey: Optional[str] = Field(
-        None, description="Pagination key for subsequent requests", example="page_2"
+        None, description="Pagination key for subsequent requests", examples=["page_2"]
     )
     suggestKeyword: Optional[str] = Field(
         None,
         description="Partial keyword for suggestion autocomplete",
-        example="OpenK9",
+        examples=["OpenK9"],
     )
     suggestionCategoryId: Optional[int] = Field(
-        None, description="Category ID to filter suggestions", example=1
+        None, description="Category ID to filter suggestions", examples=[1]
     )
     extra: Optional[dict[str, list]] = Field(
         default_factory=dict,
         description="Additional filter parameters",
-        example={"filter": ["example"]},
+        examples=[{"filter": ["example"]}],
     )
     sort: Optional[list] = Field(
         None,
         description="Sorting criteria with field:direction format",
-        example=["field1:asc"],
+        examples=[["field1:asc"]],
     )
     sortAfterKey: Optional[str] = Field(
-        None, description="Pagination key for sorted results", example="sort-key"
+        None, description="Pagination key for sorted results", examples=["sort-key"]
     )
     language: Optional[str] = Field(
-        None, description="Language code for localized results", example="it_IT"
+        None, description="Language code for localized results", examples=["it_IT"]
     )
     searchText: str = Field(
-        ..., description="Primary search text input", example="What is OpenK9?"
+        ..., description="Primary search text input", examples=["What is OpenK9?"]
     )
     chatHistory: Optional[list] = Field(
         None,
         description="Previous chat messages in conversation",
-        example=[
-            {
-                "question": "Che cos’è la garanzia Infortuni del Conducente?",
-                "answer": "La garanzia Infortuni del Conducente è una garanzia accessoria offerta da AXA che protegge il conducente in caso di invalidità permanente o, nei casi più gravi, indennizza gli eredi in caso di morte mentre si guida il veicolo assicurato. Inoltre, l'estensione della garanzia copre anche le spese mediche sostenute a seguito di un infortunio.",
-                "title": "Spiegazione della Garanzia Infortuni del Conducente di AXA",
-                "sources": [
-                    {
-                        "title": "Assicurazione Infortuni Conducente | AXA",
-                        "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
-                        "citations": [],
-                    },
-                    {
-                        "title": "Garanzie Accessorie Assicurazione Veicoli | AXA",
-                        "url": "https://www.axa.it/garanzie-accessorie-per-veicoli",
-                        "citations": [],
-                    },
-                ],
-                "chat_id": "1740389549494",
-                "timestamp": "1740389552570",
-                "chat_sequence_number": 1,
-            },
+        examples=[
+            [
+                {
+                    "question": "Che cos’è la garanzia Infortuni del Conducente?",
+                    "answer": "La garanzia Infortuni del Conducente è una garanzia accessoria offerta da AXA che protegge il conducente in caso di invalidità permanente o, nei casi più gravi, indennizza gli eredi in caso di morte mentre si guida il veicolo assicurato. Inoltre, l'estensione della garanzia copre anche le spese mediche sostenute a seguito di un infortunio.",
+                    "title": "Spiegazione della Garanzia Infortuni del Conducente di AXA",
+                    "sources": [
+                        {
+                            "title": "Assicurazione Infortuni Conducente | AXA",
+                            "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
+                            "citations": [],
+                        },
+                        {
+                            "title": "Garanzie Accessorie Assicurazione Veicoli | AXA",
+                            "url": "https://www.axa.it/garanzie-accessorie-per-veicoli",
+                            "citations": [],
+                        },
+                    ],
+                    "chat_id": "1740389549494",
+                    "timestamp": "1740389552570",
+                    "chat_sequence_number": 1,
+                },
+            ]
         ],
     )
     timestamp: str = Field(
-        ..., description="Timestamp of request", example="1740389552570"
+        ..., description="Timestamp of request", examples=["1740389552570"]
     )
     chatSequenceNumber: int = Field(
-        ..., description="Incremental conversation turn number", example=3
+        ..., description="Incremental conversation turn number", examples=[3]
     )
     datasourceIds: Optional[list[int]] = Field(
         None,
         description="Restrict retrieval to these datasource ids",
-        example=[1, 2],
+        examples=[[1, 2]],
     )
     media: Optional[Media] = Field(
         None,
@@ -198,10 +204,12 @@ class UserChats(BaseModel):
     """Model for retrieving user chat history."""
 
     chatSequenceNumber: int = Field(
-        1, description="Incremental conversation turn number", example=1
+        1, description="Incremental conversation turn number", examples=[1]
     )
-    paginationFrom: int = Field(0, description="Pagination start index", example=0)
-    paginationSize: int = Field(10, description="Number of items per page", example=10)
+    paginationFrom: int = Field(0, description="Pagination start index", examples=[0])
+    paginationSize: int = Field(
+        10, description="Number of items per page", examples=[10]
+    )
 
 
 class ChatMessage(BaseModel):
@@ -217,7 +225,7 @@ class ChatMessage(BaseModel):
         min_length=1,
         max_length=100,
         description="New title for the chat conversation",
-        example="Project Discussion",
+        examples=["Project Discussion"],
     )
 
 
@@ -232,26 +240,26 @@ class Evaluation(BaseModel):
     limit: Optional[int] = Field(
         100,
         description="Maximum number of spans to return. Defaults to 100.",
-        example=10,
+        examples=[10],
     )
     start_time: Optional[datetime] = Field(
         None,
         description="Optional start time for filtering (inclusive lower bound)",
-        example="2025-12-17",
+        examples=["2025-12-17"],
     )
     end_time: Optional[datetime] = Field(
         None,
         description="Optional end time for filtering (exclusive upper bound)",
-        example="2026-01-14",
+        examples=["2026-01-14"],
     )
     evaluateRagRouter: Optional[bool] = Field(
-        False, description="Whether to evaluate rag router", example=False
+        False, description="Whether to evaluate rag router", examples=[False]
     )
     evaluateRetriever: Optional[bool] = Field(
-        False, description="Whether to evaluate retriever", example=False
+        False, description="Whether to evaluate retriever", examples=[False]
     )
     evaluateResponse: Optional[bool] = Field(
-        False, description="Whether to to evaluate response", example=False
+        False, description="Whether to to evaluate response", examples=[False]
     )
 
 
@@ -272,12 +280,12 @@ class CommonHeadersMinimal(BaseModel):
     authorization: Optional[str] = Field(
         None,
         description="Bearer token for authentication.",
-        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..",
+        examples=["Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.."],
     )
     x_tenant_id: Optional[str] = Field(
         None,
         description="Identifier for the tenant/organization in a multi-tenant architecture.",
-        example="tenant-12345",
+        examples=["tenant-12345"],
     )
 
 
@@ -296,5 +304,5 @@ class CommonHeaders(CommonHeadersMinimal):
     openk9_acl: Optional[list[str]] = Field(
         None,
         description="Access control list for tenant resources.",
-        example='["group:admins", "project:openk9"]',
+        examples=['["group:admins", "project:openk9"]'],
     )
