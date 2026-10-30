@@ -100,16 +100,6 @@ public class HybridQueryParserTest {
 	}
 
 	@Test
-	void should_inject_acl_query_parser_after_refactoring() {
-		// after refactoring, AclQueryParser is injected via CDI
-		assertNotNull(hybridQueryParser.getAclQueryParser());
-
-		// and getBoolQuery should not throw with default config
-		assertDoesNotThrow(() -> hybridQueryParser.getAclQueryParser()
-			.getBoolQuery(createParserContext()));
-	}
-
-	@Test
 	void should_build_multi_match_with_searchable_fields() {
 		// a bucket exposing both the title and the content as searchable text
 		withSearchableFields();
@@ -121,10 +111,10 @@ public class HybridQueryParserTest {
 
 		assertEquals(
 			"most_fields",
-			readString(hybridQuery, "$.hybrid.queries[0].multi_match.type"));
+			readString(hybridQuery, "$.hybrid.queries[0].bool.must[0].multi_match.type"));
 
 		List<String> fields = readList(
-			hybridQuery, "$.hybrid.queries[0].multi_match.fields");
+			hybridQuery, "$.hybrid.queries[0].bool.must[0].multi_match.fields");
 
 		// chunkText is always searched, together with the searchable fields
 		assertTrue(fields.contains("chunkText"));
@@ -139,7 +129,7 @@ public class HybridQueryParserTest {
 		var hybridQuery = applyAndGetHybridQuery();
 
 		List<String> fields = readList(
-			hybridQuery, "$.hybrid.queries[0].multi_match.fields");
+			hybridQuery, "$.hybrid.queries[0].bool.must[0].multi_match.fields");
 
 		// the configured boost drives the weight of the title at query time
 		assertTrue(fields.contains("web.title^" + TITLE_BOOST));
@@ -153,7 +143,7 @@ public class HybridQueryParserTest {
 		// the textual branch falls back to the plain match on chunkText
 		assertFalse(hybridQuery.contains("multi_match"));
 		assertNotNull(
-			readString(hybridQuery, "$.hybrid.queries[0].match.chunkText.query"));
+			readString(hybridQuery, "$.hybrid.queries[0].bool.must[0].match.chunkText.query"));
 	}
 
 	@Test

@@ -33,17 +33,24 @@ import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.opensearch.client.opensearch._types.query_dsl.HybridQuery;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
 import org.opensearch.client.opensearch._types.query_dsl.MultiMatchQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.TextQueryType;
 import org.opensearch.common.unit.Fuzziness;
+import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.MultiMatchQueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.index.query.WrapperQueryBuilder;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,9 +59,6 @@ import java.util.List;
 public class HybridQueryParser implements QueryParser {
 
 	static final String CHUNK_TEXT = "chunkText";
-
-	@Inject
-	AclQueryParser aclQueryParser;
 
 	@Inject
 	EmbeddingService embeddingService;
@@ -75,10 +79,37 @@ public class HybridQueryParser implements QueryParser {
 	)
 	Integer defaultMaxTextQueryLength;
 
+	/**
+	 * Adds the textual branch of the hybrid query to the shared bool query,
+	 * as the search path of the suggestions does.
+	 * <p>
+	 * The suggestions count only the documents the textual branch matches:
+	 * the knn branch would cost an embedding call for each request of
+	 * suggestions, to add at most {@code kNeighbors} documents per shard.
+	 */
 	@Override
 	public Uni<Void> apply(ParserContext parserContext) {
-		throw new UnsupportedOperationException(
-			"Hybrid query parser cannot be applied to standard queries.");
+
+		var jsonConfig = parserContext.getQueryParserConfig();
+		var parserSearchToken = parserContext.getTokenTypeGroup().iterator().next();
+
+		var values = parserSearchToken.getValues().iterator();
+
+		if (values.hasNext()) {
+			var textQuery = toTextQuery(
+				parserContext,
+				parserSearchToken,
+				jsonConfig,
+				getTextQueryValue(parserContext, values.next()),
+				TextQueryParser.getFuzziness(parserSearchToken, jsonConfig),
+				TextQueryParser.getBoost(parserSearchToken, jsonConfig)
+			);
+
+			parserContext.getMutableQuery().must(
+				OpenSearchUtils.toWrapperQueryBuilder(textQuery));
+		}
+
+		return Uni.createFrom().voidItem();
 	}
 
 	@Override
@@ -86,6 +117,13 @@ public class HybridQueryParser implements QueryParser {
 		return QueryParserType.HYBRID;
 	}
 
+	/**
+	 * Sets on the search source the hybrid query of the token, whose two
+	 * branches both apply the base query of the context, that is the
+	 * filters and the ACL built from the other tokens of the request.
+	 * <p>
+	 * A context without a base query applies no filter.
+	 */
 	public Uni<SearchSourceBuilder> apply(
 		ParserContext parserContext, SearchSourceBuilder searchSourceBuilder) {
 
@@ -100,6 +138,185 @@ public class HybridQueryParser implements QueryParser {
 
 		var values = parserSearchToken.getValues().iterator();
 
+		var baseQuery = parserContext.getMutableQuery() != null
+			? parserContext.getMutableQuery()
+			: QueryBuilders.boolQuery();
+
+		if (values.hasNext()) {
+			var value = values.next();
+
+			var textQuery = toTextQuery(
+				parserContext,
+				parserSearchToken,
+				jsonConfig,
+				getTextQueryValue(parserContext, value),
+				fuzziness,
+				boost
+			);
+
+			return embeddingService.getEmbeddedText(tenantId, value)
+				.map(embeddedText -> KnnQueryParser.toKnnQuery(embeddedText, kNeighbors))
+				.map(knnQuery -> toHybridQuery(baseQuery, textQuery, knnQuery))
+				.map(searchSourceBuilder::query);
+
+		}
+
+		return Uni.createFrom().item(searchSourceBuilder);
+	}
+
+	/**
+	 * Composes the hybrid query as json, inside a single wrapper query.
+	 * <p>
+	 * OpenSearch accepts the hybrid query only at the top level, so the base
+	 * query cannot wrap it: it is applied inside each branch instead. The
+	 * base query comes from the legacy client and the branches from
+	 * opensearch-java, whose typed deserializer rejects the legacy json:
+	 * the two meet as json.
+	 *
+	 * @param baseQuery the filters and the ACL of the request
+	 * @param textQuery the textual query of the token
+	 * @param knnQuery  the knn query of the token, without filter
+	 * @return the wrapper query holding the hybrid query
+	 */
+	static WrapperQueryBuilder toHybridQuery(
+		BoolQueryBuilder baseQuery, Query textQuery, Query knnQuery) {
+
+		var queries = new JsonArray()
+			.add(toTextBranch(baseQuery, textQuery))
+			.add(toKnnBranch(baseQuery, knnQuery));
+
+		var hybridQuery = new JsonObject()
+			.put("hybrid", new JsonObject().put("queries", queries));
+
+		return QueryBuilders.wrapperQuery(hybridQuery.encode());
+	}
+
+	/**
+	 * Builds the textual branch as the base query plus the textual query as
+	 * a must clause, the same query a TEXT search runs.
+	 *
+	 * @param baseQuery the filters and the ACL of the request
+	 * @param textQuery the textual query of the token
+	 * @return the json of the textual branch
+	 */
+	static JsonObject toTextBranch(BoolQueryBuilder baseQuery, Query textQuery) {
+
+		var textBranch = new JsonObject(baseQuery.toString());
+
+		addClause(textBranch, "must", toJson(textQuery));
+
+		return textBranch;
+	}
+
+	/**
+	 * Builds the knn branch with the clauses that restrict the base query as
+	 * the native filter of the knn query, so that the k neighbors are
+	 * searched among the documents the request admits.
+	 * <p>
+	 * The scoring clauses of the base query, must and should, surround the
+	 * knn query as in a KNN search, so that a document scores as it does
+	 * there.
+	 *
+	 * @param baseQuery the filters and the ACL of the request
+	 * @param knnQuery  the knn query of the token, without filter
+	 * @return the json of the knn branch
+	 */
+	static JsonObject toKnnBranch(BoolQueryBuilder baseQuery, Query knnQuery) {
+
+		var knnJson = toJson(knnQuery);
+
+		var knnFilter = toKnnFilter(baseQuery);
+
+		if (knnFilter.hasClauses()) {
+			knnJson
+				.getJsonObject("knn")
+				.getJsonObject("vector")
+				.put("filter", new JsonObject(knnFilter.toString()));
+		}
+
+		if (baseQuery.must().isEmpty() && baseQuery.should().isEmpty()) {
+			return knnJson;
+		}
+
+		var scoringQuery = QueryBuilders.boolQuery()
+			.minimumShouldMatch(baseQuery.minimumShouldMatch());
+
+		baseQuery.must().forEach(scoringQuery::must);
+		baseQuery.should().forEach(scoringQuery::should);
+
+		var knnBranch = new JsonObject(scoringQuery.toString());
+
+		addClause(knnBranch, "must", knnJson);
+
+		return knnBranch;
+	}
+
+	/**
+	 * Collects the clauses of the base query that restrict the documents:
+	 * filter and must in filter context, must_not as they are.
+	 * <p>
+	 * The should clauses restrict only with a minimum should match: without
+	 * it they would turn, alone in a filter, from an optional boost into a
+	 * mandatory condition.
+	 *
+	 * @param baseQuery the filters and the ACL of the request
+	 * @return the filter of the knn query, with no clause when nothing restricts
+	 */
+	static BoolQueryBuilder toKnnFilter(BoolQueryBuilder baseQuery) {
+
+		var knnFilter = QueryBuilders.boolQuery();
+
+		baseQuery.filter().forEach(knnFilter::filter);
+		baseQuery.must().forEach(knnFilter::filter);
+		baseQuery.mustNot().forEach(knnFilter::mustNot);
+
+		if (baseQuery.minimumShouldMatch() != null) {
+			baseQuery.should().forEach(knnFilter::should);
+			knnFilter.minimumShouldMatch(baseQuery.minimumShouldMatch());
+		}
+
+		return knnFilter;
+	}
+
+	private static void addClause(
+		JsonObject boolQuery, String occur, JsonObject clause) {
+
+		var bool = boolQuery.getJsonObject("bool");
+
+		var clauses = bool.getJsonArray(occur);
+
+		if (clauses == null) {
+			clauses = new JsonArray();
+			bool.put(occur, clauses);
+		}
+
+		clauses.add(clause);
+	}
+
+	private static JsonObject toJson(Query query) {
+
+		try (var os = new ByteArrayOutputStream()) {
+
+			var generator = jakarta.json.Json.createGenerator(os);
+
+			query.serialize(generator, new JacksonJsonpMapper());
+
+			generator.close();
+
+			return new JsonObject(os.toString());
+		}
+		catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+	}
+
+	/**
+	 * Enforces the maximum text query length of the bucket, disabled if set to
+	 * 0 or a negative value.
+	 */
+	private String getTextQueryValue(
+		ParserContext parserContext, String value) {
+
 		var searchConfig = parserContext.getTenantWithBucket().getBucket().getSearchConfig();
 
 		var maxTextQueryLength =
@@ -107,47 +324,9 @@ public class HybridQueryParser implements QueryParser {
 			? searchConfig.getMaxTextQueryLength()
 			: defaultMaxTextQueryLength;
 
-		if (values.hasNext()) {
-			var value = values.next();
-
-			// enforce a maximum text query length (disabled if set to 0 or a negative value)
-			var textQueryValue = (maxTextQueryLength > 0 && value.length() > maxTextQueryLength)
-				? value.substring(0, maxTextQueryLength)
-				: value;
-
-			var textQuery = toTextQuery(
-				parserContext,
-				parserSearchToken,
-				jsonConfig,
-				textQueryValue,
-				fuzziness,
-				boost
-			);
-
-			return embeddingService.getEmbeddedText(tenantId, value)
-				.map(embeddedText -> KnnQueryParser.toKnnQuery(embeddedText, kNeighbors))
-				.map(knnQuery -> new HybridQuery.Builder()
-					.queries(textQuery, knnQuery)
-					.build()
-					.toQuery()
-				)
-				.map(OpenSearchUtils::toWrapperQueryBuilder)
-				.map(hybridQuery -> {
-					searchSourceBuilder.query(hybridQuery);
-
-					var aclFilterQuery = 
-						aclQueryParser.getBoolQuery(
-							parserContext);
-
-					searchSourceBuilder.postFilter(
-						aclFilterQuery);
-
-					return searchSourceBuilder;
-				});
-
-		}
-
-		return Uni.createFrom().item(searchSourceBuilder);
+		return (maxTextQueryLength > 0 && value.length() > maxTextQueryLength)
+			? value.substring(0, maxTextQueryLength)
+			: value;
 	}
 
 	/**
@@ -184,6 +363,7 @@ public class HybridQueryParser implements QueryParser {
 				.field(CHUNK_TEXT)
 				.query(q -> q.stringValue(textQueryValue))
 				.fuzziness(fuzziness.asString())
+				.lenient(true)
 				.boost(boost)
 				.build()
 				.toQuery();
@@ -205,6 +385,7 @@ public class HybridQueryParser implements QueryParser {
 			.type(toTextQueryType(multiMatchType))
 			.tieBreaker((double) tieBreaker)
 			.fuzziness(fuzziness.asString())
+			.lenient(true)
 			.boost(boost)
 			.build()
 			.toQuery();
@@ -229,10 +410,6 @@ public class HybridQueryParser implements QueryParser {
 			case PHRASE_PREFIX -> TextQueryType.PhrasePrefix;
 			case BOOL_PREFIX -> TextQueryType.BoolPrefix;
 		};
-	}
-
-	protected AclQueryParser getAclQueryParser() {
-		return this.aclQueryParser;
 	}
 
 }
