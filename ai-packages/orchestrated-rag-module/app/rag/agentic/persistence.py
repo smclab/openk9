@@ -16,33 +16,34 @@
 #
 
 """
-Persistence compat store — sostituisce ``OpenSearchSaver`` di agentic-rag-module mantenendone la
-**forma documentale** (decisione 1 del piano).
+Chat history in the documents of agentic-rag-module.
 
-Perche' compat e non schema nuovo: la forma checkpoint e' letta/scritta **direttamente**
-da 4 endpoint di ``app/server.py`` (``get_user_chats``, ``get_chat``, ``rename_chat``,
-``delete_chat``) e dallo scheduler ``app/utils/chat_history.py::delete_documents``. Riprodurre la
-forma tiene quegli endpoint e lo scheduler **intatti**.
+The module saves each turn in the same document shape as the checkpointer of
+agentic-rag-module. Four endpoints of ``app/server.py`` (``get_user_chats``, ``get_chat``,
+``rename_chat``, ``delete_chat``) and the retention scheduler
+(``app/utils/chat_history.py::delete_documents``) read and write that shape directly: keeping it
+leaves them unchanged, and a chat goes on from one module to the other.
 
-Contratto documentale (dedotto dal codice che lo legge):
+The shape, as the code that reads it expects:
 
-- indice ``{tenant_id}-{user_id}``; ``thread_id`` = ``chat_id``.
-- ``checkpoint`` = **stringa JSON** con:
-  ``ts`` e ``channel_values.{original_query, current_query, response, conversation_title,
-  chat_sequence_number, retrieve_from_uploaded_documents, context, messages}``.
-- ``context`` = lista di documenti ``{"kwargs": {"metadata": {document_id, score, title,
-  url, domain?}}}`` (``get_chat`` legge ``kwargs.metadata.*``).
-- ``metadata.step`` (>0): ``get_chat``/``get_user_chats`` prendono il doc a step massimo per
-  ``chat_sequence_number`` / per thread. ``get_user_chats`` aggrega su ``thread_id`` (keyword) e
-  ordina con painless su ``metadata.step.keyword`` → mapping esplicito sotto.
-- ``checkpoint_id``: id univoco per doc (richiesto dal riconoscimento indici di ``delete_documents``).
+- index ``{tenant_id}-{user_id}``; ``thread_id`` is the ``chat_id``.
+- ``checkpoint`` is a **JSON string** with ``ts`` and ``channel_values.{original_query,
+  current_query, response, conversation_title, chat_sequence_number,
+  retrieve_from_uploaded_documents, context, messages}``.
+- ``context`` is a list of documents ``{"kwargs": {"metadata": {document_id, score, title,
+  url, domain?}}}``: ``get_chat`` reads ``kwargs.metadata.*``.
+- ``metadata.step`` (>0): ``get_chat`` and ``get_user_chats`` take the document with the highest
+  step, per ``chat_sequence_number`` and per thread. ``get_user_chats`` aggregates on
+  ``thread_id`` (keyword) and sorts with painless on ``metadata.step.keyword``, hence the
+  explicit mapping below.
+- ``checkpoint_id``: a unique id per document, which ``delete_documents`` needs to recognize
+  the index.
 
-``channel_values.messages`` porta la history PydanticAI serializzata (round-trip via
-``ModelMessagesTypeAdapter``).
+``channel_values.messages`` holds the serialized PydanticAI history (round trip through
+``ModelMessagesTypeAdapter``), or, in a chat started with agentic-rag-module, its messages.
 
-⚠️ Le chiamate OpenSearch non sono validabili qui (serve un cluster). Il mapping esplicito e'
-progettato per soddisfare i 3 endpoint + lo scheduler; va verificato contro un indice reale creato
-da agentic-rag-module (potrebbero esserci campi extra tollerabili).
+``tests/rag/test_chat_persistence.py`` runs the store against OpenSearch when
+``OPENSEARCH_TEST_HOST`` is set.
 """
 
 import json
@@ -52,10 +53,9 @@ from typing import Optional
 
 from app.rag.agentic.contracts import DocumentRef
 
-WRITES_INDEX_SUFFIX = "-writes"
-
-#: Mapping esplicito: thread_id keyword (aggregabile come "thread_id"), metadata.step con
-#: sottocampo .keyword (usato dal painless di get_user_chats), checkpoint come text (JSON string).
+#: Explicit mapping: ``thread_id`` as keyword (aggregated as "thread_id"), ``metadata.step`` with
+#: a ``.keyword`` subfield (used by the painless of get_user_chats), ``checkpoint`` as text (JSON
+#: string).
 CHECKPOINT_INDEX_MAPPING = {
     "mappings": {
         "properties": {
@@ -75,9 +75,9 @@ CHECKPOINT_INDEX_MAPPING = {
 }
 
 
-#: Sort per step numerico decrescente. ``metadata.step`` e' text+keyword, quindi
-#: ordinarlo/aggregarlo come keyword e' sbagliato: l'agg ``max`` viene rifiutata da OpenSearch e il
-#: sort e' lessicografico ("9" > "10"). Stesso script painless usato dai 4 endpoint di ``server.py``.
+#: Sort by numeric step, descending. ``metadata.step`` is text plus keyword, so sorting or
+#: aggregating it as keyword is wrong: OpenSearch rejects the ``max`` aggregation and the sort is
+#: lexicographic ("9" > "10"). The same painless script as the 4 endpoints of ``server.py``.
 STEP_DESC_SORT = [
     {
         "_script": {
@@ -102,13 +102,13 @@ def _now_iso() -> str:
 
 
 def _title_of(document: dict) -> Optional[str]:
-    """``conversation_title`` dal ``_source`` di un doc checkpoint."""
+    """``conversation_title`` from the ``_source`` of a checkpoint document."""
     checkpoint = json.loads(document.get("checkpoint", "{}"))
     return checkpoint.get("channel_values", {}).get("conversation_title")
 
 
 def serialize_context(used_document_refs: list[DocumentRef]) -> list[dict]:
-    """DocumentRef → forma letta da ``get_chat`` (``kwargs.metadata.*``)."""
+    """DocumentRef → the shape ``get_chat`` reads (``kwargs.metadata.*``)."""
     serialized = []
     for ref in used_document_refs:
         serialized.append(
@@ -128,20 +128,20 @@ def serialize_context(used_document_refs: list[DocumentRef]) -> list[dict]:
 
 
 def serialize_messages(message_history) -> list:
-    """History PydanticAI → JSON-able (per ``channel_values.messages``)."""
+    """PydanticAI history → JSON-able (for ``channel_values.messages``)."""
     from pydantic_core import to_jsonable_python
 
     return to_jsonable_python(message_history or [])
 
 
 def _is_agentic_rag_message(message) -> bool:
-    """Un messaggio nel formato ``{"lc": 1, "id": [...], "kwargs": {...}}``, quello che
-    agentic-rag-module salva nel canale ``messages`` del checkpoint."""
+    """A message in the ``{"lc": 1, "id": [...], "kwargs": {...}}`` format, the one
+    agentic-rag-module saves in the ``messages`` channel of the checkpoint."""
     return isinstance(message, dict) and "lc" in message and "kwargs" in message
 
 
 def _text_of(content) -> str:
-    """Testo di un ``content`` di agentic-rag-module: una stringa, o una lista di parti (multimodale)."""
+    """Text of an agentic-rag-module ``content``: a string, or a list of parts (multimodal)."""
     if isinstance(content, str):
         return content
     return "".join(
@@ -150,12 +150,12 @@ def _text_of(content) -> str:
 
 
 def messages_from_agentic_rag(data) -> list:
-    """Messaggi di agentic-rag-module → ``list[ModelMessage]`` PydanticAI.
+    """Messages of agentic-rag-module → PydanticAI ``list[ModelMessage]``.
 
-    Una chat cominciata con agentic-rag-module e continuata con questo modulo porta nel checkpoint
-    i ``HumanMessage``/``AIMessage`` del grafo: diventano domanda e risposta del turno, come quelli
-    di :func:`messages_from_chat_history`. Gli altri tipi (system, tool) non sono storia della
-    conversazione e vengono saltati.
+    A chat started with agentic-rag-module and continued with this module carries in its
+    checkpoint the ``HumanMessage``/``AIMessage`` of the graph: they become question and answer
+    of each turn, as in :func:`messages_from_chat_history`. The other types (system, tool) are
+    not history of the conversation and are skipped.
     """
     from pydantic_ai.messages import ModelRequest, ModelResponse, TextPart, UserPromptPart
 
@@ -171,9 +171,9 @@ def messages_from_agentic_rag(data) -> list:
 
 
 def deserialize_messages(data) -> list:
-    """JSON-able → ``list[ModelMessage]`` PydanticAI (per riprendere la conversazione).
+    """JSON-able → PydanticAI ``list[ModelMessage]`` (to resume the conversation).
 
-    Accetta anche i messaggi di una chat salvata da agentic-rag-module.
+    Also accepts the messages of a chat saved by agentic-rag-module.
     """
     from pydantic_ai.messages import ModelMessagesTypeAdapter
 
@@ -196,7 +196,7 @@ def build_checkpoint(
     message_history,
     ts: Optional[str] = None,
 ) -> dict:
-    """Costruisce il dizionario checkpoint (pre-serializzazione JSON). Puro, testabile."""
+    """The checkpoint dictionary, before JSON serialization."""
     channel_values = {
         "original_query": original_query,
         "current_query": current_query,
@@ -214,7 +214,7 @@ def build_checkpoint(
 
 
 class OpenSearchConversationStore:
-    """Store per utenti loggati — scrive/legge la forma checkpoint su ``{tenant}-{user}``."""
+    """Store for logged users: writes and reads the checkpoint shape in ``{tenant}-{user}``."""
 
     def __init__(self, opensearch_host: str, tenant_id: str, user_id: str):
         from app.utils.opensearch_client import get_opensearch_client
@@ -227,7 +227,7 @@ class OpenSearchConversationStore:
             self._client.indices.create(index=self.index, body=CHECKPOINT_INDEX_MAPPING)
 
     def _latest_doc(self, thread_id: str) -> Optional[dict]:
-        """``_source`` del checkpoint a step massimo del thread, o ``None``."""
+        """``_source`` of the checkpoint with the highest step of the thread, or ``None``."""
         if not self._client.indices.exists(index=self.index):
             return None
         response = self._client.search(
@@ -258,9 +258,9 @@ class OpenSearchConversationStore:
         self._ensure_index()
         latest = self._latest_doc(chat_id)
         step = int(latest.get("metadata", {}).get("step", 0)) + 1 if latest else 1
-        # Il titolo e' calcolato solo al primo turno, ma ``get_user_chats``/``rename_chat``
-        # leggono il doc a step massimo: va riportato avanti a ogni turno (in
-        # agentic-rag-module lo faceva il canale di stato ``conversation_title``).
+        # The title is generated only on the first turn, but ``get_user_chats`` and
+        # ``rename_chat`` read the document with the highest step: it is carried over at every
+        # turn (in agentic-rag-module the ``conversation_title`` state channel did it).
         if conversation_title is None and latest:
             conversation_title = _title_of(latest)
         checkpoint = build_checkpoint(
@@ -283,7 +283,7 @@ class OpenSearchConversationStore:
         self._client.index(index=self.index, body=document, refresh=True)
 
     def load_message_history(self, chat_id: str) -> list:
-        """Ricostruisce la history PydanticAI dall'ultimo checkpoint (max step) del thread."""
+        """The PydanticAI history from the latest checkpoint (highest step) of the thread."""
         latest = self._latest_doc(chat_id)
         if not latest:
             return []
@@ -292,10 +292,10 @@ class OpenSearchConversationStore:
 
 
 def messages_from_chat_history(chat_history) -> list:
-    """``chatHistory`` del frontend → ``list[ModelMessage]`` PydanticAI.
+    """``chatHistory`` of the frontend → PydanticAI ``list[ModelMessage]``.
 
-    Port di ``load_messages_from_frontend``: tollerante come l'originale, una entry incompleta
-    viene saltata invece di far fallire il turno.
+    As ``load_messages_from_frontend`` of agentic-rag-module, an incomplete entry is skipped
+    instead of failing the turn.
     """
     from pydantic_ai.messages import ModelRequest, ModelResponse, TextPart, UserPromptPart
 
@@ -311,19 +311,18 @@ def messages_from_chat_history(chat_history) -> list:
 
 
 class FrontendConversationStore:
-    """Store per utenti non loggati: la conversazione la porta il client a ogni richiesta.
+    """Store for anonymous users: the client sends the conversation with every request.
 
-    Sostituisce un precedente store in-memory che teneva la history lato server sotto un'unica
-    chiave (``chat_id`` e' ``None`` per gli anonimi), e quindi la condivideva fra utenti diversi.
-    La sorgente corretta e' il payload, come in agentic-rag-module: nessuno stato lato server, gli
-    anonimi restano isolati e la history non dipende da quale replica risponde.
+    As in agentic-rag-module, the history comes from the payload and nothing is kept on the
+    server: anonymous users stay isolated (their ``chat_id`` is ``None``), and the history does
+    not depend on which replica answers.
     """
 
     def __init__(self, chat_history=None):
         self._messages = messages_from_chat_history(chat_history)
 
     def save_turn(self, **_ignored) -> None:
-        """No-op: la history del turno successivo la rimanda il client."""
+        """No-op: the client sends the history again with the next turn."""
 
     def load_message_history(self, chat_id: str) -> list:
         return list(self._messages)
