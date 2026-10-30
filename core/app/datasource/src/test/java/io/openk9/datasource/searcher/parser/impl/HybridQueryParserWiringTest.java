@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
 class HybridQueryParserWiringTest {
@@ -62,6 +63,7 @@ class HybridQueryParserWiringTest {
 		var parserContext = ParserContext.builder()
 			.tenantWithBucket(new TenantWithBucket(TENANT_ID, bucket))
 			.tokenTypeGroup(List.of(token))
+			.mutableQuery(QueryBuilders.boolQuery())
 			.queryParserConfig(new JsonObject())
 			.build();
 

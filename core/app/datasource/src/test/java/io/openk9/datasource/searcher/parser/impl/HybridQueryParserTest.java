@@ -44,12 +44,14 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -98,6 +100,17 @@ public class HybridQueryParserTest {
 
 		assertDoesNotThrow(() -> hybridQueryParser.apply(
 			createParserContext(), searchSourceBuilder));
+	}
+
+	@Test
+	void should_fail_without_the_base_query() {
+		// a context without the base query would search without the ACL
+		var parserContext = createParserContext();
+		parserContext.setMutableQuery(null);
+
+		assertThrows(
+			NullPointerException.class,
+			() -> hybridQueryParser.apply(parserContext, searchSourceBuilder));
 	}
 
 	@Test
@@ -206,6 +219,7 @@ public class HybridQueryParserTest {
 		return ParserContext.builder()
 			.tenantWithBucket(new TenantWithBucket(TENANT_ID, bucket))
 			.tokenTypeGroup(List.of(parserSearchToken))
+			.mutableQuery(QueryBuilders.boolQuery())
 			.queryParserConfig(new JsonObject())
 			.language(Language.NONE)
 			.build();
