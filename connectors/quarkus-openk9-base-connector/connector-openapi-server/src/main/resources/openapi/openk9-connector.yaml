@@ -156,7 +156,12 @@ components:
         timestamp:
           type: integer
           format: int64
-      description: The datasource configuration arrives as additional top-level properties.
+        datasourceConfig:
+          type: object
+          additionalProperties: { }
+          description: Configuration of the datasource.
+      description: The datasource configuration arrives both in datasourceConfig and
+        as additional top-level properties.
       additionalProperties: { }
     BinaryDTO:
       type: object

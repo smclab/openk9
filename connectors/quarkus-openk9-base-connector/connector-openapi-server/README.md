@@ -70,8 +70,9 @@ It is the body request sent by OpenK9 to connector.
 - **scheduleId**: ID of schedule.
 - **tenantId**: ID of tenant.
 - **timestamp**: Timestamp relative to last ingestion date.
+- **datasourceConfig**: Configuration of the datasource.
 
-The configuration of the datasource arrives as additional top-level properties, next to the fields above; read it with `getAdditionalProperties()`.
+The same configuration also arrives as additional top-level properties, next to the fields above: read it either with `getDatasourceConfig().getAdditionalProperties()` or with `getAdditionalProperties()`.
 
 **Form**  
 It is the class used in `FormResource`.
