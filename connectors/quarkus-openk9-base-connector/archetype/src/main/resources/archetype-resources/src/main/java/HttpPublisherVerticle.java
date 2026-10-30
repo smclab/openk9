@@ -1,8 +1,10 @@
 package ${package};
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.openk9.connector.api.beans.IngestionDTO;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.json.Json;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.jboss.logging.Logger;
@@ -27,8 +29,10 @@ public class HttpPublisherVerticle extends AbstractVerticle {
     private String host;
     private String path;
     private int maxPoolSize;
+    private ObjectMapper objectMapper;
 
-    public HttpPublisherVerticle(int maxPoolSize, int port, String host, String path) {
+    public HttpPublisherVerticle(ObjectMapper objectMapper, int maxPoolSize, int port, String host, String path) {
+        this.objectMapper = objectMapper;
         this.maxPoolSize = maxPoolSize;
         this.port = port;
         this.host = host;
@@ -45,16 +49,35 @@ public class HttpPublisherVerticle extends AbstractVerticle {
         WebClient client = WebClient.create(vertx, webClientOptions);
         vertx.eventBus().consumer(ADDRESS, message -> {
             IngestionDTO ingestionDTO = (IngestionDTO) message.body();
+            /*
+               Serialize with Jackson, as OpenK9 does: Vert.x Json encodes byte[] as unpadded
+               base64url, which OpenK9 rejects, so binaries would never be ingested.
+             */
+            Buffer body;
+            try {
+                body = Buffer.buffer(objectMapper.writeValueAsBytes(ingestionDTO));
+            } catch (JsonProcessingException e) {
+                LOGGER.error("Error serializing IngestionDTO object: " + e.getMessage());
+                return;
+            }
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Message consumed: " + Json.encodePrettily(ingestionDTO));
+                LOGGER.debug("Message consumed: " + body);
             }
             client
                     .post(port, host, path)
-                    .sendJson(ingestionDTO)
+                    .putHeader("Content-Type", "application/json")
+                    .sendBuffer(body)
                     .onSuccess(res -> {
                         if (res.statusCode() == 406) {
                             LOGGER.error("HttpPublisherVerticle closed caused by 406 error");
                             vertx.close();
+                        } else if (res.statusCode() / 100 != 2) {
+                            LOGGER.errorf("IngestionDTO [%s, %s, %s] rejected with HTTP %d: %s",
+                                    ingestionDTO.getTenantId(),
+                                    ingestionDTO.getDatasourceId(),
+                                    ingestionDTO.getContentId(),
+                                    res.statusCode(),
+                                    res.bodyAsString());
                         } else {
                             LOGGER.infof("IngestionDTO [%s, %s, %s] sent successfully\n",
                                     ingestionDTO.getTenantId(),
