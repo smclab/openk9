@@ -58,6 +58,12 @@ data:
   OPENK9_DATASOURCE_CLIENT_ENRICHER_VALIDATION_REGEXES: {{ .Values.datasource.client.enricherValidationRegexes | quote }}
   OPENK9_DATASOURCE_CONFIG_REDACTION_KEYS: {{ .Values.datasource.config.redactionKeys | quote }}
   OPENK9_DATASOURCE_QUERY_ANALYSIS_SEARCH_TEXT_LENGTH: {{ .Values.queryAnalysis.searchTextLength | quote }}
+  {{- with (.Values.datasource.search).knnMaxKNeighbors }}
+  OPENK9_DATASOURCE_KNN_MAX_K_NEIGHBORS: {{ . | quote }}
+  {{- end }}
+  {{- with (.Values.datasource.search).embeddingQueryMaxTextLength }}
+  OPENK9_DATASOURCE_EMBEDDING_QUERY_MAX_TEXT_LENGTH: {{ . | quote }}
+  {{- end }}
   QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: {{ include "helper.tenantManagerHost" . | quote }}
   QUARKUS_GRPC_CLIENTS__EMBEDDING__HOST: {{ .Values.openk9.embedding.host | quote }}
   QUARKUS_GRPC_CLIENTS__EMBEDDING__PORT: {{ .Values.openk9.embedding.port | quote }}

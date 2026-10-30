@@ -19,11 +19,17 @@ package io.openk9.datasource.pipeline.service;
 
 import java.util.List;
 
+import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.ml.grpc.Embedding;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.google.protobuf.ByteString;
+import io.quarkus.cache.Cache;
+import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 class EmbeddingServiceQueryTest {
 
@@ -169,6 +175,102 @@ class EmbeddingServiceQueryTest {
 		Assertions.assertThrows(
 			PayloadEmbeddingFailed.class,
 			() -> EmbeddingService.toQueryVector(vector));
+	}
+
+	@Test
+	void should_truncate_the_query_text_before_the_provider() {
+
+		// 1. a service limited to 2048 characters, with mocked model and stub
+		var embedding = Mockito.mock(Embedding.class);
+		Mockito.when(embedding.embedQuery(Mockito.any()))
+			.thenReturn(Uni.createFrom().item(float32Vector()));
+
+		var service = embeddingService(embedding, 2048);
+
+		// 2. embed a text of 10000 characters
+		service.embedQuery(TENANT_ID, "a".repeat(10000), null)
+			.await().indefinitely();
+
+		// 3. the provider receives the first 2048 characters
+		var requestCaptor =
+			ArgumentCaptor.forClass(EmbeddingOuterClass.EmbedQueryRequest.class);
+
+		Mockito.verify(embedding).embedQuery(requestCaptor.capture());
+
+		Assertions.assertEquals(
+			"a".repeat(2048), requestCaptor.getValue().getText());
+	}
+
+	@Test
+	void should_keep_a_query_text_within_the_limit() {
+
+		// 1. a service limited to 2048 characters
+		var embedding = Mockito.mock(Embedding.class);
+		Mockito.when(embedding.embedQuery(Mockito.any()))
+			.thenReturn(Uni.createFrom().item(float32Vector()));
+
+		var service = embeddingService(embedding, 2048);
+
+		// 2. embed a short text
+		service.embedQuery(TENANT_ID, "hello world", null)
+			.await().indefinitely();
+
+		// 3. the provider receives it whole
+		var requestCaptor =
+			ArgumentCaptor.forClass(EmbeddingOuterClass.EmbedQueryRequest.class);
+
+		Mockito.verify(embedding).embedQuery(requestCaptor.capture());
+
+		Assertions.assertEquals("hello world", requestCaptor.getValue().getText());
+	}
+
+	@Test
+	void should_truncate_the_query_text_only_when_enabled() {
+
+		// a limit of 0 or below disables the truncation; null stays null
+		var text = "a".repeat(100);
+
+		Assertions.assertEquals(text, EmbeddingService.truncateQueryText(text, 0));
+		Assertions.assertEquals(text, EmbeddingService.truncateQueryText(text, -1));
+		Assertions.assertEquals(
+			"a".repeat(10), EmbeddingService.truncateQueryText(text, 10));
+		Assertions.assertNull(EmbeddingService.truncateQueryText(null, 10));
+	}
+
+	@Test
+	void should_not_split_a_surrogate_pair_when_truncating() {
+
+		// the cut falls inside an emoji: it is dropped whole
+		var text = "abc" + "\uD83D\uDE00" + "def";
+
+		Assertions.assertEquals(
+			"abc", EmbeddingService.truncateQueryText(text, 4));
+	}
+
+	@SuppressWarnings("unchecked")
+	private static EmbeddingService embeddingService(
+		Embedding embedding, int maxQueryTextLength) {
+
+		var cache = Mockito.mock(Cache.class);
+		Mockito.when(cache.getAsync(Mockito.any(), Mockito.any()))
+			.thenReturn(Uni.createFrom().item(new EmbeddingModel()));
+
+		var service = new EmbeddingService();
+		service.cache = cache;
+		service.embedding = embedding;
+		service.maxQueryTextLength = maxQueryTextLength;
+
+		return service;
+	}
+
+	private static EmbeddingOuterClass.EmbeddedVector float32Vector() {
+		return EmbeddingOuterClass.EmbeddedVector.newBuilder()
+			.setVectorDataType(FLOAT32)
+			.setDimension(1)
+			.setF32(EmbeddingOuterClass.FloatVector.newBuilder()
+				.addValues(0.1f)
+				.build())
+			.build();
 	}
 
 }

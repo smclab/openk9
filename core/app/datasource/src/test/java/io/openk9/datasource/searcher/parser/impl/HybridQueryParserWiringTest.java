@@ -17,7 +17,9 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
@@ -25,6 +27,7 @@ import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 
+import com.jayway.jsonpath.JsonPath;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Assertions;
@@ -82,6 +85,53 @@ class HybridQueryParserWiringTest {
 
 		Assertions.assertEquals("hello world", textCaptor.getValue());
 		Assertions.assertNull(mediaCaptor.getValue());
+	}
+
+	@Test
+	void should_cap_kNeighbors_of_the_knn_component() {
+
+		// 1. a hybrid parser capped at 50, a token asking for 10000 neighbours
+		var embeddingService = Mockito.mock(EmbeddingService.class);
+		Mockito.when(embeddingService.embedQuery(
+				Mockito.anyString(), Mockito.any(), Mockito.any()))
+			.thenReturn(Uni.createFrom().item(
+				new EmbeddingService.QueryVector(QUERY_VECTOR)));
+
+		var parser = new HybridQueryParser();
+		parser.embeddingService = embeddingService;
+		parser.maxKNeighbors = 50;
+
+		var bucket = new Bucket();
+		bucket.setName("bucket test");
+
+		var token = ParserSearchToken.builder()
+			.tokenType("HYBRID")
+			.values(List.of("hello world"))
+			.extra(Map.of("kNeighbors", "10000"))
+			.build();
+
+		var parserContext = ParserContext.builder()
+			.tenantWithBucket(new TenantWithBucket(TENANT_ID, bucket))
+			.tokenTypeGroup(List.of(token))
+			.mutableQuery(QueryBuilders.boolQuery())
+			.queryParserConfig(new JsonObject())
+			.build();
+
+		// 2. apply the hybrid parser
+		var searchSourceBuilder = parser
+			.apply(parserContext, new SearchSourceBuilder())
+			.await().indefinitely();
+
+		// 3. the knn component of the hybrid query carries the cap
+		String wrappedQuery = JsonPath
+			.parse(searchSourceBuilder.query().toString())
+			.read("$.wrapper.query");
+
+		int k = JsonPath
+			.parse(new String(Base64.getDecoder().decode(wrappedQuery)))
+			.read("$.hybrid.queries[1].knn.vector.k");
+
+		Assertions.assertEquals(50, k);
 	}
 
 }

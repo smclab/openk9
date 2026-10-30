@@ -106,6 +106,8 @@ Openk9 Datasource service has specific configurations that can be customized to 
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `datasource.aclQueryExtraParamsEnabled`    | Add to the ACL filter the roles a trusted caller of the searcher sends in the internal headers `X-K9-ROLES` / `OPENK9_ACL`, bypassing the gateway. Turn on only for such an integration, and keep the searcher reachable only from it | `false`            |
 | `datasource.config.redactionKeys`    | Comma-separated, case-insensitive JSON keys whose values are redacted from exported tenant configuration (env `OPENK9_DATASOURCE_CONFIG_REDACTION_KEYS`)                             | `password,pwd,passphrase,secret,token,apikey,api_key,accesskey,access_key,secretkey,secret_key,privatekey,private_key,credential,credentials,clientsecret,client_secret`            |
+| `datasource.search.knnMaxKNeighbors` | Cap of `kNeighbors` in KNN and HYBRID searches: a higher value, from the request extra or the query parser config, is lowered to the cap. Commented out by default: the application default `50` applies. `"0"` disables the cap (env `OPENK9_DATASOURCE_KNN_MAX_K_NEIGHBORS`) | `""` |
+| `datasource.search.embeddingQueryMaxTextLength` | Max characters of the text a KNN or HYBRID search sends to the embedding provider; a longer text is truncated. Commented out by default: the application default `1024` (below 512 tokens, the input limit of the narrowest supported models, also in Italian) applies. `"0"` disables the truncation (env `OPENK9_DATASOURCE_EMBEDDING_QUERY_MAX_TEXT_LENGTH`) | `""` |
 
 
 ### JVM configuration

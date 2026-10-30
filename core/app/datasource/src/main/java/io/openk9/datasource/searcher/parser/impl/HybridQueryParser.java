@@ -72,6 +72,12 @@ public class HybridQueryParser implements QueryParser {
 	@Inject
 	EmbeddingService embeddingService;
 
+	@ConfigProperty(
+		name = KnnQueryParser.MAX_K_NEIGHBORS_PROPERTY,
+		defaultValue = KnnQueryParser.DEFAULT_MAX_K_NEIGHBORS
+	)
+	int maxKNeighbors;
+
 	/**
 	 * Adds the textual branch of the hybrid query to the shared bool query,
 	 * as the search path of the suggestions does.
@@ -127,7 +133,8 @@ public class HybridQueryParser implements QueryParser {
 
 		var tenantId = parserContext.getTenantWithBucket().getTenantId();
 
-		var kNeighbors = KnnQueryParser.getKNeighbors(parserSearchToken, jsonConfig);
+		var kNeighbors = KnnQueryParser.getKNeighbors(
+			parserSearchToken, jsonConfig, maxKNeighbors);
 		var boost = TextQueryParser.getBoost(parserSearchToken, jsonConfig);
 		var fuzziness = TextQueryParser.getFuzziness(parserSearchToken, jsonConfig);
 

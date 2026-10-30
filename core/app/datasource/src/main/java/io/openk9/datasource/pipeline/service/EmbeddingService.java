@@ -61,6 +61,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -95,6 +96,12 @@ public class EmbeddingService {
 
 	@CacheName("bucket-resource")
 	Cache cache;
+
+	@ConfigProperty(
+		name = "openk9.datasource.embedding.query.max-text-length",
+		defaultValue = "1024"
+	)
+	int maxQueryTextLength;
 
 	/**
 	 * Embeds a document through the single-response {@code GetMessages} RPC.
@@ -841,6 +848,11 @@ public class EmbeddingService {
 	 * {@code EmbedQuery(inline)}, and text plus media produces a single combined
 	 * {@code EmbedQuery(text + inline)} vector.
 	 *
+	 * <p>The text is truncated to {@code maxQueryTextLength} characters before
+	 * it leaves for the provider, whatever the caller: past that length the
+	 * query costs tokens and latency, may exceed the input limit of the model,
+	 * and no longer reads as a query anyway.
+	 *
 	 * @param tenantId the tenant owning the query
 	 * @param text     the query text, or {@code null} for an image-only query
 	 * @param media    the inline query image, or {@code null} for a text-only
@@ -849,6 +861,8 @@ public class EmbeddingService {
 	 */
 	public Uni<QueryVector> embedQuery(
 		String tenantId, String text, QueryMedia media) {
+
+		var queryText = truncateQueryText(text, maxQueryTextLength);
 
 		return getEmbeddingModel(tenantId)
 			.onItem().ifNull().failWith(ConfigurationNotFound::new)
@@ -861,11 +875,36 @@ public class EmbeddingService {
 					tenantId,
 					embeddingModelRequest,
 					toGrpcVectorDataType(embeddingModel.getVectorDataType()),
-					text,
+					queryText,
 					media));
 			})
 			.map(EmbeddingService::toQueryVector);
 
+	}
+
+	/**
+	 * Cuts the query text to at most {@code maxLength} characters, without
+	 * splitting a surrogate pair.
+	 *
+	 * @param text      the query text, or {@code null}
+	 * @param maxLength the limit, disabled if 0 or negative
+	 * @return the text, truncated if longer than the limit
+	 */
+	static String truncateQueryText(String text, int maxLength) {
+
+		if (text == null || maxLength <= 0 || text.length() <= maxLength) {
+			return text;
+		}
+
+		var end = Character.isHighSurrogate(text.charAt(maxLength - 1))
+			? maxLength - 1
+			: maxLength;
+
+		log.debugf(
+			"Query text of %d characters truncated to %d before embedding",
+			text.length(), end);
+
+		return text.substring(0, end);
 	}
 
 	/**

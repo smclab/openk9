@@ -160,6 +160,11 @@ services:
       OPENK9_DATASOURCE_ACL_QUERY_EXTRA_PARAMS_ENABLED: 'false'
       OPENK9_DATASOURCE_CONFIG_REDACTION_KEYS: 'password,pwd,passphrase,secret,token,apikey,api_key,accesskey,access_key,secretkey,secret_key,privatekey,private_key,credential,credentials,clientsecret,client_secret'
       OPENK9_DATASOURCE_QUERY_ANALYSIS_SEARCH_TEXT_LENGTH: '30'
+      # Cap of kNeighbors in KNN and HYBRID searches (default 50, 0 disables).
+      # OPENK9_DATASOURCE_KNN_MAX_K_NEIGHBORS: '50'
+      # Max characters of the text a KNN or HYBRID search sends to the
+      # embedding provider (default 1024, 0 disables).
+      # OPENK9_DATASOURCE_EMBEDDING_QUERY_MAX_TEXT_LENGTH: '1024'
       OPENK9_SECURITY_ADMIN_PASSWORD: 'admin'
       QUARKUS_DATASOURCE_PASSWORD: 'openk9'
       QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/openk9'

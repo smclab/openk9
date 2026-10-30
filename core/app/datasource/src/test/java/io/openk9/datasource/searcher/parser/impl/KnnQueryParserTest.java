@@ -19,6 +19,7 @@ package io.openk9.datasource.searcher.parser.impl;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
@@ -40,6 +41,7 @@ class KnnQueryParserTest {
 
 	private static final int VECTOR_SIZE = 1800;
 	private static final int K_NEIGHBORS = 2;
+	private static final int MAX_K_NEIGHBORS = 50;
 	private static final String TENANT_ID = "1";
 	private static final List<Float> QUERY_VECTOR = List.of(0.1f, 0.2f, 0.3f);
 
@@ -179,6 +181,90 @@ class KnnQueryParserTest {
 
 		Assertions.assertEquals(
 			1, parserContext.getMutableQuery().must().size());
+	}
+
+	@Test
+	void should_cap_kNeighbors_from_the_token_extra() {
+
+		// a client asking for 10000 neighbours gets the cap
+		var token = ParserSearchToken.builder()
+			.extra(Map.of("kNeighbors", "10000"))
+			.build();
+
+		Assertions.assertEquals(
+			MAX_K_NEIGHBORS,
+			KnnQueryParser.getKNeighbors(token, new JsonObject(), MAX_K_NEIGHBORS));
+	}
+
+	@Test
+	void should_cap_kNeighbors_from_the_query_parser_config() {
+
+		// a query parser config above the cap is lowered too
+		var token = ParserSearchToken.builder().build();
+		var config = new JsonObject().put("kNeighbors", 500);
+
+		Assertions.assertEquals(
+			MAX_K_NEIGHBORS,
+			KnnQueryParser.getKNeighbors(token, config, MAX_K_NEIGHBORS));
+	}
+
+	@Test
+	void should_keep_kNeighbors_below_the_cap() {
+
+		// extra and config values within the cap are unchanged
+		var token = ParserSearchToken.builder()
+			.extra(Map.of("kNeighbors", "10"))
+			.build();
+		var config = new JsonObject().put("kNeighbors", 30);
+
+		Assertions.assertEquals(
+			10, KnnQueryParser.getKNeighbors(token, config, MAX_K_NEIGHBORS));
+		Assertions.assertEquals(
+			30,
+			KnnQueryParser.getKNeighbors(
+				ParserSearchToken.builder().build(), config, MAX_K_NEIGHBORS));
+	}
+
+	@Test
+	void should_not_cap_kNeighbors_when_the_cap_is_disabled() {
+
+		// a cap of 0 leaves the requested value as it is
+		var token = ParserSearchToken.builder()
+			.extra(Map.of("kNeighbors", "10000"))
+			.build();
+
+		Assertions.assertEquals(
+			10000, KnnQueryParser.getKNeighbors(token, new JsonObject(), 0));
+	}
+
+	@Test
+	void should_send_the_capped_kNeighbors_to_the_knn_query() {
+
+		// 1. a KNN token asking for 10000 neighbours
+		var parser = knnParser(mockEmbeddingService());
+		parser.maxKNeighbors = MAX_K_NEIGHBORS;
+
+		var token = ParserSearchToken.builder()
+			.tokenType("KNN")
+			.values(List.of("hello world"))
+			.extra(Map.of("kNeighbors", "10000"))
+			.build();
+
+		var parserContext = knnContext(token);
+
+		// 2. apply the parser
+		parser.apply(parserContext).await().indefinitely();
+
+		// 3. the knn query carries the cap
+		String wrappedQuery = JsonPath
+			.parse(parserContext.getMutableQuery().toString())
+			.read("$.bool.must[0].wrapper.query");
+
+		int k = JsonPath
+			.parse(new String(Base64.getDecoder().decode(wrappedQuery)))
+			.read("$.knn.vector.k");
+
+		Assertions.assertEquals(MAX_K_NEIGHBORS, k);
 	}
 
 	private EmbeddingService mockEmbeddingService() {

@@ -31,6 +31,7 @@ import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import jdk.jfr.Name;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch._types.query_dsl.KnnQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
@@ -39,10 +40,24 @@ import org.opensearch.client.opensearch._types.query_dsl.Query;
 @Name("KnnQueryParser")
 public class KnnQueryParser implements QueryParser {
 
+	/**
+	 * Upper bound of {@code kNeighbors}, shared by the KNN and HYBRID parsers.
+	 */
+	static final String MAX_K_NEIGHBORS_PROPERTY =
+		"openk9.datasource.knn.max-k-neighbors";
+
+	static final String DEFAULT_MAX_K_NEIGHBORS = "50";
+
 	private static final Logger log = Logger.getLogger(KnnQueryParser.class);
 
 	@Inject
 	EmbeddingService embeddingService;
+
+	@ConfigProperty(
+		name = MAX_K_NEIGHBORS_PROPERTY,
+		defaultValue = DEFAULT_MAX_K_NEIGHBORS
+	)
+	int maxKNeighbors;
 
 	@Override
 	public QueryParserType getType() {
@@ -62,7 +77,8 @@ public class KnnQueryParser implements QueryParser {
 
 		for (ParserSearchToken parserSearchToken : tokenTypeGroup) {
 
-			var kNeighbors = getKNeighbors(parserSearchToken, queryParserConfig);
+			var kNeighbors = getKNeighbors(
+				parserSearchToken, queryParserConfig, maxKNeighbors);
 
 			var media = toQueryMedia(parserSearchToken.getMedia());
 
@@ -115,15 +131,37 @@ public class KnnQueryParser implements QueryParser {
 			.replaceWithVoid();
 	}
 
+	/**
+	 * Reads {@code kNeighbors} from the token extra, then from the query
+	 * parser config, and caps it at {@code maxKNeighbors}.
+	 * <p>
+	 * The value comes from the client, so without the cap a single search
+	 * could ask every shard for thousands of neighbours. A value above the
+	 * cap is lowered to the cap, not rejected.
+	 *
+	 * @param maxKNeighbors the cap, disabled if 0 or negative
+	 * @return the number of neighbours of the knn query
+	 */
 	protected static Integer getKNeighbors(
 		ParserSearchToken parserSearchToken,
-		JsonObject queryParserConfig) {
+		JsonObject queryParserConfig,
+		int maxKNeighbors) {
 
-		return ParserContext.getInteger(
+		int kNeighbors = ParserContext.getInteger(
 			parserSearchToken,
 			queryParserConfig,
 			"kNeighbors"
 		).orElse(2);
+
+		if (maxKNeighbors > 0 && kNeighbors > maxKNeighbors) {
+			log.debugf(
+				"kNeighbors %d is above the cap, lowered to %d",
+				kNeighbors, maxKNeighbors);
+
+			return maxKNeighbors;
+		}
+
+		return kNeighbors;
 	}
 
 	protected static Query toKnnQuery(

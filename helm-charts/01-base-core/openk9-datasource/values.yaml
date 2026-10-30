@@ -113,6 +113,13 @@ datasource:
   # from exported tenant configuration. Extend per environment as needed.
   config:
     redactionKeys: "password,pwd,passphrase,secret,token,apikey,api_key,accesskey,access_key,secretkey,secret_key,privatekey,private_key,credential,credentials,clientsecret,client_secret"
+  ## Limits of KNN and HYBRID searches. Left commented, the application
+  ## defaults apply; uncomment to override (0 or a negative value disables).
+  search:
+    ## @param datasource.search.knnMaxKNeighbors Cap of kNeighbors: a higher value from the request or the query parser config is lowered to the cap (app default 50)
+    # knnMaxKNeighbors: 50
+    ## @param datasource.search.embeddingQueryMaxTextLength Max characters of the text sent to the embedding provider; longer text is truncated (app default 1024, below 512 tokens)
+    # embeddingQueryMaxTextLength: 1024
 
 ## QueryParser configuration
 queryAnalysis:
