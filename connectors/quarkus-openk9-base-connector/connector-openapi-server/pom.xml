@@ -34,6 +34,7 @@
 		<compiler-plugin.version>3.14.0</compiler-plugin.version>
 		<surefire-plugin.version>3.5.3</surefire-plugin.version>
 		<jandex-plugin.version>3.3.1</jandex-plugin.version>
+		<jar-plugin.version>3.4.1</jar-plugin.version>
 	</properties>
 
 	<dependencies>
@@ -56,6 +57,17 @@
 				<version>${compiler-plugin.version}</version>
 				<configuration>
 					<parameters>true</parameters>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>${jar-plugin.version}</version>
+				<configuration>
+					<!-- Code generation settings only: inside the jar they would
+					     reach the config of every project using this library -->
+					<excludes>
+						<exclude>application.properties</exclude>
+					</excludes>
 				</configuration>
 			</plugin>
 			<plugin>
