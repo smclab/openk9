@@ -19,15 +19,19 @@ package io.openk9.datasource.searcher.parser.impl;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 import io.openk9.datasource.pipeline.service.EmbeddingService;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 
 import com.jayway.jsonpath.JsonPath;
+import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.opensearch._types.query_dsl.MultiMatchQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.search.builder.SearchSourceBuilder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -37,6 +41,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class HybridQueryBranchesTest {
 
 	private static final int K_NEIGHBORS = 3;
+	private static final int PAGINATION_DEPTH = 100;
+
+	private static final ParserSearchToken TOKEN = ParserSearchToken.builder()
+		.tokenType("HYBRID")
+		.values(List.of("test values"))
+		.build();
 
 	private static final Query TEXT_QUERY = new MultiMatchQuery.Builder()
 		.fields("chunkText")
@@ -184,9 +194,81 @@ class HybridQueryBranchesTest {
 		assertEquals(before, baseQuery.toString());
 	}
 
+	@Test
+	void should_set_the_pagination_depth() {
+		var hybridQuery = toHybridJson(QueryBuilders.boolQuery());
+
+		assertEquals(
+			PAGINATION_DEPTH,
+			JsonPath.parse(hybridQuery)
+				.read("$.hybrid.pagination_depth", Integer.class));
+	}
+
+	@Test
+	void should_keep_the_same_depth_across_the_first_pages() {
+		// the first page and the page right before the depth
+		var firstPage = pagination(0, 10, new JsonObject());
+		var lastPage = pagination(90, 10, new JsonObject());
+
+		assertEquals(HybridQueryParser.DEFAULT_PAGINATION_DEPTH, firstPage);
+		assertEquals(HybridQueryParser.DEFAULT_PAGINATION_DEPTH, lastPage);
+	}
+
+	@Test
+	void should_grow_the_depth_beyond_it() {
+		assertEquals(110, pagination(100, 10, new JsonObject()));
+	}
+
+	@Test
+	void should_read_the_depth_from_the_configuration() {
+		var jsonConfig = new JsonObject().put("paginationDepth", 50);
+
+		assertEquals(50, pagination(0, 10, jsonConfig));
+	}
+
+	@Test
+	void should_read_the_depth_from_the_token() {
+		var token = ParserSearchToken.builder()
+			.tokenType("HYBRID")
+			.values(List.of("test values"))
+			.extra(Map.of("paginationDepth", "30"))
+			.build();
+
+		var depth = HybridQueryParser.getPaginationDepth(
+			token, new JsonObject().put("paginationDepth", 50),
+			new SearchSourceBuilder().from(0).size(10));
+
+		assertEquals(30, depth);
+	}
+
+	@Test
+	void should_stop_the_depth_at_the_result_window() {
+		var jsonConfig = new JsonObject().put("paginationDepth", 50_000);
+
+		assertEquals(
+			HybridQueryParser.MAX_PAGINATION_DEPTH,
+			pagination(0, 10, jsonConfig));
+	}
+
+	@Test
+	void should_cover_the_default_page_without_a_range() {
+		var jsonConfig = new JsonObject().put("paginationDepth", 5);
+
+		var depth = HybridQueryParser.getPaginationDepth(
+			TOKEN, jsonConfig, new SearchSourceBuilder());
+
+		// OpenSearch serves 10 hits when the request sets no size
+		assertEquals(10, depth);
+	}
+
+	private static int pagination(int from, int size, JsonObject jsonConfig) {
+		return HybridQueryParser.getPaginationDepth(
+			TOKEN, jsonConfig, new SearchSourceBuilder().from(from).size(size));
+	}
+
 	private static String toHybridJson(BoolQueryBuilder baseQuery) {
 		var wrapperQuery = HybridQueryParser.toHybridQuery(
-			baseQuery, TEXT_QUERY, KNN_QUERY);
+			baseQuery, TEXT_QUERY, KNN_QUERY, PAGINATION_DEPTH);
 
 		String encoded = JsonPath.read(wrapperQuery.toString(), "$.wrapper.query");
 

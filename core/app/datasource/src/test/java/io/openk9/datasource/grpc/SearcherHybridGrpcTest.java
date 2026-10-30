@@ -22,6 +22,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -319,6 +320,23 @@ public class SearcherHybridGrpcTest {
 	}
 
 	@Test
+	void should_serve_the_pages_after_the_first_one() {
+		// action — one hit per page
+		var firstPage = search(page(0)).ids();
+		var secondPage = search(page(1)).ids();
+
+		// assertion — the second page follows the first one
+		assertEquals(1, firstPage.size());
+		assertEquals(1, secondPage.size());
+		assertFalse(firstPage.containsAll(secondPage));
+
+		var bothPages = new HashSet<>(firstPage);
+		bothPages.addAll(secondPage);
+
+		assertEquals(Set.of(OWN_ID, OTHER_ID), bothPages);
+	}
+
+	@Test
 	void should_count_the_suggestions_of_a_hybrid_search() {
 		// action
 		var values = searcher.suggestionsQueryParser(request(false).toBuilder()
@@ -442,6 +460,13 @@ public class SearcherHybridGrpcTest {
 			.await().indefinitely();
 
 		return IndexName.from(TENANT_ID, dataIndex).toString();
+	}
+
+	private static QueryParserRequest page(int from) {
+		return request(false).toBuilder()
+			.setRange(0, from)
+			.setRange(1, 1)
+			.build();
 	}
 
 	private static QueryParserRequest request(

@@ -352,7 +352,8 @@ public class QueryParserConfigs {
 				"boost": 1.0,
 				"fuzziness": "ZERO",
 				"multiMatchType": "MOST_FIELDS",
-				"tieBreaker": 0.0
+				"tieBreaker": 0.0,
+				"paginationDepth": 100
 			}
 			""";
 
@@ -369,6 +370,15 @@ public class QueryParserConfigs {
 				.label("K Neighbors")
 				.value(FieldValue.builder()
 					.value(2)
+					.build())
+				.type(FormFieldType.NUMBER)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("paginationDepth")
+				.label("Pagination Depth")
+				.value(FieldValue.builder()
+					.value(100)
 					.build())
 				.type(FormFieldType.NUMBER)
 				.build()
