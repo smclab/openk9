@@ -132,7 +132,9 @@ public class HybridQueryParser implements QueryParser {
 	 * branches both apply the base query of the context, that is the
 	 * filters and the ACL built from the other tokens of the request.
 	 * <p>
-	 * A context without a base query applies no filter.
+	 * A token without text sets the base query alone, so that the filters
+	 * and the ACL still apply. A context without a base query applies no
+	 * filter.
 	 */
 	public Uni<SearchSourceBuilder> apply(
 		ParserContext parserContext, SearchSourceBuilder searchSourceBuilder) {
@@ -175,7 +177,7 @@ public class HybridQueryParser implements QueryParser {
 
 		}
 
-		return Uni.createFrom().item(searchSourceBuilder);
+		return Uni.createFrom().item(searchSourceBuilder.query(baseQuery));
 	}
 
 	/**
