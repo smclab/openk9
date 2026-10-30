@@ -27,9 +27,13 @@ $h2 REST Classes
     "scheduleId": "008f8ad6-884f-4ccd-8e6a-9772e407d325",
     "tenantId": "465bb95b-d6f0-48cf-8bfe-4d1bf366dbc7",
     "timestamp": 1753866303,
-    "jsonConfig": {}
+    "datasourceConfig": {
+      "testForm": "Value example"
+    },
+    "testForm": "Value example"
   }
   ```
+  The datasource configuration, with the fields of `FormResourceImpl`, arrives both in `datasourceConfig` and as top-level keys: read it with `getDatasourceConfig().getAdditionalProperties()` or `getAdditionalProperties()`.
 
 
 - **FormResourceImpl.java**  
@@ -101,7 +105,10 @@ $h2 REST Classes
           "name": "example",
           "contentType": "application/json",
           "data": "<base64-string>",
-          "resourceId": "3CB769de-1dEf-bc87-2aeE-Bacfe2FF5Df4"
+          "sourceUrl": "https://example.org/files/example.json",
+          "metadata": {
+            "page": 1
+          }
         }
       ],
       "splitBinaries": true
@@ -111,6 +118,8 @@ $h2 REST Classes
     "type": "DOCUMENT"
   }
   ```
+  Each top-level key of `datasourcePayload` becomes a document type of the datasource when OpenK9 reads this sample, so it should have the same keys as the documents the connector sends.  
+  `type` is `DOCUMENT`, `PARTIAL_DOCUMENT` (updates the indexed documents with the same `contentId`), `LAST` or `HALT`; `CrawlerVerticle` sends `LAST` and `HALT`.
 
 
 $h2 Connector Base Classes

@@ -20,6 +20,9 @@ public class WorkerImpl implements Worker {
 
     @Override
     public void work(MessageProducer<IngestionDTO> producer) throws InterruptedException {
+        // The datasource configuration, with the fields of FormResourceImpl, is in
+        // invokeRequest.getDatasourceConfig().getAdditionalProperties()
+
         // Simulate an I/O-bound delay condition
         Thread.sleep(10000);
         // Setting up an IngestionDTO example
