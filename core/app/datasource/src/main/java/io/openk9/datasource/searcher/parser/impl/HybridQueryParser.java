@@ -154,8 +154,7 @@ public class HybridQueryParser implements QueryParser {
 			? parserContext.getMutableQuery()
 			: QueryBuilders.boolQuery();
 
-		var paginationDepth = getPaginationDepth(
-			parserSearchToken, jsonConfig, searchSourceBuilder);
+		var paginationDepth = getPaginationDepth(jsonConfig, searchSourceBuilder);
 
 		if (values.hasNext()) {
 			var value = values.next();
@@ -220,17 +219,18 @@ public class HybridQueryParser implements QueryParser {
 	 * same across the pages, so that the pages follow one another without
 	 * duplicates or gaps. It grows only for the pages beyond it, and stops at
 	 * the result window of OpenSearch.
+	 * <p>
+	 * Only the configuration sets the depth, unlike the other keys a token
+	 * may override: it drives the cost of every page.
 	 *
 	 * @param searchSourceBuilder the search source holding the page requested
 	 * @return the pagination depth of the hybrid query
 	 */
 	static int getPaginationDepth(
-		ParserSearchToken parserSearchToken, JsonObject jsonConfig,
-		SearchSourceBuilder searchSourceBuilder) {
+		JsonObject jsonConfig, SearchSourceBuilder searchSourceBuilder) {
 
-		var paginationDepth = ParserContext.getInteger(
-			parserSearchToken, jsonConfig, "paginationDepth"
-		).orElse(DEFAULT_PAGINATION_DEPTH);
+		var paginationDepth = jsonConfig.getInteger(
+			"paginationDepth", DEFAULT_PAGINATION_DEPTH);
 
 		var from = Math.max(searchSourceBuilder.from(), 0);
 		var size = searchSourceBuilder.size() < 0
