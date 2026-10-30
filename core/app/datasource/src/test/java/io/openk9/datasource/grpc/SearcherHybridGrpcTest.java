@@ -372,7 +372,25 @@ public class SearcherHybridGrpcTest {
 	@Test
 	void should_count_the_suggestions_of_a_hybrid_search() {
 		// action
-		var values = searcher.suggestionsQueryParser(request(false).toBuilder()
+		var values = suggestionValues(request(false));
+
+		// assertion — only the documents the user reads
+		assertEquals(Set.of("pubblico"), values);
+	}
+
+	@Test
+	void should_filter_the_suggestions_of_a_super_user_asking_for_obscured_results() {
+		configureResultAcl();
+
+		// action — a super-user in the obscuring mode, as the frontend asks
+		var values = suggestionValues(request(true, ROLE_AUDITOR));
+
+		// assertion — filtered as the hybrid results are
+		assertEquals(Set.of("pubblico"), values);
+	}
+
+	private Set<String> suggestionValues(QueryParserRequest request) {
+		return searcher.suggestionsQueryParser(request.toBuilder()
 				.setSuggestionCategoryId(suggestionCategory.getId())
 				.build())
 			.await().indefinitely()
@@ -380,9 +398,6 @@ public class SearcherHybridGrpcTest {
 			.stream()
 			.map(Suggestions::getValue)
 			.collect(Collectors.toSet());
-
-		// assertion — only the documents the user reads
-		assertEquals(Set.of("pubblico"), values);
 	}
 
 	private DocTypeField addField(

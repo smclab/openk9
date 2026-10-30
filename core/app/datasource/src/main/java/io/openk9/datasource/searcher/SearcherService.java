@@ -1766,8 +1766,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	/**
 	 * Tells whether a search may obscure the results instead of filtering
-	 * them: the request asks for it and has no knn token, since a knn search,
-	 * and a request mixing text and knn, stays filtered.
+	 * them: the request asks for it and has no knn or hybrid token, since a
+	 * knn search, a hybrid one, and a request mixing text and knn, stay
+	 * filtered.
 	 *
 	 * @param request    the request of the search
 	 * @param tokenGroup the tokens of the request, grouped by parser type
@@ -1778,7 +1779,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		Map<QueryParserType, List<ParserSearchToken>> tokenGroup) {
 
 		return request.getIncludeObscured()
-			&& !tokenGroup.containsKey(QueryParserType.KNN);
+			&& !tokenGroup.containsKey(QueryParserType.KNN)
+			&& !tokenGroup.containsKey(QueryParserType.HYBRID);
 	}
 
 	/**
