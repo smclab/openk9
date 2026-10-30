@@ -1,5 +1,6 @@
 package ${package};
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.openk9.connector.api.beans.InvokeRequest;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
@@ -14,6 +15,8 @@ public class CrawlingService {
     Vertx vertx;
     @Inject
     WorkerFactory workerFactory;
+    @Inject
+    ObjectMapper objectMapper;
 
 
     @ConfigProperty(name = "io.openk9.connector.port")
@@ -31,7 +34,7 @@ public class CrawlingService {
 
     public void init(@Observes StartupEvent event) {
         vertx.eventBus().registerCodec(new IngestionDTOCodec());
-        vertx.deployVerticle(new HttpPublisherVerticle(maxPoolSize, port, host, path));
+        vertx.deployVerticle(new HttpPublisherVerticle(objectMapper, maxPoolSize, port, host, path));
     }
 
     public void crawling(InvokeRequest invokeRequest) {
