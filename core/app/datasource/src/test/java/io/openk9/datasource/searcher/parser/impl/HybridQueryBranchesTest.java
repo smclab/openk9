@@ -19,10 +19,8 @@ package io.openk9.datasource.searcher.parser.impl;
 
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 
 import io.openk9.datasource.pipeline.service.EmbeddingService;
-import io.openk9.searcher.client.dto.ParserSearchToken;
 
 import com.jayway.jsonpath.JsonPath;
 import io.vertx.core.json.JsonObject;
@@ -43,10 +41,6 @@ class HybridQueryBranchesTest {
 	private static final int K_NEIGHBORS = 3;
 	private static final int PAGINATION_DEPTH = 100;
 
-	private static final ParserSearchToken TOKEN = ParserSearchToken.builder()
-		.tokenType("HYBRID")
-		.values(List.of("test values"))
-		.build();
 
 	private static final Query TEXT_QUERY = new MultiMatchQuery.Builder()
 		.fields("chunkText")
@@ -227,21 +221,6 @@ class HybridQueryBranchesTest {
 	}
 
 	@Test
-	void should_read_the_depth_from_the_token() {
-		var token = ParserSearchToken.builder()
-			.tokenType("HYBRID")
-			.values(List.of("test values"))
-			.extra(Map.of("paginationDepth", "30"))
-			.build();
-
-		var depth = HybridQueryParser.getPaginationDepth(
-			token, new JsonObject().put("paginationDepth", 50),
-			new SearchSourceBuilder().from(0).size(10));
-
-		assertEquals(30, depth);
-	}
-
-	@Test
 	void should_stop_the_depth_at_the_result_window() {
 		var jsonConfig = new JsonObject().put("paginationDepth", 50_000);
 
@@ -255,7 +234,7 @@ class HybridQueryBranchesTest {
 		var jsonConfig = new JsonObject().put("paginationDepth", 5);
 
 		var depth = HybridQueryParser.getPaginationDepth(
-			TOKEN, jsonConfig, new SearchSourceBuilder());
+			jsonConfig, new SearchSourceBuilder());
 
 		// OpenSearch serves 10 hits when the request sets no size
 		assertEquals(10, depth);
@@ -263,7 +242,7 @@ class HybridQueryBranchesTest {
 
 	private static int pagination(int from, int size, JsonObject jsonConfig) {
 		return HybridQueryParser.getPaginationDepth(
-			TOKEN, jsonConfig, new SearchSourceBuilder().from(from).size(size));
+			jsonConfig, new SearchSourceBuilder().from(from).size(size));
 	}
 
 	private static String toHybridJson(BoolQueryBuilder baseQuery) {
