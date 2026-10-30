@@ -156,9 +156,8 @@ components:
         timestamp:
           type: integer
           format: int64
-        jsonConfig:
-          type: object
-          additionalProperties: { }
+      description: The datasource configuration arrives as additional top-level properties.
+      additionalProperties: { }
     BinaryDTO:
       type: object
       properties:
@@ -176,10 +175,14 @@ components:
           type: string
           format: byte
           description: Base64 encoded string of binary resource.
-        resourceId:
+        sourceUrl:
           type: string
-          format: uuid
-          description: Unique ID that identifies the binary inside OpenK9.
+          description: Persistent URL of the binary at the source, if any.
+        metadata:
+          type: object
+          additionalProperties: { }
+          description: Optional metadata of the binary, such as page (integer),
+            caption, generated (boolean) and free keys.
     IngestionDTO:
       type: object
       properties:
@@ -224,12 +227,14 @@ components:
           $ref: "#/components/schemas/PayloadType"
           type: string
           description: String used to specify type associated with message. Default
-            is DOCUMENT for message. HALT is used when a message to stop scheduling
+            is DOCUMENT for message. PARTIAL_DOCUMENT updates the indexed documents
+            with the same contentId. HALT is used when a message to stop scheduling
             arrived.
     PayloadType:
       type: string
       enum:
         - DOCUMENT
+        - PARTIAL_DOCUMENT
         - LAST
         - HALT
     ResourcesDTO:
