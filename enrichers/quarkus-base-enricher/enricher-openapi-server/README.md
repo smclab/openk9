@@ -21,10 +21,9 @@ Expose **_/process_** POST endpoint, it is used to start the data enrichment pro
 ### Model Classes
 
 **Health**  
-It is the class used in `HealthResource`, has an enum with 3 values:
+It is the class used in `HealthResource`, has an enum with 2 values:
 - **UP**
 - **DOWN**
-- **UNKNOWN**
 
 **OpenK9Input**  
 It is the class used in `ProcessResource`.
