@@ -60,11 +60,12 @@ clean state.
 
 Access points (with the demo tenant):
 - Admin UI:   <https://demo.openk9.localhost/admin>
-- Tenant UI:  <https://demo.openk9.localhost/tenant>
+- Tenant UI:  <https://tenant-manager.openk9.localhost/admin>
 - Search UI:  <https://demo.openk9.localhost>
 - Chat UI:    <https://demo.openk9.localhost/chat> (requires `--with=gen-ai`)
 
 Admin credentials: username *k9admin*, password *openk9*.
+Tenant UI credentials: username *admin*, password *admin*.
 
 Opt-in profiles add services on top of the core:
 

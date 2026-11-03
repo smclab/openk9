@@ -21,6 +21,12 @@ const TM_REALM = 'tenant-manager';
 const TM_ADMIN_USER = 'admin';
 const TM_ADMIN_PASSWORD = 'admin';
 const TM_ADMIN_ROLE = 'admin';
+// The tenant-ui logs in on the tenant-manager realm with this client
+// (see the tenant-manager `/oauth2/settings.js` endpoint). It is served
+// by Caddy on its own host because the bundle expects the `/admin`
+// base path, already taken by the admin-ui on the tenant hosts.
+const TM_CLIENT = 'tenant-manager';
+const TM_CONSOLE_URL = 'https://tenant-manager.openk9.localhost';
 
 // The per-tenant Keycloak realm provisioned by tenant-manager has a
 // `k9admin` user with a server-generated random password. The
@@ -181,10 +187,52 @@ async function disableLightweightTokens(authMaster, realmName) {
   }
 }
 
+// Creates the public client used by the tenant-ui login, if missing:
+// Authorization Code with PKCE S256 only, limited to the console host.
+async function ensureTenantManagerClient(authMaster) {
+  const clientsApi = `${KEYCLOAK_URL}/admin/realms/${TM_REALM}/clients`;
+  const lookup = await fetchWithRetry(
+    `${clientsApi}?clientId=${TM_CLIENT}`,
+    { method: 'GET', headers: { 'Authorization': authMaster } },
+    `Lookup ${TM_CLIENT} client`
+  );
+  if (!lookup.ok) {
+    throw new Error(`Failed to lookup client (${lookup.status}): ${await lookup.text()}`);
+  }
+  if ((await lookup.json()).length > 0) {
+    console.log(`  client ${TM_CLIENT} already exists.`);
+    return;
+  }
+  const createClient = await fetchWithRetry(
+    clientsApi,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': authMaster },
+      body: JSON.stringify({
+        clientId: TM_CLIENT, enabled: true, protocol: 'openid-connect',
+        publicClient: true, standardFlowEnabled: true,
+        directAccessGrantsEnabled: false, implicitFlowEnabled: false,
+        serviceAccountsEnabled: false,
+        redirectUris: [`${TM_CONSOLE_URL}/*`], webOrigins: ['+'],
+        attributes: {
+          'pkce.code.challenge.method': 'S256',
+          'post.logout.redirect.uris': '+',
+        },
+      }),
+    },
+    `Create ${TM_CLIENT} client`
+  );
+  if (!createClient.ok && createClient.status !== 409) {
+    throw new Error(`Failed to create client (${createClient.status}): ${await createClient.text()}`);
+  }
+  console.log(`  client ${TM_CLIENT} created.`);
+}
+
 // Idempotent bootstrap of the `tenant-manager` realm: create the
-// realm, the `admin` role, an `admin`/`admin` user with that role
-// (clearing requiredActions so password grants work), and disable
-// lightweight tokens on admin-cli.
+// realm, the `tenant-manager` client for the tenant-ui, the `admin`
+// role, an `admin`/`admin` user with that role (clearing
+// requiredActions so password grants work), and disable lightweight
+// tokens on admin-cli.
 async function ensureTenantManagerRealm(authMaster) {
   console.log(`0/4 Ensuring Keycloak realm "${TM_REALM}"...`);
   const adminApi = `${KEYCLOAK_URL}/admin/realms`;
@@ -215,6 +263,8 @@ async function ensureTenantManagerRealm(authMaster) {
   else {
     throw new Error(`Unexpected status checking realm (${realmCheck.status}): ${await realmCheck.text()}`);
   }
+
+  await ensureTenantManagerClient(authMaster);
 
   const rolesApi = `${adminApi}/${TM_REALM}/roles`;
   const createRole = await fetchWithRetry(
