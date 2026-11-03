@@ -32,9 +32,13 @@ These classes implement the REST classes from the library and adapt their behavi
     "scheduleId": "008f8ad6-884f-4ccd-8e6a-9772e407d325",
     "tenantId": "465bb95b-d6f0-48cf-8bfe-4d1bf366dbc7",
     "timestamp": 1753866303,
-    "jsonConfig": {}
+    "datasourceConfig": {
+      "testForm": "Value example"
+    },
+    "testForm": "Value example"
   }
   ```
+   The datasource configuration, with the fields of `FormResourceImpl`, arrives both in `datasourceConfig` and as top-level keys: read it with `getDatasourceConfig().getAdditionalProperties()` or `getAdditionalProperties()`.
 
 
 - **FormResourceImpl.java**  
@@ -116,6 +120,8 @@ These classes implement the REST classes from the library and adapt their behavi
     "type": "DOCUMENT"
   }
   ```
+   Each top-level key of `datasourcePayload` becomes a document type of the datasource when OpenK9 reads this sample, so it should have the same keys as the documents the connector sends.  
+   `type` is `DOCUMENT`, `PARTIAL_DOCUMENT` (updates the indexed documents with the same `contentId`), `LAST` or `HALT`; `CrawlerVerticle` sends `LAST` and `HALT`.
 
 
 ### Connector Base Classes

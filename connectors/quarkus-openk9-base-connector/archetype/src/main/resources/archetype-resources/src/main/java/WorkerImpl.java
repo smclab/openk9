@@ -21,6 +21,9 @@ public class WorkerImpl implements Worker {
 
     @Override
     public void work(Promise<?> promise, MessageProducer<IngestionDTO> producer) {
+        // The datasource configuration, with the fields of FormResourceImpl, is in
+        // invokeRequest.getDatasourceConfig().getAdditionalProperties()
+
         // Simulate an I/O-bound delay condition
         try {
             Thread.sleep(10000);
