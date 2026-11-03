@@ -137,16 +137,17 @@
 		"bearerOnly" : null,
 		"consentRequired" : null,
 		"standardFlowEnabled" : true,
-		"implicitFlowEnabled" : null,
-		"directAccessGrantsEnabled" : null,
-		"serviceAccountsEnabled" : null,
+		"implicitFlowEnabled" : false,
+		"directAccessGrantsEnabled" : false,
+		"serviceAccountsEnabled" : false,
 		"authorizationServicesEnabled" : null,
 		"directGrantsOnly" : null,
 		"publicClient" : true,
 		"frontchannelLogout" : null,
 		"protocol" : "openid-connect",
 		"attributes" : {
-			"login_theme" : "openk9"
+			"login_theme" : "openk9",
+			"pkce.code.challenge.method" : "S256"
 		},
 		"authenticationFlowBindingOverrides" : null,
 		"fullScopeAllowed" : null,

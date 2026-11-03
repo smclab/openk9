@@ -24,11 +24,16 @@ Then create a new client and call it *tenant-manager*. If you named differently 
 
 ![create-client-tenant-manager](../static/img/create-client-tenant-manager.png)
 
-Mantains default choices in section *Capability config* and proceed to *login settings* section.
+In section *Capability config* keep *Client authentication* Off and, in *Authentication flow*, check only *Standard flow*.
+Uncheck *Direct access grants*, that the console enables by default: the Tenant Manager Admin UI doesn't use the password grant. Proceed to *login settings* section.
 
 Set *Valid redirect URIs* with url configured for tenant manager.
 
 ![login-settings-tenant-manager](../static/img/login-settings-tenant-manager.png)
+
+Require PKCE `S256`. Up to Keycloak 26.2, save the client, open its *Advanced* tab and, in *Advanced settings*, set *Proof Key for Code Exchange Code Challenge Method* to `S256`, then save again. From Keycloak 26.3, set *PKCE Method* to `S256` directly in *Capability config*.
+
+The same rules apply to the OAuth2 client of each tenant: see [Tenant authentication](./configuration/tenant-authentication.md).
 
 Create then a new role *admin*.
 
