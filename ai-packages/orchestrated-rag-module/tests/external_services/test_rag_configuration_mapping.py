@@ -60,6 +60,7 @@ FULL_JSON_CONFIG = {
     "scope_gate_redirect_message": "Solo corsi Liferay.",
     "domain_threshold": 0.9,
     "guardrail_categories": ["violence", "hate"],
+    "max_iterations": 2,
 }
 
 
@@ -149,6 +150,7 @@ def test_every_field_and_json_key_reaches_its_output_key():
             "guardrail_categories": ["violence", "hate"],
         },
         "domain_threshold": 0.9,
+        "max_iterations": 2,
     }
 
 
@@ -199,6 +201,8 @@ def test_an_empty_json_config_yields_the_defaults():
             "guardrail_categories": [],
         },
         "domain_threshold": 0.7,
+        # no default: without it the turn has no request limit
+        "max_iterations": None,
     }
 
 
