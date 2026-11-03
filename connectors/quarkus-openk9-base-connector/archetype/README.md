@@ -33,9 +33,11 @@ These classes implement the REST classes from the library and adapt their behavi
     "tenantId": "465bb95b-d6f0-48cf-8bfe-4d1bf366dbc7",
     "timestamp": 1753866303,
     "datasourceConfig": {
-      "testForm": "Value example"
+      "baseUrl": "https://example.org",
+      "language": "en"
     },
-    "testForm": "Value example"
+    "baseUrl": "https://example.org",
+    "language": "en"
   }
   ```
    The datasource configuration, with the fields of `FormResourceImpl`, arrives both in `datasourceConfig` and as top-level keys: read it with `getDatasourceConfig().getAdditionalProperties()` or `getAdditionalProperties()`.
@@ -47,44 +49,123 @@ These classes implement the REST classes from the library and adapt their behavi
   {
     "fields": [
       {
-        "info": "",
-        "label": "Test Form",
-        "name": "testForm",
-        "type": "text",
-        "size": 2,
+        "info": "Base URL of the source to read the documents from",
+        "label": "Base URL",
+        "name": "baseUrl",
+        "type": "url",
+        "size": 8.0,
+        "required": true,
+        "values": [
+          {
+            "value": "https://example.org",
+            "isDefault": true
+          }
+        ]
+      },
+      {
+        "info": "Access token of the source, if it requires one",
+        "label": "API Token",
+        "name": "apiToken",
+        "type": "password",
+        "size": 4.0,
+        "required": false,
+        "values": []
+      },
+      {
+        "info": "Paths to read, relative to the base URL; empty to read the whole source",
+        "label": "Paths",
+        "name": "paths",
+        "type": "list",
+        "size": 12.0,
+        "required": false,
+        "values": []
+      },
+      {
+        "info": "Language of the documents",
+        "label": "Language",
+        "name": "language",
+        "type": "select",
+        "size": 4.0,
+        "required": true,
+        "values": [
+          {
+            "value": "en",
+            "isDefault": true
+          },
+          {
+            "value": "it",
+            "isDefault": false
+          },
+          {
+            "value": "de",
+            "isDefault": false
+          },
+          {
+            "value": "fr",
+            "isDefault": false
+          },
+          {
+            "value": "es",
+            "isDefault": false
+          }
+        ]
+      },
+      {
+        "info": "Kinds of document to import",
+        "label": "Document Kinds",
+        "name": "documentKinds",
+        "type": "multiselect",
+        "size": 4.0,
         "required": false,
         "values": [
           {
+            "value": "article",
+            "isDefault": true
+          },
+          {
+            "value": "page",
+            "isDefault": false
+          },
+          {
+            "value": "news",
+            "isDefault": false
+          }
+        ]
+      },
+      {
+        "info": "Documents read for each request to the source",
+        "label": "Page Size",
+        "name": "pageSize",
+        "type": "number",
+        "size": 2.0,
+        "required": false,
+        "values": [
+          {
+            "value": 50,
             "isDefault": true
           }
         ],
         "validator": {
-          "min": 0,
-          "max": 10,
-          "regex": "/[[:test]]"
+          "min": 1,
+          "max": 500
         }
       },
       {
-        "info": "",
-        "label": "Main Object",
-        "name": "mainObject",
-        "type": "number",
-        "size": 0.78,
-        "required": true,
+        "info": "Import the attachments as binaries too",
+        "label": "Include Attachments",
+        "name": "includeAttachments",
+        "type": "checkbox",
+        "size": 2.0,
+        "required": false,
         "values": [
           {
-            "isDefault": true,
-            "value": "Value example"
+            "value": false,
+            "isDefault": true
           }
-        ],
-         "validator": {
-           "min": 0,
-           "max": 10,
-           "regex": "/[[:test]]"
-         }
-       }
-     ]
-  } 
+        ]
+      }
+    ]
+  }
   ```
 
 
@@ -240,7 +321,7 @@ After generating it, changes need to be made to the connector to create a concre
           formField.setLabel("Strapi Data");
           formField.setRequired(false);
           formField.setSize(1.0);
-          formField.setType(FormField.Type.text);
+          formField.setType(FormField.Type.TEXT);
           formField.setValidator(getValidator());
           formField.setValues(getFiledValueList());
           formFieldList.add(formField);
