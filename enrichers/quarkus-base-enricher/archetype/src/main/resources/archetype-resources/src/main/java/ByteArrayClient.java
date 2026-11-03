@@ -3,7 +3,6 @@ package ${package};
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.codec.BodyCodec;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -13,7 +12,8 @@ import org.jboss.logging.Logger;
 
 /**
  * This class provides the byte array-encoded format of a binary payload.
- * To retrieve the correct payload, you must provide both a {@code resourceId} and a {@code schemaName}.
+ * To retrieve the correct payload, you must provide the {@code resourceId} of the binary and, as
+ * {@code schemaName}, the {@code tenantId} of the document.
  *
  * @see WebClient
  */
@@ -40,8 +40,13 @@ public class ByteArrayClient {
                 .get(port, host, path + resourceId + "/" + schemaName)
                 .as(BodyCodec.buffer())
                 .send()
-                .map(HttpResponse::body)
-                .onSuccess(res -> LOGGER.info("Result from byte array endpoint: " + res.getBytes()))
+                .map(res -> {
+                    if (res.statusCode() / 100 != 2) {
+                        throw new IllegalStateException("File manager answered HTTP " + res.statusCode());
+                    }
+                    return res.body();
+                })
+                .onSuccess(res -> LOGGER.info("Byte array binary received: " + res.length() + " bytes"))
                 .onFailure(res -> LOGGER.error("Error requesting byte array binaries: " + res.getMessage()));
     }
 }
