@@ -162,7 +162,7 @@ def test_the_fields_are_saved_with_the_turn():
 # --------------------------------------------------------------------------- #
 # The turn with real-time evaluation                                           #
 # --------------------------------------------------------------------------- #
-def _turn(monkeypatch, *, real_time, judges_fail=False):
+def _turn(monkeypatch, *, real_time, judges_fail=False, with_verifier=False):
     calls = []
 
     async def fake_guardrail(**_):
@@ -173,8 +173,10 @@ def _turn(monkeypatch, *, real_time, judges_fail=False):
         calls.append("intent")
         return [], []
 
-    async def fake_run_orchestrator(**_):
+    async def fake_run_orchestrator(*, deps, **_):
         calls.append("orchestrator")
+        if with_verifier:
+            deps.emit_status("evaluating")  # what the Verifier publishes
         return OUTPUT, [], MagicMock(all_messages=lambda: [])
 
     async def fake_evaluations(**_):
@@ -196,7 +198,10 @@ def _turn(monkeypatch, *, real_time, judges_fail=False):
                 rag_type="CHAT_RAG",
                 search_text="Chi e' il RUP?",
                 # the evaluation alone buffers the answer; without it, the Verifier does
-                deps=_deps(enable_real_time_evaluation=real_time, enable_verifier=not real_time),
+                deps=_deps(
+                    enable_real_time_evaluation=real_time,
+                    enable_verifier=with_verifier or not real_time,
+                ),
                 store=store,
                 chat_id="c1",
                 user_id="u1",
@@ -216,6 +221,14 @@ def test_with_real_time_evaluation_the_turn_runs_like_the_evaluation_graph(monke
     types = [e["type"] for e in events]
     assert types.index("STATUS", types.index("STATUS") + 1) < types.index("START")
     assert store.save_turn.call_args.kwargs["evaluation_fields"] == {"response_evaluation": "CLEAR"}
+
+
+def test_with_the_verifier_too_evaluating_comes_once(monkeypatch):
+    events, calls, _ = _turn(monkeypatch, real_time=True, with_verifier=True)
+
+    assert calls == ["orchestrator", "evaluation"]
+    phases = [e["chunk"] for e in events if e["type"] == "STATUS"]
+    assert phases == ["planning", "evaluating", "generating"]
 
 
 def test_without_real_time_evaluation_nothing_is_judged(monkeypatch):

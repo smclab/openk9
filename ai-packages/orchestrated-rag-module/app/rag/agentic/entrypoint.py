@@ -367,7 +367,9 @@ async def run_turn(
 
         evaluation_fields = None
         if real_time_evaluation:
-            yield streaming.status_event("evaluating")
+            # the Verifier, when on, has already announced this phase
+            if "evaluating" not in deps.emitted_phases:
+                yield streaming.status_event("evaluating")
             evaluation_fields = await evaluation.run_evaluations(
                 question=search_text,
                 output=output,
