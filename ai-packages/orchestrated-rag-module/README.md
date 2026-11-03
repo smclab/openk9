@@ -20,7 +20,8 @@ generate an answer:
   as agentic-rag-module. With `enable_verifier` a Verifier checks every claim of
   the answer against the documents and has the orchestrator repair it, and the
   answer is streamed only once verified. Before the answer, `STATUS` events give
-  the phase of the turn (`planning`, `discovering`, `retrieving`, `generating`).
+  the phase of the turn (`planning`, `discovering`, `retrieving`, `evaluating`
+  with the Verifier, `generating`).
   The guardrails, the intent detection and the uploaded documents are not wired
   yet;
 - `/api/rag/evaluate` answers `501 Not Implemented`;

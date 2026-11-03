@@ -91,7 +91,7 @@ class AgenticDeps:
         Un turno invoca ``discover``/``retriever`` piu' volte: senza la deduplica il frontend
         riceverebbe eventi identici e l'indicatore, che mostra una sola label, sfarfallerebbe tra
         le stesse due fasi. Una fase sola per run rende la progressione monotona (planning →
-        discovering → retrieving → generating).
+        discovering → retrieving → evaluating → generating).
         """
         if self.status_sink is None or phase in self.emitted_phases:
             return

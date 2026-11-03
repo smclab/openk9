@@ -266,6 +266,8 @@ async def _verified(ctx: RunContext[AgenticDeps], output: OrchestratorOutput, ve
     # non verificare gli esiti non-ok (unanswerable/error passano)
     if output.status != "ok":
         return output
+    # la risposta e' gia' scritta: da qui in poi l'utente aspetta il giudizio
+    ctx.deps.emit_status("evaluating")
     verdict = await verifier.verify(
         output=output, deps=ctx.deps, usage=ctx.usage, model=verifier_model
     )

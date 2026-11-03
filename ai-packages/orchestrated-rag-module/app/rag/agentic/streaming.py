@@ -19,7 +19,7 @@
 SSE events of an answer, with the protocol of agentic-rag-module: ``START``,
 ``CHUNK``, ``DOCUMENT``, ``ERROR`` and ``END``, plus ``STATUS``, the phase of
 the turn before the answer starts: ``planning``, ``discovering``,
-``retrieving``, ``generating``.
+``retrieving``, ``evaluating`` (only with the Verifier), ``generating``.
 
 :func:`stream_answer` consumes an async iterator of text deltas: the deltas of
 the provider while the orchestrator writes (:func:`coalesce`), or a complete

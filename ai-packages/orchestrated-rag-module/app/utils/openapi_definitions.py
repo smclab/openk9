@@ -44,7 +44,7 @@ API_RAG_STREAM_RESPONSE = {
         "Stream of Server-Sent Events, each a JSON object with `chunk` and `type`. "
         "Before the answer, `STATUS` events give the phase of the turn in `chunk`: "
         "`planning`, `discovering` (a search is delegated), `retrieving` (OpenSearch "
-        "is queried), `generating`; a phase is sent at most once, and none after "
+        "is queried), `evaluating` (the Verifier checks the answer), `generating`; a phase is sent at most once, and none after "
         "`START`. Then `START`, the `CHUNK` events of the answer, `TITLE` on the "
         "first turn of a chat, one `DOCUMENT` per cited document and `END`. "
         "`GUARDRAIL` reports a blocked request and `ERROR` a failed one."

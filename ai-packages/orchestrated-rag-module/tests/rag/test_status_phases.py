@@ -16,7 +16,7 @@
 #
 
 """
-Test delle fasi SSE ``STATUS`` (planning / discovering / retrieving / generating).
+Test delle fasi SSE ``STATUS`` (planning / discovering / retrieving / evaluating / generating).
 
 Il punto delicato non e' *quali* fasi esistono ma **quando escono**: ``discover`` e ``retriever``
 girano dentro ``agent.run``, parecchi frame sotto il generator che produce gli eventi SSE, quindi
@@ -223,3 +223,87 @@ def test_phase_sequence_on_the_streaming_path():
         "generating",
     ]
     assert tipi.index("START") > max(i for i, t in enumerate(tipi) if t == "STATUS")
+
+
+# --------------------------------------------------------------------------- #
+# Con il Verifier: evaluating mentre il Verifier giudica                       #
+# --------------------------------------------------------------------------- #
+def test_phase_sequence_with_the_verifier(monkeypatch):
+    """Con il Verifier la risposta e' gia' scritta quando viene giudicata: la fase di quel tempo
+    e' ``evaluating``, pubblicata prima del giudizio e non a cose fatte."""
+    from app.rag.agentic.contracts import VerificationOk
+    from app.rag.agentic.persistence import FrontendConversationStore
+
+    deps = _deps(enable_verifier=True)
+    deps.orchestrator_model = TestModel()
+    deps.discovery_model = TestModel()
+    deps.retrieve_fn = lambda **_: [{"document_id": "doc-1", "content": "testo"}]
+    fasi_al_giudizio = []
+
+    async def fake_verify(*, deps, **_):
+        fasi_al_giudizio.extend(sorted(deps.emitted_phases))
+        return VerificationOk()
+
+    monkeypatch.setattr(orchestrator.verifier, "verify", fake_verify)
+
+    async def scenario():
+        return [
+            json.loads(raw)
+            async for raw in entrypoint.run_turn(
+                rag_type="CHAT_RAG",
+                search_text="chi e' il RUP?",
+                deps=deps,
+                store=FrontendConversationStore(None),
+            )
+        ]
+
+    eventi = asyncio.run(scenario())
+
+    assert [e["chunk"] for e in eventi if e["type"] == "STATUS"] == [
+        "planning",
+        "discovering",
+        "retrieving",
+        "evaluating",
+        "generating",
+    ]
+    assert "evaluating" in fasi_al_giudizio
+
+
+def test_a_repair_publishes_evaluating_once(monkeypatch):
+    """Il Verifier boccia la prima risposta e giudica la seconda: due giudizi, una fase."""
+    from pydantic_ai.messages import ModelResponse, ToolCallPart
+    from pydantic_ai.models.function import AgentInfo, FunctionModel
+
+    from app.rag.agentic.contracts import (
+        UnsupportedClaim,
+        VerificationFailed,
+        VerificationOk,
+    )
+
+    verdetti = [
+        VerificationFailed(
+            reason="non supportata",
+            unsupported_claims=[UnsupportedClaim(claim="23 citta'", action="remove")],
+        ),
+        VerificationOk(),
+    ]
+
+    async def fake_verify(**_):
+        return verdetti.pop(0)
+
+    monkeypatch.setattr(orchestrator.verifier, "verify", fake_verify)
+
+    def answer(messages, info: AgentInfo) -> ModelResponse:
+        args = {"status": "ok", "message": "risposta", "used_document_ids": []}
+        return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, args)])
+
+    deps = _deps(enable_verifier=True, max_iterations=1)
+    fasi: list = []
+    deps.status_sink = fasi.append
+
+    asyncio.run(
+        orchestrator.run_orchestrator(question="q", deps=deps, model=FunctionModel(answer))
+    )
+
+    assert verdetti == []
+    assert fasi == ["evaluating"]
