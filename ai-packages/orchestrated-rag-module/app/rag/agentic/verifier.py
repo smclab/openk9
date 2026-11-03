@@ -129,13 +129,15 @@ async def verify(
     logger.debug(f"[verifier] verifica risposta per q={deps.question!r}")
     result = await agent.run(prompt, deps=deps, usage=usage)
     verdict = result.output
-    logger.debug(
-        f"[verifier] verdetto={'FAILED' if isinstance(verdict, VerificationFailed) else 'OK'}"
-        + (
-            f" reason={verdict.reason!r} claims="
-            + str([(c.action, c.claim) for c in verdict.unsupported_claims])
-            if isinstance(verdict, VerificationFailed)
-            else ""
-        )
+    failed = isinstance(verdict, VerificationFailed)
+    # The verdict at INFO, the text of the claims only at DEBUG.
+    logger.info(
+        f"[verifier] verdetto={'FAILED' if failed else 'OK'}"
+        + (f" unsupported_claims={len(verdict.unsupported_claims)}" if failed else "")
     )
+    if failed:
+        logger.debug(
+            f"[verifier] reason={verdict.reason!r} claims="
+            + str([(c.action, c.claim) for c in verdict.unsupported_claims])
+        )
     return verdict
