@@ -302,6 +302,8 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
             "parallel_discovery": json_config.get("parallel_discovery", False),
             "max_parallel_subtasks": json_config.get("max_parallel_subtasks"),
             "enable_intent_detection": json_config.get("enable_intent_detection", True),
+            "orchestrator_prompt": json_config.get("orchestrator_prompt"),
+            "discovery_prompt": json_config.get("discovery_prompt"),
         }
 
         return configuration

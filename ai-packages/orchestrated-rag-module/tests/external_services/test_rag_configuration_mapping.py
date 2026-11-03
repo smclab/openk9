@@ -65,6 +65,8 @@ FULL_JSON_CONFIG = {
     "parallel_discovery": True,
     "max_parallel_subtasks": 4,
     "enable_intent_detection": False,
+    "orchestrator_prompt": "cita sempre il bando",
+    "discovery_prompt": "cerca anche gli allegati",
 }
 
 
@@ -159,6 +161,8 @@ def test_every_field_and_json_key_reaches_its_output_key():
         "parallel_discovery": True,
         "max_parallel_subtasks": 4,
         "enable_intent_detection": False,
+        "orchestrator_prompt": "cita sempre il bando",
+        "discovery_prompt": "cerca anche gli allegati",
     }
 
 
@@ -216,6 +220,8 @@ def test_an_empty_json_config_yields_the_defaults():
         # no default here: resolve_max_parallel_subtasks applies 3
         "max_parallel_subtasks": None,
         "enable_intent_detection": True,
+        "orchestrator_prompt": None,
+        "discovery_prompt": None,
     }
 
 
