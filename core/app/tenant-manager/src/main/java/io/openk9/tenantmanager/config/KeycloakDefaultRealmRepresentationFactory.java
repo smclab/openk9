@@ -74,6 +74,11 @@ public class KeycloakDefaultRealmRepresentationFactory {
 	private static final boolean EVENTS_ADMIN_ENABLED = true;
 	private static final boolean EVENTS_ADMIN_DETAILS_ENABLED = true;
 
+	// Client openk9: Authorization Code with PKCE only
+	private static final String PKCE_CODE_CHALLENGE_METHOD =
+		"pkce.code.challenge.method";
+	private static final String PKCE_S256 = "S256";
+
 	// Pre-built password policy string
 	private static final String DEFAULT_PASSWORD_POLICY =
 		"length(12) and upperCase(1) and lowerCase(1) and digits(1)"
@@ -179,6 +184,11 @@ public class KeycloakDefaultRealmRepresentationFactory {
 
 	/**
 	 * Creates the default {@code openk9} client representation.
+	 * <p>
+	 * The frontends use only the Authorization Code flow with PKCE
+	 * {@code S256}: PKCE is required and every other grant is
+	 * disabled explicitly, without relying on the Keycloak defaults.
+	 * </p>
 	 */
 	static ClientRepresentation createDefaultOpenk9Client() {
 		var client = new ClientRepresentation();
@@ -187,9 +197,14 @@ public class KeycloakDefaultRealmRepresentationFactory {
 		client.setEnabled(true);
 		client.setClientAuthenticatorType("client-secret");
 		client.setStandardFlowEnabled(true);
+		client.setDirectAccessGrantsEnabled(false);
+		client.setImplicitFlowEnabled(false);
+		client.setServiceAccountsEnabled(false);
 		client.setPublicClient(true);
 		client.setProtocol("openid-connect");
-		client.setAttributes(Map.of("login_theme", "openk9"));
+		client.setAttributes(Map.of(
+			"login_theme", "openk9",
+			PKCE_CODE_CHALLENGE_METHOD, PKCE_S256));
 		client.setDefaultClientScopes(
 			List.of("profile", "email", "roles", "basic"));
 		return client;

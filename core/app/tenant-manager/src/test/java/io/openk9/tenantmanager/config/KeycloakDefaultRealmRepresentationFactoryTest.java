@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation.BruteForceStrategy;
 import org.keycloak.representations.idm.RolesRepresentation;
@@ -352,7 +353,9 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 			assertTrue(openk9.isPublicClient());
 			assertEquals("openid-connect", openk9.getProtocol());
 			assertEquals(
-				Map.of("login_theme", "openk9"),
+				Map.of(
+					"login_theme", "openk9",
+					"pkce.code.challenge.method", "S256"),
 				openk9.getAttributes());
 			assertTrue(openk9.getDefaultClientScopes()
 				.containsAll(List.of("profile", "email", "roles", "basic")));
@@ -362,6 +365,43 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 		@DisplayName("realm is enabled")
 		void realmEnabled() {
 			assertTrue(hardenedRealm.isEnabled());
+		}
+	}
+
+	// ---------------------------------------------------------------
+	// Client openk9 grants
+	// ---------------------------------------------------------------
+
+	@Nested
+	@DisplayName("Client openk9 grants")
+	class Openk9ClientGrants {
+
+		private ClientRepresentation openk9;
+
+		@BeforeEach
+		void setUp() {
+			openk9 = KeycloakDefaultRealmRepresentationFactory
+				.createDefaultOpenk9Client();
+		}
+
+		@Test
+		@DisplayName("only the standard flow of a public client is enabled")
+		void onlyStandardFlow() {
+			assertTrue(openk9.isPublicClient());
+			assertTrue(openk9.isStandardFlowEnabled());
+			assertEquals(
+				Boolean.FALSE, openk9.isDirectAccessGrantsEnabled());
+			assertEquals(Boolean.FALSE, openk9.isImplicitFlowEnabled());
+			assertEquals(
+				Boolean.FALSE, openk9.isServiceAccountsEnabled());
+		}
+
+		@Test
+		@DisplayName("PKCE S256 is required")
+		void pkceS256Required() {
+			assertEquals(
+				"S256",
+				openk9.getAttributes().get("pkce.code.challenge.method"));
 		}
 	}
 

@@ -26,7 +26,8 @@ const sidebars = {
                 "type": "category",
                 "label": "Install Openk9",
     			"items": [
-    			"openk9-packages", "using-docker", "using-kubernetes-openshift"]}, "first-configuration"]
+    			"openk9-packages", "using-docker", "using-kubernetes-openshift"]}, "first-configuration",
+    		"configuration/tenant-authentication"]
         ,
         "Advanced Configuration": ["configuration/overview", "configuration/manage-bucket",
     		{
