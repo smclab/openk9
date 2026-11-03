@@ -7,7 +7,7 @@ function makeState(
   securityConfiguration: SecurityConfigurationKey | null = "OAUTH2_ADMIN_ONLY"
 ): WizardState {
   return {
-    step1: { tenantName: "demo", virtualHost: "demo.openk9.io", clientId: "", clientSecret: "", issuerUri: "", ...step1 },
+    step1: { tenantName: "demo", virtualHost: "demo.openk9.io", clientId: "", issuerUri: "", ...step1 },
     step2: { securityConfiguration },
   };
 }
@@ -29,12 +29,12 @@ describe("buildCreateTenantRequest", () => {
 
   it("populates oAuth2Settings when both clientId and issuerUri are present", () => {
     const req = buildCreateTenantRequest(makeState({ clientId: "cid", issuerUri: "https://idp" }));
-    expect(req.oAuth2Settings).toEqual({ clientId: "cid", issuerUri: "https://idp", clientSecret: undefined });
+    expect(req.oAuth2Settings).toEqual({ clientId: "cid", issuerUri: "https://idp" });
   });
 
-  it("includes clientSecret when provided", () => {
-    const req = buildCreateTenantRequest(makeState({ clientId: "cid", issuerUri: "https://idp", clientSecret: "sec" }));
-    expect(req.oAuth2Settings?.clientSecret).toBe("sec");
+  it("never sends a client secret", () => {
+    const req = buildCreateTenantRequest(makeState({ clientId: "cid", issuerUri: "https://idp" }));
+    expect(req.oAuth2Settings).not.toHaveProperty("clientSecret");
   });
 });
 

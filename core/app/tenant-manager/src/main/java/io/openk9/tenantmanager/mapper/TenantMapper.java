@@ -39,6 +39,7 @@ public interface TenantMapper {
 	TenantResponse toTenantResponse(TenantResponseDTO tenant);
 
 	@BeanMapping(nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
+	@Mapping(target = "clientSecret", ignore = true)
 	TenantResponseDTO toTenantResponseDTO(Tenant tenant);
 
 	@Mappings({

@@ -192,7 +192,9 @@ class ApiGatewaySecurityTest {
 				.expectHeader().contentType(MediaType.APPLICATION_JSON)
 				.expectBody()
 				.jsonPath("$.issuerUri").isEqualTo("http://alabasta.localhost:9090/realms/alabasta")
-				.jsonPath("$.clientId").isEqualTo("openk9");
+				.jsonPath("$.clientId").isEqualTo("openk9")
+				// alabasta has a client secret, which must not reach the browser
+				.jsonPath("$.clientSecret").doesNotExist();
 		}
 
 		@Test
@@ -230,7 +232,27 @@ class ApiGatewaySecurityTest {
 				.uri("/api/datasource/oauth2/settings.js")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.exchange()
-				.expectStatus().isOk();
+				.expectStatus().isOk()
+				.expectBody(String.class)
+				.value(content -> {
+					// alabasta has a client secret, which must not reach the browser
+					assertThat(content).contains("window.CLIENT_ID ='openk9';");
+					assertThat(content).contains("window.CLIENT_SECRET ='';");
+					assertThat(content).doesNotContain("alabasta-secret");
+				});
+		}
+
+		@Test
+		@DisplayName("OAuth2 settings JSON route does not expose the client secret")
+		void testOauth2SettingsJsonHasNoClientSecret() {
+			webTestClient.get()
+				.uri("/api/datasource/oauth2/settings")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody()
+				.jsonPath("$.clientId").isEqualTo("openk9")
+				.jsonPath("$.clientSecret").doesNotExist();
 		}
 
 		@Test

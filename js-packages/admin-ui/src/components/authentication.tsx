@@ -28,7 +28,6 @@ type OauthConfig = {
 type OauthSettingsResponse = {
   issuerUri?: string | null;
   clientId?: string | null;
-  clientSecret?: string | null;
 };
 
 const redirectUri = typeof window !== "undefined" ? `${window.location.origin}/admin/` : "";

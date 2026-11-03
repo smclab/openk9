@@ -21,6 +21,8 @@ import io.openk9.tenantmanager.model.SecurityConfiguration;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.Builder;
+import org.eclipse.microprofile.graphql.Description;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 @Builder
 @RegisterForReflection
@@ -29,8 +31,16 @@ public record TenantResponseDTO(
 	String tenantName,
 	String virtualHost,
 	String clientId,
+	@Description(Desc.CLIENT_SECRET)
+	@Schema(description = Desc.CLIENT_SECRET)
 	String clientSecret,
 	String issuerUri,
 	SecurityConfiguration securityConfiguration,
 	boolean realmProvisioned) {
+
+	interface Desc {
+		String CLIENT_SECRET =
+			"Always null: the client secret is never returned.";
+	}
+
 }

@@ -9,6 +9,9 @@ export type TenantResponseDTO = {
     tenantName?: string;
     virtualHost?: string;
     clientId?: string;
+    /**
+     * Always null: the client secret is never returned.
+     */
     clientSecret?: string;
     issuerUri?: string;
     securityConfiguration?: SecurityConfiguration;

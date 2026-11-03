@@ -56,6 +56,7 @@ public class MockEvents {
 				.hostName("alabasta.localhost")
 				.issuerUri("http://alabasta.localhost:9090/realms/alabasta")
 				.clientId("openk9")
+				.clientSecret("alabasta-secret")
 				.routeAuthorizationMap(Map.of(
 					ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
 					ApiGroup.SEARCH, AuthorizationScheme.API_KEY))

@@ -5,7 +5,7 @@ title: Tenant authentication
 
 Every tenant with a security configuration other than `NO_GATEWAY_AUTH`
 needs an OAuth2 client on an OpenID Connect authorization server.
-The tenant stores the issuer URI, the client id and, optionally, the client secret.
+The tenant stores the issuer URI, the client id and, optionally, a client secret that stays server side.
 
 Admin UI and Search Frontend read the issuer URI and the client id from `/api/datasource/oauth2/settings`;
 Talk-to reads the Keycloak URL, the realm and the client id from `/api/datasource/oauth2/settings.js` and uses keycloak-js.
@@ -19,7 +19,7 @@ The examples use Keycloak, but the same rules apply to any OpenID Connect provid
 
 ### Realm created by the Tenant Manager
 
-When you create a tenant and leave *Client ID*, *Client Secret* and *Issuer URI* empty,
+When you create a tenant and leave *Client ID* and *Issuer URI* empty,
 the Tenant Manager creates a Keycloak realm for the tenant, named after the tenant,
 with a client called `openk9`.
 
@@ -65,18 +65,18 @@ The OpenK9 frontends require a public client: they don't use the client secret,
 so a confidential client makes the login fail when the code is exchanged for the token.
 Leave the client secret of the tenant empty.
 
-:::warning
+`/api/datasource/oauth2/settings` returns only the issuer URI and the client id,
+and `window.CLIENT_SECRET` of the deprecated `/api/datasource/oauth2/settings.js` is always empty:
+the client secret never reaches the browser.
+The Tenant Manager console no longer asks for the client secret and doesn't show it.
 
-A client secret set on the tenant reaches the browser.
-`/api/datasource/oauth2/settings` (and the deprecated `/api/datasource/oauth2/settings.js`)
-returns the issuer URI, the client id and, when it is configured, the client secret.
-Consider the client secret of the tenant public.
+The `clientSecret` field of the Tenant Manager API
+(`oAuth2Settings` of the REST tenant creation request and the GraphQL `tenant` mutation)
+stays a server-side value: the Tenant Manager stores it, but never returns it, not even in its own responses.
 
-:::
-
-For this reason, never enable client credentials (service accounts)
+Never enable client credentials (service accounts)
 or the password grant (direct access) on the client of the tenant:
-anyone who reads the secret from the browser could get tokens without any user.
+its client id is public, and the client must log in users only through the Authorization Code flow with PKCE.
 
 If a service needs machine-to-machine access, give it its own client,
 separate from the client of the tenant.

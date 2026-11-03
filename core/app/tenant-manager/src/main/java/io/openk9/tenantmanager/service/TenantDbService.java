@@ -304,7 +304,6 @@ public class TenantDbService {
 				.tenantName(tenantName)
 				.issuerUri(issuerUri)
 				.clientId(clientId)
-				.clientSecret(clientSecret)
 				.realmProvisioned(realmProvisioned)
 				.build()
 			);
@@ -353,7 +352,6 @@ public class TenantDbService {
 			.tenantName(row.getString("tenant_name"))
 			.virtualHost(row.getString("virtual_host"))
 			.clientId(row.getString("client_id"))
-			.clientSecret(row.getString("client_secret"))
 			.issuerUri(row.getString("issuer_uri"))
 			.securityConfiguration(SecurityConfiguration.valueOf(
 				row.getString("security_configuration")))

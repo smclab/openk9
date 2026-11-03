@@ -21,7 +21,7 @@ import java.net.URI;
 
 import io.openk9.apigw.security.Tenant;
 import io.openk9.apigw.security.TenantSecurityService;
-import io.openk9.apigw.security.oauth2.OAuth2Settings;
+import io.openk9.apigw.security.oauth2.OAuth2SettingsResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -41,19 +41,25 @@ public class Oauth2SettingsResource {
 	/**
 	 * Returns the OAuth2/OIDC settings for the current tenant
 	 * as a JSON object with generic OIDC fields.
+	 * <p>
+	 * The response never contains the client secret.
 	 *
 	 * @param exchange the current server exchange
 	 * @return the tenant OAuth2 settings, or empty if not configured
 	 */
 	@GetMapping(value = "/settings", produces = "application/json")
-	public Mono<OAuth2Settings> settings(ServerWebExchange exchange) {
+	public Mono<OAuth2SettingsResponse> settings(ServerWebExchange exchange) {
 
-		return tenantSecurityService.getOAuth2Settings(exchange);
+		return tenantSecurityService.getOAuth2Settings(exchange)
+			.map(OAuth2SettingsResponse::from);
 	}
 
 	/**
 	 * Returns the OAuth2 settings as JavaScript variables for
 	 * legacy Keycloak and new OIDC consumption.
+	 * <p>
+	 * {@code window.CLIENT_SECRET} is kept for the legacy shape, but it is
+	 * always empty: the client secret never reaches the browser.
 	 *
 	 * @param request the current HTTP request
 	 * @return a JavaScript snippet setting {@code window.*} variables
@@ -98,7 +104,6 @@ public class Oauth2SettingsResource {
 			: issuerUri;
 
 		String clientId = tenant.oauth2Settings().clientId();
-		String clientSecret = tenant.oauth2Settings().clientSecret();
 
 		// Returns legacy and new js variables
 		return String.format("""
@@ -109,10 +114,10 @@ public class Oauth2SettingsResource {
 			// new oidc variables
 			window.ISSUER_URI ='%s';
 			window.CLIENT_ID ='%s';
-			window.CLIENT_SECRET ='%s';
+			window.CLIENT_SECRET ='';
 			""",
 			keycloakUrl, tenantId, clientId,
-		 	issuerUri, clientId, clientSecret);
+		 	issuerUri, clientId);
 	}
 
 }

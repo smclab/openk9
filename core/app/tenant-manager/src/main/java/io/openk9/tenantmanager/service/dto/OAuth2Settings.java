@@ -41,8 +41,9 @@ public record OAuth2Settings(
 	String clientId,
 
 	@Nullable
-	@Schema(description = "OAuth2 client secret. "
-		+ "Omit for public clients.")
+	@Schema(description = "OAuth2 client secret, kept server side and "
+		+ "never returned in any response. The OpenK9 frontends don't "
+		+ "use it: they log in with a public client and PKCE.")
 	String clientSecret
 
 ) {}

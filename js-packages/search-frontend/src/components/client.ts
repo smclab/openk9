@@ -45,7 +45,6 @@ type OauthConfig = {
 type OauthSettingsResponse = {
   issuerUri?: string | null;
   clientId?: string | null;
-  clientSecret?: string | null;
 };
 
 let userManager: UserManager | null = null;
@@ -83,7 +82,7 @@ async function loadOauthConfig(tenant: string): Promise<OauthConfig | null> {
     if (data.issuerUri === "DISABLED") return null;
     if (!data.issuerUri || !data.clientId) {
       // a 200 with an unusable body is a misconfiguration, not "OAuth2 off".
-      // the payload itself is never logged: it can carry the client secret
+      // the payload itself is never logged
       console.error(
         `[auth] OAuth2 settings incomplete from ${url}: missing ${
           !data.issuerUri ? "issuerUri" : "clientId"

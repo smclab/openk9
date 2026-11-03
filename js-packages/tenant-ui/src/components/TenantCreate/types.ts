@@ -21,7 +21,6 @@ export type WizardState = {
     tenantName: string;
     virtualHost: string;
     clientId: string;
-    clientSecret: string;
     issuerUri: string;
   };
   step2: {
@@ -34,7 +33,6 @@ export const initialWizardState: WizardState = {
     tenantName: "",
     virtualHost: "",
     clientId: "",
-    clientSecret: "",
     issuerUri: "",
   },
   step2: {

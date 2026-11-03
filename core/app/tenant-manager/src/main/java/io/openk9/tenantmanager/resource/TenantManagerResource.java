@@ -101,8 +101,8 @@ public class TenantManagerResource {
 							+ "OAuth2 identity provider",
 						description = "Provide oAuth2Settings to skip "
 							+ "Keycloak provisioning and reuse an "
-							+ "existing IdP. The clientId/clientSecret "
-							+ "pair authenticates against the issuer.",
+							+ "existing IdP. The client must be public "
+							+ "and require PKCE.",
 						value = TenantManagerRequestExamples.CREATE_TENANT_EXTERNAL_IDP_REQUEST
 					),
 					@ExampleObject(

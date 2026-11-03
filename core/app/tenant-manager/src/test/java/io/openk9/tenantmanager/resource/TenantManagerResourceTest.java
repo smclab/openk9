@@ -18,16 +18,30 @@
 package io.openk9.tenantmanager.resource;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+
+import jakarta.inject.Inject;
+
+import io.openk9.event.tenant.TenantEvent;
+import io.openk9.tenantmanager.service.OutboxEventService;
 
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 @TestHTTPEndpoint(TenantManagerResource.class)
 class TenantManagerResourceTest {
+
+	private static final String CLIENT_SECRET = "s3cr3t-of-the-tenant";
+
+	@Inject
+	OutboxEventService outboxService;
 
 	@Test
 	void createTenant() {
@@ -47,6 +61,71 @@ class TenantManagerResourceTest {
 			.post()
 			.then()
 			.statusCode(200);
+
+	}
+
+	@Test
+	void createTenant_withClientSecret_neverReturnsIt() {
+
+		// 1. Create a tenant with a client secret
+		var oAuth2Settings = JsonObject.of(
+			"issuerUri", "https://idp.example.com/realms/secret",
+			"clientId", "openk9",
+			"clientSecret", CLIENT_SECRET
+		);
+
+		var id = given()
+			.contentType(ContentType.JSON)
+			.header(
+				Constants.AUTHORIZATION_HEADER,
+				Constants.BASIC_CREDENTIALS)
+			.body(JsonObject.of(
+				"virtualHost",
+				"secret.openk9.local",
+				"securityConfiguration",
+				"OAUTH2_ADMIN_ONLY",
+				"oAuth2Settings",
+				oAuth2Settings
+			).toString())
+			.post()
+			.then()
+			.statusCode(200)
+			.body("clientId", equalTo("openk9"))
+			.body(not(containsString(CLIENT_SECRET)))
+			.extract()
+			.path("id");
+
+		// 2. The secret stays server side, in the TenantCreated event
+		var createEvent = outboxService.lastEvents(1)
+			.await().indefinitely().getFirst();
+		Assertions.assertEquals(
+			TenantEvent.TENANT_CREATED, createEvent.getEventType());
+		Assertions.assertTrue(
+			createEvent.getPayload().contains(CLIENT_SECRET));
+
+		// 3. The GraphQL queries of the tenant do not return it
+		var query = """
+			{
+				tenant(id: "%s") { clientId clientSecret }
+				tenants(first: 100) {
+					edges { node { virtualHost clientSecret } }
+				}
+			}
+			""".formatted(id);
+
+		given()
+			.basePath("")
+			.contentType(ContentType.JSON)
+			.header(
+				Constants.AUTHORIZATION_HEADER,
+				Constants.BASIC_CREDENTIALS)
+			.body(JsonObject.of("query", query).toString())
+			.post("/api/tenant-manager/graphql")
+			.then()
+			.statusCode(200)
+			.body("data.tenant.clientId", equalTo("openk9"))
+			.body(containsString("secret.openk9.local"))
+			.body(not(containsString(CLIENT_SECRET)));
 
 	}
 

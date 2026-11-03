@@ -2,7 +2,7 @@ import { CreateTenantRequest, SecurityConfiguration } from "../../openapi-genera
 import { WizardState } from "./types";
 
 export function buildCreateTenantRequest(state: WizardState): CreateTenantRequest {
-  const { tenantName, virtualHost, clientId, clientSecret, issuerUri } = state.step1;
+  const { tenantName, virtualHost, clientId, issuerUri } = state.step1;
   const trimmedClientId = clientId.trim();
   const trimmedIssuerUri = issuerUri.trim();
 
@@ -10,7 +10,7 @@ export function buildCreateTenantRequest(state: WizardState): CreateTenantReques
   // (both-or-neither) so an empty form triggers Keycloak realm auto-provisioning.
   const oAuth2Settings =
     trimmedClientId && trimmedIssuerUri
-      ? { clientId: trimmedClientId, issuerUri: trimmedIssuerUri, clientSecret: clientSecret || undefined }
+      ? { clientId: trimmedClientId, issuerUri: trimmedIssuerUri }
       : undefined;
 
   return {
