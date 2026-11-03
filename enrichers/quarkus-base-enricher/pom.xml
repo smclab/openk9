@@ -35,8 +35,6 @@
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.version>3.40.1.1</quarkus.platform.version>
-		<dependency-check-plugin.version>12.1.9</dependency-check-plugin.version>
-		<skip-dependency-check>true</skip-dependency-check>
 		<skipITs>true</skipITs>
 	</properties>
 
@@ -56,30 +54,5 @@
 		<module>enricher-openapi-server</module>
 		<module>archetype</module>
 	</modules>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.owasp</groupId>
-				<artifactId>dependency-check-maven</artifactId>
-				<version>${dependency-check-plugin.version}</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>aggregate</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<!-- Use the defined property for the NVD API key -->
-					<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
-					<nvdApiDelay>6000</nvdApiDelay>
-					<suppressionFile>dependency-check-suppressions.xml</suppressionFile>
-					<skip>${skip-dependency-check}</skip>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-
 
 </project>
