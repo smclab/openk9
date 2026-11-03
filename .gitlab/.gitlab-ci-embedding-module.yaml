@@ -33,6 +33,9 @@ Fetch config:
     - !reference [.rules:child-build-always, rules]
 
 ######################## BUILD EMBEDDING OPENAI IMAGE (KANIKO) ########################
+# The image is openk9-embedding-module, like the Helm chart default (#2216).
+# openk9-openai-module is still pushed as an alias: helm-local environments and
+# installations that set image.name to the old name keep receiving updates.
 Build Embedding OpenAI:
   stage: build
   image:
@@ -67,6 +70,7 @@ Build Embedding OpenAI:
     if [ "$CI_COMMIT_BRANCH" = "main" ]; then
       echo "[OA] Build & push as :$VERSION"
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-embedding-module:$VERSION" \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:$VERSION"
 
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
@@ -78,6 +82,7 @@ Build Embedding OpenAI:
       if [ "$USER_TYPE" = "designated" ]; then
         echo "[OA] Feature (designated) => build & push :997-SNAPSHOT"
         /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
+          --destination "${CI_REGISTRY_NAME}/openk9/openk9-embedding-module:997-SNAPSHOT" \
           --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:997-SNAPSHOT"
       else
         echo "[OA] Feature (generic) => build only, no push"
@@ -120,7 +125,7 @@ Container Scanning Embedding OA:
     artifacts: false
     optional: true
   variables:
-    REGISTRY_COMPONENT_NAME: "openk9-openai-module"
+    REGISTRY_COMPONENT_NAME: "openk9-embedding-module"
     # Area-level suppressions: both embedding images use the AI area
     # ai-packages/.trivyignore (not the Java-only core/ one).
     IGNOREFILE: "ai-packages/.trivyignore.yaml"
@@ -202,12 +207,14 @@ Build Embedding OpenAI Release:
     if [ -n "$CI_COMMIT_TAG" ]; then
       echo "[OA Release] Tag: push $VERSION"
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-embedding-module:$VERSION" \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:$VERSION"
     else
       # The version comes from python_modules_config.txt, which already carries
       # -SNAPSHOT on a release branch. Push it as-is — appending would double it.
       echo "[OA Release] Branch: push $VERSION"
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-embedding-module:$VERSION" \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:$VERSION"
     fi
   rules:
@@ -243,7 +250,7 @@ Trigger Restart Embedding Release:
 Copy Embedding OpenAI to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
-    REGISTRY_COMPONENT_NAME: "openk9-openai-module"
+    REGISTRY_COMPONENT_NAME: "openk9-embedding-module"
   needs:
     # Fetch config runs in every context and carries config.env (the image version).
     - job: Fetch config
@@ -256,3 +263,10 @@ Copy Embedding OpenAI to DockerHub:
     - job: Build Embedding OpenAI Release
       artifacts: false
       optional: true
+
+# Same image under the old name, for installations that still set
+# image.name: smclab/openk9-openai-module (#2216).
+Copy Embedding OpenAI alias to DockerHub:
+  extends: Copy Embedding OpenAI to DockerHub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-openai-module"
