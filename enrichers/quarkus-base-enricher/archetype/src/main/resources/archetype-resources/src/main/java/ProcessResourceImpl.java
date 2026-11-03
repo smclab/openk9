@@ -25,6 +25,7 @@ public class ProcessResourceImpl implements ProcessResource {
 
     private static final Logger LOGGER = Logger.getLogger(ProcessResourceImpl.class);
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+    private static final String DEFAULT_TARGET_FIELD = "enrichExample";
 
 #if ($implementationType == "async")
     @Inject
@@ -39,7 +40,7 @@ public class ProcessResourceImpl implements ProcessResource {
             throw new IllegalArgumentException("replyTo is null or empty");
         }
         // Accept the request at once, then send the enriched payload to OpenK9 when it is ready
-        vertx.executeBlocking(() -> enrich(data.getPayload()))
+        vertx.executeBlocking(() -> enrich(data.getPayload(), targetField(data)))
                 .onSuccess(payload -> callBackClient.callback(payload, data.getReplyTo()))
                 .onFailure(e -> LOGGER.error("Error enriching data", e));
         ProcessResponseDTO responseDTO = new ProcessResponseDTO();
@@ -50,17 +51,29 @@ public class ProcessResourceImpl implements ProcessResource {
     @Override
     public ProcessResponseDTO process(@NotNull OpenK9Input data) {
         ProcessResponseDTO responseDTO = new ProcessResponseDTO();
-        responseDTO.setPayload(enrich(data.getPayload()));
+        responseDTO.setPayload(enrich(data.getPayload(), targetField(data)));
         return responseDTO;
     }
 #end
 
     /**
-     * Example enrichment: reads each binary of the document from its pre-signed staging URL and
-     * adds its name and size to the payload. OpenK9 takes the returned payload as the new document,
-     * so the result goes into the payload instead of being returned on its own.
+     * The enrich item configuration holds the values set in the fields of {@link FormResourceImpl}.
      */
-    private Payload enrich(Payload payload) {
+    private static String targetField(OpenK9Input data) {
+        Object targetField = data.getEnrichItemConfig() == null
+                ? null
+                : data.getEnrichItemConfig().getAdditionalProperties().get("targetField");
+        return targetField == null || targetField.toString().isBlank()
+                ? DEFAULT_TARGET_FIELD
+                : targetField.toString();
+    }
+
+    /**
+     * Example enrichment: reads each binary of the document from its pre-signed staging URL and
+     * adds its name and size to the payload, in the target field. OpenK9 takes the returned payload
+     * as the new document, so the result goes into the payload instead of being returned on its own.
+     */
+    private Payload enrich(Payload payload, String targetField) {
         List<Map<String, Object>> binaries = new ArrayList<>();
         for (Map<String, Object> binary : binaries(payload)) {
             Object stagingUrl = binary.get("stagingUrl");
@@ -88,7 +101,7 @@ public class ProcessResourceImpl implements ProcessResource {
                 break;
             }
         }
-        payload.setAdditionalProperty("enrichExample", Map.of("binaries", binaries));
+        payload.setAdditionalProperty(targetField, Map.of("binaries", binaries));
         return payload;
     }
 

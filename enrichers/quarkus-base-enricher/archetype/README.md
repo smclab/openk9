@@ -60,44 +60,79 @@ These classes implement the REST classes from the library and adapt their behavi
   {
     "fields": [
       {
-        "info": "",
-        "label": "Test Form",
-        "name": "testForm",
+        "info": "Field of the document where the enricher writes its result",
+        "label": "Target Field",
+        "name": "targetField",
         "type": "text",
-        "size": 2,
+        "size": 6.0,
+        "required": true,
+        "values": [
+          {
+            "value": "enrichExample",
+            "isDefault": true
+          }
+        ]
+      },
+      {
+        "info": "Content types of the binaries to read; none to read them all",
+        "label": "Content Types",
+        "name": "contentTypes",
+        "type": "multiselect",
+        "size": 6.0,
         "required": false,
         "values": [
           {
+            "value": "application/pdf",
+            "isDefault": true
+          },
+          {
+            "value": "text/plain",
+            "isDefault": false
+          },
+          {
+            "value": "text/html",
+            "isDefault": false
+          },
+          {
+            "value": "image/png",
+            "isDefault": false
+          }
+        ]
+      },
+      {
+        "info": "Largest binary to read, in megabytes",
+        "label": "Max Binary Size (MB)",
+        "name": "maxBinarySize",
+        "type": "number",
+        "size": 4.0,
+        "required": false,
+        "values": [
+          {
+            "value": 10,
             "isDefault": true
           }
         ],
         "validator": {
-          "min": 0,
-          "max": 10,
-          "regex": "/[[:test]]"
+          "min": 1,
+          "max": 100
         }
       },
       {
-        "info": "",
-        "label": "Main Object",
-        "name": "mainObject",
-        "type": "number",
-        "size": 0.78,
-        "required": true,
+        "info": "Read the binaries through their staging URL; when off, only the text is used",
+        "label": "Read Binaries",
+        "name": "readBinaries",
+        "type": "checkbox",
+        "size": 4.0,
+        "required": false,
         "values": [
           {
-            "isDefault": true,
-            "value": "Value example"
+            "value": true,
+            "isDefault": true
           }
-        ],
-         "validator": {
-           "min": 0,
-           "max": 10,
-           "regex": "/[[:test]]"
-         }
-       }
-     ]
-  } 
+        ]
+      }
+    ]
+  }
   ```
 
 ### Enricher Base Classes
@@ -172,7 +207,7 @@ After generating it, changes need to be made to the enricher to create a concret
           formField.setLabel("Read and Reply");
           formField.setRequired(true);
           formField.setSize(6.0);
-          formField.setType(FormField.Type.text);
+          formField.setType(FormField.Type.TEXT);
           formField.setValidator(getValidator());
           formField.setValues(getFiledValueList());
           formFieldList.add(formField);
@@ -198,13 +233,15 @@ After generating it, changes need to be made to the enricher to create a concret
    ```
 2. In an async enricher, update the callback host and port in _application.properties_ to reach the OpenK9 datasource;
 3. Replace the example enrichment in `ProcessResourceImpl` with your logic: read what you need from the payload,
-   the binaries through their `stagingUrl`, and add your result to the payload;
+   the binaries through their `stagingUrl`, and add your result to the payload.
+   The values set in the enrich item for the fields of `FormResourceImpl` arrive in `data.getEnrichItemConfig()`,
+   as `targetField` in the example;
    ```java
-    private Payload enrich(Payload payload) {
+    private Payload enrich(Payload payload, String targetField) {
         // Read the document, e.g. its text or its binaries through stagingUrl
         Object rawContent = payload.getAdditionalProperties().get("rawContent");
-        // Add the result to the payload: OpenK9 takes it as the new document
-        payload.setAdditionalProperty("myEnrichment", Map.of("length", String.valueOf(rawContent).length()));
+        // Add the result to the payload, in the field set in the enrich item: OpenK9 takes it as the new document
+        payload.setAdditionalProperty(targetField, Map.of("length", String.valueOf(rawContent).length()));
         return payload;
     }
    ```
@@ -215,7 +252,7 @@ After generating it, changes need to be made to the enricher to create a concret
     @Override
     public ProcessResponseDTO process(@NotNull OpenK9Input data) {
         ProcessResponseDTO responseDTO = new ProcessResponseDTO();
-        responseDTO.setPayload(enrich(data.getPayload()));
+        responseDTO.setPayload(enrich(data.getPayload(), targetField(data)));
         return responseDTO;
     }
    ```
@@ -227,7 +264,7 @@ After generating it, changes need to be made to the enricher to create a concret
         if (data.getReplyTo() == null || data.getReplyTo().isEmpty()) {
             throw new IllegalArgumentException("replyTo is null or empty");
         }
-        vertx.executeBlocking(() -> enrich(data.getPayload()))
+        vertx.executeBlocking(() -> enrich(data.getPayload(), targetField(data)))
                 .onSuccess(payload -> callBackClient.callback(payload, data.getReplyTo()))
                 .onFailure(e -> LOGGER.error("Error enriching data", e));
         ProcessResponseDTO responseDTO = new ProcessResponseDTO();
