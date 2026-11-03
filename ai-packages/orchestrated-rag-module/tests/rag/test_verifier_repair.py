@@ -174,3 +174,9 @@ def test_usage_budget_covers_a_repair_with_a_new_discover():
 
     per_discovery = discovery.MAX_RETRIEVER_CALLS + 1
     assert limits.request_limit == 2 * (2 + per_discovery + 1) + 2
+
+
+def test_the_verifier_runs_only_when_enabled_and_with_retrieval():
+    assert orchestrator.verifier_enabled({"enable_verifier": True})
+    assert not orchestrator.verifier_enabled({})
+    assert not orchestrator.verifier_enabled({"enable_verifier": True, "bypass_rag": True})

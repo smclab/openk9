@@ -202,3 +202,42 @@ def test_with_the_verifier_the_answer_is_verified_before_it_streams(monkeypatch)
     assert order == ["run_orchestrator"]
     assert [e["type"] for e in events] == ["START", "CHUNK", "END"]
     assert events[1]["chunk"] == "risposta verificata"
+
+
+def test_with_bypass_rag_the_answer_streams_even_with_the_verifier_on(monkeypatch):
+    output = OrchestratorOutput(status="ok", message="risposta libera", used_document_ids=[])
+
+    async def no_buffered_run(**_):
+        raise AssertionError("with bypass_rag nobody verifies the answer: it must stream")
+
+    class Stream:
+        async def deltas(self):
+            yield "risposta libera"
+
+        async def finalize(self):
+            result = MagicMock()
+            result.all_messages.return_value = []
+            return output, [], result
+
+    @asynccontextmanager
+    async def stream(**_):
+        yield Stream()
+
+    monkeypatch.setattr(orchestrator, "run_orchestrator", no_buffered_run)
+    monkeypatch.setattr(orchestrator, "stream_orchestrator", stream)
+
+    async def collect():
+        return [
+            json.loads(event)
+            async for event in entrypoint.run_turn(
+                rag_type="CHAT_RAG",
+                search_text="domanda",
+                deps=_deps(bypass_rag=True, enable_verifier=True),
+                store=FrontendConversationStore(None),
+            )
+        ]
+
+    events = asyncio.run(collect())
+
+    assert [e["type"] for e in events] == ["START", "CHUNK", "END"]
+    assert events[1]["chunk"] == "risposta libera"

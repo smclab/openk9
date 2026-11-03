@@ -144,7 +144,7 @@ async def run_turn(
         )
         return title, emit_title, refs
 
-    if deps.rag_configuration.get("enable_verifier"):
+    if orchestrator.verifier_enabled(deps.rag_configuration):
         output, refs, result = await orchestrator.run_orchestrator(
             question=search_text, deps=deps, message_history=message_history
         )

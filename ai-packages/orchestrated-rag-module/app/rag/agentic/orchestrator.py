@@ -117,6 +117,14 @@ DISCOVERY_LIMIT_REACHED = (
 )
 
 
+def verifier_enabled(rag_configuration: dict) -> bool:
+    """Whether the Verifier judges the answer: only with retrieval, since without documents
+    it would reject every answer."""
+    return bool(rag_configuration.get("enable_verifier")) and not rag_configuration.get(
+        "bypass_rag"
+    )
+
+
 def build_usage_limits(rag_configuration: dict) -> Optional[UsageLimits]:
     """``max_iterations`` (jsonConfig) -> ``UsageLimits``, un tetto alle richieste LLM del turno.
 
@@ -133,7 +141,7 @@ def build_usage_limits(rag_configuration: dict) -> Optional[UsageLimits]:
     attempts = int(max_iterations) + 1  # tentativo iniziale + retry
     per_discovery = discovery.MAX_RETRIEVER_CALLS + 1  # ricerche + 1 selezione id
     per_orchestrator = 2  # 1 richiesta per delegare + 1 per comporre
-    per_verifier = 1 if rag_configuration.get("enable_verifier") else 0
+    per_verifier = 1 if verifier_enabled(rag_configuration) else 0
     request_limit = attempts * (per_discovery + per_orchestrator + per_verifier) + 2  # + margine
     return UsageLimits(request_limit=request_limit)
 
@@ -376,9 +384,7 @@ async def run_orchestrator(
     """
     deps.question = question
     deps.message_history = list(message_history or [])
-    cfg = deps.rag_configuration
-    # senza retrieval il Verifier non ha documenti su cui giudicare il grounding: boccerebbe sempre
-    enable_verifier = bool(cfg.get("enable_verifier")) and not cfg.get("bypass_rag")
+    enable_verifier = verifier_enabled(deps.rag_configuration)
     result = await _orchestrator_for(deps, model, enable_verifier=enable_verifier).run(
         question,
         deps=deps,
