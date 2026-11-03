@@ -51,18 +51,14 @@ following the recommended configuration.
 | Redirect URIs | Only the tenant virtual host | *Valid redirect URIs* `https://<virtual-host>/*` |
 | Web origins | Only the tenant virtual host | *Web origins* `https://<virtual-host>` (or `+`, the origins of the redirect URIs) |
 
-## Confidential client and client secret
+## Client secret
 
-The client of the tenant is used by the browser, so keep it public.
+The client of the tenant is used by the browser, so it is public:
+OpenK9 doesn't use a client secret for it, neither in the frontends nor
+in the services.
 
-If the tenant has a client secret, the OpenK9 services use it only on the server side:
-`/api/datasource/oauth2/settings.js` doesn't return it.
-Even so, on a client with a secret:
-
-- enable only the standard flow (Authorization Code) with PKCE `S256`;
-- never enable client credentials (service accounts) or the password grant (direct access):
-  whoever gets the secret could get tokens without any user.
-
+Never enable client credentials (service accounts) or the password grant
+(direct access) on the client of the tenant.
 If a service needs machine-to-machine access, give it its own client,
 separate from the client of the tenant.
 
