@@ -46,8 +46,9 @@ It is the class used to pass the data crawled.
 - **splitBinaries** : Specify if multiple binaries must be split up in differente messages.
 
 **PayloadType**  
-It has an enum with 3 values:
+It has an enum with 4 values:
 - **DOCUMENT**
+- **PARTIAL_DOCUMENT**: updates the indexed documents with the same `contentId`.
 - **HALT**
 - **LAST**
 
@@ -59,10 +60,9 @@ It has an enum with 3 values:
 - **resourceId**: Unique ID that identifies the binary inside Openk9.
 
 **Health**  
-It is the class used in `HealthResource`, has an enum with 3 values:
+It is the class used in `HealthResource`, has an enum with 2 values:
 - **UP**
 - **DOWN**
-- **UNKNOWN**
 
 **InvokeRequest**  
 It is the body request sent by OpenK9 to connector.
@@ -70,7 +70,10 @@ It is the body request sent by OpenK9 to connector.
 - **scheduleId**: ID of schedule.
 - **tenantId**: ID of tenant.
 - **timestamp**: Timestamp relative to last ingestion date.
-- **jsonConfig**: Defines the configuration needed to use the connector.
+- **datasourceConfig**: Configuration of the datasource.
+- **jsonConfig**: Never sent by OpenK9 (Deprecated, see `datasourceConfig` property).
+
+The same configuration also arrives as additional top-level properties, next to the fields above: read it either with `getDatasourceConfig().getAdditionalProperties()` or with `getAdditionalProperties()`.
 
 **Form**  
 It is the class used in `FormResource`.

@@ -156,9 +156,18 @@ components:
         timestamp:
           type: integer
           format: int64
+        datasourceConfig:
+          type: object
+          additionalProperties: { }
+          description: Configuration of the datasource.
         jsonConfig:
           type: object
           additionalProperties: { }
+          deprecated: true
+          description: Never sent by OpenK9 (Deprecated, see 'datasourceConfig' property)
+      description: The datasource configuration arrives both in datasourceConfig and
+        as additional top-level properties.
+      additionalProperties: { }
     BinaryDTO:
       type: object
       properties:
@@ -228,12 +237,14 @@ components:
           $ref: "#/components/schemas/PayloadType"
           type: string
           description: String used to specify type associated with message. Default
-            is DOCUMENT for message. HALT is used when a message to stop scheduling
+            is DOCUMENT for message. PARTIAL_DOCUMENT updates the indexed documents
+            with the same contentId. HALT is used when a message to stop scheduling
             arrived.
     PayloadType:
       type: string
       enum:
         - DOCUMENT
+        - PARTIAL_DOCUMENT
         - LAST
         - HALT
     ResourcesDTO:
