@@ -37,10 +37,7 @@ export function Step3Confirm({ values }: Props) {
           <Field label="Tenant Name" value={values.step1.tenantName} />
           <Field label="Virtual Host" value={values.step1.virtualHost} />
           <Field label="Client ID" value={values.step1.clientId} />
-          <Field label="Client Secret" value={values.step1.clientSecret ? "••••••••" : "(empty)"} />
-          <Box sx={{ gridColumn: "1 / -1" }}>
-            <Field label="Issuer URI" value={values.step1.issuerUri} />
-          </Box>
+          <Field label="Issuer URI" value={values.step1.issuerUri} />
         </Box>
       </Paper>
 

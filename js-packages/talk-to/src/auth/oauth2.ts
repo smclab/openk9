@@ -11,7 +11,6 @@ type OauthConfig = {
 type OauthSettingsResponse = {
 	issuerUri?: string | null;
 	clientId?: string | null;
-	clientSecret?: string | null;
 };
 
 let userManager: UserManager | null = null;

@@ -226,6 +226,7 @@ export type SortByInput = {
 
 export type TenantRequestDtoInput = {
   clientId: Scalars['String'];
+  /** OAuth2 client secret, kept server side and never returned in any response. The OpenK9 frontends don't use it: they log in with a public client and PKCE. */
   clientSecret?: InputMaybe<Scalars['String']>;
   issuerUri: Scalars['String'];
   securityConfiguration: SecurityConfiguration;
@@ -236,6 +237,7 @@ export type TenantRequestDtoInput = {
 export type TenantResponseDto = {
   __typename?: 'TenantResponseDTO';
   clientId?: Maybe<Scalars['String']>;
+  /** Always null: the client secret is never returned. */
   clientSecret?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['String']>;
   issuerUri?: Maybe<Scalars['String']>;
@@ -278,7 +280,7 @@ export type TenantQueryVariables = Exact<{
 }>;
 
 
-export type TenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'TenantResponseDTO', id?: string | null, tenantName?: string | null, virtualHost?: string | null, clientId?: string | null, clientSecret?: string | null, issuerUri?: string | null, securityConfiguration?: SecurityConfiguration | null, realmProvisioned: boolean } | null };
+export type TenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'TenantResponseDTO', id?: string | null, tenantName?: string | null, virtualHost?: string | null, clientId?: string | null, issuerUri?: string | null, securityConfiguration?: SecurityConfiguration | null, realmProvisioned: boolean } | null };
 
 export type TenantsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -454,7 +456,6 @@ export const TenantDocument = gql`
     tenantName
     virtualHost
     clientId
-    clientSecret
     issuerUri
     securityConfiguration
     realmProvisioned
@@ -568,4 +569,4 @@ export function usePreconfigurationsLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type PreconfigurationsQueryHookResult = ReturnType<typeof usePreconfigurationsQuery>;
 export type PreconfigurationsLazyQueryHookResult = ReturnType<typeof usePreconfigurationsLazyQuery>;
 export type PreconfigurationsQueryResult = Apollo.QueryResult<PreconfigurationsQuery, PreconfigurationsQueryVariables>;
-// Generated on 2026-07-22T18:30:36+02:00
+// Generated on 2026-11-03T21:24:25+01:00

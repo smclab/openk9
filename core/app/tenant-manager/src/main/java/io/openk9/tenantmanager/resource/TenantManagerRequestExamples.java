@@ -59,8 +59,7 @@ public class TenantManagerRequestExamples {
 			\t"tenantName": "demo",
 			\t"oAuth2Settings": {
 			\t\t"issuerUri": "https://idp.example.com/realms/demo",
-			\t\t"clientId": "openk9-admin",
-			\t\t"clientSecret": "s3cr3t"
+			\t\t"clientId": "openk9-admin"
 			\t}
 			}""";
 
@@ -95,7 +94,6 @@ public class TenantManagerRequestExamples {
 			\t"tenantName": "demo",
 			\t"virtualHost": "demo.openk9.io",
 			\t"clientId": "demo-client",
-			\t"clientSecret": "s3cr3t",
 			\t"issuerUri": "https://keycloak.openk9.io/realms/demo",
 			\t"securityConfiguration": "OAUTH2_ADMIN_ONLY",
 			\t"realmProvisioned": true

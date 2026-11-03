@@ -25,7 +25,6 @@ export const TenantQuery = gql`
       tenantName
       virtualHost
       clientId
-      clientSecret
       issuerUri
       securityConfiguration
       realmProvisioned
@@ -229,7 +228,6 @@ export function Tenant() {
             <TextField label="Tenant Name" value={tenant?.tenantName || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField label="Virtual Host" value={tenant?.virtualHost || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField label="Client ID" value={tenant?.clientId || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
-            <TextField label="Client Secret" value={tenant?.clientSecret || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField label="Issuer URI" value={tenant?.issuerUri || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField
               label="Security Configuration"

@@ -26,6 +26,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.graphql.Description;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,6 +42,9 @@ public class TenantRequestDTO {
 	@NotBlank
 	@NotNull
 	private String clientId;
+	@Description("OAuth2 client secret, kept server side and never returned "
+		+ "in any response. The OpenK9 frontends don't use it: they log in "
+		+ "with a public client and PKCE.")
 	private String clientSecret;
 	@NotBlank
 	@NotNull

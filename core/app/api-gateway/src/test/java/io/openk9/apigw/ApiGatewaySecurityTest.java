@@ -181,7 +181,9 @@ class ApiGatewaySecurityTest {
 				.expectHeader().contentType(MediaType.APPLICATION_JSON)
 				.expectBody()
 				.jsonPath("$.issuerUri").isEqualTo("http://alabasta.localhost:9090/realms/alabasta")
-				.jsonPath("$.clientId").isEqualTo("openk9");
+				.jsonPath("$.clientId").isEqualTo("openk9")
+				// alabasta has a client secret, which must not reach the browser
+				.jsonPath("$.clientSecret").doesNotExist();
 		}
 
 		@Test
@@ -219,7 +221,10 @@ class ApiGatewaySecurityTest {
 				.uri("/api/datasource/oauth2/settings")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.exchange()
-				.expectStatus().isOk();
+				.expectStatus().isOk()
+				.expectBody()
+				.jsonPath("$.clientId").isEqualTo("openk9")
+				.jsonPath("$.clientSecret").doesNotExist();
 		}
 
 		@Test

@@ -57,19 +57,10 @@ export function Step1Form({ values, onChange }: Props) {
       <TextField label="Virtual Host" required fullWidth {...input(values, onChange, "virtualHost")} helperText="e.g. pikachu.openk9.io" />
       <TextField label="Client ID" fullWidth {...input(values, onChange, "clientId")} helperText="Optional — leave empty for Keycloak auto-managed realm" />
       <TextField
-        label="Client Secret"
-        type="password"
-        fullWidth
-        autoComplete="new-password"
-        {...input(values, onChange, "clientSecret")}
-        helperText="Optional, leave empty for public clients"
-      />
-      <TextField
         label="Issuer URI"
         fullWidth
         {...input(values, onChange, "issuerUri")}
         helperText="Optional — leave empty for Keycloak auto-managed realm"
-        sx={{ gridColumn: "1 / -1" }}
       />
     </Box>
   );

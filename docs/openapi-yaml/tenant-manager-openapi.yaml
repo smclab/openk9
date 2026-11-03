@@ -125,7 +125,9 @@ components:
           description: OAuth2 client identifier.
         clientSecret:
           type: string
-          description: OAuth2 client secret. Omit for public clients.
+          description: "OAuth2 client secret, kept server side and never returned\
+            \ in any response. The OpenK9 frontends don't use it: they log in with\
+            \ a public client and PKCE."
     Preset:
       type: string
       enum:
@@ -158,6 +160,7 @@ components:
           type: string
         clientSecret:
           type: string
+          description: "Always null: the client secret is never returned."
         issuerUri:
           type: string
         securityConfiguration:
@@ -270,8 +273,8 @@ paths:
               external-idp:
                 summary: Tenant authenticated by an external OAuth2 identity provider
                 description: Provide oAuth2Settings to skip Keycloak provisioning
-                  and reuse an existing IdP. The clientId/clientSecret pair authenticates
-                  against the issuer.
+                  and reuse an existing IdP. The client must be public and require
+                  PKCE.
                 value:
                   virtualHost: demo.openk9.io
                   securityConfiguration: OAUTH2_ADMIN_ONLY
@@ -279,7 +282,6 @@ paths:
                   oAuth2Settings:
                     issuerUri: https://idp.example.com/realms/demo
                     clientId: openk9-admin
-                    clientSecret: s3cr3t
               search-only-public:
                 summary: Anonymous public search-only deployment
                 description: "**WARNING — development-only configuration.** Use only\
@@ -320,7 +322,6 @@ paths:
                 tenantName: demo
                 virtualHost: demo.openk9.io
                 clientId: demo-client
-                clientSecret: s3cr3t
                 issuerUri: https://keycloak.openk9.io/realms/demo
                 securityConfiguration: OAUTH2_ADMIN_ONLY
                 realmProvisioned: true
