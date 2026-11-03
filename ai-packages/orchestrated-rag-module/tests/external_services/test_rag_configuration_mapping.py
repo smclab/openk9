@@ -62,6 +62,8 @@ FULL_JSON_CONFIG = {
     "guardrail_categories": ["violence", "hate"],
     "max_iterations": 2,
     "enable_verifier": True,
+    "parallel_discovery": True,
+    "max_parallel_subtasks": 4,
 }
 
 
@@ -153,6 +155,8 @@ def test_every_field_and_json_key_reaches_its_output_key():
         "domain_threshold": 0.9,
         "max_iterations": 2,
         "enable_verifier": True,
+        "parallel_discovery": True,
+        "max_parallel_subtasks": 4,
     }
 
 
@@ -206,6 +210,9 @@ def test_an_empty_json_config_yields_the_defaults():
         # no default: without it the turn has no request limit
         "max_iterations": None,
         "enable_verifier": False,
+        "parallel_discovery": False,
+        # no default here: resolve_max_parallel_subtasks applies 3
+        "max_parallel_subtasks": None,
     }
 
 

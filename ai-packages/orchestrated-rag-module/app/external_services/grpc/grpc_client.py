@@ -299,6 +299,8 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
             "domain_threshold": domain_threshold,
             "max_iterations": json_config.get("max_iterations"),
             "enable_verifier": json_config.get("enable_verifier", False),
+            "parallel_discovery": json_config.get("parallel_discovery", False),
+            "max_parallel_subtasks": json_config.get("max_parallel_subtasks"),
         }
 
         return configuration
