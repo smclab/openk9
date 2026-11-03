@@ -298,6 +298,7 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
             "guardrails_configuration": guardrails_configuration,
             "domain_threshold": domain_threshold,
             "max_iterations": json_config.get("max_iterations"),
+            "enable_verifier": json_config.get("enable_verifier", False),
         }
 
         return configuration
