@@ -143,28 +143,47 @@ To configure Route for Openshift use:
 
 Openk9 Docling Processor supports Readiness, Liveness and Startup Probes.
 
+Each probe is an HTTP GET on `/health`, which always answers `{"status":"UP"}` without external calls; the core reads the same endpoint. The whole probe, check included, is read from `values.yaml`, so it can be changed without touching the template.
+
 To configure probes appropriately you can use following parameters:
 
-| Name                | Description                                                                                              | Value                      |
-| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `livenessProbe.enabled`                             | Enable livenessProbe                                                                                                                                                                                              | `true`           |
-| `livenessProbe.initialDelaySeconds`                 | Initial delay seconds for livenessProbe                                                                                                                                                                           | `120`            |
-| `livenessProbe.periodSeconds`                       | Period seconds for livenessProbe                                                                                                                                                                                  | `30`             |
-| `livenessProbe.timeoutSeconds`                      | Timeout seconds for livenessProbe                                                                                                                                                                                 | `20`             |
-| `livenessProbe.failureThreshold`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
-| `livenessProbe.successThreshold`                    | Success threshold for livenessProbe                                                                                                                                                                               | `1`              |
-| `readinessProbe.enabled`                            | Enable readinessProbe                                                                                                                                                                                             | `true`           |
-| `readinessProbe.initialDelaySeconds`                | Initial delay seconds for readinessProbe                                                                                                                                                                          | `10`             |
-| `readinessProbe.periodSeconds`                      | Period seconds for readinessProbe                                                                                                                                                                                 | `30`             |
-| `readinessProbe.timeoutSeconds`                     | Timeout seconds for readinessProbe                                                                                                                                                                                | `20`             |
-| `readinessProbe.failureThreshold`                   | Failure threshold for readinessProbe                                                                                                                                                                              | `3`              |
-| `readinessProbe.successThreshold`                   | Success threshold for readinessProbe                                                                                                                                                                              | `1`              |
-| `startupProbe.enabled`                              | Enable startupProbe                                                                                                                                                                                               | `false`          |
-| `startupProbe.initialDelaySeconds`                  | Initial delay seconds for startupProbe                                                                                                                                                                            | `10`             |
-| `startupProbe.periodSeconds`                        | Period seconds for startupProbe                                                                                                                                                                                   | `30`             |
-| `startupProbe.timeoutSeconds`                       | Timeout seconds for startupProbe                                                                                                                                                                                  | `20`             |
-| `startupProbe.failureThreshold`                     | Failure threshold for startupProbe                                                                                                                                                                                | `3`              |
-| `startupProbe.successThreshold`                     | Success threshold for startupProbe                                                                                                                                                                                | `1`              |
+| Name                                 | Description                                       | Value     |
+| ------------------------------------ | ------------------------------------------------- | --------- |
+| `livenessProbe.enabled`              | Enable livenessProbe                              | `true`    |
+| `livenessProbe.httpGet.path`         | Path requested by livenessProbe                   | `/health` |
+| `livenessProbe.httpGet.port`         | Port (name or number) requested by livenessProbe  | `http`    |
+| `livenessProbe.initialDelaySeconds`  | Initial delay seconds for livenessProbe           | `0`       |
+| `livenessProbe.periodSeconds`        | Period seconds for livenessProbe                  | `10`      |
+| `livenessProbe.timeoutSeconds`       | Timeout seconds for livenessProbe                 | `10`      |
+| `livenessProbe.successThreshold`     | Success threshold for livenessProbe               | `1`       |
+| `livenessProbe.failureThreshold`     | Failure threshold for livenessProbe               | `6`       |
+| `readinessProbe.enabled`             | Enable readinessProbe                             | `true`    |
+| `readinessProbe.httpGet.path`        | Path requested by readinessProbe                  | `/health` |
+| `readinessProbe.httpGet.port`        | Port (name or number) requested by readinessProbe | `http`    |
+| `readinessProbe.initialDelaySeconds` | Initial delay seconds for readinessProbe          | `0`       |
+| `readinessProbe.periodSeconds`       | Period seconds for readinessProbe                 | `10`      |
+| `readinessProbe.timeoutSeconds`      | Timeout seconds for readinessProbe                | `10`      |
+| `readinessProbe.successThreshold`    | Success threshold for readinessProbe              | `1`       |
+| `readinessProbe.failureThreshold`    | Failure threshold for readinessProbe              | `3`       |
+| `startupProbe.enabled`               | Enable startupProbe                               | `true`    |
+| `startupProbe.httpGet.path`          | Path requested by startupProbe                    | `/health` |
+| `startupProbe.httpGet.port`          | Port (name or number) requested by startupProbe   | `http`    |
+| `startupProbe.initialDelaySeconds`   | Initial delay seconds for startupProbe            | `0`       |
+| `startupProbe.periodSeconds`         | Period seconds for startupProbe                   | `5`       |
+| `startupProbe.timeoutSeconds`        | Timeout seconds for startupProbe                  | `3`       |
+| `startupProbe.successThreshold`      | Success threshold for startupProbe                | `1`       |
+| `startupProbe.failureThreshold`      | Failure threshold for startupProbe                | `30`      |
+
+Conversions are CPU-heavy, so `/health` can answer slowly while one is running. The liveness defaults are wide for this reason: the container is restarted only after `/health` has failed to answer within 10 seconds six times in a row, about a minute. A restart during a conversion loses the callback to the enrich pipeline, and the enrich item waits until its own timeout. On slow nodes or with very large documents, raise `livenessProbe.timeoutSeconds` or `livenessProbe.failureThreshold`, or set `livenessProbe.enabled=false`.
+
+To use another kind of check, set `httpGet` to `null` and add the new handler. Helm merges your values with the chart defaults, and Kubernetes rejects a probe with two handlers:
+
+```yaml
+livenessProbe:
+  httpGet: null
+  tcpSocket:
+    port: http
+```
 
 ### Resource requests and limits
 
