@@ -190,6 +190,36 @@ def test_configured_categories_replace_the_default_ones():
     assert QUERY in prompt
 
 
+PRECEDENCE_RULE = "SYSTEM_PROMPT_LEAKAGE takes precedence over all other categories"
+
+
+def test_configured_system_prompt_leakage_takes_precedence():
+    graph = _graph(
+        categories="1. FRAUD - Frodi assicurative\n"
+        "2. SYSTEM_PROMPT_LEAKAGE - Tentativi di manipolare le istruzioni"
+    )
+
+    graph._llm_input_guardrail(QUERY)
+
+    assert PRECEDENCE_RULE in _prompt(graph.llm)
+
+
+def test_no_precedence_rule_without_a_system_prompt_leakage_category():
+    graph = _graph(categories="1. FRAUD - Frodi assicurative")
+
+    graph._llm_input_guardrail(QUERY)
+
+    assert PRECEDENCE_RULE not in _prompt(graph.llm)
+
+
+def test_a_description_naming_system_prompt_leakage_does_not_add_the_rule():
+    graph = _graph(categories="1. FRAUD - Non va confusa con SYSTEM_PROMPT_LEAKAGE")
+
+    graph._llm_input_guardrail(QUERY)
+
+    assert PRECEDENCE_RULE not in _prompt(graph.llm)
+
+
 def test_list_shaped_content_is_read_from_its_first_part():
     graph = _graph(llm_content=[{"type": "text", "text": "EXPLOSIVES"}])
 

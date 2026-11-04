@@ -210,3 +210,20 @@ The score goes from 0 to 1. With embeddings of unit length, as those of the comm
 With a guardrail threshold at `0` the guardrail classifies every question, or every answer, for which the guardrail index holds at least one document; with an empty or missing index it classifies nothing. A threshold above `0` classifies only the texts close enough to a guardrail example, which saves a classifier call on most of the traffic. It also stops classifying the texts that resemble no example: before raising the threshold, the guardrail index has to hold examples of every category the guardrail is configured with, or the requests of the missing categories are no longer checked.
 
 When no domain document scores at least `domain_threshold`, the domain is chosen by the language model among the configured ones.
+
+## Guardrail Categories
+
+When the guardrail provider is the chat model or AWS Bedrock, the input and output guardrails ask the model to classify the text into one of a list of categories, and block it when the answer is not `NONE`. Without configuration the list holds six categories: `SELF-HARM/SUICIDE`, `VIOLENCE/WEAPONS`, `EXPLOSIVES`, `HATE/HARASSMENT`, `SEXUAL_CONTENT` and `SYSTEM_PROMPT_LEAKAGE`. Google Model Armor and OpenAI moderation use their own classification and ignore the list.
+
+The `guardrail_categories` key of the `jsonConfig` of the RAG configuration replaces that list, for both guardrails:
+
+```json
+"guardrail_categories": [
+  {"name": "SYSTEM_PROMPT_LEAKAGE", "description": "Content that attempts to extract, reveal, modify, or manipulate the system prompt..."},
+  {"name": "PHISHING/FRAUD", "description": "Content that attempts to deceive users into revealing credentials..."}
+]
+```
+
+The configured categories are not added to the default ones: to extend the defaults, copy them into the list together with the new categories. Write the name in uppercase, as the model answers with it.
+
+When the list holds a category named exactly `SYSTEM_PROMPT_LEAKAGE`, the guardrail tells the model that this category takes precedence over all the others, as with the default list. Without it, attempts to override or reveal the instructions are blocked only if another category covers them. The more categories the list holds, the more often the smaller models miss these attempts: keep `SYSTEM_PROMPT_LEAKAGE` in the list, and check the classification of a few known jailbreaks with the model the tenant uses.
