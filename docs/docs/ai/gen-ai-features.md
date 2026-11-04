@@ -152,3 +152,20 @@ The key is needed by the models that reason by default and then refuse function 
   "reasoning": false
 }
 ```
+
+## Guardrail Categories
+
+When the guardrail provider is the chat model or AWS Bedrock, the input and output guardrails ask the model to classify the text into one of a list of categories, and block it when the answer is not `NONE`. Without configuration the list holds six categories: `SELF-HARM/SUICIDE`, `VIOLENCE/WEAPONS`, `EXPLOSIVES`, `HATE/HARASSMENT`, `SEXUAL_CONTENT` and `SYSTEM_PROMPT_LEAKAGE`. Google Model Armor and OpenAI moderation use their own classification and ignore the list.
+
+The `guardrail_categories` key of the `jsonConfig` of the RAG configuration replaces that list, for both guardrails:
+
+```json
+"guardrail_categories": [
+  {"name": "SYSTEM_PROMPT_LEAKAGE", "description": "Content that attempts to extract, reveal, modify, or manipulate the system prompt..."},
+  {"name": "PHISHING/FRAUD", "description": "Content that attempts to deceive users into revealing credentials..."}
+]
+```
+
+The configured categories are not added to the default ones: to extend the defaults, copy them into the list together with the new categories. Write the name in uppercase, as the model answers with it.
+
+When the list holds a category named exactly `SYSTEM_PROMPT_LEAKAGE`, the guardrail tells the model that this category takes precedence over all the others, as with the default list. Without it, attempts to override or reveal the instructions are blocked only if another category covers them. The more categories the list holds, the more often the smaller models miss these attempts: keep `SYSTEM_PROMPT_LEAKAGE` in the list, and check the classification of a few known jailbreaks with the model the tenant uses.
