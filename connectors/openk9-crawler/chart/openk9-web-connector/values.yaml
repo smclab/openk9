@@ -1,19 +1,19 @@
 # Copyright Smc Treviso, S.r.l All Rights Reserved.
 # SPDX-License-Identifier: APACHE-2.0
 
-# Default values for openk9-database-connector.
+# Default values for openk9-web-connector.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-## @param replicaCount Number of Database Connector replicas to deploy
+## @param replicaCount Number of Web Connector replicas to deploy
 ##
 replicaCount: 1
-## @section Database Connector Image parameters
-## Docker Database Connector image version
+## @section Web Connector Image parameters
+## Docker Web Connector image version
 ## ref: https://hub.docker.com/u/smclab
-## @param image.registry [default: REGISTRY_NAME] Database Connector image registry
-## @skip image.tag Database Connector image tag (immutable tags are recommended)
-## @param image.pullPolicy Database Connector image pull policy
+## @param image.registry [default: REGISTRY_NAME] Web Connector image registry
+## @skip image.tag Web Connector image tag (immutable tags are recommended)
+## @param image.pullPolicy Web Connector image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
   registry: ""
@@ -63,11 +63,11 @@ openk9:
 ## @param concurrentRequests Maximum number of concurrent requests performed by the crawler
 ##
 concurrentRequests: "8"
-## Database Connector pods ServiceAccount
+## Web Connector pods ServiceAccount
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 ##
 serviceAccount:
-  ## @param serviceAccount.create Enable creation of ServiceAccount for Database Connector pods
+  ## @param serviceAccount.create Enable creation of ServiceAccount for Web Connector pods
   ##
   create: false
   ## @param serviceAccount.annotations Annotations for service account. Evaluated as a template. Only used if `create` is `true`.
@@ -77,17 +77,17 @@ serviceAccount:
   ## If not set and create is true, a name is generated using the fullname template
   ##
   name: ""
-## @param podAnnotations Datasource Pod annotations. Evaluated as a template
+## @param podAnnotations Web Connector Pod annotations. Evaluated as a template
 ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 ##
 podAnnotations: {}
-## Datasource pods' Security Context
+## Web Connector pods' Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
-## @param podSecurityContext.enabled Enable Datasource pods' Security Context
+## @param podSecurityContext.enabled Enable Web Connector pods' Security Context
 ## @param podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
 ## @param podSecurityContext.sysctls Set kernel settings using the sysctl interface
 ## @param podSecurityContext.supplementalGroups Set filesystem extra groups
-## @param podSecurityContext.fsGroup Set Datasource pod's Security Context fsGroup
+## @param podSecurityContext.fsGroup Set Web Connector pod's Security Context fsGroup
 ##
 podSecurityContext: {}
 # fsGroup: 2000
@@ -134,9 +134,11 @@ tolerations: []
 ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
 ##
 affinity: {}
-## Configure Database Connector containers' extra options for startup probe
+## Configure Web Connector containers' extra options for startup probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param startupProbe.enabled Enable startupProbe
+## @param startupProbe.httpGet.path Path requested by startupProbe
+## @param startupProbe.httpGet.port Port (name or number) requested by startupProbe
 ## @param startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
 ## @param startupProbe.periodSeconds Period seconds for startupProbe
 ## @param startupProbe.timeoutSeconds Timeout seconds for startupProbe
@@ -145,14 +147,19 @@ affinity: {}
 ##
 startupProbe:
   enabled: true
-  initialDelaySeconds: 90
-  periodSeconds: 10
-  timeoutSeconds: 5
+  httpGet:
+    path: /docs
+    port: http
+  initialDelaySeconds: 0
+  periodSeconds: 5
+  timeoutSeconds: 3
   successThreshold: 1
-  failureThreshold: 5
-## Configure Database Connector containers' extra options for liveness probe
+  failureThreshold: 30
+## Configure Web Connector containers' extra options for liveness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param livenessProbe.enabled Enable livenessProbe
+## @param livenessProbe.httpGet.path Path requested by livenessProbe
+## @param livenessProbe.httpGet.port Port (name or number) requested by livenessProbe
 ## @param livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
 ## @param livenessProbe.periodSeconds Period seconds for livenessProbe
 ## @param livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
@@ -161,14 +168,19 @@ startupProbe:
 ##
 livenessProbe:
   enabled: true
-  initialDelaySeconds: 90
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 0
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 5
-## Configure Database Connector containers' extra options for readiness probe
+  failureThreshold: 6
+## Configure Web Connector containers' extra options for readiness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param readinessProbe.enabled Enable readinessProbe
+## @param readinessProbe.httpGet.path Path requested by readinessProbe
+## @param readinessProbe.httpGet.port Port (name or number) requested by readinessProbe
 ## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
 ## @param readinessProbe.periodSeconds Period seconds for readinessProbe
 ## @param readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
@@ -177,11 +189,14 @@ livenessProbe:
 ##
 readinessProbe:
   enabled: true
-  initialDelaySeconds: 90
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 0
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 5
+  failureThreshold: 3
 metrics:
   ## @param metrics.prometheusAuthType Authentication mode for Prometheus (`jwt` or `public`)
   ## To allow public access without authentication for prometheus metrics set environment as follows.
