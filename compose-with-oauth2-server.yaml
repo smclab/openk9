@@ -59,3 +59,9 @@ services:
     depends_on:
       keycloak:
         condition: service_healthy
+  api-gateway:
+    environment:
+      # Netty resolves every *.localhost name to loopback without asking
+      # the DNS, so the gateway would fetch the realm keys from itself.
+      # Turning the rule off lets Docker resolve keycloak.openk9.localhost.
+      JAVA_TOOL_OPTIONS: '-Dio.netty.resolver.dns.resolveLocalhostWithoutDns=false'
