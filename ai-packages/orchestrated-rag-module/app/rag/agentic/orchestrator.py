@@ -143,8 +143,16 @@ def verifier_enabled(rag_configuration: dict) -> bool:
 
 
 def resolve_max_parallel_subtasks(rag_configuration: dict) -> int:
-    """``max_parallel_subtasks`` del jsonConfig (default 3) limitato a ``1..4``."""
-    configured = int(rag_configuration.get("max_parallel_subtasks", 3) or 3)
+    """``max_parallel_subtasks`` del jsonConfig (default 3) limitato a ``1..4``. Un valore non
+    numerico usa il default: e' configurazione scritta a mano, non deve far fallire il turno."""
+    configured = rag_configuration.get("max_parallel_subtasks")
+    if configured is None:
+        return 3
+    try:
+        configured = int(configured)
+    except (TypeError, ValueError):
+        logger.warning(f"[orchestrator] max_parallel_subtasks={configured!r} non numerico: uso 3")
+        return 3
     resolved = min(max(configured, 1), MAX_PARALLEL_SUBTASKS_LIMIT)
     if resolved != configured:
         logger.warning(
