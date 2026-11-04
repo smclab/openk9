@@ -249,11 +249,22 @@ ORCHESTRATOR_SETTINGS = {"temperature": 0}
 #: ``max_parallel_subtasks``: piu' ``discover`` nella stessa risposta del modello lo aggirerebbero.
 FANOUT_ORCHESTRATOR_SETTINGS = {**ORCHESTRATOR_SETTINGS, "parallel_tool_calls": False}
 
-#: Nota per l'orchestratore quando ``discover_many`` scarta delle sotto-domande: senza, comporrebbe
-#: la risposta credendo di avere coperto tutta la domanda.
+#: Nota per l'orchestratore quando ``discover_many`` scarta delle sotto-domande oltre
+#: ``max_parallel_subtasks`` e il turno ha ancora deleghe: il limite e' sui Discovery contemporanei,
+#: quindi le scartate vanno cercate con la chiamata successiva. Chiedere di dirle "non coperte"
+#: faceva rispondere al modello che i documenti non le contengono.
 DROPPED_SUBTASKS_NOTE = (
-    "These sub-questions were NOT searched (limit reached). Do not answer them from your own "
-    "knowledge: say they could not be covered."
+    "These sub-questions were NOT searched yet: only a limited number of searches run at once. "
+    "Search them with another call before composing the answer. Do not answer them from your own "
+    "knowledge."
+)
+
+#: Nota quando le sotto-domande scartate non possono piu' essere cercate: il tetto di deleghe del
+#: turno e' esaurito. La risposta deve distinguere "non cercato" da "non trovato nei documenti".
+SUBTASKS_OVER_BUDGET_NOTE = (
+    "These sub-questions were NOT searched: the search limit of this turn is reached. In the "
+    "answer, say that these parts were not searched; do not say that the documents lack them, "
+    "and do not answer them from your own knowledge."
 )
 
 
@@ -356,10 +367,11 @@ def build_orchestrator(
             ]
             if not dropped:
                 return {"subtasks": subtasks}
+            budget_left = budget - len(capped) > 0
             return {
                 "subtasks": subtasks,
                 "dropped_subtasks": dropped,
-                "note": DROPPED_SUBTASKS_NOTE,
+                "note": DROPPED_SUBTASKS_NOTE if budget_left else SUBTASKS_OVER_BUDGET_NOTE,
             }
 
     if enable_verifier:

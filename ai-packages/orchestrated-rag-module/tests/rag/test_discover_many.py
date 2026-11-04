@@ -138,6 +138,46 @@ def test_the_turn_budget_counts_discover_and_discover_many_together(monkeypatch)
 
     assert [s["subtask"] for s in returned[0]["subtasks"]] == ["A"]
     assert returned[0]["dropped_subtasks"] == ["B", "C"]
+    # il budget e' finito: un'altra chiamata non le cercherebbe, la risposta deve dire "non cercato"
+    assert returned[0]["note"] == orchestrator.SUBTASKS_OVER_BUDGET_NOTE
+
+
+def test_sub_questions_dropped_by_the_limit_are_searched_by_a_following_call(monkeypatch):
+    """Il limite e' sui Discovery contemporanei: con budget rimasto, la parte scartata va cercata
+    con la chiamata successiva, non riportata come "non trovata"."""
+    searched = []
+
+    async def fake_discovery(*, request, deps, usage=None, model=None):
+        searched.append(request.question)
+        return _result(request.question)
+
+    monkeypatch.setattr(discovery, "run_discovery", fake_discovery)
+    notes = []
+
+    def model(messages, info: AgentInfo) -> ModelResponse:
+        returns = [
+            part
+            for message in messages
+            for part in message.parts
+            if isinstance(part, ToolReturnPart) and part.tool_name == "discover_many"
+        ]
+        if not returns:
+            requests = [{"question": q} for q in ["A", "B", "C"]]
+            return ModelResponse(parts=[ToolCallPart("discover_many", {"requests": requests})])
+        if len(returns) == 1:
+            notes.append(returns[0].content["note"])
+            dropped = [{"question": q} for q in returns[0].content["dropped_subtasks"]]
+            return ModelResponse(parts=[ToolCallPart("discover_many", {"requests": dropped})])
+        args = {"status": "ok", "message": "confronto", "used_document_ids": []}
+        return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, args)])
+
+    deps = _deps(parallel_discovery=True, max_parallel_subtasks=2)
+
+    _run(deps, FunctionModel(model))
+
+    assert notes == [orchestrator.DROPPED_SUBTASKS_NOTE]
+    assert sorted(searched) == ["A", "B", "C"]
+    assert deps.discoveries_run == 3
 
 
 def test_a_failed_sub_question_does_not_stop_the_others(monkeypatch):
