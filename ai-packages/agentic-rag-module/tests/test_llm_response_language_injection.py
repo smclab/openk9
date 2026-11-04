@@ -30,7 +30,7 @@ def _graph():
     """RagGraph stub exercising llm_response_node with a spy LLM, so we can
     assert the resolved target language reaches the prompt sent to the model.
     The node reads state.target_lang; it does NOT resolve the language itself
-    (resolution happens once in stream()/invoke(), outside the graph)."""
+    (the resolve_language node does, earlier in the graph)."""
     graph = RagGraph.__new__(RagGraph)
     graph.answer_only_with_context = False
     graph.configuration = {"prompt_template": "SYSTEM", "prompt_no_rag": "SYSTEM"}
@@ -104,9 +104,7 @@ def test_italian_query_has_no_regression():
     assert state.target_lang == "Italian"
 
 
-def test_invoke_seeds_resolved_target_language():
-    # Regression guard: the language must be resolved for the graph seed, not
-    # inside the streamed llm_response node.
+def test_invoke_leaves_the_language_to_the_graph():
     graph = RagGraph.__new__(RagGraph)
     graph.config = {}
     graph.chat_sequence_number = 1
@@ -115,15 +113,12 @@ def test_invoke_seeds_resolved_target_language():
 
     graph.invoke("Hablame de DGS")
 
-    graph._resolve_target_language.assert_called_once_with("Hablame de DGS")
+    graph._resolve_target_language.assert_not_called()
     seed = graph.graph.invoke.call_args.args[0]
-    assert seed["target_lang"] == "Spanish"
+    assert "target_lang" not in seed
 
 
-def test_stream_resolves_language_before_graph_and_seeds_it():
-    # Regression guard for the leaked-chunks bug: stream() must resolve the
-    # language BEFORE iterating the graph and pass it via the state seed, so
-    # the resolver's LLM output never enters the llm_response token stream.
+def test_stream_leaves_the_language_to_the_graph():
     graph = RagGraph.__new__(RagGraph)
     graph.config = {}
     graph.chat_sequence_number = 1
@@ -140,6 +135,6 @@ def test_stream_resolves_language_before_graph_and_seeds_it():
 
     list(graph.stream("Erzaehl mir von DGS"))
 
-    graph._resolve_target_language.assert_called_once_with("Erzaehl mir von DGS")
+    graph._resolve_target_language.assert_not_called()
     seed = graph.graph.stream.call_args.args[0]
-    assert seed["target_lang"] == "German"
+    assert "target_lang" not in seed
