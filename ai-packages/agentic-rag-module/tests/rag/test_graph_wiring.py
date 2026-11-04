@@ -18,9 +18,10 @@
 """How RagGraph wires its nodes and where it keeps the conversation.
 
 The chat graph starts from the input guardrail and reaches the answer through
-history, query analysis, optional domain detection, routing and retrieval.
-The real-time evaluation graph drops guardrail and domain detection and adds
-the judge nodes. A saved chat checkpoints on OpenSearch, in an index of its
+the answer language, history, query analysis, optional domain detection,
+routing and retrieval: a blocked input never reaches the language. The
+real-time evaluation graph drops guardrail and domain detection, starts from
+the language and adds the judge nodes. A saved chat checkpoints on OpenSearch, in an index of its
 own tenant and user; an anonymous one only in memory.
 """
 
@@ -34,6 +35,7 @@ from app.rag.agentic_rag import RagGraph
 CHAT_NODES = {
     "input_guardrail",
     "guardrail_violation_response",
+    "resolve_language",
     "history_handler",
     "analyze_and_rewrite_query",
     "input_domain",
@@ -46,7 +48,8 @@ CHAT_NODES = {
 CHAT_EDGES = {
     ("__start__", "input_guardrail"),
     ("input_guardrail", "guardrail_violation_response"),
-    ("input_guardrail", "history_handler"),
+    ("input_guardrail", "resolve_language"),
+    ("resolve_language", "history_handler"),
     ("guardrail_violation_response", "__end__"),
     ("history_handler", "analyze_and_rewrite_query"),
     ("analyze_and_rewrite_query", "input_domain"),
@@ -60,6 +63,7 @@ CHAT_EDGES = {
 }
 
 EVALUATION_NODES = {
+    "resolve_language",
     "history_handler",
     "analyze_and_rewrite_query",
     "rag_router",
@@ -72,7 +76,8 @@ EVALUATION_NODES = {
 }
 
 EVALUATION_EDGES = {
-    ("__start__", "history_handler"),
+    ("__start__", "resolve_language"),
+    ("resolve_language", "history_handler"),
     ("history_handler", "analyze_and_rewrite_query"),
     ("analyze_and_rewrite_query", "rag_router"),
     ("rag_router", "opensearch_retriever"),

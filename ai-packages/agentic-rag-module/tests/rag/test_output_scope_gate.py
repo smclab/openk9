@@ -59,7 +59,6 @@ def _graph(chunk_texts, prefix_chars, verdict=None, state_values=None):
         values=state_values if state_values is not None else {}
     )
 
-    graph._resolve_target_language = MagicMock(return_value="Italian")
     graph._llm_scope_gate = MagicMock(return_value=verdict)
     graph._get_retrieved_context_text = MagicMock(return_value=CONTEXT)
     return graph

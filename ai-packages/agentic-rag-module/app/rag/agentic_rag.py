@@ -32,6 +32,7 @@ from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables.config import ensure_config, merge_configs
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.constants import TAG_NOSTREAM
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from phoenix.evals import (
@@ -1218,13 +1219,17 @@ class RagGraph:
             """
 
             language_prompt_template = PromptTemplate.from_template(language_prompt)
-            chain = language_prompt_template | self.utility_llm
+            # nostream keeps the JSON answer out of the messages stream, which
+            # is what reaches the client. No explicit config: inside a node it
+            # would replace the node callbacks instead of inheriting them.
+            chain = language_prompt_template | self.utility_llm.with_config(
+                tags=[TAG_NOSTREAM]
+            )
             raw_output = chain.invoke(
                 {
                     "query": query,
                     "format_instructions": format_instructions,
-                },
-                config=self.config,
+                }
             )
 
             if isinstance(raw_output.content, list):
@@ -1240,6 +1245,16 @@ class RagGraph:
                 exc_info=True,
             )
             return "Italian"
+
+    def resolve_language_node(self, state: GraphState) -> GraphState:
+        # Runs before the query is rewritten, so the language is the one of
+        # the query the user wrote.
+        state.target_lang = self._resolve_target_language(state.current_query)
+        logger.info(
+            f"[resolve_language] target_lang={state.target_lang} "
+            f"{self._log_context()}"
+        )
+        return state
 
     def input_domain_node(self, state: GraphState) -> GraphState:
         query = state.current_query
@@ -2081,9 +2096,7 @@ class RagGraph:
             state.no_context_answer = True
             return state
 
-        # target_lang is resolved once in stream()/invoke() (outside the graph)
-        # so the resolver's utility LLM output is never captured by the
-        # llm_response token stream and leaked to the client.
+        # target_lang is set by the resolve_language node.
         target_lang = state.target_lang or "Italian"
 
         # Bound here, not in the branch that fills them: the parsing below
@@ -2584,6 +2597,7 @@ class RagGraph:
         workflow = StateGraph(GraphState)
 
         if self.configuration.get("enable_real_time_evaluation"):
+            workflow.add_node("resolve_language", self.resolve_language_node)
             workflow.add_node("history_handler", self.history_handler_node)
             workflow.add_node(
                 "analyze_and_rewrite_query", self.analyze_and_rewrite_query_node
@@ -2599,7 +2613,7 @@ class RagGraph:
             workflow.add_node("history_saver", self.history_saver_node)
             workflow.add_node("response_evaluation", self.response_evaluation_node)
 
-            workflow.set_entry_point("history_handler")
+            workflow.set_entry_point("resolve_language")
 
             workflow.add_conditional_edges(
                 "rag_router",
@@ -2610,6 +2624,7 @@ class RagGraph:
                 },
             )
 
+            workflow.add_edge("resolve_language", "history_handler")
             workflow.add_edge("history_handler", "analyze_and_rewrite_query")
             workflow.add_edge("analyze_and_rewrite_query", "rag_router")
             workflow.add_edge("opensearch_retriever", "opensearch_retriever_evaluation")
@@ -2625,6 +2640,7 @@ class RagGraph:
             workflow.add_node(
                 "guardrail_violation_response", self.guardrail_violation_response_node
             )
+            workflow.add_node("resolve_language", self.resolve_language_node)
             workflow.add_node("history_handler", self.history_handler_node)
             workflow.add_node(
                 "analyze_and_rewrite_query", self.analyze_and_rewrite_query_node
@@ -2644,7 +2660,7 @@ class RagGraph:
                 self.input_guardrail_route_decision,
                 {
                     "guardrail_violation_response": "guardrail_violation_response",
-                    "history_handler": "history_handler",
+                    "history_handler": "resolve_language",
                 },
             )
             workflow.add_conditional_edges(
@@ -2666,6 +2682,7 @@ class RagGraph:
             )
 
             workflow.add_edge("guardrail_violation_response", END)
+            workflow.add_edge("resolve_language", "history_handler")
             workflow.add_edge("history_handler", "analyze_and_rewrite_query")
             # workflow.add_edge("analyze_and_rewrite_query", "rag_router")
             workflow.add_edge("opensearch_retriever", "llm_response")
@@ -2691,7 +2708,6 @@ class RagGraph:
             {
                 "current_query": query,
                 "chat_sequence_number": self.chat_sequence_number,
-                "target_lang": self._resolve_target_language(query),
             },
             config=self.config,
         )
@@ -2821,7 +2837,7 @@ class RagGraph:
                     "matches a streamed document: no DOCUMENT event emitted"
                 )
 
-    def _iter_answer_chunks(self, query: str, target_lang: str) -> Iterator[str]:
+    def _iter_answer_chunks(self, query: str) -> Iterator[str]:
         """Yield the llm_response text chunks, without the citations tail.
 
         Single entry point for every stream() branch: the graph is streamed in
@@ -2837,7 +2853,6 @@ class RagGraph:
             {
                 "current_query": query,
                 "chat_sequence_number": self.chat_sequence_number,
-                "target_lang": target_lang,
             },
             config=self.config,
             stream_mode="messages",
@@ -2875,10 +2890,6 @@ class RagGraph:
             + debug_extra(logger, query=query)
         )
 
-        # Resolve the answer language once, BEFORE running the graph, so the
-        # resolver's utility LLM call is not part of the llm_response token
-        # stream (otherwise its JSON output leaks to the client as chunks).
-        target_lang = self._resolve_target_language(query)
         try:
             if (
                 self.output_guardrail.get("enable_output_guardrail")
@@ -2890,7 +2901,7 @@ class RagGraph:
                 scope_checked = False
 
                 try:
-                    for chunk_response in self._iter_answer_chunks(query, target_lang):
+                    for chunk_response in self._iter_answer_chunks(query):
                         if start_chunk:
                             yield from self._stream_sources_map()
                             yield json.dumps({"chunk": "", "type": "START"})
@@ -2970,7 +2981,7 @@ class RagGraph:
                 chunk_batch = []
 
                 try:
-                    for chunk_response in self._iter_answer_chunks(query, target_lang):
+                    for chunk_response in self._iter_answer_chunks(query):
                         if start_chunk:
                             yield from self._stream_sources_map()
                             yield json.dumps({"chunk": "", "type": "START"})
@@ -3035,7 +3046,7 @@ class RagGraph:
                 chunk_number = 0
 
                 try:
-                    for chunk_response in self._iter_answer_chunks(query, target_lang):
+                    for chunk_response in self._iter_answer_chunks(query):
                         chunk_number += 1
 
                         if start_chunk:
@@ -3092,7 +3103,7 @@ class RagGraph:
                 result_answer = ""
 
                 try:
-                    for chunk_response in self._iter_answer_chunks(query, target_lang):
+                    for chunk_response in self._iter_answer_chunks(query):
                         if start_chunk:
                             yield from self._stream_sources_map()
                             yield json.dumps({"chunk": "", "type": "START"})

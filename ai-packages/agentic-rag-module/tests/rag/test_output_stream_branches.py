@@ -61,7 +61,6 @@ def _graph(guardrail_type, enabled=True):
     graph.graph.stream.return_value = []
     graph.graph.get_state.return_value = SimpleNamespace(values={})
 
-    graph._resolve_target_language = MagicMock(return_value="English")
     graph._llm_output_guardrail = MagicMock(return_value="NONE")
     graph._llm_scope_gate = MagicMock(return_value="VALID")
     graph._get_retrieved_context_text = MagicMock(return_value="Contesto.")
@@ -78,9 +77,8 @@ def test_the_graph_runs_on_the_turn_input(guardrail_type):
 
     _events(graph)
 
-    graph._resolve_target_language.assert_called_once_with(QUERY)
     graph.graph.stream.assert_called_once_with(
-        {"current_query": QUERY, "chat_sequence_number": 3, "target_lang": "English"},
+        {"current_query": QUERY, "chat_sequence_number": 3},
         config=CONFIG,
         stream_mode="messages",
     )

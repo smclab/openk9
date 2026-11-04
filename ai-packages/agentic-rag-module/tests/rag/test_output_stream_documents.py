@@ -59,7 +59,6 @@ def _graph(state_values, *, rag_type="AGENTIC", sequence_number=1, logged=True):
     graph.graph.stream.return_value = []
     graph.graph.get_state.return_value = SimpleNamespace(values=state_values)
 
-    graph._resolve_target_language = MagicMock(return_value="Italian")
     return graph
 
 

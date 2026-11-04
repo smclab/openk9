@@ -105,7 +105,6 @@ def test_stream_passes_the_state_citations_to_the_document_events():
             "response": "Risposta.",
         }
     )
-    graph._resolve_target_language = MagicMock(return_value="Italian")
 
     events = [json.loads(event) for event in graph.stream("Domanda?")]
     documents = [event["chunk"] for event in events if event["type"] == "DOCUMENT"]

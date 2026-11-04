@@ -16,21 +16,34 @@
 #
 
 
+"""The language the answer must be written in.
+
+It is resolved by a node of its own, before the query is rewritten. Its model
+call is tagged nostream, so the JSON it returns never reaches the messages
+stream that is forwarded to the client.
+"""
+
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from app.rag.agentic_rag import RagGraph
+from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langgraph.constants import TAG_NOSTREAM
+from langgraph.graph import END, StateGraph
+
+from app.rag.agentic_rag import GraphState, RagGraph
 
 
 def _graph_with_llm_returning(content):
     """RagGraph stub whose utility_llm replies with the given content payload."""
     graph = RagGraph.__new__(RagGraph)
+    graph.tenant_id = None
+    graph.user_id = None
+    graph.chat_id = None
     llm = MagicMock()
     llm.return_value = SimpleNamespace(content=content)
+    # The tagged model is the one the chain calls.
+    llm.with_config.return_value = llm
     graph.utility_llm = llm
-    # The resolver runs outside the graph, so it is handed the request config
-    # explicitly: that is what puts its tokens on the request's own tally.
-    graph.config = {}
     return graph
 
 
@@ -52,6 +65,14 @@ def test_prompt_carries_the_query_and_the_format_instructions():
     assert user_query.strip() == "Parlami di DGS, answer in English"
     assert "The output should be formatted as a JSON instance" in prompt
     assert '"language"' in prompt.split("---")[-1]
+
+
+def test_model_call_is_tagged_nostream():
+    graph = _graph_with_llm_returning('{"language": "English"}')
+
+    graph._resolve_target_language("Tell me about DGS")
+
+    graph.utility_llm.with_config.assert_called_once_with(tags=[TAG_NOSTREAM])
 
 
 def test_returns_language_from_list_content():
@@ -78,3 +99,40 @@ def test_falls_back_to_italian_when_utility_llm_unavailable():
     graph = RagGraph.__new__(RagGraph)
 
     assert graph._resolve_target_language("qualcosa") == "Italian"
+
+
+def test_node_writes_the_language_of_the_query_into_the_state():
+    graph = _graph_with_llm_returning('{"language": "Spanish"}')
+
+    state = graph.resolve_language_node(GraphState(current_query="Hablame de DGS"))
+
+    assert state.target_lang == "Spanish"
+    prompt = graph.utility_llm.call_args.args[0].to_string()
+    assert "Hablame de DGS" in prompt
+
+
+def test_node_falls_back_to_italian_when_resolution_fails():
+    graph = _graph_with_llm_returning("this is not a json object")
+
+    state = graph.resolve_language_node(GraphState(current_query="qualcosa"))
+
+    assert state.target_lang == "Italian"
+
+
+def test_node_output_never_reaches_the_messages_stream():
+    # The filter on the node name in stream() is not what keeps it out: run
+    # with a model that streams for real, nothing of it is emitted.
+    graph = _graph_with_llm_returning(None)
+    graph.utility_llm = FakeListChatModel(responses=['{"language": "English"}'])
+    workflow = StateGraph(GraphState)
+    workflow.add_node("resolve_language", graph.resolve_language_node)
+    workflow.set_entry_point("resolve_language")
+    workflow.add_edge("resolve_language", END)
+    compiled = workflow.compile()
+
+    messages = list(
+        compiled.stream({"current_query": "Tell me about DGS"}, stream_mode="messages")
+    )
+
+    assert messages == []
+    assert compiled.invoke({"current_query": "Tell me"})["target_lang"] == "English"

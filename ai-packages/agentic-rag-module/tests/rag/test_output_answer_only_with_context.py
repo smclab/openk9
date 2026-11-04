@@ -112,7 +112,6 @@ def test_stream_relays_the_no_context_message():
     graph.user_id = None
     graph.chat_id = None
     graph.rag_type = "SIMPLE_GENERATE"
-    graph._resolve_target_language = MagicMock(return_value="Italian")
     graph.graph = MagicMock()
     graph.graph.stream.return_value = []
     graph.graph.get_state.return_value = SimpleNamespace(

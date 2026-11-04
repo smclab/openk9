@@ -52,7 +52,6 @@ def _graph(chunk_texts, retrieve_citations, guardrail_type=0):
     ]
     graph.graph.get_state.return_value = SimpleNamespace(values={})
 
-    graph._resolve_target_language = MagicMock(return_value="Italian")
     graph._llm_output_guardrail = MagicMock(return_value="NONE")
     return graph
 

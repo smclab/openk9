@@ -65,7 +65,6 @@ def _graph(guardrail_type, chunk_texts, verdicts, interval=2):
     ]
     graph.graph.get_state.return_value = SimpleNamespace(values={})
 
-    graph._resolve_target_language = MagicMock(return_value="Italian")
     graph._llm_output_guardrail = MagicMock(side_effect=verdicts)
     return graph
 

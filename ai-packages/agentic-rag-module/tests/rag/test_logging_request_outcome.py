@@ -50,7 +50,6 @@ def _graph(chunk_texts=(ANSWER,), state_values=None, stream_exception=None):
     graph.output_guardrail_type = 0
     graph.config = {}
     graph.chat_sequence_number = 1
-    graph._resolve_target_language = MagicMock(return_value="Italian")
     graph.graph = MagicMock()
 
     if stream_exception is not None:
