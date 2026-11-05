@@ -118,7 +118,8 @@ used by the Tenant Manager Admin UI (see [First configuration](../first-configur
 ### Check the client
 
 An authorization request without `code_challenge` must end with an error
-(`invalid_request`, missing `code_challenge`) instead of the login page:
+(`invalid_request`, `Missing parameter: code_challenge_method`) instead of the
+login page:
 
 ```bash
 curl -s -o /dev/null -w '%{http_code} %{redirect_url}\n' \
