@@ -123,7 +123,14 @@ def test_the_search_runs_on_the_domain_index_of_the_tenant(tenant):
 # --------------------------------------------------------------------------- #
 @pytest.mark.parametrize(
     "answer, domains",
-    [("billing", ["billing"]), ("", []), (["billing", "how-to"], ["billing", "how-to"])],
+    [
+        ("billing", ["billing"]),
+        ("", []),
+        (["billing", "how-to"], ["billing", "how-to"]),
+        # a name that is not a domain of the tenant would filter out every document
+        ("invoices", []),
+        (["billing", "invoices"], ["billing"]),
+    ],
 )
 def test_the_model_answer_becomes_a_list_of_domains(answer, domains):
     prompts = []

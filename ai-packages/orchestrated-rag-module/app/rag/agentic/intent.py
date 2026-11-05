@@ -86,7 +86,8 @@ def intent_detection_enabled(rag_type: str, rag_configuration: dict) -> bool:
 
 
 async def classify_domain_with_llm(model, query: str, possible_domains) -> List[str]:
-    """The domains the model gives to ``query`` among ``possible_domains``."""
+    """The domains the model gives to ``query`` among ``possible_domains``. A name
+    that is not among them is dropped: as a filter it would match no document."""
     from pydantic_ai import Agent
 
     agent = Agent(
@@ -95,7 +96,11 @@ async def classify_domain_with_llm(model, query: str, possible_domains) -> List[
         system_prompt=DOMAIN_INSTRUCTION.format(possible_domains=list(possible_domains)),
     )
     result = await agent.run(query)
-    return result.output.domain or []
+    answer = result.output.domain or []
+    domains = [d for d in answer if d in possible_domains]
+    if domains != answer:
+        logger.warning(f"[input_domain] model domains {answer} not of the tenant: kept {domains}")
+    return domains
 
 
 async def detect_domains(*, query: str, deps: AgenticDeps) -> tuple[list[str], list[str]]:
