@@ -264,7 +264,7 @@ After generating it, changes need to be made to the enricher to create a concret
         if (data.getReplyTo() == null || data.getReplyTo().isEmpty()) {
             throw new IllegalArgumentException("replyTo is null or empty");
         }
-        vertx.executeBlocking(() -> enrich(data.getPayload(), targetField(data)))
+        vertx.executeBlocking(() -> enrich(data.getPayload(), targetField(data)), false)
                 .onSuccess(payload -> callBackClient.callback(payload, data.getReplyTo()))
                 .onFailure(e -> LOGGER.error("Error enriching data", e));
         ProcessResponseDTO responseDTO = new ProcessResponseDTO();

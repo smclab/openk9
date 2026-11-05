@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,7 +25,9 @@ import java.util.Map;
 public class ProcessResourceImpl implements ProcessResource {
 
     private static final Logger LOGGER = Logger.getLogger(ProcessResourceImpl.class);
-    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
     private static final String DEFAULT_TARGET_FIELD = "enrichExample";
 
 #if ($implementationType == "async")
@@ -39,8 +42,9 @@ public class ProcessResourceImpl implements ProcessResource {
         if (data.getReplyTo() == null || data.getReplyTo().isEmpty()) {
             throw new IllegalArgumentException("replyTo is null or empty");
         }
-        // Accept the request at once, then send the enriched payload to OpenK9 when it is ready
-        vertx.executeBlocking(() -> enrich(data.getPayload(), targetField(data)))
+        // Accept the request at once, then send the enriched payload to OpenK9 when it is ready.
+        // Not ordered: documents are independent, so a slow one must not hold back the others.
+        vertx.executeBlocking(() -> enrich(data.getPayload(), targetField(data)), false)
                 .onSuccess(payload -> callBackClient.callback(payload, data.getReplyTo()))
                 .onFailure(e -> LOGGER.error("Error enriching data", e));
         ProcessResponseDTO responseDTO = new ProcessResponseDTO();
@@ -84,7 +88,10 @@ public class ProcessResourceImpl implements ProcessResource {
             try {
                 // The staging URL is a bearer credential: never log it
                 HttpResponse<byte[]> response = HTTP_CLIENT.send(
-                        HttpRequest.newBuilder(URI.create(stagingUrl.toString())).GET().build(),
+                        HttpRequest.newBuilder(URI.create(stagingUrl.toString()))
+                                .timeout(Duration.ofSeconds(30))
+                                .GET()
+                                .build(),
                         HttpResponse.BodyHandlers.ofByteArray());
                 if (response.statusCode() >= 300) {
                     LOGGER.warnf("Binary %s not read: HTTP %d", binary.get("name"), response.statusCode());
