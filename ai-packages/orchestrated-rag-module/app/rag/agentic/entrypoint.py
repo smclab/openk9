@@ -35,6 +35,8 @@ import asyncio
 import json
 import time
 
+from fastapi import HTTPException
+
 from app.external_services.grpc.grpc_client import get_embedding_model_configuration
 from app.rag.agentic import guardrails, intent, orchestrator, retrieval, streaming
 from app.rag.agentic.deps import AgenticDeps
@@ -407,7 +409,11 @@ async def get_agentic_rag(
             yield event
 
     except Exception as e:  # noqa: BLE001
-        logger.error(f"Unexpected error: {e} {context}")
+        if isinstance(e, HTTPException) and e.status_code == 401:
+            # a refused request, not a fault of the module
+            logger.warning(f"[request] refused: {e.detail} {context}")
+        else:
+            logger.error(f"Unexpected error: {e} {context}")
         outcome = "ERROR"
         detail = str(e).lower()
         if any(marker in detail for marker in CONTENT_POLICY_MARKERS):

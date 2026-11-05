@@ -24,6 +24,7 @@ documents, and an anonymous user, who has none, is refused.
 
 import asyncio
 import json
+import logging
 from unittest.mock import MagicMock
 
 import pytest
@@ -314,6 +315,28 @@ def test_the_flag_without_a_user_is_refused(monkeypatch):
 
     assert events == [{"chunk": "Unexpected error", "type": "ERROR", "message": "Invalid token."}]
     assert captured == {}
+
+
+def test_the_refusal_is_not_logged_as_an_error(monkeypatch, caplog):
+    with caplog.at_level(logging.INFO, logger="app"):
+        _request(monkeypatch, uploaded=True, user_id=None)
+
+    refusals = [r for r in caplog.records if r.levelno >= logging.WARNING]
+    assert [r.levelno for r in refusals] == [logging.WARNING]
+    assert "Invalid token." in refusals[0].getMessage()
+
+
+def test_a_failing_service_is_still_logged_as_an_error(monkeypatch, caplog):
+    from fastapi import HTTPException
+
+    def failing(**_):
+        raise HTTPException(status_code=500, detail="Unexpected error")
+
+    monkeypatch.setattr(retrieval, "uploaded_documents_retrieve_fn", failing)
+    with caplog.at_level(logging.INFO, logger="app"):
+        _request(monkeypatch, uploaded=True, user_id="user-1")
+
+    assert [r.levelno for r in caplog.records if r.levelno >= logging.WARNING] == [logging.ERROR]
 
 
 def test_the_flag_is_saved_with_the_turn(monkeypatch):
