@@ -67,13 +67,9 @@ consegna il "Report".
   Vale anche per quello che scopri strada facendo e che "Da fornire" non 
   elenca: segnalalo, è un buco della descrizione.
 - I passi sono le voci di "Ambiente e configurazione" e i punti dei "Casi". 
-  Li esegui tu, tranne quelli che iniziano con uno di questi tre marcatori:
+  Li esegui tu, tranne quelli che iniziano con uno di questi due marcatori:
   - **[azione-reviewer]**: lo fa il reviewer, di solito nel pannello. 
     Chiediglielo e aspetta che ti dica com'è andata.
-  - **[permesso-reviewer]**: il comando scrive dati. 
-    Mostralo e lancialo solo dopo un ok del reviewer. 
-    L'import dell'export del tenant è sempre **[permesso-reviewer]**, anche 
-    se non è marcato.
   - **[lettura-reviewer]**: il reviewer legge un esito, nel pannello o nei 
     log, e ti dice cosa vede. 
     Chiediglielo senza anticipare l'atteso: "che stato vedi?", non 
@@ -103,8 +99,7 @@ consegna il "Report".
 (Come arrivare al punto in cui i casi si possono eseguire. 
 Chi non ha mai configurato questa parte del prodotto deve potercela fare. 
 Compila le voci che servono, cancella quelle che non c'entrano. 
-Marca i passi con **[azione-reviewer]** o **[permesso-reviewer]** come nei 
-Casi.)
+Marca i passi con **[azione-reviewer]** come nei Casi.)
 
 - **Avvio:** (i comandi in ordine: `./k9.sh up ...`, build delle immagini 
   toccate)
@@ -137,9 +132,8 @@ eseguiti; poi i casi in più emersi in sviluppo, marcati come tali.
 Per ogni caso: i passi, cosa DEVE succedere, dove si osserva. 
 Dichiarare l'attesa prima di eseguire è quello che rende il caso capace di 
 fallire. 
-Un passo che fa il reviewer inizia con **[azione-reviewer]**; un comando che 
-scrive dati inizia con **[permesso-reviewer]**; un esito che legge il reviewer 
-inizia con **[lettura-reviewer]**. 
+Un passo che fa il reviewer inizia con **[azione-reviewer]**; un esito che 
+legge il reviewer inizia con **[lettura-reviewer]**. 
 Gli altri li esegue l'agente senza chiedere. 
 Almeno un caso ha un passo **[lettura-reviewer]** sull'Allora principale 
 della issue: almeno un esito il reviewer lo controlla con i suoi occhi. 
@@ -151,7 +145,7 @@ scrivi "Nessuna lettura del reviewer" e il perché.
 **C1 — Riprocessare non duplica.**
 - Conta i chunk sull'indice, aggregati per `contentId`.
 - **[azione-reviewer]** Ricarica lo stesso file dal pannello.
-- **[permesso-reviewer]** Lancia il reindex del datasource.
+- Lancia il reindex del datasource.
 - **[lettura-reviewer]** Cerca il titolo del file nel frontend di ricerca e 
   conta i risultati.
 - Atteso: un solo risultato per il file, lo stesso numero di chunk di prima e 
