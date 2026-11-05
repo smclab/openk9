@@ -376,6 +376,19 @@ class CreateDataIndexGateTest {
 	}
 
 	@Test
+	@DisplayName("Should accept a language of an I18N field in the header")
+	void should_accept_a_language_of_an_i18n_field_in_the_header() {
+		// label.i18n.it_IT is in the payload as a value, like a child of an object
+		var fixture = headerFixture();
+
+		var dataIndex = createDataIndex(
+			headerDataIndex(fixture, List.of(fixture.labelItalianId())));
+
+		assertEquals(
+			List.of(fixture.labelItalianId()), chunkHeaderFieldIds(dataIndex));
+	}
+
+	@Test
 	@DisplayName("Should keep the header fields in the order they were chosen")
 	void should_persist_the_header_in_the_chosen_order() {
 		// two header fields in reverse id order
@@ -410,8 +423,8 @@ class CreateDataIndexGateTest {
 	/**
 	 * Creates the docTypes the header tests choose their fields from: a
 	 * manual with the text to embed, value fields, a keyword sub-field, an
-	 * object with a child and an I18N field; and a web docType the
-	 * dataIndexes of the tests do not hold.
+	 * object with a child and an I18N field with a language; and a web docType
+	 * the dataIndexes of the tests do not hold.
 	 */
 	private HeaderFixture headerFixture() {
 		var manualId = createDocType(MANUAL_DOC_TYPE);
@@ -422,13 +435,15 @@ class CreateDataIndexGateTest {
 		var metaId = addField(manualId, "meta", FieldType.OBJECT);
 		var metaAuthorId = addSubField(metaId, "author", FieldType.KEYWORD);
 		var labelId = addField(manualId, "label", FieldType.I18N);
+		var labelI18nId = addSubField(labelId, "i18n", FieldType.OBJECT);
+		var labelItalianId = addSubField(labelI18nId, "it_IT", FieldType.TEXT);
 
 		var webId = createDocType(WEB_DOC_TYPE);
 		var webTitleId = addField(webId, "title", FieldType.TEXT);
 
 		return new HeaderFixture(
 			manualId, contentId, titleId, titleKeywordId, categoryId, metaId,
-			metaAuthorId, labelId, webTitleId);
+			metaAuthorId, labelId, labelItalianId, webTitleId);
 	}
 
 	private DataIndexDTO headerDataIndex(
@@ -588,6 +603,7 @@ class CreateDataIndexGateTest {
 		long metaId,
 		long metaAuthorId,
 		long labelId,
+		long labelItalianId,
 		long webTitleId
 	) {}
 

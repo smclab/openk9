@@ -1425,12 +1425,16 @@ public class DataIndexService
 
 	/**
 	 * Returns the first field above the given one that is not an object, or
-	 * {@code null} when every field above it is one.
+	 * {@code null} when every field above it is one. An I18N field counts as
+	 * an object: its languages are in the payload as values, like the
+	 * children of an object.
 	 */
 	private static DocTypeField notObjectParent(DocTypeField field) {
 		var parent = field.getParentDocTypeField();
 
-		while (parent != null && parent.getFieldType() == FieldType.OBJECT) {
+		while (parent != null
+			&& (parent.getFieldType() == FieldType.OBJECT
+				|| parent.getFieldType() == FieldType.I18N)) {
 			parent = parent.getParentDocTypeField();
 		}
 
