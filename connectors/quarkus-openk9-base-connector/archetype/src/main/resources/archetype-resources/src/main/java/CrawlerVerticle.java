@@ -37,7 +37,8 @@ public class CrawlerVerticle extends AbstractVerticle {
                 producer.write(createLastIngestionDTO(invokeRequest));
                 undeployVerticle();
             } else if (result.failed()) {
-                producer.write(createHaltIngestionDTO(invokeRequest));
+                LOGGER.error("Worker failed, sending HALT", result.cause());
+                producer.write(createHaltIngestionDTO(invokeRequest, result.cause()));
                 undeployVerticle();
             }
         });
@@ -48,7 +49,7 @@ public class CrawlerVerticle extends AbstractVerticle {
         LOGGER.info("Verticle closed: " + deploymentID());
     }
 
-    private IngestionDTO createHaltIngestionDTO(InvokeRequest invokeRequest) {
+    private IngestionDTO createHaltIngestionDTO(InvokeRequest invokeRequest, Throwable cause) {
         IngestionDTO ingestionDTO = new IngestionDTO();
         ingestionDTO.setContentId(UUID.randomUUID());
         ingestionDTO.setDatasourceId(invokeRequest.getDatasourceId());
@@ -56,6 +57,9 @@ public class CrawlerVerticle extends AbstractVerticle {
         ingestionDTO.setTenantId(invokeRequest.getTenantId());
         ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
         ingestionDTO.setDatasourcePayload(new DatasourcePayload());
+        // OpenK9 stores the HALT rawContent as the scheduling error: send only the exception type,
+        // since its message may hold source URLs or credentials. The full cause is in the log.
+        ingestionDTO.setRawContent("Worker failed: " + cause.getClass().getSimpleName());
         ingestionDTO.setType(PayloadType.HALT);
         return ingestionDTO;
     }

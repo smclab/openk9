@@ -205,7 +205,7 @@ These classes implement the REST classes from the library and adapt their behavi
   }
   ```
    Each top-level key of `datasourcePayload` becomes a document type of the datasource when OpenK9 reads this sample, so it should have the same keys as the documents the connector sends.  
-   `type` is `DOCUMENT`, `PARTIAL_DOCUMENT` (updates the indexed documents with the same `contentId`), `LAST` or `HALT`; `CrawlerVerticle` sends `LAST` and `HALT`.
+   `type` is `DOCUMENT`, `PARTIAL_DOCUMENT` (updates the indexed documents with the same `contentId`), `LAST` or `HALT`; `CrawlerVerticle` sends `LAST` and `HALT`; the `rawContent` of a `HALT` becomes the error of the scheduling.
 
 
 ### Connector Base Classes
@@ -253,7 +253,7 @@ They are responsible for crawling data and sending them one by one to OpenK9 asy
     A `Worker` instance, created via `WorkerFactoryImpl` injected in `CrawlingService`, is passed to its constructor.  
     It sets up the producer using the IngestionDTOCodec to send data to `HttpPublisherVerticle`.  
     The _work_ method of `WorkerImpl` is executed on a worker thread via `executeBlocking`: returning normally completes it, throwing an exception fails it.  
-    If it completes successfully, the verticle is undeployed.
+    When it completes, the verticle sends `LAST`; when it fails, it logs the cause and sends `HALT` with only the exception type as `rawContent`. Then the verticle is undeployed.
 
 
 - **HttpPublisherVerticle**  
