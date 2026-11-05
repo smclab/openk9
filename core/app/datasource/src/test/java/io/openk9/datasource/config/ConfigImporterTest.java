@@ -1869,6 +1869,46 @@ public class ConfigImporterTest {
 	}
 
 	@Test
+	void create_never_persists_the_secret_of_the_embedding_configuration() {
+		// 1. A new datasource whose embedding secret arrives already redacted
+		ConfigEntity entity = new ConfigEntity(
+			"DATASOURCE-NEW",
+			ConfigEntityType.DATASOURCE,
+			NEW_DATASOURCE_NAME,
+			DatasourceDTO.builder()
+				.name(NEW_DATASOURCE_NAME)
+				.embeddingJsonConfig(
+					"{\"url\":\"https://x\",\"password\":\""
+						+ ConfigRedactor.PLACEHOLDER + "\"}")
+				.build(),
+			new LinkedHashMap<>(),
+			List.of("embeddingJsonConfig.password"));
+		entity.setAttributeKeys(Set.of("name", "embeddingJsonConfig"));
+
+		try {
+			// 2. There is no target to restore it from
+			ImportReport report = configImporter
+				.importConfig(
+					TENANT_ID,
+					new ConfigPackage(
+						ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(entity)),
+					ImportMode.SKIP, false)
+				.await().indefinitely();
+
+			assertTrue(report.applied(), "blocking: " + report.blockingErrors());
+
+			// 3. The datasource keeps the rest of the configuration, and neither
+			// the placeholder nor a secret is stored
+			String config = loadDatasource(NEW_DATASOURCE_NAME).getEmbeddingJsonConfig();
+			assertTrue(config.contains("https://x"), config);
+			assertFalse(config.contains(ConfigRedactor.PLACEHOLDER), config);
+		}
+		finally {
+			removeDatasource(NEW_DATASOURCE_NAME);
+		}
+	}
+
+	@Test
 	void a_knn_datasource_without_a_field_to_embed_blocks_the_import() {
 		// a datasource that asks for a knn index but says nothing of the field
 		ConfigPackage pkg = packageWithNewDatasource(
