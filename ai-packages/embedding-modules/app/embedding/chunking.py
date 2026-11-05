@@ -49,7 +49,12 @@ class UnsupportedChunkType(ValueError):
 HEADER_SHARE_MAX = 0.25
 
 
-class HeaderTooLong(ValueError):
+class ChunkHeaderError(ValueError):
+    """A chunk header the chunker cannot make room for: the request is
+    invalid, and sending it again gives the same error."""
+
+
+class HeaderTooLong(ChunkHeaderError):
     """A chunk header longer than HEADER_SHARE_MAX of chunk_size."""
 
     def __init__(
@@ -57,8 +62,22 @@ class HeaderTooLong(ValueError):
     ):
         super().__init__(
             f"The chunk header is {length} {unit} long, over the limit of "
-            f"{limit} {unit} (25% of chunk_size {chunk_size}); "
+            f"{limit} {unit} ({HEADER_SHARE_MAX:.0%} of chunk_size {chunk_size}); "
             f"header fields: {', '.join(fields)}"
+        )
+
+
+class HeaderLeavesNoRoomForOverlap(ChunkHeaderError):
+    """A chunk_size that, reduced by the chunk header, is no longer above
+    chunk_overlap."""
+
+    def __init__(
+        self, length: int, unit: str, chunk_size: int, overlap: int, fields: list[str]
+    ):
+        super().__init__(
+            f"The chunk header is {length} {unit} long: chunk_size {chunk_size} "
+            f"minus the header leaves {chunk_size - length} {unit}, not more than "
+            f"chunk_overlap {overlap}; header fields: {', '.join(fields)}"
         )
 
 
@@ -175,8 +194,10 @@ def build_header_chunker(
     """Builds the chunker of build_chunker with room for the chunk header:
     its chunk_size is reduced by the length of the header, so header plus
     chunk stays within chunk_size. Raises HeaderTooLong when the header
-    takes more than HEADER_SHARE_MAX of chunk_size. A chunker without
-    chunk_size is built as it is, with a warning."""
+    takes more than HEADER_SHARE_MAX of chunk_size, and
+    HeaderLeavesNoRoomForOverlap when the reduced chunk_size is no longer
+    above the chunk_overlap of the jsonConfig. A chunker without chunk_size
+    is built as it is, with a warning."""
     if not header:
         return build_chunker(chunk_type, json_config)
 
@@ -198,6 +219,16 @@ def build_header_chunker(
 
     if length > limit:
         raise HeaderTooLong(length, limit, header_unit(chunk_type), size, fields)
+
+    # only an int overlap of the jsonConfig is checked: a float is a share of
+    # chunk_size and shrinks with it, the default overlap of a chunker is not
+    # in the arguments, and an overlap not below the whole chunk_size is a
+    # configuration broken without the header too, left to the chunker
+    overlap = arguments.get("chunk_overlap")
+    if isinstance(overlap, int) and size - length <= overlap < size:
+        raise HeaderLeavesNoRoomForOverlap(
+            length, header_unit(chunk_type), size, overlap, fields
+        )
 
     # semantic and late chunkers load their model twice here: accepted, the
     # header is known only per request

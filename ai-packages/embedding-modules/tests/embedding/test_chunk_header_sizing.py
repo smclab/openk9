@@ -124,3 +124,55 @@ def test_header_and_chunk_stay_within_chunk_size():
 
     assert len(chunks) > 1
     assert all(len(header + chunk) <= 512 for chunk in chunks)
+
+
+def test_header_too_long_names_the_share_of_header_share_max(monkeypatch):
+    monkeypatch.setattr(chunking, "HEADER_SHARE_MAX", 0.2)
+    header = "title: " + "x" * 94 + "\n"  # 102 characters
+
+    with pytest.raises(chunking.HeaderTooLong) as error:
+        chunking.build_header_chunker(1, {"chunk_size": 400}, header, ["title"])
+
+    message = str(error.value)
+    assert "80 characters" in message
+    assert "20% of chunk_size 400" in message
+
+
+@pytest.mark.parametrize("chunk_type", [1, 5])
+def test_overlap_left_without_room_by_the_header_is_refused(chunk_type):
+    header = "title: " + "x" * 13 + "\n"  # 21, within 25% of 100
+
+    with pytest.raises(chunking.ChunkHeaderError) as error:
+        chunking.build_header_chunker(
+            chunk_type,
+            {"chunk_size": 100, "chunk_overlap": 90},
+            header,
+            ["title"],
+        )
+
+    message = str(error.value)
+    assert "chunk_size 100" in message
+    assert "leaves 79" in message
+    assert "chunk_overlap 90" in message
+    assert "title" in message
+
+
+def test_overlap_share_shrinks_with_the_chunk_size():
+    # a float overlap is a share of chunk_size for the token chunker
+    chunker = chunking.build_header_chunker(
+        2, {"chunk_size": 100, "chunk_overlap": 0.5}, HEADER, ["title"]
+    )
+
+    size = 100 - chunker.tokenizer.count_tokens(HEADER)
+    assert chunker.chunk_size == size
+    assert chunker.chunk_overlap == int(0.5 * size)
+
+
+def test_overlap_not_below_the_whole_chunk_size_is_left_to_the_chunker():
+    # broken without the header too: the error is the chunker's own
+    with pytest.raises(ValueError) as error:
+        chunking.build_header_chunker(
+            5, {"chunk_size": 100, "chunk_overlap": 100}, HEADER, ["title"]
+        )
+
+    assert not isinstance(error.value, chunking.ChunkHeaderError)

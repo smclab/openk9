@@ -151,6 +151,26 @@ def test_a_header_too_long_is_invalid_argument(make_stub):
     assert calls == []
 
 
+def test_an_overlap_left_without_room_is_invalid_argument(make_stub):
+    calls = []
+    stub = make_stub(build_pipelines=_recording_pipelines(calls))
+
+    request = _request(
+        text="primo",
+        chunk_header=_header(("title", "x" * 13)),
+        json_config={"chunk_size": 100, "chunk_overlap": 90},
+    )
+
+    with pytest.raises(grpc.RpcError) as error:
+        list(stub.EmbedContent(request))
+
+    assert error.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    details = error.value.details()
+    assert "chunk_overlap 90" in details
+    assert "title" in details
+    assert calls == []
+
+
 def test_a_chunker_error_stays_internal(make_stub):
     def broken_chunker(chunk_type, config):
         raise RuntimeError("chunker broken")

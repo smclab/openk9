@@ -714,7 +714,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                     for piece in pieces:
                         number += 1
                         yield to_chunk_message(piece, number, total, vector_data_type)
-        except chunking.HeaderTooLong as error:
+        except chunking.ChunkHeaderError as error:
             context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(error))
         except Exception as error:
             logger.exception("EmbedContent text error")
