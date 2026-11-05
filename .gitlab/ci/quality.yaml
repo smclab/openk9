@@ -126,6 +126,30 @@ Trivy FS Java:
     # NB: no tag rule (deps identical to main/N.N.x) and no porting-MR rule
     # (porting → N.N.x stays compile-only — see PLAN §5.5 context 6).
 
+# Checkstyle Report
+# Informational only: the ruleset lives in core/checkstyle/checkstyle.xml and the plugin
+# never fails the build. The vendor module is outside the checked perimeter because it does
+# not inherit the plugin configuration from core/pom.xml.
+Checkstyle Report:
+  stage: quality
+  image: maven:3.9.6-eclipse-temurin-21
+  needs: []
+  allow_failure: true
+  script:
+    - cd core
+    - mvn -B checkstyle:checkstyle -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+        -pl '!../vendor/hibernate-rx-multitenancy,!../vendor/hibernate-rx-multitenancy/runtime,!../vendor/hibernate-rx-multitenancy/deployment'
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - core/**/target/checkstyle-result.xml
+      - core/**/target/site/checkstyle.html
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *java_files_list
+
 # SonarQube Check
 SonarQube Check:
   stage: quality
