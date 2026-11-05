@@ -878,15 +878,26 @@ class ReindexDataIndexTest {
 	}
 
 	/**
-	 * Two fields other than the one to embed, in reverse id order, so that a
-	 * header that loses its order on the way does not pass unnoticed.
+	 * Two root text fields other than the one to embed, in reverse id order,
+	 * so that a header that loses its order on the way does not pass
+	 * unnoticed.
 	 */
 	private List<Long> headerFieldIds() {
+		var embeddingFieldId = anyDocTypeFieldId();
+
 		return sessionFactory.withTransaction((s, t) -> s
-				.createQuery("select f.id from DocTypeField f order by f.id", Long.class)
-				.setMaxResults(3)
+				.createQuery(
+					"select f.id from DocTypeField f" +
+					" where f.parentDocTypeField is null" +
+					" and f.fieldType in (:fieldTypes) and f.id <> :embeddingFieldId" +
+					" order by f.id",
+					Long.class
+				)
+				.setParameter("fieldTypes", List.of(FieldType.TEXT, FieldType.KEYWORD))
+				.setParameter("embeddingFieldId", embeddingFieldId)
+				.setMaxResults(2)
 				.getResultList()
-				.map(ids -> List.of(ids.get(2), ids.get(1)))
+				.map(ids -> List.of(ids.get(1), ids.get(0)))
 			)
 			.await()
 			.indefinitely();

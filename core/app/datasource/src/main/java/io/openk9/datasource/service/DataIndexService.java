@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -57,6 +58,7 @@ import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
@@ -80,6 +82,18 @@ public class DataIndexService
 
 	public static final String DETAILS_FIELD = "details";
 	private static final Logger log = Logger.getLogger(DataIndexService.class);
+	// the field types whose value is not one line of text: they cannot be a
+	// field of the chunk header
+	private static final Set<FieldType> NO_VALUE_FIELD_TYPES = EnumSet.of(
+		FieldType.OBJECT,
+		FieldType.NESTED,
+		FieldType.FLATTENED,
+		FieldType.I18N,
+		FieldType.BINARY,
+		FieldType.KNN_VECTOR,
+		FieldType.DENSE_VECTOR,
+		FieldType.SPARSE_VECTOR
+	);
 
 	@Inject
 	DocTypeFieldService docTypeFieldService;
@@ -291,6 +305,7 @@ public class DataIndexService
 		}
 
 		return attachChunkHeaderFields(session, dataIndex)
+			.flatMap(unused -> checkChunkHeaderFields(dataIndex))
 			.flatMap(unused -> resolveEmbeddingModel(session, dataIndex))
 			.flatMap(embeddingModel -> merge(session, dataIndex)
 				.call(merged -> createDataIndexTemplate(
@@ -1270,6 +1285,11 @@ public class DataIndexService
 			return Uni.createFrom().item(new ArrayList<>());
 		}
 
+		if (chunkHeaderFieldIds.stream().anyMatch(Objects::isNull)) {
+			return Uni.createFrom().failure(
+				new ValidationException("chunkHeaderFieldIds cannot hold null."));
+		}
+
 		return docTypeFieldService
 			.findByIds(session, new LinkedHashSet<>(chunkHeaderFieldIds))
 			.map(found -> {
@@ -1320,6 +1340,101 @@ public class DataIndexService
 		return findChunkHeaderFields(session, ids)
 			.invoke(dataIndex::setChunkHeaderFields)
 			.replaceWithVoid();
+	}
+
+	/**
+	 * Refuses the header fields whose value the document does not hold as one
+	 * line of text, all of them in one error.
+	 */
+	private static Uni<Void> checkChunkHeaderFields(DataIndex dataIndex) {
+		var problems = chunkHeaderFieldProblems(dataIndex);
+
+		if (problems.isEmpty()) {
+			return Uni.createFrom().voidItem();
+		}
+
+		return Uni.createFrom().failure(new ValidationException(String.format(
+			"Cannot create the dataIndex %s: chunkHeaderFields cannot hold %s.",
+			dataIndex.getName(),
+			String.join("; ", problems)
+		)));
+	}
+
+	/**
+	 * Describes the header fields the document cannot give a value for: a
+	 * field of a docType the dataIndex does not hold, a field under one that
+	 * is not an object (a multi-field such as {@code title.keyword} has no
+	 * path in the document, a field under a nested one is a list), and the
+	 * types that hold an object, translations, a binary or a vector.
+	 */
+	private static List<String> chunkHeaderFieldProblems(DataIndex dataIndex) {
+		var chunkHeaderFields = dataIndex.getChunkHeaderFields();
+
+		if (chunkHeaderFields == null || chunkHeaderFields.isEmpty()) {
+			return List.of();
+		}
+
+		var docTypeIds = Objects.requireNonNullElseGet(
+				dataIndex.getDocTypes(), Set::<DocType>of)
+			.stream()
+			.map(DocType::getId)
+			.collect(Collectors.toSet());
+
+		var problems = new ArrayList<String>();
+
+		for (DocTypeField field : chunkHeaderFields) {
+			var docType = docTypeOf(field);
+			var notObjectParent = notObjectParent(field);
+
+			if (docType == null || !docTypeIds.contains(docType.getId())) {
+				problems.add(String.format(
+					"%s, of a docType the dataIndex does not hold", field.getPath()));
+			}
+			else if (notObjectParent != null) {
+				problems.add(String.format(
+					"%s, under the %s field %s",
+					field.getPath(),
+					notObjectParent.getFieldType(),
+					notObjectParent.getPath()
+				));
+			}
+			else if (NO_VALUE_FIELD_TYPES.contains(field.getFieldType())) {
+				problems.add(String.format(
+					"%s, a field of type %s", field.getPath(), field.getFieldType()));
+			}
+		}
+
+		return problems;
+	}
+
+	/**
+	 * Returns the docType of a field, taken from its root when the field has
+	 * none of its own.
+	 */
+	private static DocType docTypeOf(DocTypeField field) {
+		var current = field;
+
+		while (current.getDocType() == null
+			&& current.getParentDocTypeField() != null) {
+
+			current = current.getParentDocTypeField();
+		}
+
+		return current.getDocType();
+	}
+
+	/**
+	 * Returns the first field above the given one that is not an object, or
+	 * {@code null} when every field above it is one.
+	 */
+	private static DocTypeField notObjectParent(DocTypeField field) {
+		var parent = field.getParentDocTypeField();
+
+		while (parent != null && parent.getFieldType() == FieldType.OBJECT) {
+			parent = parent.getParentDocTypeField();
+		}
+
+		return parent;
 	}
 
 	/**
