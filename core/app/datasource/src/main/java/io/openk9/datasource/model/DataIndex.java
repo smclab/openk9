@@ -134,7 +134,7 @@ public class DataIndex extends K9Entity {
 	@Ignore
 	private String settings;
 
-	@Column(name = "knn_index", updatable = false)
+	@Column(name = "knn_index", nullable = false, updatable = false)
 	@Immutable
 	private Boolean knnIndex = DEFAULT_KNN_INDEX;
 
@@ -170,6 +170,10 @@ public class DataIndex extends K9Entity {
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "embedding_json_config")
 	private String embeddingJsonConfig = DEFAULT_EMBEDDING_JSON_CONFIG;
+
+	public void setKnnIndex(Boolean knnIndex) {
+		this.knnIndex = Objects.requireNonNullElse(knnIndex, DEFAULT_KNN_INDEX);
+	}
 
 	public void setChunkType(EmbeddingOuterClass.ChunkType chunkType) {
 		this.chunkType =

@@ -114,7 +114,7 @@ class NewDataIndexTest {
 		assertEquals(datasource, newDataIndex.getDatasource());
 		assertFalse(newDataIndex.getKnnIndex());
 		assertNull(newDataIndex.getEmbeddingDocTypeField());
-		assertNull(newDataIndex.getSettings());
+		assertEquals("{}", newDataIndex.getSettings());
 		assertTrue(newDataIndex.getDocTypes().isEmpty());
 		assertTrue(newDataIndex.getChunkHeaderFields().isEmpty());
 	}

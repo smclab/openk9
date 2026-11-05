@@ -59,6 +59,7 @@ public class Datasource extends K9Entity {
 	private static final Boolean DEFAULT_KNN_INDEX = false;
 	private static final Integer DEFAULT_CHUNK_WINDOW_SIZE = 0;
 	private static final String DEFAULT_EMBEDDING_JSON_CONFIG = "{}";
+	private static final String DEFAULT_SETTINGS = "{}";
 	private static final EmbeddingOuterClass.ChunkType DEFAULT_CHUNK_TYPE =
 		EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT;
 	private static final Boolean DEFAULT_PURGEABLE = false;
@@ -191,7 +192,7 @@ public class Datasource extends K9Entity {
 	@Description("The custom settings of the first dataIndex, as a JSON object")
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "settings")
-	private String settings;
+	private String settings = DEFAULT_SETTINGS;
 	@ToString.Exclude
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "embedding_doc_type_field_id", referencedColumnName = "id")
@@ -221,6 +222,10 @@ public class Datasource extends K9Entity {
 	public void setEmbeddingJsonConfig(String embeddingJsonConfig) {
 		this.embeddingJsonConfig = Objects.requireNonNullElse(
 			embeddingJsonConfig, DEFAULT_EMBEDDING_JSON_CONFIG);
+	}
+
+	public void setSettings(String settings) {
+		this.settings = Objects.requireNonNullElse(settings, DEFAULT_SETTINGS);
 	}
 
 	public void setPurgeable(Boolean purgeable) {

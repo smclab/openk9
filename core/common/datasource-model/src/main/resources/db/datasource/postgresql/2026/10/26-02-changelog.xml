@@ -84,6 +84,22 @@
 								 referencedColumnNames="id"/>
 	</changeSet>
 
+	<changeSet id="1793032966-7" author="openk9">
+		<comment>
+			data_index.knn_index was nullable, and the datasource column that
+			receives it is not: a dataIndex without a value is a dataIndex that
+			is not a knn one.
+		</comment>
+		<update tableName="data_index">
+			<column name="knn_index" valueBoolean="false"/>
+			<where>knn_index IS NULL</where>
+		</update>
+		<addDefaultValue tableName="data_index" columnName="knn_index"
+						 columnDataType="BOOLEAN" defaultValueBoolean="false"/>
+		<addNotNullConstraint tableName="data_index" columnName="knn_index"
+							  columnDataType="BOOLEAN"/>
+	</changeSet>
+
 	<changeSet id="1793032966-6" author="openk9">
 		<comment>
 			A datasource that already has a dataIndex takes its shape from the
@@ -120,6 +136,16 @@
 			UPDATE datasource SET embedding_json_config = '{}'
 			WHERE embedding_json_config IS NULL
 		</sql>
+	</changeSet>
+
+	<changeSet id="1793032966-8" author="openk9">
+		<comment>
+			An empty settings is the empty JSON object, as the entity assigns it.
+		</comment>
+		<update tableName="datasource">
+			<column name="settings" value="{}"/>
+			<where>settings IS NULL</where>
+		</update>
 	</changeSet>
 
 </databaseChangeLog>
