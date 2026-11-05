@@ -19,9 +19,13 @@ package io.openk9.datasource.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.NotFoundException;
 
 import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
 import io.openk9.datasource.model.EmbeddingModel;
@@ -44,7 +48,7 @@ public class EmbeddingModelServiceTest {
 	public static final String API_KEY = "EMST.asdfkaslf01432kl4l1";
 	public static final String URL = "https://api.acmeai.com/v1/embeddings";
 
-	private static final String ENTITY_NAME_PREFIX = "EmbeddingModelGraphqlTest - ";
+	private static final String ENTITY_NAME_PREFIX = "EmbeddingModelServiceTest - ";
 	private static final String EMBEDDING_MODEL_ONE_NAME = ENTITY_NAME_PREFIX + "Embedding model 1 ";
 	private static final String JSON_CONFIG_EMPTY = "{}";
 	private static final String PROVIDER = "provider";
@@ -112,6 +116,56 @@ public class EmbeddingModelServiceTest {
 		assertEquals(JSON_CONFIG_EMPTY, embeddingModelOne.getJsonConfig());
 
 		removeEmbeddingModelOne();
+	}
+
+	@Test
+	void should_fail_with_not_found_when_tenant_binding_is_missing() {
+		var embeddingModelOne = createEmbeddingModelOne();
+
+		try {
+			var tenantBindingsBefore = readTenantBindings();
+
+			// The transaction is marked for rollback up front, so the delete is
+			// never committed, whatever the outcome of enable.
+			var exception = assertThrows(
+				NotFoundException.class,
+				() -> sessionFactory
+					.withTransaction((s, t) -> {
+						t.markForRollback();
+
+						return s
+							.createNativeQuery("DELETE FROM tenant_binding")
+							.executeUpdate()
+							.flatMap(deleted -> embeddingModelService.enable(
+								s, embeddingModelOne.getId()));
+					})
+					.await()
+					.indefinitely()
+			);
+
+			assertEquals(
+				"Tenant binding not found create one first",
+				exception.getMessage()
+			);
+
+			assertEquals(tenantBindingsBefore, readTenantBindings());
+		}
+		finally {
+			removeEmbeddingModelOne();
+		}
+	}
+
+	private List<List<Object>> readTenantBindings() {
+		return sessionFactory
+			.withSession(s -> s
+				.createNativeQuery(
+					"SELECT * FROM tenant_binding ORDER BY id", Object[].class)
+				.getResultList())
+			.await()
+			.indefinitely()
+			.stream()
+			.map(Arrays::asList)
+			.toList();
 	}
 
 	private EmbeddingModel createEmbeddingModelOne() {
