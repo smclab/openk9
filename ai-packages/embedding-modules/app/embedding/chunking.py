@@ -188,6 +188,19 @@ def header_unit(chunk_type: int) -> str:
     return "tokens"
 
 
+def whole_overlap(overlap) -> int | None:
+    """The chunk_overlap as an int when it is a whole number of units, also
+    written as a float of at least 1; None for a share or no overlap."""
+    if isinstance(overlap, bool):
+        return None
+    if isinstance(overlap, int):
+        return overlap
+    if isinstance(overlap, float) and overlap >= 1 and overlap.is_integer():
+        return int(overlap)
+
+    return None
+
+
 def build_header_chunker(
     chunk_type: int, json_config: dict, header: str, fields: list[str]
 ):
@@ -220,12 +233,13 @@ def build_header_chunker(
     if length > limit:
         raise HeaderTooLong(length, limit, header_unit(chunk_type), size, fields)
 
-    # only an int overlap of the jsonConfig is checked: a float is a share of
-    # chunk_size and shrinks with it, the default overlap of a chunker is not
-    # in the arguments, and an overlap not below the whole chunk_size is a
+    # only a whole overlap of the jsonConfig is checked, also as a float (the
+    # jsonConfig is a Struct: 90 arrives as 90.0); a share of chunk_size
+    # shrinks with it, the default overlap of a chunker is not in the
+    # arguments, and an overlap not below the whole chunk_size is a
     # configuration broken without the header too, left to the chunker
-    overlap = arguments.get("chunk_overlap")
-    if isinstance(overlap, int) and size - length <= overlap < size:
+    overlap = whole_overlap(arguments.get("chunk_overlap"))
+    if overlap is not None and size - length <= overlap < size:
         raise HeaderLeavesNoRoomForOverlap(
             length, header_unit(chunk_type), size, overlap, fields
         )

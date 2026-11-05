@@ -157,6 +157,18 @@ def test_overlap_left_without_room_by_the_header_is_refused(chunk_type):
     assert "title" in message
 
 
+def test_overlap_of_a_whole_float_is_checked_as_an_int():
+    # chunk_overlap 90 of the jsonConfig arrives as 90.0
+    header = "title: " + "x" * 13 + "\n"
+
+    with pytest.raises(chunking.HeaderLeavesNoRoomForOverlap) as error:
+        chunking.build_header_chunker(
+            2, {"chunk_size": 100.0, "chunk_overlap": 90.0}, header, ["title"]
+        )
+
+    assert "chunk_overlap 90;" in str(error.value)
+
+
 def test_overlap_share_shrinks_with_the_chunk_size():
     # a float overlap is a share of chunk_size for the token chunker
     chunker = chunking.build_header_chunker(

@@ -66,10 +66,10 @@ def _header(*pairs):
     ]
 
 
-def _request(text=None, refs=(), chunk_header=(), json_config=None):
+def _request(text=None, refs=(), chunk_header=(), json_config=None, chunk_type=1):
     request = embedding_pb2.EmbedContentRequest(
         tenantId="mew",
-        chunk=embedding_pb2.RequestChunk(type=1),
+        chunk=embedding_pb2.RequestChunk(type=chunk_type),
         refs=list(refs),
         chunkHeader=list(chunk_header),
     )
@@ -151,7 +151,10 @@ def test_a_header_too_long_is_invalid_argument(make_stub):
     assert calls == []
 
 
-def test_an_overlap_left_without_room_is_invalid_argument(make_stub):
+# the jsonConfig is a Struct: chunk_overlap 90 arrives as 90.0, which the
+# token chunker (type 2) keeps as a float
+@pytest.mark.parametrize("chunk_type", [1, 2])
+def test_an_overlap_left_without_room_is_invalid_argument(make_stub, chunk_type):
     calls = []
     stub = make_stub(build_pipelines=_recording_pipelines(calls))
 
@@ -159,6 +162,7 @@ def test_an_overlap_left_without_room_is_invalid_argument(make_stub):
         text="primo",
         chunk_header=_header(("title", "x" * 13)),
         json_config={"chunk_size": 100, "chunk_overlap": 90},
+        chunk_type=chunk_type,
     )
 
     with pytest.raises(grpc.RpcError) as error:
