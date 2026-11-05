@@ -103,8 +103,8 @@ Parallel discovery is enabled. When the question has SEVERAL independent parts (
 "X vs Y", or multiple distinct sub-topics), decompose it into self-contained sub-questions and issue
 a SINGLE `discover_many` call passing all of them at once — they run in parallel. Use the plain
 `discover` tool only for a genuinely single-topic question. Each sub-result comes back separately
-(labeled by its sub-question); synthesize the final answer across all of them and cite ids from any
-sub-result you used."""
+(labeled by its sub-question); synthesize the final answer across all of them. Put the ids of every
+sub-result you used in `used_document_ids`; do not write document ids in the answer text."""
 
 #: Prompt di default con ``bypass_rag`` attivo, quando il tenant non configura ``prompt_no_rag``.
 #: Stesso testo del ramo ``else`` di ``llm_response_node`` di agentic-rag-module, piu' le istruzioni per
