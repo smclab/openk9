@@ -369,10 +369,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -460,23 +456,14 @@
 							<version>10.21.0</version>
 						</dependency>
 					</dependencies>
-					<executions>
-						<execution>
-							<id>checkstyle-validate</id>
-							<phase>validate</phase>
-							<goals>
-								<goal>check</goal>
-							</goals>
-						</execution>
-					</executions>
+					<!-- Nessun bind a una fase: si esegue a mano con checkstyle:checkstyle -->
 					<configuration>
-						<!-- Usa lo stile Google. Per Sun: sun_checks.xml -->
-						<configLocation>google_checks.xml</configLocation>
+						<configLocation>${maven.multiModuleProjectDirectory}/checkstyle/checkstyle.xml</configLocation>
 
-						<!-- Non blocca la build, emette solo warning -->
+						<!-- Solo report: non blocca mai la build -->
 						<failOnViolation>false</failOnViolation>
+						<failsOnError>false</failsOnError>
 						<logViolationsToConsole>true</logViolationsToConsole>
-						<violationSeverity>warning</violationSeverity>
 
 						<!-- Esclude le classi generate automaticamente -->
 						<excludes>
@@ -549,16 +536,4 @@
 			</distributionManagement>
 		</profile>
 	</profiles>
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>3.3.1</version>
-				<configuration>
-					<configLocation>google_checks.xml</configLocation>
-				</configuration>
-			</plugin>
-		</plugins>
-	</reporting>
 </project>
