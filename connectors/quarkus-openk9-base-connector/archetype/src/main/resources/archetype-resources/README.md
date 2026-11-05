@@ -210,13 +210,13 @@ $h2 Connector Base Classes
 
 
 - **Worker.java**  
-  This interface is implemented by `WorkerImp.java`.
+  This interface is implemented by `WorkerImpl.java`.
 
 
 - **WorkerImpl.java**  
   It overrides _work_ method from `Worker` interface, it sends a message through the producer for each data retrieved from the source, using the `producer.write()` method.  
   The body of the message is an `IngestionDTO` object.  
-  Once the process is complete, it calls `promise.complete()`.
+  The work is complete when _work_ returns, and fails if it throws an exception.
 
 
 - **WorkerFactory.java**  
