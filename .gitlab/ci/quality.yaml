@@ -129,7 +129,8 @@ Trivy FS Java:
 # Checkstyle Report
 # Informational only: the ruleset lives in core/checkstyle/checkstyle.xml and the plugin
 # never fails the build. The vendor module is outside the checked perimeter because it does
-# not inherit the plugin configuration from core/pom.xml.
+# not inherit the plugin configuration from core/pom.xml. The check goal is used instead of
+# checkstyle because it does not resolve module dependencies, which are not built in this job.
 Checkstyle Report:
   stage: quality
   image: maven:3.9.6-eclipse-temurin-21
@@ -137,14 +138,13 @@ Checkstyle Report:
   allow_failure: true
   script:
     - cd core
-    - mvn -B checkstyle:checkstyle -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+    - mvn -B checkstyle:check -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
         -pl '!../vendor/hibernate-rx-multitenancy,!../vendor/hibernate-rx-multitenancy/runtime,!../vendor/hibernate-rx-multitenancy/deployment'
   artifacts:
     when: always
     expire_in: 1 week
     paths:
       - core/**/target/checkstyle-result.xml
-      - core/**/target/site/checkstyle.html
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
