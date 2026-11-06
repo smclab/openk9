@@ -40,7 +40,7 @@ import pytest
 MODULE_ROOT = Path(__file__).resolve().parent.parent.parent
 
 DEPENDENCY = "sse_starlette.sse"
-APPLICATION = "app.rag.agentic_rag"
+APPLICATION = "app.rag.agentic.entrypoint"
 
 # Reports the level each logger ends up with, from a process that has just
 # configured the logging the way the service does at startup.
