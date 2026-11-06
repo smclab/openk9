@@ -90,7 +90,7 @@ def test_the_tenant_adds_an_instruction_to_every_discovery():
         assert DISCOVERY_TEXT in prompt
 
 
-@pytest.mark.parametrize("value", [None, "", "   "])
+@pytest.mark.parametrize("value", [None, "", "   ", 5, True, ["a"]])
 def test_without_instructions_the_prompts_are_the_defaults(value):
     configuration = {"orchestrator_prompt": value, "discovery_prompt": value}
 

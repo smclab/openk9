@@ -123,10 +123,17 @@ def resolve_filter_domains(
     return deps.detected_domains or llm_domains or None
 
 
-def tenant_instructions(text: Optional[str]) -> str:
+def tenant_instructions(text) -> str:
     """Le istruzioni del tenant (``orchestrator_prompt``, ``discovery_prompt`` del jsonConfig),
     in coda al prompt di default: si aggiungono, non lo sostituiscono, perche' il prompt di default
-    porta il contratto di output e le regole di delega. Senza istruzioni, niente."""
+    porta il contratto di output e le regole di delega. Senza istruzioni, niente; un valore che non
+    e' testo si ignora, come ``max_parallel_subtasks`` non numerico, invece di far fallire il
+    turno."""
+    if text is not None and not isinstance(text, str):
+        logger.warning(
+            f"[tenant] istruzioni del tenant non testuali ({type(text).__name__}): ignorate"
+        )
+        return ""
     if not text or not text.strip():
         return ""
     return (
