@@ -146,6 +146,16 @@ def test_the_ordinal_survives_a_gap_in_the_numbering():
     assert [c["ordinal"] for c in chunks] == [2]
 
 
+def test_the_ordinal_is_a_number_even_when_the_checkpoint_says_otherwise():
+    # A chat with a user is checkpointed to OpenSearch as JSON, which has no
+    # integer keys, so citation_ordinals comes back keyed by string. The
+    # SOURCES event of the same response builds its ordinals fresh, as
+    # numbers: emitting a string here would break a client joining the two.
+    chunks = _documents_with_ordinals({"doc-2": []}, {"2": "doc-2"})
+
+    assert [chunk["ordinal"] for chunk in chunks] == [2]
+
+
 def test_sources_shown_without_an_ordinal_carry_none():
     # The fallback: nothing was marked, so every source is shown and there is
     # no number to attach.
