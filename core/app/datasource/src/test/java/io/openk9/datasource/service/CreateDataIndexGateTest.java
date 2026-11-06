@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import jakarta.inject.Inject;
 import jakarta.validation.ValidationException;
@@ -29,6 +30,7 @@ import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.IndexTemplateUtils;
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
+import io.openk9.datasource.listener.DatasourcePurgeService;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
@@ -418,6 +420,31 @@ class CreateDataIndexGateTest {
 
 		// and the field is still there
 		assertNotNull(docTypeFieldName(headerFieldId));
+	}
+
+	@Test
+	@DisplayName("Should purge an orphan dataIndex together with its header")
+	void should_purge_a_data_index_with_a_header()
+		throws ExecutionException, InterruptedException {
+
+		// an orphan dataIndex with a header
+		var fixture = headerFixture();
+
+		var dataIndex = createDataIndex(
+			headerDataIndex(fixture, List.of(fixture.titleId())));
+
+		// the purge deletes it
+		DatasourcePurgeService
+			.deleteDataIndices(TENANT_ID, 0L, List.of(dataIndex))
+			.get();
+
+		// with its header rows, that would otherwise hold it by the foreign key
+		var purged = sessionFactory.withTransaction((s, t) -> s
+				.find(DataIndex.class, dataIndex.getId()))
+			.await()
+			.indefinitely();
+
+		assertNull(purged);
 	}
 
 	/**

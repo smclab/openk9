@@ -48,6 +48,8 @@ public class DatasourcePurgeService {
 		"DELETE FROM data_index t WHERE t.id in (:ids)";
 	private static final String BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP =
 		"DELETE FROM data_index_doc_types t WHERE t.data_index_id IN (:ids)";
+	private static final String BULK_DELETE_DATA_INDEX_CHUNK_HEADER_FIELDS =
+		"DELETE FROM data_index_chunk_header_fields t WHERE t.data_index_id IN (:ids)";
 	private static final String BULK_UPDATE_DEREFERENCE_NEW_DATAINDEX =
 		"UPDATE scheduler SET new_data_index_id = null WHERE new_data_index_id in (:ids)";
 	private static final String BULK_UPDATE_DEREFERENCE_OLD_DATAINDEX =
@@ -123,6 +125,11 @@ public class DatasourcePurgeService {
 				.createNativeQuery(BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP)
 				.setParameter("ids", ids)
 				.executeUpdate()
+				.chain(ignore -> s
+					.createNativeQuery(BULK_DELETE_DATA_INDEX_CHUNK_HEADER_FIELDS)
+					.setParameter("ids", ids)
+					.executeUpdate()
+				)
 				.chain(ignore -> s
 					.createNativeQuery(BULK_UPDATE_DEREFERENCE_OLD_DATAINDEX)
 					.setParameter("ids", ids)
