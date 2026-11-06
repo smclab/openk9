@@ -73,19 +73,22 @@ Fields of this module:
 | Field                   | Default | Effect |
 |-------------------------|---------|--------|
 | `max_iterations`        | none    | Retries of the orchestrator after a rejection of the Verifier, and the request limit of the turn derived from them; without it there is no request limit, only the six delegations per turn |
-| `enable_verifier`       | `false` | The Verifier checks every claim against the delivered documents and has the orchestrator repair the answer; the answer is buffered until verified |
+| `enable_verifier`       | `false` | The Verifier checks every claim against the delivered documents and has the orchestrator repair the answer; the answer is buffered until verified; off with `bypass_rag`, since there are no documents to check against |
 | `parallel_discovery`    | `false` | The orchestrator can delegate independent sub-questions in parallel (`discover_many`) |
 | `max_parallel_subtasks` | `3`     | Sub-questions searched in parallel, between 1 and 4 |
-| `enable_intent_detection` | `true` | Detect the domains of the question and filter the searches on them; skipped anyway for a tenant without domain documents |
-| `orchestrator_prompt`   | none    | Instructions of the tenant added after the default prompt of the orchestrator |
+| `enable_intent_detection` | `true` | Detect the domains of the question and filter the searches on them; skipped anyway for a tenant without domain documents or with `enable_real_time_evaluation` |
+| `orchestrator_prompt`   | none    | Instructions of the tenant added after the default prompt of the orchestrator; not used with `bypass_rag`, where the prompt comes from `prompt_no_rag` |
 | `discovery_prompt`      | none    | Instructions of the tenant added after the default prompt of every Discovery |
 
 Fields shared with `agentic-rag-module`, with the same meaning: `bypass_rag`
-and `prompt_no_rag`, `retrieve_citations` (quotes in the `DOCUMENT` events;
-the `[n]` markers are always there), `chunk_window`, `range_values`,
-`metadata`, `rerank`, `score_threshold`, `domain_threshold`,
-`enable_conversation_title`, `enable_real_time_evaluation` and the guardrails
-configuration. One difference on the output guardrail: the answer streams in
+and `prompt_no_rag`, `chunk_window`, `range_values`, `metadata`,
+`score_threshold`, `domain_threshold`, `enable_conversation_title`,
+`enable_real_time_evaluation` (as there, the turn also skips the input
+guardrail and the intent detection) and the guardrails configuration. As
+there, `retrieve_citations` is a field of the LLM configuration, not of the
+RAG configuration: it adds the quotes to the `DOCUMENT` events, while the
+`[n]` markers are always there. `rerank` is read but does not work yet, here
+as in `agentic-rag-module`: the URL of the reranker never reaches the search. One difference on the output guardrail: the answer streams in
 pieces of 40 characters rather than in the tokens of the provider, so the same
 `output_guardrail_chunk_interval` checks about ten times less often; lower it
 to keep the frequency.
@@ -96,6 +99,13 @@ Fields of `agentic-rag-module` this module ignores: `prompt` (use
 follow-up questions by itself), `answer_only_with_context` (the answer always
 comes from the documents). `rag_tool_description` is used only by the routing
 judge of the evaluations.
+
+For a tenant that comes from `agentic-rag-module`: its `prompt` is the whole
+prompt of the answer, while `orchestrator_prompt` and `discovery_prompt` are
+added to the default prompts, which carry the rules on searching and citing.
+Do not copy it: move into `orchestrator_prompt` only the instructions of the
+tenant on the answer (tone, language, constraints), and into
+`discovery_prompt` only those on the search.
 
 ## Configuration
 
