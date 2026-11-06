@@ -2764,8 +2764,14 @@ class RagGraph:
         marks that source with, so a client can turn [2] in the text into a
         link to this document; it rides on DOCUMENT rather than on an event
         of its own, so a client that ignores it is unaffected."""
+        # int(), because a chat with a user is checkpointed to OpenSearch as
+        # JSON, and JSON has no integer keys: the ordinals come back as
+        # strings, while the SOURCES event of the same response builds them
+        # fresh as numbers. A client joining the two by value would find
+        # nothing. get_chat coerces them for the same reason.
         ordinal_of = {
-            document_id: ordinal for ordinal, document_id in (ordinals or {}).items()
+            document_id: int(ordinal)
+            for ordinal, document_id in (ordinals or {}).items()
         }
         documents_id = set()
         for document in documents:
