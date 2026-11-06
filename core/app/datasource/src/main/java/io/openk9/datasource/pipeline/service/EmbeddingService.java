@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
 
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
@@ -1121,7 +1122,13 @@ public class EmbeddingService {
 			key -> sessionFactory.withTransaction(
 					configurationRequest.tenantId(),
 					(s, t) -> getEmbeddingModel(s, configurationRequest.tenantId())
-						.onItem().ifNull().failWith(ConfigurationNotFound::new)
+						.onFailure(NoResultException.class)
+						.transform(throwable -> new ConfigurationNotFound(
+							String.format(
+								"There is no active embedding model on tenant %s",
+								configurationRequest.tenantId()
+							),
+							throwable))
 						.flatMap(embeddingModel -> s.createNamedQuery(
 								Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
 							.setPlan(s.getEntityGraph(
@@ -1169,8 +1176,6 @@ public class EmbeddingService {
 					"Something went wrong when trying to get Embedding chunks configuration",
 					throwable
 				))
-				.onFailure()
-				.recoverWithNull()
 		);
 	}
 
