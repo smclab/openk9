@@ -7,6 +7,8 @@ import { Box, Chip, IconButton, Skeleton, Typography } from "@mui/material";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
+import { markdownComponentsWithCitations } from "./CitationChip";
+import { quotesByOrdinal, remarkCitationMarkers } from "./inlineCitations";
 import { Logo } from "../Svg/Logo";
 import { Message } from "./useGenerateResponse";
 
@@ -288,6 +290,7 @@ export function MessageCard({
 							</>
 						) : (
 							<Markdown
+								remarkPlugins={[remarkCitationMarkers]}
 								components={{
 									pre: (props: any) => <PreBlock {...props} />,
 									code: (props: any) => {
@@ -305,6 +308,7 @@ export function MessageCard({
 											</code>
 										);
 									},
+									...markdownComponentsWithCitations(message.citedSources, quotesByOrdinal(message.sources)),
 								}}
 							>
 								{message.answer}
