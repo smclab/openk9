@@ -50,7 +50,7 @@ function renderAnswer(
   );
 }
 
-describe("la pastiglia che cita la fonte", () => {
+describe("il chip che cita la fonte", () => {
   it("mostra il titolo della fonte, non il numero", () => {
     // Su un corpus a dominio unico il nome del sito non distinguerebbe
     // nulla: e' il titolo del documento a dire quale fonte e'.
@@ -74,7 +74,7 @@ describe("la pastiglia che cita la fonte", () => {
     expect((chip.textContent ?? "").length).toBeLessThanOrEqual(28);
   });
 
-  it("riunisce in una pastiglia sola le fonti della stessa frase", () => {
+  it("riunisce in un chip solo le fonti della stessa frase", () => {
     // "[1][2]" e' una citazione con due fonti, non due citazioni.
     renderAnswer("Una frase [1][2].");
 
@@ -129,7 +129,7 @@ describe("la pastiglia che cita la fonte", () => {
   });
 
   it("il pannello resta aperto quando il puntatore ci si sposta sopra", async () => {
-    // Il difetto: fra pastiglia e pannello c'era un margine che non
+    // Il difetto: fra chip e pannello c'era un margine che non
     // apparteneva a nessuno dei due, e attraversarlo chiudeva tutto proprio
     // mentre si andava a cliccare il link.
     const user = userEvent.setup();
@@ -142,7 +142,7 @@ describe("la pastiglia che cita la fonte", () => {
     expect(screen.getByRole("tooltip")).toBeTruthy();
   });
 
-  it("il pannello si chiude lasciando sia pastiglia sia pannello", async () => {
+  it("il pannello si chiude lasciando sia chip sia pannello", async () => {
     const user = userEvent.setup();
     renderAnswer("Una frase [1]. Altro testo.");
 
@@ -153,9 +153,9 @@ describe("la pastiglia che cita la fonte", () => {
     await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
   });
 
-  it("ne resta aperto uno solo passando in fretta da una pastiglia all'altra", async () => {
+  it("ne resta aperto uno solo passando in fretta da un chip all'altro", async () => {
     // La chiusura e' ritardata per lasciare raggiungere il link: senza un
-    // registro, la pastiglia che si lascia e' ancora nel suo margine di
+    // registro, il chip che si lascia e' ancora nel suo margine di
     // tolleranza quando la successiva apre, e si vedono due pannelli.
     const user = userEvent.setup();
     renderAnswer("Prima [1]. Seconda [2].");
