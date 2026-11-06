@@ -109,6 +109,9 @@ kcadm.sh update clients/$CID -r <tenant-realm> \
 kcadm.sh get clients/$CID -r <tenant-realm>
 ```
 
+If `kcadm.sh` can't write its config file (as in the Bitnami Keycloak image, where it fails with
+`Failed to create config file`), add `--config /tmp/kcadm.config` to every command.
+
 In the output, `directAccessGrantsEnabled`, `implicitFlowEnabled` and `serviceAccountsEnabled`
 must be `false` and `attributes` must contain `"pkce.code.challenge.method" : "S256"`.
 
