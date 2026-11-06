@@ -219,9 +219,10 @@ async def media_only_turn(
     document_ids = list(deps.discovered)
     deps.delivered_ids.extend(document_ids)
     documents = "\n\n".join(deps.discovered[i].get("content", "") for i in document_ids)
-    agent = Agent(
-        deps.orchestrator_model, output_type=str, system_prompt=MEDIA_ONLY_QUERY_INSTRUCTION
-    )
+    # instructions, not a system prompt: sent at every turn by the agent that runs it, while those
+    # of the past turns are not sent again, so neither lost after the first turn nor left to the
+    # orchestrator of the next one
+    agent = Agent(deps.orchestrator_model, output_type=str, instructions=MEDIA_ONLY_QUERY_INSTRUCTION)
     result = await agent.run(f"Context:\n{documents}", message_history=message_history)
     output = OrchestratorOutput(status="ok", message=result.output, used_document_ids=document_ids)
 

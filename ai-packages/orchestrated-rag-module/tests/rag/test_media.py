@@ -27,7 +27,14 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
-from pydantic_ai.messages import ModelResponse, TextPart
+from pydantic_ai.messages import (
+    ModelRequest,
+    ModelResponse,
+    SystemPromptPart,
+    TextPart,
+    ToolCallPart,
+    UserPromptPart,
+)
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
 from app.models import models
@@ -144,7 +151,34 @@ def test_every_search_of_the_discovery_carries_the_image():
 # --------------------------------------------------------------------------- #
 # A question made of an image alone                                            #
 # --------------------------------------------------------------------------- #
-def _turn(monkeypatch, *, search_text, media):
+def _instructions(messages) -> str:
+    """What the model is told to do: any system prompt of the history and the instructions of
+    the request, the only ones a model sends."""
+    system = [p.content for m in messages for p in m.parts if isinstance(p, SystemPromptPart)]
+    return " ".join(system + [messages[-1].instructions or ""])
+
+
+#: a turn of a chat: the orchestrator answered a written question
+TEXT_TURN = [
+    ModelRequest(parts=[SystemPromptPart("ORCHESTRATOR PROMPT"), UserPromptPart("domanda")]),
+    ModelResponse(parts=[TextPart("risposta")]),
+]
+#: a turn with an image alone as saved: its instructions stay on its request
+IMAGE_TURN = [
+    ModelRequest(
+        parts=[UserPromptPart("Context:\nCantiere di via Roma")],
+        instructions=entrypoint.MEDIA_ONLY_QUERY_INSTRUCTION,
+    ),
+    ModelResponse(parts=[TextPart("Le immagini mostrano un cantiere.")]),
+]
+#: the history a client sends for an anonymous user: no system prompt
+CLIENT_HISTORY = [
+    ModelRequest(parts=[UserPromptPart("domanda")]),
+    ModelResponse(parts=[TextPart("risposta")]),
+]
+
+
+def _turn(monkeypatch, *, search_text, media, history=None):
     calls = []
 
     async def fake_guardrail(**_):
@@ -169,8 +203,7 @@ def _turn(monkeypatch, *, search_text, media):
     prompts, searches = [], []
 
     def model(messages, info: AgentInfo) -> ModelResponse:
-        system = " ".join(part.content for part in messages[0].parts if hasattr(part, "content"))
-        prompts.append((system, messages[-1].parts[-1].content))
+        prompts.append((_instructions(messages), messages[-1].parts[-1].content))
         return ModelResponse(parts=[TextPart("Le immagini mostrano due cantieri.")])
 
     deps = _deps(media=media, enable_verifier=True)
@@ -180,6 +213,7 @@ def _turn(monkeypatch, *, search_text, media):
         {"document_id": "d2", "content": "", "title": "Foto 2"},
     ]
     store = MagicMock()
+    store.load_message_history.return_value = history or []
 
     async def collect():
         return [
@@ -191,6 +225,7 @@ def _turn(monkeypatch, *, search_text, media):
                 store=store,
                 chat_id="c1",
                 user_id="u1",
+                chat_sequence_number=2 if history else 1,
             )
         ]
 
@@ -221,6 +256,35 @@ def test_an_image_alone_is_answered_from_the_text_of_what_was_found(monkeypatch)
         "Foto 2",
     ]
     store.save_turn.assert_called_once()
+
+
+def test_an_image_alone_after_a_written_question_gets_its_instruction(monkeypatch):
+    _, _, prompts, _, _ = _turn(monkeypatch, search_text="", media=IMAGE, history=TEXT_TURN)
+
+    instructions, _ = prompts[0]
+    assert entrypoint.MEDIA_ONLY_QUERY_INSTRUCTION in instructions
+
+
+@pytest.mark.parametrize("history", [IMAGE_TURN, CLIENT_HISTORY], ids=["image", "client"])
+def test_the_orchestrator_gets_its_prompt_after_any_turn(history):
+    received = []
+
+    def model(messages, info: AgentInfo) -> ModelResponse:
+        received.append(_instructions(messages))
+        output = {"status": "ok", "message": "risposta", "used_document_ids": []}
+        return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, output)])
+
+    asyncio.run(
+        orchestrator.run_orchestrator(
+            question="e il cantiere di via Milano?",
+            deps=_deps(),
+            message_history=history,
+            model=FunctionModel(model),
+        )
+    )
+
+    assert "You are the Orchestrator" in received[0]
+    assert entrypoint.MEDIA_ONLY_QUERY_INSTRUCTION not in received[0]
 
 
 def test_an_image_with_text_takes_the_usual_path(monkeypatch):

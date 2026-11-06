@@ -35,7 +35,7 @@ def _orchestrator(parallel_discovery):
 
 
 def _system_prompt(agent):
-    return "\n".join(agent._system_prompts)
+    return "\n".join(agent._instructions)
 
 
 def test_without_parallel_discovery_a_single_discover_is_requested():

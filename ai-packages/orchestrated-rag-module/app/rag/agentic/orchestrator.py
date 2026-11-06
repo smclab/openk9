@@ -307,7 +307,9 @@ def build_orchestrator(
         model,
         output_type=OrchestratorOutput,
         deps_type=AgenticDeps,
-        system_prompt=_build_system_prompt(
+        # instructions e non system prompt: arrivano a ogni turno, anche con una cronologia che
+        # non ha il prompt (un turno con la sola immagine, la cronologia mandata dal client)
+        instructions=_build_system_prompt(
             bypass_rag=bypass_rag,
             prompt_no_rag=prompt_no_rag,
             parallel_discovery=parallel_discovery,

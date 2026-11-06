@@ -151,13 +151,13 @@ def test_the_tenant_flag_reaches_the_prompt(retrieve_citations):
         _deps(llm_configuration=llm_configuration), model="test"
     )
 
-    assert ("Fill `citations`" in "\n".join(agent._system_prompts)) is retrieve_citations
+    assert ("Fill `citations`" in "\n".join(agent._instructions)) is retrieve_citations
 
 
 def test_the_flag_in_the_rag_configuration_is_not_read():
     misplaced = orchestrator._orchestrator_for(_deps(retrieve_citations=True), model="test")
 
-    assert "Fill `citations`" not in "\n".join(misplaced._system_prompts)
+    assert "Fill `citations`" not in "\n".join(misplaced._instructions)
 
 
 def test_the_answer_field_asks_for_the_markers():
