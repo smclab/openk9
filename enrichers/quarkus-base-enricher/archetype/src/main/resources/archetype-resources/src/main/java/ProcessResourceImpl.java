@@ -12,7 +12,6 @@ import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
 import org.jboss.logging.Logger;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -22,6 +21,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class ProcessResourceImpl implements ProcessResource {
 
@@ -83,23 +86,29 @@ public class ProcessResourceImpl implements ProcessResource {
                 LOGGER.warnf("Binary %s has no stagingUrl", binary.get("name"));
                 continue;
             }
+            CompletableFuture<HttpResponse<byte[]>> download = null;
             try {
-                // The staging URL is a bearer credential: never log it
-                HttpResponse<byte[]> response = HTTP_CLIENT.send(
-                        HttpRequest.newBuilder(URI.create(stagingUrl.toString()))
-                                .timeout(Duration.ofSeconds(30))
-                                .GET()
-                                .build(),
+                // The staging URL is a bearer credential: never log it, nor the messages that quote it
+                download = HTTP_CLIENT.sendAsync(
+                        HttpRequest.newBuilder(URI.create(stagingUrl.toString())).GET().build(),
                         HttpResponse.BodyHandlers.ofByteArray());
+                // Bounds the whole download: the request timeout of the JDK client stops at the headers
+                HttpResponse<byte[]> response = download.get(30, TimeUnit.SECONDS);
                 if (response.statusCode() >= 300) {
                     LOGGER.warnf("Binary %s not read: HTTP %d", binary.get("name"), response.statusCode());
                     continue;
                 }
                 info.put("size", response.body().length);
                 binaries.add(info);
-            } catch (IOException e) {
+            } catch (IllegalArgumentException e) {
                 LOGGER.warnf("Binary %s not read: %s", binary.get("name"), e.getClass().getSimpleName());
+            } catch (ExecutionException e) {
+                LOGGER.warnf("Binary %s not read: %s", binary.get("name"), e.getCause().getClass().getSimpleName());
+            } catch (TimeoutException e) {
+                download.cancel(true);
+                LOGGER.warnf("Binary %s not read: download took more than 30s", binary.get("name"));
             } catch (InterruptedException e) {
+                download.cancel(true);
                 Thread.currentThread().interrupt();
                 break;
             }
