@@ -704,6 +704,40 @@ public class DataIndexService
 	}
 
 	/**
+	 * Refuses an ingestion on a knn dataIndex when the tenant has no active
+	 * embedding model, before any document is worked.
+	 * <p>
+	 * Without the model no document can be embedded, so every one of them
+	 * would fail. A plain dataIndex never consults the model.
+	 *
+	 * @param session   the session the model is read in
+	 * @param dataIndex the dataIndex the ingestion writes to, already loaded
+	 *                  with its {@code knnIndex}, or {@code null} when the
+	 *                  datasource has none
+	 * @return a {@code Uni} that fails with a {@link ValidationException}
+	 * when the dataIndex is knn and the tenant has no active embedding model
+	 */
+	public Uni<Void> checkEmbeddingModel(
+		Mutiny.Session session, DataIndex dataIndex) {
+
+		var knnIndex = dataIndex == null ? null : dataIndex.getKnnIndex();
+
+		if (knnIndex == null || !knnIndex) {
+			return Uni.createFrom().voidItem();
+		}
+
+		return embeddingModelService.fetchCurrent(session)
+			.onFailure(NoResultException.class)
+			.transform(throwable -> new ValidationException(String.format(
+				"Cannot ingest on the dataIndex %s: knnIndex is set to" +
+				" true but there is no active embedding model on this" +
+				" tenant. Enable an embedding model or disable knnIndex.",
+				dataIndex.getName()
+			)))
+			.replaceWithVoid();
+	}
+
+	/**
 	 * Resolves the embedding model the index template must be generated from,
 	 * refusing a knn dataIndex that would hold no vector.
 	 * <p>

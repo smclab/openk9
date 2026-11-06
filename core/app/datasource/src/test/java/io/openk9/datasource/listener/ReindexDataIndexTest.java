@@ -593,24 +593,40 @@ class ReindexDataIndexTest {
 	}
 
 	@Test
-	@DisplayName("Should keep ingesting on a knn index with the model disabled")
-	void should_keep_ingesting_on_a_knn_index_with_the_model_disabled() {
-		// an ordinary ingestion creates no dataIndex, so it is unaffected by
-		// the absence of an active model
+	@DisplayName("Should refuse the ingestion on a knn index with no active model")
+	void should_refuse_the_ingestion_on_a_knn_index_without_an_active_model() {
+		// a knn dataIndex on a tenant whose embedding model has been disabled
 		var datasourceId = createDatasource(knnDataIndex());
 
 		disableEmbeddingModel();
 
-		var datasource = fetchDatasourceConnection(datasourceId);
+		var scheduler = newIngestionScheduler(datasourceId);
 
-		var scheduler = new Scheduler();
-		scheduler.setScheduleId(UUID.randomUUID().toString());
-		scheduler.setDatasource(datasource);
-		scheduler.setOldDataIndex(datasource.getDataIndex());
-		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
-		scheduler.setReindex(false);
+		// the ingestion is refused before any document is worked, naming the
+		// missing model
+		var exception = assertThrows(
+			CompletionException.class,
+			() -> persistOffRequest(scheduler)
+		);
 
-		var persisted = persistOffRequest(scheduler);
+		assertTrue(
+			exception.getCause().getMessage().contains("no active embedding model"),
+			exception.getCause().getMessage()
+		);
+
+		// and no scheduler is left behind to block the next trigger
+		assertEquals(0, countSchedulers(datasourceId));
+	}
+
+	@Test
+	@DisplayName("Should keep ingesting on a plain index with no active model")
+	void should_keep_ingesting_on_a_plain_index_without_an_active_model() {
+		// a plain dataIndex never consults the embedding model
+		var datasourceId = createDatasource(DataIndexDTO.builder().knnIndex(false));
+
+		disableEmbeddingModel();
+
+		var persisted = persistOffRequest(newIngestionScheduler(datasourceId));
 
 		assertNotNull(persisted.getId());
 		assertNull(persisted.getNewDataIndex());
@@ -721,6 +737,20 @@ class ReindexDataIndexTest {
 				.createQuery(
 					"select count(di) from DataIndex di"
 					+ " where di.datasource.id = :datasourceId",
+					Long.class
+				)
+				.setParameter("datasourceId", datasourceId)
+				.getSingleResult()
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private long countSchedulers(long datasourceId) {
+		return sessionFactory.withTransaction((s, t) -> s
+				.createQuery(
+					"select count(sc) from Scheduler sc"
+					+ " where sc.datasource.id = :datasourceId",
 					Long.class
 				)
 				.setParameter("datasourceId", datasourceId)
@@ -875,6 +905,23 @@ class ReindexDataIndexTest {
 			.embeddingJsonConfig(EMBEDDING_JSON_CONFIG)
 			.settings(SETTINGS)
 			.docTypeIds(allDocTypeIds());
+	}
+
+	/**
+	 * Reproduces what the job scheduler does when an ordinary ingestion
+	 * starts: it records a scheduler on the current dataIndex and creates none.
+	 */
+	private Scheduler newIngestionScheduler(long datasourceId) {
+		var datasource = fetchDatasourceConnection(datasourceId);
+
+		var scheduler = new Scheduler();
+		scheduler.setScheduleId(UUID.randomUUID().toString());
+		scheduler.setDatasource(datasource);
+		scheduler.setOldDataIndex(datasource.getDataIndex());
+		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
+		scheduler.setReindex(false);
+
+		return scheduler;
 	}
 
 	/**
