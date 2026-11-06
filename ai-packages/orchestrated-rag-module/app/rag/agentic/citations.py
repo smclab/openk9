@@ -113,7 +113,8 @@ def _valid_quotes(citations: dict, cited: dict, deps: AgenticDeps) -> dict:
         for quote in raw if isinstance(raw, list) else [raw]:
             if not isinstance(quote, str) or not quote.strip() or len(kept) == MAX_QUOTES:
                 continue
-            if _normalize(quote) not in source:
+            normalized = _normalize(quote)
+            if not normalized or normalized not in source:
                 logger.debug(f"[citations] quote not found in source {ordinal}: {quote!r}")
                 continue
             kept.append(quote)
@@ -141,7 +142,11 @@ def cited_refs(deps: AgenticDeps, output: OrchestratorOutput) -> list[DocumentRe
         logger.warning(f"[citations] markers {invented} point to no source")
     if not cited:
         return discovery.resolve_document_refs(deps, output.used_document_ids)
-    quotes = _valid_quotes(output.citations, cited, deps)
+    quotes = (
+        _valid_quotes(output.citations, cited, deps)
+        if deps.llm_configuration.get("retrieve_citations")
+        else {}
+    )
     refs = discovery.resolve_document_refs(deps, [cited[ordinal] for ordinal in sorted(cited)])
     for ref in refs:
         ref.ordinal = deps.source_ordinals[ref.document_id]

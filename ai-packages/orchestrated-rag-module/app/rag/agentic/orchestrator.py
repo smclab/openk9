@@ -465,7 +465,7 @@ class OrchestratorStream:
 
 
 def _orchestrator_for(deps: AgenticDeps, model=None, *, enable_verifier=False) -> Agent:
-    """L'orchestratore configurato dalla RAGConfiguration del tenant."""
+    """L'orchestratore configurato dalla RAGConfiguration e dalla configurazione LLM del tenant."""
     cfg = deps.rag_configuration
     return build_orchestrator(
         model or deps.orchestrator_model,
@@ -475,7 +475,7 @@ def _orchestrator_for(deps: AgenticDeps, model=None, *, enable_verifier=False) -
         max_parallel_subtasks=resolve_max_parallel_subtasks(cfg),
         bypass_rag=bool(cfg.get("bypass_rag")),
         prompt_no_rag=cfg.get("prompt_no_rag"),
-        retrieve_citations=bool(cfg.get("retrieve_citations")),
+        retrieve_citations=bool(deps.llm_configuration.get("retrieve_citations")),
     )
 
 

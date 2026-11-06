@@ -44,10 +44,10 @@ from app.rag.agentic.persistence import build_checkpoint
 from tests.rag.test_chat_compatibility import FakeOpenSearch, _store
 
 
-def _deps(**rag_configuration):
+def _deps(llm_configuration=None, **rag_configuration):
     return AgenticDeps(
         rag_configuration=rag_configuration,
-        llm_configuration={},
+        llm_configuration=llm_configuration or {},
         opensearch_host="http://os",
         grpc_host_datasource="ds:9000",
         grpc_host_embedding="em:9000",
@@ -139,9 +139,14 @@ def test_the_prompt_asks_for_the_markers_and_the_quotes_only_when_wanted():
 
 
 def test_the_tenant_flag_reaches_the_prompt():
-    agent = orchestrator._orchestrator_for(_deps(retrieve_citations=True), model="test")
+    """The flag is a field of the LLM configuration, as GetLLMConfiguration returns it."""
+    agent = orchestrator._orchestrator_for(
+        _deps(llm_configuration={"retrieve_citations": True}), model="test"
+    )
+    misplaced = orchestrator._orchestrator_for(_deps(retrieve_citations=True), model="test")
 
     assert "Fill `citations`" in "\n".join(agent._system_prompts)
+    assert "Fill `citations`" not in "\n".join(misplaced._system_prompts)
 
 
 # --------------------------------------------------------------------------- #
@@ -189,14 +194,14 @@ def test_a_sentence_removed_in_repair_takes_its_source_away():
 
 
 def test_only_the_quotes_really_in_the_source_are_kept():
-    deps = _deps()
+    deps = _deps(llm_configuration={"retrieve_citations": True})
     _delivered(
         deps,
         ("a", "L'eccellenza dal 1995. Sede a Treviso. Terzo fatto."),
         ("b", "Altro documento."),
     )
     quotes = {
-        "1": ["l’eccellenza dal 1995", "Sede a Roma", "Sede a Treviso", "Terzo fatto"],
+        "1": ["l’eccellenza dal 1995", "Sede a Roma", "αβγ", "Sede a Treviso", "Terzo fatto"],
         "2": ["Altro documento"],
         "x": ["chiave non numerica"],
     }
@@ -206,6 +211,17 @@ def test_only_the_quotes_really_in_the_source_are_kept():
     assert [(r.document_id, r.quotes) for r in refs] == [
         ("a", ["l’eccellenza dal 1995", "Sede a Treviso"])
     ]
+
+
+def test_without_the_flag_the_quotes_are_dropped():
+    deps = _deps()
+    _delivered(deps, ("a", "L'eccellenza dal 1995."))
+
+    refs = citations.cited_refs(
+        deps, _output("Dal 1995 [1].", quotes={"1": ["L'eccellenza dal 1995"]})
+    )
+
+    assert [(r.document_id, r.quotes) for r in refs] == [("a", [])]
 
 
 # --------------------------------------------------------------------------- #
