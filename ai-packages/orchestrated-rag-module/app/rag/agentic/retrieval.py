@@ -42,6 +42,9 @@ TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
 HYBRID_RETRIEVE_TYPE = "HYBRID"
 VECTORIAL_RETRIEVE_TYPES = ["KNN", "HYBRID"]
+#: Characters of ``rawContent`` that a chunk without text, as an image chunk, brings to the
+#: model in place of its own: ``rawContent`` is the whole document.
+MEDIA_CHUNK_TEXT_CHARS = 2000
 
 #: Keys that describe a single chunk: the merged window does not carry them.
 CHUNK_KEYS = ("chunk_idx", "prev", "next", "content")
@@ -263,7 +266,10 @@ def retrieve_documents(
                         dynamic_metadata[key] = metadata_value
 
         if retrieve_type in VECTORIAL_RETRIEVE_TYPES:
-            content = document_source.get("chunkText", "")
+            # an image chunk has no text: the start of its document tells the model what it is
+            content = document_source.get("chunkText") or (
+                document_source.get("rawContent") or ""
+            )[:MEDIA_CHUNK_TEXT_CHARS]
             # OpenSearch omits previous/next at the edges of a document: empty
             # lists keep the chunk_window merge working (#2298)
             record = {

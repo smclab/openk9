@@ -115,6 +115,54 @@ def test_the_media_of_a_request_token_is_kept(monkeypatch):
     assert token["media"] == IMAGE.model_dump()
 
 
+# --------------------------------------------------------------------------- #
+# The text of a chunk found by image                                           #
+# --------------------------------------------------------------------------- #
+def _found(monkeypatch, source):
+    client = MagicMock()
+    client.search.return_value = {"hits": {"hits": [{"_source": source, "_score": 1.0}]}}
+    monkeypatch.setattr(retrieval, "get_opensearch_client", lambda host: client)
+    monkeypatch.setattr(
+        retrieval,
+        "query_parser",
+        lambda **_: {"query": b"{}", "index_name": ["an-index"], "query_parameters": {}},
+    )
+    (record,) = retrieval.retrieve_documents(
+        query="",
+        search_text="",
+        retrieve_type="KNN",
+        tenant_id="t1",
+        opensearch_host="http://os",
+        grpc_host="ds:9000",
+        context_window=100_000,
+        range_values=[0, 5],
+        media=IMAGE,
+    )
+    return record["content"]
+
+
+def test_a_chunk_without_text_brings_the_start_of_its_document(monkeypatch):
+    description = "Bicicletta da corsa blu, telaio in alluminio. " * 100
+    content = _found(
+        monkeypatch,
+        {"contentId": "d1", "chunkText": "", "media_type": "image/png", "rawContent": description},
+    )
+
+    assert content == description[: retrieval.MEDIA_CHUNK_TEXT_CHARS]
+
+
+def test_a_chunk_with_text_keeps_its_own(monkeypatch):
+    content = _found(
+        monkeypatch, {"contentId": "d1", "chunkText": "il chunk", "rawContent": "il documento"}
+    )
+
+    assert content == "il chunk"
+
+
+def test_a_chunk_without_text_nor_document_text_stays_empty(monkeypatch):
+    assert _found(monkeypatch, {"contentId": "d1", "chunkText": ""}) == ""
+
+
 def _deps(media=None, **rag_configuration):
     return AgenticDeps(
         rag_configuration=rag_configuration,
