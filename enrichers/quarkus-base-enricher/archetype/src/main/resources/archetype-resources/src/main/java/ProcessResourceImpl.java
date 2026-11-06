@@ -40,8 +40,9 @@ public class ProcessResourceImpl implements ProcessResource {
         if (data.getReplyTo() == null || data.getReplyTo().isEmpty()) {
             throw new IllegalArgumentException("replyTo is null or empty");
         }
-        // Accept the request at once, then send the enriched payload to OpenK9 when it is ready
-        vertx.executeBlocking(() -> enrich(data.getPayload(), targetField(data)))
+        // Accept the request at once, then send the enriched payload to OpenK9 when it is ready.
+        // Not ordered: documents are independent, so a slow one must not hold back the others.
+        vertx.executeBlocking(() -> enrich(data.getPayload(), targetField(data)), false)
                 .onSuccess(payload -> callBackClient.callback(payload, data.getReplyTo()))
                 .onFailure(e -> LOGGER.error("Error enriching data", e));
         ProcessResponseDTO responseDTO = new ProcessResponseDTO();
