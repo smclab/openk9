@@ -2029,6 +2029,26 @@ class RagGraph:
                     }
                 )
 
+    def _iter_answer_chunks(self, query: str) -> Iterator[str]:
+        """Yield the llm_response text chunks of one run of the graph.
+
+        Single entry point for every stream() branch: the graph is streamed in
+        messages mode (the node calls invoke(), but LangGraph's streaming
+        callback makes the model stream its tokens anyway)."""
+        for chunk, metadata in self.graph.stream(
+            {
+                "current_query": query,
+                "chat_sequence_number": self.chat_sequence_number,
+            },
+            config=self.config,
+            stream_mode="messages",
+        ):
+            if metadata["langgraph_node"] == "llm_response" and chunk.content:
+                if isinstance(chunk.content, list):
+                    yield chunk.content[0].get("text")
+                else:
+                    yield chunk.content
+
     def stream(self, query: str):
         started_at = time.monotonic()
         # Set by whichever branch ends the stream; the end record is emitted
@@ -2054,62 +2074,42 @@ class RagGraph:
                 scope_checked = False
 
                 try:
-                    for chunk, metadata in self.graph.stream(
-                        {
-                            "current_query": query,
-                            "chat_sequence_number": self.chat_sequence_number,
-                        },
-                        config=self.config,
-                        stream_mode="messages",
-                    ):
-                        if (
-                            metadata["langgraph_node"] == "llm_response"
-                            and chunk.content
-                        ):
-                            chunk_response = ""
+                    for chunk_response in self._iter_answer_chunks(query):
+                        if start_chunk:
+                            yield json.dumps({"chunk": "", "type": "START"})
+                            start_chunk = False
 
-                            if isinstance(chunk.content, list):
-                                chunk_response = chunk.content[0].get("text")
-                            else:
-                                chunk_response = chunk.content
+                        result_answer += chunk_response
 
-                            if start_chunk:
-                                yield json.dumps({"chunk": "", "type": "START"})
-                                start_chunk = False
+                        # Prefix already validated: stream the rest freely.
+                        if scope_checked:
+                            yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
+                            continue
 
-                            result_answer += chunk_response
+                        prefix_buffer.append(chunk_response)
 
-                            # Prefix already validated: stream the rest freely.
-                            if scope_checked:
+                        if len(result_answer) >= self.scope_gate_prefix_chars:
+                            scope_gate = self._llm_scope_gate(
+                                query,
+                                self._get_retrieved_context_text(),
+                                result_answer,
+                            )
+                            if scope_gate == "OFF_SCOPE":
+                                outcome = "OFF_SCOPE"
                                 yield json.dumps(
-                                    {"chunk": chunk_response, "type": "CHUNK"}
+                                    {
+                                        "chunk": self.scope_gate_redirect_message,
+                                        "type": "CANCEL",
+                                    }
                                 )
-                                continue
+                                return
 
-                            prefix_buffer.append(chunk_response)
-
-                            if len(result_answer) >= self.scope_gate_prefix_chars:
-                                scope_gate = self._llm_scope_gate(
-                                    query,
-                                    self._get_retrieved_context_text(),
-                                    result_answer,
+                            for buffered_chunk in prefix_buffer:
+                                yield json.dumps(
+                                    {"chunk": buffered_chunk, "type": "CHUNK"}
                                 )
-                                if scope_gate == "OFF_SCOPE":
-                                    outcome = "OFF_SCOPE"
-                                    yield json.dumps(
-                                        {
-                                            "chunk": self.scope_gate_redirect_message,
-                                            "type": "CANCEL",
-                                        }
-                                    )
-                                    return
-
-                                for buffered_chunk in prefix_buffer:
-                                    yield json.dumps(
-                                        {"chunk": buffered_chunk, "type": "CHUNK"}
-                                    )
-                                prefix_buffer = []
-                                scope_checked = True
+                            prefix_buffer = []
+                            scope_checked = True
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
                         outcome = "ERROR"
@@ -2153,56 +2153,33 @@ class RagGraph:
                 chunk_batch = []
 
                 try:
-                    for chunk, metadata in self.graph.stream(
-                        {
-                            "current_query": query,
-                            "chat_sequence_number": self.chat_sequence_number,
-                        },
-                        config=self.config,
-                        stream_mode="messages",
-                    ):
-                        if (
-                            metadata["langgraph_node"] == "llm_response"
-                            and chunk.content
-                        ):
-                            chunk_response = ""
+                    for chunk_response in self._iter_answer_chunks(query):
+                        if start_chunk:
+                            yield json.dumps({"chunk": "", "type": "START"})
+                            start_chunk = False
 
-                            if isinstance(chunk.content, list):
-                                chunk_response = chunk.content[0].get("text")
-                            else:
-                                chunk_response = chunk.content
+                        result_answer += chunk_response
 
-                            if start_chunk:
-                                yield json.dumps({"chunk": "", "type": "START"})
-                                start_chunk = False
+                        chunk_batch.append({"chunk": chunk_response, "type": "CHUNK"})
 
-                            result_answer += chunk_response
-
-                            chunk_batch.append(
-                                {"chunk": chunk_response, "type": "CHUNK"}
+                        if len(chunk_batch) == self.output_guardrail_chunk_interval:
+                            llm_output_guardrail = self._llm_output_guardrail(
+                                result_answer, "chunk_interval"
                             )
-
-                            if len(chunk_batch) == self.output_guardrail_chunk_interval:
-                                llm_output_guardrail = self._llm_output_guardrail(
-                                    result_answer, "chunk_interval"
+                            if llm_output_guardrail and llm_output_guardrail != "NONE":
+                                outcome = "BLOCKED_OUTPUT"
+                                yield json.dumps(
+                                    {
+                                        "chunk": "Inappropriate content",
+                                        "type": "CANCEL",
+                                    }
                                 )
-                                if (
-                                    llm_output_guardrail
-                                    and llm_output_guardrail != "NONE"
-                                ):
-                                    outcome = "BLOCKED_OUTPUT"
-                                    yield json.dumps(
-                                        {
-                                            "chunk": "Inappropriate content",
-                                            "type": "CANCEL",
-                                        }
-                                    )
-                                    return
+                                return
 
-                                else:
-                                    for chunk in chunk_batch:
-                                        yield json.dumps(chunk)
-                                    chunk_batch = []
+                            else:
+                                for chunk in chunk_batch:
+                                    yield json.dumps(chunk)
+                                chunk_batch = []
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
                         outcome = "ERROR"
@@ -2240,50 +2217,32 @@ class RagGraph:
                 chunk_number = 0
 
                 try:
-                    for chunk, metadata in self.graph.stream(
-                        {
-                            "current_query": query,
-                            "chat_sequence_number": self.chat_sequence_number,
-                        },
-                        config=self.config,
-                        stream_mode="messages",
-                    ):
-                        if (
-                            metadata["langgraph_node"] == "llm_response"
-                            and chunk.content
-                        ):
-                            chunk_response = ""
+                    for chunk_response in self._iter_answer_chunks(query):
+                        chunk_number += 1
 
-                            if isinstance(chunk.content, list):
-                                chunk_response = chunk.content[0].get("text")
-                            else:
-                                chunk_response = chunk.content
+                        if start_chunk:
+                            yield json.dumps({"chunk": "", "type": "START"})
+                            start_chunk = False
 
-                            chunk_number += 1
+                        result_answer += chunk_response
 
-                            if start_chunk:
-                                yield json.dumps({"chunk": "", "type": "START"})
-                                start_chunk = False
+                        if chunk_number == self.output_guardrail_chunk_interval:
+                            llm_output_guardrail = self._llm_output_guardrail(
+                                result_answer, "chunk_interval"
+                            )
+                            chunk_number = 0
+                            result_answer = ""
 
-                            result_answer += chunk_response
-
-                            if chunk_number == self.output_guardrail_chunk_interval:
-                                llm_output_guardrail = self._llm_output_guardrail(
-                                    result_answer, "chunk_interval"
+                            if llm_output_guardrail != "NONE":
+                                outcome = "BLOCKED_OUTPUT"
+                                yield json.dumps(
+                                    {
+                                        "chunk": "Inappropriate content",
+                                        "type": "CANCEL",
+                                    }
                                 )
-                                chunk_number = 0
-                                result_answer = ""
-
-                                if llm_output_guardrail != "NONE":
-                                    outcome = "BLOCKED_OUTPUT"
-                                    yield json.dumps(
-                                        {
-                                            "chunk": "Inappropriate content",
-                                            "type": "CANCEL",
-                                        }
-                                    )
-                                    return
-                            yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
+                                return
+                        yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
 
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
@@ -2314,32 +2273,14 @@ class RagGraph:
                 result_answer = ""
 
                 try:
-                    for chunk, metadata in self.graph.stream(
-                        {
-                            "current_query": query,
-                            "chat_sequence_number": self.chat_sequence_number,
-                        },
-                        config=self.config,
-                        stream_mode="messages",
-                    ):
-                        if (
-                            metadata["langgraph_node"] == "llm_response"
-                            and chunk.content
-                        ):
-                            chunk_response = ""
+                    for chunk_response in self._iter_answer_chunks(query):
+                        if start_chunk:
+                            yield json.dumps({"chunk": "", "type": "START"})
+                            start_chunk = False
 
-                            if isinstance(chunk.content, list):
-                                chunk_response = chunk.content[0].get("text")
-                            else:
-                                chunk_response = chunk.content
+                        result_answer += chunk_response
 
-                            if start_chunk:
-                                yield json.dumps({"chunk": "", "type": "START"})
-                                start_chunk = False
-
-                            result_answer += chunk_response
-
-                            yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
+                        yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
 
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
