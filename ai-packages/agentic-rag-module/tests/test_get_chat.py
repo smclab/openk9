@@ -240,15 +240,15 @@ def test_get_chat_returns_404_when_chat_missing(client, monkeypatch):
     assert response.status_code == 404
 
 
-def test_get_chat_returns_only_the_cited_sources(client, monkeypatch):
-    """A reloaded conversation must show what the stream showed: the sources
-    the answer marked, not every retrieved document."""
+def test_get_chat_returns_only_cited_sources_with_their_quotes(client, monkeypatch):
+    """A reloaded conversation must show what the stream showed: the cited
+    sources with their quotes, not every retrieved document."""
     context = [
         _document("doc-1", "Citato"),
         _document("doc-1", "Citato"),
         _document("doc-2", "Recuperato ma non usato"),
     ]
-    hits = [_checkpoint_with_sources(context, citations={"doc-1": []})]
+    hits = [_checkpoint_with_sources(context, citations={"doc-1": ["una quota"]})]
     monkeypatch.setattr(
         server, "get_opensearch_client", lambda *a, **k: _opensearch_mock(hits)
     )
@@ -264,7 +264,7 @@ def test_get_chat_returns_only_the_cited_sources(client, monkeypatch):
             "ordinal": None,
             "title": "Citato",
             "url": "http://smc.it/doc-1",
-            "citations": [],
+            "citations": [{"quote": "una quota"}],
         }
     ]
 
