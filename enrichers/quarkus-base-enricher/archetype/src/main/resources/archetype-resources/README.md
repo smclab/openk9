@@ -46,6 +46,8 @@ $h2 REST Classes
   OpenK9 takes the payload returned by the enricher as the new document, so the result of the enrichment goes into the payload.  
   Each binary can be read from the file manager with `ByteArrayClient` or `Base64Client`, by its `resourceId` and,
   as `schemaName`, the `tenantId` of the document.  
+  When the enricher comes after Tika in the pipeline, turn on `retain_binaries` in the Tika enrich item:
+  otherwise Tika deletes each binary from the file manager after reading it, and this enricher finds none.  
   `replyTo` is set only for async enrichers: it is the token to send back with the enriched payload.
 
 
