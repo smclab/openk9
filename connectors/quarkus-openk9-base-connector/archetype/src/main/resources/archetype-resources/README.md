@@ -197,7 +197,7 @@ $h2 REST Classes
   }
   ```
   Each top-level key of `datasourcePayload` becomes a document type of the datasource when OpenK9 reads this sample, so it should have the same keys as the documents the connector sends.  
-  `type` is `DOCUMENT`, `PARTIAL_DOCUMENT` (updates the indexed documents with the same `contentId`), `LAST` or `HALT`; `CrawlerVerticle` sends `LAST` and `HALT`.
+  `type` is `DOCUMENT`, `PARTIAL_DOCUMENT` (updates the indexed documents with the same `contentId`), `LAST` or `HALT`; `CrawlerVerticle` sends `LAST` and `HALT`; the `rawContent` of a `HALT` becomes the error of the scheduling.
 
 
 $h2 Connector Base Classes
@@ -242,7 +242,7 @@ $h2 Connector Base Classes
   A `Worker` instance, created via `WorkerFactoryImpl` injected in `CrawlingService`, is passed to its constructor.  
   It sets up the producer using the IngestionDTOCodec to send data to `HttpPublisherVerticle`.  
   The _work_ method of `WorkerImpl` is executed on a worker thread via a promise.  
-  If the promise completes successfully, the verticle is undeployed.
+  When the promise completes, the verticle sends `LAST`; when it fails, it logs the cause and sends `HALT` with only the exception type as `rawContent`. Then the verticle is undeployed.
 
 
 - **HttpPublisherVerticle**  
