@@ -68,6 +68,33 @@ from app.utils.query_rewrite import escape_curly_braces
 
 logger = get_logger(__name__)
 
+# The model numbers its sources and writes [2] at the end of each sentence
+# taken from source 2, which is what lets the answer carry only the documents
+# it actually used and say which part came from where. The marker is NOT
+# suppressed - it travels to the client as answer text, and the ordinal on the
+# DOCUMENT event carries the mapping a client needs to render it as a
+# footnote. Nothing to suppress means no streaming filter, and a marker a
+# client cannot resolve degrades into a readable [2] rather than into text
+# eaten by suppression logic.
+CITATION_MARKER = re.compile(r"\[(\d{1,3})\]")
+CITATION_MARKERS_INSTRUCTION = (
+    "Each source in the context is numbered. Every time a sentence of your "
+    "answer states something taken from a source, write that source's number "
+    "in square brackets at the end of the sentence, before the full stop, "
+    "like this: SMC opera dal 1995 [2]. Use only the numbers shown in the "
+    "context and never invent one. Mark each sentence with the one source it "
+    "took its statement from. Do not mark a sentence you wrote yourself "
+    "rather than took from a source."
+)
+
+# Without it nothing stops the model from appending a list of sources of its
+# own invention, and since nothing is expected after the answer there is no
+# filter to hold it back: it would reach the reader as answer text.
+CITATION_MARKERS_ONLY_INSTRUCTION = (
+    " Write no list of sources at the end and nothing after the answer: "
+    "these markers are the only citation you must produce."
+)
+
 
 class GraphState(BaseModel):
     current_query: Annotated[str, "current_query"] = Field(
@@ -123,6 +150,14 @@ class GraphState(BaseModel):
     )
     target_lang: Optional[str] = Field(
         default=None, description="Resolved language the answer must be written in"
+    )
+    citations: Optional[dict] = Field(
+        default=None,
+        description="Sources the LLM cited, by document_id",
+    )
+    citation_ordinals: Optional[dict] = Field(
+        default=None,
+        description="Inline marker number -> document_id it points to",
     )
     # conversation_summary: Annotated[str, "conversation_summary"] = Field(
     #     "", description="Summary of the conversation"
@@ -1732,9 +1767,43 @@ class RagGraph:
         # target_lang is set by the resolve_language node.
         target_lang = state.target_lang or "Italian"
 
+        # Bound here, not in the branch that fills them: the parsing below
+        # reads them on every path through this node.
+        ordinals = {}
+
         if state.use_rag and context:
             prompt = escape_curly_braces(self.configuration.get("prompt_template"))
-            context_text = "\n\n".join([doc.page_content for doc in context])
+
+            # Each chunk is labelled with its source number so the LLM can
+            # attribute its sentences. The instruction is passed as a template
+            # *value*, not appended to the template, so nothing it contains is
+            # parsed as a template variable.
+            # One ordinal per source, not per chunk: two chunks of the same
+            # document share a number, so the model cannot cite the same
+            # source twice under different names.
+            # A chunk with no document_id can never be emitted as a source, so
+            # it gets no number either: numbering it would let the model cite
+            # something that no DOCUMENT event can ever carry.
+            for doc in context:
+                if document_id := doc.metadata.get("document_id"):
+                    ordinals.setdefault(str(document_id), len(ordinals) + 1)
+
+            def _label(doc):
+                document_id = doc.metadata.get("document_id")
+                ordinal = ordinals.get(str(document_id)) if document_id else None
+                return (
+                    f"[{ordinal}]\n{doc.page_content}" if ordinal else doc.page_content
+                )
+
+            context_text = "\n\n".join(_label(doc) for doc in context)
+
+            citations_instruction = (
+                CITATION_MARKERS_INSTRUCTION + CITATION_MARKERS_ONLY_INSTRUCTION
+            )
+            logger.debug(
+                f"[citations] {len(context)} chunks numbered over "
+                f"{len(ordinals)} sources"
+            )
 
             rag_prompt = ChatPromptTemplate.from_template(
                 prompt
@@ -1748,7 +1817,7 @@ class RagGraph:
                 Question: {query}
 
                 IMPORTANT: Write your entire answer in {target_lang}, regardless of the language used in the context or in these instructions.
-
+{citations_instruction}
                 Answer:
                 """
             )
@@ -1760,6 +1829,7 @@ class RagGraph:
                     "context": context_text,
                     "history": conversation_history,
                     "target_lang": target_lang,
+                    "citations_instruction": citations_instruction,
                 }
             )
         else:
@@ -1797,9 +1867,63 @@ class RagGraph:
         else:
             llm_response = response.content
 
+        if state.use_rag and context:
+            # The markers stay in llm_response: they are part of the answer
+            # the client renders.
+            state.citations, state.citation_ordinals = self._parse_citations(
+                llm_response, ordinals
+            )
+
         state.response = llm_response
 
         return state
+
+    @staticmethod
+    def _parse_citations(answer: str, ordinals: dict) -> tuple:
+        """Read the inline [n] markers the answer carries.
+
+        Returns the sources to keep (document_id -> its citations) and the
+        ordinal -> document_id mapping the DOCUMENT events carry.
+
+        Returns (None, None) when nothing usable was marked, and the caller
+        then falls back to showing every retrieved source rather than an
+        answer with no source at all."""
+        by_ordinal = {ordinal: document_id for document_id, ordinal in ordinals.items()}
+
+        cited_ordinals = {}
+        invented = []
+        for match in CITATION_MARKER.finditer(answer):
+            ordinal = int(match.group(1))
+            if ordinal in by_ordinal:
+                cited_ordinals.setdefault(ordinal, by_ordinal[ordinal])
+            elif ordinal not in invented:
+                invented.append(ordinal)
+
+        if invented:
+            # The number points at no source: a client would render a
+            # footnote leading nowhere. Counted, not corrected.
+            logger.warning(
+                f"[citations] inline markers {invented} point to no source "
+                f"(only 1..{len(ordinals)} exist)"
+            )
+
+        if not cited_ordinals:
+            logger.debug(
+                "[citations] the answer carries no usable inline marker, "
+                "keeping all sources"
+            )
+            return None, None
+
+        logger.debug(
+            f"[citations] {len(cited_ordinals)} of {len(ordinals)} retrieved "
+            f"sources cited (inline markers: "
+            f"{','.join(str(ordinal) for ordinal in cited_ordinals)})"
+        )
+
+        return (
+            {document_id: [] for document_id in cited_ordinals.values()},
+            cited_ordinals,
+        )
 
     def history_saver_node(self, state: GraphState) -> GraphState:
         """Update messages with the latest query and response"""
@@ -2003,16 +2127,39 @@ class RagGraph:
             }
         )
 
-    def _stream_documents(self, documents: List[Document]):
+    def _stream_documents(
+        self,
+        documents: List[Document],
+        citations: Optional[dict] = None,
+        ordinals: Optional[dict] = None,
+    ):
+        """Emit one DOCUMENT event per retrieved source.
+
+        With citations given, only the sources the LLM cited are emitted. The
+        ordinal is the number the answer marks that source with, so a client
+        can turn [2] in the text into a link to this document; it rides on
+        DOCUMENT rather than on an event of its own, so a client that ignores
+        it is unaffected."""
+        ordinal_of = {
+            document_id: ordinal for ordinal, document_id in (ordinals or {}).items()
+        }
         documents_id = set()
         for document in documents:
             metadata = document.metadata
             if (
                 document_id := metadata.get("document_id")
             ) and document_id not in documents_id:
+                if citations is not None and str(document_id) not in citations:
+                    continue
                 documents_id.add(document_id)
                 chunk = {}
-                chunk["citations"] = []
+                if (ordinal := ordinal_of.get(str(document_id))) is not None:
+                    chunk["ordinal"] = ordinal
+                chunk["citations"] = (
+                    []
+                    if citations is None
+                    else [{"quote": quote} for quote in citations[str(document_id)]]
+                )
                 if "score" in metadata:
                     chunk["score"] = metadata.get("score")
                 if "title" in metadata:
@@ -2027,6 +2174,21 @@ class RagGraph:
                         "chunk": chunk,
                         "type": "DOCUMENT",
                     }
+                )
+
+        if citations is not None:
+            if documents_id:
+                logger.debug(
+                    f"[citations] DOCUMENT events emitted: {len(documents_id)} "
+                    f"of {len(citations)} cited sources"
+                )
+            else:
+                # Worst outcome for the user: an answer with no source at all.
+                # Only reachable if the state citations and the documents being
+                # streamed disagree, so it is worth a warning.
+                logger.warning(
+                    f"[citations] none of the {len(citations)} cited sources "
+                    "matches a streamed document: no DOCUMENT event emitted"
                 )
 
     def _iter_answer_chunks(self, query: str) -> Iterator[str]:
@@ -2321,7 +2483,11 @@ class RagGraph:
                     and not last_state.values.get("guardrail_check")
                     and (documents := last_state.values.get("context"))
                 ):
-                    yield from self._stream_documents(documents)
+                    yield from self._stream_documents(
+                        documents,
+                        last_state.values.get("citations"),
+                        last_state.values.get("citation_ordinals"),
+                    )
 
             if last_state.values.get("guardrail_check"):
                 outcome = "BLOCKED_INPUT"
