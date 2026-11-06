@@ -162,7 +162,7 @@ def test_the_fields_are_saved_with_the_turn():
 # --------------------------------------------------------------------------- #
 # The turn with real-time evaluation                                           #
 # --------------------------------------------------------------------------- #
-def _turn(monkeypatch, *, real_time, judges_fail=False, with_verifier=False):
+def _turn(monkeypatch, *, real_time, judges=None, with_verifier=False):
     calls = []
 
     async def fake_guardrail(**_):
@@ -181,14 +181,13 @@ def _turn(monkeypatch, *, real_time, judges_fail=False, with_verifier=False):
 
     async def fake_evaluations(**_):
         calls.append("evaluation")
-        if judges_fail:
-            raise AssertionError("run_evaluations is best effort and never raises")
         return {"response_evaluation": "CLEAR"}
 
     monkeypatch.setattr(guardrails, "input_guardrail", fake_guardrail)
     monkeypatch.setattr(intent, "detect_domains", fake_detect)
     monkeypatch.setattr(orchestrator, "run_orchestrator", fake_run_orchestrator)
-    monkeypatch.setattr(evaluation, "run_evaluations", fake_evaluations)
+    if judges is None:
+        monkeypatch.setattr(evaluation, "run_evaluations", fake_evaluations)
     store = MagicMock()
 
     async def collect():
@@ -199,6 +198,7 @@ def _turn(monkeypatch, *, real_time, judges_fail=False, with_verifier=False):
                 search_text="Chi e' il RUP?",
                 # the evaluation alone buffers the answer; without it, the Verifier does
                 deps=_deps(
+                    judges,
                     enable_real_time_evaluation=real_time,
                     enable_verifier=with_verifier or not real_time,
                 ),
@@ -229,6 +229,17 @@ def test_with_the_verifier_too_evaluating_comes_once(monkeypatch):
     assert calls == ["orchestrator", "evaluation"]
     phases = [e["chunk"] for e in events if e["type"] == "STATUS"]
     assert phases == ["planning", "evaluating", "generating"]
+
+
+def test_when_every_judge_fails_the_answer_still_arrives(monkeypatch):
+    model, _ = _judges(fail=("",))  # "" is in every prompt: every judge fails
+
+    events, _, store = _turn(monkeypatch, real_time=True, judges=model)
+
+    types = [e["type"] for e in events]
+    assert "START" in types and types[-1] == "END"
+    assert "".join(e["chunk"] for e in events if e["type"] == "CHUNK")
+    assert set(store.save_turn.call_args.kwargs["evaluation_fields"].values()) == {None}
 
 
 def test_without_real_time_evaluation_nothing_is_judged(monkeypatch):
@@ -292,7 +303,7 @@ TURN = {
 
 def test_the_offline_evaluation_annotates_only_the_turn_spans(monkeypatch):
     model, _ = _judges()
-    client = MagicMock()
+    client = MagicMock(spec=evaluations.Client)  # a method the client lacks fails the test
     client.spans.get_spans.return_value = [
         _span("turn", output=TURN),
         _span("child", parent_id="turn", output=TURN),
@@ -322,10 +333,27 @@ def test_the_offline_evaluation_annotates_only_the_turn_spans(monkeypatch):
     )
 
     assert evaluated == {"turn"}
-    annotations = client.annotations.add_span_annotation.call_args_list
+    annotations = client.spans.add_span_annotation.call_args_list
     assert sorted(call.kwargs["annotation_name"] for call in annotations) == [
         "evaluate_rag_router",
         "evaluate_response",
         "evaluation for chunk d1",
     ]
     assert {call.kwargs["span_id"] for call in annotations} == {"turn"}
+
+
+def test_a_span_whose_annotations_all_fail_is_not_evaluated(monkeypatch):
+    model, _ = _judges()
+    client = MagicMock(spec=evaluations.Client)
+    client.spans.get_spans.return_value = [_span("turn", output=TURN)]
+    client.spans.add_span_annotation.side_effect = RuntimeError("phoenix down")
+    monkeypatch.setattr(evaluations, "Client", lambda base_url: client)
+    monkeypatch.setattr(evaluations, "build_model", lambda configuration: model)
+
+    evaluated = asyncio.run(
+        evaluations.evaluations(
+            {}, {}, "project", "http://phoenix", 10, None, None, True, False, True
+        )
+    )
+
+    assert evaluated == set()

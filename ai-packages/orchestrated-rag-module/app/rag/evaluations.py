@@ -177,14 +177,16 @@ async def _judge(model, output_type, prompt):
 async def rag_router_evaluation(model, client, span_id, query, use_rag, rag_tool_description):
     try:
         label = await _judge(model, str, router_prompt(query, use_rag, rag_tool_description))
-        client.annotations.add_span_annotation(
+        client.spans.add_span_annotation(
             annotation_name="evaluate_rag_router",
             annotator_kind="HUMAN",
             span_id=span_id,
             label=label,
         )
+        return True
     except Exception as e:  # noqa: BLE001
         logger.error(f"[evaluate] rag router of span {span_id}: {e}")
+        return False
 
 
 async def response_evaluation(model, client, span_id, query, response):
@@ -192,7 +194,7 @@ async def response_evaluation(model, client, span_id, query, response):
         verdict = await _judge(
             model, ClassificationResponse, CLARITY_PROMPT.format(query=query, response=response)
         )
-        client.annotations.add_span_annotation(
+        client.spans.add_span_annotation(
             annotation_name="evaluate_response",
             annotator_kind="HUMAN",
             span_id=span_id,
@@ -200,8 +202,10 @@ async def response_evaluation(model, client, span_id, query, response):
             score=verdict.vote,
             explanation=verdict.explanation,
         )
+        return True
     except Exception as e:  # noqa: BLE001
         logger.error(f"[evaluate] response of span {span_id}: {e}")
+        return False
 
 
 async def retriever_evaluation(model, client, span_id, query, context):
@@ -218,15 +222,17 @@ async def retriever_evaluation(model, client, span_id, query, context):
             model, RetrieverEvaluationResponseList, CHUNKS_PROMPT.format(query=query, chunks=chunks)
         )
         for verdict in verdicts.evaluations:
-            client.annotations.add_span_annotation(
+            client.spans.add_span_annotation(
                 annotation_name=f"evaluation for chunk {verdict.chunk_id}",
                 span_id=span_id,
                 label=verdict.judgment.value,
                 score=verdict.vote,
                 explanation=verdict.explanation,
             )
+        return True
     except Exception as e:  # noqa: BLE001
         logger.error(f"[evaluate] retriever of span {span_id}: {e}")
+        return False
 
 
 def _turn(span) -> dict:
@@ -269,20 +275,21 @@ async def evaluations(
         query = turn.get("current_query", "")
         response = turn.get("response", "")
         context = turn.get("context") or []
+        # a span counts as evaluated only when one of its annotations reached Phoenix
         if evaluate_response and query and response:
-            await response_evaluation(model, client, span_id, query, response)
-            evaluated_spans.add(span_id)
+            if await response_evaluation(model, client, span_id, query, response):
+                evaluated_spans.add(span_id)
         if evaluate_rag_router:
-            await rag_router_evaluation(
+            if await rag_router_evaluation(
                 model,
                 client,
                 span_id,
                 query,
                 turn.get("use_rag", False),
                 rag_configuration.get("rag_tool_description"),
-            )
-            evaluated_spans.add(span_id)
+            ):
+                evaluated_spans.add(span_id)
         if evaluate_retriever and context:
-            await retriever_evaluation(model, client, span_id, query, context)
-            evaluated_spans.add(span_id)
+            if await retriever_evaluation(model, client, span_id, query, context):
+                evaluated_spans.add(span_id)
     return evaluated_spans
