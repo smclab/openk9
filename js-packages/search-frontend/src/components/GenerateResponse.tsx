@@ -18,6 +18,7 @@ import isEqual from "lodash/isEqual";
 import React from "react";
 import Markdown from "react-markdown";
 import { useTranslation } from "react-i18next";
+import { remarkStripCitationMarkers } from "./inlineCitations";
 import styled, { keyframes } from "styled-components";
 import { css } from "styled-components";
 import { DeleteLogo } from "./DeleteLogo";
@@ -156,7 +157,11 @@ export default function GenerateResponse({
                 {(isChatting || loadingSearch) && <SmallLoader />}
                 {(message?.answer || isChatting) && (
                   <Answer>
-                    <Markdown>{message?.answer ?? ""}</Markdown>
+                    {/* this view renders no citations, so the markers the
+                        answer carries are noise the reader cannot act on */}
+                    <Markdown remarkPlugins={[remarkStripCitationMarkers]}>
+                      {message?.answer ?? ""}
+                    </Markdown>
                   </Answer>
                 )}
               </>
