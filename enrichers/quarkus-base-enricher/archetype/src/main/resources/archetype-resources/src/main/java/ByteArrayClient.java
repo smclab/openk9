@@ -44,6 +44,10 @@ public class ByteArrayClient {
                     if (res.statusCode() / 100 != 2) {
                         throw new IllegalStateException("File manager answered HTTP " + res.statusCode());
                     }
+                    // The file manager answers 200 with an empty body when it does not have the resource
+                    if (res.body() == null || res.body().length() == 0) {
+                        throw new IllegalStateException("File manager returned no content");
+                    }
                     return res.body();
                 })
                 .onSuccess(res -> LOGGER.info("Byte array binary received: " + res.length() + " bytes"))
