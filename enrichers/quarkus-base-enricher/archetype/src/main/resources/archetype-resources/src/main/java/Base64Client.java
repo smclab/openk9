@@ -43,6 +43,10 @@ public class Base64Client {
                     if (res.statusCode() / 100 != 2) {
                         throw new IllegalStateException("File manager answered HTTP " + res.statusCode());
                     }
+                    // The file manager answers 200 with an empty body when it does not have the resource
+                    if (res.body() == null || res.body().isEmpty()) {
+                        throw new IllegalStateException("File manager returned no content");
+                    }
                     return res.body();
                 })
                 .onSuccess(res -> LOGGER.info("Base64 binary received: " + res.length() + " characters"))
