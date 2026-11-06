@@ -52,7 +52,8 @@ These classes implement the REST classes from the library and adapt their behavi
   Each binary can be read from the file manager with `ByteArrayClient` or `Base64Client`, by its `resourceId` and,
   as `schemaName`, the `tenantId` of the document.  
   When the enricher comes after Tika in the pipeline, turn on `retain_binaries` in the Tika enrich item:
-  otherwise Tika deletes each binary from the file manager after reading it, and this enricher finds none.  
+  otherwise Tika deletes the first binary of the document from the file manager after reading it,
+  even when its type is not mapped, and this enricher then logs it as not read.  
   `replyTo` is set only for async enrichers: it is the token to send back with the enriched payload.
 
 
