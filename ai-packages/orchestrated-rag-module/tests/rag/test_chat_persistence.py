@@ -31,6 +31,7 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic_ai.messages import ModelRequest, ModelResponse, TextPart, UserPromptPart
 
+from app.rag.agentic import persistence
 from app.rag.agentic.entrypoint import resolve_conversation_title
 from app.rag.agentic.persistence import OpenSearchConversationStore
 
@@ -122,6 +123,34 @@ def test_first_turn_starts_at_step_one():
 
     _, body = _indexed_checkpoint(store)
     assert body["metadata"]["step"] == "1"
+
+
+def test_the_instructions_of_the_requests_are_not_saved():
+    """The agent sends only its own instructions, never those of the past turns: saved, they
+    would repeat the prompt in every request of every turn."""
+    store = _store_with_mock(None)
+    history = [
+        ModelRequest(parts=[UserPromptPart(content="domanda")], instructions="ORCHESTRATOR PROMPT"),
+        ModelResponse(parts=[TextPart(content="risposta")]),
+    ]
+
+    store.save_turn(
+        chat_id="chat-1",
+        chat_sequence_number=1,
+        original_query="domanda",
+        current_query="domanda",
+        response="risposta",
+        conversation_title="Titolo",
+        retrieve_from_uploaded_documents=False,
+        used_document_refs=[],
+        message_history=history,
+    )
+
+    checkpoint, _ = _indexed_checkpoint(store)
+    assert "ORCHESTRATOR PROMPT" not in json.dumps(checkpoint)
+    assert history[0].instructions == "ORCHESTRATOR PROMPT"
+    reloaded = persistence.deserialize_messages(checkpoint["channel_values"]["messages"])
+    assert [p.content for m in reloaded for p in m.parts] == ["domanda", "risposta"]
 
 
 def _title(**kwargs):

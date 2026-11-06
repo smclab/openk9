@@ -128,10 +128,21 @@ def serialize_context(used_document_refs: list[DocumentRef]) -> list[dict]:
 
 
 def serialize_messages(message_history) -> list:
-    """PydanticAI history → JSON-able (for ``channel_values.messages``)."""
+    """PydanticAI history → JSON-able (for ``channel_values.messages``).
+
+    The instructions of the requests are left out: an agent sends only its own, never those of
+    the past turns, so saved they would only repeat the prompt in every request of every turn.
+    """
+    from dataclasses import replace
+
+    from pydantic_ai.messages import ModelRequest
     from pydantic_core import to_jsonable_python
 
-    return to_jsonable_python(message_history or [])
+    messages = [
+        replace(m, instructions=None) if isinstance(m, ModelRequest) else m
+        for m in message_history or []
+    ]
+    return to_jsonable_python(messages)
 
 
 def _is_agentic_rag_message(message) -> bool:
