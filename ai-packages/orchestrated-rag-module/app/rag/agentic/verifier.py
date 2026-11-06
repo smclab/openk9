@@ -73,6 +73,7 @@ that is not supported, quoted as written, each with an action:
 def build_verifier_agent(model) -> Agent:
     return Agent(
         model,
+        name="verifier",
         output_type=[VerificationOk, VerificationFailed],
         deps_type=AgenticDeps,
         system_prompt=VERIFIER_SYSTEM_PROMPT,

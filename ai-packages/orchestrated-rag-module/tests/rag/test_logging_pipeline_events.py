@@ -30,7 +30,8 @@ from unittest.mock import MagicMock
 
 import pytest
 from pydantic_ai.messages import ModelResponse, TextPart, ToolCallPart, ToolReturnPart
-from pydantic_ai.models.function import AgentInfo, FunctionModel
+from pydantic_ai.exceptions import UsageLimitExceeded
+from pydantic_ai.models.function import AgentInfo, DeltaToolCall, FunctionModel
 from pydantic_ai.usage import RequestUsage, RunUsage
 
 from app.rag.agentic import discovery, entrypoint, guardrails, intent, orchestrator, retrieval
@@ -169,6 +170,45 @@ def test_the_orchestrator_counts_its_discovery_too():
 
     # two requests of the orchestrator, one of the Discovery
     assert deps.usage.requests == 3
+
+
+def test_an_orchestrator_stopped_by_its_limit_still_counts():
+    def orchestrator_model(messages, info: AgentInfo) -> ModelResponse:
+        return ModelResponse(parts=[ToolCallPart("discover", {"question": QUERY})])
+
+    def discovery_model(messages, info: AgentInfo) -> ModelResponse:
+        unanswerable = next(t for t in info.output_tools if "Unanswerable" in t.name)
+        return ModelResponse(parts=[ToolCallPart(unanswerable.name, {"reason": "nulla"})])
+
+    deps = _deps(FunctionModel(orchestrator_model), max_iterations=1)
+    deps.discovery_model = FunctionModel(discovery_model)
+
+    with pytest.raises(UsageLimitExceeded):
+        asyncio.run(orchestrator.run_orchestrator(question=QUERY, deps=deps))
+
+    assert deps.usage.requests > 0
+
+
+def test_a_cancelled_answer_still_counts_the_orchestrator():
+    """The output guardrail can stop the stream before ``finalize``: the record of the request
+    must carry what the orchestrator spent anyway."""
+    output_args = json.dumps({"status": "ok", "message": ANSWER, "used_document_ids": []})
+
+    async def stream_function(messages, info: AgentInfo):
+        yield {0: DeltaToolCall(name=info.output_tools[0].name, json_args=output_args)}
+
+    deps = _deps()
+
+    async def cancelled():
+        async with orchestrator.stream_orchestrator(
+            question=QUERY, deps=deps, model=FunctionModel(stream_function=stream_function)
+        ) as stream:
+            async for _ in stream.deltas():
+                break
+
+    asyncio.run(cancelled())
+
+    assert deps.usage.requests == 1
 
 
 def test_the_other_agents_of_the_turn_add_to_the_same_bill():

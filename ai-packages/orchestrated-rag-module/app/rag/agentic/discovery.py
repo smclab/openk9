@@ -134,6 +134,7 @@ def _build_discovery_agent(model, store: _CandidateStore, deps: AgenticDeps) -> 
     )
     agent = Agent(
         model,
+        name="discovery",
         output_type=[DiscoverySelection, DiscoveryUnanswerable],
         deps_type=AgenticDeps,
         system_prompt=f"{DISCOVERY_SYSTEM_PROMPT}\n\nAllowed domains:\n{domains_xml}",

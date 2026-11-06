@@ -97,6 +97,7 @@ async def generate_title(model, question: str, answer: str, usage=None) -> str:
 
     agent = Agent(
         model,
+        name="title",
         output_type=str,
         system_prompt=(
             "Generate a short conversation title (a few words, no quotes) for the exchange "
@@ -232,7 +233,12 @@ async def media_only_turn(
     # instructions, not a system prompt: sent at every turn by the agent that runs it, while those
     # of the past turns are not sent again, so neither lost after the first turn nor left to the
     # orchestrator of the next one
-    agent = Agent(deps.orchestrator_model, output_type=str, instructions=MEDIA_ONLY_QUERY_INSTRUCTION)
+    agent = Agent(
+        deps.orchestrator_model,
+        name="media_only_answer",
+        output_type=str,
+        instructions=MEDIA_ONLY_QUERY_INSTRUCTION,
+    )
     result = await agent.run(
         f"Context:\n{documents}", message_history=message_history, usage=deps.usage
     )

@@ -143,7 +143,13 @@ async def classify_with_llm(
     """The category the model gives to ``text``, or ``NONE`` for an empty answer."""
     from pydantic_ai import Agent
 
-    agent = Agent(model, output_type=str, system_prompt=instruction, model_settings=model_settings)
+    agent = Agent(
+        model,
+        name="guardrail_classifier",
+        output_type=str,
+        system_prompt=instruction,
+        model_settings=model_settings,
+    )
     result = await agent.run(text, usage=usage)
     return (result.output or "").strip() or SAFE
 
@@ -420,7 +426,7 @@ async def scope_gate(
         context_text=context_text,
         answer_prefix=answer_prefix,
     )
-    result = await Agent(model, output_type=str).run(prompt, usage=deps.usage)
+    result = await Agent(model, name="scope_gate", output_type=str).run(prompt, usage=deps.usage)
     verdict = "OFF_SCOPE" if "OFF_SCOPE" in (result.output or "").upper() else "VALID"
     context = log_context(tenant_id=deps.tenant_id, user_id=deps.user_id, chat_id=deps.chat_id)
     if verdict == "OFF_SCOPE":

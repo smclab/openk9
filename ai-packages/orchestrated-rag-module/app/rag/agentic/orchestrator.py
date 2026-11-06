@@ -35,7 +35,7 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 from pydantic_ai import Agent, ModelRetry, RunContext
-from pydantic_ai.usage import UsageLimits
+from pydantic_ai.usage import RunUsage, UsageLimits
 
 from app.rag.agentic import citations, discovery, verifier
 from app.rag.agentic.contracts import (
@@ -305,6 +305,7 @@ def build_orchestrator(
     """
     agent = Agent(
         model,
+        name="orchestrator",
         output_type=OrchestratorOutput,
         deps_type=AgenticDeps,
         # instructions e non system prompt: arrivano a ogni turno, anche con una cronologia che
@@ -462,7 +463,6 @@ class OrchestratorStream:
     async def finalize(self):
         """Da chiamare a delta esauriti: risolve output finale e ``DocumentRef``."""
         self.output = await self._streamed.get_output()
-        self._deps.usage.incr(self._streamed.usage)
         self.refs = citations.cited_refs(self._deps, self.output)
         return self.output, self.refs, self.result
 
@@ -496,13 +496,19 @@ async def stream_orchestrator(
     ``output_validator``, e ritrattare token gia' inviati richiederebbe un evento SSE che i
     frontend non gestiscono. Con il Verifier attivo l'entrypoint usa :func:`run_orchestrator`.
     """
-    async with _orchestrator_for(deps, model).run_stream(
-        question,
-        deps=deps,
-        message_history=message_history,
-        usage_limits=build_usage_limits(deps.rag_configuration),
-    ) as streamed:
-        yield OrchestratorStream(streamed, deps)
+    spent = RunUsage()
+    try:
+        async with _orchestrator_for(deps, model).run_stream(
+            question,
+            deps=deps,
+            message_history=message_history,
+            usage=spent,
+            usage_limits=build_usage_limits(deps.rag_configuration),
+        ) as streamed:
+            yield OrchestratorStream(streamed, deps)
+    finally:
+        # also when the answer is cancelled before finalize or the run fails
+        deps.usage.incr(spent)
 
 
 async def run_orchestrator(
@@ -522,16 +528,21 @@ async def run_orchestrator(
     deps.question = question
     deps.message_history = list(message_history or [])
     enable_verifier = verifier_enabled(deps.rag_configuration)
-    result = await _orchestrator_for(deps, model, enable_verifier=enable_verifier).run(
-        question,
-        deps=deps,
-        message_history=message_history,
-        usage_limits=build_usage_limits(deps.rag_configuration),
-    )
-    output = result.output
     # Discovery and Verifier share the usage of the run: it is the whole bill of the orchestrator.
-    # Added here, not passed in, so that its request limit counts its own requests only.
-    deps.usage.incr(result.usage)
+    # A usage of its own, not deps.usage, so that its request limit counts its own requests only;
+    # added in a finally, so that a run stopped by its limit is billed too.
+    spent = RunUsage()
+    try:
+        result = await _orchestrator_for(deps, model, enable_verifier=enable_verifier).run(
+            question,
+            deps=deps,
+            message_history=message_history,
+            usage=spent,
+            usage_limits=build_usage_limits(deps.rag_configuration),
+        )
+    finally:
+        deps.usage.incr(spent)
+    output = result.output
     refs = citations.cited_refs(deps, output)
     logger.debug(
         f"[orchestrator] done status={output.status} "

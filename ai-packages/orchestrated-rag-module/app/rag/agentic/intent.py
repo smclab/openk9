@@ -92,6 +92,7 @@ async def classify_domain_with_llm(model, query: str, possible_domains, usage=No
 
     agent = Agent(
         model,
+        name="intent_detection",
         output_type=Domain,
         system_prompt=DOMAIN_INSTRUCTION.format(possible_domains=list(possible_domains)),
     )

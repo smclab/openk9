@@ -171,7 +171,8 @@ Adesso valuta i chunk forniti usando queste regole.
 
 async def _judge(model, output_type, prompt):
     with suppress_tracing():
-        return (await Agent(model, output_type=output_type).run(prompt)).output
+        agent = Agent(model, name="evaluation_judge", output_type=output_type)
+        return (await agent.run(prompt)).output
 
 
 async def rag_router_evaluation(model, client, span_id, query, use_rag, rag_tool_description):

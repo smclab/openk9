@@ -131,7 +131,8 @@ async def run_evaluations(
     model = deps.orchestrator_model
 
     async def judge(output_type, prompt):
-        return (await Agent(model, output_type=output_type).run(prompt, usage=deps.usage)).output
+        agent = Agent(model, name="evaluation_judge", output_type=output_type)
+        return (await agent.run(prompt, usage=deps.usage)).output
 
     documents = [
         (document_id, deps.discovered.get(document_id, {}).get("content", ""))
