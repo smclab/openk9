@@ -69,7 +69,7 @@ $h2 REST Classes
         ]
       },
       {
-        "info": "Content types of the binaries to read; none to read them all",
+        "info": "Content types of the binaries to read; none to read them all (example field, not read by the code)",
         "label": "Content Types",
         "name": "contentTypes",
         "type": "multiselect",
@@ -95,7 +95,7 @@ $h2 REST Classes
         ]
       },
       {
-        "info": "Largest binary to read, in megabytes",
+        "info": "Largest binary to read, in megabytes (example field, not read by the code)",
         "label": "Max Binary Size (MB)",
         "name": "maxBinarySize",
         "type": "number",
@@ -113,7 +113,7 @@ $h2 REST Classes
         }
       },
       {
-        "info": "Read the binaries from the file manager; when off, only the text is used",
+        "info": "Read the binaries from the file manager; when off, only their names are listed",
         "label": "Read Binaries",
         "name": "readBinaries",
         "type": "checkbox",
@@ -196,14 +196,14 @@ After generating it, changes need to be made to the enricher to create a concret
    enricher, the callback host and port to reach the OpenK9 datasource;
 3. Replace the example enrichment in `ProcessResourceImpl` with your logic: read what you need from the payload,
    the binaries through `ByteArrayClient` or `Base64Client`, and add your result to the payload.
-   The values set in the enrich item for the fields of `FormResourceImpl` arrive in `data.getEnrichItemConfig()`,
-   as `targetField` in the example;
+   The values set in the enrich item for the fields of `FormResourceImpl` arrive in `data.getEnrichItemConfig()`:
+   the example reads `targetField` and `readBinaries`, while `contentTypes` and `maxBinarySize` are example fields only;
    ```java
-    private Payload enrich(Payload payload, String targetField) {
+    private Payload enrich(Payload payload, EnrichItemConfig config) {
         // Read the document, e.g. its text or its binaries from the file manager
         Object rawContent = payload.getAdditionalProperties().get("rawContent");
         // Add the result to the payload, in the field set in the enrich item: OpenK9 takes it as the new document
-        payload.setAdditionalProperty(targetField, Map.of("length", String.valueOf(rawContent).length()));
+        payload.setAdditionalProperty(targetField(config), Map.of("length", String.valueOf(rawContent).length()));
         return payload;
     }
    ```
@@ -214,7 +214,7 @@ After generating it, changes need to be made to the enricher to create a concret
     @Override
     public ProcessResponseDTO process(@NotNull OpenK9Input data) {
         ProcessResponseDTO responseDTO = new ProcessResponseDTO();
-        responseDTO.setPayload(enrich(data.getPayload(), targetField(data)));
+        responseDTO.setPayload(enrich(data.getPayload(), data.getEnrichItemConfig()));
         return responseDTO;
     }
    ```
@@ -226,7 +226,7 @@ After generating it, changes need to be made to the enricher to create a concret
         if (data.getReplyTo() == null || data.getReplyTo().isEmpty()) {
             throw new IllegalArgumentException("replyTo is null or empty");
         }
-        vertx.executeBlocking(() -> enrich(data.getPayload(), targetField(data)), false)
+        vertx.executeBlocking(() -> enrich(data.getPayload(), data.getEnrichItemConfig()), false)
                 .onSuccess(payload -> callBackClient.callback(payload, data.getReplyTo()))
                 .onFailure(e -> LOGGER.error("Error enriching data", e));
         ProcessResponseDTO responseDTO = new ProcessResponseDTO();

@@ -23,13 +23,15 @@ public class FormResourceImpl implements FormResource {
         form.setFields(List.of(
                 field("targetField", "Target Field", "Field of the document where the enricher writes its result",
                         FormField.Type.TEXT, 6, true, List.of(value("enrichExample", true))),
-                field("contentTypes", "Content Types", "Content types of the binaries to read; none to read them all",
+                field("contentTypes", "Content Types",
+                        "Content types of the binaries to read; none to read them all"
+                                + " (example field, not read by the code)",
                         FormField.Type.MULTISELECT, 6, false, List.of(
                                 value("application/pdf", true), value("text/plain", false),
                                 value("text/html", false), value("image/png", false))),
                 maxBinarySize(),
                 field("readBinaries", "Read Binaries",
-                        "Read the binaries from the file manager; when off, only the text is used",
+                        "Read the binaries from the file manager; when off, only their names are listed",
                         FormField.Type.CHECKBOX, 4, false, List.of(value(true, true)))
         ));
         return form;
@@ -40,7 +42,8 @@ public class FormResourceImpl implements FormResource {
         validator.setMin(1L);
         validator.setMax(100L);
         FormField maxBinarySize = field("maxBinarySize", "Max Binary Size (MB)",
-                "Largest binary to read, in megabytes", FormField.Type.NUMBER, 4, false, List.of(value(10, true)));
+                "Largest binary to read, in megabytes (example field, not read by the code)",
+                FormField.Type.NUMBER, 4, false, List.of(value(10, true)));
         maxBinarySize.setValidator(validator);
         return maxBinarySize;
     }
