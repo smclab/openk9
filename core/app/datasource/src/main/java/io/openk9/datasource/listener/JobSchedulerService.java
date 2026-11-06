@@ -194,7 +194,18 @@ public class JobSchedulerService {
 			var newDataIndex = scheduler.getNewDataIndex();
 
 			if (newDataIndex == null) {
-				return s.persist(scheduler).map(unused -> scheduler);
+				// no dataIndex is created, so nothing else would notice a
+				// knn dataIndex with no model to embed its documents; a
+				// scheduler that records a failure is never refused, or the
+				// failure would leave no record
+				var check = scheduler.getStatus() == Scheduler.SchedulerStatus.RUNNING
+					? dataIndexService
+						.checkEmbeddingModel(s, scheduler.getOldDataIndex())
+					: Uni.createFrom().voidItem();
+
+				return check
+					.call(() -> s.persist(scheduler))
+					.map(unused -> scheduler);
 			}
 
 			// the dataIndex service owns the creation of every dataIndex, and
