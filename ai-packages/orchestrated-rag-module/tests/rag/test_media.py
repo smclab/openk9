@@ -24,6 +24,7 @@ text of what it found.
 
 import asyncio
 import json
+import logging
 from unittest.mock import MagicMock
 
 import pytest
@@ -148,8 +149,30 @@ def test_every_search_of_the_discovery_carries_the_image():
     assert searches[0]["media"] == IMAGE
 
 
+@pytest.mark.parametrize("media, logged", [(IMAGE, "media=yes"), (None, "media=no")])
+def test_the_log_of_a_search_says_whether_it_carried_an_image(caplog, media, logged):
+    deps = _deps(media=media)
+    deps.retrieve_fn = lambda **kwargs: []
+
+    def selector(messages, info: AgentInfo) -> ModelResponse:
+        if len(messages) == 1:
+            return ModelResponse(parts=[ToolCallPart("retriever", {"question": "foto"})])
+        unanswerable = next(t for t in info.output_tools if "Unanswerable" in t.name)
+        return ModelResponse(parts=[ToolCallPart(unanswerable.name, {"reason": "nulla"})])
+
+    with caplog.at_level(logging.INFO, logger="app"):
+        asyncio.run(
+            discovery.run_discovery(
+                request=SubAgentRequest(question="foto"), deps=deps, model=FunctionModel(selector)
+            )
+        )
+
+    (line,) = [r.getMessage() for r in caplog.records if "[retriever]" in r.getMessage()]
+    assert logged in line
+
+
 # --------------------------------------------------------------------------- #
-# A question made of an image alone                                            #
+# A question made of an image alone                                           #
 # --------------------------------------------------------------------------- #
 def _instructions(messages) -> str:
     """What the model is told to do: any system prompt of the history and the instructions of

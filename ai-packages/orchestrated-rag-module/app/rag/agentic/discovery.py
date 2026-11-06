@@ -179,7 +179,8 @@ def _build_discovery_agent(model, store: _CandidateStore, deps: AgenticDeps) -> 
             tenant_id=ctx.deps.tenant_id, user_id=ctx.deps.user_id, chat_id=ctx.deps.chat_id
         )
         logger.info(
-            f"[retriever] retrieved {len(records)} docs domains={filter_domains} {context}"
+            f"[retriever] retrieved {len(records)} docs domains={filter_domains} "
+            f"media={'yes' if ctx.deps.media else 'no'} {context}"
         )
         store.add_many(records)
 
