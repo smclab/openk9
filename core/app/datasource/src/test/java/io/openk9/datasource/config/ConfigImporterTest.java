@@ -30,6 +30,7 @@ import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigEntityType;
+import io.openk9.datasource.config.model.ConfigMetadata;
 import io.openk9.datasource.config.model.ConfigPackage;
 import io.openk9.datasource.config.model.ImportMode;
 import io.openk9.datasource.config.model.ImportReport;
@@ -81,6 +82,7 @@ import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
+import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.RAGConfigurationService;
@@ -156,6 +158,10 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "created-pipeline";
 	private static final String OLD_EMBEDDING_MODEL_NAME =
 		ENTITY_NAME_PREFIX + "old-embedding-model";
+	private static final String BOUND_EMBEDDING_MODEL_NAME =
+		ENTITY_NAME_PREFIX + "bound-embedding-model";
+	private static final String SWITCHED_EMBEDDING_MODEL_NAME =
+		ENTITY_NAME_PREFIX + "switched-embedding-model";
 	private static final String SHARED_SORTING_NAME =
 		ENTITY_NAME_PREFIX + "Shared-Sorting";
 	private static final String CASE_SORTING_NAME =
@@ -227,6 +233,9 @@ public class ConfigImporterTest {
 
 	@Inject
 	EnrichPipelineService enrichPipelineService;
+
+	@Inject
+	EmbeddingModelService embeddingModelService;
 
 	@Inject
 	ObjectMapper objectMapper;
@@ -877,6 +886,53 @@ public class ConfigImporterTest {
 		}
 		assertEquals(virtualHostBefore, binding[3],
 			"the import must preserve the destination virtual host");
+	}
+
+	@Test
+	void the_embedding_model_bound_to_the_tenant_is_switched_by_the_import() {
+		// The binding already points at an embedding model and the package names
+		// a different one: the rebind must move the binding, not fail.
+		Long previousId = boundEmbeddingModelId();
+		createEmbeddingModel(BOUND_EMBEDDING_MODEL_NAME);
+		createEmbeddingModel(SWITCHED_EMBEDDING_MODEL_NAME);
+
+		try {
+			// 1. Bind the first model, then export a package that carries both
+			Long boundId = embeddingModelId(BOUND_EMBEDDING_MODEL_NAME);
+			Long switchedId = embeddingModelId(SWITCHED_EMBEDDING_MODEL_NAME);
+			embeddingModelService.enable(boundId).await().indefinitely();
+			assertEquals(boundId, boundEmbeddingModelId());
+
+			ConfigPackage exported =
+				configExporter.export(TENANT_ID).await().indefinitely();
+			ConfigPackage pkg = withEnabledEmbeddingModel(
+				exported, SWITCHED_EMBEDDING_MODEL_NAME);
+
+			// 2. Import the package pointing at the second model
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, false)
+				.await().indefinitely();
+
+			assertEquals(switchedId, boundEmbeddingModelId(),
+				"the tenant binding must reference the embedding model named by "
+					+ "the package metadata");
+
+			// 3. Importing the same package again leaves the binding as it is
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, false)
+				.await().indefinitely();
+
+			assertEquals(switchedId, boundEmbeddingModelId(),
+				"a repeated import must keep the binding");
+		}
+		finally {
+			// 4. Restore the binding, then remove what the test created
+			restoreEmbeddingModelBinding(previousId);
+			EntitiesUtils.removeEntity(
+				SWITCHED_EMBEDDING_MODEL_NAME, embeddingModelService,
+				sessionFactory);
+			EntitiesUtils.removeEntity(
+				BOUND_EMBEDDING_MODEL_NAME, embeddingModelService,
+				sessionFactory);
+		}
 	}
 
 	@Test
@@ -2240,6 +2296,59 @@ public class ConfigImporterTest {
 			return entity;
 		});
 		return new ConfigPackage(pkg.getSchemaVersion(), pkg.getMetadata(), entities);
+	}
+
+	private Long boundEmbeddingModelId() {
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.createQuery(
+					"select tb.embeddingModel.id from TenantBinding tb "
+						+ "where tb.id = 1",
+					Long.class)
+				.getSingleResultOrNull()
+		).await().indefinitely();
+	}
+
+	private Long embeddingModelId(String name) {
+		return EntitiesUtils.getEntity(name, embeddingModelService, sessionFactory)
+			.getId();
+	}
+
+	private void createEmbeddingModel(String name) {
+		EntitiesUtils.createEntity(
+			EmbeddingModelDTO.builder().name(name).vectorSize(1536).build(),
+			embeddingModelService, sessionFactory);
+	}
+
+	private void restoreEmbeddingModelBinding(Long embeddingModelId) {
+		if (embeddingModelId != null) {
+			embeddingModelService.enable(embeddingModelId).await().indefinitely();
+			return;
+		}
+		sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.createMutationQuery(
+					"update TenantBinding tb set tb.embeddingModel = null "
+						+ "where tb.id = 1")
+				.executeUpdate()
+		).await().indefinitely();
+	}
+
+	private static ConfigPackage withEnabledEmbeddingModel(
+		ConfigPackage pkg, String embeddingModelName) {
+
+		String ref = pkg.getEntities().stream()
+			.filter(entity -> entity.getType() == ConfigEntityType.EMBEDDING_MODEL
+				&& embeddingModelName.equals(entity.getKey()))
+			.map(ConfigEntity::getRef)
+			.findFirst()
+			.orElseThrow();
+		ConfigMetadata source = pkg.getMetadata();
+		ConfigMetadata metadata = new ConfigMetadata(
+			source.getExportedAt(), source.getSourceVirtualHost(),
+			source.getActiveBucketRef(), ref,
+			source.getEnabledLargeLanguageModelRef());
+
+		return new ConfigPackage(
+			pkg.getSchemaVersion(), metadata, pkg.getEntities());
 	}
 
 	private Long firstId(String jpqlEntity) {

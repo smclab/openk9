@@ -32,8 +32,9 @@ import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.eclipse.microprofile.graphql.Description;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -46,7 +47,8 @@ import java.util.Objects;
 	name = EmbeddingModel.FETCH_CURRENT,
 	query = "from EmbeddingModel em where em.tenantBinding is not null"
 )
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class EmbeddingModel extends K9Entity {
