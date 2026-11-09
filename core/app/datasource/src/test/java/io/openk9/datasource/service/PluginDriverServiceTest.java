@@ -122,6 +122,55 @@ public class PluginDriverServiceTest {
 			log.debug(String.format("document type %d: %s", docType.getId(), docType)));
 	}
 
+	@Test
+	void should_create_a_USER_pluginDriver_when_provisioning_is_missing() {
+		// create without provisioning
+		var pluginDriver = pluginDriverService.create(
+				DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
+					.name("missing-provisioning-create")
+					.provisioning(null)
+					.build()
+			)
+			.await().indefinitely();
+
+		// the default provisioning is applied
+		assertEquals(PluginDriver.Provisioning.USER, pluginDriver.getProvisioning());
+
+		// cleanup
+		pluginDriverService.deleteById(pluginDriver.getId())
+			.await().indefinitely();
+	}
+
+	@Test
+	void should_set_USER_provisioning_on_update_when_provisioning_is_missing() {
+		// 1. Create a SYSTEM pluginDriver
+		var pluginDriver = pluginDriverService.create(
+				DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
+					.name("missing-provisioning-update")
+					.provisioning(PluginDriver.Provisioning.SYSTEM)
+					.build()
+			)
+			.await().indefinitely();
+
+		assertEquals(PluginDriver.Provisioning.SYSTEM, pluginDriver.getProvisioning());
+
+		// 2. Update it without provisioning
+		var updated = pluginDriverService.update(
+				pluginDriver.getId(),
+				DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
+					.name("missing-provisioning-update")
+					.provisioning(null)
+					.build()
+			)
+			.await().indefinitely();
+
+		assertEquals(PluginDriver.Provisioning.USER, updated.getProvisioning());
+
+		// cleanup
+		pluginDriverService.deleteById(pluginDriver.getId())
+			.await().indefinitely();
+	}
+
 	@AfterEach
 	void tearDown() {
 
