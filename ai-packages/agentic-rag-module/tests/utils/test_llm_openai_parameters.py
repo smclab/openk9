@@ -17,8 +17,9 @@
 
 """What initialize_language_model hands to ChatOpenAI: reasoning_effort "none"
 when the tenant turns reasoning off, so that models reasoning by default accept
-the function tools of structured output on chat completions, and nothing at all
-otherwise, since other models reject the parameter."""
+the function tools of structured output on chat completions, nothing at all
+without a level, since other models reject the parameter, and the Responses API
+when the tenant asks for a reasoning level."""
 
 import importlib.util
 import pathlib
@@ -98,4 +99,52 @@ def test_reasoning_off_keeps_the_utility_temperature(llm_module):
 
     payload = _structured_output_payload(llm)
 
+    assert payload["temperature"] == 0
+
+
+@pytest.mark.parametrize("model", ["gpt-6-luna", "gpt-5.6-luna"])
+def test_reasoning_level_sends_function_tools_to_the_responses_api(llm_module, model):
+    # chat completions rejects function tools together with reasoning
+    llm = llm_module.initialize_language_model(
+        _openai_configuration(model=model, reasoning="medium")
+    )
+
+    payload = _structured_output_payload(llm)
+
+    assert "input" in payload
+    assert "messages" not in payload
+    assert payload["reasoning"] == {"effort": "medium"}
+    assert payload["tools"][0]["name"] == "Grade"
+
+
+def test_reasoning_level_drops_the_utility_temperature(llm_module):
+    # langchain drops it only for gpt-5 names, and gpt-6-luna rejects it
+    llm = llm_module.initialize_language_model(
+        _openai_configuration(model="gpt-6-luna", reasoning="medium"), temperature=0
+    )
+
+    payload = _structured_output_payload(llm)
+
+    assert "temperature" not in payload
+
+
+def test_reasoning_level_keeps_the_answer_text_first_in_content(llm_module):
+    # the default Responses output puts the reasoning block before the text,
+    # where every node reads content[0]
+    llm = llm_module.initialize_language_model(
+        _openai_configuration(reasoning="medium")
+    )
+
+    assert llm.output_version == "v0"
+
+
+def test_reasoning_off_stays_on_chat_completions_for_gpt_6(llm_module):
+    llm = llm_module.initialize_language_model(
+        _openai_configuration(model="gpt-6-luna", reasoning=False), temperature=0
+    )
+
+    payload = _structured_output_payload(llm)
+
+    assert "messages" in payload
+    assert payload["reasoning_effort"] == "none"
     assert payload["temperature"] == 0

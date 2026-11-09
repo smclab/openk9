@@ -181,10 +181,12 @@ def initialize_language_model(configuration, temperature=None):
                 Configurations for Google Vertex AI Model Garden (required if using CHAT_VERTEX_AI_MODEL_GARDEN).
             - "aws_bedrock": dict
                 Configurations for AWS Bedrock (required if using AWS_BEDROCK).
-            - "reasoning": bool
+            - "reasoning": bool or str
                 Whether the model thinks before answering. OLLAMA defaults to False;
                 on OPENAI only an explicit False is sent, as reasoning_effort "none",
-                and without it the model keeps its own default.
+                and without it the model keeps its own default. On OPENAI a level
+                such as "medium" moves the calls to the Responses API with that
+                reasoning effort and without temperature.
             - "keep_alive": int
                 Seconds the model stays resident in Ollama after a call (OLLAMA only,
                 defaults to DEFAULT_KEEP_ALIVE).
@@ -214,7 +216,22 @@ def initialize_language_model(configuration, temperature=None):
             # chat completions, which every structured output call sends; others
             # reject reasoning_effort altogether, "none" included. So it is sent
             # only when the tenant turns reasoning off.
-            reasoning_off = configuration.get("reasoning") is False
+            reasoning = configuration.get("reasoning")
+            if isinstance(reasoning, str):
+                # A level keeps reasoning on with function tools, which only the
+                # Responses API accepts. There these models reject temperature,
+                # and output "v0" keeps the answer text in content[0] instead
+                # of a reasoning block.
+                reasoning_params = {
+                    "reasoning_effort": reasoning,
+                    "use_responses_api": True,
+                    "output_version": "v0",
+                }
+                temperature = None
+            else:
+                reasoning_params = {
+                    "reasoning_effort": "none" if reasoning is False else None
+                }
             llm = ChatOpenAI(
                 model=model,
                 openai_api_key=api_key,
@@ -222,7 +239,7 @@ def initialize_language_model(configuration, temperature=None):
                 stream_usage=True,
                 max_retries=0,
                 temperature=temperature,
-                reasoning_effort="none" if reasoning_off else None,
+                **reasoning_params,
             )
         case ModelType.OLLAMA.value:
             context_window = configuration["context_window"]

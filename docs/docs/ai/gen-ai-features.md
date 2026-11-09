@@ -124,7 +124,7 @@ When the Large Language Model or the Embedding Model uses Ollama as its provider
 
 | Key | Type | Default | Entity |
 |---|---|---|---|
-| `reasoning` | bool | `false` | LLM |
+| `reasoning` | bool or string | `false` | LLM |
 | `keep_alive` | int (seconds) | `1800` (`0` unloads at once, `-1` keeps the model resident) | LLM, Embedding Model |
 | `num_gpu` | int | not sent: Ollama decides | LLM, Embedding Model |
 
@@ -169,6 +169,16 @@ The key is needed by the models that reason by default and then refuse function 
   "reasoning": false
 }
 ```
+
+To keep reasoning on with these models, give `reasoning` a level instead of a boolean: one of the values the model accepts as reasoning effort, such as `"low"`, `"medium"` or `"high"`. Function tools and reasoning together are accepted only by the Responses API, so with a level every call of the LLM goes to `/v1/responses` with that effort, and without `temperature`, which these models refuse there. The RAG steps that ask for deterministic output lose their `temperature` of `0` too.
+
+```json
+{
+  "reasoning": "medium"
+}
+```
+
+Use a level only with OpenAI itself: OpenAI compatible endpoints such as LiteLLM or vLLM often expose `/v1/chat/completions` alone. On the `ollama` provider a level turns thinking on like `true`.
 
 ## Embedding Batch Size
 
