@@ -137,7 +137,13 @@ class OrchestratorOutput(BaseModel):
     """Output finale dell'orchestratore (output_type dell'Agent)."""
 
     status: Literal["ok", "unanswerable", "error"]
-    message: str
+    message: str = Field(
+        description=(
+            "the answer for the user; end every sentence taken from a document with the source "
+            "number of that document in square brackets, before the full stop, like this: "
+            "SMC opera dal 1995 [2]"
+        ),
+    )
     used_document_ids: list[str] = Field(
         default_factory=list,
         description=(
