@@ -25,6 +25,7 @@ in them. The saved turn keeps both, so that a reopened chat renders the same ``[
 
 import asyncio
 import json
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -41,6 +42,7 @@ from app.rag.agentic.contracts import (
 )
 from app.rag.agentic.deps import AgenticDeps
 from app.rag.agentic.persistence import build_checkpoint
+from tests.external_services import test_llm_configuration_mapping as llm_mapping
 from tests.rag.test_chat_compatibility import FakeOpenSearch, _store
 
 
@@ -138,14 +140,23 @@ def test_the_prompt_asks_for_the_markers_and_the_quotes_only_when_wanted():
     assert "[2]" not in bypass
 
 
-def test_the_tenant_flag_reaches_the_prompt():
-    """The flag is a field of the LLM configuration, as GetLLMConfiguration returns it."""
+@pytest.mark.parametrize("retrieve_citations", [True, False])
+def test_the_tenant_flag_reaches_the_prompt(retrieve_citations):
+    """The flag is a field of the LLM configuration: here from the dict that
+    get_llm_configuration builds out of the GetLLMConfigurations response."""
+    response = llm_mapping._response({})
+    response.retrieveCitations = retrieve_citations
+    llm_configuration, _ = llm_mapping._get_llm_configuration(MagicMock(return_value=response))
     agent = orchestrator._orchestrator_for(
-        _deps(llm_configuration={"retrieve_citations": True}), model="test"
+        _deps(llm_configuration=llm_configuration), model="test"
     )
+
+    assert ("Fill `citations`" in "\n".join(agent._system_prompts)) is retrieve_citations
+
+
+def test_the_flag_in_the_rag_configuration_is_not_read():
     misplaced = orchestrator._orchestrator_for(_deps(retrieve_citations=True), model="test")
 
-    assert "Fill `citations`" in "\n".join(agent._system_prompts)
     assert "Fill `citations`" not in "\n".join(misplaced._system_prompts)
 
 
