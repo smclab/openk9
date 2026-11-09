@@ -318,6 +318,7 @@ public class UnboundDocTypeFieldTest {
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_FIVE_NAME, docTypeFieldService, sf);
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_SIX_NAME, docTypeFieldService, sf);
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_SEVEN_NAME, docTypeFieldService, sf);
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_EIGHT_NAME, docTypeFieldService, sf);
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_FOUR_NAME, docTypeFieldService, sf);
 	}
 
