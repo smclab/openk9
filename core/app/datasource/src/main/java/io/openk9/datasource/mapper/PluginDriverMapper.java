@@ -21,10 +21,29 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(
 	config = K9EntityMapper.class
 )
 public interface PluginDriverMapper extends
 	K9EntityMapper<PluginDriver, PluginDriverDTO> {
+
+	/**
+	 * Creates a {@link PluginDriver} from the dto, defaulting a missing
+	 * provisioning to {@link PluginDriver.Provisioning#USER}.
+	 */
+	@Override
+	@Mapping(target = "provisioning", defaultValue = "USER")
+	PluginDriver create(PluginDriverDTO dto);
+
+	/**
+	 * Replaces the state of the {@link PluginDriver} with the dto, defaulting
+	 * a missing provisioning to {@link PluginDriver.Provisioning#USER}.
+	 */
+	@Override
+	@Mapping(target = "provisioning", defaultValue = "USER")
+	PluginDriver update(@MappingTarget PluginDriver entity, PluginDriverDTO dto);
+
 }
