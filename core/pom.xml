@@ -465,11 +465,8 @@
 						<failsOnError>false</failsOnError>
 						<logViolationsToConsole>true</logViolationsToConsole>
 
-						<!-- Esclude le classi generate automaticamente -->
-						<excludes>
-							**/generated/**/*,
-							**/io/quarkus/hibernate/**/*
-						</excludes>
+						<!-- Esclude i sorgenti generati in target/generated-sources (es. dai .proto) -->
+						<excludeGeneratedSources>true</excludeGeneratedSources>
 
 						<!-- Encoding sorgenti -->
 						<consoleOutput>true</consoleOutput>
