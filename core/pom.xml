@@ -130,6 +130,7 @@
 		<amqp-client.version>5.36.0</amqp-client.version>
 		<scram.version>3.3</scram.version>
 		<jib-plugin.version>3.5.1</jib-plugin.version>
+		<checkstyle-plugin.version>3.3.1</checkstyle-plugin.version>
 		<jib.platform.architecture>amd64</jib.platform.architecture>
 
 	</properties>
@@ -447,7 +448,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-checkstyle-plugin</artifactId>
-					<version>3.3.1</version>
+					<version>${checkstyle-plugin.version}</version>
 					<!-- Forza Checkstyle 10.x per supporto Java 21 -->
 					<dependencies>
 						<dependency>
@@ -468,7 +469,7 @@
 						<!-- Esclude i sorgenti generati in target/generated-sources (es. dai .proto) -->
 						<excludeGeneratedSources>true</excludeGeneratedSources>
 
-						<!-- Encoding sorgenti -->
+						<!-- Stampa le violazioni in console con il goal checkstyle -->
 						<consoleOutput>true</consoleOutput>
 					</configuration>
 				</plugin>

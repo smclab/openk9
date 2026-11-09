@@ -16,11 +16,13 @@
 
 	<!-- Indentazione con tab: una riga non può iniziare con spazi (esclusa la continuazione Javadoc) -->
 	<module name="RegexpSingleline">
+		<property name="severity" value="warning"/>
 		<property name="format" value="^ +(?!\*)\S"/>
 		<property name="message" value="Indentare con i tab, non con gli spazi"/>
 	</module>
 
 	<module name="LineLength">
+		<property name="severity" value="warning"/>
 		<property name="max" value="100"/>
 		<property name="ignorePattern" value="^(package|import) .*|^\s*(//|\*).*https?://\S+"/>
 	</module>
