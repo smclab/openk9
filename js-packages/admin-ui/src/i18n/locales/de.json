@@ -42,7 +42,8 @@
     "admin-settings": "Admin-Einstellungen",
     "admin-settings-group": "Admin-Einstellungen",
     "admin-settings-general": "Allgemeine Einstellungen",
-    "import-export": "Import / Export von Konfigurationen"
+    "import-export": "Import / Export von Konfigurationen",
+    "result-acl": "ACL: maskierte Ergebnisse"
   },
   "common": {
     "active": "Aktiv",
@@ -358,6 +359,27 @@
           "not-applied": "Import nicht übernommen"
         }
       },
+      "result-acl": {
+        "title": "ACL: maskierte Ergebnisse",
+        "page-description": "Ist der Modus aktiv, schließen ACLs bei Textsuchen, die ihn anfordern, Dokumente nicht mehr aus: Ein Benutzer ohne Berechtigung sieht das Dokument in den Ergebnissen, aber nur mit seinen sichtbaren Feldern. Die knn- und die hybride Suche sowie der Chat bleiben nach ACLs gefiltert, und die Filterwerte mit ihren Anzahlen stammen nur aus den Dokumenten, die der Benutzer lesen darf.",
+        "risk-title": "Risiko der Exfiltration durch Rückschlüsse",
+        "risk-body": "Bei der Textsuche verhält sich ein maskiertes Dokument wie ein lesbares: Der gesuchte Text, die angewendeten Filter, die Sortierung und die Bewertung berücksichtigen auch die nicht sichtbaren Felder. Durch wiederholte Suchen und die Beobachtung, welche Dokumente in welcher Reihenfolge erscheinen, kann ein Benutzer einen Teil des Inhalts ableiten, den er nicht sieht. Für jedes maskierte Ergebnis nennt die Antwort außerdem die Namen der entfernten Felder, nicht deren Werte.",
+        "frontend-note": "Das Such-Frontend fordert maskierte Ergebnisse nur an, wenn derjenige, der es einbindet, die entsprechende Option aktiviert. Die Option schützt die Dokumente nicht: Ist der Modus aktiv, kann jeder Benutzer, der die Such-API direkt aufruft, sie anfordern.",
+        "mode-title": "Modus",
+        "mode-description": "Bei der Textsuche legen ACLs fest, was von jedem Ergebnis sichtbar ist, statt es auszuschließen.",
+        "enabled-label": "Maskierte Ergebnisse aktivieren",
+        "super-users-title": "Superuser-Rollen",
+        "super-users-description": "Benutzer mit einer dieser Rollen im Zugriffstoken sehen alle Ergebnisse der Textsuchen, die den Modus anfordern, vollständig, und die Filterwerte mit ihren Anzahlen stammen aus allen Dokumenten. Bei der knn- und der hybriden Suche sowie im Chat gilt der ACL-Filter auch für sie. Die Extra Roles der Anfrage zählen nicht.",
+        "visible-fields-title": "Sichtbare Felder",
+        "visible-fields-description": "Auch in maskierten Ergebnissen sichtbar, die außerdem immer die ID und den Dokumenttyp zeigen. Ausgeschlossene Felder, OBJECT-Felder, NESTED-Felder mit Unterfeldern, Varianten von i18n-Feldern und Multi-Fields können nicht ausgewählt werden.",
+        "doc-type-note": "Ein Dokumenttyp mit einem sichtbaren Feld kann nicht gelöscht werden: Entfernen Sie das Feld zuerst hier.",
+        "enable-warning": "Ist der Modus aktiv, erscheinen bei Textsuchen, die ihn anfordern, Dokumente, die ein Benutzer nicht lesen darf, in seinen Ergebnissen nur mit den sichtbaren Feldern. Durch wiederholte Suchen kann der Benutzer einen Teil des Inhalts ableiten, den er nicht sieht.",
+        "add-field-warning": "Der Wert der Felder, die Sie hinzufügen, ist für jeden Benutzer sichtbar, der das Dokument bei einer Textsuche findet, auch wenn er es nicht lesen darf. Fügen Sie nur Felder hinzu, die keine vertraulichen Inhalte preisgeben. Das Risiko von Rückschlüssen bleibt: Durch wiederholte Suchen kann ein Benutzer einen Teil des Inhalts auch aus den nicht sichtbaren Feldern ableiten.",
+        "saved-title": "Konfiguration gespeichert",
+        "saved-content": "Die Konfiguration der maskierten Ergebnisse wurde gespeichert.",
+        "save-error-content": "Die Konfiguration der maskierten Ergebnisse konnte nicht gespeichert werden.",
+        "load-error": "Die Konfiguration der maskierten Ergebnisse oder die auswählbaren Felder konnten nicht gelesen werden. Laden Sie die Seite neu: Solange sie nicht gelesen sind, lässt die Seite kein Speichern zu."
+      },
       "general-title": "Allgemeine Einstellungen"
     },
     "analyzers": {
@@ -527,6 +549,7 @@
       "refresh-filters-when-tab-is-applied": "Filter aktualisieren, wenn ein Tab angewendet wird",
       "retriever-type-used-to-search-data-if": "Retriever-Typ für die Datensuche. Bei match wird eine Textsuche ausgeführt, andernfalls eine Vektor-/Hybridsuche",
       "highlight-configuration-used-to-build-the": "Hervorhebungskonfiguration, mit der der Highlight-Abschnitt der Such-Query aufgebaut wird",
+      "only-the-languages-associated-to-this": "Nur die diesem Bucket zugeordneten Sprachen können seine Standardsprache sein",
       "tab-datasource": "Datenquelle",
       "tab-suggestion-category": "Vorschlagskategorie",
       "tab-tabs": "Tabs",
@@ -621,7 +644,12 @@
       "mappings-fetch-error": "Fehler beim Abrufen der Mappings.",
       "settings-title": "Datenindex-Einstellungen",
       "custom-settings": "Benutzerdefinierte Einstellungen",
-      "index-mapping": "Index-Mapping"
+      "index-mapping": "Index-Mapping",
+      "chunk-header-fields": "Felder des Chunk-Headers",
+      "chunk-header-fields-description": "Felder, deren Werte in dieser Reihenfolge vor jeden Chunk geschrieben werden, bevor er eingebettet wird. Der einzubettende Text darf nicht dazugehören.",
+      "chunk-header-fields-empty": "Kein Header: Die Chunks werden unverändert eingebettet.",
+      "chunk-header-fields-add": "Header-Feld hinzufügen",
+      "chunk-header-fields-remove": "Entfernen"
     },
     "datasources": {
       "title": "Datenquellen",
@@ -979,10 +1007,9 @@
       "recap-label": "Zusammenfassung Anreicherungselement",
       "edit-enrich-item": "Anreicherungselement bearbeiten",
       "missing-data": "Fehlende Daten",
-      "connection-not-verified": "Verbindung nicht überprüft",
       "please-provide-a-name-for-the-enrich": "Bitte geben Sie einen Namen für das Anreicherungselement ein",
       "please-provide-both-base-uri-and-path": "Bitte geben Sie sowohl die Basis-URI als auch den Pfad an",
-      "please-test-the-connection-before-proceeding-or": "Bitte testen Sie die Verbindung, bevor Sie fortfahren, oder stellen Sie sicher, dass der Endpunkt erreichbar ist.",
+      "successful-connection-test-required": "Führen Sie „Verbindung testen“ erfolgreich aus, bevor Sie fortfahren.",
       "impossible-to-fetch-dynamic-form-check-connection": "Das dynamische Formular konnte nicht abgerufen werden. Überprüfen Sie die Verbindungseinstellungen.",
       "are-you-sure-you-want-to-edit": "Möchten Sie dieses Anreicherungselement wirklich bearbeiten?",
       "waiting-for-test": "Warten auf Test",

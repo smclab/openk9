@@ -42,7 +42,8 @@
     "admin-settings": "Paramètres d'administration",
     "admin-settings-group": "Paramètres d'administration",
     "admin-settings-general": "Paramètres généraux",
-    "import-export": "Import / Export des configurations"
+    "import-export": "Import / Export des configurations",
+    "result-acl": "ACL : résultats masqués"
   },
   "common": {
     "active": "Actif",
@@ -358,6 +359,27 @@
           "not-applied": "Import non appliqué"
         }
       },
+      "result-acl": {
+        "title": "ACL : résultats masqués",
+        "page-description": "Lorsque le mode est activé, dans les recherches textuelles qui le demandent, les ACL n'excluent plus les documents : un utilisateur sans autorisation voit le document parmi les résultats, mais uniquement avec ses champs visibles. La recherche knn et hybride ainsi que le chat restent filtrés par les ACL, et les valeurs des filtres, avec leurs décomptes, proviennent uniquement des documents que l'utilisateur peut lire.",
+        "risk-title": "Risque d'exfiltration par inférence",
+        "risk-body": "Dans la recherche textuelle, un document masqué répond comme un document lisible : le texte recherché, les filtres appliqués, le tri et le score utilisent aussi les champs non visibles. En répétant les recherches et en observant quels documents apparaissent, et dans quel ordre, un utilisateur peut déduire une partie du contenu qu'il ne voit pas. Pour chaque résultat masqué, la réponse indique en outre le nom des champs retirés, pas leurs valeurs.",
+        "frontend-note": "Le search frontend ne demande les résultats masqués que si l'intégrateur active l'option prévue à cet effet. L'option ne protège pas les documents : lorsque le mode est activé, tout utilisateur qui appelle directement l'API de recherche peut les demander.",
+        "mode-title": "Mode",
+        "mode-description": "Dans la recherche textuelle, les ACL déterminent ce qui est visible de chaque résultat, au lieu de l'exclure.",
+        "enabled-label": "Activer les résultats masqués",
+        "super-users-title": "Rôles de super-utilisateur",
+        "super-users-description": "Les utilisateurs ayant l'un de ces rôles dans leur jeton d'accès voient en entier tous les résultats des recherches textuelles qui demandent le mode, et les valeurs des filtres, avec leurs décomptes, proviennent de tous les documents. Dans la recherche knn et hybride et dans le chat, le filtre ACL s'applique aussi à eux. Les extra roles de la requête ne comptent pas.",
+        "visible-fields-title": "Champs visibles",
+        "visible-fields-description": "Visibles même dans les résultats masqués, qui affichent toujours aussi l'id et le type de document. Les champs exclus, les champs OBJECT, les champs NESTED avec des sous-champs, les variantes des champs i18n et les multi-fields ne peuvent pas être sélectionnés.",
+        "doc-type-note": "Un type de document qui a un champ visible ne peut pas être supprimé : retirez d'abord le champ ici.",
+        "enable-warning": "Lorsque le mode est activé, dans les recherches textuelles qui le demandent, les documents qu'un utilisateur ne peut pas lire apparaissent parmi ses résultats avec uniquement les champs visibles. En répétant les recherches, l'utilisateur peut déduire une partie du contenu qu'il ne voit pas.",
+        "add-field-warning": "La valeur des champs que vous ajoutez sera visible par tout utilisateur qui trouve le document dans une recherche textuelle, même s'il ne peut pas le lire. N'ajoutez que des champs qui ne révèlent pas de contenu confidentiel. Le risque d'inférence demeure : en répétant les recherches, un utilisateur peut déduire une partie du contenu à partir des champs non visibles également.",
+        "saved-title": "Configuration enregistrée",
+        "saved-content": "La configuration des résultats masqués a été enregistrée.",
+        "save-error-content": "Impossible d'enregistrer la configuration des résultats masqués.",
+        "load-error": "Impossible de lire la configuration des résultats masqués ou les champs sélectionnables. Rechargez la page : tant qu'ils ne sont pas lus, la page ne permet pas d'enregistrer."
+      },
       "general-title": "Paramètres généraux"
     },
     "analyzers": {
@@ -527,6 +549,7 @@
       "refresh-filters-when-tab-is-applied": "Actualiser les filtres lorsqu'un tab est appliqué",
       "retriever-type-used-to-search-data-if": "Type de retriever utilisé pour rechercher les données. Avec match, effectue une recherche textuelle, sinon effectue une recherche vectorielle/hybride",
       "highlight-configuration-used-to-build-the": "Configuration de mise en évidence utilisée pour construire la section de mise en évidence de la query de recherche",
+      "only-the-languages-associated-to-this": "Seules les langues associées à ce bucket peuvent être sa langue par défaut",
       "tab-datasource": "source de données",
       "tab-suggestion-category": "catégorie de suggestion",
       "tab-tabs": "tabs",
@@ -621,7 +644,12 @@
       "mappings-fetch-error": "Erreur lors de la récupération des mappings.",
       "settings-title": "Paramètres de l'index de données",
       "custom-settings": "Paramètres personnalisés",
-      "index-mapping": "Mapping de l'index"
+      "index-mapping": "Mapping de l'index",
+      "chunk-header-fields": "Champs de l'en-tête des chunks",
+      "chunk-header-fields-description": "Champs dont les valeurs sont écrites, dans cet ordre, devant chaque chunk avant l'embedding. Le texte à vectoriser ne peut pas en faire partie.",
+      "chunk-header-fields-empty": "Aucun en-tête : les chunks sont vectorisés tels quels.",
+      "chunk-header-fields-add": "Ajouter un champ d'en-tête",
+      "chunk-header-fields-remove": "Retirer"
     },
     "datasources": {
       "title": "Sources de données",
@@ -979,10 +1007,9 @@
       "recap-label": "Récapitulatif de l'élément d'enrichissement",
       "edit-enrich-item": "Modifier l'élément d'enrichissement",
       "missing-data": "Données manquantes",
-      "connection-not-verified": "Connexion non vérifiée",
       "please-provide-a-name-for-the-enrich": "Saisissez un nom pour l'élément d'enrichissement",
       "please-provide-both-base-uri-and-path": "Saisissez à la fois l'URI de base et le chemin",
-      "please-test-the-connection-before-proceeding-or": "Testez la connexion avant de continuer, ou assurez-vous que l'endpoint est joignable.",
+      "successful-connection-test-required": "Avant de continuer, exécutez \"Tester la connexion\" avec succès.",
       "impossible-to-fetch-dynamic-form-check-connection": "Impossible de récupérer le formulaire dynamique. Vérifiez les paramètres de connexion.",
       "are-you-sure-you-want-to-edit": "Voulez-vous vraiment modifier cet élément d'enrichissement ?",
       "waiting-for-test": "En attente du test",

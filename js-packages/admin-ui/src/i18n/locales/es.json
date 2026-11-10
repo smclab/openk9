@@ -42,7 +42,8 @@
     "admin-settings": "Ajustes de administración",
     "admin-settings-group": "Ajustes de administración",
     "admin-settings-general": "Ajustes generales",
-    "import-export": "Importar / Exportar configuraciones"
+    "import-export": "Importar / Exportar configuraciones",
+    "result-acl": "ACL: resultados enmascarados"
   },
   "common": {
     "active": "Activo",
@@ -358,6 +359,27 @@
           "not-applied": "Importación no aplicada"
         }
       },
+      "result-acl": {
+        "title": "ACL: resultados enmascarados",
+        "page-description": "Con el modo activo, en las búsquedas de texto que lo solicitan las ACL ya no excluyen los documentos: quien no tiene permiso ve el documento entre los resultados, pero solo con sus campos visibles. La búsqueda knn e híbrida y el chat siguen filtrados por ACL, y los valores de los filtros, con sus recuentos, proceden solo de los documentos que el usuario puede leer.",
+        "risk-title": "Riesgo de exfiltración por inferencia",
+        "risk-body": "En la búsqueda de texto un documento enmascarado responde como uno legible: el texto buscado, los filtros aplicados, la ordenación y la puntuación usan también los campos que no son visibles. Repitiendo búsquedas y observando qué documentos aparecen, y en qué orden, un usuario puede deducir parte del contenido que no ve. De cada resultado enmascarado la respuesta indica además los nombres de los campos eliminados, no sus valores.",
+        "frontend-note": "El search frontend solicita los resultados enmascarados solo si quien lo integra activa la opción correspondiente. La opción no protege los documentos: con el modo activo, cualquier usuario que llame directamente a la API de búsqueda puede solicitarlos.",
+        "mode-title": "Modo",
+        "mode-description": "En la búsqueda de texto las ACL deciden qué se ve de cada resultado, en lugar de excluirlo.",
+        "enabled-label": "Activar los resultados enmascarados",
+        "super-users-title": "Roles de superusuario",
+        "super-users-description": "Quien tiene uno de estos roles en su token de acceso ve completos todos los resultados de las búsquedas de texto que solicitan el modo, y los valores de los filtros, con sus recuentos, proceden de todos los documentos. En la búsqueda knn e híbrida y en el chat el filtro ACL se aplica también a estos usuarios. Los extra roles de la solicitud no cuentan.",
+        "visible-fields-title": "Campos visibles",
+        "visible-fields-description": "Se ven también en los resultados enmascarados, que siempre muestran además el id y el tipo de documento. No se pueden seleccionar los campos excluidos, los campos OBJECT, los campos NESTED con subcampos, las variantes de los campos i18n ni los multi-fields.",
+        "doc-type-note": "Un tipo de documento con un campo visible no se puede eliminar: primero quita el campo desde aquí.",
+        "enable-warning": "Con el modo activo, en las búsquedas de texto que lo solicitan los documentos que un usuario no puede leer aparecen entre sus resultados solo con los campos visibles. Repitiendo búsquedas el usuario puede deducir parte del contenido que no ve.",
+        "add-field-warning": "El valor de los campos que añadas será visible para todo usuario que encuentre el documento en una búsqueda de texto, aunque no pueda leerlo. Añade solo campos que no revelen contenido confidencial. El riesgo de inferencia sigue existiendo: repitiendo búsquedas un usuario puede deducir parte del contenido también a partir de los campos que no son visibles.",
+        "saved-title": "Configuración guardada",
+        "saved-content": "Se ha guardado la configuración de los resultados enmascarados.",
+        "save-error-content": "No se pudo guardar la configuración de los resultados enmascarados.",
+        "load-error": "No se pudo leer la configuración de los resultados enmascarados o los campos seleccionables. Recarga la página: hasta que se lean, la página no permite guardar."
+      },
       "general-title": "Ajustes generales"
     },
     "analyzers": {
@@ -527,6 +549,7 @@
       "refresh-filters-when-tab-is-applied": "Actualizar los filtros cuando se aplica un tab",
       "retriever-type-used-to-search-data-if": "Tipo de retriever que se usa para buscar los datos. Con match se realiza una búsqueda de texto; en caso contrario, una búsqueda vectorial/híbrida",
       "highlight-configuration-used-to-build-the": "Configuración de resaltado que se usa para construir la sección de resaltado de la query de búsqueda",
+      "only-the-languages-associated-to-this": "Solo los idiomas asociados a este bucket pueden ser su idioma predeterminado",
       "tab-datasource": "fuente de datos",
       "tab-suggestion-category": "categoría de sugerencia",
       "tab-tabs": "tabs",
@@ -621,7 +644,12 @@
       "mappings-fetch-error": "Error al obtener los mappings.",
       "settings-title": "Ajustes del índice de datos",
       "custom-settings": "Ajustes personalizados",
-      "index-mapping": "Mapping del índice"
+      "index-mapping": "Mapping del índice",
+      "chunk-header-fields": "Campos de la cabecera de los chunks",
+      "chunk-header-fields-description": "Campos cuyos valores se escriben, en este orden, delante de cada chunk antes del embedding. El texto que se vectoriza no puede ser uno de ellos.",
+      "chunk-header-fields-empty": "Sin cabecera: los chunks se vectorizan tal como están.",
+      "chunk-header-fields-add": "Añadir un campo de la cabecera",
+      "chunk-header-fields-remove": "Quitar"
     },
     "datasources": {
       "title": "Fuentes de datos",
@@ -979,10 +1007,9 @@
       "recap-label": "Resumen del elemento de enriquecimiento",
       "edit-enrich-item": "Editar elemento de enriquecimiento",
       "missing-data": "Faltan datos",
-      "connection-not-verified": "Conexión no verificada",
       "please-provide-a-name-for-the-enrich": "Introduce un nombre para el elemento de enriquecimiento",
       "please-provide-both-base-uri-and-path": "Introduce tanto la URI base como la ruta",
-      "please-test-the-connection-before-proceeding-or": "Prueba la conexión antes de continuar o asegúrate de que el endpoint esté accesible.",
+      "successful-connection-test-required": "Antes de continuar, ejecuta \"Probar conexión\" con resultado positivo.",
       "impossible-to-fetch-dynamic-form-check-connection": "No se pudo obtener el formulario dinámico. Revisa los ajustes de conexión.",
       "are-you-sure-you-want-to-edit": "¿Seguro que quieres editar este elemento de enriquecimiento?",
       "waiting-for-test": "A la espera de la prueba",
