@@ -43,7 +43,8 @@ export function ToastProvider({ children }: ToastProviderProps) {
           key={key}
           open
           autoHideDuration={6000}
-          onClose={() => {
+          onClose={(_, reason) => {
+            if (reason === "clickaway") return;
             setToastItems((toastItems) => toastItems.filter((item) => item.key !== key));
           }}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}

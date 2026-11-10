@@ -67,6 +67,8 @@ describe("two toasts emitted together", () => {
       </ToastProvider>,
     );
     fireEvent.click(screen.getByText("show"));
+    // MUI arms the click-away listener of each Snackbar on the next tick
+    act(() => jest.advanceTimersByTime(1));
 
     fireEvent.click(screen.getAllByRole("button", { name: "Close" })[0]);
 
