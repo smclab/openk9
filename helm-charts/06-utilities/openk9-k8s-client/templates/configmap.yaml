@@ -36,7 +36,12 @@ data:
   {{- end }}
 
   # JVM Memory variable
-  JAVA_TOOL_OPTIONS: {{ .Values.jvm.toolOptions | quote }}
+  {{- /* extraCAs: adds the trust store built by the init container */}}
+  {{- $javaToolOptions := .Values.jvm.toolOptions }}
+  {{- if .Values.extraCAs.enabled }}
+  {{- $javaToolOptions = trim (printf "%s %s" $javaToolOptions (include "helper.extraCAs.javaToolOptions" .)) }}
+  {{- end }}
+  JAVA_TOOL_OPTIONS: {{ $javaToolOptions | quote }}
 
   # Opentelemetry env
   QUARKUS_OTEL_SDK_DISABLED: {{ .Values.otel.disabled | quote }}

@@ -218,6 +218,32 @@ You can use security context settings when you need to handle permissions on you
 | `podSecurityContext.readOnlyRootFilesystem`   | Set container's Security Context readOnlyRootFilesystem                                                                                                                                                           | `true`           |
 | `podSecurityContext.capabilities.drop`        | Set container's Security Context runAsNonRoot                                                                                                                                                                     | `["ALL"]`        |
 
+### Extra CA certificates
+
+When Keycloak, or another HTTPS service the K8s Client calls, has a certificate signed by a private CA (an OpenShift router CA, a company PKI), the JVM does not trust it and the calls fail with `PKIX path building failed`. With `extraCAs` the chart adds the CA certificates to the JVM trust store:
+
+- an init container, with the same image, copies the default JVM trust store to an `emptyDir` and imports every PEM certificate it finds in the Secret;
+- the ConfigMap sets `JAVA_TOOL_OPTIONS` so that the JVM reads that trust store, after the options of `jvm.toolOptions`.
+
+TLS verification stays on: the JVM trusts the default CAs plus the ones added here. The certificates are part of the chart values, so they survive `helm upgrade`.
+
+| Name                      | Description                                                           | Value   |
+| ------------------------- | --------------------------------------------------------------------- | ------- |
+| `extraCAs.enabled`        | Add the extra CA certificates to the JVM trust store                  | `false` |
+| `extraCAs.existingSecret` | Existing Secret whose keys hold PEM certificates, one or more per key | `""`    |
+| `extraCAs.pem`            | PEM certificates, one or more, stored by the chart in a Secret        | `""`    |
+
+Set exactly one of `extraCAs.existingSecret` and `extraCAs.pem`. With an existing Secret:
+
+```bash
+kubectl create secret generic openk9-extra-cas --from-file=internal-ca.pem
+helm upgrade -i k8s-client openk9/openk9-k8s-client --set extraCAs.enabled=true --set extraCAs.existingSecret=openk9-extra-cas
+```
+
+With the certificates in the values, use `--set-file extraCAs.pem=internal-ca.pem` instead.
+
+The trust store is built when the pod starts: after changing the certificates, restart the pods with `kubectl rollout restart deployment/openk9-k8s-client`. The log of the init container reports how many certificates were added (`kubectl logs deployment/openk9-k8s-client -c extra-cas`). `curl` from inside the pod is not a valid check: it reads the system CA bundle, not the JVM trust store.
+
 ### Prometheus metrics
 
 This chart can be integrated with Prometheus by setting `metrics.enabled` to `true`.
