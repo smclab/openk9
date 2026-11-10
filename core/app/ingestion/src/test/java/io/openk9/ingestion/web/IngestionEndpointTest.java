@@ -21,6 +21,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.IngestionDTO;
 import io.openk9.ingestion.dto.ResourcesDTO;
@@ -33,6 +34,8 @@ import io.quarkus.test.junit.mockito.InjectSpy;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mockito;
 
 import static io.restassured.RestAssured.given;
@@ -65,6 +68,26 @@ class IngestionEndpointTest {
 			.statusCode(406);
 
 		then(binaryStorageService).shouldHaveNoInteractions();
+
+		then(ingestionEmitter)
+			.should(times(1))
+			.emit(any(IngestionDTO.class));
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = PayloadType.class, names = {"DOCUMENT", "LAST", "HALT"})
+	void should_ingest_a_payload_without_datasourcePayload(PayloadType type) {
+
+		given()
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body(IngestionDTO.builder()
+				.type(type)
+				.build())
+			.post()
+			.then()
+			//a 406 is expected because no queue exists with name "null#null"
+			.statusCode(406);
 
 		then(ingestionEmitter)
 			.should(times(1))
