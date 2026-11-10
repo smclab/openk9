@@ -151,16 +151,20 @@ def test_a_chunk_without_text_brings_the_start_of_its_document(monkeypatch):
     assert content == description[: retrieval.MEDIA_CHUNK_TEXT_CHARS]
 
 
-def test_a_chunk_with_text_keeps_its_own(monkeypatch):
+def test_a_chunk_with_text_keeps_its_own(monkeypatch, caplog):
     content = _found(
         monkeypatch, {"contentId": "d1", "chunkText": "il chunk", "rawContent": "il documento"}
     )
 
     assert content == "il chunk"
+    assert "without chunkText nor rawContent" not in caplog.text
 
 
-def test_a_chunk_without_text_nor_document_text_stays_empty(monkeypatch):
-    assert _found(monkeypatch, {"contentId": "d1", "chunkText": ""}) == ""
+def test_a_chunk_without_text_nor_document_text_stays_empty_and_is_logged(monkeypatch, caplog):
+    with caplog.at_level(logging.WARNING, logger="app"):
+        assert _found(monkeypatch, {"contentId": "d1", "chunkText": ""}) == ""
+
+    assert "1 chunk without chunkText nor rawContent" in caplog.text
 
 
 def _deps(media=None, **rag_configuration):

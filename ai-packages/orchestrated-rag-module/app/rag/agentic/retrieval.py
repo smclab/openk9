@@ -248,6 +248,7 @@ def retrieve_documents(
         )
 
     documents = []
+    empty_chunks = 0
     for row in hits:
         # OpenSearch reports an explicit "_score": null when the query carries
         # a field sort: a .get default would not cover it.
@@ -270,6 +271,7 @@ def retrieve_documents(
             content = document_source.get("chunkText") or (
                 document_source.get("rawContent") or ""
             )[:MEDIA_CHUNK_TEXT_CHARS]
+            empty_chunks += not content
             # OpenSearch omits previous/next at the edges of a document: empty
             # lists keep the chunk_window merge working (#2298)
             record = {
@@ -294,6 +296,13 @@ def retrieve_documents(
         if total_tokens < max_tokens:
             record.update(dynamic_metadata)
             documents.append(record)
+
+    if empty_chunks:
+        # the searcher asks only for the fields of the document types (#2651)
+        logger.warning(
+            f"[opensearch_query] {empty_chunks} chunk without chunkText nor rawContent: "
+            "rawContent is not a field of their document type, or it is excluded"
+        )
 
     if rerank:
         documents_to_rerank = [
