@@ -1,0 +1,23 @@
+# Overlay additivo dello scenario "E2E embedding multimodale Ollama 2670".
+# Aggiunge solo il connettore finto, sulla rete 'openk9' creata da ./k9.sh up.
+#   docker compose -p e2e-ollama-2670 -f docker-compose.fake-connector.yml up -d --build
+services:
+  fake-connector:
+    build:
+      context: .
+      dockerfile: fake-connector/Dockerfile
+    image: e2e-ollama-2670/fake-connector:local
+    container_name: e2e-ollama-2670-fake-connector
+    hostname: e2e-ollama-2670-fake-connector
+    environment:
+      INGESTION_URL: "http://openk9-ingestion:8080/api/ingestion/v1/ingestion/"
+    volumes:
+      # preparato da run.sh: le immagini e il PDF da indicizzare
+      - ./corpus:/app/corpus:ro
+    networks:
+      - openk9
+    restart: "no"
+
+networks:
+  openk9:
+    external: true
