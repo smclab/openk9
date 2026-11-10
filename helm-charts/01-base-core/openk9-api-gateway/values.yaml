@@ -154,6 +154,19 @@ containerSecurityContext:
 ##
 hostAliases: []
 
+## Extra CA certificates added to the JVM trust store, for HTTPS services signed by a private CA
+## (e.g. Keycloak behind an OpenShift router or a company PKI). An init container copies the default
+## JVM trust store and imports these certificates; the JVM reads the result through JAVA_TOOL_OPTIONS.
+## TLS verification stays on: only the default CAs and these ones are trusted.
+## @param extraCAs.enabled Add the extra CA certificates to the JVM trust store
+## @param extraCAs.existingSecret Existing Secret whose keys hold PEM certificates, one or more per key
+## @param extraCAs.pem PEM certificates, one or more, stored by the chart in a Secret
+##
+extraCAs:
+  enabled: false
+  existingSecret: ""
+  pem: ""
+
 ## Kubernetes service type
 ##
 service:

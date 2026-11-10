@@ -23,6 +23,25 @@ spec:
       nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
       securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.hostAliases "context" $) | nindent 8 }}
+      {{- if .Values.extraCAs.enabled }}
+      initContainers:
+        - name: extra-cas
+          image: {{ template "common.images.fullname" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- if .Values.containerSecurityContext }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          {{- end }}
+          command: {{- include "helper.extraCAs.command" . | nindent 12 }}
+          volumeMounts:
+            - name: extra-cas
+              mountPath: /extra-cas
+              readOnly: true
+            - name: extra-cas-truststore
+              mountPath: /truststore
+          {{- if .Values.resources }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Release.Name }}
           image: {{ template "common.images.fullname" . }}
@@ -34,6 +53,11 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            {{- if .Values.extraCAs.enabled }}
+            - name: extra-cas-truststore
+              mountPath: /truststore
+              readOnly: true
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ template "common.names.name" . }}-config
@@ -91,3 +115,6 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
+        {{- if .Values.extraCAs.enabled }}
+        {{- include "helper.extraCAs.volumes" . | nindent 8 }}
+        {{- end }}

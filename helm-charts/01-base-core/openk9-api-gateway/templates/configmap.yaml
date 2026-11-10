@@ -27,3 +27,8 @@ data:
   IO_OPENK9_APIGW_DATASOURCE-URL: {{ include "helper.datasourceURL" . | quote }}
   IO_OPENK9_APIGW_RAG-URL: {{ include "helper.ragURL" . | quote }}
   IO_OPENK9_APIGW_INGESTION-URL: {{ include "helper.ingestionURL" . | quote }}
+  {{- if .Values.extraCAs.enabled }}
+
+  # JVM trust store with the extraCAs certificates
+  JAVA_TOOL_OPTIONS: {{ include "helper.extraCAs.javaToolOptions" . | quote }}
+  {{- end }}
