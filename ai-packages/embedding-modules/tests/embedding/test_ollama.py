@@ -31,7 +31,7 @@ from app.embedding.ollama import OllamaMultimodalEmbedder
 from app.embedding.router import EmbedFailed, SkipRef
 
 GEMMA = "embeddinggemma-2:740m"
-PNG = b"png-bytes"
+PNG = b"\x89PNG\r\n\x1a\npng-bytes"
 PNG_B64 = base64.b64encode(PNG).decode()
 # the real /api/show call, before the autouse fixture fakes it
 REAL_SHOW = ollama._show
@@ -163,6 +163,50 @@ def test_a_format_ollama_does_not_decode_is_skipped(content_type):
     with pytest.raises(SkipRef):
         embedder.embed_mixed("title: x\n", PNG, content_type, input_type="search_document")
     assert server.bodies == []
+
+
+@pytest.mark.parametrize(
+    ("data", "content_type"),
+    [
+        pytest.param(PNG, "image/png", id="png"),
+        pytest.param(b"\xff\xd8\xff\xe0jpeg", "image/jpeg", id="jpeg"),
+        pytest.param(b"GIF87agif", "image/gif", id="gif87a"),
+        pytest.param(b"GIF89agif", "image/gif", id="gif89a"),
+        pytest.param(b"RIFF\x00\x00\x00\x00WEBPVP8 ", "image/webp", id="webp"),
+    ],
+)
+def test_the_bytes_of_the_four_formats_are_sent(data, content_type):
+    server = _Server()
+
+    _embedder(server).embed_image(data, content_type)
+
+    assert server.bodies[0][1]["input"] == [{"image": base64.b64encode(data).decode()}]
+
+
+def test_a_declared_png_with_other_bytes_is_skipped():
+    server = _Server()
+
+    with pytest.raises(SkipRef, match="bytes of this image/png"):
+        _embedder(server).embed_image(b"BM\x36\x00bmp-bytes", "image/png")
+    assert server.bodies == []
+
+
+def test_an_answer_that_is_not_an_object_fails_the_embedding():
+    server = _Server(answer=[[0.1, 0.2]])
+
+    with pytest.raises(EmbedFailed):
+        _embedder(server).embed_texts(["uno"], "search_document")
+
+
+def test_a_show_that_is_not_an_object_leaves_the_model_text_only(
+    ollama_server, caplog
+):
+    ollama_server.show = ["embedding", "vision"]
+
+    with caplog.at_level(logging.WARNING, logger=ollama.logger.name):
+        assert ollama.is_multimodal("http://ollama:11434", GEMMA) is False
+
+    assert "lists no capabilities" in caplog.text
 
 
 @pytest.mark.parametrize("status", [400, 500])

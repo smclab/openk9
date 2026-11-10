@@ -117,7 +117,7 @@ def is_multimodal(api_url, model):
         return False
 
     _failed.pop(key, None)
-    capabilities = show.get("capabilities")
+    capabilities = show.get("capabilities") if isinstance(show, dict) else None
 
     if not capabilities:
         logger.warning(
@@ -151,6 +151,16 @@ def _image(data, content_type):
             f"Ollama embeds PNG, JPEG, GIF and WebP images only, not {content_type}"
         )
 
+    # the declared type can be wrong: Ollama reads the bytes
+    if not (
+        data.startswith((b"\x89PNG", b"\xff\xd8\xff", b"GIF87a", b"GIF89a"))
+        or (data[:4] == b"RIFF" and data[8:12] == b"WEBP")
+    ):
+        raise SkipRef(
+            f"Ollama embeds PNG, JPEG, GIF and WebP images only: the bytes of "
+            f"this {content_type} are none of them"
+        )
+
     return base64.b64encode(data).decode("ascii")
 
 
@@ -182,7 +192,7 @@ class OllamaMultimodalEmbedder:
             response = self.client.post(self.url, json=body, timeout=EMBED_TIMEOUT)
             response.raise_for_status()
             vectors = response.json().get("embeddings") or []
-        except (httpx.HTTPError, ValueError) as error:
+        except (httpx.HTTPError, ValueError, AttributeError) as error:
             raise EmbedFailed(f"Ollama /api/embed failed: {error}") from error
 
         if len(vectors) != len(inputs) or not all(vectors):
