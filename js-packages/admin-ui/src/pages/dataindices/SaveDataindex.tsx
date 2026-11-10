@@ -29,6 +29,7 @@ import {
 import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import { useRestClient } from "@components/queryClient";
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
@@ -53,6 +54,7 @@ import {
   useDocumentTypesQuery,
 } from "../../graphql-generated";
 import { useDataSources, useDocTypeOptions } from "../../utils/RelationOneToOne";
+import { NO_DOC_TYPES_WARNING } from "./Dataindices";
 
 export type DataindexData = {
   dataindexId: string;
@@ -441,6 +443,11 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             {
               content: (
                 <div>
+                  {isReadOnly && dataindexData.docTypeIds.length === 0 && (
+                    <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
+                      {NO_DOC_TYPES_WARNING}
+                    </Alert>
+                  )}
                   <TextInput label="Name" {...form.inputProps("name")} />
                   <TextInput label="Description" {...form.inputProps("description")} />
                   <AutocompleteDropdown
