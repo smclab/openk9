@@ -19,16 +19,50 @@ package io.openk9.common.util;
 
 import java.util.List;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor(staticName = "of")
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor
 public class Response<E> {
 	private E entity;
 	private List<FieldValidator> fieldValidators;
+	private List<String> warnings;
+
+	/**
+	 * Builds a response that carries an entity or the validation errors
+	 * that prevented its creation, and no warnings.
+	 *
+	 * @param entity          the entity, {@code null} when the request failed
+	 * @param fieldValidators the validation errors, {@code null} when the
+	 *                        request succeeded
+	 * @param <T>             the entity type
+	 * @return the response
+	 */
+	public static <T> Response<T> of(T entity, List<FieldValidator> fieldValidators) {
+		return new Response<>(entity, fieldValidators, null);
+	}
+
+	/**
+	 * Builds a response that carries an entity together with the warnings
+	 * about it: non-blocking messages on a request that succeeded, such as a
+	 * configuration that is incomplete but can be completed later.
+	 *
+	 * @param entity          the entity, {@code null} when the request failed
+	 * @param fieldValidators the validation errors, {@code null} when the
+	 *                        request succeeded
+	 * @param warnings        the warnings, empty or {@code null} when none
+	 * @param <T>             the entity type
+	 * @return the response
+	 */
+	public static <T> Response<T> of(
+		T entity, List<FieldValidator> fieldValidators, List<String> warnings) {
+
+		return new Response<>(entity, fieldValidators, warnings);
+	}
 
 	public static <T> Response<T> error(List<FieldValidator> fieldValidators) {
 		return Response.of(null, fieldValidators);
