@@ -34,9 +34,14 @@ for c in "$DATASOURCE_CONTAINER" "$INGESTION_CONTAINER" "$TENANTMANAGER_CONTAINE
 done
 [ "$(docker inspect -f '{{.State.Running}}' "$EMBEDDING_CONTAINER" 2>/dev/null)" = "true" ] \
     || die "container '$EMBEDDING_CONTAINER' non in esecuzione (serve --with=gen-ai)"
-proj="$(docker inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' "$DATASOURCE_CONTAINER" 2>/dev/null)"
-[ "$proj" = "openk9" ] || die "lo stack in esecuzione appartiene al progetto compose '$proj', non 'openk9'."
-info "progetto compose: openk9"
+docker exec "$EMBEDDING_CONTAINER" test -f app/embedding/ollama.py \
+    || die "il modulo di embedding in esecuzione non ha l'embedder Ollama: e' un'immagine senza #2670.
+   Ricostruiscila dal checkout da testare: ./k9.sh build embedding-module, poi ricrea il container"
+info "$EMBEDDING_CONTAINER: immagine con l'embedder Ollama"
+docker exec "$EMBEDDING_CONTAINER" python -c "import httpx; httpx.get('$OLLAMA_URL/api/version', timeout=10).raise_for_status()" >/dev/null 2>&1 \
+    || die "Ollama non raggiungibile dal container $EMBEDDING_CONTAINER su $OLLAMA_URL.
+   Con Docker Engine su Linux vedi il README (extra_hosts host-gateway o OLLAMA_URL)"
+info "Ollama raggiungibile da $EMBEDDING_CONTAINER su $OLLAMA_URL"
 
 caps="$(curl -sf "$OLLAMA_HOST_URL/api/show" -d "{\"model\":\"$OLLAMA_MODEL\"}" \
     | python3 -c 'import json,sys; print(",".join(json.load(sys.stdin).get("capabilities") or []))')" \

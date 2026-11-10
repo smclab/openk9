@@ -29,14 +29,17 @@ interroga Ollama anche dall'host, su `OLLAMA_HOST_URL`
 
 ## Cosa fa
 
-1. controlla lo stack e che Ollama dichiari la capability `vision`
+1. controlla lo stack (qualunque progetto compose), che il modulo di
+   embedding in esecuzione abbia l'embedder Ollama, che raggiunga Ollama
+   su `OLLAMA_URL` e che il modello dichiari la capability `vision`
 2. disegna `corpus/` con Pillow del modulo di embedding:
    - `bilge.jpg`: pagina "Bilge pump diagram" (scafo, pozzetto, pompa, mandata)
    - `cabin.jpg`: pagina "Cabin interior layout" (pianta degli interni)
    - `manual.pdf`: tre pagine, impianto elettrico, sentina, interni
    - `query.jpg`: ritaglio ruotato e scalato dello schema della sentina
 3. sentinella: chiede a Ollama un vettore per `{"text", "image"}`; deve
-   essere uno solo e diverso da quello della sola immagine (coseno < 0.99)
+   essere uno solo e diverso sia da quello della sola immagine sia da quello
+   del solo testo (coseno < 0.99 con ciascuno)
 4. tenant `e2eollama` da zero, modello di embedding Ollama registrato e
    abilitato via GraphQL, datasource con il connettore finto, data index knn
    su `document.content`

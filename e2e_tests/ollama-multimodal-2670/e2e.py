@@ -10,7 +10,8 @@ config.env):
               -> plugin driver -> datasource -> doc type dal /sample ->
               data index knn (stampa l'id del datasource sull'ultima riga)
   sentinel    chiede a Ollama, dall'host, un vettore testo+immagine: deve
-              essere uno solo e diverso da quello della sola immagine
+              essere uno solo e diverso sia da quello della sola immagine sia
+              da quello del solo testo
   check       aggancia il datasource al bucket (KNN) e verifica i chunk su
               OpenSearch e le ricerche dal searcher; exit 0 se tutto passa
 """
@@ -238,14 +239,20 @@ def cmd_sentinel(_args):
             sys.exit("sentinel: /api/embed HTTP %s: %s" % (status, json.dumps(body)[:200]))
         return body.get("embeddings") or []
 
-    alone = embed([{"image": image}])
+    image_alone = embed([{"image": image}])
+    text_alone = embed([env("QUERY_TEXT")])
     mixed = embed([{"text": env("QUERY_TEXT"), "image": image}])
-    if len(alone) != 1 or len(mixed) != 1:
-        sys.exit("sentinel: attesi 1 vettore per input, avuti %d e %d" % (len(alone), len(mixed)))
-    cosine = _cosine(alone[0], mixed[0])
-    print("sentinel: testo+immagine -> 1 vettore, coseno con la sola immagine %.3f" % cosine)
-    if cosine >= 0.99:
-        sys.exit("sentinel: il testo non entra nel vettore misto (coseno %.3f)" % cosine)
+    if len(image_alone) != 1 or len(text_alone) != 1 or len(mixed) != 1:
+        sys.exit("sentinel: attesi 1 vettore per input, avuti %d, %d e %d"
+                 % (len(image_alone), len(text_alone), len(mixed)))
+    with_image = _cosine(image_alone[0], mixed[0])
+    with_text = _cosine(text_alone[0], mixed[0])
+    print("sentinel: testo+immagine -> 1 vettore, coseno con la sola immagine %.3f, "
+          "con il solo testo %.3f" % (with_image, with_text))
+    if with_image >= 0.99:
+        sys.exit("sentinel: il testo non entra nel vettore misto (coseno %.3f)" % with_image)
+    if with_text >= 0.99:
+        sys.exit("sentinel: l'immagine non entra nel vettore misto (coseno %.3f)" % with_text)
 
 
 # --------------------------------------------------------------------------- #
