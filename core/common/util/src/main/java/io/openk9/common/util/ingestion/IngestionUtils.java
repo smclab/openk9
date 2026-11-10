@@ -20,7 +20,18 @@ package io.openk9.common.util.ingestion;
 import java.util.Map;
 
 public class IngestionUtils {
+	/**
+	 * Returns the document types of an ingested content: the top-level keys
+	 * of its datasource payload.
+	 *
+	 * @param datasourcePayload the payload sent by the connector, may be null
+	 * @return the document types, empty when the payload is null or empty
+	 */
 	public static String[] getDocumentTypes(Map<String, Object> datasourcePayload) {
+		if (datasourcePayload == null) {
+			return new String[0];
+		}
+
 		return datasourcePayload.keySet().toArray(new String[0]);
 	}
 
