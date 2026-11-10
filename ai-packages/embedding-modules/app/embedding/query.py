@@ -34,7 +34,7 @@ the dispatch is testable without models or network.
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from app.embedding.router import classify
+from app.embedding.router import SkipRef, classify
 
 
 class QueryInvalid(Exception):
@@ -84,11 +84,18 @@ def query_vector(text, inline, capabilities) -> list:
             raise QueryPrecondition(
                 "the configured model has no native text+image input"
             )
-        return capabilities.embed_mixed(text, data, content_type)
+        try:
+            return capabilities.embed_mixed(text, data, content_type)
+        except SkipRef as error:
+            # an image format the model does not decode
+            raise QueryPrecondition(str(error)) from error
 
     if has_inline:
         if capabilities.embed_image is None:
             raise QueryPrecondition("the configured model has no image input")
-        return capabilities.embed_image(data, content_type)
+        try:
+            return capabilities.embed_image(data, content_type)
+        except SkipRef as error:
+            raise QueryPrecondition(str(error)) from error
 
     return capabilities.embed_text(text)

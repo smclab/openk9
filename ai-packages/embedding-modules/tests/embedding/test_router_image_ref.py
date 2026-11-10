@@ -18,7 +18,9 @@
 """An image ref is fetched from its URL and embedded into a single chunk
 carrying its fileId and an empty text."""
 
-from app.embedding.router import ref_pieces
+import pytest
+
+from app.embedding.router import SkipRef, ref_pieces
 
 
 def test_image_ref_is_fetched_and_embedded(make_pipelines):
@@ -38,10 +40,6 @@ def test_image_ref_is_fetched_and_embedded(make_pipelines):
 
 
 def test_an_image_the_model_cannot_embed_is_skipped(make_pipelines):
-    import pytest
-
-    from app.embedding.router import SkipRef
-
     def refuse(data, content_type):
         raise SkipRef(f"not {content_type}")
 

@@ -23,6 +23,7 @@ import grpc
 import pytest
 
 from app.embedding.query import QueryCapabilities
+from app.embedding.router import SkipRef
 from app.external_services.grpc.embedding import embedding_pb2
 
 TEXT_VECTOR = [3.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0]
@@ -70,3 +71,30 @@ def test_text_and_inline_without_native_mixed_is_precondition(make_stub):
     assert error.value.details() == (
         "the configured model has no native text+image input"
     )
+
+
+def _refuse(*args):
+    raise SkipRef("Ollama embeds PNG, JPEG, GIF and WebP images only, not image/bmp")
+
+
+@pytest.mark.parametrize("text", [None, "un gatto"], ids=["image", "text and image"])
+def test_an_image_format_the_model_does_not_decode_is_precondition(make_stub, text):
+    stub = make_stub(
+        build_query_capabilities=lambda configuration: QueryCapabilities(
+            embed_text=lambda text: TEXT_VECTOR,
+            embed_image=_refuse,
+            embed_mixed=_refuse,
+        )
+    )
+    request = embedding_pb2.EmbedQueryRequest(
+        tenantId="mew",
+        inline=embedding_pb2.InlineMedia(data=b"bmp", contentType="image/bmp"),
+    )
+    if text is not None:
+        request.text = text
+
+    with pytest.raises(grpc.RpcError) as error:
+        stub.EmbedQuery(request)
+
+    assert error.value.code() == grpc.StatusCode.FAILED_PRECONDITION
+    assert "not image/bmp" in error.value.details()

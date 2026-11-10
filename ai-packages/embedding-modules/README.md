@@ -279,9 +279,9 @@ header. Queries (`EmbedQuery`) are embedded as they are.
   with a warning that its length is not checked.
 - Textual refs take the same header. Images and PDF pages take it in one vector
   when the model fuses text and image (Cohere Embed v4 on Bedrock, with the
-  `search_document` input type, and the Ollama multimodal models); with other models they are embedded as before
-  and one warning per request counts them. `header_on_images` turns the header
-  off on images and pages.
+  `search_document` input type, and the Ollama multimodal models); with other
+  models they are embedded as before and one warning per request counts them.
+  `header_on_images` turns the header off on images and pages.
 
 #### Response: stream of EmbeddedChunk
 
@@ -385,9 +385,9 @@ At least one of `text` / `inline` must be set, otherwise the RPC fails with
   same space as the indexed documents.
 
 - `text + inline` is produced **only** by a model with native mixed input (text
-  and image in one call, one vector — e.g. Cohere Embed v4 on AWS Bedrock, or an
-  Ollama multimodal model); there
-  is no module-side fusion of two separate vectors.
+  and image in one call, one vector — e.g. Cohere Embed v4 on AWS Bedrock, or
+  an Ollama multimodal model); there is no module-side fusion of two separate
+  vectors.
 
 - The vector is L2-normalized, then quantized according to `vectorDataType`.
 
