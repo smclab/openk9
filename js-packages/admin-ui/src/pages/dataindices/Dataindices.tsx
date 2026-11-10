@@ -1,10 +1,14 @@
 import { formatDate } from "@components/common";
 import { Table } from "@components/Table/Table";
-import { Box, Button, Container, Typography } from "@mui/material";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import { Box, Button, Container, Tooltip, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@components/Form";
 import { useDataIndicesQuery, useDeleteDataIndexMutation } from "../../graphql-generated";
+
+export const NO_DOC_TYPES_WARNING =
+  "This data index has no document type: text searches and filters on it cannot be resolved. Generate them from the index mapping with POST /api/datasource/v1/data-index/auto-generate-doc-types on its datasource.";
 
 export function Dataindices() {
   const dataIndicesQuery = useDataIndicesQuery({ variables: { first: 10 } });
@@ -91,7 +95,16 @@ export function Dataindices() {
             columns={[
               {
                 header: "Name",
-                content: (dataIndice) => <Box fontWeight="bolder">{dataIndice?.name}</Box>,
+                content: (dataIndice) => (
+                  <Box fontWeight="bolder" display="flex" alignItems="center" gap={1}>
+                    {(dataIndice?.docTypes?.edges?.length ?? 0) === 0 && (
+                      <Tooltip title={NO_DOC_TYPES_WARNING}>
+                        <WarningAmberIcon color="warning" fontSize="small" />
+                      </Tooltip>
+                    )}
+                    {dataIndice?.name}
+                  </Box>
+                ),
               },
               {
                 header: "Description",

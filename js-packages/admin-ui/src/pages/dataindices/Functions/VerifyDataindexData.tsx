@@ -1,8 +1,9 @@
 import { CodeInput, combineErrorMessages, ContainerFluid, useToast } from "@components/Form";
-import { Button, Stack, TextField } from "@mui/material";
+import { Alert, Button, Stack, TextField } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChunkType, useCreateDataIndexMutation } from "../../../graphql-generated";
+import { NO_DOC_TYPES_WARNING } from "../Dataindices";
 import { DataindexData } from "../SaveDataindex";
 
 export const bytesToMegabytes = (bytes: number): number => parseFloat((bytes / (1024 * 1024)).toFixed(2));
@@ -71,6 +72,11 @@ export function VerifyDataindexData({
   return (
     <ContainerFluid>
       <Stack spacing={3}>
+        {verifyData === "view" && dataindexData.docTypeIds.length === 0 && (
+          <Alert severity="warning" variant="outlined">
+            {NO_DOC_TYPES_WARNING}
+          </Alert>
+        )}
         <TextField label="Dataindex Name" value={dataindexData.name} disabled fullWidth />
         <TextField label="Description" value={dataindexData.description} disabled fullWidth />
         <TextField label="Datasource" value={dataindexData.datasourceId?.name || ""} disabled fullWidth />
