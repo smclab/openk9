@@ -128,6 +128,19 @@ describe("App — accesso richiesto per usare la chat", () => {
 		expect(screen.getByRole("alert")).toHaveTextContent("login-required");
 	});
 
+	test("dopo l'accesso senza ricaricare la pagina, l'invio parte e l'avviso si chiude", async () => {
+		await renderApp();
+		await typeMessage("una domanda");
+		fireEvent.click(screen.getByLabelText("send-message"));
+		expect(screen.getByRole("alert")).toHaveTextContent("login-required");
+
+		mockAuthenticated = true;
+		fireEvent.click(screen.getByLabelText("send-message"));
+
+		expect(mockGenerateResponse).toHaveBeenCalledTimes(1);
+		expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+	});
+
 	test("l'utente loggato chatta come oggi", async () => {
 		mockAuthenticated = true;
 		await renderApp();

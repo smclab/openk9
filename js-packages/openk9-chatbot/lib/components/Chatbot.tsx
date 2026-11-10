@@ -306,6 +306,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
       setLoginNoticeOpen(true);
       return false;
     }
+    setLoginNoticeOpen(false);
     generateResponse(message);
     return true;
   };
