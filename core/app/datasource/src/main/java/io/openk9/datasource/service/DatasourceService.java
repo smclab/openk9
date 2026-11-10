@@ -154,7 +154,15 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 						return dataIndexService.create(session, datasourceId, dataIndexDTO)
 							.invoke(datasource::setDataIndex)
-							.flatMap(ignored -> create(session, datasource));
+							.flatMap(ignored -> create(session, datasource))
+							// the dataIndex is created with the datasource, so
+							// the warnings about it belong to this response
+							.map(created -> Response.of(
+								created,
+								null,
+								DataIndexService.configurationWarnings(
+									created.getDataIndex())
+							));
 						}
 					)
 
@@ -164,7 +172,9 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				throwable, "datasourceConnection %s cannot be created.", datasourceConnection)
 			)
 			.onItemOrFailure()
-			.transform(BaseK9EntityService::toResponse)
+			.transform((response, throwable) -> throwable == null
+				? response
+				: BaseK9EntityService.<Datasource>toResponse(null, throwable))
 			.onFailure()
 			.transform(K9Error::new);
 	}

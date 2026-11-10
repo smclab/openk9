@@ -18,12 +18,16 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.Initializer;
+import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DatasourceService;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.Document;
+import io.smallrye.graphql.client.core.InputObject;
 import io.smallrye.graphql.client.core.OperationType;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import jakarta.inject.Inject;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -36,6 +40,8 @@ import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
 import static io.smallrye.graphql.client.core.Document.document;
 import static io.smallrye.graphql.client.core.Field.field;
+import static io.smallrye.graphql.client.core.InputObject.inputObject;
+import static io.smallrye.graphql.client.core.InputObjectField.prop;
 import static io.smallrye.graphql.client.core.Operation.operation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -45,11 +51,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @QuarkusTest
 public class DataIndexGraphqlTest {
 
+	// lowercase, as the name of a dataIndex names its index
+	private static final String ENTITY_NAME_PREFIX = "dataindexgraphqltest-";
 	private static final String CAT = "cat";
 	private static final String DATA_INDEX = "dataIndex";
+	private static final String DATA_INDEX_DTO = "dataIndexDTO";
 	private static final String DATA_INDICES = "dataIndices";
 	private static final String DATASOURCE = "datasource";
+	private static final String DATASOURCE_ID = "datasourceId";
+	private static final String DOC_TYPE_IDS = "docTypeIds";
 	private static final String EDGES = "edges";
+	private static final String ENTITY = "entity";
 	private static final String ID = "id";
 	private static final String KNN_INDEX = "knnIndex";
 	private static final String NAME = "name";
@@ -58,11 +70,18 @@ public class DataIndexGraphqlTest {
 	private static final String SETTINGS = "settings";
 	private static final String STATUS = "status";
 	private static final String TENANT_ID = "public";
+	private static final String WARNINGS = "warnings";
 
 	private static final Logger log = Logger.getLogger(DataIndexGraphqlTest.class);
 
 	@Inject
+	DataIndexService dataIndexService;
+
+	@Inject
 	DatasourceService datasourceService;
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
 
 	@Inject
 	@GraphQLClient("openk9-dynamic")
@@ -323,6 +342,125 @@ public class DataIndexGraphqlTest {
 		assertNotNull(dataIndexR);
 		assertEquals(
 			dataIndex.getId(), Long.parseLong(dataIndexR.getString(ID)));
+	}
+
+	@Test
+	void should_warn_when_created_without_doc_types()
+		throws ExecutionException, InterruptedException {
+
+		// a dataIndex created with no docTypeIds
+		var name = ENTITY_NAME_PREFIX + "no-doc-types";
+
+		var response = graphQLClient.executeSync(createDataIndexMutation(
+			inputObject(
+				prop(NAME, name),
+				prop(KNN_INDEX, false)
+			)
+		));
+
+		log.info(String.format(RESPONSE, response));
+
+		try {
+			assertFalse(response.hasError());
+
+			var dataIndexR = response.getData().getJsonObject(DATA_INDEX);
+
+			// the creation is not refused
+			assertEquals(
+				name, dataIndexR.getJsonObject(ENTITY).getString(NAME));
+
+			// but the response says the configuration is incomplete
+			var warnings = dataIndexR.getJsonArray(WARNINGS);
+
+			assertEquals(1, warnings.size());
+			assertEquals(
+				DataIndexService.NO_DOC_TYPES_WARNING, warnings.getString(0));
+		}
+		finally {
+			deleteDataIndexQuietly(name);
+		}
+	}
+
+	@Test
+	void should_not_warn_when_created_with_doc_types()
+		throws ExecutionException, InterruptedException {
+
+		// a dataIndex created with one docType
+		var name = ENTITY_NAME_PREFIX + "with-doc-types";
+
+		var response = graphQLClient.executeSync(createDataIndexMutation(
+			inputObject(
+				prop(NAME, name),
+				prop(KNN_INDEX, false),
+				prop(DOC_TYPE_IDS, List.of(anyDocTypeId()))
+			)
+		));
+
+		log.info(String.format(RESPONSE, response));
+
+		try {
+			assertFalse(response.hasError());
+
+			var dataIndexR = response.getData().getJsonObject(DATA_INDEX);
+
+			assertEquals(
+				name, dataIndexR.getJsonObject(ENTITY).getString(NAME));
+
+			// nothing to warn about
+			assertTrue(
+				dataIndexR.isNull(WARNINGS)
+				|| dataIndexR.getJsonArray(WARNINGS).isEmpty());
+		}
+		finally {
+			deleteDataIndexQuietly(name);
+		}
+	}
+
+	private Document createDataIndexMutation(InputObject dataIndexDTO) {
+
+		var datasource = datasourceService.findByName(
+				TENANT_ID, Initializer.INIT_DATASOURCE_CONNECTION)
+			.await().indefinitely();
+
+		return document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					DATA_INDEX,
+					args(
+						arg(DATASOURCE_ID, datasource.getId()),
+						arg(DATA_INDEX_DTO, dataIndexDTO)
+					),
+					field(
+						ENTITY,
+						field(ID),
+						field(NAME)
+					),
+					field(WARNINGS)
+				)
+			)
+		);
+	}
+
+	private long anyDocTypeId() {
+		return sessionFactory.withTransaction((s, t) -> s
+				.createQuery("select dt.id from DocType dt order by dt.id", Long.class)
+				.getResultList()
+				.map(List::getFirst)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void deleteDataIndexQuietly(String name) {
+		try {
+			var dataIndex = dataIndexService.findByName(TENANT_ID, name)
+				.await().indefinitely();
+
+			dataIndexService.deleteById(dataIndex.getId()).await().indefinitely();
+		}
+		catch (Exception ignored) {
+		}
 	}
 
 }

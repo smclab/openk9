@@ -34,6 +34,8 @@ import io.openk9.datasource.service.exception.K9Error;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import org.hibernate.reactive.mutiny.Mutiny;
+import java.util.List;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -199,6 +201,32 @@ class CreateDatasourceConnectionTest {
 
 		then(dataIndexService).shouldHaveNoInteractions();
 
+	}
+
+	@Test
+	void should_warn_when_the_data_index_has_no_doc_types() {
+
+		// a connection whose dataIndex asks for no docType
+		var response = datasourceService.createDatasourceConnection(
+			DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
+				.name(DATASOURCE_NAME)
+				.pluginDriverId(pluginDriverId)
+				.pipelineId(enrichPipelineId)
+				.dataIndex(DataIndexDTO.builder()
+					.name(DATA_INDEX_NAME)
+					.build())
+				.build()
+		).await().indefinitely();
+
+		// the datasource is created all the same
+		Assertions.assertNotNull(response.getEntity());
+		Assertions.assertNull(response.getFieldValidators());
+
+		// and the response carries the warning about its dataIndex
+		Assertions.assertEquals(
+			List.of(DataIndexService.NO_DOC_TYPES_WARNING),
+			response.getWarnings()
+		);
 	}
 
 	@Test
