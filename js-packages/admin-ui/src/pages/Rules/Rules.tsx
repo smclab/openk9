@@ -189,7 +189,13 @@ export function Rules() {
   });
 
   // Le regole ripetono lo stesso id: a differenza della v10, la MiniMap della v12 disegnerebbe i doppioni.
-  return <BuildGraph node={[...new Map(elements.map((n) => [n.id, n])).values()]} edgesValue={edges} />;
+  // Anche gli archi possono ripeterlo: la v12 li elenca per id e React segnalerebbe chiavi doppie.
+  return (
+    <BuildGraph
+      node={[...new Map(elements.map((n) => [n.id, n])).values()]}
+      edgesValue={[...new Map(edges.map((e) => [e.id, e])).values()]}
+    />
+  );
 }
 
 function recoveryValue({
