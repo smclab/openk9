@@ -70,6 +70,13 @@ export const DataIndicesQuery = gql`
           name
           description
           createDate
+          docTypes(first: 1) {
+            edges {
+              node {
+                id
+              }
+            }
+          }
         }
       }
       pageInfo {

@@ -1777,8 +1777,6 @@ export type EmbeddingModel = {
   jsonConfig?: Maybe<Scalars['String']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
-  /** Deprecated and ignored: the embedding module tells a multimodal model from its provider and model (Cohere Embed v4 on AWS Bedrock, multimodalembedding on Vertex AI). It will be removed. */
-  multimodal: Scalars['Boolean'];
   name?: Maybe<Scalars['String']>;
   providerModel?: Maybe<ProviderModel>;
   vectorDataType?: Maybe<VectorDataType>;
@@ -1801,12 +1799,6 @@ export type EmbeddingModelDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
   jsonConfig?: InputMaybe<Scalars['String']>;
-  /**
-   * Deprecated and ignored: the embedding module tells a multimodal
-   * model from its provider and model (Cohere Embed v4 on AWS Bedrock,
-   * multimodalembedding on Vertex AI). It will be removed.
-   */
-  multimodal?: InputMaybe<Scalars['Boolean']>;
   name: Scalars['String'];
   providerModel: ProviderModelDtoInput;
   /**
@@ -5027,180 +5019,210 @@ export type Response_Analyzer = {
   __typename?: 'Response_Analyzer';
   entity?: Maybe<Analyzer>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Annotator = {
   __typename?: 'Response_Annotator';
   entity?: Maybe<Annotator>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Autocomplete = {
   __typename?: 'Response_Autocomplete';
   entity?: Maybe<Autocomplete>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Autocorrection = {
   __typename?: 'Response_Autocorrection';
   entity?: Maybe<Autocorrection>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Bucket = {
   __typename?: 'Response_Bucket';
   entity?: Maybe<Bucket>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_CharFilter = {
   __typename?: 'Response_CharFilter';
   entity?: Maybe<CharFilter>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_DataIndex = {
   __typename?: 'Response_DataIndex';
   entity?: Maybe<DataIndex>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Datasource = {
   __typename?: 'Response_Datasource';
   entity?: Maybe<Datasource>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_DocType = {
   __typename?: 'Response_DocType';
   entity?: Maybe<DocType>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_DocTypeField = {
   __typename?: 'Response_DocTypeField';
   entity?: Maybe<DocTypeField>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_DocTypeTemplate = {
   __typename?: 'Response_DocTypeTemplate';
   entity?: Maybe<DocTypeTemplate>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_EmbeddingModel = {
   __typename?: 'Response_EmbeddingModel';
   entity?: Maybe<EmbeddingModel>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_EnrichItem = {
   __typename?: 'Response_EnrichItem';
   entity?: Maybe<EnrichItem>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_EnrichPipeline = {
   __typename?: 'Response_EnrichPipeline';
   entity?: Maybe<EnrichPipeline>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Highlight = {
   __typename?: 'Response_Highlight';
   entity?: Maybe<Highlight>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Language = {
   __typename?: 'Response_Language';
   entity?: Maybe<Language>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_LargeLanguageModel = {
   __typename?: 'Response_LargeLanguageModel';
   entity?: Maybe<LargeLanguageModel>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_PluginDriver = {
   __typename?: 'Response_PluginDriver';
   entity?: Maybe<PluginDriver>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_QueryAnalysis = {
   __typename?: 'Response_QueryAnalysis';
   entity?: Maybe<QueryAnalysis>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_QueryParserConfig = {
   __typename?: 'Response_QueryParserConfig';
   entity?: Maybe<QueryParserConfig>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_RagConfiguration = {
   __typename?: 'Response_RAGConfiguration';
   entity?: Maybe<RagConfiguration>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_ResultAclConfig = {
   __typename?: 'Response_ResultAclConfig';
   entity?: Maybe<ResultAclConfig>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Rule = {
   __typename?: 'Response_Rule';
   entity?: Maybe<Rule>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_SearchConfig = {
   __typename?: 'Response_SearchConfig';
   entity?: Maybe<SearchConfig>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Sorting = {
   __typename?: 'Response_Sorting';
   entity?: Maybe<Sorting>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_SuggestionCategory = {
   __typename?: 'Response_SuggestionCategory';
   entity?: Maybe<SuggestionCategory>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Tab = {
   __typename?: 'Response_Tab';
   entity?: Maybe<Tab>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_TokenFilter = {
   __typename?: 'Response_TokenFilter';
   entity?: Maybe<TokenFilter>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_TokenTab = {
   __typename?: 'Response_TokenTab';
   entity?: Maybe<TokenTab>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type Response_Tokenizer = {
   __typename?: 'Response_Tokenizer';
   entity?: Maybe<Tokenizer>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  warnings?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type ResultAclConfig = {
@@ -7619,7 +7641,7 @@ export type DataIndicesQueryVariables = Exact<{
 }>;
 
 
-export type DataIndicesQuery = { __typename?: 'Query', dataIndices?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null, description?: string | null, createDate?: any | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DataIndicesQuery = { __typename?: 'Query', dataIndices?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null, description?: string | null, createDate?: any | null, docTypes?: { __typename?: 'DefaultConnection_DocType', edges?: Array<{ __typename?: 'DefaultEdge_DocType', node?: { __typename?: 'DocType', id?: string | null } | null } | null> | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DataIndexQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -16242,6 +16264,13 @@ export const DataIndicesDocument = gql`
         name
         description
         createDate
+        docTypes(first: 1) {
+          edges {
+            node {
+              id
+            }
+          }
+        }
       }
     }
     pageInfo {
@@ -17640,4 +17669,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-10-28T12:03:11+00:00
+// Generated on 2026-11-10T11:12:52+01:00

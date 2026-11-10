@@ -16,7 +16,8 @@
  */
 import { useFormatDate } from "@components/common";
 import { Table } from "@components/Table/Table";
-import { Box, Button, Container, Typography } from "@mui/material";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import { Box, Button, Container, Tooltip, Typography } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
@@ -106,7 +107,16 @@ export function Dataindices() {
             columns={[
               {
                 header: t("common.name"),
-                content: (dataIndice) => <Box fontWeight="bolder">{dataIndice?.name}</Box>,
+                content: (dataIndice) => (
+                  <Box fontWeight="bolder" display="flex" alignItems="center" gap={1}>
+                    {(dataIndice?.docTypes?.edges?.length ?? 0) === 0 && (
+                      <Tooltip title={t("pages.data-indices.no-doc-types-warning")}>
+                        <WarningAmberIcon color="warning" fontSize="small" />
+                      </Tooltip>
+                    )}
+                    {dataIndice?.name}
+                  </Box>
+                ),
               },
               {
                 header: t("common.description"),
