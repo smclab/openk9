@@ -63,6 +63,7 @@ import {
 import { AlignmentOutcomesModal } from "@components/IndexAlignment/AlignmentOutcomesModal";
 import { useAlignmentRun } from "@components/IndexAlignment/useAlignmentRun";
 import { useDataSources, useDocTypeOptions } from "../../utils/RelationOneToOne";
+import { fieldsToPrefill, IntentFields } from "./intentPrefill";
 
 export type DataindexData = {
   dataindexId: string;
@@ -303,52 +304,78 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     [documentTypesQuery.data, form.inputProps("docTypeIds").value],
   );
 
+  // the prefill reads the form once the query answers, not as it was on the click
+  const formRef = useRef(form);
+  useEffect(() => {
+    formRef.current = form;
+  }, [form]);
+  const lastPrefill = useRef<IntentFields | null>(null);
+  const chosenDatasourceId = useRef<string | null>(null);
+
   /**
-   * Starts a new dataIndex from the configuration its datasource asks for. Only the
-   * fields still at their default are filled, so that what was already typed is
-   * never overwritten.
+   * Starts a new dataIndex from the configuration its datasource asks for.
+   * `fieldsToPrefill` decides which fields are filled, so that what was already
+   * typed is never overwritten.
    */
   const prefillFromDatasource = useCallback(
     async (datasourceId: string) => {
       if (!isNew || !datasourceId) return;
 
+      chosenDatasourceId.current = datasourceId;
       const { data } = await loadDatasourceIndexConfig({ variables: { id: datasourceId } });
+      // a datasource chosen while this one was loading wins
+      if (chosenDatasourceId.current !== datasourceId) return;
       const config = data?.datasource;
       if (!config) return;
 
-      const isDefault = <T,>(value: T | null | undefined, defaultValue: T) =>
-        value == null || JSON.stringify(value) === JSON.stringify(defaultValue);
-
-      if (isDefault(form.inputProps("knnIndex").value, DEFAULT_DATAINDEX_VALUES.knnIndex)) {
-        form.inputProps("knnIndex").onChange(config.knnIndex ?? false);
-      }
-      if (isDefault(form.inputProps("chunkType").value, DEFAULT_DATAINDEX_VALUES.chunkType) && config.chunkType) {
-        form.inputProps("chunkType").onChange(config.chunkType);
-      }
-      if (isDefault(form.inputProps("chunkWindowSize").value, DEFAULT_DATAINDEX_VALUES.chunkWindowSize)) {
-        form.inputProps("chunkWindowSize").onChange(config.chunkWindowSize ?? 0);
-      }
-      if (isDefault(form.inputProps("embeddingJsonConfig").value, DEFAULT_DATAINDEX_VALUES.embeddingJsonConfig)) {
-        form.inputProps("embeddingJsonConfig").onChange(config.embeddingJsonConfig || "{}");
-      }
-      if (isDefault(form.inputProps("settings").value, DEFAULT_DATAINDEX_VALUES.customSettings) && config.settings) {
-        setCustomSettings(prettyJson(config.settings));
-      }
-      if (!form.inputProps("embeddingDocTypeFieldId").value && config.embeddingDocTypeField) {
-        form.inputProps("embeddingDocTypeFieldId").onChange({
-          id: config.embeddingDocTypeField.id || "",
-          name: config.embeddingDocTypeField.name || "",
-        });
-      }
-      if (!form.inputProps("docTypeIds").value?.length) {
-        form.inputProps("docTypeIds").onChange(
+      const intent: IntentFields = {
+        knnIndex: config.knnIndex ?? false,
+        chunkType: config.chunkType ?? DEFAULT_DATAINDEX_VALUES.chunkType,
+        chunkWindowSize: config.chunkWindowSize ?? 0,
+        embeddingJsonConfig: config.embeddingJsonConfig || "{}",
+        embeddingDocTypeFieldId: config.embeddingDocTypeField
+          ? { id: config.embeddingDocTypeField.id || "", name: config.embeddingDocTypeField.name || "" }
+          : null,
+        docTypeIds:
           config.docTypes?.edges
             ?.map((edge) => (edge?.node?.id ? Number(edge.node.id) : null))
             .filter((id): id is number => id !== null) || [],
-        );
+        settings: prettyJson(config.settings),
+      };
+
+      const latest = formRef.current;
+      const embeddingDocTypeField = latest.inputProps("embeddingDocTypeFieldId").value;
+      const changes = fieldsToPrefill({
+        current: {
+          knnIndex: latest.inputProps("knnIndex").value,
+          chunkType: latest.inputProps("chunkType").value,
+          chunkWindowSize: latest.inputProps("chunkWindowSize").value,
+          embeddingJsonConfig: latest.inputProps("embeddingJsonConfig").value,
+          // the clear button of the field leaves an empty pair, not null
+          embeddingDocTypeFieldId: embeddingDocTypeField?.id ? embeddingDocTypeField : null,
+          docTypeIds: latest.inputProps("docTypeIds").value,
+          settings: latest.inputProps("settings").value,
+        },
+        intent,
+        defaults: { ...DEFAULT_DATAINDEX_VALUES, settings: DEFAULT_DATAINDEX_VALUES.customSettings },
+        previous: lastPrefill.current,
+      });
+      lastPrefill.current = intent;
+
+      if (changes.knnIndex !== undefined) latest.inputProps("knnIndex").onChange(changes.knnIndex);
+      if (changes.chunkType !== undefined) latest.inputProps("chunkType").onChange(changes.chunkType);
+      if (changes.chunkWindowSize !== undefined) latest.inputProps("chunkWindowSize").onChange(changes.chunkWindowSize);
+      if (changes.embeddingJsonConfig !== undefined) {
+        latest.inputProps("embeddingJsonConfig").onChange(changes.embeddingJsonConfig);
       }
+      if (changes.embeddingDocTypeFieldId !== undefined) {
+        latest.inputProps("embeddingDocTypeFieldId").onChange(changes.embeddingDocTypeFieldId);
+      }
+      if (changes.docTypeIds !== undefined) latest.inputProps("docTypeIds").onChange(changes.docTypeIds);
+      // the settings editor reads its own state, which flows into the form
+      if (changes.settings != null) setCustomSettings(changes.settings);
     },
-    [form, isNew, loadDatasourceIndexConfig],
+    [isNew, loadDatasourceIndexConfig],
   );
 
   const resetOptionalFields = useCallback(() => {
