@@ -93,3 +93,28 @@ class PdfSamples:
 @pytest.fixture
 def pdf_samples():
     return PdfSamples
+
+
+@pytest.fixture(autouse=True)
+def ollama_server(monkeypatch):
+    """No Ollama server in the tests: /api/show answers as for a text-only
+    model, and the answers kept for the process start empty. A test sets
+    `show` to the answer it wants, or to an exception to raise."""
+    from app.embedding import ollama
+
+    class _Server:
+        show = {"capabilities": ["embedding"]}
+        asked = []
+
+        def __call__(self, api_url, model):
+            self.asked.append((api_url, model))
+            if isinstance(self.show, Exception):
+                raise self.show
+            return self.show, "0.40.16"
+
+    server = _Server()
+    server.asked = []
+    monkeypatch.setattr(ollama, "_show", server)
+    monkeypatch.setattr(ollama, "_multimodal", {})
+
+    return server

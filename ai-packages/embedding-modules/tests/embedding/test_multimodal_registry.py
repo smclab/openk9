@@ -20,9 +20,10 @@ maps the jsonConfig onto its constructor. A model that is not registered is
 text-only: the registry has nothing for it. Concrete classes are faked so the
 test needs no cloud SDK."""
 
+import httpx
 import pytest
 
-from app.embedding import bedrock, multimodal, vertex
+from app.embedding import bedrock, multimodal, ollama, vertex
 
 
 @pytest.mark.parametrize(
@@ -212,3 +213,51 @@ def test_vertex_project_falls_back_to_the_adc_quota_project(monkeypatch):
     multimodal.find_multimodal_embedder(configuration).factory(configuration)
 
     assert captured == {"project": "adc-proj"}
+
+
+OLLAMA_GEMMA = {
+    "model_type": "ollama",
+    "model": "embeddinggemma-2:740m",
+    "api_url": "http://ollama:11434",
+}
+
+
+def test_an_ollama_model_with_vision_has_its_embedder(ollama_server):
+    ollama_server.show = {"capabilities": ["embedding", "vision", "audio"]}
+
+    entry = multimodal.find_multimodal_embedder(OLLAMA_GEMMA)
+
+    assert entry.name == "ollama-multimodal"
+    assert entry.batch_size == 512
+    assert ollama_server.asked == [("http://ollama:11434", "embeddinggemma-2:740m")]
+
+
+@pytest.mark.parametrize(
+    "show",
+    [
+        pytest.param({"capabilities": ["embedding"]}, id="text only"),
+        pytest.param(httpx.ConnectError("unreachable"), id="show fails"),
+    ],
+)
+def test_an_ollama_model_without_vision_stays_on_langchain(ollama_server, show):
+    ollama_server.show = show
+
+    assert multimodal.find_multimodal_embedder(OLLAMA_GEMMA) is None
+    # same entry as before: langchain, batches of 512
+    entry = multimodal.find_model(OLLAMA_GEMMA)
+    assert (entry.name, entry.factory, entry.batch_size) == ("ollama", None, 512)
+
+
+def test_ollama_provider_maps_to_ollama_embedder(ollama_server):
+    ollama_server.show = {"capabilities": ["embedding", "vision"]}
+    configuration = {**OLLAMA_GEMMA, "keep_alive": 60.0, "num_gpu": 0.0}
+
+    embedder = multimodal.find_multimodal_embedder(configuration).factory(configuration)
+
+    assert isinstance(embedder, ollama.OllamaMultimodalEmbedder)
+    assert embedder.url == "http://ollama:11434/api/embed"
+    assert (embedder.model, embedder.keep_alive, embedder.num_gpu) == (
+        "embeddinggemma-2:740m",
+        60,
+        0,
+    )

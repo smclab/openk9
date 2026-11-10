@@ -41,6 +41,7 @@ from app.embedding import chunk_header, chunking, query, router, vertex_batching
 from app.embedding.fetch import fetch_url
 from app.embedding.media_options import split_media_options
 from app.embedding.multimodal import find_model, find_multimodal_embedder
+from app.embedding.ollama import DEFAULT_KEEP_ALIVE
 from app.embedding.quantization import l2_normalize, quantize_binary, quantize_int8
 from app.embedding.router import Pipelines
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
@@ -73,11 +74,6 @@ for configured_logger in (logger, embedding_logger):
 # default text embedding parameters
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "text-embedding-3-small"
-# Ollama unloads a model after five minutes of inactivity, so a run of the
-# indexing that follows a pause pays the reload; keep_alive in the jsonConfig
-# of the embedding model overrides this, in seconds (0 unloads at once, -1
-# keeps it resident).
-DEFAULT_KEEP_ALIVE = 1800
 # EmbedContent embeds the inline text this many chunks at a time and emits each
 # batch before embedding the next, so the first chunks reach the caller after
 # one batch instead of after the whole document. The registry of models and

@@ -207,11 +207,25 @@ embeds text only.
 | ---------------------------- | ---------------- | ---------------------------------------------------------------- |
 | `bedrock-cohere-v4`          | `aws_bedrock`    | contains `cohere.embed-v4`, inference profiles included (`eu.cohere.embed-v4:0`) |
 | `vertex-multimodalembedding` | `chat_vertex_ai` | starts with `multimodalembedding`                                |
+| `ollama-multimodal`          | `ollama`         | any model whose capabilities include `embedding` and `vision`    |
+
+An Ollama model is recognized by what the server says of it, not by its name:
+the module asks `/api/show` once per process for each (`api_url`, model) and
+logs the capabilities and the Ollama version. When `/api/show` fails or lists
+no capabilities, the model is served by langchain, text only, with a warning.
+Requirements: a recent Ollama server (tested with 0.40.16) and a model with
+the `embedding` and `vision` capabilities, e.g. `embeddinggemma-2:740m`. The
+images travel in `input` of `/api/embed` as `{"image": <base64>}` and
+`{"text": ..., "image": ...}` objects: a shape the Ollama documentation does
+not describe, so it may change upstream. Text goes as plain strings, so the
+vectors of an index built with langchain stay valid. EmbeddingGemma queries
+take the `task: search result | query: ` prefix of its model card.
 
 Limits:
 
 - images, at indexing and in a query, only with a model in the registry;
-- a mixed query (text and image together) only with Cohere Embed v4;
+- a mixed query (text and image together) only with Cohere Embed v4 and the
+  Ollama multimodal models;
 - custom providers (served as OpenAI-compatible endpoints) and models outside
   the registry embed text only.
 
@@ -260,7 +274,7 @@ header. Queries (`EmbedQuery`) are embedded as they are.
   with a warning that its length is not checked.
 - Textual refs take the same header. Images and PDF pages take it in one vector
   when the model fuses text and image (Cohere Embed v4 on Bedrock, with the
-  `search_document` input type); with other models they are embedded as before
+  `search_document` input type, and the Ollama multimodal models); with other models they are embedded as before
   and one warning per request counts them. `header_on_images` turns the header
   off on images and pages.
 
@@ -366,7 +380,8 @@ At least one of `text` / `inline` must be set, otherwise the RPC fails with
   same space as the indexed documents.
 
 - `text + inline` is produced **only** by a model with native mixed input (text
-  and image in one call, one vector — e.g. Cohere Embed v4 on AWS Bedrock); there
+  and image in one call, one vector — e.g. Cohere Embed v4 on AWS Bedrock, or an
+  Ollama multimodal model); there
   is no module-side fusion of two separate vectors.
 
 - The vector is L2-normalized, then quantized according to `vectorDataType`.

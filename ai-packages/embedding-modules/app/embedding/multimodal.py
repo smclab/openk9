@@ -74,16 +74,35 @@ def _build_vertex(configuration):
     )
 
 
+def _build_ollama(configuration):
+    from app.embedding.ollama import OllamaMultimodalEmbedder
+
+    return OllamaMultimodalEmbedder(
+        model=configuration.get("model"),
+        api_url=configuration.get("api_url"),
+        keep_alive=configuration.get("keep_alive"),
+        num_gpu=configuration.get("num_gpu"),
+    )
+
+
+def _ollama_is_multimodal(configuration):
+    from app.embedding.ollama import is_multimodal
+
+    return is_multimodal(configuration.get("api_url"), configuration.get("model"))
+
+
 class RegisteredModel(NamedTuple):
     """A model with a rule of its own: the embedder that serves it, when it
     embeds images (None leaves it to langchain), and the batch size of its
-    text in EmbedContent (None leaves the default)."""
+    text in EmbedContent (None leaves the default). The capabilities check,
+    when there is one, asks the server what the model name does not tell."""
 
     name: str
     provider: str
     matches: Callable[[str], bool]
     factory: Callable | None = None
     batch_size: int | None = None
+    capable: Callable[[dict], bool] | None = None
 
 
 # The first entry that matches wins, so the specific models come before the
@@ -91,9 +110,11 @@ class RegisteredModel(NamedTuple):
 # v4 schema only, and the Vertex one the multimodalembedding family only. The
 # Cohere v4 match is a substring so the inference profile ids
 # (eu.cohere.embed-v4:0, ...) match too; 96 texts is its limit per request.
-# Ollama serves a long text faster in batches of 512 than of 256. The Vertex
-# text models take at most 250 texts per request (vertex_batching): a batch of
-# 250 is one request, not a measured optimum.
+# Ollama serves a long text faster in batches of 512 than of 256; an Ollama
+# model is multimodal when the server lists the embedding and vision
+# capabilities for it, whatever its name. The Vertex text models take at most
+# 250 texts per request (vertex_batching): a batch of 250 is one request, not
+# a measured optimum.
 MODEL_REGISTRY = [
     RegisteredModel(
         "bedrock-cohere-v4",
@@ -107,6 +128,14 @@ MODEL_REGISTRY = [
         "chat_vertex_ai",
         lambda model: model.startswith("multimodalembedding"),
         _build_vertex,
+    ),
+    RegisteredModel(
+        "ollama-multimodal",
+        "ollama",
+        lambda model: True,
+        _build_ollama,
+        batch_size=512,
+        capable=_ollama_is_multimodal,
     ),
     RegisteredModel("ollama", "ollama", lambda model: True, batch_size=512),
     RegisteredModel(
@@ -122,7 +151,11 @@ def find_model(configuration):
     model = configuration.get("model") or ""
 
     for entry in MODEL_REGISTRY:
-        if entry.provider == provider and entry.matches(model):
+        if (
+            entry.provider == provider
+            and entry.matches(model)
+            and (entry.capable is None or entry.capable(configuration))
+        ):
             return entry
 
     return None

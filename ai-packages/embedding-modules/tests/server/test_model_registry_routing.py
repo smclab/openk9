@@ -204,6 +204,45 @@ def test_a_model_outside_the_registry_embeds_text_only(stub, calls, caplog):
     )
 
 
+OLLAMA_GEMMA = ("ollama", "embeddinggemma-2:740m")
+
+
+def test_an_ollama_model_with_vision_embeds_images(stub, calls, ollama_server):
+    ollama_server.show = {"capabilities": ["embedding", "vision", "audio"]}
+
+    chunks = _index(stub, _model(OLLAMA_GEMMA))
+
+    assert [(text, file_id) for text, file_id, _ in chunks] == [
+        ("uno", None),
+        ("due", None),
+        ("", "img-1"),
+    ]
+    assert ("embed_texts", ["uno", "due"], "search_document") in calls
+    assert ("embed_image", b"png-1", "image/png") in calls
+    assert not any(call[0] == "langchain" for call in calls)
+
+
+def test_an_ollama_model_with_vision_answers_a_mixed_query(stub, calls, ollama_server):
+    ollama_server.show = {"capabilities": ["embedding", "vision"]}
+
+    vector = _query(stub, _model(OLLAMA_GEMMA), text="sentina", image=b"png-1")
+
+    assert list(vector.f32.values) == _normalized(DIRECT_MIXED_VECTOR)
+    assert ("embed_mixed", "sentina", b"png-1", "image/png") in calls
+
+
+def test_an_ollama_model_without_vision_skips_images(stub, calls, ollama_server):
+    ollama_server.show = {"capabilities": ["embedding"]}
+
+    chunks = _index(stub, _model(OLLAMA_GEMMA))
+
+    assert [(text, file_id) for text, file_id, _ in chunks] == [("uno", None), ("due", None)]
+    assert calls == [
+        ("langchain", "embeddinggemma-2:740m"),
+        ("embed_documents", ["uno", "due"]),
+    ]
+
+
 def test_a_custom_provider_does_not_fail(stub, calls, caplog):
     with caplog.at_level(logging.INFO, logger=server_module.logger.name):
         chunks = _index(stub, _model(("my-gateway", "my-embedder")), refs=())
