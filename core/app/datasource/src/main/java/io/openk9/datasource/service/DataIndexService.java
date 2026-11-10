@@ -75,6 +75,15 @@ public class DataIndexService
 	public static final String DETAILS_FIELD = "details";
 	private static final Logger log = Logger.getLogger(DataIndexService.class);
 
+	/**
+	 * The warning on a dataIndex that has no docType: the searcher resolves
+	 * the fields of a query from the docTypes, so none of them can be
+	 * built until the docTypes are bound or generated.
+	 */
+	public static final String NO_DOC_TYPES_WARNING =
+		"No docType is bound to the dataIndex: text searches and filters on it"
+		+ " cannot be resolved until its docTypes are generated";
+
 	@Inject
 	DocTypeFieldService docTypeFieldService;
 	@Inject
@@ -274,6 +283,7 @@ public class DataIndexService
 					session, merged, replaced))
 				.call(merged -> createDataIndexTemplate(
 					session, merged, embeddingModel))
+				.call(merged -> warnIncompleteConfiguration(session, merged))
 			);
 	}
 
@@ -291,7 +301,9 @@ public class DataIndexService
 	public Uni<Response<DataIndex>> create(long datasourceId, DataIndexDTO dataIndexDTO) {
 
 		return sessionFactory.withTransaction(
-				(session, transaction) -> create(session, datasourceId, dataIndexDTO))
+				(session, transaction) -> create(session, datasourceId, dataIndexDTO)
+					.map(dataIndex -> Response.of(
+						dataIndex, null, configurationWarnings(dataIndex))))
 			.onFailure()
 			.invoke(throwable -> log.errorf(
 				throwable,
@@ -299,7 +311,9 @@ public class DataIndexService
 				dataIndexDTO
 			))
 			.onItemOrFailure()
-			.transform(BaseK9EntityService::toResponse);
+			.transform((response, throwable) -> throwable == null
+				? response
+				: BaseK9EntityService.<DataIndex>toResponse(null, throwable));
 
 	}
 
@@ -668,6 +682,48 @@ public class DataIndexService
 					})
 					.replaceWithVoid();
 			});
+	}
+
+	/**
+	 * Lists the warnings about the configuration of a dataIndex: what is
+	 * incomplete and degrades the searches on it, though it can still be
+	 * completed later. The docTypes are read as they are in memory, as on a
+	 * dataIndex that has just gone through the creation.
+	 *
+	 * @param dataIndex the dataIndex to look at
+	 * @return the warnings, empty when the configuration is complete
+	 */
+	public static List<String> configurationWarnings(DataIndex dataIndex) {
+		var docTypes = dataIndex.getDocTypes();
+
+		if (docTypes == null || docTypes.isEmpty()) {
+			return List.of(NO_DOC_TYPES_WARNING);
+		}
+
+		return List.of();
+	}
+
+	private Uni<Void> warnIncompleteConfiguration(
+		Mutiny.Session session, DataIndex dataIndex) {
+
+		var warnings = configurationWarnings(dataIndex);
+
+		if (warnings.isEmpty()) {
+			return Uni.createFrom().voidItem();
+		}
+
+		var datasource = dataIndex.getDatasource();
+
+		return getCurrentTenant(session)
+			.invoke(tenant -> log.warnf(
+				"Tenant %s, datasource %s: dataIndex %s has an incomplete"
+				+ " configuration. %s",
+				tenant.schemaName(),
+				datasource != null ? datasource.getId() : null,
+				dataIndex.getName(),
+				String.join(" ", warnings)
+			))
+			.replaceWithVoid();
 	}
 
 	private Uni<DataIndex> createDataIndexTransient(
