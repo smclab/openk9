@@ -17,6 +17,7 @@
 
 package io.openk9.ingestion.web;
 
+import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.ingestion.client.filemanager.FileManagerClient;
 import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.IngestionDTO;
@@ -28,6 +29,8 @@ import io.quarkus.test.junit.mockito.InjectSpy;
 import io.restassured.http.ContentType;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.util.Base64;
 import java.util.List;
@@ -64,6 +67,26 @@ class IngestionEndpointTest {
 			.statusCode(406);
 
 		then(fileManagerClient).shouldHaveNoInteractions();
+
+		then(ingestionEmitter)
+			.should(times(1))
+			.emit(any(IngestionDTO.class));
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = PayloadType.class, names = {"DOCUMENT", "LAST", "HALT"})
+	void should_ingest_a_payload_without_datasourcePayload(PayloadType type) {
+
+		given()
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body(IngestionDTO.builder()
+				.type(type)
+				.build())
+			.post()
+			.then()
+			//a 406 is expected because no queue exists with name "null#null"
+			.statusCode(406);
 
 		then(ingestionEmitter)
 			.should(times(1))
