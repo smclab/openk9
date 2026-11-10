@@ -62,7 +62,7 @@ for name, data in json.load(sys.stdin).items():
 info "$(ls "$SCRIPT_DIR/corpus" | tr '\n' ' ')"
 python3 "$SCRIPT_DIR/e2e.py" sentinel || die "/api/embed non fonde testo e immagine come atteso"
 
-START_TS="$(date -u +%Y-%m-%dT%H:%M:%S)"
+START_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # --------------------------------------------------------------------------- #
 say "Clean-slate (drop tenant + indici)"
