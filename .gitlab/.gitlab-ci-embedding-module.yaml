@@ -71,7 +71,7 @@ Build Embedding OpenAI Release:
     fi
 
     /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
-      --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:$IMAGE_TAG"
+      --destination "${CI_REGISTRY_NAME}/openk9/openk9-embedding-module:$IMAGE_TAG"
   rules:
     - !reference [.rules:child-build-release, rules]
 
@@ -96,7 +96,7 @@ Container Scanning Embedding OpenAI:
   - job: Build Embedding OpenAI Release
     artifacts: false
   variables:
-    REGISTRY_COMPONENT_NAME: "openk9-openai-module"
+    REGISTRY_COMPONENT_NAME: "openk9-embedding-module"
   rules:
     - !reference [.rules:child-restart-release, rules]
 
@@ -119,7 +119,7 @@ Trigger Restart Embedding Release:
 Copy Embedding OpenAI to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
-    REGISTRY_COMPONENT_NAME: "openk9-openai-module"
+    REGISTRY_COMPONENT_NAME: "openk9-embedding-module"
   needs:
     - job: Fetch config
       artifacts: true

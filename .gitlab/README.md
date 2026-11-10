@@ -108,7 +108,7 @@ il deploy in produzione è manuale.
 
 ### AI / Python (2)
 - `rag-module` → `openk9-rag-module`
-- `embedding-modules` → `openk9-openai-module` (Dockerfile.base)
+- `embedding-modules` → `openk9-embedding-module` (Dockerfile.base)
   > Su `3.0.x` viene buildata **solo** l'immagine OpenAI; la sentence-transformers
   > variant non è inclusa in questa release line.
 
@@ -322,7 +322,7 @@ Stessa struttura, in più:
 Stessa struttura, in più:
 - `Fetch config` (sempre, legge `python_modules_config.txt` → `config.env`)
 - Build Verifier = `python3 -m py_compile` su tutti i `.py`
-- `embedding-modules` produce solo `openk9-openai-module` su `3.0.x` (la
+- `embedding-modules` produce solo `openk9-embedding-module` su `3.0.x` (la
   sentence-transformers variant è solo su `main`).
 
 ### Connectors
