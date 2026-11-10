@@ -9,12 +9,15 @@ config.env):
   provision   tenant -> initTenant -> modello di embedding Ollama (abilitato)
               -> plugin driver -> datasource -> doc type dal /sample ->
               data index knn (stampa l'id del datasource sull'ultima riga)
+  sentinel    chiede a Ollama, dall'host, un vettore testo+immagine: deve
+              essere uno solo e diverso da quello della sola immagine
   check       aggancia il datasource al bucket (KNN) e verifica i chunk su
               OpenSearch e le ricerche dal searcher; exit 0 se tutto passa
 """
 import argparse
 import base64
 import json
+import math
 import os
 import re
 import subprocess
@@ -210,6 +213,42 @@ def cmd_provision(_args):
 
 
 # --------------------------------------------------------------------------- #
+# sentinel
+# --------------------------------------------------------------------------- #
+def _corpus(name):
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "corpus", name)
+
+
+def _cosine(a, b):
+    return sum(x * y for x, y in zip(a, b)) / math.sqrt(
+        sum(x * x for x in a) * sum(y * y for y in b)
+    )
+
+
+def cmd_sentinel(_args):
+    """La forma di input con le immagini non e' documentata da Ollama: se
+    smettesse di fondere testo e immagine in un vettore, lo dice qui."""
+    with open(_corpus("query.jpg"), "rb") as fh:
+        image = base64.b64encode(fh.read()).decode()
+
+    def embed(inputs):
+        status, body = _request("POST", env("OLLAMA_HOST_URL") + "/api/embed",
+                                {"model": env("OLLAMA_MODEL"), "input": inputs}, timeout=120)
+        if status != 200:
+            sys.exit("sentinel: /api/embed HTTP %s: %s" % (status, json.dumps(body)[:200]))
+        return body.get("embeddings") or []
+
+    alone = embed([{"image": image}])
+    mixed = embed([{"text": env("QUERY_TEXT"), "image": image}])
+    if len(alone) != 1 or len(mixed) != 1:
+        sys.exit("sentinel: attesi 1 vettore per input, avuti %d e %d" % (len(alone), len(mixed)))
+    cosine = _cosine(alone[0], mixed[0])
+    print("sentinel: testo+immagine -> 1 vettore, coseno con la sola immagine %.3f" % cosine)
+    if cosine >= 0.99:
+        sys.exit("sentinel: il testo non entra nel vettore misto (coseno %.3f)" % cosine)
+
+
+# --------------------------------------------------------------------------- #
 # check
 # --------------------------------------------------------------------------- #
 def _wire_bucket(ds_id):
@@ -313,7 +352,7 @@ def cmd_check(args):
                 or (c.get("binary") or {}).get("contentType")]
 
     size = int(env("VECTOR_SIZE"))
-    for content_id in (env("SENTINA_CONTENT_ID"), env("OTHER_CONTENT_ID")):
+    for content_id in (env("BILGE_CONTENT_ID"), env("CABIN_CONTENT_ID")):
         group = "IMMAGINE %s" % content_id
         images = media(content_id)
         add(group, "un chunk per l'immagine", 1, len(images))
@@ -335,33 +374,34 @@ def cmd_check(args):
         _wire_bucket(args.ds_id)
         time.sleep(3)
 
-    query_image = os.path.join(env("CORPUS_DIR"), env("QUERY_IMAGE"))
-    sentina, other = env("SENTINA_CONTENT_ID"), env("OTHER_CONTENT_ID")
+    query_image = _corpus("query.jpg")
+    bilge, cabin, pdf = env("BILGE_CONTENT_ID"), env("CABIN_CONTENT_ID"), env("PDF_CONTENT_ID")
+    relevant = ((bilge, None), (pdf, 2))
+
+    def before(ranking):
+        return ((bilge, None) in ranking and (cabin, None) in ranking
+                and ranking.index((bilge, None)) < ranking.index((cabin, None)))
 
     result, error = _search(image=query_image)
     ranking = _image_ranking(result) if result else []
-    print("\nquery immagine (ritaglio di p019) -> chunk-immagine: %s" % (ranking or error))
+    print("\nquery immagine (ritaglio dello schema) -> chunk-immagine: %s" % (ranking or error))
     add("RICERCA immagine", "risponde", None, error)
-    add("RICERCA immagine", "il primo e' la pagina 19 (immagine o pagina 2 del PDF)", True,
-        bool(ranking) and ranking[0] in ((sentina, None), (env("PDF_CONTENT_ID"), 2)))
-    add("RICERCA immagine", "pagina-sentina prima di pagina-altra", True,
-        (sentina, None) in ranking and (other, None) in ranking
-        and ranking.index((sentina, None)) < ranking.index((other, None)))
+    add("RICERCA immagine", "il primo e' lo schema della sentina (immagine o pagina 2 del PDF)",
+        True, bool(ranking) and ranking[0] in relevant)
+    add("RICERCA immagine", "%s prima di %s" % (bilge, cabin), True, before(ranking))
 
-    result, error = _search(text="schema dell'impianto di sentina")
+    result, error = _search(text=env("QUERY_TEXT"))
     ranking = _image_ranking(result) if result else []
-    print("query testo 'schema dell'impianto di sentina' -> chunk-immagine: %s" % (ranking or error))
+    print("query testo '%s' -> chunk-immagine: %s" % (env("QUERY_TEXT"), ranking or error))
     add("RICERCA testo", "risponde", None, error)
-    add("RICERCA testo", "immagine pertinente prima della non correlata", True,
-        (sentina, None) in ranking and (other, None) in ranking
-        and ranking.index((sentina, None)) < ranking.index((other, None)))
+    add("RICERCA testo", "immagine pertinente prima della non correlata", True, before(ranking))
 
-    result, error = _search(text="schema dell'impianto di sentina", image=query_image)
+    result, error = _search(text=env("QUERY_TEXT"), image=query_image)
     ranking = _image_ranking(result) if result else []
     print("query testo + immagine -> chunk-immagine: %s" % (ranking or error))
     add("RICERCA testo+immagine", "risponde (embed_mixed)", None, error)
-    add("RICERCA testo+immagine", "il primo e' la pagina 19", True,
-        bool(ranking) and ranking[0] in ((sentina, None), (env("PDF_CONTENT_ID"), 2)))
+    add("RICERCA testo+immagine", "il primo e' lo schema della sentina", True,
+        bool(ranking) and ranking[0] in relevant)
 
     add("LOG", "client ollama-multimodal nel modulo di embedding", True, args.log_client == "true")
 
@@ -392,6 +432,7 @@ def main():
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("clean")
     sub.add_parser("provision")
+    sub.add_parser("sentinel")
     p_check = sub.add_parser("check")
     p_check.add_argument("--ds-id", required=True)
     p_check.add_argument("--log-client", default="false")
@@ -402,6 +443,8 @@ def main():
         cmd_clean(args)
     elif args.cmd == "provision":
         cmd_provision(args)
+    elif args.cmd == "sentinel":
+        cmd_sentinel(args)
     elif args.cmd == "check":
         sys.exit(cmd_check(args))
 

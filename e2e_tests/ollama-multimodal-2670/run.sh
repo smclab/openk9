@@ -45,27 +45,17 @@ case ",$caps," in *,vision,*) ;; *) die "il modello $OLLAMA_MODEL non ha la capa
 info "Ollama $(curl -sf "$OLLAMA_HOST_URL/api/version"), $OLLAMA_MODEL: $caps"
 
 # --------------------------------------------------------------------------- #
-say "Corpus (due immagini e un PDF di tre pagine)"
-[ -n "$CORPUS_DIR" ] || die "CORPUS_DIR non impostata: la cartella con le immagini di prova (vedi config.env)"
+say "Corpus (disegnato con Pillow) e sentinella su /api/embed"
+# make_corpus.py gira nel modulo di embedding, che ha Pillow, ed esce in
+# JSON {file: base64}
 mkdir -p "$SCRIPT_DIR/corpus"
-cp "$CORPUS_DIR/$PAGE_SENTINA" "$SCRIPT_DIR/corpus/sentina.jpg" || die "immagine assente: $CORPUS_DIR/$PAGE_SENTINA"
-cp "$CORPUS_DIR/$PAGE_OTHER" "$SCRIPT_DIR/corpus/altra.jpg" || die "immagine assente: $CORPUS_DIR/$PAGE_OTHER"
-[ -f "$CORPUS_DIR/$QUERY_IMAGE" ] || die "immagine di query assente: $CORPUS_DIR/$QUERY_IMAGE"
-# Il PDF lo fa Pillow del modulo di embedding: le JPEG entrano in base64 da
-# stdin, il PDF esce in base64 da stdout
-pages=()
-for p in $PDF_PAGES; do pages+=("$CORPUS_DIR/$p"); done
-python3 -c 'import base64,json,sys; print(json.dumps([base64.b64encode(open(p,"rb").read()).decode() for p in sys.argv[1:]]))' "${pages[@]}" \
-  | docker exec -i "$EMBEDDING_CONTAINER" python -c '
-import base64, io, json, sys
-from PIL import Image
-images = [Image.open(io.BytesIO(base64.b64decode(d))).convert("RGB") for d in json.load(sys.stdin)]
-out = io.BytesIO()
-images[0].save(out, "PDF", save_all=True, append_images=images[1:], resolution=150)
-print(base64.b64encode(out.getvalue()).decode())' \
-  | python3 -c 'import base64,sys; open(sys.argv[1],"wb").write(base64.b64decode(sys.stdin.read()))' "$SCRIPT_DIR/corpus/estratto.pdf" \
-  || die "costruzione del PDF fallita"
+docker exec -i "$EMBEDDING_CONTAINER" python - < "$SCRIPT_DIR/make_corpus.py" \
+  | python3 -c 'import base64,json,os,sys
+for name, data in json.load(sys.stdin).items():
+    open(os.path.join(sys.argv[1], name), "wb").write(base64.b64decode(data))' "$SCRIPT_DIR/corpus" \
+  || die "costruzione del corpus fallita"
 info "$(ls "$SCRIPT_DIR/corpus" | tr '\n' ' ')"
+python3 "$SCRIPT_DIR/e2e.py" sentinel || die "/api/embed non fonde testo e immagine come atteso"
 
 START_TS="$(date -u +%Y-%m-%dT%H:%M:%S)"
 

@@ -4,7 +4,7 @@ Connettore attivo dello scenario "E2E embedding multimodale Ollama 2670".
 Il datasource lo invoca su POST /invoke all'avvio di uno scheduling: risponde
 200 subito e poi, in un thread, manda all'ingestion i messaggi che un
 connettore reale produrrebbe: due pagine di manuale con la loro immagine
-JPEG, un estratto di tre pagine come PDF, e il LAST. I binari viaggiano
+JPEG, un manuale di tre pagine come PDF, e il LAST. I binari viaggiano
 inline (base64) nei resources.binaries del messaggio.
 
 Non contiene asserzioni: le verifiche le fa e2e.py su OpenSearch e sul
@@ -27,9 +27,9 @@ INGESTION_URL = os.environ.get(
 
 # (contentId, testo, file del binario, content type, fileId)
 DOCUMENTS = [
-    ("pagina-sentina", "Manuale First 40.7, pagina 19", "sentina.jpg", "image/jpeg", "2670001"),
-    ("pagina-altra", "Manuale First 40.7, pagina 6", "altra.jpg", "image/jpeg", "2670002"),
-    ("estratto-pdf", "Manuale First 40.7, pagine 17, 19 e 20", "estratto.pdf", "application/pdf", "2670003"),
+    ("page-bilge", "Owner's manual, page 7", "bilge.jpg", "image/jpeg", "2670001"),
+    ("page-cabin", "Owner's manual, page 3", "cabin.jpg", "image/jpeg", "2670002"),
+    ("manual-pdf", "Owner's manual, pages 9, 7 and 3", "manual.pdf", "application/pdf", "2670003"),
 ]
 
 _driven = set()
