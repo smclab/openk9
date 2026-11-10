@@ -210,6 +210,7 @@ const StructureChatbot: React.FC<StructureChatbotProps> = ({
       setLoginNoticeOpen(true);
       return null;
     }
+    setLoginNoticeOpen(false);
     return generateResponse(message);
   };
   const handleSearch = (message: string) => startResponse(message) !== null;

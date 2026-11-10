@@ -50,6 +50,7 @@ function App() {
 			setLoginNoticeOpen(true);
 			return false;
 		}
+		setLoginNoticeOpen(false);
 		const flag = retrieveFromUploadedDocumentsParam ?? retrieveFromUploadedDocuments;
 		chatId?.id && generateResponse(query, chatId?.id || "", flag);
 		return true;
