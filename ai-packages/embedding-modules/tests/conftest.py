@@ -116,5 +116,6 @@ def ollama_server(monkeypatch):
     server.asked = []
     monkeypatch.setattr(ollama, "_show", server)
     monkeypatch.setattr(ollama, "_multimodal", {})
+    monkeypatch.setattr(ollama, "_failed", {})
 
     return server

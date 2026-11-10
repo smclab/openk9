@@ -149,6 +149,9 @@ def _text_ref_pieces(data, content_type, pipelines, file_id):
 def _image_ref_pieces(data, content_type, pipelines, file_id):
     try:
         vector = pipelines.embed_image(data, content_type)
+    except SkipRef:
+        # the model cannot embed this image (a format it does not decode)
+        raise
     except Exception as error:
         raise EmbedFailed(str(error)) from error
 

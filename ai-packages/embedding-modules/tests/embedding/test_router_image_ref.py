@@ -35,3 +35,19 @@ def test_image_ref_is_fetched_and_embedded(make_pipelines):
     assert pieces[0].file_id == "img-1"
     assert pieces[0].text == ""
     assert pieces[0].vector == ["image", b"png-bytes", "image/png"]
+
+
+def test_an_image_the_model_cannot_embed_is_skipped(make_pipelines):
+    import pytest
+
+    from app.embedding.router import SkipRef
+
+    def refuse(data, content_type):
+        raise SkipRef(f"not {content_type}")
+
+    storage = {"https://signed/img": (b"bmp-bytes", "image/bmp")}
+    ref = {"url": "https://signed/img", "fileId": "img-1", "contentType": "image/bmp"}
+
+    # a skip, not EmbedFailed: the document goes on without this ref
+    with pytest.raises(SkipRef, match="not image/bmp"):
+        ref_pieces(ref, make_pipelines(storage=storage, embed_image=refuse))

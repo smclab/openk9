@@ -212,7 +212,9 @@ embeds text only.
 An Ollama model is recognized by what the server says of it, not by its name:
 the module asks `/api/show` once per process for each (`api_url`, model) and
 logs the capabilities and the Ollama version. When `/api/show` fails or lists
-no capabilities, the model is served by langchain, text only, with a warning.
+no capabilities, the model is served by langchain, text only, with a warning;
+a server that did not answer is asked again after 30 seconds. An `api_url`
+without scheme takes `http://`, as in the langchain client.
 Requirements: a recent Ollama server (tested with 0.40.16) and a model with
 the `embedding` and `vision` capabilities, e.g. `embeddinggemma-2:740m`. The
 images travel in `input` of `/api/embed` as `{"image": <base64>}` and
@@ -226,6 +228,9 @@ Limits:
 - images, at indexing and in a query, only with a model in the registry;
 - a mixed query (text and image together) only with Cohere Embed v4 and the
   Ollama multimodal models;
+- the Ollama multimodal models embed PNG, JPEG, GIF and WebP images only: a
+  ref in another format (BMP, TIFF, SVG, ...) is skipped, the rest of the
+  document is indexed;
 - custom providers (served as OpenAI-compatible endpoints) and models outside
   the registry embed text only.
 

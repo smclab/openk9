@@ -31,10 +31,11 @@ for the same text the two give the same vector.
 
 import base64
 import logging
+import time
 
 import httpx
 
-from app.embedding.router import EmbedFailed
+from app.embedding.router import EmbedFailed, SkipRef
 
 logger = logging.getLogger(__name__)
 
@@ -47,39 +48,66 @@ DEFAULT_KEEP_ALIVE = 1800
 # is not, so it waits for the answer as langchain does
 PROBE_TIMEOUT = httpx.Timeout(10.0)
 EMBED_TIMEOUT = httpx.Timeout(None, connect=10.0)
+# A request asks the registry more than once (batch size, client, log): a
+# server that did not answer is not asked again for this many seconds.
+PROBE_RETRY_SECONDS = 30
 # The prefix a query takes, by model family: Ollama sends the input to the
 # model as it is (template {{ .Prompt }}). The documents go without one, as
 # langchain sends them, so an index built with langchain stays valid.
 QUERY_PREFIXES = {"embeddinggemma": "task: search result | query: "}
+# the image formats Ollama decodes; it answers 400 to any other
+IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"}
 
 # (api_url, model) -> whether the model embeds images, once the server answered
 _multimodal = {}
+# (api_url, model) -> when /api/show last failed
+_failed = {}
+_now = time.monotonic
+
+
+def base_url(api_url):
+    """The api_url without the trailing slash, with http:// when it has no
+    scheme, as the Ollama client of langchain reads it."""
+    url = (api_url or "").rstrip("/")
+
+    return url if not url or "://" in url else f"http://{url}"
 
 
 def _show(api_url, model):
-    """The /api/show answer of the model and the version of the server."""
+    """The /api/show answer of the model and the version of the server, None
+    when /api/version does not tell it."""
     response = httpx.post(
         f"{api_url}/api/show", json={"model": model}, timeout=PROBE_TIMEOUT
     )
     response.raise_for_status()
-    version = httpx.get(f"{api_url}/api/version", timeout=PROBE_TIMEOUT)
 
-    return response.json(), version.json().get("version") if version.is_success else None
+    try:
+        version = httpx.get(f"{api_url}/api/version", timeout=PROBE_TIMEOUT)
+        version = version.json().get("version") if version.is_success else None
+    except (httpx.HTTPError, ValueError, AttributeError):
+        version = None
+
+    return response.json(), version
 
 
 def is_multimodal(api_url, model):
     """True when the Ollama model lists the `embedding` and `vision`
     capabilities. The answer of the server is kept for the process; a server
-    that does not answer leaves the model text-only for this request, with a
-    warning, and is asked again on the next one."""
+    that does not answer leaves the model text-only, with a warning, and is
+    asked again after PROBE_RETRY_SECONDS."""
+    api_url = base_url(api_url)
     key = (api_url, model)
 
     if key in _multimodal:
         return _multimodal[key]
 
+    if key in _failed and _now() - _failed[key] < PROBE_RETRY_SECONDS:
+        return False
+
     try:
-        show, version = _show((api_url or "").rstrip("/"), model)
+        show, version = _show(api_url, model)
     except (httpx.HTTPError, ValueError) as error:
+        _failed[key] = _now()
         logger.warning(
             "Ollama model %s at %s treated as text only: /api/show failed: %s",
             model,
@@ -88,6 +116,7 @@ def is_multimodal(api_url, model):
         )
         return False
 
+    _failed.pop(key, None)
     capabilities = show.get("capabilities")
 
     if not capabilities:
@@ -114,10 +143,21 @@ def is_multimodal(api_url, model):
     return _multimodal[key]
 
 
+def _image(data, content_type):
+    """The image as /api/embed takes it, base64; SkipRef for a format Ollama
+    does not decode, so the ref is skipped as on a text-only model."""
+    if (content_type or "").split(";")[0].strip().lower() not in IMAGE_TYPES:
+        raise SkipRef(
+            f"Ollama embeds PNG, JPEG, GIF and WebP images only, not {content_type}"
+        )
+
+    return base64.b64encode(data).decode("ascii")
+
+
 class OllamaMultimodalEmbedder:
     def __init__(self, model, api_url, keep_alive=None, num_gpu=None, client=None):
         self.model = model
-        self.url = f"{(api_url or '').rstrip('/')}/api/embed"
+        self.url = f"{base_url(api_url)}/api/embed"
         # jsonConfig numbers reach the module as floats, Ollama wants integers
         self.keep_alive = int(DEFAULT_KEEP_ALIVE if keep_alive is None else keep_alive)
         self.num_gpu = int(num_gpu) if num_gpu is not None else None
@@ -163,8 +203,8 @@ class OllamaMultimodalEmbedder:
         return self._embed(texts) if texts else []
 
     def embed_image(self, data, content_type):
-        """Embeds a single image (raw bytes, JPEG or PNG as they come)."""
-        return self._embed([{"image": base64.b64encode(data).decode("ascii")}])[0]
+        """Embeds a single image (raw bytes, in the format they come)."""
+        return self._embed([{"image": _image(data, content_type)}])[0]
 
     def embed_mixed(self, text, data, content_type, input_type="search_query"):
         """Embeds text and an image together: the model fuses them into one
@@ -173,7 +213,7 @@ class OllamaMultimodalEmbedder:
             [
                 {
                     "text": self._text(text, input_type),
-                    "image": base64.b64encode(data).decode("ascii"),
+                    "image": _image(data, content_type),
                 }
             ]
         )[0]

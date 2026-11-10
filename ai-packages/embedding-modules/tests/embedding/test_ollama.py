@@ -28,7 +28,7 @@ import pytest
 
 from app.embedding import ollama
 from app.embedding.ollama import OllamaMultimodalEmbedder
-from app.embedding.router import EmbedFailed
+from app.embedding.router import EmbedFailed, SkipRef
 
 GEMMA = "embeddinggemma-2:740m"
 PNG = b"png-bytes"
@@ -142,6 +142,29 @@ def test_keep_alive_and_num_gpu_reach_ollama_as_integers():
     assert type(body["options"]["num_gpu"]) is int
 
 
+@pytest.mark.parametrize(
+    "content_type", ["image/jpeg", "image/png", "image/gif", "image/webp", "image/JPEG; q=1"]
+)
+def test_the_formats_ollama_decodes_are_sent(content_type):
+    server = _Server()
+
+    _embedder(server).embed_image(PNG, content_type)
+
+    assert server.bodies[0][1]["input"] == [{"image": PNG_B64}]
+
+
+@pytest.mark.parametrize("content_type", ["image/bmp", "image/tiff", "image/svg+xml", None])
+def test_a_format_ollama_does_not_decode_is_skipped(content_type):
+    server = _Server()
+    embedder = _embedder(server)
+
+    with pytest.raises(SkipRef, match="PNG, JPEG, GIF and WebP"):
+        embedder.embed_image(PNG, content_type)
+    with pytest.raises(SkipRef):
+        embedder.embed_mixed("title: x\n", PNG, content_type, input_type="search_document")
+    assert server.bodies == []
+
+
 @pytest.mark.parametrize("status", [400, 500])
 def test_an_error_of_the_server_fails_the_embedding(status):
     server = _Server(status=status, answer={"error": "failed to process inputs"})
@@ -193,17 +216,36 @@ def test_the_answer_is_kept_per_server_and_model(ollama_server):
 
 
 def test_a_server_that_does_not_answer_leaves_the_model_text_only(
-    ollama_server, caplog
+    ollama_server, caplog, monkeypatch
 ):
     ollama_server.show = httpx.ConnectError("connection refused")
+    clock = [1000.0]
+    monkeypatch.setattr(ollama, "_now", lambda: clock[0])
 
     with caplog.at_level(logging.WARNING, logger=ollama.logger.name):
         assert ollama.is_multimodal("http://ollama:11434", GEMMA) is False
 
     assert "treated as text only: /api/show failed" in caplog.text
-    # asked again on the next request
-    ollama.is_multimodal("http://ollama:11434", GEMMA)
+    # the rest of the request does not ask again
+    clock[0] += ollama.PROBE_RETRY_SECONDS - 1
+    assert ollama.is_multimodal("http://ollama:11434", GEMMA) is False
+    assert len(ollama_server.asked) == 1
+    # a later request does, and finds the server back
+    clock[0] += 2
+    ollama_server.show = {"capabilities": ["embedding", "vision"]}
+    assert ollama.is_multimodal("http://ollama:11434", GEMMA) is True
     assert len(ollama_server.asked) == 2
+
+
+def test_an_api_url_without_scheme_takes_http(ollama_server):
+    ollama_server.show = {"capabilities": ["embedding", "vision"]}
+
+    ollama.is_multimodal("ollama:11434/", GEMMA)
+
+    assert ollama_server.asked == [("http://ollama:11434", GEMMA)]
+    assert OllamaMultimodalEmbedder(GEMMA, "ollama:11434").url == (
+        "http://ollama:11434/api/embed"
+    )
 
 
 def test_a_server_without_capabilities_leaves_the_model_text_only(
@@ -236,3 +278,32 @@ def test_show_asks_the_model_and_the_version(monkeypatch):
     assert version == "0.40.16"
     assert seen[0][:2] == ("POST", "/api/show")
     assert json.loads(seen[0][2]) == {"model": GEMMA}
+
+
+def test_a_server_without_version_is_still_recognized(monkeypatch):
+    def handler(request):
+        if request.url.path == "/api/version":
+            return httpx.Response(404, text="404 page not found")
+        return httpx.Response(200, json={"capabilities": ["embedding", "vision"]})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    monkeypatch.setattr(ollama.httpx, "post", client.post)
+    monkeypatch.setattr(ollama.httpx, "get", client.get)
+
+    assert REAL_SHOW("http://ollama:11434", GEMMA) == (
+        {"capabilities": ["embedding", "vision"]},
+        None,
+    )
+
+
+def test_a_version_that_is_not_json_is_none(monkeypatch):
+    def handler(request):
+        if request.url.path == "/api/version":
+            return httpx.Response(200, text="<html>proxy</html>")
+        return httpx.Response(200, json={"capabilities": ["embedding", "vision"]})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    monkeypatch.setattr(ollama.httpx, "post", client.post)
+    monkeypatch.setattr(ollama.httpx, "get", client.get)
+
+    assert REAL_SHOW("http://ollama:11434", GEMMA)[1] is None
