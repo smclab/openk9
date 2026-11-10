@@ -1,5 +1,5 @@
 import React from "react";
-import { Snackbar, Alert, AlertColor } from "@mui/material";
+import { Snackbar, Alert, AlertColor, Stack } from "@mui/material";
 
 type ToastDefinition = {
   displayType: AlertColor;
@@ -41,30 +41,36 @@ export function ToastProvider({ children }: ToastProviderProps) {
   return (
     <ToastContext.Provider value={addToast}>
       {children}
-      {toastItems.map(({ key, displayType, title, content }) => (
-        <Snackbar
-          key={key}
-          open
-          autoHideDuration={6000}
-          onClose={(_, reason) => {
-            if (reason === "clickaway") return;
-            setToastItems((toastItems) => toastItems.filter((item) => item.key !== key));
-          }}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          sx={{ paddingBottom: "50px" }}
-        >
-          <Alert
-            onClose={() => {
+      {/* one fixed column: each Snackbar is fixed on its own, so they would cover each other */}
+      <Stack
+        spacing={1}
+        alignItems="flex-end"
+        sx={{ position: "fixed", right: 24, bottom: 24, paddingBottom: "50px", zIndex: "snackbar" }}
+      >
+        {toastItems.map(({ key, displayType, title, content }) => (
+          <Snackbar
+            key={key}
+            open
+            autoHideDuration={6000}
+            onClose={(_, reason) => {
+              if (reason === "clickaway") return;
               setToastItems((toastItems) => toastItems.filter((item) => item.key !== key));
             }}
-            severity={displayType}
-            sx={{ width: "100%" }}
+            sx={{ position: "static" }}
           >
-            <strong>{title}</strong>
-            <div>{content}</div>
-          </Alert>
-        </Snackbar>
-      ))}
+            <Alert
+              onClose={() => {
+                setToastItems((toastItems) => toastItems.filter((item) => item.key !== key));
+              }}
+              severity={displayType}
+              sx={{ width: "100%" }}
+            >
+              <strong>{title}</strong>
+              <div>{content}</div>
+            </Alert>
+          </Snackbar>
+        ))}
+      </Stack>
     </ToastContext.Provider>
   );
 }
