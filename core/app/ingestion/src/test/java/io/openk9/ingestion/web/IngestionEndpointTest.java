@@ -31,6 +31,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
 
 import java.util.Base64;
 import java.util.List;
@@ -74,8 +75,8 @@ class IngestionEndpointTest {
 	}
 
 	@ParameterizedTest
-	@EnumSource(value = PayloadType.class, names = {"DOCUMENT", "LAST", "HALT"})
-	void should_ingest_a_payload_without_datasourcePayload(PayloadType type) {
+	@EnumSource(value = PayloadType.class, names = {"LAST", "HALT"})
+	void should_ingest_a_control_message_without_datasourcePayload(PayloadType type) {
 
 		given()
 			.accept(ContentType.JSON)
@@ -91,6 +92,26 @@ class IngestionEndpointTest {
 		then(ingestionEmitter)
 			.should(times(1))
 			.emit(any(IngestionDTO.class));
+	}
+
+	@ParameterizedTest
+	@NullSource
+	@EnumSource(value = PayloadType.class, names = {"DOCUMENT", "PARTIAL_DOCUMENT"})
+	void should_reject_a_content_message_without_datasourcePayload(PayloadType type) {
+
+		given()
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body(IngestionDTO.builder()
+				.type(type)
+				.build())
+			.post()
+			.then()
+			.statusCode(400);
+
+		then(fileManagerClient).shouldHaveNoInteractions();
+
+		then(ingestionEmitter).shouldHaveNoInteractions();
 	}
 
 	@Test
