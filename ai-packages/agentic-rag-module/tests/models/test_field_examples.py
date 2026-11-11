@@ -42,7 +42,8 @@ from app.rag import agentic_rag, evaluations
 MODULE_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Reports the pydantic deprecations raised from the application code while
-# its models are defined.
+# its models are defined. The service entry point pulls in every module that
+# declares one, so a model added later is checked too.
 PROBE = f"""
 import json, sys, warnings
 sys.path.insert(0, {str(MODULE_ROOT)!r})
@@ -50,9 +51,7 @@ from pydantic.warnings import PydanticDeprecatedSince20
 
 with warnings.catch_warnings(record=True) as caught:
     warnings.simplefilter("always")
-    import app.models.models
-    import app.rag.agentic_rag
-    import app.rag.evaluations
+    import app.server
 
 print(json.dumps([
     f"{{w.filename}}:{{w.lineno}}: {{w.message}}"
