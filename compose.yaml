@@ -84,11 +84,9 @@ services:
     hostname: openk9-tenant-manager
     # Comes back after an out-of-memory exit, like the datasource.
     restart: unless-stopped
-    # Container limit: heap (K9_TENANT_MANAGER_XMX) plus metaspace, threads and direct buffers.
     mem_limit: ${K9_TENANT_MANAGER_MEM_LIMIT:-512m}
     environment:
-      # An explicit heap: the base image default is a share of the Docker VM memory.
-      # JAVA_OPTS_APPEND replaces the image one, so the log manager stays here.
+      # Explicit heap; JAVA_OPTS_APPEND replaces the image one, so it keeps the log manager
       JAVA_OPTS_APPEND: '-Djava.util.logging.manager=org.jboss.logmanager.LogManager -Xmx${K9_TENANT_MANAGER_XMX:-192m}'
       RABBITMQ_HOST: 'rabbitmq'
       RABBITMQ_PASSWORD: 'openk9'
@@ -149,7 +147,6 @@ services:
     # Comes back after an out-of-memory exit or kill: the searcher fails
     # every request while the datasource is down.
     restart: unless-stopped
-    # Container limit: heap (K9_DATASOURCE_XMX) plus metaspace, threads and direct buffers.
     mem_limit: ${K9_DATASOURCE_MEM_LIMIT:-1800m}
     environment:
       PEKKO_CLUSTER_BOOTSTRAP_SERVICE_NAME: 'datasource'
@@ -158,8 +155,7 @@ services:
       IO_OPENK9_SCHEDULING_PURGE_MAX_AGE: '2d'
       IO_OPENK9_SCHEDULING_TIMEOUT: '100s'
       JAVA_DEBUG: 'true'
-      # An explicit heap: the base image default is a share of the Docker VM memory.
-      # JAVA_OPTS_APPEND replaces the image one, so the log manager stays here.
+      # Explicit heap; JAVA_OPTS_APPEND replaces the image one, so it keeps the log manager
       JAVA_OPTS_APPEND: '-Djava.util.logging.manager=org.jboss.logmanager.LogManager -Xmx${K9_DATASOURCE_XMX:-1280m}'
       MP_MESSAGING_INCOMING_EVENTS_ROUTING_KEYS: 'noop'
       OPENK9_DATASOURCE_ACL_QUERY_EXTRA_PARAMS_ENABLED: 'false'
@@ -185,8 +181,6 @@ services:
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_CORS_ENABLED: 'true'
       QUARKUS_HTTP_CORS_ORIGINS: '/.*/'
-      # Configuration import and enricher callbacks (extracted text, not binaries:
-      # those go through the staging storage)
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       QUARKUS_LOG_LEVEL: 'INFO'
@@ -216,11 +210,9 @@ services:
     hostname: openk9-ingestion
     # Comes back after an out-of-memory exit, like the datasource.
     restart: unless-stopped
-    # Container limit: heap (K9_INGESTION_XMX) plus metaspace, threads and direct buffers.
     mem_limit: ${K9_INGESTION_MEM_LIMIT:-800m}
     environment:
-      # An explicit heap: the base image default is a share of the Docker VM memory.
-      # JAVA_OPTS_APPEND replaces the image one, so the log manager stays here.
+      # Explicit heap; JAVA_OPTS_APPEND replaces the image one, so it keeps the log manager
       JAVA_OPTS_APPEND: '-Djava.util.logging.manager=org.jboss.logmanager.LogManager -Xmx${K9_INGESTION_XMX:-512m}'
       RABBITMQ_HOST: 'rabbitmq'
       RABBITMQ_PASSWORD: 'openk9'
@@ -228,10 +220,6 @@ services:
       RABBITMQ_PORT: '5672'
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
-      # Binaries arrive base64 encoded in the JSON body (+33%): 64M accepts files up
-      # to about 48 MB. For larger files raise it to about 1.4 times the file and
-      # raise K9_INGESTION_XMX too: a file being received takes 3 to 4 times its size
-      # in heap. Measured: 512m holds four 47 MB files at once, 820m two 100 MB files.
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '64M'
       QUARKUS_OTEL_SDK_DISABLED: 'true'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
@@ -249,11 +237,9 @@ services:
     hostname: openk9-searcher
     # Comes back after an out-of-memory exit, like the datasource.
     restart: unless-stopped
-    # Container limit: heap (K9_SEARCHER_XMX) plus metaspace, threads and direct buffers.
     mem_limit: ${K9_SEARCHER_MEM_LIMIT:-400m}
     environment:
-      # An explicit heap: the base image default is a share of the Docker VM memory.
-      # JAVA_OPTS_APPEND replaces the image one, so the log manager stays here.
+      # Explicit heap; JAVA_OPTS_APPEND replaces the image one, so it keeps the log manager
       JAVA_OPTS_APPEND: '-Djava.util.logging.manager=org.jboss.logmanager.LogManager -Xmx${K9_SEARCHER_XMX:-128m}'
       QUARKUS_OPENSEARCH_HOSTS: 'opensearch:9200'
       QUARKUS_OPENSEARCH_USERNAME: 'opensearch'

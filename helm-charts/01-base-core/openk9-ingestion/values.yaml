@@ -85,9 +85,7 @@ quarkus:
   LogConsoleJson: false ## put to true to force json log format
   LogLevel: "INFO"
 
-## Http limit max size: the largest request the Ingestion accepts. Binaries
-## travel base64 encoded in the JSON body (+33%), so 64M accepts files up to
-## about 48 MB. Raising it needs memory too: see the chart README
+## Http limit max size
 limit:
   max:
     size: 64M
