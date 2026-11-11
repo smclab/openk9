@@ -3,7 +3,7 @@ services:
     image: chrislusf/seaweedfs:4.47
     container_name: seaweedfs
     hostname: seaweedfs
-    command: server -dir=/data -s3 -s3.config=/etc/seaweedfs/s3.json
+    command: server -dir=/data -s3 -s3.config=/etc/seaweedfs/s3.json -master.volumeSizeLimitMB=64 -volume.max=10000
     ports:
       - "8333:8333"
       - "8888:8888"
