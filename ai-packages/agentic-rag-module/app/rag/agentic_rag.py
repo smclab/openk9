@@ -1251,8 +1251,7 @@ class RagGraph:
         # the query the user wrote.
         state.target_lang = self._resolve_target_language(state.current_query)
         logger.info(
-            f"[resolve_language] target_lang={state.target_lang} "
-            f"{self._log_context()}"
+            f"[resolve_language] target_lang={state.target_lang} {self._log_context()}"
         )
         return state
 
@@ -1355,7 +1354,7 @@ class RagGraph:
 
     def input_guardrail_route_decision(
         self, state: GraphState
-    ) -> Literal["guardrail_violation_response", "history_handler"]:
+    ) -> Literal["guardrail_violation_response", "resolve_language"]:
         """Separate function for conditional routing decision"""
         if state.guardrail_check:
             logger.info(
@@ -1365,10 +1364,10 @@ class RagGraph:
             return "guardrail_violation_response"
         else:
             logger.info(
-                "[input_guardrail_route] guardrail_check=False -> history_handler "
+                "[input_guardrail_route] guardrail_check=False -> resolve_language "
                 f"{self._log_context()}"
             )
-            return "history_handler"
+            return "resolve_language"
 
     def history_handler_node(self, state: GraphState) -> GraphState:
         if self.rag_type != "SIMPLE_GENERATE" and self.chat_sequence_number > 1:
@@ -2660,7 +2659,7 @@ class RagGraph:
                 self.input_guardrail_route_decision,
                 {
                     "guardrail_violation_response": "guardrail_violation_response",
-                    "history_handler": "resolve_language",
+                    "resolve_language": "resolve_language",
                 },
             )
             workflow.add_conditional_edges(

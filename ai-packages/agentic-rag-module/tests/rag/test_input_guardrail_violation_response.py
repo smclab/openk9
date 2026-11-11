@@ -42,11 +42,11 @@ def test_flagged_query_is_routed_to_the_violation_response():
     )
 
 
-def test_clean_query_goes_on_to_the_history():
+def test_clean_query_goes_on_to_the_language():
     graph = _graph()
     state = GraphState(current_query="query", guardrail_check=False)
 
-    assert graph.input_guardrail_route_decision(state) == "history_handler"
+    assert graph.input_guardrail_route_decision(state) == "resolve_language"
 
 
 def test_violation_response_is_the_fixed_guardrail_text():

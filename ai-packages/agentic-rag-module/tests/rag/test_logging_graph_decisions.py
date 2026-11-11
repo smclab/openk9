@@ -71,8 +71,8 @@ def test_clean_input_reports_where_it_is_routed(caplog):
             GraphState(current_query="q", guardrail_check=False)
         )
 
-    assert destination == "history_handler"
-    assert "guardrail_check=False -> history_handler" in _info(
+    assert destination == "resolve_language"
+    assert "guardrail_check=False -> resolve_language" in _info(
         caplog, "[input_guardrail_route]"
     )
 
