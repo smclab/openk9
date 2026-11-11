@@ -350,6 +350,7 @@
           "missing-references": "Références manquantes (missingReferences)",
           "errors": "Erreurs bloquantes"
         },
+        "report-warnings-heading": "Avertissements — l'import continue, mais vérifiez ce qui suit",
         "report-secrets-heading": "Secrets à saisir de nouveau — ils n'ont pas été copiés et doivent être définis manuellement",
         "report-missing-heading": "Références manquantes — le package pointe vers des éléments externes",
         "report-title": {

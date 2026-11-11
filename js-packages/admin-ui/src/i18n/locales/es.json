@@ -350,6 +350,7 @@
           "missing-references": "Referencias que faltan (missingReferences)",
           "errors": "Errores bloqueantes"
         },
+        "report-warnings-heading": "Avisos — la importación continúa, pero revisa lo que sigue",
         "report-secrets-heading": "Valores sensibles que hay que volver a introducir — no se copiaron y deben configurarse a mano",
         "report-missing-heading": "Referencias que faltan — el paquete apunta fuera de sí mismo",
         "report-title": {

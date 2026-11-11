@@ -350,6 +350,7 @@
           "missing-references": "Fehlende Referenzen (missingReferences)",
           "errors": "Blockierende Fehler"
         },
+        "report-warnings-heading": "Warnungen – der Import wird fortgesetzt, aber prüfen Sie Folgendes",
         "report-secrets-heading": "Erneut einzugebende Secrets – sie wurden nicht kopiert und müssen manuell festgelegt werden",
         "report-missing-heading": "Fehlende Referenzen – das Paket verweist auf Elemente außerhalb des Pakets",
         "report-title": {
