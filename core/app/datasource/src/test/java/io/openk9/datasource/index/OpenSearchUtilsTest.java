@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.index;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
@@ -73,6 +74,18 @@ class OpenSearchUtilsTest {
 			assertEquals(expected, dynamicMapping);
 		}
 
+	}
+
+	@Test
+	void should_create_dynamic_mapping_for_a_sample_without_datasourcePayload() {
+		var ingestionPayload = IngestionPayload.builder()
+			.datasourceId(1L)
+			.contentId("1")
+			.scheduleId("1")
+			.build();
+
+		assertDoesNotThrow(() ->
+			OpenSearchUtils.getDynamicMapping(ingestionPayload, mapper));
 	}
 
 
