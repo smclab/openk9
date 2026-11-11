@@ -10,6 +10,10 @@ global:
 ## Deployment all-in-one: master, volume, filer e gateway S3 in un solo pod
 master:
   enabled: false
+  ## Volumi da 64 MB (default 1000): ogni bucket ne prende 7 e il numero
+  ## massimo e' spazio del PVC / dimensione del volume. Il valore e' letto
+  ## anche dal deployment all-in-one, con il master spento
+  volumeSizeLimitMB: 64
 volume:
   enabled: false
 filer:
