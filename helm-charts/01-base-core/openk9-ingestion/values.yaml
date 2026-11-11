@@ -85,10 +85,12 @@ quarkus:
   LogConsoleJson: false ## put to true to force json log format
   LogLevel: "INFO"
 
-## Http limit max size
+## Http limit max size: the largest request the Ingestion accepts. Binaries
+## travel base64 encoded in the JSON body (+33%), so 64M accepts files up to
+## about 48 MB. Raising it needs memory too: see the chart README
 limit:
   max:
-    size: 10240K
+    size: 64M
 
 ## Rabbitmq configuration
 rabbitmq:

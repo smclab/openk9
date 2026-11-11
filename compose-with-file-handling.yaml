@@ -33,7 +33,6 @@ services:
     environment:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
-      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
       QUARKUS_OTEL_SDK_DISABLED: 'true'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       OPENK9_TIKA_POOL_SIZE: '1'

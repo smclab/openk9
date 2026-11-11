@@ -180,6 +180,8 @@ services:
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_CORS_ENABLED: 'true'
       QUARKUS_HTTP_CORS_ORIGINS: '/.*/'
+      # Import della configurazione e callback degli enricher (testo estratto,
+      # non i binari, che passano dallo staging)
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       QUARKUS_LOG_LEVEL: 'INFO'
@@ -217,7 +219,11 @@ services:
       RABBITMQ_PORT: '5672'
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
-      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
+      # Il file arriva in base64 dentro il JSON (+33%): 64M fa passare file fino a
+      # circa 48 MB. Per file piu' grandi alza il limite (circa 1,4 volte il file) e
+      # K9_INGESTION_MEM_LIMIT: ogni file in lavorazione occupa circa 5 volte la sua
+      # dimensione (800m reggono un file da 100 MB alla volta, 1536m due)
+      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '64M'
       QUARKUS_OTEL_SDK_DISABLED: 'true'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
     depends_on:

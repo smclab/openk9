@@ -194,6 +194,22 @@ To configure probes appropriately you can use following parameters:
 | `startupProbe.failureThreshold`                     | Failure threshold for startupProbe                                                                                                                                                                                | `13`             |
 | `startupProbe.successThreshold`                     | Success threshold for startupProbe                                                                                                                                                                                | `1`              |
 
+### Request size limit
+
+| Name             | Description                                                                                                         | Value  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------- | ------ |
+| `limit.max.size` | Largest request the Ingestion accepts (`QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE`). Binaries travel base64 encoded (+33%) | `64M`  |
+
+With `64M` the Ingestion accepts files up to about 48 MB and refuses larger ones with `413 Request Entity Too Large`. With an 800Mi memory limit it received four 47 MB files at the same time.
+
+To accept larger files, raise `limit.max.size` to about 1.4 times the largest file and raise the memory with it. Each file being received takes about 5 times its size in memory until it is stored, and the Ingestion exits on `OutOfMemoryError`, failing every request in flight. Measured with 100 MB files and `limit.max.size: 140M`:
+
+| Memory limit | Files received at the same time |
+| ------------ | ------------------------------- |
+| 800Mi        | 1                               |
+| 1Gi          | 1                               |
+| 1536Mi       | 2                               |
+
 ### Resource requests and limits
 
 Openk9 Ingestion chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.

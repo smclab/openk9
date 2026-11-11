@@ -91,11 +91,6 @@ tika:
   characterLength: 10
   poolSize: 4
 
-## Http limit max size
-limit:
-  max:
-    size: 10240K
-
 ## OpenK9 grpc services configuration
 openk9:
   ## Openk Datasource configuration

@@ -12,7 +12,6 @@ data:
   QUARKUS_HTTP_CORS_ORIGINS: {{ .Values.quarkus.HttpCorsOrigin | quote }}
   QUARKUS_LOG_CONSOLE_JSON:  {{ .Values.quarkus.LogConsoleJson | quote }}
   QUARKUS_LOG_LEVEL: {{ .Values.quarkus.LogLevel | quote }}
-  QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: {{ .Values.limit.max.size | quote }}
 
   OPENK9_TIKA_POOL_SIZE: {{ .Values.tika.poolSize | quote }}
 
