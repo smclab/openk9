@@ -58,6 +58,7 @@ import io.openk9.datasource.model.dto.base.*;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
@@ -160,6 +161,7 @@ public interface ConfigEntityMapper {
 
 	Datasource entity(DatasourceDTO dto);
 
+	@Mapping(target = "provisioning", defaultValue = "USER")
 	PluginDriver entity(PluginDriverDTO dto);
 
 	EnrichPipeline entity(EnrichPipelineDTO dto);
@@ -227,6 +229,7 @@ public interface ConfigEntityMapper {
 
 	Datasource update(@MappingTarget Datasource entity, DatasourceDTO dto);
 
+	@Mapping(target = "provisioning", defaultValue = "USER")
 	PluginDriver update(@MappingTarget PluginDriver entity, PluginDriverDTO dto);
 
 	EnrichPipeline update(@MappingTarget EnrichPipeline entity, EnrichPipelineDTO dto);

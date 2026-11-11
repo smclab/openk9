@@ -23,9 +23,12 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import io.openk9.datasource.config.model.ConfigEntityType;
+import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -99,6 +102,32 @@ public class ConfigEntityMapperTest {
 			mismatches.isEmpty(),
 			"ConfigEntityMapper.update(...) must accept the DTO its ConfigEntityType "
 				+ "declares; mismatches: " + mismatches);
+	}
+
+	@Test
+	void a_plugin_driver_without_provisioning_is_created_as_USER() {
+		PluginDriver pluginDriver = new ConfigEntityMapperImpl().entity(
+			PluginDriverDTO.builder()
+				.name("missing-provisioning")
+				.type(PluginDriver.PluginDriverType.HTTP)
+				.build());
+
+		assertEquals(PluginDriver.Provisioning.USER, pluginDriver.getProvisioning());
+	}
+
+	@Test
+	void a_plugin_driver_overwritten_without_provisioning_becomes_USER() {
+		PluginDriver target = new PluginDriver();
+		target.setProvisioning(PluginDriver.Provisioning.SYSTEM);
+
+		PluginDriver pluginDriver = new ConfigEntityMapperImpl().update(
+			target,
+			PluginDriverDTO.builder()
+				.name("missing-provisioning")
+				.type(PluginDriver.PluginDriverType.HTTP)
+				.build());
+
+		assertEquals(PluginDriver.Provisioning.USER, pluginDriver.getProvisioning());
 	}
 
 	private static Method findMethod(String name, Predicate<Method> match) {
