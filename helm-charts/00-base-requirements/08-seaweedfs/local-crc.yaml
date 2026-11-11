@@ -10,14 +10,11 @@ global:
 ## Deployment all-in-one: master, volume, filer e gateway S3 in un solo pod
 master:
   enabled: false
-  ## Volumi da 64 MB (default 1000): ogni bucket ne prende 7 e il numero
-  ## massimo e' spazio del PVC / dimensione del volume. Il valore e' letto
-  ## anche dal deployment all-in-one, con il master spento
+  ## 64 MB volumes (default 1000): each bucket takes 7, read by all-in-one too
   volumeSizeLimitMB: 64
 volume:
   enabled: false
-  ## Tetto fisso di 1000 volumi (-volume.max): con 0 si calcola dallo spazio
-  ## libero all'avvio. Il deployment all-in-one lo legge dalla prima voce
+  ## At most 1000 volumes (-volume.max), read by all-in-one; 0 derives it from the free disk
   dataDirs:
   - name: data1
     type: "emptyDir"
