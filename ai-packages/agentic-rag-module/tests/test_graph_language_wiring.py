@@ -47,8 +47,11 @@ def _edges(**overrides):
     }
     configuration.update(overrides)
 
-    with patch.object(agentic_rag, "get_opensearch_client"), patch.object(
-        agentic_rag, "OpenSearchSaver", MagicMock(return_value=InMemorySaver())
+    with (
+        patch.object(agentic_rag, "get_opensearch_client"),
+        patch.object(
+            agentic_rag, "OpenSearchSaver", MagicMock(return_value=InMemorySaver())
+        ),
     ):
         graph = RagGraph(MagicMock(), configuration)
 
