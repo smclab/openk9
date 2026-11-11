@@ -17,8 +17,10 @@
 
 package io.openk9.ingestion.web;
 
+import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.ingestion.dto.IngestionDTO;
 import io.openk9.ingestion.dto.IngestionDtoExamples;
+import io.openk9.ingestion.exception.MissingDatasourcePayloadException;
 import io.openk9.ingestion.exception.NoSuchQueueException;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
@@ -96,6 +98,11 @@ public class IngestionEndpoint {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<String> ingestion(IngestionDTO dto) {
 
+		if (dto.getDatasourcePayload() == null && !_isControlMessage(dto)) {
+			return Uni.createFrom().failure(new MissingDatasourcePayloadException(
+				"datasourcePayload is required, except for LAST and HALT messages."));
+		}
+
 		return _fileManagerEmitter.emit(dto)
 			.replaceWith(() -> EMPTY_JSON);
 
@@ -108,6 +115,26 @@ public class IngestionEndpoint {
 				DETAILS_FIELD,
 				"No such queue for this schedule."
 			));
+	}
+
+	@ServerExceptionMapper
+	public RestResponse<JsonObject> mapException(
+		MissingDatasourcePayloadException exception) {
+
+		return RestResponse.status(Response.Status.BAD_REQUEST,
+			JsonObject.of(
+				DETAILS_FIELD,
+				exception.getMessage()
+			));
+	}
+
+	/**
+	 * LAST and HALT only drive the scheduling, so they need no
+	 * datasourcePayload; a message without type is a DOCUMENT.
+	 */
+	private static boolean _isControlMessage(IngestionDTO dto) {
+		return dto.getType() == PayloadType.LAST
+			|| dto.getType() == PayloadType.HALT;
 	}
 
 }
