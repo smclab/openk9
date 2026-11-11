@@ -3,9 +3,10 @@ services:
     image: chrislusf/seaweedfs:4.47
     container_name: seaweedfs
     hostname: seaweedfs
-    # Volumi da 64 MB: lo storage tiene i binari solo finche' il documento non e'
-    # indicizzato, e il numero di volumi (disco libero / dimensione) limita i bucket
-    command: server -dir=/data -s3 -s3.config=/etc/seaweedfs/s3.json -master.volumeSizeLimitMB=64
+    # Volumi da 64 MB e tetto fisso di 1000: ogni bucket prende 7 volumi, e senza
+    # -volume.max il tetto si calcola dal disco libero all'avvio. Lo storage tiene i
+    # binari solo finche' il documento non e' indicizzato
+    command: server -dir=/data -s3 -s3.config=/etc/seaweedfs/s3.json -master.volumeSizeLimitMB=64 -volume.max=1000
     ports:
       - "8333:8333"
       - "8888:8888"

@@ -1388,7 +1388,7 @@ For OpenShift use `00-base-requirements/08-seaweedfs/local-crc.yaml` instead.
 
 The S3 endpoint is then available inside the cluster at `http://seaweedfs-all-in-one:8333`, the default host of the Ingestion and Datasource charts.
 
-The values files set `master.volumeSizeLimitMB: 64`. SeaweedFS can hold as many volumes as the free space divided by the volume size, and every bucket takes 7 volumes on its first write, one bucket per tenant. With the default 1000 MB volumes a 10Gi volume fits a single tenant with binaries; with 64 MB volumes it fits about 20. Binaries stay in SeaweedFS only until their document is indexed, so small volumes are enough. Keep the value if you change the storage size.
+The values files set 64 MB volumes (`master.volumeSizeLimitMB: 64`) and at most 1000 of them (`volume.dataDirs[0].maxVolumes: 1000`, read by the all-in-one deployment as `-volume.max`). Every bucket takes 7 volumes on its first write, one bucket per tenant. Without a fixed limit SeaweedFS computes it at startup as the free space divided by the volume size: with the default 1000 MB volumes a 10Gi volume fits a single tenant with binaries. Volumes are not preallocated and binaries stay in SeaweedFS only until their document is indexed, so the real limit is the disk space actually used.
 
 To customize SeaweedFS installation follow [chart documentation](https://github.com/seaweedfs/seaweedfs/tree/master/k8s/charts/seaweedfs)
 

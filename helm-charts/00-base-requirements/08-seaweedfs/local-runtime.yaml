@@ -16,6 +16,12 @@ master:
   volumeSizeLimitMB: 64
 volume:
   enabled: false
+  ## Tetto fisso di 1000 volumi (-volume.max): con 0 si calcola dallo spazio
+  ## libero all'avvio. Il deployment all-in-one lo legge dalla prima voce
+  dataDirs:
+  - name: data1
+    type: "emptyDir"
+    maxVolumes: 1000
 filer:
   enabled: false
 
