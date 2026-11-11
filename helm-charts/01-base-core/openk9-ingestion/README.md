@@ -200,15 +200,15 @@ To configure probes appropriately you can use following parameters:
 | ---------------- | ------------------------------------------------------------------------------------------------------------------- | ------ |
 | `limit.max.size` | Largest request the Ingestion accepts (`QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE`). Binaries travel base64 encoded (+33%) | `64M`  |
 
-With `64M` the Ingestion accepts files up to about 48 MB and refuses larger ones with `413 Request Entity Too Large`. With an 800Mi memory limit it received four 47 MB files at the same time.
+With `64M` the Ingestion accepts files up to about 48 MB and refuses larger ones with `413 Request Entity Too Large`.
 
-To accept larger files, raise `limit.max.size` to about 1.4 times the largest file and raise the memory with it. Each file being received takes about 5 times its size in memory until it is stored, and the Ingestion exits on `OutOfMemoryError`, failing every request in flight. Measured with 100 MB files and `limit.max.size: 140M`:
+To accept larger files, raise `limit.max.size` to about 1.4 times the largest file and raise the memory with it. A file being received takes 3 to 4 times its size in heap until it is stored, and the Ingestion exits on `OutOfMemoryError`, failing every request in flight. The heap is 80% of `resources.limits.memory`. Measured with files sent at the same time:
 
-| Memory limit | Files received at the same time |
-| ------------ | ------------------------------- |
-| 800Mi        | 1                               |
-| 1Gi          | 1                               |
-| 1536Mi       | 2                               |
+| Heap (`resources.limits.memory`) | `limit.max.size` | Files at the same time                  |
+| -------------------------------- | ---------------- | --------------------------------------- |
+| 512Mi (`640Mi`)                  | `64M`            | four 47 MB files                        |
+| 820Mi (`1Gi`)                    | `64M`            | four 47 MB files                        |
+| 820Mi (`1Gi`)                    | `140M`           | two 100 MB files; the third exits on OOM |
 
 ### Resource requests and limits
 

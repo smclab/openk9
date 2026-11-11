@@ -665,7 +665,7 @@ limit:
     size: 64M # Largest request accepted: files up to about 48 MB
 ```
 
-Connectors send every binary base64 encoded inside the JSON body, which adds a third to its size: `64M` accepts files up to about 48 MB. A larger file is refused with `413 Request Entity Too Large`. To accept larger files raise `limit.max.size` to about 1.4 times the largest file and raise the Ingestion memory too: each file being received takes about 5 times its size in memory. The [Ingestion chart README](./01-base-core/openk9-ingestion/README.md) has the measured values.
+Connectors send every binary base64 encoded inside the JSON body, which adds a third to its size: `64M` accepts files up to about 48 MB. A larger file is refused with `413 Request Entity Too Large`. To accept larger files raise `limit.max.size` to about 1.4 times the largest file and raise the Ingestion memory too: a file being received takes 3 to 4 times its size in heap. The [Ingestion chart README](./01-base-core/openk9-ingestion/README.md) has the measured values.
 
 For advanced configurations read [README.md](./01-base-core/openk9-ingestion/README.md) inside Ingestion chart folder.
 

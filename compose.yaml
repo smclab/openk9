@@ -185,8 +185,8 @@ services:
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_CORS_ENABLED: 'true'
       QUARKUS_HTTP_CORS_ORIGINS: '/.*/'
-      # Import della configurazione e callback degli enricher (testo estratto,
-      # non i binari, che passano dallo staging)
+      # Configuration import and enricher callbacks (extracted text, not binaries:
+      # those go through the staging storage)
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       QUARKUS_LOG_LEVEL: 'INFO'
@@ -228,10 +228,10 @@ services:
       RABBITMQ_PORT: '5672'
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
-      # Il file arriva in base64 dentro il JSON (+33%): 64M fa passare file fino a
-      # circa 48 MB. Per file piu' grandi alza il limite (circa 1,4 volte il file) e
-      # K9_INGESTION_MEM_LIMIT: ogni file in lavorazione occupa circa 5 volte la sua
-      # dimensione (800m reggono un file da 100 MB alla volta, 1536m due)
+      # Binaries arrive base64 encoded in the JSON body (+33%): 64M accepts files up
+      # to about 48 MB. For larger files raise it to about 1.4 times the file and
+      # raise K9_INGESTION_XMX too: a file being received takes 3 to 4 times its size
+      # in heap. Measured: 512m holds four 47 MB files at once, 820m two 100 MB files.
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '64M'
       QUARKUS_OTEL_SDK_DISABLED: 'true'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
