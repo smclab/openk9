@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @QuarkusTest
 public class PluginDriverServiceTest {
 
+	private static final String ENTITY_NAME_PREFIX = "PluginDriverServiceTest - ";
 	private static final String TENANT_ID = "public";
 	private static final Logger log = Logger.getLogger(PluginDriverServiceTest.class);
 
@@ -127,7 +128,7 @@ public class PluginDriverServiceTest {
 		// create without provisioning
 		var pluginDriver = pluginDriverService.create(
 				DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
-					.name("missing-provisioning-create")
+					.name(ENTITY_NAME_PREFIX + "missing-provisioning-create")
 					.provisioning(null)
 					.build()
 			)
@@ -146,7 +147,7 @@ public class PluginDriverServiceTest {
 		// 1. Create a SYSTEM pluginDriver
 		var pluginDriver = pluginDriverService.create(
 				DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
-					.name("missing-provisioning-update")
+					.name(ENTITY_NAME_PREFIX + "missing-provisioning-update")
 					.provisioning(PluginDriver.Provisioning.SYSTEM)
 					.build()
 			)
@@ -158,7 +159,7 @@ public class PluginDriverServiceTest {
 		var updated = pluginDriverService.update(
 				pluginDriver.getId(),
 				DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
-					.name("missing-provisioning-update")
+					.name(ENTITY_NAME_PREFIX + "missing-provisioning-update")
 					.provisioning(null)
 					.build()
 			)
