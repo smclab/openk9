@@ -96,6 +96,12 @@ const useGenerateResponse = ({
       setAbortControllers((prev) => new Map(prev).set(id, controller));
       const url = `${tenant}/api/rag/chat-tool`;
       // const url = "/api/rag/chat-tool";
+      const showError = (answer = getTranslation("generateError", language)) =>
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === id ? { ...msg, status: "ERROR", answer } : msg,
+          ),
+        );
 
       const chatSequenceNumber =
         messages[messages.length - 1]?.chat_sequence_number + 1 || 1;
@@ -188,17 +194,8 @@ const useGenerateResponse = ({
                       setIsLoading(null);
                       break;
                     case "ERROR":
-                      setMessages((prev) =>
-                        prev.map((msg) =>
-                          msg.id === id
-                            ? {
-                                ...msg,
-                                answer: data.chunk,
-                                status: "ERROR",
-                              }
-                            : msg,
-                        ),
-                      );
+                      // the chunk may carry the raw backend exception
+                      showError(data.message || undefined);
                       setIsChatting(false);
                       break;
                     case "END":
@@ -233,6 +230,33 @@ const useGenerateResponse = ({
                       setIsLoading(null);
                       break;
 
+                    case "CANCEL": {
+                      // the output guardrail stopped the answer: its types 1 and 2
+                      // send a fixed English marker, the scope gate a text to show
+                      const text =
+                        typeof data.chunk === "string" ? data.chunk.trim() : "";
+                      setMessages((prev) =>
+                        prev.map((msg) =>
+                          msg.id === id
+                            ? {
+                                ...msg,
+                                status: "END",
+                                answer:
+                                  text && text !== "Inappropriate content"
+                                    ? text
+                                    : getTranslation(
+                                        "guardrailViolation",
+                                        language,
+                                      ),
+                              }
+                            : msg,
+                        ),
+                      );
+                      setIsChatting(false);
+                      setIsLoading(null);
+                      break;
+                    }
+
                     default:
                       console.warn(
                         "Tipo di chunk non riconosciuto:",
@@ -246,20 +270,22 @@ const useGenerateResponse = ({
               }
             }
           }
-        } else {
-          console.error("Errore nel generare la risposta");
-
+          // a stream that closed without any content would leave the message blank
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === id
+              msg.id === id && !msg.answer && msg.status !== "ERROR"
                 ? {
                     ...msg,
                     status: "ERROR",
-                    answer: response?.statusText || "Error",
+                    answer: getTranslation("generateError", language),
                   }
                 : msg,
             ),
           );
+        } else {
+          console.error("Errore nel generare la risposta");
+
+          showError();
           setIsChatting(false);
         }
         setIsChatting(false);
@@ -267,6 +293,11 @@ const useGenerateResponse = ({
       } catch (error) {
         console.error("Errore durante la richiesta", error);
         setIsChatting(false);
+        // a cancelled request is already reported by cancelResponse
+        if (!controller.signal.aborted) {
+          showError();
+          setIsLoading(null);
+        }
       }
 
       setAbortControllers((prev) => {

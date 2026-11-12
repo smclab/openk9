@@ -1,5 +1,7 @@
 {
   "translation": {
+    "generate-error": "Respuesta generada no disponible.",
+    "generate-answer": "Respuesta generada",
     "after-days": "días adelante",
     "guardrail-violation": "Tu solicitud no puede ser procesada porque infringe las directrices de contenido.",
     "active-filters": "Filtros Activos",
