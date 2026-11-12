@@ -379,11 +379,11 @@ affinity: {}
 ##
 startupProbe:
   enabled: true
-  initialDelaySeconds: 90
+  initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 5
+  failureThreshold: 13
 
 ## Configure Datasource containers' extra options for liveness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
@@ -396,7 +396,7 @@ startupProbe:
 ##
 livenessProbe:
   enabled: true
-  initialDelaySeconds: 90
+  initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
@@ -413,7 +413,7 @@ livenessProbe:
 ##
 readinessProbe:
   enabled: true
-  initialDelaySeconds: 90
+  initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1

@@ -252,11 +252,11 @@ affinity: {}
 ##
 startupProbe:
   enabled: false
-  initialDelaySeconds: 90
+  initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 5
+  failureThreshold: 13
 
 ## Configure Resources Validator containers' extra options for liveness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
@@ -269,7 +269,7 @@ startupProbe:
 ##
 livenessProbe:
   enabled: false
-  initialDelaySeconds: 90
+  initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
@@ -286,7 +286,7 @@ livenessProbe:
 ##
 readinessProbe:
   enabled: false
-  initialDelaySeconds: 90
+  initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
