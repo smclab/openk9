@@ -200,6 +200,8 @@ affinity: {}
 ## Configure Talk To containers' extra options for startup probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param startupProbe.enabled Enable startupProbe
+## @param startupProbe.httpGet.path Path requested by startupProbe
+## @param startupProbe.httpGet.port Port (name or number) requested by startupProbe
 ## @param startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
 ## @param startupProbe.periodSeconds Period seconds for startupProbe
 ## @param startupProbe.timeoutSeconds Timeout seconds for startupProbe
@@ -207,16 +209,21 @@ affinity: {}
 ## @param startupProbe.successThreshold Success threshold for startupProbe
 ##
 startupProbe:
-  enabled: false
-  initialDelaySeconds: 90
-  periodSeconds: 10
-  timeoutSeconds: 5
+  enabled: true
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 0
+  periodSeconds: 5
+  timeoutSeconds: 3
   successThreshold: 1
-  failureThreshold: 5
+  failureThreshold: 30
 
 ## Configure Talk To containers' extra options for liveness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param livenessProbe.enabled Enable livenessProbe
+## @param livenessProbe.httpGet.path Path requested by livenessProbe
+## @param livenessProbe.httpGet.port Port (name or number) requested by livenessProbe
 ## @param livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
 ## @param livenessProbe.periodSeconds Period seconds for livenessProbe
 ## @param livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
@@ -224,16 +231,21 @@ startupProbe:
 ## @param livenessProbe.successThreshold Success threshold for livenessProbe
 ##
 livenessProbe:
-  enabled: false
-  initialDelaySeconds: 90
+  enabled: true
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 0
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 5
+  failureThreshold: 3
 
 ## Configure Talk To containers' extra options for readiness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param readinessProbe.enabled Enable readinessProbe
+## @param readinessProbe.httpGet.path Path requested by readinessProbe
+## @param readinessProbe.httpGet.port Port (name or number) requested by readinessProbe
 ## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
 ## @param readinessProbe.periodSeconds Period seconds for readinessProbe
 ## @param readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
@@ -241,10 +253,13 @@ livenessProbe:
 ## @param readinessProbe.successThreshold Success threshold for readinessProbe
 ##
 readinessProbe:
-  enabled: false
-  initialDelaySeconds: 90
+  enabled: true
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 0
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 5
+  failureThreshold: 3
 
