@@ -56,17 +56,17 @@ spec:
             successThreshold: {{ .Values.readinessProbe.successThreshold }}
             failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
           {{- end }}
-            {{- if .Values.startupProbe.enabled }}
-            startupProbe:
-              httpGet:
-                path: /q/health/started
-                port: http
-              initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
-              periodSeconds: {{ .Values.startupProbe.periodSeconds }}
-              timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds }}
-              successThreshold: {{ .Values.startupProbe.successThreshold }}
-              failureThreshold: {{ .Values.startupProbe.failureThreshold }}
-            {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe:
+            httpGet:
+              path: /q/health/started
+              port: http
+            initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.startupProbe.successThreshold }}
+            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+          {{- end }}
           env:
             - name: {{ .Values.rabbitmq.keyPasswordEnvName }}
               valueFrom:
