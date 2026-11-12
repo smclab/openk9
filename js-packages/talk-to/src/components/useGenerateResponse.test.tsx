@@ -159,6 +159,84 @@ describe("useGenerateResponse", () => {
 		});
 	});
 
+	test("an ERROR event without a message shows the translated error, not the chunk", async () => {
+		mockGenerateResponse.mockResolvedValue(
+			createSSEResponse([
+				{ type: "START", chunk: "" },
+				{ type: "ERROR", chunk: "openai.APIConnectionError: Connection error." },
+			]),
+		);
+
+		const { result } = renderHook(() => useGenerateResponse({ initialMessages }));
+
+		await act(async () => {
+			await result.current.generateResponse("query", "chat-1");
+		});
+
+		const lastMessage = result.current.messages[result.current.messages.length - 1];
+		expect(lastMessage.status).toBe("ERROR");
+		expect(lastMessage.answer).toBe("error");
+	});
+
+	test("a CANCEL from the output guardrail shows its message instead of the partial answer", async () => {
+		mockGenerateResponse.mockResolvedValue(
+			createSSEResponse([
+				{ type: "START", chunk: "" },
+				{ type: "CHUNK", chunk: "Parte della risposta" },
+				{ type: "CANCEL", chunk: "Posso rispondere solo su questo sito." },
+			]),
+		);
+
+		const { result } = renderHook(() => useGenerateResponse({ initialMessages }));
+
+		await act(async () => {
+			await result.current.generateResponse("query", "chat-1");
+		});
+
+		const lastMessage = result.current.messages[result.current.messages.length - 1];
+		expect(lastMessage.status).toBe("END");
+		expect(lastMessage.answer).toBe("Posso rispondere solo su questo sito.");
+	});
+
+	test.each(["Inappropriate content", "  "])(
+		"the CANCEL chunk %j becomes the translated guardrail text",
+		async (chunk) => {
+			mockGenerateResponse.mockResolvedValue(
+				createSSEResponse([
+					{ type: "START", chunk: "" },
+					{ type: "CHUNK", chunk: "Testo bloccato" },
+					{ type: "CANCEL", chunk },
+				]),
+			);
+
+			const { result } = renderHook(() => useGenerateResponse({ initialMessages }));
+
+			await act(async () => {
+				await result.current.generateResponse("query", "chat-1");
+			});
+
+			const lastMessage = result.current.messages[result.current.messages.length - 1];
+			expect(lastMessage.status).toBe("END");
+			expect(lastMessage.answer).toBe("guardrail-violation");
+		},
+	);
+
+	test("a stream that closes without content shows the error and stops loading", async () => {
+		mockGenerateResponse.mockResolvedValue(createSSEResponse([]));
+
+		const { result } = renderHook(() => useGenerateResponse({ initialMessages }));
+
+		await act(async () => {
+			await result.current.generateResponse("query", "chat-1");
+		});
+
+		const lastMessage = result.current.messages[result.current.messages.length - 1];
+		expect(lastMessage.status).toBe("ERROR");
+		expect(lastMessage.answer).toBe("error");
+		expect(result.current.isLoading).toBeNull();
+		expect(result.current.isChatting).toBe(false);
+	});
+
 	describe("immagine come input della domanda", () => {
 		const prepared = {
 			data: "BASE64BYTES",

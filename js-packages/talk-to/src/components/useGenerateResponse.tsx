@@ -236,7 +236,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 														? {
 																...msg,
 																status: "ERROR",
-																answer: data.message || "Si è verificato un errore.",
+																answer: data.message || t("error"),
 														  }
 														: msg,
 												),
@@ -258,6 +258,25 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 											setIsChatting(false);
 											setIsLoading(null);
 											break;
+										case "CANCEL": {
+											// the output guardrail stopped the answer: its types 1 and 2
+											// send a fixed English marker, the scope gate a text to show
+											const text = typeof data.chunk === "string" ? data.chunk.trim() : "";
+											setMessages((prev) =>
+												prev.map((msg) =>
+													msg.id === id
+														? {
+																...msg,
+																status: "END",
+																answer: text && text !== "Inappropriate content" ? text : t("guardrail-violation"),
+														  }
+														: msg,
+												),
+											);
+											setIsChatting(false);
+											setIsLoading(null);
+											break;
+										}
 										default:
 											console.warn("Tipo di chunk non riconosciuto:", data.type);
 											break;
@@ -268,6 +287,16 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 							}
 						}
 					}
+					// a stream that closed without any content would leave the skeleton on
+					setMessages((prev) =>
+						prev.map((msg) =>
+							msg.id === id && !msg.answer && msg.status !== "ERROR"
+								? { ...msg, status: "ERROR", answer: t("error") }
+								: msg,
+						),
+					);
+					setIsChatting(false);
+					setIsLoading((current) => (current?.id === id ? null : current));
 				} else {
 					const errorData = await response.json();
 					setMessages((prev) =>
