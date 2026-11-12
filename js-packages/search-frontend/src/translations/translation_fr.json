@@ -29,6 +29,8 @@
     "filter-no-results": "Aucun résultat pour",
     "copilot-loading": "K9 IA est en train d'écrire…",
     "copilot-error": "Une erreur s'est produite. Veuillez réessayer.",
+    "generate-error": "Réponse générée non disponible.",
+    "generate-answer": "Réponse générée",
     "copilot-refine-prompt": "L'utilisateur a recherché : \"{{searchText}}\". Propose exactement 3 recherches associées plus spécifiques qui affinent la recherche. Réponds dans la même langue que la recherche, UNIQUEMENT les 3 recherches, une par ligne, sans numérotation, guillemets ni autre texte.",
     "after-days": "jours à venir",
     "guardrail-violation": "Votre demande ne peut pas être traitée car elle enfreint les règles relatives au contenu.",

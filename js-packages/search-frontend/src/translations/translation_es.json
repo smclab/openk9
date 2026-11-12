@@ -29,6 +29,8 @@
     "filter-no-results": "Sin resultados para",
     "copilot-loading": "K9 IA está escribiendo…",
     "copilot-error": "Se produjo un error. Inténtalo de nuevo.",
+    "generate-error": "Respuesta generada no disponible.",
+    "generate-answer": "Respuesta generada",
     "copilot-refine-prompt": "El usuario buscó: \"{{searchText}}\". Propón exactamente 3 búsquedas relacionadas más específicas que refinen la búsqueda. Responde en el mismo idioma de la búsqueda, SOLO las 3 búsquedas, una por línea, sin numeración, comillas ni ningún otro texto.",
     "after-days": "días adelante",
     "guardrail-violation": "Tu solicitud no puede ser procesada porque infringe las directrices de contenido.",

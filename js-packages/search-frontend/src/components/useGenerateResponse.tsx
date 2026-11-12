@@ -70,6 +70,18 @@ const useGenerateResponse = ({
       const controller = new AbortController();
       setAbortController(controller);
 
+      const showError = () =>
+        setMessage((prev) =>
+          prev
+            ? { ...prev, status: "ERROR", answer: t("generate-error") }
+            : prev,
+        );
+      // a newer request may have set its own controller in the meantime
+      const releaseController = () =>
+        setAbortController((current) =>
+          current === controller ? null : current,
+        );
+
       const searchQueryT: GenerateRequest = {
         searchText: query,
         language,
@@ -86,14 +98,13 @@ const useGenerateResponse = ({
           controller,
         });
 
-        const stream = response.body;
+        // fetch does not throw on 4xx/5xx: an error body is not the stream
+        const stream = response.ok ? response.body : null;
         if (!stream) {
           setIsChatting(false);
           setIsRequestLoading?.(false);
-          setMessage((prev) =>
-            prev ? { ...prev, status: "ERROR", answer: "No stream" } : prev,
-          );
-          setAbortController(null);
+          showError();
+          releaseController();
           return;
         }
 
@@ -150,7 +161,8 @@ const useGenerateResponse = ({
                     ? {
                         ...prev,
                         status: "ERROR",
-                        answer: data.message || data.chunk || "ERROR",
+                        // the chunk may carry the raw backend exception
+                        answer: data.message || t("generate-error"),
                       }
                     : prev,
                 );
@@ -170,6 +182,27 @@ const useGenerateResponse = ({
                 setIsChatting(false);
                 setIsRequestLoading?.(false);
                 break;
+              case "CANCEL": {
+                // the output guardrail stopped the answer: its types 1 and 2
+                // send a fixed English marker, the scope gate a text to show
+                const text =
+                  typeof data.chunk === "string" ? data.chunk.trim() : "";
+                setMessage((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        status: "END",
+                        answer:
+                          text && text !== "Inappropriate content"
+                            ? text
+                            : t("guardrail-violation"),
+                      }
+                    : prev,
+                );
+                setIsChatting(false);
+                setIsRequestLoading?.(false);
+                break;
+              }
               default:
                 if (typeof data.chunk === "string") {
                   if (!sawAnyChunk) {
@@ -233,14 +266,24 @@ const useGenerateResponse = ({
         const tail = buffer.trim();
         if (tail.length) flushEvent(tail);
 
+        // a stream that closed without any content would leave the panel blank
+        setMessage((prev) =>
+          prev && !prev.answer && prev.status !== "ERROR"
+            ? { ...prev, status: "ERROR", answer: t("generate-error") }
+            : prev,
+        );
         setIsRequestLoading?.(false);
         setIsChatting(false);
       } catch {
+        // a cancelled request was already reset by cancelAllResponses,
+        // and the state may belong to a newer request by now
+        if (controller.signal.aborted) return;
         setIsChatting(false);
         setIsRequestLoading?.(false);
+        showError();
       }
 
-      setAbortController(null);
+      releaseController();
     },
     [client, setIsRequestLoading, t],
   );

@@ -1,22 +1,23 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import isEqual from "lodash/isEqual";
 import React from "react";
 import Markdown from "react-markdown";
+import { useTranslation } from "react-i18next";
 import styled, { keyframes } from "styled-components";
 import { css } from "styled-components";
 import { DeleteLogo } from "./DeleteLogo";
@@ -42,6 +43,7 @@ export default function GenerateResponse({
   const sortData = sort && sort.length > 0 ? sort[0] : undefined;
   const { range } = useRange();
   const [loadingSearch, setLoadingSearch] = React.useState<boolean>(false);
+  const { t } = useTranslation();
 
   const { generateResponse, message, isChatting, cancelAllResponses } =
     useGenerateResponse({
@@ -74,7 +76,9 @@ export default function GenerateResponse({
       const clearSearchQuery = searchQuery.map(
         (token) =>
           Object.fromEntries(
-            Object.entries(token).filter(([key]) => !UI_ONLY_KEYS.includes(key)),
+            Object.entries(token).filter(
+              ([key]) => !UI_ONLY_KEYS.includes(key),
+            ),
           ) as SearchToken,
       );
 
@@ -106,10 +110,11 @@ export default function GenerateResponse({
       {question && (
         <Container>
           <ContainerBox>
-            <Question>Generate answer</Question>
+            <Question>{t("generate-answer")}</Question>
 
             {message?.status === "ERROR" ? (
               <div
+                role="alert"
                 css={css`
                   display: flex;
                   align-items: stretch;
@@ -256,4 +261,3 @@ const SmallLoader = styled.div`
     transform-origin: left center;
   }
 `;
-
