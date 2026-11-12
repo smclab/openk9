@@ -23,7 +23,7 @@ test needs no cloud SDK."""
 import httpx
 import pytest
 
-from app.embedding import bedrock, multimodal, ollama, vertex
+from app.embedding import bedrock, bedrock_langchain, multimodal, ollama, vertex
 
 
 @pytest.mark.parametrize(
@@ -31,7 +31,9 @@ from app.embedding import bedrock, multimodal, ollama, vertex
     [
         pytest.param("openai", "text-embedding-3-small", id="text-only provider"),
         pytest.param("aws_bedrock", "amazon.titan-embed-text-v2:0", id="bedrock titan"),
-        pytest.param("aws_bedrock", "cohere.embed-english-v3", id="bedrock cohere v3"),
+        pytest.param(
+            "aws_bedrock", "twelvelabs.marengo-embed-3-0-v1:0", id="bedrock marengo"
+        ),
         pytest.param("chat_vertex_ai", "text-embedding-005", id="vertex text"),
         pytest.param("ollama", "qwen3-embedding:0.6b", id="ollama"),
         pytest.param("my-gateway", "cohere.embed-v4:0", id="custom provider"),
@@ -50,6 +52,42 @@ def test_a_model_outside_the_registry_has_no_embedder(provider, model):
         pytest.param("aws_bedrock", "cohere.embed-v4:0", "bedrock-cohere-v4", id="model id"),
         pytest.param("aws_bedrock", "eu.cohere.embed-v4:0", "bedrock-cohere-v4", id="eu profile"),
         pytest.param("aws_bedrock", "global.cohere.embed-v4:0", "bedrock-cohere-v4", id="global profile"),
+        pytest.param(
+            "aws_bedrock",
+            "amazon.nova-2-multimodal-embeddings-v1:0",
+            "bedrock-nova-2-multimodal",
+            id="nova 2",
+        ),
+        pytest.param(
+            "aws_bedrock",
+            "amazon.titan-embed-image-v1",
+            "bedrock-titan-multimodal",
+            id="titan multimodal",
+        ),
+        pytest.param(
+            "aws_bedrock",
+            "amazon.titan-embed-image-v1:0",
+            "bedrock-titan-multimodal",
+            id="titan multimodal provisioned",
+        ),
+        pytest.param(
+            "aws_bedrock",
+            "cohere.embed-english-v3",
+            "bedrock-cohere-english-v3",
+            id="cohere english v3",
+        ),
+        pytest.param(
+            "aws_bedrock",
+            "cohere.embed-multilingual-v3",
+            "bedrock-cohere-multilingual-v3",
+            id="cohere multilingual v3",
+        ),
+        pytest.param(
+            "aws_bedrock",
+            "cohere.embed-multilingual-v3:0:512",
+            "bedrock-cohere-multilingual-v3",
+            id="cohere multilingual v3 provisioned",
+        ),
         pytest.param(
             "chat_vertex_ai",
             "multimodalembedding@001",
@@ -115,6 +153,35 @@ def test_bedrock_provider_maps_to_bedrock_embedder(monkeypatch):
         "model_id": "cohere.embed-v4:0",
         "region_name": "us-east-1",
         "dimension": 1024,
+    }
+
+
+def test_a_bedrock_langchain_model_maps_to_the_langchain_embedder(monkeypatch):
+    captured = {}
+
+    def _fake_bedrock_embeddings(**kwargs):
+        captured.update(kwargs)
+        return "langchain client"
+
+    monkeypatch.setattr(
+        bedrock_langchain, "BedrockEmbeddings", _fake_bedrock_embeddings
+    )
+
+    configuration = {
+        "model_type": "aws_bedrock",
+        "model": "amazon.nova-2-multimodal-embeddings-v1:0",
+        "aws_bedrock": {"region_name": "us-east-1", "output_dimension": 1024},
+    }
+
+    embedder = multimodal.find_multimodal_embedder(configuration).factory(configuration)
+
+    assert isinstance(embedder, bedrock_langchain.LangchainBedrockEmbedder)
+    assert embedder.embeddings == "langchain client"
+    # the output dimension is not passed: the text of an index built without
+    # it keeps its size
+    assert captured == {
+        "model_id": "amazon.nova-2-multimodal-embeddings-v1:0",
+        "region_name": "us-east-1",
     }
 
 

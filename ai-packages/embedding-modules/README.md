@@ -206,8 +206,31 @@ embeds text only.
 | Name                         | Provider         | Model id                                                         |
 | ---------------------------- | ---------------- | ---------------------------------------------------------------- |
 | `bedrock-cohere-v4`          | `aws_bedrock`    | contains `cohere.embed-v4`, inference profiles included (`eu.cohere.embed-v4:0`) |
+| `bedrock-nova-2-multimodal`  | `aws_bedrock`    | contains `nova-2-multimodal-embeddings`                          |
+| `bedrock-titan-multimodal`   | `aws_bedrock`    | contains `titan-embed-image`                                     |
+| `bedrock-cohere-english-v3`  | `aws_bedrock`    | contains `cohere.embed-english-v3`                               |
+| `bedrock-cohere-multilingual-v3` | `aws_bedrock` | contains `cohere.embed-multilingual-v3`                         |
 | `vertex-multimodalembedding` | `chat_vertex_ai` | starts with `multimodalembedding`                                |
 | `ollama-multimodal`          | `ollama`         | any model whose capabilities include `embedding` and `vision`    |
+
+Cohere Embed v4 is served by a client of the module, the only Bedrock one that
+sends text and image together. The other Bedrock models of the registry are served
+by langchain-aws (`BedrockEmbeddings`), the same client that serves their text
+outside the registry, so an index built before keeps its text vectors. No
+output dimension is sent to them: `output_dimension` in `aws_bedrock` applies
+to Cohere Embed v4 only, the others embed at their default dimension (1024 for
+Titan and Cohere v3, 3072 for Nova 2). Things to know before choosing one:
+
+- Titan Multimodal embeds only the first ~128 tokens of a text (about 600
+  characters) and drops the rest silently: with longer chunks, the end of each
+  chunk is not in its vector;
+- Cohere Embed v3 refuses a text longer than 2048 characters: a chunk or a
+  query longer than that fails the request;
+- Nova 2 Multimodal Embeddings is offered in `us-east-1` only at the time of
+  writing; langchain-aws embeds the queries with the same purpose as the
+  documents (`GENERIC_INDEX`), which costs some precision on image search;
+- Titan and Nova take one request per chunk, Cohere v3 up to 96 chunks per
+  request.
 
 An Ollama model is recognized by what the server says of it, not by its name:
 the module asks `/api/show` once per process for each (`api_url`, model) and
@@ -228,9 +251,9 @@ Limits:
 - images, at indexing and in a query, only with a model in the registry;
 - a mixed query (text and image together) only with Cohere Embed v4 and the
   Ollama multimodal models;
-- the Ollama multimodal models embed PNG, JPEG, GIF and WebP images only: a
-  ref in another format (BMP, TIFF, SVG, ...) is skipped, the rest of the
-  document is indexed;
+- the Ollama multimodal models and the Bedrock models served by langchain-aws
+  embed PNG, JPEG, GIF and WebP images only: a ref in another format (BMP,
+  TIFF, SVG, ...) is skipped, the rest of the document is indexed;
 - custom providers (served as OpenAI-compatible endpoints) and models outside
   the registry embed text only.
 

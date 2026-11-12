@@ -60,6 +60,15 @@ def _build_bedrock(configuration):
     )
 
 
+def _build_bedrock_langchain(configuration):
+    from app.embedding.bedrock_langchain import (
+        LangchainBedrockEmbedder,
+        bedrock_embeddings,
+    )
+
+    return LangchainBedrockEmbedder(bedrock_embeddings(configuration))
+
+
 def _build_vertex(configuration):
     from app.embedding.vertex import VertexMultimodalEmbedder
 
@@ -110,6 +119,8 @@ class RegisteredModel(NamedTuple):
 # v4 schema only, and the Vertex one the multimodalembedding family only. The
 # Cohere v4 match is a substring so the inference profile ids
 # (eu.cohere.embed-v4:0, ...) match too; 96 texts is its limit per request.
+# The other Bedrock models that embed images go through langchain-aws, which
+# has no mixed input; their matches are substrings for the same reason.
 # Ollama serves a long text faster in batches of 512 than of 256; an Ollama
 # model is multimodal when the server lists the embedding and vision
 # capabilities for it, whatever its name. The Vertex text models take at most
@@ -122,6 +133,30 @@ MODEL_REGISTRY = [
         lambda model: "cohere.embed-v4" in model,
         _build_bedrock,
         batch_size=96,
+    ),
+    RegisteredModel(
+        "bedrock-nova-2-multimodal",
+        "aws_bedrock",
+        lambda model: "nova-2-multimodal-embeddings" in model,
+        _build_bedrock_langchain,
+    ),
+    RegisteredModel(
+        "bedrock-titan-multimodal",
+        "aws_bedrock",
+        lambda model: "titan-embed-image" in model,
+        _build_bedrock_langchain,
+    ),
+    RegisteredModel(
+        "bedrock-cohere-english-v3",
+        "aws_bedrock",
+        lambda model: "cohere.embed-english-v3" in model,
+        _build_bedrock_langchain,
+    ),
+    RegisteredModel(
+        "bedrock-cohere-multilingual-v3",
+        "aws_bedrock",
+        lambda model: "cohere.embed-multilingual-v3" in model,
+        _build_bedrock_langchain,
     ),
     RegisteredModel(
         "vertex-multimodalembedding",

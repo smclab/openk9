@@ -23,23 +23,22 @@ test_ollama_parameters.py."""
 import pytest
 
 from app import server as server_module
+from app.embedding import bedrock_langchain
 
 LANGCHAIN_CLASSES = (
-    "OpenAIEmbeddings",
-    "WatsonxEmbeddings",
-    "BatchedVertexAIEmbeddings",
-    "HuggingFaceEmbeddings",
-    "BedrockEmbeddings",
+    (server_module, "OpenAIEmbeddings"),
+    (server_module, "WatsonxEmbeddings"),
+    (server_module, "BatchedVertexAIEmbeddings"),
+    (server_module, "HuggingFaceEmbeddings"),
+    (bedrock_langchain, "BedrockEmbeddings"),
 )
 
 
 @pytest.fixture(autouse=True)
 def _fake_langchain_classes(monkeypatch):
     """Every class answers (its name, the keyword arguments it received)."""
-    for name in LANGCHAIN_CLASSES:
-        monkeypatch.setattr(
-            server_module, name, lambda name=name, **kwargs: (name, kwargs)
-        )
+    for module, name in LANGCHAIN_CLASSES:
+        monkeypatch.setattr(module, name, lambda name=name, **kwargs: (name, kwargs))
     monkeypatch.setattr(server_module, "_apply_credentials", lambda configuration: None)
 
 

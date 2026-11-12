@@ -29,7 +29,6 @@ from google.protobuf import json_format
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
 from grpc_reflection.v1alpha import reflection
-from langchain_aws import BedrockEmbeddings
 from langchain_google_vertexai import VertexAIEmbeddings
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_ibm import WatsonxEmbeddings
@@ -37,7 +36,14 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
 from app.config import settings
-from app.embedding import chunk_header, chunking, query, router, vertex_batching
+from app.embedding import (
+    bedrock_langchain,
+    chunk_header,
+    chunking,
+    query,
+    router,
+    vertex_batching,
+)
 from app.embedding.fetch import fetch_url
 from app.embedding.media_options import split_media_options
 from app.embedding.multimodal import find_model, find_multimodal_embedder
@@ -236,13 +242,7 @@ def initialize_embedding_model(configuration):
                 model,
             )
         case ModelType.AWS_BEDROCK.value:
-            aws_bedrock = configuration["aws_bedrock"]
-            region_name = aws_bedrock["region_name"]
-
-            embeddings = BedrockEmbeddings(
-                model_id=model,
-                region_name=region_name,
-            )
+            embeddings = bedrock_langchain.bedrock_embeddings(configuration)
         case _:
             # a custom provider is an OpenAI-compatible endpoint with a key of
             # its own: handed to the client, not to the process environment,
