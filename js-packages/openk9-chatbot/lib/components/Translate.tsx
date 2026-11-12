@@ -93,6 +93,13 @@ const translations: {
     es_ES: "Tu solicitud no puede ser procesada porque infringe las directrices de contenido.",
     de_DE: "Ihre Anfrage kann nicht bearbeitet werden, da sie gegen die Inhaltsrichtlinien verstößt.",
   },
+  generateError: {
+    it_IT: "Risposta generata non disponibile.",
+    en_US: "Generated answer not available.",
+    fr_FR: "Réponse générée non disponible.",
+    es_ES: "Respuesta generada no disponible.",
+    de_DE: "Generierte Antwort nicht verfügbar.",
+  },
   aiDisclosure: {
     it_IT:
       "Stai interagendo con un sistema di intelligenza artificiale. Le risposte sono generate automaticamente e possono contenere errori: verifica le informazioni importanti.",
@@ -119,5 +126,6 @@ type TranslationKey =
   | "customPlaceholder"
   | "searchLabel"
   | "guardrailViolation"
+  | "generateError"
   | "aiDisclosure";
 
