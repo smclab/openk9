@@ -66,7 +66,7 @@ public class LiquibaseDataMigrationTest {
 			"Sample Suggestion category", suggestionCategory.getName());
 	}
 
-	// test for changeSets with id 1794300000-1, 1794300000-2
+	// test for changeSets with id 1794490014-1, 1794490014-2
 	@Test
 	void should_add_the_base_path_to_web_crawler_drivers_registered_at_the_root()
 		throws Exception {
@@ -77,7 +77,7 @@ public class LiquibaseDataMigrationTest {
 			// 1. Forget the changesets
 			execute(connection,
 				"DELETE FROM databasechangelog "
-					+ "WHERE id IN ('1794300000-1', '1794300000-2')");
+					+ "WHERE id IN ('1794490014-1', '1794490014-2')");
 
 			try {
 				// 2. Seed drivers, ordered by id

@@ -33,7 +33,7 @@
 	  both operations under the base paths too. Drivers already on /urls or
 	  /sitemap are left as they are.
 	-->
-	<changeSet id="1794300000-1" author="openk9">
+	<changeSet id="1794490014-1" author="openk9">
 		<comment>Add the /urls base path to the web crawler plugin drivers of the crawling from URLs registered at the connector root</comment>
 		<sql>
 			UPDATE plugin_driver
@@ -48,7 +48,7 @@
 		</sql>
 	</changeSet>
 
-	<changeSet id="1794300000-2" author="openk9">
+	<changeSet id="1794490014-2" author="openk9">
 		<comment>Add the /sitemap base path to the web crawler plugin drivers of the crawling from sitemaps registered at the connector root</comment>
 		<sql>
 			UPDATE plugin_driver
