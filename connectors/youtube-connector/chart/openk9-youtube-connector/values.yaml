@@ -87,6 +87,8 @@ affinity: {}
 # Container's startup probe
 # ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
 # - startupProbe.enabled Enable/disable the startup probe (master nodes pod)
+# - startupProbe.httpGet.path Path requested by startupProbe
+# - startupProbe.httpGet.port Port (name or number) requested by startupProbe
 # - startupProbe.initialDelaySeconds Delay before startup probe is initiated (master nodes pod)
 # - startupProbe.periodSeconds How often to perform the probe (master nodes pod)
 # - startupProbe.timeoutSeconds When the probe times out (master nodes pod)
@@ -94,15 +96,21 @@ affinity: {}
 # - startupProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed after having succeeded
 #
 startupProbe:
-  enabled: false
-  initialDelaySeconds: 90
-  periodSeconds: 10
-  timeoutSeconds: 5
+  enabled: true
+  httpGet:
+    path: /docs
+    port: http
+  initialDelaySeconds: 0
+  periodSeconds: 5
+  timeoutSeconds: 3
   successThreshold: 1
-  failureThreshold: 5
+  failureThreshold: 30
+
 # Container's liveness probe
 # ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
 # - livenessProbe.enabled Enable/disable the liveness probe (master-eligible nodes pod)
+# - livenessProbe.httpGet.path Path requested by livenessProbe
+# - livenessProbe.httpGet.port Port (name or number) requested by livenessProbe
 # - livenessProbe.initialDelaySeconds Delay before liveness probe is initiated (master-eligible nodes pod)
 # - livenessProbe.periodSeconds How often to perform the probe (master-eligible nodes pod)
 # - livenessProbe.timeoutSeconds When the probe times out (master-eligible nodes pod)
@@ -111,14 +119,20 @@ startupProbe:
 #
 livenessProbe:
   enabled: true
-  initialDelaySeconds: 90
+  httpGet:
+    path: /docs
+    port: http
+  initialDelaySeconds: 0
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 5
+  failureThreshold: 3
+
 # Container's readiness probe
 # ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
 # - readinessProbe.enabled Enable/disable the readiness probe (master-eligible nodes pod)
+# - readinessProbe.httpGet.path Path requested by readinessProbe
+# - readinessProbe.httpGet.port Port (name or number) requested by readinessProbe
 # - readinessProbe.initialDelaySeconds Delay before readiness probe is initiated (master-eligible nodes pod)
 # - readinessProbe.periodSeconds How often to perform the probe (master-eligible nodes pod)
 # - readinessProbe.timeoutSeconds When the probe times out (master-eligible nodes pod)
@@ -127,8 +141,12 @@ livenessProbe:
 #
 readinessProbe:
   enabled: true
-  initialDelaySeconds: 90
+  httpGet:
+    path: /docs
+    port: http
+  initialDelaySeconds: 0
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
-  failureThreshold: 5
+  failureThreshold: 3
+
