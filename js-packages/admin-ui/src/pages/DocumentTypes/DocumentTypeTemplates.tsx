@@ -80,6 +80,8 @@ export function DocumentTypeTemplates() {
             field: (data) => data?.docTypeTemplates,
           }}
           onCreatePath="/document-type-template/new"
+          edgesPath="docTypeTemplates.edges"
+          pageInfoPath="docTypeTemplates.pageInfo"
           rowActions={[
             {
               label: "View",
