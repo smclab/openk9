@@ -31,6 +31,7 @@ import lombok.NoArgsConstructor;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @Builder
@@ -38,6 +39,12 @@ import java.util.Map;
 @NoArgsConstructor
 @RegisterForReflection
 public class HttpPluginDriverContext {
+
+	// The fields of the invocation: a configuration key with one of these
+	// names must not shadow them at the top level.
+	private static final Set<String> RESERVED_KEYS = Set.of(
+		"datasourceId", "tenantId", "scheduleId", "timestamp", "datasourceConfig");
+
 	private long datasourceId;
 	private String tenantId;
 	private String scheduleId;
@@ -51,9 +58,23 @@ public class HttpPluginDriverContext {
 		datasourceConfig.put(key, value);
 	}
 
+	/**
+	 * Returns the datasource configuration that is also sent at the top level
+	 * of the invocation, next to the system fields, for the connectors that
+	 * read it there.
+	 * <p>
+	 * Keys named as a system field are left out, so that the configuration
+	 * cannot replace the values of the invocation; they stay readable in
+	 * {@code datasourceConfig}.
+	 *
+	 * @return a copy of the configuration without the reserved keys
+	 */
 	@JsonAnyGetter
 	public Map<String, Object> getRest() {
-		return datasourceConfig;
+		var rest = new HashMap<>(datasourceConfig);
+		rest.keySet().removeAll(RESERVED_KEYS);
+
+		return rest;
 	}
 
 }

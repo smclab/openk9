@@ -19,7 +19,13 @@ package io.openk9.datasource.plugindriver;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import io.openk9.datasource.client.exception.InvalidUriException;
 import jakarta.inject.Inject;
@@ -35,6 +41,10 @@ import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.web.dto.HealthDTO;
 
+import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -57,6 +67,11 @@ class HttpPluginDriverClientTest {
 
 	private static final ResourceUri resourceUri = ResourceUri.builder()
 		.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
+		.build();
+
+	// Fails on a key that appears twice in the same JSON object.
+	private static final ObjectMapper STRICT_MAPPER = JsonMapper.builder()
+		.enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
 		.build();
 
 	@Inject
@@ -103,6 +118,59 @@ class HttpPluginDriverClientTest {
 			err -> {
 				Assertions.assertInstanceOf(UnexpectedResponseStatusException.class, err);
 				wireMockServer.removeStub(invalidInvokeRequest);
+			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_invoke_with_system_fields_not_overridden_by_datasource_config(
+		UniAsserter asserter) {
+
+		// a datasource configuration with every key named as a system field
+		var scheduleId = UUID.randomUUID().toString();
+		var timestamp = OffsetDateTime.of(2026, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+		var datasourceConfig = new HashMap<String, Object>();
+		datasourceConfig.put("folder", "/e2e-data");
+		datasourceConfig.put("datasourceId", 99);
+		datasourceConfig.put("tenantId", "from-form");
+		datasourceConfig.put("scheduleId", "from-form");
+		datasourceConfig.put("timestamp", 99);
+		datasourceConfig.put("datasourceConfig", "from-form");
+
+		asserter.assertThat(
+			() -> httpPluginDriverClient.invoke(
+				resourceUri,
+				HttpPluginDriverContext.builder()
+					.datasourceId(1L)
+					.tenantId("demo")
+					.scheduleId(scheduleId)
+					.timestamp(timestamp)
+					.datasourceConfig(datasourceConfig)
+					.build()
+			),
+			res -> {
+				// the body the plugin driver received, without duplicated keys
+				var body = wireMockServer.findAll(WireMock
+						.postRequestedFor(WireMock.urlEqualTo(HttpPluginDriverClient.INVOKE_PATH))
+						.withRequestBody(WireMock.containing(scheduleId)))
+					.getFirst()
+					.getBodyAsString();
+				var json = readStrictly(body);
+
+				// the system fields keep the values of the invocation
+				Assertions.assertEquals(1, json.get("datasourceId"));
+				Assertions.assertEquals("demo", json.get("tenantId"));
+				Assertions.assertEquals(scheduleId, json.get("scheduleId"));
+				Assertions.assertEquals(
+					timestamp.toInstant().toEpochMilli(),
+					((Number) json.get("timestamp")).longValue());
+
+				// the other keys of the configuration stay at the top level
+				Assertions.assertEquals("/e2e-data", json.get("folder"));
+
+				// the whole configuration stays readable in datasourceConfig
+				Assertions.assertEquals(datasourceConfig, json.get("datasourceConfig"));
 			}
 		);
 	}
@@ -321,6 +389,15 @@ class HttpPluginDriverClientTest {
 				.indefinitely()
 		);
 
+	}
+
+	private static Map<String, Object> readStrictly(String body) {
+		try {
+			return STRICT_MAPPER.readValue(body, new TypeReference<>() {});
+		}
+		catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 }
