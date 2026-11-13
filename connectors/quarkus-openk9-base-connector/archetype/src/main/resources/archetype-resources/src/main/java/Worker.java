@@ -11,6 +11,9 @@ import io.vertx.core.eventbus.MessageProducer;
  * performs a non-blocking operation. The result of the operation is communicated
  * using the provided {@link Promise}, and output data can be published using the
  * {@link MessageProducer}.
+ * When OpenK9 no longer accepts the data of the schedule, for example because it
+ * was cancelled, the next write throws {@link java.util.concurrent.CancellationException}:
+ * let it propagate, so that the work stops.
  *
  * @see io.vertx.core.Promise
  * @see io.vertx.core.eventbus.MessageProducer

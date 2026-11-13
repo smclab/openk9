@@ -206,6 +206,10 @@ $h2 Connector Base Classes
   A test class that verifies if the health endpoint responds correctly with HTTP status 200 and body status set to "UP".
 
 
+- **CrawlerVerticleTest.java**  
+  A test class that verifies that a 406 from OpenK9 stops only the execution of that schedule, while the connector keeps running the others.
+
+
 - **Worker.java**  
   This interface is implemented by `WorkerImp.java`.
 
@@ -213,7 +217,8 @@ $h2 Connector Base Classes
 - **WorkerImpl.java**  
   It overrides _work_ method from `Worker` interface, it sends a message through the producer for each data retrieved from the source, using the `producer.write()` method.  
   The body of the message is an `IngestionDTO` object.  
-  Once the process is complete, it calls `promise.complete()`.
+  Once the process is complete, it calls `promise.complete()`.  
+  When OpenK9 no longer accepts the data of the schedule, `producer.write()` throws `CancellationException`: do not catch it, so that the work stops.
 
 
 - **WorkerFactory.java**  
@@ -242,13 +247,15 @@ $h2 Connector Base Classes
   A `Worker` instance, created via `WorkerFactoryImpl` injected in `CrawlingService`, is passed to its constructor.  
   It sets up the producer using the IngestionDTOCodec to send data to `HttpPublisherVerticle`.  
   The _work_ method of `WorkerImpl` is executed on a worker thread via a promise.  
-  When the promise completes, the verticle sends `LAST`; when it fails, it logs the cause and sends `HALT` with only the exception type as `rawContent`. Then the verticle is undeployed.
+  When the promise completes, the verticle sends `LAST`; when it fails, it logs the cause and sends `HALT` with only the exception type as `rawContent`. Then the verticle is undeployed.  
+  When `HttpPublisherVerticle` reports that OpenK9 has no queue for the schedule, the next `producer.write()` of the worker throws `CancellationException`; the verticle then sends neither `LAST` nor `HALT`, and is undeployed.
 
 
 - **HttpPublisherVerticle**  
   A verticle responsible for consuming event bus messages and sending `IngestionDTO` objects one by one to OpenK9 using **_/ingest_** POST endpoint.  
   The HTTP client configuration is configured through `CrawlingService`.  
-  The class name is used as the virtual address on the event bus to send messages to it.
+  The class name is used as the virtual address on the event bus to send messages to it.  
+  When OpenK9 answers 406, it has no queue for that schedule any more, for example because the schedule was cancelled: the verticle tells the `CrawlerVerticle` of that schedule to stop, and keeps sending the data of the other schedules.
 
 ---
 

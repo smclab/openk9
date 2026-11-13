@@ -25,7 +25,7 @@
         <fileSet filtered="true" packaged="true">
             <directory>src/main/java</directory>
         </fileSet>
-        <fileSet>
+        <fileSet filtered="true" packaged="true">
             <directory>src/test/java</directory>
         </fileSet>
         <fileSet filtered="true">
