@@ -1,17 +1,12 @@
-.os-theme-dark.os-host-transition>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle {
-	@media (max-width: 480px) {
-		width: 3px;
-	}
+/* v1 handle colours; v2 defaults are 0.44 idle and 0.66 active. Two classes to beat the library CSS whatever the import order */
+.os-scrollbar.os-theme-dark {
+  --os-handle-bg: rgba(0, 0, 0, 0.4);
+  --os-handle-bg-active: rgba(0, 0, 0, 0.7);
 }
 
-.os-theme-dark>.os-scrollbar-horizontal .os-scrollbar-handle:before {
-	@media  (max-width: 480px) {
-		height: 3px;
-	}
-}
-
-.os-theme-dark.os-host-transition>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle {
-	@media (max-width: 480px) {
-		height: 3px;
-	}
+@media (max-width: 480px) {
+  /* 3px handle: v2 handle thickness is --os-size minus 2px padding per side */
+  .os-scrollbar.os-theme-dark {
+    --os-size: 7px;
+  }
 }

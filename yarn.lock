@@ -8353,15 +8353,15 @@ ora@5.4.1, ora@^5.4.1:
     strip-ansi "^6.0.0"
     wcwidth "^1.0.1"
 
-overlayscrollbars-react@^0.2.3:
-  version "0.2.3"
-  resolved "https://registry.npmjs.org/overlayscrollbars-react/-/overlayscrollbars-react-0.2.3.tgz#9a35adea5218c83675b756f9f02dfbd7a8835248"
-  integrity sha512-eN/JsEtJvPulOXOZXIdo1H90eriUWcgj4TwSdOcchk2M4uY2/BpsHlZ2+0viZMLXTcNQNJz+/4m47NugSBg+0g==
+overlayscrollbars-react@^0.5.6:
+  version "0.5.7"
+  resolved "https://registry.npmjs.org/overlayscrollbars-react/-/overlayscrollbars-react-0.5.7.tgz#6434d5cc03004a6915fb9db67d6a382bb65c08ad"
+  integrity sha512-pjWnZNmVkv4J0k/YzdazWJpBuu1mTTKR6K0pzjqK9BfHkB53hREqBGV8LONH23G5ulGXeXBLgD91HjcQuvq2WA==
 
-overlayscrollbars@^1.13.1:
-  version "1.13.3"
-  resolved "https://registry.npmjs.org/overlayscrollbars/-/overlayscrollbars-1.13.3.tgz#992c96fd2c8535802d1e56c40bc12ec03076c626"
-  integrity sha512-1nB/B5kaakJuHXaLXLRK0bUIilWhUGT6q5g+l2s5vqYdLle/sd0kscBHkQC1kuuDg9p9WR4MTdySDOPbeL/86g==
+overlayscrollbars@^2.16.0:
+  version "2.17.0"
+  resolved "https://registry.npmjs.org/overlayscrollbars/-/overlayscrollbars-2.17.0.tgz#cc9beca1cb138cc204088a13c7a30d294455ea74"
+  integrity sha512-tyFSxFVJ2FcTTiEkwMthAb+Ogs8vgpW31Sy5z2TL1Q6Kw7579zrcd4xDm38lmdD934LjiTHyrzR90KMDrbCXoA==
 
 own-keys@^1.0.0, own-keys@^1.0.1:
   version "1.0.2"
