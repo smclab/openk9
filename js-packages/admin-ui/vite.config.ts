@@ -19,6 +19,15 @@ export default defineConfig(({ mode }) => ({
         });
       },
     },
+    {
+      // CodeInput's getWorker always answers: without this, Vite builds the ts and json workers twice at the same time.
+      name: "monaco-skip-builtin-workers",
+      apply: "build",
+      transform(code, id) {
+        if (/monaco-editor\/esm\/vs\/languages\/features\/\w+\/workerManager\.js$/.test(id))
+          return code.replace(/new Worker\(new URL\([^)]*\)[^)]*\)/g, "undefined");
+      },
+    },
     react(),
     tsconfigPaths(),
     viteCompression({
