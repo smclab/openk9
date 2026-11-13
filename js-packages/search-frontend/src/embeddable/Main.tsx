@@ -283,6 +283,17 @@ export function Main({
     languages.isLoading ||
     isLoadingTab;
 
+  // a widget in error tries again when the search changes; by content, since
+  // searchQuery gets a new array on renders that do not change the search
+  const searchKey = React.useMemo(
+    () => JSON.stringify(searchQuery),
+    [searchQuery],
+  );
+  const renderPortal = (
+    node: React.ReactNode,
+    container: Element | string | null,
+  ) => renderWidget(node, container, searchKey);
+
   return (
     <QueryImageProvider
       retrieveType={retrieveType}
@@ -2069,9 +2080,10 @@ function useDetails(
   return { detail, setDetail };
 }
 
-function renderPortal(
+function renderWidget(
   node: React.ReactNode,
   container: Element | string | null,
+  resetKey: unknown,
 ): React.ReactNode {
   const element =
     typeof container === "string"
@@ -2081,7 +2093,7 @@ function renderPortal(
   // in the widget's own container instead of the detached React root.
   return element
     ? ReactDOM.createPortal(
-        <SimpleErrorBoundary>
+        <SimpleErrorBoundary resetKey={resetKey}>
           <React.Suspense>{node}</React.Suspense>
         </SimpleErrorBoundary>,
         element,
