@@ -28,8 +28,8 @@ RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
                 /var/cache/nginx/fastcgi_temp \
                 /var/cache/nginx/uwsgi_temp \
                 /var/cache/nginx/scgi_temp \
-    && chown -R 1001:0 /var/cache/nginx /var/run /etc/nginx/conf.d /usr/share/nginx/html \
-    && chmod -R g+rwX /var/cache/nginx /var/run /etc/nginx/conf.d /usr/share/nginx/html
+    && chown -R 1001:0 /var/cache/nginx /etc/nginx/conf.d /usr/share/nginx/html \
+    && chmod -R g+rwX /var/cache/nginx /etc/nginx/conf.d /usr/share/nginx/html
 EXPOSE 8080
 USER 1001
 
