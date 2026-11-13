@@ -59,7 +59,7 @@ monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
   esModuleInterop: true,
 });
 
-monaco.languages.typescript.typescriptDefaults.addExtraLib(templateTypeDefinition(), "./template.d.ts");
+monaco.languages.typescript.typescriptDefaults.addExtraLib(templateTypeDefinition(), "file:///template.d.ts");
 
 for (const language of ["javascript", "typescript", "json"]) {
   monaco.languages.registerDocumentFormattingEditProvider(language, {
