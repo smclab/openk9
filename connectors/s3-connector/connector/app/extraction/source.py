@@ -37,6 +37,8 @@ def user_metadata(
             continue
 
         key = key[len(USER_METADATA_PREFIX):].replace(".", "_")
+        if not key:
+            continue
         value = _decode(value)
 
         if key == "page":
@@ -66,6 +68,6 @@ def _decode(value: str) -> str:
     # S3 clients send non-ASCII values as RFC 2047 encoded words; a value
     # that cannot be decoded is kept as it is
     try:
-        return str(make_header(decode_header(value)))
+        return str(make_header(decode_header(value))) or value
     except (LookupError, UnicodeDecodeError, HeaderParseError):
         return value

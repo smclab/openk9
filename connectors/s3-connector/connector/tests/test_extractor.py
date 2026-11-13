@@ -150,3 +150,41 @@ def test_a_value_with_an_unknown_charset_stays_raw(monkeypatch):
     binary = extract(monkeypatch, {"X-Amz-Meta-Caption": "=?x-ignoto?q?abc?="})
 
     assert binary["metadata"] == {"caption": "=?x-ignoto?q?abc?="}
+
+
+def test_a_value_that_does_not_decode_stays_raw(monkeypatch):
+    binary = extract(
+        monkeypatch,
+        {
+            "X-Amz-Meta-Caption": "=?utf-8?b?!!!?=",
+            "X-Amz-Meta-Lato": "=?utf-8?q?=FF?=",
+            "X-Amz-Meta-Vista": "=?utf-8?b?w(?=",
+        },
+    )
+
+    assert binary["metadata"] == {
+        "caption": "=?utf-8?b?!!!?=",
+        "lato": "=?utf-8?q?=FF?=",
+        "vista": "=?utf-8?b?w(?=",
+    }
+
+
+def test_the_last_header_wins_when_two_keys_collide(monkeypatch):
+    binary = extract(
+        monkeypatch,
+        {"X-Amz-Meta-A.B": "primo", "X-Amz-Meta-A_B": "secondo"},
+    )
+
+    assert binary["metadata"] == {"a_b": "secondo"}
+
+
+def test_an_object_whose_metadata_are_all_dropped(monkeypatch):
+    binary = extract(monkeypatch, {"X-Amz-Meta-Page": "dodici"})
+
+    assert "metadata" not in binary
+
+
+def test_a_header_without_a_name_is_ignored(monkeypatch):
+    binary = extract(monkeypatch, {"X-Amz-Meta-": "x", "X-Amz-Meta-Lato": "retro"})
+
+    assert binary["metadata"] == {"lato": "retro"}
