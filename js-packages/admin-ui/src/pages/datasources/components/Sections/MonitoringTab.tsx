@@ -98,7 +98,7 @@ export function MonitoringTab({ id }: { id: string }) {
 
     if (newEdges.length) {
       setSchedulers((prev) => [...prev, ...newEdges]);
-      setPageInfo(newPageInfo);
+      setPageInfo(newPageInfo ?? null);
     }
   };
 
@@ -335,7 +335,7 @@ export function MonitoringTab({ id }: { id: string }) {
 
                 return (
                   <TableRow key={item?.node?.id || index} ref={isLast ? lastElementRef : null}>
-                    <TableCell>{item?.node?.__typename}</TableCell>
+                    <TableCell>{(item?.node as { __typename?: string } | null | undefined)?.__typename}</TableCell>
                     <TableCell>{renderSchedulationType(item?.node?.reindex)}</TableCell>
                     <TableCell>{formattedDateTime}</TableCell>
                     <TableCell>{item?.node?.status && renderStatus(item.node.status)}</TableCell>

@@ -4,8 +4,13 @@ schema:
 documents: "./src/**/*.tsx"
 generates:
   src/graphql-generated.ts:
+    config:
+      enumType: native
+      scalars:
+        BigDecimal: any
+        BigInteger: any
+        DateTime: any
+        FormConfigurations: any
     plugins:
-      - typescript
       - typescript-operations
       - typescript-react-apollo
-      - time

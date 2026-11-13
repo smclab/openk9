@@ -42,7 +42,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import i18n from "../../i18n";
 import {
   DocTypeUserDtoInput,
-  InputMaybe,
   PluginDriverType,
   Provisioning,
   ResourceUriInput,
@@ -300,7 +299,7 @@ export const SavePluginnDriverModel = React.forwardRef(
         docTypeUserDTOSet:
           pluginDriverQuery.data?.pluginDriver?.aclMappings?.map((field) => ({
             docTypeId: Number(field?.docTypeField?.id),
-            userField: field?.userField as InputMaybe<UserField> | undefined,
+            userField: field?.userField as UserField | null | undefined,
           })) || [],
       },
       isLoading: pluginDriverQuery.loading || pluginDriverWithDocTypeMutation.loading,
@@ -325,7 +324,7 @@ export const SavePluginnDriverModel = React.forwardRef(
             docTypeUserDTOSet:
               fields?.map((field) => ({
                 docTypeId: Number(field.docTypeId),
-                userField: field.userFieldId as InputMaybe<UserField> | undefined,
+                userField: field.userFieldId as UserField | null | undefined,
               })) || [],
           },
         }).then(() => {

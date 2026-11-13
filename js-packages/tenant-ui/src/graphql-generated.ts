@@ -1,26 +1,10 @@
+/** Internal type. DO NOT USE DIRECTLY. */
+type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+/** Internal type. DO NOT USE DIRECTLY. */
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
-export type Maybe<T> = T | null;
-export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 const defaultOptions = {} as const;
-/** All built-in and custom scalars, mapped to their actual values */
-export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-  /** Scalar for BigDecimal */
-  BigDecimal: any;
-  /** Scalar for BigInteger */
-  BigInteger: any;
-  /** Scalar for DateTime */
-  DateTime: any;
-};
-
 export enum ApiGroup {
   Administration = 'ADMINISTRATION',
   Ingestion = 'INGESTION',
@@ -28,182 +12,18 @@ export enum ApiGroup {
   Search = 'SEARCH'
 }
 
-export type ApiKeyResponse = {
-  __typename?: 'ApiKeyResponse';
-  apiGroup?: Maybe<Scalars['String']>;
-  /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  /** ISO-8601 */
-  expirationDate?: Maybe<Scalars['DateTime']>;
-  hash?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
-  prefix?: Maybe<Scalars['String']>;
-  status?: Maybe<Scalars['String']>;
-  suffix?: Maybe<Scalars['String']>;
-  tenantId?: Maybe<Scalars['String']>;
-};
-
 export enum AuthorizationScheme {
   ApiKey = 'API_KEY',
   NoAuth = 'NO_AUTH',
   Oauth2 = 'OAUTH2'
 }
 
-export type Config = {
-  __typename?: 'Config';
-  apiGroup?: Maybe<ApiGroup>;
-  authScheme?: Maybe<AuthorizationScheme>;
-};
-
-/** A connection to a list of items. */
-export type Connection_TenantResponseDto = {
-  /** A list of edges. */
-  edges?: Maybe<Array<Maybe<Edge_TenantResponseDto>>>;
-  /** details about this specific page */
-  pageInfo?: Maybe<PageInfo>;
-};
-
 export type CreateApiKeyRequestInput = {
   apiGroup: ApiGroup;
   /** ISO-8601 */
-  expirationDate?: InputMaybe<Scalars['DateTime']>;
-  name: Scalars['String'];
-  tenantName: Scalars['String'];
-};
-
-export type CreateApiKeyResponse = {
-  __typename?: 'CreateApiKeyResponse';
-  apiKey?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['String']>;
-};
-
-export type DefaultConnection_TenantResponseDto = Connection_TenantResponseDto & {
-  __typename?: 'DefaultConnection_TenantResponseDTO';
-  edges?: Maybe<Array<Maybe<Edge_TenantResponseDto>>>;
-  pageInfo?: Maybe<PageInfo>;
-};
-
-export type DefaultEdge_TenantResponseDto = Edge_TenantResponseDto & {
-  __typename?: 'DefaultEdge_TenantResponseDTO';
-  cursor?: Maybe<Scalars['String']>;
-  node?: Maybe<TenantResponseDto>;
-};
-
-export type DefaultPageInfo = PageInfo & {
-  __typename?: 'DefaultPageInfo';
-  endCursor?: Maybe<Scalars['String']>;
-  hasNextPage: Scalars['Boolean'];
-  hasPreviousPage: Scalars['Boolean'];
-  startCursor?: Maybe<Scalars['String']>;
-};
-
-export enum Direction {
-  Asc = 'ASC',
-  Desc = 'DESC'
-}
-
-/** An edge in a connection */
-export type Edge_TenantResponseDto = {
-  /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
-  /** The item at the end of the edge */
-  node?: Maybe<TenantResponseDto>;
-};
-
-export type FieldValidator = {
-  __typename?: 'FieldValidator';
-  field?: Maybe<Scalars['String']>;
-  message?: Maybe<Scalars['String']>;
-};
-
-/** Mutation root */
-export type Mutation = {
-  __typename?: 'Mutation';
-  createApiKey?: Maybe<CreateApiKeyResponse>;
-  revokeApiKey?: Maybe<Scalars['Boolean']>;
-  tenant?: Maybe<Response_TenantResponseDto>;
-};
-
-
-/** Mutation root */
-export type MutationCreateApiKeyArgs = {
-  createApiKeyRequest: CreateApiKeyRequestInput;
-};
-
-
-/** Mutation root */
-export type MutationRevokeApiKeyArgs = {
-  id: Scalars['ID'];
-};
-
-
-/** Mutation root */
-export type MutationTenantArgs = {
-  tenantRequestDTO?: InputMaybe<TenantRequestDtoInput>;
-};
-
-/** Information about pagination in a connection. */
-export type PageInfo = {
-  /** When paginating forwards, the cursor to continue. */
-  endCursor?: Maybe<Scalars['String']>;
-  /** When paginating forwards, are there more items? */
-  hasNextPage: Scalars['Boolean'];
-  /** When paginating backwards, are there more items? */
-  hasPreviousPage: Scalars['Boolean'];
-  /** When paginating backwards, the cursor to continue. */
-  startCursor?: Maybe<Scalars['String']>;
-};
-
-export type Preconfiguration = {
-  __typename?: 'Preconfiguration';
-  configs?: Maybe<Array<Maybe<Config>>>;
-  name?: Maybe<SecurityConfiguration>;
-};
-
-/** Query root */
-export type Query = {
-  __typename?: 'Query';
-  apiKey?: Maybe<ApiKeyResponse>;
-  apiKeys?: Maybe<Array<Maybe<ApiKeyResponse>>>;
-  preconfigurations?: Maybe<Array<Maybe<Preconfiguration>>>;
-  tenant?: Maybe<TenantResponseDto>;
-  tenants?: Maybe<Connection_TenantResponseDto>;
-};
-
-
-/** Query root */
-export type QueryApiKeyArgs = {
-  id: Scalars['ID'];
-};
-
-
-/** Query root */
-export type QueryApiKeysArgs = {
-  tenantId: Scalars['String'];
-};
-
-
-/** Query root */
-export type QueryTenantArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-};
-
-
-/** Query root */
-export type QueryTenantsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
-  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
-};
-
-export type Response_TenantResponseDto = {
-  __typename?: 'Response_TenantResponseDTO';
-  entity?: Maybe<TenantResponseDto>;
-  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+  expirationDate?: any;
+  name: string;
+  tenantName: string;
 };
 
 export enum SecurityConfiguration {
@@ -219,81 +39,53 @@ export enum SecurityConfiguration {
   Oauth2SearchWithApiKey = 'OAUTH2_SEARCH_WITH_API_KEY'
 }
 
-export type SortByInput = {
-  column?: InputMaybe<Scalars['String']>;
-  direction?: InputMaybe<Direction>;
-};
-
-export type TenantRequestDtoInput = {
-  clientId: Scalars['String'];
-  /** OAuth2 client secret, kept server side and never returned in any response. The OpenK9 frontends don't use it: they log in with a public client and PKCE. */
-  clientSecret?: InputMaybe<Scalars['String']>;
-  issuerUri: Scalars['String'];
-  securityConfiguration: SecurityConfiguration;
-  tenantName: Scalars['String'];
-  virtualHost: Scalars['String'];
-};
-
-export type TenantResponseDto = {
-  __typename?: 'TenantResponseDTO';
-  clientId?: Maybe<Scalars['String']>;
-  /** Always null: the client secret is never returned. */
-  clientSecret?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['String']>;
-  issuerUri?: Maybe<Scalars['String']>;
-  realmProvisioned: Scalars['Boolean'];
-  securityConfiguration?: Maybe<SecurityConfiguration>;
-  tenantName?: Maybe<Scalars['String']>;
-  virtualHost?: Maybe<Scalars['String']>;
-};
-
 export type GetApiKeysQueryVariables = Exact<{
-  tenantId: Scalars['String'];
+  tenantId: string;
 }>;
 
 
-export type GetApiKeysQuery = { __typename?: 'Query', apiKeys?: Array<{ __typename?: 'ApiKeyResponse', id?: string | null, tenantId?: string | null, name?: string | null, apiGroup?: string | null, status?: string | null, prefix?: string | null, suffix?: string | null, hash?: string | null, createDate?: any | null, expirationDate?: any | null } | null> | null };
+export type GetApiKeysQuery = { apiKeys: Array<{ id: string | null, tenantId: string | null, name: string | null, apiGroup: string | null, status: string | null, prefix: string | null, suffix: string | null, hash: string | null, createDate: any, expirationDate: any } | null> | null };
 
 export type GetApiKeyQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: string | number;
 }>;
 
 
-export type GetApiKeyQuery = { __typename?: 'Query', apiKey?: { __typename?: 'ApiKeyResponse', id?: string | null, tenantId?: string | null, name?: string | null, apiGroup?: string | null, status?: string | null, prefix?: string | null, suffix?: string | null, hash?: string | null, createDate?: any | null, expirationDate?: any | null } | null };
+export type GetApiKeyQuery = { apiKey: { id: string | null, tenantId: string | null, name: string | null, apiGroup: string | null, status: string | null, prefix: string | null, suffix: string | null, hash: string | null, createDate: any, expirationDate: any } | null };
 
 export type CreateApiKeyMutationVariables = Exact<{
   createApiKeyRequest: CreateApiKeyRequestInput;
 }>;
 
 
-export type CreateApiKeyMutation = { __typename?: 'Mutation', createApiKey?: { __typename?: 'CreateApiKeyResponse', id?: string | null, apiKey?: string | null } | null };
+export type CreateApiKeyMutation = { createApiKey: { id: string | null, apiKey: string | null } | null };
 
 export type RevokeApiKeyMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: string | number;
 }>;
 
 
-export type RevokeApiKeyMutation = { __typename?: 'Mutation', revokeApiKey?: boolean | null };
+export type RevokeApiKeyMutation = { revokeApiKey: boolean | null };
 
 export type TenantQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: string | number;
 }>;
 
 
-export type TenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'TenantResponseDTO', id?: string | null, tenantName?: string | null, virtualHost?: string | null, clientId?: string | null, issuerUri?: string | null, securityConfiguration?: SecurityConfiguration | null, realmProvisioned: boolean } | null };
+export type TenantQuery = { tenant: { id: string | null, tenantName: string | null, virtualHost: string | null, clientId: string | null, issuerUri: string | null, securityConfiguration: SecurityConfiguration | null, realmProvisioned: boolean } | null };
 
 export type TenantsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: string | null | undefined;
+  cursor?: string | null | undefined;
 }>;
 
 
-export type TenantsQuery = { __typename?: 'Query', tenants?: { __typename?: 'DefaultConnection_TenantResponseDTO', edges?: Array<{ __typename?: 'DefaultEdge_TenantResponseDTO', node?: { __typename?: 'TenantResponseDTO', id?: string | null, virtualHost?: string | null } | null } | null> | null } | null };
+export type TenantsQuery = { tenants: { edges: Array<{ node: { id: string | null, virtualHost: string | null } | null } | null> | null } | null };
 
 export type PreconfigurationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PreconfigurationsQuery = { __typename?: 'Query', preconfigurations?: Array<{ __typename?: 'Preconfiguration', name?: SecurityConfiguration | null, configs?: Array<{ __typename?: 'Config', apiGroup?: ApiGroup | null, authScheme?: AuthorizationScheme | null } | null> | null } | null> | null };
+export type PreconfigurationsQuery = { preconfigurations: Array<{ name: SecurityConfiguration | null, configs: Array<{ apiGroup: ApiGroup | null, authScheme: AuthorizationScheme | null } | null> | null } | null> | null };
 
 
 export const GetApiKeysDocument = gql`
@@ -329,7 +121,7 @@ export const GetApiKeysDocument = gql`
  *   },
  * });
  */
-export function useGetApiKeysQuery(baseOptions: Apollo.QueryHookOptions<GetApiKeysQuery, GetApiKeysQueryVariables>) {
+export function useGetApiKeysQuery(baseOptions: Apollo.QueryHookOptions<GetApiKeysQuery, GetApiKeysQueryVariables> & ({ variables: GetApiKeysQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<GetApiKeysQuery, GetApiKeysQueryVariables>(GetApiKeysDocument, options);
       }
@@ -337,8 +129,16 @@ export function useGetApiKeysLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<GetApiKeysQuery, GetApiKeysQueryVariables>(GetApiKeysDocument, options);
         }
+// @ts-ignore
+export function useGetApiKeysSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetApiKeysQuery, GetApiKeysQueryVariables>): Apollo.UseSuspenseQueryResult<GetApiKeysQuery, GetApiKeysQueryVariables>;
+export function useGetApiKeysSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetApiKeysQuery, GetApiKeysQueryVariables>): Apollo.UseSuspenseQueryResult<GetApiKeysQuery | undefined, GetApiKeysQueryVariables>;
+export function useGetApiKeysSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetApiKeysQuery, GetApiKeysQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetApiKeysQuery, GetApiKeysQueryVariables>(GetApiKeysDocument, options);
+        }
 export type GetApiKeysQueryHookResult = ReturnType<typeof useGetApiKeysQuery>;
 export type GetApiKeysLazyQueryHookResult = ReturnType<typeof useGetApiKeysLazyQuery>;
+export type GetApiKeysSuspenseQueryHookResult = ReturnType<typeof useGetApiKeysSuspenseQuery>;
 export type GetApiKeysQueryResult = Apollo.QueryResult<GetApiKeysQuery, GetApiKeysQueryVariables>;
 export const GetApiKeyDocument = gql`
     query GetApiKey($id: ID!) {
@@ -373,7 +173,7 @@ export const GetApiKeyDocument = gql`
  *   },
  * });
  */
-export function useGetApiKeyQuery(baseOptions: Apollo.QueryHookOptions<GetApiKeyQuery, GetApiKeyQueryVariables>) {
+export function useGetApiKeyQuery(baseOptions: Apollo.QueryHookOptions<GetApiKeyQuery, GetApiKeyQueryVariables> & ({ variables: GetApiKeyQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<GetApiKeyQuery, GetApiKeyQueryVariables>(GetApiKeyDocument, options);
       }
@@ -381,8 +181,16 @@ export function useGetApiKeyLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<GetApiKeyQuery, GetApiKeyQueryVariables>(GetApiKeyDocument, options);
         }
+// @ts-ignore
+export function useGetApiKeySuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetApiKeyQuery, GetApiKeyQueryVariables>): Apollo.UseSuspenseQueryResult<GetApiKeyQuery, GetApiKeyQueryVariables>;
+export function useGetApiKeySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetApiKeyQuery, GetApiKeyQueryVariables>): Apollo.UseSuspenseQueryResult<GetApiKeyQuery | undefined, GetApiKeyQueryVariables>;
+export function useGetApiKeySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetApiKeyQuery, GetApiKeyQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetApiKeyQuery, GetApiKeyQueryVariables>(GetApiKeyDocument, options);
+        }
 export type GetApiKeyQueryHookResult = ReturnType<typeof useGetApiKeyQuery>;
 export type GetApiKeyLazyQueryHookResult = ReturnType<typeof useGetApiKeyLazyQuery>;
+export type GetApiKeySuspenseQueryHookResult = ReturnType<typeof useGetApiKeySuspenseQuery>;
 export type GetApiKeyQueryResult = Apollo.QueryResult<GetApiKeyQuery, GetApiKeyQueryVariables>;
 export const CreateApiKeyDocument = gql`
     mutation CreateApiKey($createApiKeyRequest: CreateApiKeyRequestInput!) {
@@ -479,7 +287,7 @@ export const TenantDocument = gql`
  *   },
  * });
  */
-export function useTenantQuery(baseOptions: Apollo.QueryHookOptions<TenantQuery, TenantQueryVariables>) {
+export function useTenantQuery(baseOptions: Apollo.QueryHookOptions<TenantQuery, TenantQueryVariables> & ({ variables: TenantQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<TenantQuery, TenantQueryVariables>(TenantDocument, options);
       }
@@ -487,8 +295,16 @@ export function useTenantLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ten
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<TenantQuery, TenantQueryVariables>(TenantDocument, options);
         }
+// @ts-ignore
+export function useTenantSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<TenantQuery, TenantQueryVariables>): Apollo.UseSuspenseQueryResult<TenantQuery, TenantQueryVariables>;
+export function useTenantSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<TenantQuery, TenantQueryVariables>): Apollo.UseSuspenseQueryResult<TenantQuery | undefined, TenantQueryVariables>;
+export function useTenantSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<TenantQuery, TenantQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<TenantQuery, TenantQueryVariables>(TenantDocument, options);
+        }
 export type TenantQueryHookResult = ReturnType<typeof useTenantQuery>;
 export type TenantLazyQueryHookResult = ReturnType<typeof useTenantLazyQuery>;
+export type TenantSuspenseQueryHookResult = ReturnType<typeof useTenantSuspenseQuery>;
 export type TenantQueryResult = Apollo.QueryResult<TenantQuery, TenantQueryVariables>;
 export const TenantsDocument = gql`
     query Tenants($searchText: String, $cursor: String) {
@@ -528,8 +344,16 @@ export function useTenantsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Te
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<TenantsQuery, TenantsQueryVariables>(TenantsDocument, options);
         }
+// @ts-ignore
+export function useTenantsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<TenantsQuery, TenantsQueryVariables>): Apollo.UseSuspenseQueryResult<TenantsQuery, TenantsQueryVariables>;
+export function useTenantsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<TenantsQuery, TenantsQueryVariables>): Apollo.UseSuspenseQueryResult<TenantsQuery | undefined, TenantsQueryVariables>;
+export function useTenantsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<TenantsQuery, TenantsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<TenantsQuery, TenantsQueryVariables>(TenantsDocument, options);
+        }
 export type TenantsQueryHookResult = ReturnType<typeof useTenantsQuery>;
 export type TenantsLazyQueryHookResult = ReturnType<typeof useTenantsLazyQuery>;
+export type TenantsSuspenseQueryHookResult = ReturnType<typeof useTenantsSuspenseQuery>;
 export type TenantsQueryResult = Apollo.QueryResult<TenantsQuery, TenantsQueryVariables>;
 export const PreconfigurationsDocument = gql`
     query Preconfigurations {
@@ -566,7 +390,14 @@ export function usePreconfigurationsLazyQuery(baseOptions?: Apollo.LazyQueryHook
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<PreconfigurationsQuery, PreconfigurationsQueryVariables>(PreconfigurationsDocument, options);
         }
+// @ts-ignore
+export function usePreconfigurationsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<PreconfigurationsQuery, PreconfigurationsQueryVariables>): Apollo.UseSuspenseQueryResult<PreconfigurationsQuery, PreconfigurationsQueryVariables>;
+export function usePreconfigurationsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<PreconfigurationsQuery, PreconfigurationsQueryVariables>): Apollo.UseSuspenseQueryResult<PreconfigurationsQuery | undefined, PreconfigurationsQueryVariables>;
+export function usePreconfigurationsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<PreconfigurationsQuery, PreconfigurationsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<PreconfigurationsQuery, PreconfigurationsQueryVariables>(PreconfigurationsDocument, options);
+        }
 export type PreconfigurationsQueryHookResult = ReturnType<typeof usePreconfigurationsQuery>;
 export type PreconfigurationsLazyQueryHookResult = ReturnType<typeof usePreconfigurationsLazyQuery>;
+export type PreconfigurationsSuspenseQueryHookResult = ReturnType<typeof usePreconfigurationsSuspenseQuery>;
 export type PreconfigurationsQueryResult = Apollo.QueryResult<PreconfigurationsQuery, PreconfigurationsQueryVariables>;
-// Generated on 2026-11-03T21:24:25+01:00

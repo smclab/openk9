@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import { QueryResult } from "@apollo/client";
-import { DataSourceQuery, Exact, InputMaybe, Provisioning, Scalars } from "../../../graphql-generated";
+import { DataSourceQuery, DataSourceQueryVariables, Provisioning } from "../../../graphql-generated";
 import { useEffect, useState } from "react";
 import { parseCronString } from "../Function";
 import { ConnectionData } from "../types";
@@ -68,13 +68,7 @@ export const initializeConnectionData = (datasourceId: string | undefined | null
 
 export const useDatasourceForm = (
   datasourceId: string,
-  datasourceQuery: QueryResult<
-    DataSourceQuery,
-    Exact<{
-      id: Scalars["ID"];
-      searchText?: InputMaybe<Scalars["String"]>;
-    }>
-  >,
+  datasourceQuery: QueryResult<DataSourceQuery, DataSourceQueryVariables>,
 ) => {
   const [formValues, setFormValues] = useState<ConnectionData>(initializeConnectionData(datasourceId));
 
