@@ -448,16 +448,17 @@ def _encode_vector(message, vector, vector_data_type):
         message.f32.values.extend(normalized.tolist())
 
 
-def to_chunk_message(piece, number, total, vector_data_type):
+def to_chunk_message(piece, number, total, vector_data_type, header=""):
     """Maps a router Piece onto the EmbeddedChunk wire message.
 
     The vector is L2-normalized, then quantized according to the requested
-    vectorDataType.
+    vectorDataType. The header is the chunk header text of the request.
     """
     message = embedding_pb2.EmbeddedChunk(
         number=number,
         text=piece.text or "",
         vectorDataType=vector_data_type,
+        header=header,
     )
     if total is not None:
         message.total = total
@@ -709,7 +710,9 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 for pieces in router.text_piece_batches(chunks, pipelines, batch_size):
                     for piece in pieces:
                         number += 1
-                        yield to_chunk_message(piece, number, total, vector_data_type)
+                        yield to_chunk_message(
+                            piece, number, total, vector_data_type, header.text
+                        )
         except chunking.ChunkHeaderError as error:
             context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(error))
         except Exception as error:
@@ -739,7 +742,13 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 )
                 for pieces in groups:
                     messages = [
-                        to_chunk_message(piece, number + offset, None, vector_data_type)
+                        to_chunk_message(
+                            piece,
+                            number + offset,
+                            None,
+                            vector_data_type,
+                            header.text,
+                        )
                         for offset, piece in enumerate(pieces, start=1)
                     ]
                     for message in messages:

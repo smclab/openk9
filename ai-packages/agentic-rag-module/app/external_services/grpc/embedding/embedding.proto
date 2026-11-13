@@ -171,6 +171,9 @@ message EmbeddedChunk {
     // merges it into the metadata of the source binary: on the same key
     // the chunk wins. Absent when the module has nothing to add.
     google.protobuf.Struct metadata = 10;
+    // The document header of the request, on every chunk of it, also when
+    // not in its vector; empty without a header. The text stays the chunk.
+    string header = 11;
 }
 
 // Single vector returned by EmbedQuery, quantized with the same

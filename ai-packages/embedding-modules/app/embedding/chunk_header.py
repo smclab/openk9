@@ -19,9 +19,10 @@
 front of every chunk before embedding.
 
 The header goes into the vector only: the text returned for a chunk is the
-original one. Images and PDF pages take it too when the model fuses text and
-image into one vector (embed_mixed); otherwise they are embedded as they
-are, and the request counts them for a single warning.
+original one, and the header comes back beside it on every chunk. Images and
+PDF pages take it too when the model fuses text and image into one vector
+(embed_mixed); otherwise they are embedded as they are, and the request
+counts them for a single warning.
 """
 
 from collections.abc import Iterable

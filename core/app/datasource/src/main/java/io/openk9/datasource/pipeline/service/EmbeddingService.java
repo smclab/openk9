@@ -452,6 +452,10 @@ public class EmbeddingService {
 		jsonObject.put("chunkText", chunk.getText());
 		jsonObject.put("vector", mapVector(chunk));
 
+		if (!chunk.getHeader().isEmpty()) {
+			jsonObject.put("chunkHeader", chunk.getHeader());
+		}
+
 		// merge the rest of the source document (same as mapToDocumentObject)
 		// but its resources: a chunk carries only its own binary.
 		for (Map.Entry<String, Object> entry : root.entrySet()) {

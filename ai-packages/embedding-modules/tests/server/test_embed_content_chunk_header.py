@@ -252,3 +252,45 @@ def test_without_fusion_one_warning_counts_the_images(make_stub, caplog):
     assert len(warnings) == 1
     assert "2 images" in warnings[0]
     assert "text-only-model" in warnings[0]
+
+
+def test_every_chunk_carries_the_header_beside_its_text(make_stub):
+    calls = []
+    stub = make_stub(build_pipelines=_recording_pipelines(calls, fusing=False))
+
+    refs = [
+        embedding_pb2.MediaRef(
+            url="https://signed/notes-1", fileId="notes-1", contentType="text/plain"
+        ),
+        embedding_pb2.MediaRef(
+            url="https://signed/img-1", fileId="img-1", contentType="image/png"
+        ),
+    ]
+    chunks = list(
+        stub.EmbedContent(
+            _request(
+                text="primo", refs=refs, chunk_header=_header(("title", "Manuale"))
+            )
+        )
+    )
+
+    # the image is not fused with the header, yet it carries it too
+    assert [chunk.header for chunk in chunks] == ["title: Manuale\n"] * 4
+    assert [chunk.text for chunk in chunks] == ["primo", "riga uno", "riga due", ""]
+
+
+@pytest.mark.parametrize("chunk_header", [(), _header(("title", " "))])
+def test_without_a_header_no_chunk_carries_one(make_stub, chunk_header):
+    calls = []
+    stub = make_stub(build_pipelines=_recording_pipelines(calls))
+
+    ref = embedding_pb2.MediaRef(
+        url="https://signed/img-1", fileId="img-1", contentType="image/png"
+    )
+    chunks = list(
+        stub.EmbedContent(
+            _request(text="primo|secondo", refs=[ref], chunk_header=chunk_header)
+        )
+    )
+
+    assert [chunk.header for chunk in chunks] == ["", "", ""]

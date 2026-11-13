@@ -268,7 +268,8 @@ With a non-empty `chunkHeader` every chunk is embedded as the header plus the
 chunk: one `name: value` line per field, then the chunk. Each value goes
 through the same cleaning as the text; a value empty after cleaning is
 skipped. The `text` of the returned chunk is the original chunk, without the
-header. Queries (`EmbedQuery`) are embedded as they are.
+header; the header comes back in `header`, on every chunk of the request.
+Queries (`EmbedQuery`) are embedded as they are.
 
 - The header length is subtracted from `chunk_size`, in the unit of the
   chunker (tokens, characters or UTF-8 bytes); without `chunk_size` in the
@@ -295,6 +296,7 @@ header. Queries (`EmbedQuery`) are embedded as they are.
 | `dimension`          | `int32`             | Vector dimension                                     |
 | `f32` / `i8` / `bits`| `oneof vector`      | The vector, encoded according to `vectorDataType`    |
 | `metadata`           | `Struct` (optional) | Chunk metadata, e.g. `page` (from 1) of a PDF page   |
+| `header`             | `string`            | Chunk header of the request; empty without a header  |
 
 **Behavior**
 - Text is chunked and embedded first, then each ref in list order; `number` is

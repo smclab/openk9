@@ -81,6 +81,15 @@ def _image_source_metadata(document_source: dict) -> dict:
     }
 
 
+def _with_chunk_header(document: Document) -> Document:
+    """Put the chunk header, when the chunk has one, in front of the text the
+    model reads; it already ends with a line break."""
+    metadata = dict(document.metadata)
+    chunk_header = metadata.pop("chunk_header", "")
+
+    return Document(chunk_header + document.page_content, metadata=metadata)
+
+
 class OpenSearchRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving documents."""
 
@@ -201,6 +210,7 @@ class OpenSearchRetriever(BaseRetriever):
                 document_types = document_source.get("documentTypes", [])
                 document_domain = document_source.get("domain")
                 dynamic_metadata = {}
+                chunk_header = ""
 
                 for document_type in document_types:
                     if self.metadata and document_type in self.metadata.keys():
@@ -213,6 +223,7 @@ class OpenSearchRetriever(BaseRetriever):
 
                 if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
                     page_content = document_source.get("chunkText", "")
+                    chunk_header = document_source.get("chunkHeader") or ""
                     chunk_idx = document_source.get("number")
                     previous_chunks = document_source.get("previous") or []
                     previous_chunk = [
@@ -229,6 +240,8 @@ class OpenSearchRetriever(BaseRetriever):
                         "domain": document_domain,
                         **_image_source_metadata(document_source),
                     }
+                    if chunk_header:
+                        metadata["chunk_header"] = chunk_header
 
                 else:
                     page_content = document_source.get("rawContent", "")
@@ -236,7 +249,9 @@ class OpenSearchRetriever(BaseRetriever):
                         "document_id": document_id,
                     }
 
-                document_tokens_number = len(page_content) / TOKEN_SIZE
+                document_tokens_number = (
+                    len(chunk_header) + len(page_content)
+                ) / TOKEN_SIZE
                 total_tokens += document_tokens_number
 
                 if total_tokens < max_tokens:
@@ -310,4 +325,5 @@ class OpenSearchRetriever(BaseRetriever):
                 for merged_document in merged_documents
             ]
 
-        return documents
+        # after the merge, so a window gets the header once, before its text
+        return [_with_chunk_header(document) for document in documents]

@@ -77,6 +77,8 @@ public class IndexMappingService {
 	public static final String GENERATE_DOC_TYPE =
 		"IndexMappingService#generateDocTypeFieldsFromPluginDriverSampleAsync";
 
+	private static final String CHUNK_HEADER_FIELD = "chunkHeader";
+
 	// all the document fields that must be ignored on write
 	private static final String[] IGNORED_FIELD_PATHS = new String[]{
 		"vector",
@@ -637,12 +639,35 @@ public class IndexMappingService {
 
 		var jsonObject = (JsonObject) Json.decodeValue(mappings);
 
+		var docTypeAndFieldsGroup = toDocTypeAndFieldsGroup(
+			toEmbeddingDocTypeFields(jsonObject.getMap()),
+			List.of(DocType.DEFAULT_NAME));
+
 		return indexService.putComponentTemplate(componentTemplateRequest)
-			.call(() -> generateDocTypeFields(
-				session,
-				jsonObject.getMap(),
-				List.of(DocType.DEFAULT_NAME)
-			).flatMap(docTypes -> session.mergeAll(docTypes.toArray())));
+			.call(() -> _refreshDocTypeSet(session, docTypeAndFieldsGroup)
+				.flatMap(docTypes -> session.mergeAll(docTypes.toArray())));
+	}
+
+	/**
+	 * Generates the docType fields of the embedding component template. The
+	 * {@code chunkHeader} field is not searchable: it is returned with the
+	 * chunk, for the RAG, but it must not change the search.
+	 *
+	 * @param mappings the rendered {@code embeddingComponentMappings}
+	 * @return the generated docType fields
+	 */
+	protected static List<DocTypeField> toEmbeddingDocTypeFields(
+		Map<String, Object> mappings) {
+
+		var docTypeFields = toDocTypeFields(mappings);
+
+		for (DocTypeField docTypeField : docTypeFields) {
+			if (CHUNK_HEADER_FIELD.equals(docTypeField.getName())) {
+				docTypeField.setSearchable(false);
+			}
+		}
+
+		return docTypeFields;
 	}
 
 	/**

@@ -425,6 +425,50 @@ class EmbedContentStreamTest {
 	}
 
 	@Test
+	void should_write_the_header_beside_the_text_of_every_chunk() {
+
+		// two text chunks, a PDF page and an image, all with the header
+		var header = "title: Manuale Alfa\n";
+		var docs = runToDocs(
+			List.of(
+				textChunk(1, 2, "first", 1.0f).toBuilder()
+					.setHeader(header).build(),
+				textChunk(2, 2, "second", 1.0f).toBuilder()
+					.setHeader(header).build(),
+				binaryChunk(3, "pdf-1", 1.0f).toBuilder()
+					.setHeader(header).build(),
+				imageChunk(4, "img-1", 1.0f).toBuilder()
+					.setHeader(header).build()),
+			1, Map.of(),
+			Map.of("img-1", binary("img-1", Map.of("caption", "a caption"))));
+
+		// the header has its own field, the text is the original chunk
+		for (var doc : docs) {
+			Assertions.assertEquals(header, doc.getString("chunkHeader"));
+		}
+		Assertions.assertEquals("first", docs.get(0).getString("chunkText"));
+		Assertions.assertEquals("second", docs.get(1).getString("chunkText"));
+		Assertions.assertEquals(
+			"binary-chunk-3", docs.get(2).getString("chunkText"));
+		Assertions.assertEquals("a caption", docs.get(3).getString("chunkText"));
+
+		// the windows carry the original text only
+		Assertions.assertEquals(
+			JsonArray.of(windowEntry(1, "first")),
+			docs.get(1).getJsonArray("previous"));
+	}
+
+	@Test
+	void should_write_no_header_when_the_module_sent_none() {
+
+		var docs = runToDocs(textChunks(2), 1);
+
+		for (var doc : docs) {
+			Assertions.assertFalse(doc.containsKey("chunkHeader"));
+		}
+	}
+
+	@Test
 	void should_keep_the_caption_out_of_the_windows() {
 
 		// a text in two chunks and an image with a caption

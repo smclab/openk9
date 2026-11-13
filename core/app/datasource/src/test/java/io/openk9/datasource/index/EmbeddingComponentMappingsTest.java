@@ -188,6 +188,28 @@ public class EmbeddingComponentMappingsTest {
 			.noneMatch(name -> name.startsWith("dynamic_templates")));
 	}
 
+	@Test
+	void should_keep_the_chunk_header_out_of_the_search() {
+
+		// the header is a plain text field of the mapping
+		var chunkHeader = render(VectorDataType.FLOAT32)
+			.getJsonObject("properties")
+			.getJsonObject("chunkHeader");
+
+		assertEquals("text", chunkHeader.getString("type"));
+		assertFalse(chunkHeader.containsKey("index"));
+
+		// its field is returned with the chunk but never searched
+		var docTypeFields = IndexMappingService.toEmbeddingDocTypeFields(
+			render(VectorDataType.FLOAT32).getMap());
+		Map<String, DocTypeField> fieldByName = new HashMap<>();
+		flatten(docTypeFields, fieldByName);
+
+		assertFalse(fieldByName.get("chunkHeader").isSearchable());
+		assertFalse(fieldByName.get("chunkHeader").isDefaultExclude());
+		assertTrue(fieldByName.get("chunkText").isSearchable());
+	}
+
 	private static void flatten(
 		Collection<DocTypeField> docTypeFields,
 		Map<String, DocTypeField> fieldByName) {

@@ -192,3 +192,16 @@ def test_the_model_failing_on_a_later_page_ends_the_rpc_after_the_first_group(
 
     assert error.value.code() == grpc.StatusCode.INTERNAL
     assert [chunk.metadata["page"] for chunk in received] == [1.0, 2.0]
+
+
+def test_every_page_carries_the_chunk_header(make_stub, storage):
+    stub = make_stub(_pipelines(storage))
+    request = _request([_ref("manual")])
+    request.chunkHeader.append(
+        embedding_pb2.ChunkHeaderField(name="title", value="Manuale")
+    )
+
+    chunks = list(stub.EmbedContent(request))
+
+    assert [chunk.header for chunk in chunks] == ["title: Manuale\n"] * 3
+    assert [chunk.text for chunk in chunks] == ["Pagina uno", "", "Pagina tre"]
