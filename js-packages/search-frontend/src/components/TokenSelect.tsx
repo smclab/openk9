@@ -288,7 +288,7 @@ function FactoryTokenType({
   option: AnalysisToken & {
     score: number;
   };
-  t: TFunction<"translation", undefined, "translation">;
+  t: TFunction<"translation">;
 }) {
   switch (option.tokenType) {
     case "AUTOCOMPLETE":

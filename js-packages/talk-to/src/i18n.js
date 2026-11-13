@@ -25,7 +25,8 @@ i18n.use(initReactI18next).init({
 		de: ["de_DE", "en_US"],
 		default: ["en_US"],
 	},
-	supportedLngs: Object.keys(resources),
+	// 26 matches the language part of en_US ("en") against this list: short codes needed
+	supportedLngs: [...Object.keys(resources), "en", "it", "fr", "es", "de"],
 	nonExplicitSupportedLngs: true,
 	interpolation: {
 		escapeValue: false,
