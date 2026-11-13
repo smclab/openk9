@@ -177,6 +177,7 @@ export function Table<
   React.useEffect(() => {
     let isCurrent = true;
     isRefetching.current = true;
+    endMissed.current = false;
     refetch({ searchText: searchTextDebounced } as any)
       .finally(() => {
         if (isCurrent) isRefetching.current = false;
