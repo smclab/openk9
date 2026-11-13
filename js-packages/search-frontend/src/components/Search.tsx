@@ -75,7 +75,10 @@ export function Search({
   const [highlightIndex, setHighlightIndex] = React.useState(-1);
   const [acceptSuggestion, setAcceptSuggestion] = React.useState(true);
 
-  const autocompleteQ = useAutocomplete(selectionsState.textOnChange, configuration.autocompleteEnabled);
+  const autocompleteQ = useAutocomplete(
+    selectionsState.textOnChange,
+    configuration.autocompleteEnabled,
+  );
   const suggestions = autocompleteQ.data ?? [];
 
   React.useEffect(() => {
@@ -340,11 +343,9 @@ export function Search({
                   inherit
                 );
                 background-color: inherit;
-                color: ${viewColor
-                  ? showSyntax
-                    ? "transparent"
-                    : "black"
-                  : "black"};
+                color: ${
+                  viewColor ? (showSyntax ? "transparent" : "black") : "black"
+                };
                 @media (max-width: 480px) {
                   color: black;
                 }

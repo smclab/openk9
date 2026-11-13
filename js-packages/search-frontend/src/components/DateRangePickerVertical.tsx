@@ -336,7 +336,9 @@ export function DataRangePickerVertical({
                     --openk9-embeddable-search--line-height-none,
                     1
                   );
-                  transition: color 0.15s ease, background-color 0.15s ease;
+                  transition:
+                    color 0.15s ease,
+                    background-color 0.15s ease;
                   &:hover {
                     color: #dc3545;
                     background-color: rgba(220, 53, 69, 0.08);
@@ -523,7 +525,9 @@ export function DataRangePickerVertical({
                     --openk9-embeddable-search--line-height-none,
                     1
                   );
-                  transition: color 0.15s ease, background-color 0.15s ease;
+                  transition:
+                    color 0.15s ease,
+                    background-color 0.15s ease;
                   &:hover {
                     color: #dc3545;
                     background-color: rgba(220, 53, 69, 0.08);

@@ -57,9 +57,11 @@ export function TokenSelect({
   const statusStyles: Record<Status, ReturnType<typeof css>> = {
     "can-select": css`
       display: ${isColorSearch ? "block" : "none"};
-      color: ${isColorSearch
-        ? "var(--openk9-embeddable-search--primary-color)"
-        : "inerith"};
+      color: ${
+        isColorSearch
+          ? "var(--openk9-embeddable-search--primary-color)"
+          : "inerith"
+      };
     `,
     "auto-selected": css`
       display: ${isColorSearch ? "block" : "none"};
@@ -87,16 +89,22 @@ export function TokenSelect({
     border-bottom: 1px solid #b09c9c12;
     :hover {
     }
-    background-color: ${isHighlighted
-      ? " #eeeeee"
-      : "var(--openk9-embeddable-search--primary-background-color)"};
+    background-color: ${
+      isHighlighted
+        ? " #eeeeee"
+        : "var(--openk9-embeddable-search--primary-background-color)"
+    };
     cursor: pointer;
-    border-left: ${isSelected
-      ? `8px solid var(--openk9-embeddable-search--active-color)`
-      : "none"};
-    padding-left: ${isSelected
-      ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
-      : "var(--openk9-embeddable-search--spacing-lg, 16px)"};
+    border-left: ${
+      isSelected
+        ? `8px solid var(--openk9-embeddable-search--active-color)`
+        : "none"
+    };
+    padding-left: ${
+      isSelected
+        ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
+        : "var(--openk9-embeddable-search--spacing-lg, 16px)"
+    };
   `;
   const deseleziona = (isSelected: boolean) => css`
     padding: var(--openk9-embeddable-search--spacing-sm, 8px)
@@ -120,9 +128,11 @@ export function TokenSelect({
           white-space: pre;
           ${statusStyles[status]};
           border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
-          border-top: ${isOpen
-            ? "2px solid var(--openk9-embeddable-search--active-color)"
-            : ""};
+          border-top: ${
+            isOpen
+              ? "2px solid var(--openk9-embeddable-search--active-color)"
+              : ""
+          };
           margin-top: ${isOpen ? "-2px" : ""};
         `}
       >
@@ -134,9 +144,11 @@ export function TokenSelect({
           css={css`
             position: absolute;
             top: 100%;
-            margin-top: ${isColorSearch
-              ? "0px"
-              : "var(--openk9-embeddable-search--spacing-xl, 20px)"};
+            margin-top: ${
+              isColorSearch
+                ? "0px"
+                : "var(--openk9-embeddable-search--spacing-xl, 20px)"
+            };
             left: 0px;
             width: 330px;
             background-color: var(
@@ -258,10 +270,7 @@ export function TokenSelect({
   );
 }
 type Status =
-  | "can-select"
-  | "has-selected"
-  | "auto-selected"
-  | "not-interactive";
+  "can-select" | "has-selected" | "auto-selected" | "not-interactive";
 
 export function getTokenLabel(token: AnalysisToken) {
   switch (token.tokenType) {

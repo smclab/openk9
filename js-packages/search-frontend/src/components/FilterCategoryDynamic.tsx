@@ -324,7 +324,9 @@ function FilterCategoryDynamic({
               padding: var(--openk9-embeddable-search--spacing-sm, 8px)
                 var(--openk9-embeddable-search--spacing-sm, 8px);
               cursor: pointer;
-              transition: transform 120ms ease, background-color 120ms ease,
+              transition:
+                transform 120ms ease,
+                background-color 120ms ease,
                 border-color 120ms ease;
               &:hover {
                 background: rgba(0, 0, 0, 0.03);
@@ -510,7 +512,7 @@ function FilterCategoryDynamic({
                   const label =
                     s?.tokenType === "ENTITY"
                       ? `${s?.entityType ?? ""}: ${s?.entityValue ?? ""}`
-                      : s?.value ?? "";
+                      : (s?.value ?? "");
                   return (
                     <button
                       key={keyOfSuggestion(s)}
@@ -628,9 +630,11 @@ function FilterCategoryDynamic({
             css={css`
               display: flex;
               flex-direction: ${isUniqueLoadMore ? "row" : "column"};
-              gap: ${isUniqueLoadMore
-                ? "0"
-                : "var(--openk9-embeddable-search--spacing-xs, 4px)"};
+              gap: ${
+                isUniqueLoadMore
+                  ? "0"
+                  : "var(--openk9-embeddable-search--spacing-xs, 4px)"
+              };
               flex-wrap: ${isUniqueLoadMore ? "wrap" : "initial"};
               padding-left: unset;
               margin: 0;
@@ -698,7 +702,7 @@ function FilterCategoryDynamic({
                     ? `${suggestion?.entityType ?? ""}-${
                         suggestion?.entityValue ?? ""
                       }`
-                    : suggestion?.value ?? String(index);
+                    : (suggestion?.value ?? String(index));
                 const handleAdd = (tok: SearchToken) => {
                   setOptimistic((prev) => {
                     const m = new Map(prev);
@@ -731,9 +735,11 @@ function FilterCategoryDynamic({
                         display: flex;
                         align-items: ${multiSelect ? "baseline" : "stretch"};
                         width: ${isUniqueLoadMore ? "50%" : "auto"};
-                        margin-bottom: ${isUniqueLoadMore
-                          ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
-                          : "0"};
+                        margin-bottom: ${
+                          isUniqueLoadMore
+                            ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
+                            : "0"
+                        };
                         @media (max-width: 768px) {
                           width: 100%;
                           height: ${isUniqueLoadMore ? "50%" : "auto"};
@@ -782,9 +788,11 @@ function FilterCategoryDynamic({
                             400
                           );
                           line-height: 22px;
-                          color: ${isChecked
-                            ? "var(--openk9-embeddable-search--primary-color)"
-                            : "#000000"};
+                          color: ${
+                            isChecked
+                              ? "var(--openk9-embeddable-search--primary-color)"
+                              : "#000000"
+                          };
                         `}
                       >
                         {suggestion?.tokenType === "ENTITY" ? (
@@ -1055,9 +1063,11 @@ function SingleSelect({
               50%
             ) !important;
             border: 2px solid #ccc !important;
-            background-color: ${isChecked
-              ? "var(--openk9-embeddable-search--secondary-active-color) !important"
-              : "#fff !important"};
+            background-color: ${
+              isChecked
+                ? "var(--openk9-embeddable-search--secondary-active-color) !important"
+                : "#fff !important"
+            };
             cursor: pointer !important;
           `}
           onMouseOver={(event) => {
@@ -1099,7 +1109,7 @@ function CheckBoxSelect({
   const idValue =
     suggestion?.tokenType === "ENTITY"
       ? `${suggestion?.entityType ?? ""}-${suggestion?.entityValue ?? ""}`
-      : suggestion?.value ?? "val";
+      : (suggestion?.value ?? "val");
 
   return (
     <>

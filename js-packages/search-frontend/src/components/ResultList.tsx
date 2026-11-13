@@ -46,9 +46,7 @@ import {
 import { Renderers, useRenderers } from "./useRenderers";
 
 export type ResultsDisplayMode =
-  | { type: "finite" }
-  | { type: "infinite" }
-  | { type: "virtual" };
+  { type: "finite" } | { type: "infinite" } | { type: "virtual" };
 
 type ResultsProps<E> = {
   searchQuery: Array<SearchToken>;
@@ -73,9 +71,7 @@ type ResultsProps<E> = {
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedSort: setSortResultsType;
   setIdPreview?:
-    | React.Dispatch<React.SetStateAction<string>>
-    | undefined
-    | null;
+    React.Dispatch<React.SetStateAction<string>> | undefined | null;
   /** id of the result currently shown in the detail panel, so its card can stay
    *  marked as long as that detail is open instead of only while hovered */
   idPreview?: string;
@@ -426,19 +422,24 @@ export function InfiniteResults<E>({
                             --openk9-embeddable-search--spacing-sm,
                             8px
                           );
-                          transition: border-color 120ms ease,
+                          transition:
+                            border-color 120ms ease,
                             box-shadow 120ms ease;
                           /* the accent stripe marks the card whose detail is
                              open, so it has to survive the pointer leaving.
                              Drawn as an inset shadow rather than a wider
                              border-left so it never reflows the card, and so it
                              follows the corner radius */
-                          border-color: ${isPreviewed
-                            ? "var(--openk9-embeddable-search--border-color, #ced4da)"
-                            : "transparent"};
-                          box-shadow: ${isPreviewed
-                            ? "inset 3px 0 0 var(--openk9-embeddable-search--accent-color, #d6012e), 0 2px 8px rgba(0, 0, 0, 0.06)"
-                            : "none"};
+                          border-color: ${
+                            isPreviewed
+                              ? "var(--openk9-embeddable-search--border-color, #ced4da)"
+                              : "transparent"
+                          };
+                          box-shadow: ${
+                            isPreviewed
+                              ? "inset 3px 0 0 var(--openk9-embeddable-search--accent-color, #d6012e), 0 2px 8px rgba(0, 0, 0, 0.06)"
+                              : "none"
+                          };
                           &:hover {
                             border-color: var(
                               --openk9-embeddable-search--border-color,

@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import isEqualWith from "lodash/isEqualWith";
@@ -108,7 +108,9 @@ function CollapsableFilterCategoryLocal({
             padding: var(--openk9-embeddable-search--spacing-sm, 8px)
               var(--openk9-embeddable-search--spacing-sm, 8px);
             cursor: pointer;
-            transition: transform 120ms ease, background-color 120ms ease,
+            transition:
+              transform 120ms ease,
+              background-color 120ms ease,
               border-color 120ms ease;
             &:hover {
               background: rgba(0, 0, 0, 0.03);
@@ -379,7 +381,9 @@ export default function AllFilters({
             );
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: background 0.2s, box-shadow 0.2s;
+            transition:
+              background 0.2s,
+              box-shadow 0.2s;
             margin-top: var(--openk9-embeddable-search--spacing-lg, 16px);
             &:hover {
               background: var(
@@ -402,4 +406,3 @@ export default function AllFilters({
     </>
   );
 }
-

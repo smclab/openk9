@@ -1,32 +1,27 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { queryStringMapType } from "../embeddable/entry";
 import type { SearchToken } from "./client";
 
 export type QueryKey =
-  | "search"
-  | "text"
-  | "textOnChange"
-  | "selection"
-  | "filters";
+  "search" | "text" | "textOnChange" | "selection" | "filters";
 
 export type QueryStringValuesSpec =
-  | QueryKey[]
-  | Partial<Record<QueryKey, boolean>>;
+  QueryKey[] | Partial<Record<QueryKey, boolean>>;
 
 export type QueryValueShape = Partial<
   Record<QueryKey, unknown> & {
@@ -72,7 +67,9 @@ type QueryStringMapKey = (typeof QUERY_STRING_MAP_KEYS)[number];
 function mappedKeysOf(
   queryStringMap: NonNullable<queryStringMapType>,
 ): QueryStringMapKey[] {
-  return QUERY_STRING_MAP_KEYS.filter((key) => queryStringMap[key] !== undefined);
+  return QUERY_STRING_MAP_KEYS.filter(
+    (key) => queryStringMap[key] !== undefined,
+  );
 }
 
 const ALL_QUERY_KEYS: QueryKey[] = [
@@ -389,4 +386,3 @@ export function deserializeFiltersGrouped(serialized: unknown): SearchToken[] {
     isFilter: true,
   })) as SearchToken[];
 }
-

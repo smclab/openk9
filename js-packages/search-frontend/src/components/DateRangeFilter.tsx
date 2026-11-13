@@ -222,10 +222,10 @@ export function DateRangeFilter({
     startDate && endDate
       ? `${fmt(startDate)} – ${fmt(endDate)}`
       : startDate
-      ? `${t("from-date") || "Dal"} ${fmt(startDate)}`
-      : endDate
-      ? `${t("to-date") || "Al"} ${fmt(endDate)}`
-      : t("filter-by-date") || "Filtra per data";
+        ? `${t("from-date") || "Dal"} ${fmt(startDate)}`
+        : endDate
+          ? `${t("to-date") || "Al"} ${fmt(endDate)}`
+          : t("filter-by-date") || "Filtra per data";
 
   const phrases = {
     chooseAvailableStartDate: (date: string) =>
@@ -310,7 +310,9 @@ export function DateRangeFilter({
           border: 1px solid ${hasSelection ? RED_TINT : BORDER};
           background: ${hasSelection ? RED_SOFT : "#fff"};
           color: ${hasSelection ? RED : INK};
-          transition: border-color 120ms ease, background 120ms ease,
+          transition:
+            border-color 120ms ease,
+            background 120ms ease,
             color 120ms ease;
           &:hover {
             border-color: ${RED};
@@ -534,9 +536,9 @@ export function DateRangeFilter({
               const [presetStart, presetEnd] = preset.range();
               const active = Boolean(
                 startDate &&
-                  endDate &&
-                  isSameDay(startDate, presetStart) &&
-                  isSameDay(endDate, presetEnd),
+                endDate &&
+                isSameDay(startDate, presetStart) &&
+                isSameDay(endDate, presetEnd),
               );
               return (
                 <button
@@ -563,7 +565,9 @@ export function DateRangeFilter({
                       600
                     );
                     cursor: pointer;
-                    transition: background 120ms ease, color 120ms ease,
+                    transition:
+                      background 120ms ease,
+                      color 120ms ease,
                       border-color 120ms ease;
                     &:hover {
                       background: ${active ? RED : RED_SOFT};

@@ -67,8 +67,8 @@ export function ChangeLanguage({
     return found
       ? found
       : options[0]
-      ? options[0]
-      : { value: "", name: "Select Language", icon: <GloboSvg /> };
+        ? options[0]
+        : { value: "", name: "Select Language", icon: <GloboSvg /> };
   }, [options, activeLanguage]);
 
   const handleChange = (opt: Option | null) => {
@@ -110,8 +110,8 @@ export function ChangeLanguage({
       backgroundColor: state.isSelected
         ? ACCENT
         : state.isFocused
-        ? `color-mix(in srgb, ${ACCENT} 10%, #fff)`
-        : "white",
+          ? `color-mix(in srgb, ${ACCENT} 10%, #fff)`
+          : "white",
       color: state.isSelected
         ? "white"
         : "var(--openk9-embeddable-search--strong-text-color, #1e1c21)",

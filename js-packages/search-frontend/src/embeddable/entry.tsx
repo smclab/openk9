@@ -368,9 +368,7 @@ export type ExternalSearchTokenEntry = {
 };
 
 export type ExternalSearchTokens =
-  | Array<ExternalSearchTokenEntry>
-  | null
-  | undefined;
+  Array<ExternalSearchTokenEntry> | null | undefined;
 
 export type TabsCallbackProps = ({
   callbackSelectTab,
@@ -584,9 +582,7 @@ export type Configuration = {
   sort: Array<RestApi.SortField>;
   showSyntax: boolean;
   styledSkeletonResults:
-    | { background?: string | undefined | null }
-    | null
-    | undefined;
+    { background?: string | undefined | null } | null | undefined;
   tenant: string | null;
   token: string | null;
   useQueryAnalysis: boolean;

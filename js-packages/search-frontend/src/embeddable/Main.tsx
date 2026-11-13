@@ -883,12 +883,16 @@ export function Main({
               );
               border: 1px solid
                 var(--openk9-embeddable-search--primary-color, #c0272b);
-              background: ${showCopilot
-                ? "var(--openk9-embeddable-search--primary-color, #c0272b)"
-                : "transparent"};
-              color: ${showCopilot
-                ? "#ffffff"
-                : "var(--openk9-embeddable-search--primary-color, #c0272b)"};
+              background: ${
+                showCopilot
+                  ? "var(--openk9-embeddable-search--primary-color, #c0272b)"
+                  : "transparent"
+              };
+              color: ${
+                showCopilot
+                  ? "#ffffff"
+                  : "var(--openk9-embeddable-search--primary-color, #c0272b)"
+              };
               font-weight: var(
                 --openk9-embeddable-search--font-weight-semibold,
                 600
@@ -896,11 +900,15 @@ export function Main({
               font-size: var(--openk9-embeddable-search--font-size-sm, 14px);
               line-height: var(--openk9-embeddable-search--line-height-none, 1);
               cursor: pointer;
-              transition: background 140ms ease, color 140ms ease,
+              transition:
+                background 140ms ease,
+                color 140ms ease,
                 box-shadow 140ms ease;
-              box-shadow: ${showCopilot
-                ? "0 2px 8px color-mix(in srgb, var(--openk9-embeddable-search--primary-color, #c22525) 35%, transparent)"
-                : "none"};
+              box-shadow: ${
+                showCopilot
+                  ? "0 2px 8px color-mix(in srgb, var(--openk9-embeddable-search--primary-color, #c22525) 35%, transparent)"
+                  : "none"
+              };
               &:hover {
                 background: var(
                   --openk9-embeddable-search--primary-color,
@@ -1515,8 +1523,9 @@ function useSearch({
   const queryAnalysisSearchQuery = useQueryAnalysis(
     {
       searchText: selectionsState.text,
-      tokens: selectionsState.selection.flatMap(({ text, start, end, token }) =>
-        token ? [{ text, start, end, token }] : [],
+      tokens: selectionsState.selection.flatMap(
+        ({ text, start, end, token }) =>
+          token ? [{ text, start, end, token }] : [],
       ),
     },
     Boolean(configuration.useQueryAnalysis),
@@ -1917,8 +1926,8 @@ function useFilters({
   const filterTokens: SearchToken[] = configuration.useFilterConfiguration
     ? [...configuration.filterTokens, ...selectionsState.filters]
     : useQueryStringFilters
-    ? selectionsState.filters
-    : [];
+      ? selectionsState.filters
+      : [];
 
   const setFilterTokens = React.useCallback(
     (filters: SearchToken[]) => {
@@ -2009,9 +2018,7 @@ function useSortResult({
   const sort = configuration.sort;
   const option = sortList?.find((option) => option.isDefault);
   const defaultOption:
-    | { field: string; type: "asc" | "desc" }
-    | null
-    | undefined = {
+    { field: string; type: "asc" | "desc" } | null | undefined = {
     field: option?.field || "",
     type: option?.type as "asc" | "desc",
   };
@@ -2214,7 +2221,7 @@ function calculateSpans(
   const spans: Array<AnalysisResponseEntry> = [
     { text: "", start: 0, end: 0, tokens: [] },
   ];
-  for (let i = 0; i < text.length; ) {
+  for (let i = 0; i < text.length;) {
     const found = analysis?.find(({ start, text }) => {
       return i === start && text !== "";
     });

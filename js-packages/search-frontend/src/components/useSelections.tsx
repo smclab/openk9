@@ -146,7 +146,7 @@ function reducer(
       const size =
         action.pageSize && action.pageSize > 0
           ? action.pageSize
-          : state.range[1] ?? 10;
+          : (state.range[1] ?? 10);
       const nextText = String(action.text ?? "");
       const nextTextOnChange = String(action.textOnchange ?? "");
       return {

@@ -98,7 +98,7 @@ function FilterCategory({
   >();
   const show = Boolean(
     text ||
-      (suggestions.data?.pages.flatMap((page) => page.result).length ?? 0) > 0,
+    (suggestions.data?.pages.flatMap((page) => page.result).length ?? 0) > 0,
   );
 
   if (!show)
@@ -281,9 +281,11 @@ function FilterCategory({
             css={css`
               display: flex;
               flex-direction: ${isUniqueLoadMore ? "row" : "column"};
-              gap: ${isUniqueLoadMore
-                ? "0"
-                : "var(--openk9-embeddable-search--spacing-xs, 4px)"};
+              gap: ${
+                isUniqueLoadMore
+                  ? "0"
+                  : "var(--openk9-embeddable-search--spacing-xs, 4px)"
+              };
               flex-wrap: ${isUniqueLoadMore ? "wrap" : "initial"};
               padding-left: var(--openk9-embeddable-search--spacing-md, 12px);
               @media (max-width: 480px) {
@@ -310,13 +312,15 @@ function FilterCategory({
                           className="form-check"
                           css={css`
                             display: flex;
-                            align-items: ${multiSelect
-                              ? "baseline"
-                              : "stretch"};
+                            align-items: ${
+                              multiSelect ? "baseline" : "stretch"
+                            };
                             width: ${isUniqueLoadMore ? "50%" : "auto"};
-                            margin-bottom: ${isUniqueLoadMore
-                              ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
-                              : "0"};
+                            margin-bottom: ${
+                              isUniqueLoadMore
+                                ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
+                                : "0"
+                            };
                             @media (max-width: 768px) {
                               width: 100%;
                               height: ${isUniqueLoadMore ? "50%" : "auto"};
@@ -367,9 +371,11 @@ function FilterCategory({
                                     4px
                                   );
                                   border: 2px solid #ccc;
-                                  background-color: ${isChecked
-                                    ? "var(--openk9-embeddable-search--secondary-active-color)"
-                                    : "#fff"};
+                                  background-color: ${
+                                    isChecked
+                                      ? "var(--openk9-embeddable-search--secondary-active-color)"
+                                      : "#fff"
+                                  };
                                   background-size: 100%;
                                   background-position: center;
                                   background-repeat: no-repeat;
@@ -669,9 +675,11 @@ function SingleSelect({
               50%
             ) !important;
             border: 2px solid #ccc !important;
-            background-color: ${isChecked
-              ? "var(--openk9-embeddable-search--secondary-active-color) !important"
-              : "#fff !important"};
+            background-color: ${
+              isChecked
+                ? "var(--openk9-embeddable-search--secondary-active-color) !important"
+                : "#fff !important"
+            };
             cursor: pointer !important;
           `}
           onMouseOver={(event) => {

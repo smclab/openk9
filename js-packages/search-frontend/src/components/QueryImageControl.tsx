@@ -138,8 +138,8 @@ export function QueryImagePreview({ returnFocusRef }: QueryImagePreviewProps) {
     attachment?.status === "pending"
       ? t("preparing-image")
       : attachment?.status === "ready"
-      ? t("attached-image", { filename: attachment.filename })
-      : "";
+        ? t("attached-image", { filename: attachment.filename })
+        : "";
 
   const showThumbnail =
     attachment !== null &&
@@ -168,13 +168,17 @@ export function QueryImagePreview({ returnFocusRef }: QueryImagePreviewProps) {
             margin-top: var(--openk9-embeddable-search--spacing-sm, 8px);
             padding: 4px 4px 4px 6px;
             border: 1px solid
-              ${attachment.status === "error"
-                ? "var(--openk9-embeddable-search--error-color, #b3261e)"
-                : "var(--openk9-embeddable-search--border-color, #ced4da)"};
+              ${
+                attachment.status === "error"
+                  ? "var(--openk9-embeddable-search--error-color, #b3261e)"
+                  : "var(--openk9-embeddable-search--border-color, #ced4da)"
+              };
             border-radius: var(--openk9-embeddable-search--radius-sm, 8px);
-            background-color: ${attachment.status === "error"
-              ? "var(--openk9-embeddable-search--error-background-color, #fdecea)"
-              : "var(--openk9-embeddable-search--primary-background-color, #ffffff)"};
+            background-color: ${
+              attachment.status === "error"
+                ? "var(--openk9-embeddable-search--error-background-color, #fdecea)"
+                : "var(--openk9-embeddable-search--primary-background-color, #ffffff)"
+            };
           `}
         >
           {showThumbnail ? (
@@ -271,9 +275,11 @@ export function QueryImagePreview({ returnFocusRef }: QueryImagePreviewProps) {
               }
               css={css`
                 flex-shrink: 0;
-                color: ${attachment.status === "ready"
-                  ? "var(--openk9-embeddable-search--success-color, #16a34a)"
-                  : "var(--openk9-embeddable-search--error-color, #b3261e)"};
+                color: ${
+                  attachment.status === "ready"
+                    ? "var(--openk9-embeddable-search--success-color, #16a34a)"
+                    : "var(--openk9-embeddable-search--error-color, #b3261e)"
+                };
               `}
             />
           )}

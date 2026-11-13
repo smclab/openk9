@@ -51,8 +51,7 @@ export type FiltersMobileProps<E> = {
   isVisibleFilters: boolean;
   tabs: Array<Tab>;
   setIsVisibleFilters:
-    | React.Dispatch<React.SetStateAction<boolean>>
-    | undefined;
+    React.Dispatch<React.SetStateAction<boolean>> | undefined;
   onSelectedTabIndexChange(index: number): void;
   selectedTabIndex: number;
   viewTabs?: boolean;
@@ -515,9 +514,11 @@ function ViewAllTabs({
                         50%
                       );
                       border: 2px solid #ccc;
-                      background-color: ${selectedTabIndex === index
-                        ? "var(--openk9-embeddable-search--secondary-active-color) "
-                        : "var(--openk9-embeddable-search--primary-background-color, #fff) "};
+                      background-color: ${
+                        selectedTabIndex === index
+                          ? "var(--openk9-embeddable-search--secondary-active-color) "
+                          : "var(--openk9-embeddable-search--primary-background-color, #fff) "
+                      };
                       cursor: pointer;
                     `}
                   />

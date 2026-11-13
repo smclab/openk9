@@ -46,9 +46,7 @@ type ResultProps<E> = {
   viewButton?: boolean;
   setViewButtonDetail?: React.Dispatch<React.SetStateAction<boolean>>;
   setIdPreview?:
-    | React.Dispatch<React.SetStateAction<string>>
-    | undefined
-    | null;
+    React.Dispatch<React.SetStateAction<string>> | undefined | null;
 };
 
 function Result<E>(props: ResultProps<E>) {
@@ -233,9 +231,7 @@ function CreateButton<E>({
   setDetailMobile(result: GenericResultItem<E> | null): void;
   result: GenericResultItem<E>;
   setIdPreview?:
-    | React.Dispatch<React.SetStateAction<string>>
-    | undefined
-    | null;
+    React.Dispatch<React.SetStateAction<string>> | undefined | null;
 }) {
   const { t } = useTranslation();
   return (

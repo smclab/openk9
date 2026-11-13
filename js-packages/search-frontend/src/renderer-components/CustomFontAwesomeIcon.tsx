@@ -13,21 +13,21 @@ export function CustomFontAwesomeIcon({
 }: {
   result: GenericResultItem;
 }) {
-	const documentTypesSet : string[] = result.source.documentTypes;
+  const documentTypesSet: string[] = result.source.documentTypes;
   if (documentTypesSet.includes("forum")) {
     return <FontAwesomeIcon icon={faForumbee} />;
   }
   if (documentTypesSet.includes("calendar")) {
-	  return <FontAwesomeIcon icon={faCalendar} />;
-	}
+    return <FontAwesomeIcon icon={faCalendar} />;
+  }
   if (documentTypesSet.includes("user")) {
- 	  return <FontAwesomeIcon icon={faUser} />;
- 	}
-   if (documentTypesSet.includes("site")) {
-  	  return <FontAwesomeIcon icon={faSitemap} />;
-  	}
-   if (documentTypesSet.includes("wiki")) {
-   	  return <FontAwesomeIcon icon={faWikipediaW} />;
-   	}
+    return <FontAwesomeIcon icon={faUser} />;
+  }
+  if (documentTypesSet.includes("site")) {
+    return <FontAwesomeIcon icon={faSitemap} />;
+  }
+  if (documentTypesSet.includes("wiki")) {
+    return <FontAwesomeIcon icon={faWikipediaW} />;
+  }
   return <FontAwesomeIcon icon={faFileAlt} />;
 }

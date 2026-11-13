@@ -37,8 +37,7 @@ export type FiltersMobileProps<E> = {
   onConfigurationChange: ConfigurationUpdateFunction;
   isVisibleFilters: boolean;
   setIsVisibleFilters:
-    | React.Dispatch<React.SetStateAction<boolean>>
-    | undefined;
+    React.Dispatch<React.SetStateAction<boolean>> | undefined;
   language: string;
   sortAfterKey: string;
   isDynamicElement: WhoIsDynamic[];
@@ -46,9 +45,7 @@ export type FiltersMobileProps<E> = {
   numberResultOfFilters: number | null | undefined;
   memoryResults: boolean;
   filtersMobileBasicCallback?:
-    | (() => void | null | undefined)
-    | null
-    | undefined;
+    (() => void | null | undefined) | null | undefined;
 };
 function FiltersMobile<E>({
   dynamicFilters,

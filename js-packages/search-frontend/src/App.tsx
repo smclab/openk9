@@ -1050,20 +1050,22 @@ function AppInner() {
           display: grid;
           gap: var(--openk9-embeddable-search--spacing-xl, 20px);
           padding: var(--openk9-embeddable-search--spacing-xl, 20px);
-          grid-template-columns: ${view === "ai"
-            ? "1fr 440px"
-            : "300px 1fr 440px"};
+          grid-template-columns: ${
+            view === "ai" ? "1fr 440px" : "300px 1fr 440px"
+          };
           grid-template-rows: auto 1fr;
-          grid-template-areas: ${view === "ai"
-            ? '"dockbar dockbar" "dialog detail"'
-            : '"dockbar dockbar dockbar" "filters dialog detail"'};
+          grid-template-areas: ${
+            view === "ai"
+              ? '"dockbar dockbar" "dialog detail"'
+              : '"dockbar dockbar dockbar" "filters dialog detail"'
+          };
 
           /* tablet: restringo filtri e preview per non schiacciare i
              risultati (core della pagina) prima del layout a colonna */
           @media (max-width: 1280px) {
-            grid-template-columns: ${view === "ai"
-              ? "1fr 340px"
-              : "260px 1fr 340px"};
+            grid-template-columns: ${
+              view === "ai" ? "1fr 340px" : "260px 1fr 340px"
+            };
           }
 
           @media (max-width: 1024px) {
@@ -2121,8 +2123,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                                       16px
                                     );
                                   cursor: pointer;
-                                  box-shadow: 0 2px 10px -6px rgba(0, 0, 0, 0.15);
-                                  transition: transform 140ms ease,
+                                  box-shadow: 0 2px 10px -6px
+                                    rgba(0, 0, 0, 0.15);
+                                  transition:
+                                    transform 140ms ease,
                                     border-color 140ms ease,
                                     box-shadow 140ms ease;
                                   &:hover:not(:disabled) {
@@ -2132,8 +2136,12 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                                       ${prompt.accent} 45%,
                                       ${BORDER}
                                     );
-                                    box-shadow: 0 12px 26px -12px color-mix(in
-                                          srgb, ${prompt.accent} 55%, transparent);
+                                    box-shadow: 0 12px 26px -12px
+                                      color-mix(
+                                        in srgb,
+                                        ${prompt.accent} 55%,
+                                        transparent
+                                      );
                                   }
                                   &:disabled {
                                     opacity: 0.5;
@@ -2401,8 +2409,11 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                     --openk9-embeddable-search--primary-background-color,
                     #fff
                   );
-                  box-shadow: 0 8px 24px -12px color-mix(in srgb, ${RED} 35%, transparent);
-                  transition: border-color 120ms ease, box-shadow 120ms ease;
+                  box-shadow: 0 8px 24px -12px
+                    color-mix(in srgb, ${RED} 35%, transparent);
+                  transition:
+                    border-color 120ms ease,
+                    box-shadow 120ms ease;
                   &:focus-within {
                     border-color: ${RED};
                     box-shadow: 0 0 0 3px

@@ -76,8 +76,7 @@ export function CalendarMobile({
   calendarDate: SearchDateRange;
   isVisibleCalendar: boolean;
   setIsVisibleCalendar:
-    | React.Dispatch<React.SetStateAction<boolean>>
-    | undefined;
+    React.Dispatch<React.SetStateAction<boolean>> | undefined;
   // La configurazione `calendarMobile` e' opzionale: queste prop possono mancare,
   // come gia' avviene per `setIsVisibleCalendar`.
   startDate: Date | null | undefined;
@@ -86,8 +85,7 @@ export function CalendarMobile({
   setStartDate: React.Dispatch<React.SetStateAction<Date | null>> | undefined;
   setEndDate: React.Dispatch<React.SetStateAction<Date | null>> | undefined;
   setFocusedInput:
-    | React.Dispatch<React.SetStateAction<FocusedInput | null>>
-    | undefined;
+    React.Dispatch<React.SetStateAction<FocusedInput | null>> | undefined;
   activeLanguage?: string;
   isCLickReset: boolean;
   setIsCLickReset: React.Dispatch<React.SetStateAction<boolean>> | undefined;
@@ -353,13 +351,17 @@ export function CalendarMobile({
               600
             );
             color: ${startDate && isValid(startDate) ? "#c0272b" : "#a1a1aa"};
-            background: ${startDate && isValid(startDate)
-              ? "rgba(214, 1, 46, 0.08)"
-              : "#f4f4f5"};
+            background: ${
+              startDate && isValid(startDate)
+                ? "rgba(214, 1, 46, 0.08)"
+                : "#f4f4f5"
+            };
             border: 1px solid
-              ${startDate && isValid(startDate)
-                ? "rgba(214, 1, 46, 0.2)"
-                : "#e4e4e7"};
+              ${
+                startDate && isValid(startDate)
+                  ? "rgba(214, 1, 46, 0.2)"
+                  : "#e4e4e7"
+              };
             white-space: nowrap;
           `}
         >
@@ -388,13 +390,15 @@ export function CalendarMobile({
               600
             );
             color: ${endDate && isValid(endDate) ? "#c0272b" : "#a1a1aa"};
-            background: ${endDate && isValid(endDate)
-              ? "rgba(214, 1, 46, 0.08)"
-              : "#f4f4f5"};
+            background: ${
+              endDate && isValid(endDate) ? "rgba(214, 1, 46, 0.08)" : "#f4f4f5"
+            };
             border: 1px solid
-              ${endDate && isValid(endDate)
-                ? "rgba(214, 1, 46, 0.2)"
-                : "#e4e4e7"};
+              ${
+                endDate && isValid(endDate)
+                  ? "rgba(214, 1, 46, 0.2)"
+                  : "#e4e4e7"
+              };
             white-space: nowrap;
           `}
         >

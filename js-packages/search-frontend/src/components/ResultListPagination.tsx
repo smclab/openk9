@@ -45,9 +45,7 @@ import {
 } from "./useRange";
 
 export type ResultsDisplayMode =
-  | { type: "finite" }
-  | { type: "infinite" }
-  | { type: "virtual" };
+  { type: "finite" } | { type: "infinite" } | { type: "virtual" };
 
 type ResultsProps<E> = {
   state: SelectionsState;

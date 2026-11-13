@@ -787,16 +787,14 @@ export type GenericResultItemFields<E> = DeepKeys<
 
 type PathImpl<T, Key extends keyof T> = Key extends string
   ? T[Key] extends Record<string, unknown>
-    ?
-        | `${Key}.${PathImpl<T[Key], Exclude<keyof T[Key], keyof unknown[]>> &
-            string}`
-        | `${Key}.${Exclude<keyof T[Key], keyof unknown[]> & string}`
+    ? | `${Key}.${PathImpl<T[Key], Exclude<keyof T[Key], keyof unknown[]>> &
+          string}`
+      | `${Key}.${Exclude<keyof T[Key], keyof unknown[]> & string}`
     : never
   : never;
 type PathImpl2<T> = PathImpl<T, keyof T> | keyof T;
-type DeepKeys<T> = PathImpl2<T> extends string | keyof T
-  ? PathImpl2<T>
-  : keyof T;
+type DeepKeys<T> =
+  PathImpl2<T> extends string | keyof T ? PathImpl2<T> : keyof T;
 type Without<T, K> = Pick<T, Exclude<keyof T, K>>;
 
 export type Template<E> = {

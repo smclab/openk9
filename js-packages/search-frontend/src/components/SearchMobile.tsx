@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { useTranslation } from "react-i18next";
 import { SearchDateRange } from "../embeddable/Main";
 import {
@@ -554,12 +554,16 @@ export function TokenSelectMobile({
     :hover {
     }
     cursor: pointer;
-    border-left: ${isSelected
-      ? `8px solid var(--openk9-embeddable-search--active-color)`
-      : "none"};
-    padding-left: ${isSelected
-      ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
-      : "var(--openk9-embeddable-search--spacing-lg, 16px)"};
+    border-left: ${
+      isSelected
+        ? `8px solid var(--openk9-embeddable-search--active-color)`
+        : "none"
+    };
+    padding-left: ${
+      isSelected
+        ? "var(--openk9-embeddable-search--spacing-sm, 8px)"
+        : "var(--openk9-embeddable-search--spacing-lg, 16px)"
+    };
   `;
   const deseleziona = (isSelected: boolean) => css`
     padding: var(--openk9-embeddable-search--spacing-sm, 8px)
@@ -655,9 +659,9 @@ export function TokenSelectMobile({
                           --openk9-embeddable-search--spacing-xs,
                           4px
                         );
-                        border: ${index !== 0
-                          ? "0.5px solid #E4E4E7;"
-                          : "none"};
+                        border: ${
+                          index !== 0 ? "0.5px solid #E4E4E7;" : "none"
+                        };
                       `}
                     ></div>
                     <strong
@@ -683,10 +687,7 @@ export function TokenSelectMobile({
   );
 }
 type Status =
-  | "can-select"
-  | "has-selected"
-  | "auto-selected"
-  | "not-interactive";
+  "can-select" | "has-selected" | "auto-selected" | "not-interactive";
 const statusStyles: Record<Status, ReturnType<typeof css>> = {
   "can-select": css`
     color: var(--openk9-embeddable-search--primary-color);
@@ -847,4 +848,3 @@ function setValueSearch({
     });
   return { setText, search, clearSearch };
 }
-

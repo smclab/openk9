@@ -255,9 +255,11 @@ export function CreateLabel({
           --openk9-embeddable-search--primary-background-color,
           #ffffff
         );
-        border: ${hasBorder
-          ? "1px solid  var(--openk9-embeddable-search--secondary-active-color);"
-          : ""};
+        border: ${
+          hasBorder
+            ? "1px solid  var(--openk9-embeddable-search--secondary-active-color);"
+            : ""
+        };
         border-radius: var(--openk9-embeddable-search--radius-xl, 20px);
         white-space: nowrap;
         cursor: pointer;

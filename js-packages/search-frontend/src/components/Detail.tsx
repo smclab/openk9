@@ -1,24 +1,29 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
 import { css } from "styled-components";
 import { fadingSeparator } from "./fadingSeparator";
 import { WebDetail } from "../renderers/openk9/web/WebDetail";
-import { GenericResultItem, DetailRendererProps, SetDetailMobile, asResultItem } from "./client";
+import {
+  GenericResultItem,
+  DetailRendererProps,
+  SetDetailMobile,
+  asResultItem,
+} from "./client";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
 import type { PdfResultItem } from "../renderers/openk9/pdf/PdfItem";
@@ -43,7 +48,9 @@ export type DetailProps<E> = {
 function Detail<E>(props: DetailProps<E>) {
   // Il dispatch sui renderer avviene per nome di document type a runtime: in
   // questo punto il risultato si tratta come generico, non come `E`.
-  const result = props.result as GenericResultItem<Record<string, unknown>> | null;
+  const result = props.result as GenericResultItem<
+    Record<string, unknown>
+  > | null;
   const setDetailMobile = props.setDetailMobile;
   const actionOnCLose = props.actionOnCLose;
   const renderers = useRenderers();
@@ -216,7 +223,8 @@ function Detail<E>(props: DetailProps<E>) {
               border-radius: var(--openk9-embeddable-search--radius-xs, 4px);
               cursor: pointer;
               &:focus-visible {
-                box-shadow: 0 0 0 0.125rem
+                box-shadow:
+                  0 0 0 0.125rem
                     var(
                       --openk9-embeddable-search--primary-background-color,
                       #fff
@@ -290,7 +298,9 @@ function Detail<E>(props: DetailProps<E>) {
             }
             if (result.source.documentTypes.includes("document")) {
               return (
-                <DocumentDetail result={asResultItem<DocumentResultItem>(result)} />
+                <DocumentDetail
+                  result={asResultItem<DocumentResultItem>(result)}
+                />
               );
             }
             if (result.source.documentTypes.includes("web")) {
@@ -319,4 +329,3 @@ function Detail<E>(props: DetailProps<E>) {
   );
 }
 export const DetailMemo = React.memo(Detail);
-

@@ -38,16 +38,23 @@ const tabItemStyle = (isSelected: boolean) => css`
   padding: var(--openk9-embeddable-search--spacing-md, 12px)
     var(--openk9-embeddable-search--spacing-sm, 8px);
   font-size: var(--openk9-embeddable-search--font-size-md, 16px);
-  font-weight: ${isSelected
-    ? "var(--openk9-embeddable-search--font-weight-semibold, 600)"
-    : "var(--openk9-embeddable-search--font-weight-regular, 400)"};
-  color: ${isSelected
-    ? "var(--openk9-embeddable-search--primary-color, #c22525)"
-    : "var(--openk9-embeddable-search--secondary-text-color, #3e4244)"};
-  box-shadow: inset 0 -2px 0 ${isSelected ? "var(--openk9-embeddable-search--accent-color, #d6012e)" : "transparent"};
+  font-weight: ${
+    isSelected
+      ? "var(--openk9-embeddable-search--font-weight-semibold, 600)"
+      : "var(--openk9-embeddable-search--font-weight-regular, 400)"
+  };
+  color: ${
+    isSelected
+      ? "var(--openk9-embeddable-search--primary-color, #c22525)"
+      : "var(--openk9-embeddable-search--secondary-text-color, #3e4244)"
+  };
+  box-shadow: inset 0 -2px 0
+    ${isSelected ? "var(--openk9-embeddable-search--accent-color, #d6012e)" : "transparent"};
   cursor: ${isSelected ? "default" : "pointer"};
   user-select: none;
-  transition: color 120ms ease, box-shadow 120ms ease;
+  transition:
+    color 120ms ease,
+    box-shadow 120ms ease;
   /* uppercase only the first letter, so tenant labels that carry an internal
      capital (SharePoint) keep it */
   ::first-letter {
@@ -55,7 +62,8 @@ const tabItemStyle = (isSelected: boolean) => css`
   }
   &:hover {
     color: var(--openk9-embeddable-search--primary-color, #c22525);
-    box-shadow: inset 0 -2px 0 ${isSelected ? "var(--openk9-embeddable-search--accent-color, #d6012e)" : "var(--openk9-embeddable-search--border-color, #ced4da)"};
+    box-shadow: inset 0 -2px 0
+      ${isSelected ? "var(--openk9-embeddable-search--accent-color, #d6012e)" : "var(--openk9-embeddable-search--border-color, #ced4da)"};
   }
 `;
 

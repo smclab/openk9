@@ -489,9 +489,11 @@ function FiltersHorizontal({
                           css={css`
                             overflow: hidden;
                             text-overflow: ellipsis;
-                            color: ${checked
-                              ? "var(--openk9-embeddable-search--accent-color, #d6012e)"
-                              : "black"};
+                            color: ${
+                              checked
+                                ? "var(--openk9-embeddable-search--accent-color, #d6012e)"
+                                : "black"
+                            };
                             display: flex;
                             align-items: flex-start;
                             @media (max-width: 480px) {
@@ -533,9 +535,11 @@ function FiltersHorizontal({
                                 4px
                               );
                               border: 2px solid #ccc;
-                              background-color: ${checked
-                                ? "var(--openk9-embeddable-search--secondary-active-color)"
-                                : "var(--openk9-embeddable-search--primary-background-color, #fff)"};
+                              background-color: ${
+                                checked
+                                  ? "var(--openk9-embeddable-search--secondary-active-color)"
+                                  : "var(--openk9-embeddable-search--primary-background-color, #fff)"
+                              };
                               background-size: 100%;
                               background-position: center;
                               background-repeat: no-repeat;
