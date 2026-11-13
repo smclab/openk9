@@ -363,6 +363,10 @@ export function OpenK9Client({
           "Content-Type": "application/json",
         },
       });
+      // an error body cached as a page would crash the result list instead of showing Retry
+      if (!response.ok) {
+        throw new Error();
+      }
       const data = await response.json();
       return data;
     },

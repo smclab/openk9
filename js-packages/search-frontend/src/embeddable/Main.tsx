@@ -270,6 +270,17 @@ export function Main({
     languages.isLoading ||
     isLoadingTab;
 
+  // a widget in error tries again when the search changes; by content, since
+  // searchQuery gets a new array on renders that do not change the search
+  const searchKey = React.useMemo(
+    () => JSON.stringify(searchQuery),
+    [searchQuery],
+  );
+  const renderPortal = (
+    node: React.ReactNode,
+    container: Element | string | null,
+  ) => renderWidget(node, container, searchKey);
+
   return (
     <React.Fragment>
       {renderPortal(
@@ -1320,12 +1331,10 @@ function useSearch({
   selectionsState: SelectionsState;
   selectionsDispatch: React.Dispatch<SelectionsAction>;
   retrieveType?: string;
-  externalSearchTokens?:
-    | Array<{
-        kind: "tabs" | "search" | "filters";
-        tokens: SearchToken[];
-      }>
-    | null;
+  externalSearchTokens?: Array<{
+    kind: "tabs" | "search" | "filters";
+    tokens: SearchToken[];
+  }> | null;
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
@@ -1471,7 +1480,8 @@ function useSearch({
     return map;
   }, [stableExternalSearchTokens]);
 
-  const effectiveTabTokens = externalOverrides.tabs ?? tabTokens?.tabToken ?? [];
+  const effectiveTabTokens =
+    externalOverrides.tabs ?? tabTokens?.tabToken ?? [];
   const effectiveFilterTokens = externalOverrides.filters ?? newTokenFilter;
   const effectiveSearchTokens = externalOverrides.search ?? newSearch;
 
@@ -1912,9 +1922,10 @@ function useDetails(
   return { detail, setDetail };
 }
 
-function renderPortal(
+function renderWidget(
   node: React.ReactNode,
   container: Element | string | null,
+  resetKey: unknown,
 ): React.ReactNode {
   const element =
     typeof container === "string"
@@ -1924,7 +1935,7 @@ function renderPortal(
   // in the widget's own container instead of the detached React root.
   return element
     ? ReactDOM.createPortal(
-        <SimpleErrorBoundary>
+        <SimpleErrorBoundary resetKey={resetKey}>
           <React.Suspense>{node}</React.Suspense>
         </SimpleErrorBoundary>,
         element,
