@@ -1,3 +1,5 @@
+package ${package};
+
 import io.openk9.connector.api.HealthResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;

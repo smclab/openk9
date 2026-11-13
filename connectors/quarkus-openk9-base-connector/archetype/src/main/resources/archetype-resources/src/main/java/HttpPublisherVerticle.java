@@ -69,8 +69,17 @@ public class HttpPublisherVerticle extends AbstractVerticle {
                     .sendBuffer(body)
                     .onSuccess(res -> {
                         if (res.statusCode() == 406) {
-                            LOGGER.error("HttpPublisherVerticle closed caused by 406 error");
-                            vertx.close();
+                            /*
+                               OpenK9 has no queue for this schedule any more, for example because
+                               it was cancelled: stop only the execution of this schedule.
+                             */
+                            LOGGER.warnf("No queue in OpenK9 for [%s, %s, %s]: stopping it",
+                                    ingestionDTO.getTenantId(),
+                                    ingestionDTO.getDatasourceId(),
+                                    ingestionDTO.getScheduleId());
+                            String cancelAddress =
+                                    CrawlerVerticle.CANCEL_ADDRESS + ingestionDTO.getScheduleId();
+                            vertx.eventBus().publish(cancelAddress, null);
                         } else if (res.statusCode() / 100 != 2) {
                             LOGGER.errorf("IngestionDTO [%s, %s, %s] rejected with HTTP %d: %s",
                                     ingestionDTO.getTenantId(),
