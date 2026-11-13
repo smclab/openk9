@@ -41,6 +41,7 @@ import {
 } from "../../graphql-generated";
 import { formatQueryToBE, formatQueryToFE } from "../../utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import { ReturnUserTabData } from "./gql";
 
 export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
@@ -54,6 +55,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
     fetchPolicy: "network-only",
   });
   const navigate = useNavigate();
+  const goBack = useGoBack("/tabs");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.tabs.edit-tab"),
     body: t("pages.tabs.are-you-sure-you-want-to-edit"),
@@ -83,7 +85,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
             displayType: "success",
             title: t("pages.tabs.tab-created"),
           });
-          navigate(`/tabs`);
+          goBack();
         }
       } catch (err) {
         console.error("Error during onCompleted processing:", err);

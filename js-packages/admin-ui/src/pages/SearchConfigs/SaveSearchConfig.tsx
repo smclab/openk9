@@ -63,6 +63,7 @@ import { useCreateOrUpdateSearchConfigMutation, useSearchConfigQuery } from "../
 import { CombinationTechnique, HybridSearchPipelineDto, NormalizationTechnique } from "../../openapi-generated";
 import { sxControl } from "../../utils/styleConfig";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import { QueryParserConfig } from "./gql";
 
 interface ConfigureHybridSearchInterface {
@@ -115,6 +116,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
   const { t } = useTranslation();
   const { searchConfigId = "new", view } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/search-configs/");
   const [types, setTypes] = React.useState<Array<{ itemLabel: string; itemLabelId: string }>>([]);
   const [activeType, setActiveType] = React.useState<string | undefined | null>();
   const openFormRef = React.useRef<(() => void) | null>(null);
@@ -162,7 +164,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
           content: isNew === "created" ? t("pages.search-configs.created-content") : t("pages.search-configs.updated-content"),
           displayType: "success",
         });
-        navigate(`/search-configs/`, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),

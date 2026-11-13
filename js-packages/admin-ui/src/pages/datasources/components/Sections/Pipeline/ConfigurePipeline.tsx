@@ -33,8 +33,6 @@ interface ConfigurePipelineProps {
   datasourceId: string;
   tabs: tabsType;
   isRecap: boolean;
-  setIsRecap: React.Dispatch<React.SetStateAction<boolean>>;
-  setActiveTab: (value: React.SetStateAction<string>) => void;
 }
 
 const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
@@ -44,8 +42,6 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
   datasourceId,
   tabs,
   isRecap,
-  setIsRecap,
-  setActiveTab,
 }) => {
   const { t } = useTranslation();
   const [showDialog, setShowDialog] = useState(defaultModal);
@@ -150,7 +146,6 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
           color="secondary"
           aria-label={t("common.back")}
           onClick={() => {
-            setActiveTab("datasource");
             const pipelineTab = tabs.find((tab) => tab.value === "datasource");
             if (pipelineTab) {
               navigate(pipelineTab.path);
@@ -163,7 +158,8 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
           variant="contained"
           aria-label={t("common.recap")}
           onClick={() => {
-            setActiveTab("dataIndex");
+            const dataIndexTab = tabs.find((tab) => tab.value === "dataIndex");
+            if (dataIndexTab) navigate(dataIndexTab.path);
           }}
         >
           {t("common.next-step")}

@@ -31,12 +31,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateDocTypeWithTemplateMutation, useDocumentTypeQuery } from "../../graphql-generated";
 import { isValidId, useDocTypesTemplates } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { t } = useTranslation();
   const { documentTypeId = "new", view } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/document-types/");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.document-types.edit-document-type"),
     body: t("pages.document-types.are-you-sure-you-want-to-edit"),
@@ -64,7 +66,7 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
           if (documentTypeId === "new") {
             toast({ displayType: "success", title: t("pages.document-types.document-type-create"), content: "" });
           } else toast({ displayType: "info", title: t("pages.document-types.document-type-update"), content: "" });
-          navigate(`/document-types/`, { replace: true });
+          goBack();
         }
       },
     });

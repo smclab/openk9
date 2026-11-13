@@ -107,9 +107,7 @@ export function Highlights() {
                 label: t("common.edit"),
                 action: (highlight) => {
                   if (highlight?.id)
-                    navigate(`/highlight/${highlight?.id}`, {
-                      replace: true,
-                    });
+                    navigate(`/highlight/${highlight?.id}`);
                 },
               },
               {

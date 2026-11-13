@@ -119,18 +119,14 @@ export function TokenTabs() {
             {
               label: t("common.view"),
               action: (tabs) => {
-                navigate(`/token-tab/${tabs?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/token-tab/${tabs?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (tabs) => {
                 tabs?.id &&
-                  navigate(`/token-tab/${tabs?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/token-tab/${tabs?.id}`);
               },
             },
             {

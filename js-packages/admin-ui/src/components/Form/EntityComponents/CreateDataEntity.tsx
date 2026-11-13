@@ -25,7 +25,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useGoBack } from "../../../utils/useGoBack";
 import { FormFieldReader } from "@components/Form/Form/useForm";
 import { RecapData } from "./RecapData";
 
@@ -194,7 +194,7 @@ function FooterButton({
   pathComeBack: string;
 }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const goBack = useGoBack(pathComeBack);
 
   return (
     <div
@@ -213,7 +213,7 @@ function FooterButton({
         color="primary"
         onClick={() => {
           if (page === 0) {
-            navigate(pathComeBack, { replace: true });
+            goBack();
           } else {
             setPage((p) => p - 1);
           }

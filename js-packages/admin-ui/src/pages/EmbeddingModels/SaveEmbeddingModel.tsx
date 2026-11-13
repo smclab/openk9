@@ -36,6 +36,7 @@ import { useCreateOrUpdateEmbeddingModelMutation, useEmbeddingModelQuery, Vector
 import { Box, Button } from "@mui/material";
 import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 const getProviderOptions = (t: TFunction) => [
@@ -59,6 +60,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
   const VECTOR_DATA_TYPE_OPTIONS = React.useMemo(() => getVectorDataTypeOptions(t), [t]);
   const { embeddingModelsId = "new", view } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/embedding-models/");
   const [isCleaning, setIsCleaning] = React.useState(false);
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.embedding-models.edit-embedding-model"),
@@ -98,7 +100,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
             content: isNew === "created" ? t("pages.embedding-models.created-content") : t("pages.embedding-models.updated-content"),
             displayType: "success",
           });
-          navigate(`/embedding-models/`, { replace: true });
+          goBack();
         } else {
           // The save runs from the recap, which covers the form: leaving it
           // open would hide the per-field messages the backend just returned.

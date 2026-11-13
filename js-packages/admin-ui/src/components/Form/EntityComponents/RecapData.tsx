@@ -18,7 +18,7 @@ import { Stack, Box, Typography, TextField, Paper, Button } from "@mui/material"
 import { FormFieldReader } from "@components/Form/Form/useForm";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useGoBack } from "../../../utils/useGoBack";
 import { ContainerFluid } from "../Containers";
 
 export function RecapData({
@@ -99,7 +99,7 @@ export function RecapData({
   }>;
 }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const goBack = useGoBack(pathBack);
   const allData = Data.map((dat) => dat.content);
   const [viewPreSubmit, setViewPreSubmit] = React.useState(false);
 
@@ -163,7 +163,7 @@ export function RecapData({
               color="primary"
               onClick={() => {
                 if (page === 0) {
-                  navigate(pathBack, { replace: true });
+                  goBack();
                 } else {
                   setPage((p) => p - 1);
                 }

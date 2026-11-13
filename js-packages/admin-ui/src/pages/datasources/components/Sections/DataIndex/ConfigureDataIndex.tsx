@@ -75,8 +75,7 @@ type DataIndexFormsourceProps = {
   isDisabled: boolean;
   isCreated: boolean;
   defaultDataIndex: (data: DefaultDataIndex[]) => void;
-  setActiveTab: (value: React.SetStateAction<string>) => void;
-  setIsRecap: React.Dispatch<React.SetStateAction<boolean>>;
+  goToTab: (tab: string) => void;
   id: string;
   microForm: MicroForm;
   setDataIndexForm: (params: SetDataIndexFormParams) => void;
@@ -114,8 +113,7 @@ export default function DataIndexFormsource({
   id,
   microForm,
   isCreated,
-  setActiveTab,
-  setIsRecap,
+  goToTab,
   defaultDataIndex,
   extraParamsDataIndex,
   changeExtraParamsDataIndex,
@@ -402,7 +400,7 @@ export default function DataIndexFormsource({
           color="secondary"
           aria-label={t("common.back")}
           onClick={() => {
-            setActiveTab("datasource");
+            goToTab("pipeline");
           }}
         >
           {t("common.back")}
@@ -418,7 +416,7 @@ export default function DataIndexFormsource({
                 document.getElementById("name-create-data-index")?.focus();
                 return;
               }
-              setIsRecap(true);
+              goToTab("recap");
             }
           }}
         >

@@ -15,7 +15,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { useTranslation } from "react-i18next";
-import { NavigateFunction } from "react-router-dom";
 import { combineErrorMessages, useModal, useToast } from "@components/Form";
 import {
   useCreateDatasourceConnectionMutation,
@@ -23,16 +22,16 @@ import {
 } from "../../../graphql-generated";
 import { DataSourceQuery } from "../gql";
 
-export const useDatasourceMutations = (datasourceId: string, navigate: NavigateFunction, onRefused: () => void) => {
+export const useDatasourceMutations = (datasourceId: string, goBack: () => void, onRefused: () => void) => {
   const { t } = useTranslation();
   const toast = useToast();
   const modal = useModal();
 
-  const [updateDatasource] = useUpdateDatasourceConnectionMutation({
+  const [updateDatasource, { loading: updating }] = useUpdateDatasourceConnectionMutation({
     refetchQueries: ["DataSources", "EnrichPipelineOptions", DataSourceQuery],
     onCompleted(data) {
       if (data.updateDatasourceConnection?.entity) {
-        navigate("/data-sources");
+        goBack();
         modal({ title: t("pages.datasources.updated-title"), displayType: "success" });
       } else {
         toast({
@@ -48,7 +47,7 @@ export const useDatasourceMutations = (datasourceId: string, navigate: NavigateF
     },
   });
 
-  const [createDatasource] = useCreateDatasourceConnectionMutation({
+  const [createDatasource, { loading: creating }] = useCreateDatasourceConnectionMutation({
     refetchQueries: ["DataSources", "EnrichPipelineOptions", DataSourceQuery],
     onCompleted(data) {
       if (data.createDatasourceConnection?.entity) {
@@ -58,7 +57,7 @@ export const useDatasourceMutations = (datasourceId: string, navigate: NavigateF
           content: isNewDatasource ? t("pages.datasources.created-content") : t("pages.datasources.updated-content"),
           displayType: "success",
         });
-        navigate("/data-sources", { replace: true });
+        goBack();
       } else {
         toast({
           title: t("pages.datasources.error-creating-datasource"),
@@ -80,6 +79,6 @@ export const useDatasourceMutations = (datasourceId: string, navigate: NavigateF
     },
   });
 
-  return { updateDatasource, createDatasource };
+  return { updateDatasource, createDatasource, saving: updating || creating };
 };
 

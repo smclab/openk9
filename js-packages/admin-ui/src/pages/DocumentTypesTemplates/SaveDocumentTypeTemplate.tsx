@@ -51,6 +51,7 @@ import {
   useEnrichPipelinesValueOptionsQuery,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
@@ -60,6 +61,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
   const navigate = useNavigate();
+  const goBack = useGoBack("/document-type-templates/");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.document-type-templates.edit-document-type-template"),
     body: t("pages.document-type-templates.are-you-sure-you-want-to-edit"),
@@ -88,7 +90,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
             content: isNew === "created" ? t("pages.document-type-templates.created-content") : t("pages.document-type-templates.updated-content"),
             displayType: "success",
           });
-          navigate(`/document-type-templates/`, { replace: true });
+          goBack();
         } else {
           toast({
             title: t("common.error"),

@@ -110,18 +110,14 @@ export function Buckets() {
                 label: t("common.view"),
                 action: (bucket) => {
                   if (bucket?.id)
-                    navigate(`/bucket/${bucket?.id}/view`, {
-                      replace: true,
-                    });
+                    navigate(`/bucket/${bucket?.id}/view`);
                 },
               },
               {
                 label: t("common.edit"),
                 action: (bucket) => {
                   if (bucket?.id)
-                    navigate(`/bucket/${bucket?.id}`, {
-                      replace: true,
-                    });
+                    navigate(`/bucket/${bucket?.id}`);
                 },
               },
               {

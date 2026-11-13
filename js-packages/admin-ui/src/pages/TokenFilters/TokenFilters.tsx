@@ -109,18 +109,14 @@ export function TokenFilters() {
             {
               label: t("common.view"),
               action: (tokenFilters) => {
-                navigate(`/token-filter/${tokenFilters?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/token-filter/${tokenFilters?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (tokenFilters) => {
                 tokenFilters?.id &&
-                  navigate(`/token-filter/${tokenFilters?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/token-filter/${tokenFilters?.id}`);
               },
             },
             {

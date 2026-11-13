@@ -73,12 +73,12 @@ const accepted = {
 };
 
 function renderMutations(datasourceId: string, mock: MockedResponse) {
-  const navigate = vi.fn();
+  const goBack = vi.fn();
   const onRefused = vi.fn();
-  const { result } = renderHook(() => useDatasourceMutations(datasourceId, navigate, onRefused), {
+  const { result } = renderHook(() => useDatasourceMutations(datasourceId, goBack, onRefused), {
     wrapper: ({ children }) => <MockedProvider mocks={[mock]}>{children}</MockedProvider>,
   });
-  return { result, navigate, onRefused };
+  return { result, goBack, onRefused };
 }
 
 beforeEach(() => {
@@ -87,7 +87,7 @@ beforeEach(() => {
 
 describe("a datasource the backend refuses", () => {
   test("is not created: the validation message shows and the form stays", async () => {
-    const { result, navigate, onRefused } = renderMutations("new", {
+    const { result, goBack, onRefused } = renderMutations("new", {
       request: { query: CreateDatasourceConnectionDocument, variables: createVariables },
       result: { data: { createDatasourceConnection: refused } },
     });
@@ -100,11 +100,11 @@ describe("a datasource the backend refuses", () => {
       displayType: "error",
     });
     expect(onRefused).toHaveBeenCalledOnce();
-    expect(navigate).not.toHaveBeenCalled();
+    expect(goBack).not.toHaveBeenCalled();
   });
 
   test("is not updated: the validation message shows and the form stays", async () => {
-    const { result, navigate, onRefused } = renderMutations("7", {
+    const { result, goBack, onRefused } = renderMutations("7", {
       request: { query: UpdateDatasourceConnectionDocument, variables: updateVariables },
       result: { data: { updateDatasourceConnection: refused } },
     });
@@ -118,13 +118,13 @@ describe("a datasource the backend refuses", () => {
     });
     expect(modal).not.toHaveBeenCalled();
     expect(onRefused).toHaveBeenCalledOnce();
-    expect(navigate).not.toHaveBeenCalled();
+    expect(goBack).not.toHaveBeenCalled();
   });
 });
 
 describe("a datasource the backend accepts", () => {
-  test("is created: the success shows and the list opens", async () => {
-    const { result, navigate, onRefused } = renderMutations("new", {
+  test("is created: the success shows and the form closes", async () => {
+    const { result, goBack, onRefused } = renderMutations("new", {
       request: { query: CreateDatasourceConnectionDocument, variables: createVariables },
       result: { data: { createDatasourceConnection: accepted } },
     });
@@ -136,12 +136,12 @@ describe("a datasource the backend accepts", () => {
       content: "pages.datasources.created-content",
       displayType: "success",
     });
-    expect(navigate).toHaveBeenCalledWith("/data-sources", { replace: true });
+    expect(goBack).toHaveBeenCalledOnce();
     expect(onRefused).not.toHaveBeenCalled();
   });
 
-  test("is updated: the success shows and the list opens", async () => {
-    const { result, navigate, onRefused } = renderMutations("7", {
+  test("is updated: the success shows and the form closes", async () => {
+    const { result, goBack, onRefused } = renderMutations("7", {
       request: { query: UpdateDatasourceConnectionDocument, variables: updateVariables },
       result: { data: { updateDatasourceConnection: accepted } },
     });
@@ -149,7 +149,7 @@ describe("a datasource the backend accepts", () => {
     await act(() => result.current.updateDatasource({ variables: updateVariables }));
 
     expect(modal).toHaveBeenCalledWith({ title: "pages.datasources.updated-title", displayType: "success" });
-    expect(navigate).toHaveBeenCalledWith("/data-sources");
+    expect(goBack).toHaveBeenCalledOnce();
     expect(onRefused).not.toHaveBeenCalled();
   });
 });

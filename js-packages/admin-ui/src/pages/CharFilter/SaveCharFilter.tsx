@@ -18,6 +18,7 @@ import { Box, Button } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { useGoBack } from "../../utils/useGoBack";
 
 import {
   combineErrorMessages,
@@ -43,6 +44,7 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
   const { t } = useTranslation();
   const { charFilterId = "new", view } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/char-filters/");
   const toast = useToast();
 
   const [page, setPage] = React.useState(0);
@@ -78,7 +80,7 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
           content: t("pages.char-filters.char-filter-saved-successfully"),
           displayType: "success",
         });
-        navigate(`/char-filters/`, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),

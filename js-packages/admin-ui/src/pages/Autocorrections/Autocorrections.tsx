@@ -104,9 +104,7 @@ export default function Autocorrections() {
                   label: t("common.edit"),
                   action: (autocorrection) => {
                     if (autocorrection?.id)
-                      navigate(`/autocorrection/${autocorrection?.id}`, {
-                        replace: true,
-                      });
+                      navigate(`/autocorrection/${autocorrection?.id}`);
                   },
                 },
                 {

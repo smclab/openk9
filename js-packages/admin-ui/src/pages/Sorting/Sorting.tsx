@@ -90,18 +90,14 @@ export function Sortings() {
             {
               label: t("common.view"),
               action: (sorting) => {
-                navigate(`/sorting/${sorting?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/sorting/${sorting?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (sorting) => {
                 sorting?.id &&
-                  navigate(`/sorting/${sorting?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/sorting/${sorting?.id}`);
               },
             },
             {

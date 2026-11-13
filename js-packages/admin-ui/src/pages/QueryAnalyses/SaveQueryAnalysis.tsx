@@ -43,6 +43,7 @@ import {
 } from "../../graphql-generated";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 type ReturnQueryAnalysis = {
@@ -115,6 +116,7 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
   const associationTabs = React.useMemo(() => getAssociationTabs(t), [t]);
   const { queryAnalysisId = "new", view } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/query-analyses/");
   const [selectedAssociationTabs, setSelectedAssociationTabs] = useState<string>(associationTabs[0].id);
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.query-analyses.edit-query-analysis"),
@@ -166,7 +168,7 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
             content: isNew === "created" ? t("pages.query-analyses.created-content") : t("pages.query-analyses.updated-content"),
             displayType: "success",
           });
-          navigate(`/query-analyses/`, { replace: true });
+          goBack();
         } else {
           toast({
             title: t("common.error"),

@@ -120,18 +120,14 @@ export function Tabs() {
             {
               label: t("common.view"),
               action: (tabs) => {
-                navigate(`/tab/${tabs?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/tab/${tabs?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (tabs) => {
                 tabs?.id &&
-                  navigate(`/tab/${tabs?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/tab/${tabs?.id}`);
               },
             },
             {

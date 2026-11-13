@@ -41,6 +41,7 @@ import {
 } from "../../graphql-generated";
 import { makeUseOptionsHook, UseOptionsHook } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import { autocorrectionsConfigOptions, autocorrectionValue } from "./gql";
 
 export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
@@ -55,6 +56,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
     fetchPolicy: "network-only",
   });
   const navigate = useNavigate();
+  const goBack = useGoBack("/autocorrections");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.autocorrections.edit-autocorrection"),
     body: t("pages.autocorrections.are-you-sure-you-want-to-edit"),
@@ -84,7 +86,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
             displayType: "success",
             title: t("pages.autocorrections.autocorrection-created"),
           });
-          navigate(`/autocorrections`);
+          goBack();
         }
       } catch (err) {
         console.error("Error during onCompleted processing:", err);

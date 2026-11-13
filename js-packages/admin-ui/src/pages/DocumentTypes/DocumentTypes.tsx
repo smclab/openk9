@@ -102,27 +102,21 @@ export default function DocumentTypes() {
                 label: t("common.view"),
                 action: (documentType) => {
                   if (documentType?.id)
-                    navigate(`/document-type/${documentType?.id}/view`, {
-                      replace: true,
-                    });
+                    navigate(`/document-type/${documentType?.id}/view`);
                 },
               },
               {
                 label: t("common.edit"),
                 action: (documentType) => {
                   if (documentType?.id)
-                    navigate(`/document-type/${documentType?.id}`, {
-                      replace: true,
-                    });
+                    navigate(`/document-type/${documentType?.id}`);
                 },
               },
               {
                 label: t("pages.document-types.handle-fields"),
                 action: (documentType) => {
                   if (documentType?.id)
-                    navigate(`/sub-document-type/${documentType?.id}`, {
-                      replace: true,
-                    });
+                    navigate(`/sub-document-type/${documentType?.id}`);
                 },
               },
             ]}

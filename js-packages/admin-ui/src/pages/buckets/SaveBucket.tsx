@@ -60,6 +60,7 @@ import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@componen
 import { useOptionSearchConfig, useQueryAnaylyses } from "../../../src/utils/RelationOneToOne";
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import { sxCheckbox, sxControl } from "../../utils/styleConfig";
 
 const getAssociationTabs = (t: TFunction): Array<{ label: string; id: string; tooltip?: string }> => [
@@ -89,6 +90,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
   const isRecap = page === 1;
   const isNew = bucketId === "new";
   const navigate = useNavigate();
+  const goBack = useGoBack("/buckets/");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.buckets.edit-bucket"),
     body: t("pages.buckets.are-you-sure-you-want-to-edit"),
@@ -167,8 +169,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
           content: isNew === "created" ? t("pages.buckets.created-content") : t("pages.buckets.updated-content"),
           displayType: "success",
         });
-        const redirectPath = `/buckets/`;
-        navigate(redirectPath, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),
@@ -429,7 +430,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         isLoading={datasources.isLoading}
                         disabled={isRecap || view === "view"}
                         isRecap={page === 1}
-                        createPath={{ path: "/data-source/new/mode/create/landingTab/0", entity: "data-sources" }}
+                        createPath={{ path: "/data-source/new/mode/create/landingTab/connectors", entity: "data-sources" }}
                         onSelect={({ items, isAdd }) => {
                           const data = form.inputProps("datasourceIds").value;
 

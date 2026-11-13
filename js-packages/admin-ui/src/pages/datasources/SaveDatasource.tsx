@@ -17,10 +17,11 @@
 import { ContainerFluid, ModalConfirm, ModalConfirmRadio, useForm, useToast } from "@components/Form";
 import { useRestClient } from "@components/queryClient";
 import { extractProblemDetails, mapHealthStatus } from "../../utils/health";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap, RecapSingleSection } from "@pages/Recap/SaveRecap";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Provisioning, useDataSourceQuery } from "../../graphql-generated";
 import { Section } from "./components/Sections/Connectors/ConfigureConnectors";
 import DynamicForm, { Field } from "./components/Sections/DataSource/DynamicForm";
@@ -36,16 +37,21 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   const { t } = useTranslation();
   const { datasourceId = "new", mode = "view", landingTabId = "monitoring" } = useParams();
   const [areaEnabled, setAreaEnabled] = useState<Section>("card");
-  const [isRecap, setIsRecap] = React.useState(false);
-  const [activeTab, setActiveTab] = useState(mode === "create" ? "connectors" : landingTabId);
+  // the wizard form lives in memory: a step opened from the URL (reload, old landingTab/0 links) starts over
+  const startedFromFirstStep = React.useRef(false);
+  if (landingTabId === "connectors") startedFromFirstStep.current = true;
+  const activeTab = landingTabId;
+  const isRecap = activeTab === "recap";
   const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
   const [showDialog, setShowDialog] = useState(defaultModal);
   const [modalHeaderButton, setModalHeaderButton] = React.useState<
     { label: string | null | undefined; action(): void } | null | undefined
   >(undefined);
   const navigate = useNavigate();
-  const { updateDatasource, createDatasource } = useDatasourceMutations(datasourceId, navigate, () =>
-    setActiveTab("datasource"),
+  const goBack = useGoBack("/data-sources/");
+  const goToTab = (tab: string) => navigate(`/data-source/${datasourceId}/mode/${mode}/landingTab/${tab}`);
+  const { updateDatasource, createDatasource, saving } = useDatasourceMutations(datasourceId, goBack, () =>
+    goToTab("datasource"),
   );
   const datasourceQuery = useDataSourceQuery({
     variables: { id: datasourceId, searchText: "" },
@@ -116,14 +122,11 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
 
     if (isView) {
       navigate(selectedTab.path);
-      setActiveTab(newValue);
     } else if (newTabIndex === currentTabIndex - 1) {
       navigate(selectedTab.path);
-      setActiveTab(newValue);
     } else if (newTabIndex === currentTabIndex + 1) {
       if (selectedTab && !selectedTab.disabled) {
         navigate(selectedTab.path);
-        setActiveTab(newValue);
       }
     }
   };
@@ -211,7 +214,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           dataIndexId: formValues.dataIndex?.id,
         },
         onError: (error) => {
-          setActiveTab("datasource");
+          goToTab("datasource");
           toast({
             title: t("pages.datasources.error-updating-datasource"),
             content: error.message || t("common.generic-error"),
@@ -245,7 +248,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         },
         refetchQueries: ["DataSources"],
         onError: (error) => {
-          setActiveTab("datasource");
+          goToTab("datasource");
           toast({
             title: t("pages.datasources.error-creating-datasource"),
             content: error.message || t("common.generic-error"),
@@ -254,7 +257,6 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         },
       });
     }
-    setIsRecap(false);
   };
 
   const form = useForm({
@@ -460,6 +462,10 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     ...dataIndexSection,
   ];
 
+  if (mode === "create" && !startedFromFirstStep.current) {
+    return <Navigate to={`/data-source/${datasourceId}/mode/create/landingTab/connectors`} replace />;
+  }
+
   return (
     <ContainerFluid style={{ width: "100%", paddingBottom: "4rem" }}>
       {modalHeaderButton && (
@@ -488,7 +494,6 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         landingTabId={landingTabId}
         mode={mode}
         navigate={navigate}
-        setActiveTab={setActiveTab}
         datasourceId={datasourceId}
         generateDocumentTypes={generateDocumentTypes}
       />
@@ -497,7 +502,8 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         tabs={tabs}
         activeTab={activeTab}
         handleTabChange={handleTabChange}
-        setActiveTab={setActiveTab}
+        goToTab={goToTab}
+        goBack={goBack}
         areaEnabled={areaEnabled}
         formValues={formValues}
         getHealthInfo={getHealthInfo}
@@ -515,20 +521,17 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         dynamicFormJson={dynamicFormJson}
         loadingFormCustom={loadingFormCustom}
         isRecap={isRecap}
-        setIsRecap={setIsRecap}
         handleDatasource={handleDatasource}
         isCreated={datasourceId === "new"}
         setExtraFab={setExtraFab}
       />
       <Recap
         actions={{
-          onBack: () => {
-            setActiveTab("dataIndex");
-            setIsRecap(false);
-          },
+          onBack: () => goToTab("dataIndex"),
           submitLabel: datasourceId === "new" ? t("entity.create") : t("entity.update"),
           onSubmit: () => {
-            handleDatasource();
+            // the recap stays open while saving: a second click must not save twice
+            if (!saving) handleDatasource();
           },
         }}
         recapData={recapSections}

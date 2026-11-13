@@ -37,6 +37,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateLargeLanguageModelMutation, useLargeLanguageModelQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 const getProviderOptions = (t: TFunction) => [
@@ -54,6 +55,7 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
   const PROVIDER_OPTIONS = React.useMemo(() => getProviderOptions(t), [t]);
   const { LargeLanguageModelId = "new", view } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/large-languages-model/");
   const [isCleaning, setIsCleaning] = React.useState(false);
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.large-language-models.edit-large-language-model"),
@@ -86,7 +88,7 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
             content: isNew === "created" ? t("pages.large-language-models.created-content") : t("pages.large-language-models.updated-content"),
             displayType: "success",
           });
-          navigate(`/large-languages-model/`, { replace: true });
+          goBack();
         } else {
           toast({
             title: t("common.error"),

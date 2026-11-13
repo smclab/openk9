@@ -85,18 +85,14 @@ export function PluginDrivers() {
             {
               label: t("common.view"),
               action: (pluginDriver) => {
-                navigate(`/plugin-driver/${pluginDriver?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/plugin-driver/${pluginDriver?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (pluginDriver) => {
                 pluginDriver?.id &&
-                  navigate(`/plugin-driver/${pluginDriver?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/plugin-driver/${pluginDriver?.id}`);
               },
             },
             {

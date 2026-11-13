@@ -33,7 +33,8 @@ export const TabsSection = ({
   tabs,
   activeTab,
   handleTabChange,
-  setActiveTab,
+  goToTab,
+  goBack,
   areaEnabled,
   formValues,
   getHealthInfo,
@@ -51,14 +52,10 @@ export const TabsSection = ({
   dynamicFormJson,
   loadingFormCustom,
   isRecap,
-  setIsRecap,
   handleDatasource,
   isCreated,
   setExtraFab,
 }: tabsPropsConstructor) => {
-  const isRecapTab = "recap";
-  isRecap && handleTabChange(null, isRecapTab);
-
   return (
     <>
       <Tabs value={activeTab} onChange={handleTabChange}>
@@ -101,7 +98,7 @@ export const TabsSection = ({
           getHealthInfoWithoutId={getHealthInfoWithoutId}
           disabled={isView}
           tabs={tabs}
-          setActiveTab={setActiveTab}
+          goBack={goBack}
           setAreaEnabled={setAreaEnabled}
           setFormValues={setFormValues}
           setShowDialog={setShowDialog}
@@ -112,11 +109,9 @@ export const TabsSection = ({
         <ConfigureDatasource
           dataDatasource={formValues}
           setDataDatasource={setFormValues}
-          setActiveTab={setActiveTab}
           disabled={isView}
           isRecap={isRecap}
           tabs={tabs}
-          setIsRecap={setIsRecap}
           requestBody={requestBody}
           formCustom={formCustom}
           setFormCustom={setFormCustom}
@@ -135,8 +130,6 @@ export const TabsSection = ({
           datasourceId={datasourceId}
           isRecap={isRecap}
           tabs={tabs}
-          setIsRecap={setIsRecap}
-          setActiveTab={setActiveTab}
         />
       )}
       {activeTab === "monitoring" && datasourceId !== "new" && <MonitoringTab id={datasourceId} />}
@@ -164,7 +157,7 @@ export const TabsSection = ({
               },
             }));
           }}
-          setActiveTab={setActiveTab}
+          goToTab={goToTab}
           extraParamsDataIndex={{
             knnIndex: formValues.vectorIndex?.knnIndex || false,
             chunkWindowSize: formValues.vectorIndex?.chunkWindowSize || 0,
@@ -193,7 +186,6 @@ export const TabsSection = ({
           }}
           isDisabled={false}
           isCreated={isCreated}
-          setIsRecap={setIsRecap}
           dataIndixes={formValues.dataIndices}
           defaultDataIndex={(defaultData: { id: string; name: string }[]) => {
             setFormValues((prev: ConnectionData) => ({
@@ -220,8 +212,7 @@ export const TabsSection = ({
             isNew={false}
             isView={isView}
             setConnectionData={setFormValues}
-            setActiveTab={setActiveTab}
-            setIsRecap={setIsRecap}
+            goToTab={goToTab}
           />
         )
       )}
@@ -252,7 +243,6 @@ export const Header = ({
   navigate,
   datasourceId,
   generateDocumentTypes,
-  setActiveTab,
 }: HeaderType) => {
   const { t } = useTranslation();
   const initialStateEditMessage = {
@@ -267,7 +257,6 @@ export const Header = ({
   const handleEditClick = async (typology: "editModal" | "generateModal") => {
     setModalMessage(initialStateEditMessage);
     const confirmed = await openConfirmModal();
-    setActiveTab("datasource");
     confirmed && typology === `editModal` && navigate(`/data-source/${datasourceId}/mode/edit/landingTab/datasource`);
   };
 

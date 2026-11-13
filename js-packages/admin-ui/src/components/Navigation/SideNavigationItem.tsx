@@ -32,7 +32,7 @@ interface SideNavigationItemProps {
 export function SideNavigationItem({ item, level = 0 }: SideNavigationItemProps) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { navigation, changaSideNavigation } = useSideNavigation();
+  const { navigation } = useSideNavigation();
   const [open, setOpen] = React.useState(false);
 
   const hasActiveChild = (menuItem: MenuItem): boolean => {
@@ -47,11 +47,7 @@ export function SideNavigationItem({ item, level = 0 }: SideNavigationItemProps)
   const isActiveParent = item.isGroup && hasActiveChild(item);
 
   const handleClick = () => {
-    if (item.isGroup) {
-      setOpen(!open);
-    } else {
-      changaSideNavigation(item.value);
-    }
+    if (item.isGroup) setOpen(!open);
   };
 
   return (

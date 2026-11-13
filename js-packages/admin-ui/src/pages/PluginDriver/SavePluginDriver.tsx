@@ -55,6 +55,7 @@ import {
 import { extractProblemDetails, mapHealthStatus } from "../../utils/health";
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { ResourceUri } from "openapi-generated";
 
@@ -98,6 +99,7 @@ export const SavePluginnDriverModel = React.forwardRef(
     const { pluginDriverId = "new", view } = useParams();
     const restClient = useRestClient();
     const navigate = useNavigate();
+    const goBack = useGoBack("/plugin-drivers/");
     const { openConfirmModal, ConfirmModal } = useConfirmModal({
       title: t("pages.connectors.edit-connector"),
       body: t("pages.connectors.are-you-sure-you-want-to-edit"),
@@ -222,7 +224,7 @@ export const SavePluginnDriverModel = React.forwardRef(
             content: isNew === "created" ? t("pages.connectors.created-content") : t("pages.connectors.updated-content"),
             displayType: "success",
           });
-          !isConnector && navigate(`/plugin-drivers/`, { replace: true });
+          !isConnector && goBack();
         } else {
           toast({
             title: t("common.error"),

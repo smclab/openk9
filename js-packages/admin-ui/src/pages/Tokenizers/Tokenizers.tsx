@@ -83,18 +83,14 @@ export function Tokenizers() {
             {
               label: t("common.view"),
               action: (tokenizer) => {
-                navigate(`/tokenizer/${tokenizer?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/tokenizer/${tokenizer?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (tokenizer) => {
                 tokenizer?.id &&
-                  navigate(`/tokenizer/${tokenizer?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/tokenizer/${tokenizer?.id}`);
               },
             },
             {

@@ -34,6 +34,7 @@ import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { useGoBack } from "../../utils/useGoBack";
 import {
   BoundaryScannerType,
   FieldType,
@@ -63,6 +64,7 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   const { t } = useTranslation();
   const { highlightId = "new", view } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/highlights/");
   const toast = useToast();
 
   const [page, setPage] = React.useState(0);
@@ -111,7 +113,7 @@ export function SaveHighlight({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           content: action === "created" ? t("pages.highlights.created-content") : t("pages.highlights.updated-content"),
           displayType: "success",
         });
-        navigate(`/highlights/`, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),

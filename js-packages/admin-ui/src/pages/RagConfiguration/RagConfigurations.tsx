@@ -100,18 +100,14 @@ export function RagConfigurations() {
                 label: t("common.view"),
                 action: (ragConfig) => {
                   if (ragConfig?.id)
-                    navigate(`/rag-configuration/${ragConfig?.id}/view`, {
-                      replace: true,
-                    });
+                    navigate(`/rag-configuration/${ragConfig?.id}/view`);
                 },
               },
               {
                 label: t("common.edit"),
                 action: (ragConfig) => {
                   if (ragConfig?.id)
-                    navigate(`/rag-configuration/${ragConfig?.id}`, {
-                      replace: true,
-                    });
+                    navigate(`/rag-configuration/${ragConfig?.id}`);
                 },
               },
               {

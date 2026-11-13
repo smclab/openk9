@@ -16,7 +16,6 @@
  */
 import { DocumentNode, useQuery } from "@apollo/client";
 import { CodeInput, ModalConfirm } from "@components/Form";
-import { useSideNavigation } from "@components/sideNavigationContext";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import {
@@ -62,11 +61,9 @@ export const defaultModal = {
 export function ConfigureDatasource({
   dataDatasource,
   setDataDatasource,
-  setActiveTab,
   disabled,
   isRecap,
   tabs,
-  setIsRecap,
   datasourceId,
   dynamicFormJson,
   loadingFormCustom,
@@ -75,11 +72,9 @@ export function ConfigureDatasource({
 }: {
   dataDatasource: ConnectionData;
   setDataDatasource: React.Dispatch<React.SetStateAction<ConnectionData>>;
-  setActiveTab: (value: React.SetStateAction<string>) => void;
   disabled: boolean;
   isRecap: boolean;
   tabs: tabsType;
-  setIsRecap: React.Dispatch<React.SetStateAction<boolean>>;
   requestBody: PluginDriverRequestBody;
   formCustom: CustomForm[] | undefined;
   setFormCustom: React.Dispatch<React.SetStateAction<CustomForm[] | undefined>>;
@@ -152,7 +147,6 @@ export function ConfigureDatasource({
                 color="secondary"
                 aria-label={t("common.back")}
                 onClick={() => {
-                  setActiveTab("connectors");
                   const pipelineTab = tabs.find((tab) => tab.value === "connectors");
                   if (pipelineTab) {
                     navigate(pipelineTab.path);
@@ -167,7 +161,6 @@ export function ConfigureDatasource({
                 disabled={!areaState.schedulingArea || isPipelineDisabled}
                 onClick={() => {
                   if (isPipelineDisabled) return;
-                  setActiveTab("pipeline");
                   if (pipelineTab) navigate(pipelineTab.path);
                 }}
               >
@@ -250,7 +243,6 @@ export function EnrichItemsTable({
   const [openModal, setOpenModal] = React.useState(false);
   const [showDialog, setShowDialog] = useState(defaultModal);
   const [modalDataLost, setModalDataLost] = useState(false);
-  const { changaSideNavigation } = useSideNavigation();
   const navigate = useNavigate();
 
   return (
@@ -264,7 +256,6 @@ export function EnrichItemsTable({
           actionConfirm={() => {
             setModalDataLost(false);
             navigate("/enrich-item/new");
-            changaSideNavigation("enrich-items");
           }}
           close={() => {
             setModalDataLost(false);

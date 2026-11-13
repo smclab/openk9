@@ -89,18 +89,14 @@ export function QueryAnalyses() {
             {
               label: t("common.view"),
               action: (queryAnalyses) => {
-                navigate(`/query-analysis/${queryAnalyses?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/query-analysis/${queryAnalyses?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (queryAnalyses) => {
                 queryAnalyses?.id &&
-                  navigate(`/query-analysis/${queryAnalyses?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/query-analysis/${queryAnalyses?.id}`);
               },
             },
             {

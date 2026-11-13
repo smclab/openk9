@@ -49,7 +49,8 @@ import {
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useGoBack } from "../../utils/useGoBack";
 import {
   ChunkType,
   CreateDataIndexMutationVariables,
@@ -138,7 +139,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   const { t } = useTranslation();
   const { dataindexId = "new", mode, view } = useParams();
   const isNew = dataindexId === "new";
-  const navigate = useNavigate();
+  const goBack = useGoBack("/dataindices/");
   const toast = useToast();
   const restClient = useRestClient();
 
@@ -222,7 +223,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           content: "",
           displayType: "success",
         });
-        navigate("/dataindices/");
+        goBack();
       } else {
         toast({
           title: t("common.error"),
@@ -730,12 +731,11 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
       <Box display="flex" justifyContent="space-between" mt={3} mb={9}>
         <Button
-          component={Link}
-          to="/dataindices"
           className="btn btn-secondary"
           type="button"
           variant="outlined"
           color="primary"
+          onClick={goBack}
         >
           {t("common.back")}
         </Button>

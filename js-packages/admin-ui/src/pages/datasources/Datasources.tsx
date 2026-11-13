@@ -74,7 +74,7 @@ export function Datasources() {
             <Typography variant="body1">{t("pages.datasources.description")}</Typography>
           </Box>
           <Box>
-            <Link to="/data-source/new/mode/create/landingTab/0" style={{ textDecoration: "none" }}>
+            <Link to="/data-source/new/mode/create/landingTab/connectors" style={{ textDecoration: "none" }}>
               <Button variant="contained" color="primary">
                 {t("pages.datasources.create-new")}
               </Button>
@@ -111,18 +111,14 @@ export function Datasources() {
               {
                 label: t("common.view"),
                 action: (datasources) => {
-                  navigate(`/data-source/${datasources?.id}/mode/view/landingTab/monitoring`, {
-                    replace: true,
-                  });
+                  navigate(`/data-source/${datasources?.id}/mode/view/landingTab/monitoring`);
                 },
               },
               {
                 label: t("common.edit"),
                 action: (datasources) => {
                   datasources?.id &&
-                    navigate(`/data-source/${datasources?.id}/mode/edit/landingTab/datasource`, {
-                      replace: true,
-                    });
+                    navigate(`/data-source/${datasources?.id}/mode/edit/landingTab/datasource`);
                 },
               },
             ]}

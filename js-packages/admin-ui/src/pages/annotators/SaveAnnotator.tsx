@@ -40,6 +40,7 @@ import {
   useCreateOrUpdateAnnotatorMutation,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
@@ -51,6 +52,7 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   });
 
   const navigate = useNavigate();
+  const goBack = useGoBack("/annotators/");
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
   const toast = useToast();
@@ -78,7 +80,7 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           displayType: "success",
         });
 
-        navigate(`/annotators/`, { replace: true });
+        goBack();
       } else {
         const errorMessage = combineErrorMessages(data.annotatorWithDocTypeField?.fieldValidators || []);
         toast({

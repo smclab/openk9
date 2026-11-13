@@ -101,18 +101,14 @@ export function EmbeddingModels() {
             {
               label: t("common.view"),
               action: (embeddingModels) => {
-                navigate(`/embedding-model/${embeddingModels?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/embedding-model/${embeddingModels?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (embeddingModels) => {
                 embeddingModels?.id &&
-                  navigate(`/embedding-model/${embeddingModels?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/embedding-model/${embeddingModels?.id}`);
               },
             },
             {

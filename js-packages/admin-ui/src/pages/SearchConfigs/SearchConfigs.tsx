@@ -90,18 +90,14 @@ export function SearchConfigs() {
             {
               label: t("common.view"),
               action: (searchConfig) => {
-                navigate(`/search-config/${searchConfig?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/search-config/${searchConfig?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (searchConfig) => {
                 searchConfig?.id &&
-                  navigate(`/search-config/${searchConfig?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/search-config/${searchConfig?.id}`);
               },
             },
             {

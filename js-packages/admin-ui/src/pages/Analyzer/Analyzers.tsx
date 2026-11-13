@@ -113,9 +113,7 @@ export function Analyzers() {
                 label: t("common.edit"),
                 action: (analyzer) => {
                   if (analyzer?.id)
-                    navigate(`/analyzer/${analyzer?.id}`, {
-                      replace: true,
-                    });
+                    navigate(`/analyzer/${analyzer?.id}`);
                 },
               },
               {

@@ -33,6 +33,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenizerMutation, useTokenizerQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import { TemplateTokenizer } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
@@ -40,6 +41,7 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
   const { t } = useTranslation();
   const { tokenizerId = "new", view } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/tokenizers/");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.tokenizers.edit-tokenizer"),
     body: t("pages.tokenizers.are-you-sure-you-want-to-edit"),
@@ -71,7 +73,7 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           content: isNew === "created" ? t("pages.tokenizers.created-content") : t("pages.tokenizers.updated-content"),
           displayType: "success",
         });
-        navigate(`/tokenizers/`, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),

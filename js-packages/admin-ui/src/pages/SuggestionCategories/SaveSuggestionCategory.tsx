@@ -39,6 +39,7 @@ import {
 } from "../../graphql-generated";
 import { isValidId } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import { DocTypeFieldAutocompleteDropdown } from "./DocTypeFieldAutocompleteDropdown";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
@@ -48,6 +49,7 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
   const [page, setPage] = React.useState(0);
   const isNew = suggestionCategoryId === "new";
   const navigate = useNavigate();
+  const goBack = useGoBack("/suggestion-categories/");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.filters.edit-filter"),
     body: t("pages.filters.are-you-sure-you-want-to-edit"),
@@ -80,7 +82,7 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
             content: isNew === "created" ? t("pages.filters.created-content") : t("pages.filters.updated-content"),
             displayType: "success",
           });
-          navigate(`/suggestion-categories/`, { replace: true });
+          goBack();
         } else {
           toast({
             title: t("common.error"),

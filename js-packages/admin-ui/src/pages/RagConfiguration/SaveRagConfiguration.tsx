@@ -36,6 +36,7 @@ import {
   useUpdateRagConfigurationMutation,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import { RagConfigurationQuery } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
@@ -46,6 +47,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
   const isRecap = page === 1;
   const isNew = ragConfigId === "new";
   const navigate = useNavigate();
+  const goBack = useGoBack("/rag-configurations/");
   const toast = useToast();
 
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
@@ -77,8 +79,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
           content: isNew === "created" ? t("pages.rag-configurations.created-content") : t("pages.rag-configurations.updated-content"),
           displayType: "success",
         });
-        const redirectPath = `/rag-configurations/`;
-        navigate(redirectPath, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),
@@ -107,8 +108,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
           content: t("pages.rag-configurations.updated-content"),
           displayType: "success",
         });
-        const redirectPath = `/rag-configurations/`;
-        navigate(redirectPath, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),

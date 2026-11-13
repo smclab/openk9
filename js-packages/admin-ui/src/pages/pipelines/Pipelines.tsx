@@ -98,18 +98,14 @@ export function Pipelines() {
               label: t("common.view"),
               action: (pipelines) => {
                 pipelines?.id &&
-                  navigate(`/pipeline/${pipelines?.id}/mode/view`, {
-                    replace: true,
-                  });
+                  navigate(`/pipeline/${pipelines?.id}/mode/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (pipelines) => {
                 pipelines?.id &&
-                  navigate(`/pipeline/${pipelines?.id}/mode/edit`, {
-                    replace: true,
-                  });
+                  navigate(`/pipeline/${pipelines?.id}/mode/edit`);
               },
             },
             {

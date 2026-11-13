@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import { combineErrorMessages, ModalConfirm, TitleEntity, useForm, useToast } from "@components/Form";
-import { useSideNavigation } from "@components/sideNavigationContext";
 import { ArrowDropDown, ArrowDropUp, Close } from "@mui/icons-material";
 import {
   Box,
@@ -46,6 +45,7 @@ import {
   useEnrichPipelineWithItemsMutation,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
@@ -77,10 +77,9 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
     skip: !pipelineId || pipelineId === "new",
   });
 
-  const { changaSideNavigation } = useSideNavigation();
-
   const pipelineValues: PipelineData = { associatedEnrichItems: [] };
   const navigate = useNavigate();
+  const goBack = useGoBack("/pipelines/");
   const [pipelineData, setPipelineData] = React.useState<PipelineData>(pipelineValues);
   const toast = useToast();
   const [open, setOpen] = useState(false);
@@ -147,7 +146,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           content: isNew === "created" ? t("pages.pipelines.created-content") : t("pages.pipelines.updated-content"),
           displayType: "success",
         });
-        navigate(`/pipelines/`, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),
@@ -352,7 +351,6 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                   color="error"
                   onClick={() => {
                     setOpen(false);
-                    changaSideNavigation("enrich-items");
                   }}
                 >
                   {t("common.confirm")}
@@ -372,7 +370,6 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
             setModalDataLost(false);
             setOpen(false);
             navigate("/enrich-item/new");
-            changaSideNavigation("enrich-items");
           }}
           close={() => {
             setModalDataLost(false);
@@ -538,9 +535,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
             variant="contained"
             color="secondary"
             aria-label={t("common.back")}
-            onClick={() => {
-              navigate("/pipelines");
-            }}
+            onClick={goBack}
           >
             {t("common.back")}
           </Button>

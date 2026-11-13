@@ -141,7 +141,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: Datasource[]
     const createOrUpdate =
       type === "Edit"
         ? `/data-source/${datasourceId}/mode/edit/landingTab/datasource`
-        : `/data-source/new/mode/create/landingTab/datasource`;
+        : `/data-source/new/mode/create/landingTab/connectors`;
     confirmed && navigate(createOrUpdate);
     confirmed && scrollToTop();
   };

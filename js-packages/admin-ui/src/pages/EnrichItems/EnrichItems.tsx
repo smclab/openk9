@@ -107,18 +107,14 @@ export function EnrichItems() {
             {
               label: t("common.view"),
               action: (enrichItem) => {
-                navigate(`/enrich-item/${enrichItem?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/enrich-item/${enrichItem?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (enrichItem) => {
                 enrichItem?.id &&
-                  navigate(`/enrich-item/${enrichItem?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/enrich-item/${enrichItem?.id}`);
               },
             },
             {

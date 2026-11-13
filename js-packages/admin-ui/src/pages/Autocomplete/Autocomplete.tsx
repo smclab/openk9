@@ -40,6 +40,7 @@ import {
   useUnboundDocTypeFieldByAutocompleteQuery,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
@@ -59,6 +60,7 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
   });
 
   const navigate = useNavigate();
+  const goBack = useGoBack("/autocompletes");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.autocompletes.edit-autocomplete"),
     body: t("pages.autocompletes.are-you-sure-you-want-to-edit"),
@@ -98,7 +100,7 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
             displayType: "success",
             title: t("pages.autocompletes.created-title"),
           });
-          navigate(`/autocompletes`);
+          goBack();
         }
       } catch (err) {
         console.error("Error during onCompleted processing:", err);

@@ -33,6 +33,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenFilterMutation, useTokenFilterQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import { Filters } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
@@ -40,6 +41,7 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
   const { t } = useTranslation();
   const { tokenFilterId = "new", view } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/token-filters/");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.token-filters.edit-token-filter"),
     body: t("pages.token-filters.are-you-sure-you-want-to-edit"),
@@ -72,7 +74,7 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
           content: isNew === "created" ? t("pages.token-filters.created-content") : t("pages.token-filters.updated-content"),
           displayType: "success",
         });
-        navigate(`/token-filters/`, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),

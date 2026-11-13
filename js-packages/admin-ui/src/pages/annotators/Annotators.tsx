@@ -117,18 +117,14 @@ export function Annotators() {
             {
               label: t("common.view"),
               action: (annotator) => {
-                navigate(`/annotator/${annotator?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/annotator/${annotator?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (annotator) => {
                 annotator?.id &&
-                  navigate(`/annotator/${annotator?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/annotator/${annotator?.id}`);
               },
             },
             {

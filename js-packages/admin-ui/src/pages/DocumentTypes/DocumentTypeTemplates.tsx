@@ -85,18 +85,14 @@ export function DocumentTypeTemplates() {
             {
               label: t("common.view"),
               action: (docTypeTemplate) => {
-                navigate(`/document-type-template/${docTypeTemplate?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/document-type-template/${docTypeTemplate?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (docTypeTemplate) => {
                 docTypeTemplate?.id &&
-                  navigate(`/document-type-template/${docTypeTemplate?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/document-type-template/${docTypeTemplate?.id}`);
               },
             },
             {

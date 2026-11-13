@@ -21,8 +21,6 @@ import { ConnectionData, PluginDriverRequestBody } from "./types";
 import { defaultModal } from "./components/Sections/DataSource/ConfigureDatasource";
 import { ChangeValueKey, Template } from "./components/Sections/DataSource/DynamicForm";
 
-import { SetStateAction } from "react";
-
 type ModalState = typeof defaultModal;
 
 export type HeaderType = {
@@ -31,14 +29,14 @@ export type HeaderType = {
   navigate: ReturnType<typeof useNavigate>;
   datasourceId: string;
   generateDocumentTypes: ReturnType<typeof useGenerateDocumentTypesMutation>;
-  setActiveTab: React.Dispatch<SetStateAction<string>>;
 };
 
 export type tabsPropsConstructor = {
   tabs: tabsType;
   activeTab: string;
   handleTabChange: (event: React.SyntheticEvent | null, newValue: string) => void;
-  setActiveTab: React.Dispatch<React.SetStateAction<string>>;
+  goToTab: (tab: string) => void;
+  goBack: () => void;
   areaEnabled: Section;
   formValues: ConnectionData;
   getHealthInfo: (id: number) => Promise<void>;
@@ -56,7 +54,6 @@ export type tabsPropsConstructor = {
   dynamicFormJson: string | null;
   loadingFormCustom: boolean;
   isRecap: boolean;
-  setIsRecap: React.Dispatch<React.SetStateAction<boolean>>;
   handleDatasource: () => void;
   isCreated: boolean;
   setExtraFab: (fab: React.ReactNode | null) => void;

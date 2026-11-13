@@ -114,18 +114,14 @@ export function SuggestionCategories() {
             {
               label: t("common.view"),
               action: (suggestionCategory) => {
-                navigate(`/suggestion-category/${suggestionCategory?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/suggestion-category/${suggestionCategory?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (suggestionCategory) => {
                 suggestionCategory?.id &&
-                  navigate(`/suggestion-category/${suggestionCategory?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/suggestion-category/${suggestionCategory?.id}`);
               },
             },
             {

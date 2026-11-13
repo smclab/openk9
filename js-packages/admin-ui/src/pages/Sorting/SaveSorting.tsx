@@ -37,12 +37,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { SortingType, useCreateOrUpdateSortingMutation, useSortingQuery } from "../../graphql-generated";
 import { isValidId, useDocTypeOptions } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 
 export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { t } = useTranslation();
   const { sortingId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const navigate = useNavigate();
+  const goBack = useGoBack("/sortings/");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.sortings.edit-sorting"),
     body: t("pages.sortings.are-you-sure-you-want-to-edit"),
@@ -75,9 +77,7 @@ export function SaveSorting({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
           content: action === "created" ? t("pages.sortings.created-content") : t("pages.sortings.updated-content"),
           displayType: "success",
         });
-        navigate(`/sortings/`, {
-          replace: true,
-        });
+        goBack();
       } else {
         toast({
           title: t("common.error"),

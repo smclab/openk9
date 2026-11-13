@@ -40,6 +40,7 @@ import {
 } from "../../graphql-generated";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { useRestClient } from "@components/queryClient";
 import { extractProblemDetails, mapHealthStatus } from "../../utils/health";
@@ -67,6 +68,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
   const statusKey = testResult === null ? "null" : testResult;
   const { color, label } = STATUS_CONFIG[statusKey];
   const navigate = useNavigate();
+  const goBack = useGoBack("/enrich-items/");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.enrich-items.edit-enrich-item"),
     body: t("pages.enrich-items.are-you-sure-you-want-to-edit"),
@@ -106,7 +108,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
           content: isNew === "created" ? t("pages.enrich-items.created-content") : t("pages.enrich-items.updated-content"),
           displayType: "success",
         });
-        navigate(`/enrich-items/`, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),
@@ -466,7 +468,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
           <Box display="flex" justifyContent="space-between" mt={4} mb={2}>
             {step === "configureBase" ? (
               <>
-                <Button variant="outlined" onClick={() => navigate("/enrich-items/")}>
+                <Button variant="outlined" onClick={goBack}>
                   {t("common.back")}
                 </Button>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>

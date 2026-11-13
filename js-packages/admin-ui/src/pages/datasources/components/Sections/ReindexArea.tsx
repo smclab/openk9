@@ -30,15 +30,13 @@ export default function ReindexArea({
   setConnectionData,
   isView,
   isNew,
-  setActiveTab,
-  setIsRecap,
+  goToTab,
 }: {
   connectionData: ConnectionData;
   setConnectionData: React.Dispatch<React.SetStateAction<ConnectionData>>;
   isView: boolean;
   isNew: boolean;
-  setActiveTab: React.Dispatch<React.SetStateAction<string>>;
-  setIsRecap: React.Dispatch<React.SetStateAction<boolean>>;
+  goToTab: (tab: string) => void;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -151,7 +149,7 @@ export default function ReindexArea({
           color="secondary"
           aria-label={t("common.back")}
           onClick={() => {
-            setActiveTab("pipeline");
+            goToTab("pipeline");
           }}
         >
           {t("common.back")}
@@ -163,7 +161,7 @@ export default function ReindexArea({
             size="large"
             aria-label={t("common.recap")}
             onClick={() => {
-              setIsRecap(true);
+              goToTab("recap");
             }}
             sx={{
               fontWeight: "bold",

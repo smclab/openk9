@@ -36,6 +36,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { isValidId, useDocTypeTokenTab } from "../../utils/RelationOneToOne";
 import { TokenType, useCreateOrUpdateTabTokenMutation, useTabTokenTabQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import { AutocompleteOptionsList } from "@components/Form/Select/AutocompleteOptionsList";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { evictTokenTabAssociationLists } from "./gql";
@@ -149,6 +150,7 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
   const { tokenTabId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const navigate = useNavigate();
+  const goBack = useGoBack("/token-tabs/");
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: t("pages.token-tabs.edit-token-tab"),
     body: t("pages.token-tabs.are-you-sure-you-want-to-edit"),
@@ -186,9 +188,7 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           content: isNew === "created" ? t("pages.token-tabs.created-content") : t("pages.token-tabs.updated-content"),
           displayType: "success",
         });
-        navigate(`/token-tabs/`, {
-          replace: true,
-        });
+        goBack();
       } else {
         toast({
           title: t("common.error"),

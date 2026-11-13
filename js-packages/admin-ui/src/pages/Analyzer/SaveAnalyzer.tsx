@@ -47,6 +47,7 @@ import {
 } from "../../graphql-generated";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { useGoBack } from "../../utils/useGoBack";
 import { TemplateAnalyzers } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { associateType } from "utils/QueryFunctions";
@@ -62,6 +63,7 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
   const { analyzerId = "new", view } = useParams();
   const [page, setPage] = useState(0);
   const navigate = useNavigate();
+  const goBack = useGoBack("/analyzers/");
   const toast = useToast();
   const [selectedAssociationTabs, setSelectedAssociationTabs] = useState<string>(associationTabs[0].id);
 
@@ -116,7 +118,7 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           content: action === "created" ? t("pages.analyzers.created-content") : t("pages.analyzers.updated-content"),
           displayType: "success",
         });
-        navigate(`/analyzers/`, { replace: true });
+        goBack();
       } else {
         toast({
           title: t("common.error"),

@@ -111,18 +111,14 @@ export function LargeLanguageModels() {
             {
               label: t("common.view"),
               action: (largeLanguage) => {
-                navigate(`/large-language-model/${largeLanguage?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/large-language-model/${largeLanguage?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (largeLanguage) => {
                 largeLanguage?.id &&
-                  navigate(`/large-language-model/${largeLanguage?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/large-language-model/${largeLanguage?.id}`);
               },
             },
             {

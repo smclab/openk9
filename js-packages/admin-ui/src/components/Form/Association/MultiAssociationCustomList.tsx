@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { NamePath, useSideNavigation } from "@components/sideNavigationContext";
+import { NamePath } from "@components/sideNavigationContext";
 import AddIcon from "@mui/icons-material/Add";
 import {
   Box,
@@ -68,7 +68,6 @@ export function MultiAssociationCustomQuery<Q>({
   const [availableItems, setAvailableItems] = React.useState<{ label: string; value: string }[]>([]);
   const [isViewModal, setIsViewModal] = React.useState(false);
   const { t } = useTranslation();
-  const { changaSideNavigation } = useSideNavigation();
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -160,7 +159,6 @@ export function MultiAssociationCustomQuery<Q>({
           actionConfirm={() => {
             if (createPath?.path && createPath.entity) {
               window.scrollTo({ top: 0, behavior: "smooth" });
-              changaSideNavigation(createPath.entity);
               navigate(createPath.path);
             }
             setIsViewModal(false);

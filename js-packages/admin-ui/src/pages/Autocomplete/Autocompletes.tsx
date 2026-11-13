@@ -85,18 +85,14 @@ export function Autocompletes() {
             {
               label: t("common.view"),
               action: (autocomplete) => {
-                navigate(`/autocomplete/${autocomplete?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/autocomplete/${autocomplete?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (autocomplete) => {
                 autocomplete?.id &&
-                  navigate(`/autocomplete/${autocomplete?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/autocomplete/${autocomplete?.id}`);
               },
             },
             {

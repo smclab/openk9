@@ -19,17 +19,20 @@ import { useLocation } from "react-router-dom";
 
 export type NamePath =
   | "admin"
+  | "autocomplete"
   | "autocompletes"
   | "dashboard"
   | "bucket"
   | "buckets"
   | "analyzer"
   | "analyzers"
+  | "autocorrection"
   | "autocorrections"
   | "data-source"
   | "data-sources"
   | "document-types"
   | "document-type"
+  | "sub-document-type"
   | "document-type-template"
   | "document-type-templates"
   | "plugin-drivers"
@@ -98,6 +101,7 @@ export const namePath: { label: NamePath; value: NamePath }[] = [
   { label: "data-sources", value: "data-sources" },
   { label: "document-types", value: "document-types" },
   { label: "document-type", value: "document-types" },
+  { label: "sub-document-type", value: "document-types" },
   { label: "document-type-template", value: "document-type-templates" },
   { label: "document-type-templates", value: "document-type-templates" },
   { label: "suggestion-category", value: "suggestion-categories" },
@@ -132,31 +136,29 @@ export const namePath: { label: NamePath; value: NamePath }[] = [
   { label: "query-analyses", value: "query-analyses" },
   { label: "search-config", value: "search-configs" },
   { label: "search-configs", value: "search-configs" },
-  { label: "large-language-model", value: "large-language-model" },
+  { label: "large-language-model", value: "large-languages-model" },
   { label: "large-languages-model", value: "large-languages-model" },
   { label: "embedding-model", value: "embedding-models" },
   { label: "embedding-models", value: "embedding-models" },
+  { label: "autocomplete", value: "autocompletes" },
+  { label: "autocompletes", value: "autocompletes" },
+  { label: "autocorrection", value: "autocorrections" },
+  { label: "autocorrections", value: "autocorrections" },
   { label: "rag-configuration", value: "rag-configurations" },
   { label: "rag-configurations", value: "rag-configurations" },
 ];
 
 type SideNavigationContextValue = {
-  changaSideNavigation: React.Dispatch<React.SetStateAction<NamePath>>;
   navigation: NamePath;
 };
 
 const AuthenticationContext = React.createContext<SideNavigationContextValue | null>(null);
 
 export function SideNavigationContextProvider({ children }: { children: React.ReactNode }) {
-  const params = useLocation().pathname.replace("/", "");
-  const pathNavigate = namePath.find((item) => params.startsWith(item.label));
-  const [navigation, changaSideNavigation] = React.useState<NamePath>(pathNavigate?.value || "dashboard");
+  const segment = useLocation().pathname.split("/")[1];
+  const navigation = namePath.find((item) => item.label === segment)?.value || "dashboard";
 
-  return (
-    <AuthenticationContext.Provider value={{ navigation, changaSideNavigation }}>
-      {children}
-    </AuthenticationContext.Provider>
-  );
+  return <AuthenticationContext.Provider value={{ navigation }}>{children}</AuthenticationContext.Provider>;
 }
 
 export function useSideNavigation() {

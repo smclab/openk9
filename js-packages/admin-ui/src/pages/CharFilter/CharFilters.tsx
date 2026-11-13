@@ -99,18 +99,14 @@ export function CharFilters() {
             {
               label: t("common.view"),
               action: (charFilters) => {
-                navigate(`/char-filter/${charFilters?.id}/view`, {
-                  replace: true,
-                });
+                navigate(`/char-filter/${charFilters?.id}/view`);
               },
             },
             {
               label: t("common.edit"),
               action: (charFilters) => {
                 charFilters?.id &&
-                  navigate(`/char-filter/${charFilters?.id}`, {
-                    replace: true,
-                  });
+                  navigate(`/char-filter/${charFilters?.id}`);
               },
             },
             {

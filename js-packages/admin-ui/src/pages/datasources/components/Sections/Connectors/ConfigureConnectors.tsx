@@ -40,7 +40,7 @@ interface ConfigureConnectorsProps {
   getHealthInfoWithoutId: () => Promise<void>;
   disabled: boolean;
   tabs: tabsType;
-  setActiveTab: React.Dispatch<React.SetStateAction<string>>;
+  goBack: () => void;
   setAreaEnabled: React.Dispatch<React.SetStateAction<Section>>;
   setFormValues: React.Dispatch<React.SetStateAction<ConnectionData>>;
   setShowDialog: React.Dispatch<
@@ -155,7 +155,7 @@ export function ConfigureConnectors({
   getHealthInfoWithoutId,
   tabs,
   disabled,
-  setActiveTab,
+  goBack,
   setAreaEnabled,
   setFormValues,
   setShowDialog,
@@ -299,7 +299,7 @@ export function ConfigureConnectors({
           paddingBlock: "20px",
         }}
       >
-        <Button variant="contained" color="secondary" aria-label={t("common.back")} onClick={() => navigate("/data-sources")}>
+        <Button variant="contained" color="secondary" aria-label={t("common.back")} onClick={goBack}>
           {t("common.back")}
         </Button>
         <Tooltip title={isDisabledNextStep ? t("pages.datasources.select-a-connector-or-create-one") : ""}>
@@ -308,7 +308,6 @@ export function ConfigureConnectors({
               variant="contained"
               disabled={isDisabledNextStep}
               onClick={() => {
-                setActiveTab("datasource");
                 const pipelineTab = tabs.find((tab) => tab.value === "datasource");
                 if (pipelineTab) {
                   navigate(pipelineTab.path);
