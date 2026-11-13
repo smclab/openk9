@@ -25,6 +25,7 @@
 	logicalFilePath="db/datasource/2026/02/04-01-changelog.xml">
 
 	<changeSet id="1770199022-1" author="openk9">
+		<validCheckSum>9:f5a1616b5f7b798340b6b721a20c234e</validCheckSum>
 		<createTable tableName="highlight">
 			<column name="id" type="NUMBER(38)">
 				<constraints
@@ -35,7 +36,7 @@
 			</column>
 			<column name="create_date" type="TIMESTAMP"/>
 			<column name="modified_date" type="TIMESTAMP"/>
-			<column name="description" type="VARCHAR2(4096)"/>
+			<column name="description" type="VARCHAR2(4000)"/>
 			<column name="name" type="VARCHAR2(255)">
 				<constraints nullable="false"/>
 			</column>

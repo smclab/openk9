@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2026/11/13-01-changelog.xml">
+
+	<!--
+	  The highlight table was first created with a VARCHAR2(4096) description,
+	  which only an Oracle with MAX_STRING_SIZE=EXTENDED accepts. It is now
+	  created with VARCHAR2(4000), like every other description column, and
+	  this changeset brings the tenants created before to the same size.
+	  It runs on every tenant: on a column already at 4000 it changes nothing.
+	  A description longer than 4000 bytes makes Oracle refuse the change
+	  (ORA-01441): shorten it by hand, then migrate again.
+	-->
+	<changeSet id="1794528000-1" author="openk9">
+		<comment>Shrink the highlight description to 4000 bytes, the size of every other description column</comment>
+		<modifyDataType tableName="highlight" columnName="description" newDataType="VARCHAR2(4000)"/>
+	</changeSet>
+
+</databaseChangeLog>
