@@ -26,6 +26,8 @@ import java.util.regex.Pattern;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
 import liquibase.Liquibase;
+import liquibase.change.CheckSum;
+import liquibase.changelog.ChangeSet;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.resource.ClassLoaderResourceAccessor;
@@ -51,6 +53,15 @@ class OracleChangelogTest {
 	private static final Pattern BOOLEAN_DEFAULT = Pattern.compile(
 		"DEFAULT\\s+(TRUE|FALSE)\\b", Pattern.CASE_INSENSITIVE);
 
+	private static final String HIGHLIGHT_CHANGELOG =
+		"db/datasource/2026/02/04-01-changelog.xml";
+
+	private static final String HIGHLIGHT_CHANGESET_ID = "1770199022-1";
+
+	// the checksum of the highlight changeset with a VARCHAR2(4096) description
+	private static final String RELEASED_HIGHLIGHT_CHECKSUM =
+		"9:f5a1616b5f7b798340b6b721a20c234e";
+
 	@TempDir
 	Path workDir;
 
@@ -75,6 +86,19 @@ class OracleChangelogTest {
 			.toList();
 
 		Assertions.assertEquals(List.of(), booleanDefaults);
+	}
+
+	@Test
+	void should_accept_the_released_highlight_checksum() throws Exception {
+		// the tenants that applied the highlight changeset as released keep
+		// migrating after its description shrank to 4000
+		try (Liquibase liquibase = offlineOracleLiquibase()) {
+			ChangeSet changeSet = liquibase.getDatabaseChangeLog().getChangeSet(
+				HIGHLIGHT_CHANGELOG, "openk9", HIGHLIGHT_CHANGESET_ID);
+
+			Assertions.assertTrue(changeSet.isCheckSumValid(
+				CheckSum.parse(RELEASED_HIGHLIGHT_CHECKSUM)));
+		}
 	}
 
 	private List<String> oracleStatements() throws Exception {
