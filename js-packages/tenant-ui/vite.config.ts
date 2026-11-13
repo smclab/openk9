@@ -53,7 +53,7 @@ export default defineConfig(({ command }) => ({
     outDir: "build",
     // nginx.conf serves the bundle from /admin/static/
     assetsDir: "static",
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         manualChunks: (id) => {
           if (!id.includes("node_modules")) return;

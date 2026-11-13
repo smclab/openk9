@@ -1,7 +1,6 @@
 import { defineConfig, PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
 import viteCompression from "vite-plugin-compression";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 // Where the dev server proxies /api/* to: the remote demo by default, the
 // local ./k9.sh stack with `yarn start:k9-local` (i.e. `vite --mode k9-local`).
@@ -28,6 +27,7 @@ export default defineConfig(({ command, mode }) => ({
   base: "/admin/",
   // Apollo >= 3.8 strips its dev-only checks from builds only when this is false
   define: { "globalThis.__DEV__": JSON.stringify(command !== "build") },
+  resolve: { tsconfigPaths: true },
   plugins: [
     {
       name: "redirect-root-to-admin",
@@ -52,7 +52,6 @@ export default defineConfig(({ command, mode }) => ({
       },
     },
     react(),
-    tsconfigPaths(),
     viteCompression({
       algorithm: "gzip",
       ext: ".gz",
@@ -66,7 +65,7 @@ export default defineConfig(({ command, mode }) => ({
   ],
   build: {
     outDir: "build",
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         manualChunks: (id) => {
           if (!id.includes("node_modules")) return;

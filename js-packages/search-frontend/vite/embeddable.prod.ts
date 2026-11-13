@@ -1,6 +1,7 @@
 // Builds a script with react inside for use with <script src=""/>
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 import path from "path";
 import license from "rollup-plugin-license";
 import { noCustomOutput } from "./plugins/noCustomOutput";
@@ -8,6 +9,18 @@ import { noCustomOutput } from "./plugins/noCustomOutput";
 export default defineConfig({
   plugins: [
     react(),
+    // without it styled-components' css prop and keyframes break in the UMD
+    babel({
+      plugins: [
+        [
+          "babel-plugin-styled-components",
+          {
+            displayName: true,
+            fileName: true,
+          },
+        ],
+      ],
+    }),
     license({
       thirdParty: {
         allow: (name) => true,
@@ -25,6 +38,10 @@ export default defineConfig({
   },
   define: {
     "process.env": {},
+    // Vite 8 leaves process.env.NODE_ENV in lib builds: keep it undefined, as Vite 7 did
+    "process.env.NODE_ENV": "undefined",
+    // moment's locale wrappers test typeof require, which Vite 7 rewrote and Vite 8 leaves to the browser
+    "typeof require": JSON.stringify("function"),
     global: "globalThis",
   },
   build: {
@@ -39,10 +56,9 @@ export default defineConfig({
       formats: ["umd"],
       fileName: () => "embeddable.js",
     },
-    rollupOptions: {
+    rolldownOptions: {
       external: [],
       output: {
-        inlineDynamicImports: true,
         exports: "named",
       },
     },

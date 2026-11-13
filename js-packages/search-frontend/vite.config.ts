@@ -17,6 +17,7 @@
 // Starts a dev server with automatic reloading
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 import path from "path";
 
 const ReactCompilerConfig = {};
@@ -26,20 +27,19 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      react({
-        babel: {
-          plugins: [
-            [
-              "babel-plugin-react-compiler",
-              ReactCompilerConfig,
-              "babel-plugin-styled-components",
-              {
-                displayName: true,
-                fileName: true,
-              },
-            ],
+      react(),
+      babel({
+        plugins: [
+          [
+            "babel-plugin-react-compiler",
+            ReactCompilerConfig,
+            "babel-plugin-styled-components",
+            {
+              displayName: true,
+              fileName: true,
+            },
           ],
-        },
+        ],
       }),
     ],
     define: {
@@ -82,8 +82,10 @@ export default defineConfig(({ mode }) => {
         "styled-components",
         "lodash",
       ],
-      esbuildOptions: {
-        target: "esnext",
+      rolldownOptions: {
+        transform: {
+          target: "esnext",
+        },
       },
     },
   };

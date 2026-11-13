@@ -34,7 +34,7 @@ export default defineConfig({
 		outDir: "build",
 		// nginx.conf serves the bundle from /chat/static/
 		assetsDir: "static",
-		rollupOptions: {
+		rolldownOptions: {
 			output: {
 				manualChunks: (id) => {
 					if (!id.includes("node_modules")) return;

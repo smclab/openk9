@@ -15,7 +15,7 @@ export default defineConfig({
       formats: ["umd"],
       fileName: () => `embeddable.js`,
     },
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         globals: {
           react: "React",

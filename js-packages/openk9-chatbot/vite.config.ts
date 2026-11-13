@@ -41,7 +41,7 @@ export default defineConfig({
     copyPublicDir: false,
     emptyOutDir: false,
     minify: false,
-    rollupOptions: {
+    rolldownOptions: {
       external: [
         "react",
         "react-markdown",
