@@ -35,11 +35,11 @@
 			</column>
 			<column name="create_date" type="TIMESTAMP"/>
 			<column name="modified_date" type="TIMESTAMP"/>
-			<column name="description" type="VARCHAR2(4096)"/>
+			<column name="description" type="VARCHAR2(4000)"/>
 			<column name="name" type="VARCHAR2(255)">
 				<constraints nullable="false"/>
 			</column>
-			<column name="enabled" type="NUMBER(1)" defaultValueBoolean="false">
+			<column name="enabled" type="BOOLEAN" defaultValueBoolean="false">
 				<constraints nullable="false"/>
 			</column>
 			<column name="super_user_roles" type="CLOB"/>
