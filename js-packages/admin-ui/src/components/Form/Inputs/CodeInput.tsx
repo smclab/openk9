@@ -15,13 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import React from "react";
-import * as monaco from "monaco-editor";
-import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
-import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
+// Only the languages used here: the full "monaco-editor" entry also bundles every other language and the CSS and HTML workers.
+import * as monaco from "monaco-editor/editor";
+import "monaco-editor/features/register.all";
+import "monaco-editor/languages/definitions/javascript/register";
+import "monaco-editor/languages/definitions/typescript/register";
+import "monaco-editor/languages/features/json/register";
+import * as typescript from "monaco-editor/languages/features/typescript/register";
+import editorWorker from "monaco-editor/editor/editor.worker?worker";
+import jsonWorker from "monaco-editor/languages/features/json/json.worker?worker";
+import tsWorker from "monaco-editor/languages/features/typescript/ts.worker?worker";
 import { BaseInputProps } from "..";
-import prettier from "prettier/standalone";
-import parserTypeScript from "prettier/parser-typescript";
+import * as prettier from "prettier/standalone";
+import * as parserTypeScript from "prettier/plugins/typescript";
+import * as prettierPluginEstree from "prettier/plugins/estree";
 import { Box, FormHelperText, Paper, Theme, Typography, useTheme } from "@mui/material";
 
 self.MonacoEnvironment = {
@@ -53,20 +60,20 @@ function applyMonacoTheme(theme: Theme) {
   });
 }
 
-monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-  jsx: monaco.languages.typescript.JsxEmit.Preserve,
-  target: monaco.languages.typescript.ScriptTarget.ES2020,
+typescript.typescriptDefaults.setCompilerOptions({
+  jsx: typescript.JsxEmit.Preserve,
+  target: typescript.ScriptTarget.ES2020,
   esModuleInterop: true,
 });
 
-monaco.languages.typescript.typescriptDefaults.addExtraLib(templateTypeDefinition(), "file:///template.d.ts");
+typescript.typescriptDefaults.addExtraLib(templateTypeDefinition(), "file:///template.d.ts");
 
 for (const language of ["javascript", "typescript", "json"]) {
   monaco.languages.registerDocumentFormattingEditProvider(language, {
-    provideDocumentFormattingEdits(model, options) {
-      const formatted = prettier.format(model.getValue(), {
+    async provideDocumentFormattingEdits(model, options) {
+      const formatted = await prettier.format(model.getValue(), {
         parser: "typescript",
-        plugins: [parserTypeScript],
+        plugins: [parserTypeScript, prettierPluginEstree],
       });
       return [
         {
