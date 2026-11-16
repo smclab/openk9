@@ -114,7 +114,7 @@ export function Dataindices() {
                   <Box fontWeight="bolder" display="flex" alignItems="center" gap={1}>
                     {(dataIndice?.docTypes?.edges?.length ?? 0) === 0 && (
                       <Tooltip title={NO_DOC_TYPES_WARNING}>
-                        <WarningAmberIcon color="warning" fontSize="small" />
+                        <WarningAmberIcon color="warning" fontSize="small" titleAccess={NO_DOC_TYPES_WARNING} />
                       </Tooltip>
                     )}
                     {dataIndice?.name}
