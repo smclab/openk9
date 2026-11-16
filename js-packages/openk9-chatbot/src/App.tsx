@@ -19,7 +19,7 @@ import { alpha } from "@mui/material/styles";
 import CloseRoundedIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import React from "react";
-import Chatbot from "../lib/components/Chatbot";
+import Chatbot, { ChatbotHandle } from "../lib/components/Chatbot";
 import { Logo } from "./svg/Logo";
 import { User } from "./svg/User";
 import { TrashIcon } from "./svg/Trash";
@@ -110,51 +110,64 @@ function AiDisclosureBanner() {
 }
 
 function App() {
+  const chatbotRef = React.useRef<ChatbotHandle>(null);
+
   return (
-    <div
-      className="openk9-chatbot"
-      style={{ position: "absolute", bottom: "20px", right: "20px" }}
-    >
-      <Chatbot
-        initialMessage="Chiedimi pure qualcosa"
-        nameChatbot="Openk9"
-        tenant="https://k9-frontend.openk9.io"
-        // endpoint del RAG: "chat-tool" (default) lascia decidere all'agente se
-        // consultare la knowledge base, "chat" passa sempre dal retrieval
-        ragMode="chat-tool"
-        // lo slot accetta un nodo qualsiasi, quindi l'informativa puo' avere uno
-        // stato suo: qui e' un banner richiudibile. Sta in `bottom`, sotto
-        // l'input; spostarlo in `top` lo porta sopra la lista dei messaggi
-        aiDisclosure={{ bottom: <AiDisclosureBanner /> }}
-        icon={{
-          buttonIcon: <Logo size={35} color="white" />,
-          userIcon: <User />,
-          chatbotIcon: <Logo size={25} />,
-          refreshChatIcon: <TrashIcon />,
-          searchIcon: <SearchIcon />,
-          logoIcon: <Logo size={35} />,
-          closeIcon: <CloseIcon size="30px" color={"white"} />,
-          closeModal: (
-            <CloseIcon
-              size="18px"
-              color={defaultThemeK9.palette.primary.main}
-            />
-          ),
-        }}
-        title={
-          <h3
-            style={{
-              color: defaultThemeK9.palette.primary.main,
-              fontWeight: 400,
-              fontSize: "14px",
-              lineHeight: "22px",
-            }}
-          >
-            Chatta con <span style={{ fontWeight: 700 }}>Openk9</span>
-          </h3>
-        }
-      />
-    </div>
+    <React.Fragment>
+      {/* un bottone della pagina ospite, fuori dal chatbot, che fa la domanda
+          al posto dell'utente: è il caso di un'integrazione in un portale */}
+      <button
+        type="button"
+        onClick={() => chatbotRef.current?.send("Che cos'è OpenK9?")}
+      >
+        Chiedi al chatbot: Che cos'è OpenK9?
+      </button>
+      <div
+        className="openk9-chatbot"
+        style={{ position: "absolute", bottom: "20px", right: "20px" }}
+      >
+        <Chatbot
+          ref={chatbotRef}
+          initialMessage="Chiedimi pure qualcosa"
+          nameChatbot="Openk9"
+          tenant="https://k9-frontend.openk9.io"
+          // endpoint del RAG: "chat-tool" (default) lascia decidere all'agente se
+          // consultare la knowledge base, "chat" passa sempre dal retrieval
+          ragMode="chat-tool"
+          // lo slot accetta un nodo qualsiasi, quindi l'informativa puo' avere uno
+          // stato suo: qui e' un banner richiudibile. Sta in `bottom`, sotto
+          // l'input; spostarlo in `top` lo porta sopra la lista dei messaggi
+          aiDisclosure={{ bottom: <AiDisclosureBanner /> }}
+          icon={{
+            buttonIcon: <Logo size={35} color="white" />,
+            userIcon: <User />,
+            chatbotIcon: <Logo size={25} />,
+            refreshChatIcon: <TrashIcon />,
+            searchIcon: <SearchIcon />,
+            logoIcon: <Logo size={35} />,
+            closeIcon: <CloseIcon size="30px" color={"white"} />,
+            closeModal: (
+              <CloseIcon
+                size="18px"
+                color={defaultThemeK9.palette.primary.main}
+              />
+            ),
+          }}
+          title={
+            <h3
+              style={{
+                color: defaultThemeK9.palette.primary.main,
+                fontWeight: 400,
+                fontSize: "14px",
+                lineHeight: "22px",
+              }}
+            >
+              Chatta con <span style={{ fontWeight: 700 }}>Openk9</span>
+            </h3>
+          }
+        />
+      </div>
+    </React.Fragment>
   );
 }
 
