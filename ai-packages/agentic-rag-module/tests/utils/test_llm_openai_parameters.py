@@ -23,8 +23,10 @@ when the tenant asks for a reasoning level."""
 
 import importlib.util
 import pathlib
+from unittest.mock import MagicMock
 
 import pytest
+from openai.types.responses import Response
 from pydantic import BaseModel, Field
 
 MODULE_ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -128,14 +130,53 @@ def test_reasoning_level_drops_the_utility_temperature(llm_module):
     assert "temperature" not in payload
 
 
+def test_reasoning_level_does_not_store_requests(llm_module):
+    # the Responses API keeps every request unless told otherwise, and the
+    # request carries the question and the documents of the tenant
+    llm = llm_module.initialize_language_model(
+        _openai_configuration(model="gpt-6-luna", reasoning="medium")
+    )
+
+    payload = _structured_output_payload(llm)
+
+    assert payload["store"] is False
+
+
 def test_reasoning_level_keeps_the_answer_text_first_in_content(llm_module):
     # the default Responses output puts the reasoning block before the text,
     # where every node reads content[0]
     llm = llm_module.initialize_language_model(
-        _openai_configuration(reasoning="medium")
+        _openai_configuration(model="gpt-6-luna", reasoning="medium")
+    )
+    llm.root_client = MagicMock()
+    create = llm.root_client.responses.with_raw_response.create
+    create.return_value.parse.return_value = Response.model_validate(
+        {
+            "id": "resp_1",
+            "created_at": 0,
+            "model": "gpt-6-luna",
+            "object": "response",
+            "parallel_tool_calls": True,
+            "tool_choice": "auto",
+            "tools": [],
+            "output": [
+                {"type": "reasoning", "id": "rs_1", "summary": []},
+                {
+                    "type": "message",
+                    "id": "msg_1",
+                    "role": "assistant",
+                    "status": "completed",
+                    "content": [
+                        {"type": "output_text", "text": "The answer", "annotations": []}
+                    ],
+                },
+            ],
+        }
     )
 
-    assert llm.output_version == "v0"
+    message = llm.invoke("A question")
+
+    assert message.content[0]["text"] == "The answer"
 
 
 def test_reasoning_off_stays_on_chat_completions_for_gpt_6(llm_module):
@@ -148,3 +189,20 @@ def test_reasoning_off_stays_on_chat_completions_for_gpt_6(llm_module):
     assert "messages" in payload
     assert payload["reasoning_effort"] == "none"
     assert payload["temperature"] == 0
+
+
+@pytest.mark.parametrize(
+    ("reasoning", "effort"),
+    [("false", "none"), ("FALSE", "none"), ("true", None), ("", None)],
+)
+def test_quoted_booleans_are_not_reasoning_levels(llm_module, reasoning, effort):
+    # a hand-written jsonConfig may quote them, and as levels every request
+    # would fail on the Responses API
+    llm = llm_module.initialize_language_model(
+        _openai_configuration(model="gpt-6-luna", reasoning=reasoning)
+    )
+
+    payload = _structured_output_payload(llm)
+
+    assert "messages" in payload
+    assert payload.get("reasoning_effort") == effort

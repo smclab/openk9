@@ -89,3 +89,9 @@ def test_json_config_numbers_reach_ollama_as_integers(llm_module):
 
     assert type(llm.keep_alive) is int
     assert type(llm.num_gpu) is int
+
+
+def test_quoted_false_keeps_thinking_off(llm_module):
+    llm = llm_module.initialize_language_model(_ollama_configuration(reasoning="false"))
+
+    assert llm.reasoning is False

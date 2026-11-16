@@ -24,6 +24,7 @@ from app.external_services.grpc.grpc_client import (
     get_rag_configuration,
 )
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
+from app.utils.logger import get_logger
 from google.auth import default, transport
 from langchain_aws import ChatBedrockConverse
 from langchain_core.output_parsers import StrOutputParser
@@ -32,6 +33,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ibm import ChatWatsonx
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
+
+logger = get_logger(__name__)
 
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
@@ -133,6 +136,31 @@ def get_configurations(
     return configurations
 
 
+def _reasoning_setting(configuration):
+    """
+    Return the "reasoning" key of the LLM configuration as the tenant meant it.
+
+    The jsonConfig is written by hand, and a quoted boolean would otherwise
+    become a reasoning level that every request fails on: "true" and "false",
+    in any case, count as the booleans and an empty string as no key. Any other
+    string is a reasoning level.
+
+    :param dict configuration: The LLM configuration.
+
+    :return: ``True``, ``False``, ``None`` or a reasoning level.
+    """
+    reasoning = configuration.get("reasoning")
+    meanings = {"true": True, "false": False, "": None}
+    if not isinstance(reasoning, str) or reasoning.strip().lower() not in meanings:
+        return reasoning
+
+    meaning = meanings[reasoning.strip().lower()]
+    logger.warning(
+        f"jsonConfig key reasoning={reasoning!r} is a string, read as {meaning}"
+    )
+    return meaning
+
+
 def initialize_language_model(configuration, temperature=None):
     """
     Initialize and return a language model based on the specified model type
@@ -186,7 +214,9 @@ def initialize_language_model(configuration, temperature=None):
                 on OPENAI only an explicit False is sent, as reasoning_effort "none",
                 and without it the model keeps its own default. On OPENAI a level
                 such as "medium" moves the calls to the Responses API with that
-                reasoning effort and without temperature.
+                reasoning effort, without temperature and without storing them.
+                The strings "true" and "false" count as the booleans, and an
+                empty string as no key.
             - "keep_alive": int
                 Seconds the model stays resident in Ollama after a call (OLLAMA only,
                 defaults to DEFAULT_KEEP_ALIVE).
@@ -216,16 +246,19 @@ def initialize_language_model(configuration, temperature=None):
             # chat completions, which every structured output call sends; others
             # reject reasoning_effort altogether, "none" included. So it is sent
             # only when the tenant turns reasoning off.
-            reasoning = configuration.get("reasoning")
+            reasoning = _reasoning_setting(configuration)
             if isinstance(reasoning, str):
                 # A level keeps reasoning on with function tools, which only the
                 # Responses API accepts. There these models reject temperature,
                 # and output "v0" keeps the answer text in content[0] instead
-                # of a reasoning block.
+                # of a reasoning block. The Responses API stores every request
+                # unless told otherwise, chat completions does not: store=False
+                # keeps questions and documents off OpenAI as before.
                 reasoning_params = {
                     "reasoning_effort": reasoning,
                     "use_responses_api": True,
                     "output_version": "v0",
+                    "store": False,
                 }
                 temperature = None
             else:
@@ -252,7 +285,7 @@ def initialize_language_model(configuration, temperature=None):
                 base_url=api_url,
                 num_ctx=context_window,
                 temperature=temperature,
-                reasoning=bool(configuration.get("reasoning")),
+                reasoning=bool(_reasoning_setting(configuration)),
                 keep_alive=DEFAULT_KEEP_ALIVE if keep_alive is None else keep_alive,
                 num_gpu=configuration.get("num_gpu"),
             )

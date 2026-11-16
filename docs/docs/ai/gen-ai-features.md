@@ -170,7 +170,7 @@ The key is needed by the models that reason by default and then refuse function 
 }
 ```
 
-To keep reasoning on with these models, give `reasoning` a level instead of a boolean: one of the values the model accepts as reasoning effort, such as `"low"`, `"medium"` or `"high"`. Function tools and reasoning together are accepted only by the Responses API, so with a level every call of the LLM goes to `/v1/responses` with that effort, and without `temperature`, which these models refuse there. The RAG steps that ask for deterministic output lose their `temperature` of `0` too.
+To keep reasoning on with these models, give `reasoning` a level instead of a boolean: one of the values the model accepts as reasoning effort, such as `"low"`, `"medium"` or `"high"`. Function tools and reasoning together are accepted only by the Responses API, so with a level every call of the LLM goes to `/v1/responses` with that effort, and without `temperature`, which these models refuse there. The RAG steps that ask for deterministic output lose their `temperature` of `0` too. The calls also send `store: false`: the Responses API keeps every request unless told otherwise, and the requests carry the questions and the documents of the tenant.
 
 ```json
 {
@@ -178,7 +178,7 @@ To keep reasoning on with these models, give `reasoning` a level instead of a bo
 }
 ```
 
-Use a level only with OpenAI itself: OpenAI compatible endpoints such as LiteLLM or vLLM often expose `/v1/chat/completions` alone. On the `ollama` provider a level turns thinking on like `true`.
+Use a level only with OpenAI itself: OpenAI compatible endpoints such as LiteLLM or vLLM often expose `/v1/chat/completions` alone. On the `ollama` provider a level turns thinking on like `true`. On both providers the strings `"true"` and `"false"` count as the booleans, and an empty string as no key, with a warning in the log of the module.
 
 ## Embedding Batch Size
 
