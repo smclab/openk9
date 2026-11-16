@@ -646,7 +646,7 @@
       "settings-title": "Impostazioni Data Index",
       "custom-settings": "Impostazioni personalizzate",
       "index-mapping": "Mapping dell'indice",
-      "no-doc-types-warning": "Questo indice dati non ha tipi di documento: le ricerche testuali e i filtri non possono essere risolti. Generali dal mapping dell'indice con POST /api/datasource/v1/data-index/auto-generate-doc-types sul suo datasource.",
+      "no-doc-types-warning": "Questo indice dati non ha tipi di documento: le ricerche testuali e i filtri non possono essere risolti. Per generarli dal mapping dell'indice, prima rendilo l'indice dati della sua sorgente dati (bindDataIndexToDatasource), poi chiama POST /api/datasource/v1/data-index/auto-generate-doc-types su quella sorgente dati.",
       "chunk-header-fields": "Campi dell'intestazione dei chunk",
       "chunk-header-fields-description": "Campi i cui valori si scrivono, in quest'ordine, davanti a ogni chunk prima dell'embedding. Il testo da vettorizzare non può essere fra questi.",
       "chunk-header-fields-empty": "Nessuna intestazione: i chunk si vettorizzano come sono.",

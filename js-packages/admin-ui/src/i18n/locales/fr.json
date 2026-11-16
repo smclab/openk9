@@ -646,6 +646,7 @@
       "settings-title": "Paramètres de l'index de données",
       "custom-settings": "Paramètres personnalisés",
       "index-mapping": "Mapping de l'index",
+      "no-doc-types-warning": "Cet index de données n'a aucun type de document : les recherches textuelles et les filtres sur cet index ne peuvent pas être résolus. Pour les générer à partir du mapping de l'index, faites-en d'abord l'index de données de sa source de données (bindDataIndexToDatasource), puis appelez POST /api/datasource/v1/data-index/auto-generate-doc-types sur cette source de données.",
       "chunk-header-fields": "Champs de l'en-tête des chunks",
       "chunk-header-fields-description": "Champs dont les valeurs sont écrites, dans cet ordre, devant chaque chunk avant l'embedding. Le texte à vectoriser ne peut pas en faire partie.",
       "chunk-header-fields-empty": "Aucun en-tête : les chunks sont vectorisés tels quels.",

@@ -646,7 +646,7 @@
       "settings-title": "Data Index settings",
       "custom-settings": "Custom settings",
       "index-mapping": "Index Mapping",
-      "no-doc-types-warning": "This data index has no document type: text searches and filters on it cannot be resolved. Generate them from the index mapping with POST /api/datasource/v1/data-index/auto-generate-doc-types on its datasource.",
+      "no-doc-types-warning": "This data index has no document type: text searches and filters on it cannot be resolved. To generate them from the index mapping, first make it the data index of its datasource (bindDataIndexToDatasource), then call POST /api/datasource/v1/data-index/auto-generate-doc-types on that datasource.",
       "chunk-header-fields": "Chunk header fields",
       "chunk-header-fields-description": "Fields whose values are written, in this order, in front of every chunk before embedding. The text to embed cannot be one of them.",
       "chunk-header-fields-empty": "No header: chunks are embedded as they are.",

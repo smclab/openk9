@@ -646,6 +646,7 @@
       "settings-title": "Datenindex-Einstellungen",
       "custom-settings": "Benutzerdefinierte Einstellungen",
       "index-mapping": "Index-Mapping",
+      "no-doc-types-warning": "Dieser Datenindex hat keinen Dokumenttyp: Textsuchen und Filter darauf können nicht aufgelöst werden. Um sie aus dem Index-Mapping zu erzeugen, machen Sie ihn zuerst zum Datenindex seiner Datenquelle (bindDataIndexToDatasource) und rufen Sie dann POST /api/datasource/v1/data-index/auto-generate-doc-types für diese Datenquelle auf.",
       "chunk-header-fields": "Felder des Chunk-Headers",
       "chunk-header-fields-description": "Felder, deren Werte in dieser Reihenfolge vor jeden Chunk geschrieben werden, bevor er eingebettet wird. Der einzubettende Text darf nicht dazugehören.",
       "chunk-header-fields-empty": "Kein Header: Die Chunks werden unverändert eingebettet.",
