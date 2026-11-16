@@ -4,6 +4,7 @@ fastapi==0.136.1
 pydantic==2.13.3
 pydantic_core==2.46.3
 requests==2.33.1
+playwright==1.64.1
 scrapy-playwright==0.0.46
 Scrapy==2.15.2
 scrapyd-client==2.0.3
