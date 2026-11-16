@@ -618,7 +618,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             {
               content: (
                 <div>
-                  {isReadOnly && dataindexData.docTypeIds.length === 0 && (
+                  {isReadOnly && dataindexQuery.data?.dataIndex && dataindexData.docTypeIds.length === 0 && (
                     <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
                       {t("pages.data-indices.no-doc-types-warning")}
                     </Alert>
