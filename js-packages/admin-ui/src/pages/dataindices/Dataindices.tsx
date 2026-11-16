@@ -8,7 +8,7 @@ import { useToast } from "@components/Form";
 import { useDataIndicesQuery, useDeleteDataIndexMutation } from "../../graphql-generated";
 
 export const NO_DOC_TYPES_WARNING =
-  "This data index has no document type: text searches and filters on it cannot be resolved. Generate them from the index mapping with POST /api/datasource/v1/data-index/auto-generate-doc-types on its datasource.";
+  "This data index has no document type: text searches and filters on it cannot be resolved. To generate them from the index mapping, first make it the data index of its datasource (bindDataIndexToDatasource), then call POST /api/datasource/v1/data-index/auto-generate-doc-types on that datasource.";
 
 export function Dataindices() {
   const dataIndicesQuery = useDataIndicesQuery({ variables: { first: 10 } });
