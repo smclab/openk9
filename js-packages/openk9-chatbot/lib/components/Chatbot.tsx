@@ -49,7 +49,24 @@ export type IconProps = {
   closeModal?: React.ReactNode;
 };
 
+/** what the host page can ask of the chatbot through `ref` */
+export type ChatbotHandle = {
+  /**
+   * sends `message` as if the user had typed and submitted it, opening the
+   * panel. Returns `false` and sends nothing when the message is empty or
+   * whitespace only, when an answer is still streaming, or after the chatbot
+   * has unmounted.
+   */
+  send(message: string): boolean;
+};
+
 type ChatbotProps = {
+  /**
+   * lets the host page drive the chatbot, e.g. a button outside it that asks a
+   * question: `chatbotRef.current?.send("...")`. The handle is created once and
+   * stays the same for the life of the chatbot, so it can also be kept aside.
+   */
+  ref?: React.Ref<ChatbotHandle>;
   icon: IconProps;
   title?: React.ReactNode;
   initialMessage?: string;
@@ -132,6 +149,7 @@ function resolveAiDisclosure(
 }
 
 const Chatbot: React.FC<ChatbotProps> = ({
+  ref,
   icon,
   title,
   initialMessage = "Benvenuti su Openk9, hai dei dubbi? non esitare a chiedere",
@@ -154,6 +172,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
       <ThemeProvider theme={themeCustom || defaultThemeK9}>
         <LanguageProvider initialLanguage={language}>
           <StructureChatbot
+            ref={ref}
             icon={icon}
             title={title}
             initialMessage={initialMessage}
@@ -171,6 +190,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
 };
 
 const StructureChatbot: React.FC<ChatbotProps> = ({
+  ref,
   icon,
   title,
   initialMessage = "Benvenuti su Openk9, hai dei dubbi? non esitare a chiedere",
@@ -212,6 +232,49 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   });
   const [trapRef] = useFocusTrap(isView);
   const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
+  // `isChatting` si aggiorna solo al render dopo: due `send` nello stesso handler
+  // lo vedrebbero entrambe a false. Il ref resta acceso finche' la richiesta
+  // partita da `send` non e' finita (a fine stream, su errore o su annullamento)
+  const isSending = React.useRef(false);
+  // l'handle e' creato una volta sola e legge da qui i valori dell'ultimo render:
+  // `generateResponse` cambia a ogni chunk, e un handle ricreato ogni volta
+  // resterebbe stantio in mano a chi lo ha salvato
+  const latest = React.useRef({ isChatting, generateResponse });
+  React.useLayoutEffect(() => {
+    latest.current = { isChatting, generateResponse };
+  });
+  // un handle tenuto da parte non deve inviare a chatbot smontato: la richiesta
+  // partirebbe e nessuno vedrebbe la risposta
+  const isMounted = React.useRef(false);
+  React.useLayoutEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      send(message) {
+        const { isChatting, generateResponse } = latest.current;
+        if (
+          !isMounted.current ||
+          isSending.current ||
+          isChatting ||
+          message.trim() === ""
+        )
+          return false;
+        isSending.current = true;
+        setIsView(true);
+        generateResponse(message).finally(() => {
+          isSending.current = false;
+        });
+        return true;
+      },
+    }),
+    [],
+  );
 
   React.useEffect(() => {
     if (messages && messagesEndRef.current) {
