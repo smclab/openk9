@@ -440,7 +440,9 @@ class RagGraph:
         prompts built on configured categories when one of them is named
         SYSTEM_PROMPT_LEAKAGE; empty otherwise."""
         if not re.search(
-            r"^\d+\. SYSTEM_PROMPT_LEAKAGE - ", self.guardrail_categories, re.MULTILINE
+            r"^\d+\.\s*SYSTEM_PROMPT_LEAKAGE\s*- ",
+            self.guardrail_categories,
+            re.MULTILINE | re.IGNORECASE,
         ):
             return ""
         return (
