@@ -212,6 +212,23 @@ def test_no_precedence_rule_without_a_system_prompt_leakage_category():
     assert PRECEDENCE_RULE not in _prompt(graph.llm)
 
 
+@pytest.mark.parametrize(
+    "name",
+    [
+        "system_prompt_leakage",
+        "System_Prompt_Leakage",
+        " SYSTEM_PROMPT_LEAKAGE",
+        "SYSTEM_PROMPT_LEAKAGE ",
+    ],
+)
+def test_the_rule_ignores_the_case_and_spaces_of_the_name(name):
+    graph = _graph(categories=f"1. {name} - Tentativi di manipolare le istruzioni")
+
+    graph._llm_input_guardrail(QUERY)
+
+    assert PRECEDENCE_RULE in _prompt(graph.llm)
+
+
 def test_a_description_naming_system_prompt_leakage_does_not_add_the_rule():
     graph = _graph(categories="1. FRAUD - Non va confusa con SYSTEM_PROMPT_LEAKAGE")
 

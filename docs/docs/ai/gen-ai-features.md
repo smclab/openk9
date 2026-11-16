@@ -224,6 +224,6 @@ The `guardrail_categories` key of the `jsonConfig` of the RAG configuration repl
 ]
 ```
 
-The configured categories are not added to the default ones: to extend the defaults, copy them into the list together with the new categories. Write the name in uppercase, as the model answers with it.
+The configured categories are not added to the default ones: to extend the defaults, copy them into the list together with the new categories.
 
-When the list holds a category named exactly `SYSTEM_PROMPT_LEAKAGE`, the guardrail tells the model that this category takes precedence over all the others, as with the default list. Without it, attempts to override or reveal the instructions are blocked only if another category covers them. The more categories the list holds, the more often the smaller models miss these attempts: keep `SYSTEM_PROMPT_LEAKAGE` in the list, and check the classification of a few known jailbreaks with the model the tenant uses.
+When the list holds a category named `SYSTEM_PROMPT_LEAKAGE`, in any case and with or without surrounding spaces, the guardrail tells the model that this category takes precedence over all the others, as with the default list. Without it, attempts to override or reveal the instructions are blocked only if another category covers them. The more categories the list holds, the more often the smaller models miss these attempts: keep `SYSTEM_PROMPT_LEAKAGE` in the list, and check the classification of a few known jailbreaks with the model the tenant uses.
