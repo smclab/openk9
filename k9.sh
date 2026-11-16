@@ -546,8 +546,16 @@ check_stack_owner() {
         else
             _error "the OpenK9 stack was started from another directory:"
             _info "  $dir   (project: $project)"
-            _info "Stop it there with './k9.sh down', or from anywhere with:"
-            _info "  docker compose -p $project down"
+            case "$CMD" in
+                up|start|restart)
+                    _info "Stop it there with './k9.sh down', or from anywhere with:"
+                    _info "  docker compose -p $project down"
+                    ;;
+                *)
+                    _info "Run the command from that directory, or from anywhere with:"
+                    _info "  docker compose -p $project $CMD"
+                    ;;
+            esac
         fi
         exit 1
     done < <(docker ps -a --format '{{.Names}}\t{{.Label "com.docker.compose.project.working_dir"}}\t{{.Label "com.docker.compose.project"}}')
@@ -701,9 +709,11 @@ case "$CMD" in
         compose up -d "${OTHER_ARGS[@]}" "${SERVICES[@]}"
         ;;
     stop)
+        check_stack_owner
         compose stop "${SERVICES[@]}"
         ;;
     down)
+        check_stack_owner
         if [ "$DOWN_REMOVE_VOLUMES" = true ]; then
             compose down --volumes "${SERVICES[@]}"
         else
@@ -724,6 +734,7 @@ case "$CMD" in
         compose up -d "${SERVICES[@]}"
         ;;
     logs)
+        check_stack_owner
         compose logs -f "${SERVICES[@]}"
         ;;
     doctor)
