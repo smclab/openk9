@@ -49,6 +49,38 @@ export default tseslint.config({
 })
 ```
 
+## Sending a message from the host page
+
+The page that hosts the chatbot can ask a question on the user's behalf, e.g. from
+a button outside the widget. Pass a `ref` and call `send` on it:
+
+```tsx
+import { Chatbot, type ChatbotHandle } from "@openk9ui/openk9-chatbot";
+
+const chatbotRef = React.useRef<ChatbotHandle>(null);
+
+<button onClick={() => chatbotRef.current?.send("What is OpenK9?")}>
+  Ask the chatbot
+</button>
+<Chatbot ref={chatbotRef} icon={icon} />
+```
+
+`send` behaves like the user typing the message and pressing send: it opens the
+panel (moving the focus to its input, as the toggle button does) and shows the
+question in the conversation. It returns `true` when the message goes out and
+`false` when nothing is sent: an empty or whitespace-only message, an answer
+still streaming, or a chatbot that has been unmounted. Two calls in the same event
+handler send one message only.
+
+The handle stays the same for the life of the chatbot, so it can be kept aside
+and called later; once the chatbot unmounts, `send` returns `false`, so remove any
+listener that still holds it. On this version (React 18) `Chatbot` forwards the
+ref with `forwardRef`; the integration code above is the same on the React 19
+versions, where `ref` is a regular prop.
+
+The library exposes no global event or API to send a message: mapping the host's
+own events (portal events, fragments) to `send` stays in the host project.
+
 ## AI interaction disclosure
 
 The chatbot always renders a notice under the input telling the user the conversation

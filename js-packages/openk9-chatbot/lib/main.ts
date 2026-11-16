@@ -16,4 +16,5 @@
 */
 import Chatbot from "./components/Chatbot";
 export { Chatbot };
+export type { ChatbotHandle } from "./components/Chatbot";
 
