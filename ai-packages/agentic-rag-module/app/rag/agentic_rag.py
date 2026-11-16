@@ -2133,6 +2133,7 @@ class RagGraph:
             return {}
 
         quotes = {}
+        received = 0
         for key, raw_quotes in entries.items():
             try:
                 ordinal = int(key)
@@ -2158,6 +2159,7 @@ class RagGraph:
             for quote in raw_quotes:
                 if not isinstance(quote, str) or not quote.strip():
                     continue
+                received += 1
                 if len(kept) == MAX_CITATION_QUOTES:
                     logger.debug(
                         f"[citations] source {ordinal} hit the "
@@ -2179,6 +2181,17 @@ class RagGraph:
                 for ordinal in cited_ordinals
             )
         )
+
+        # At INFO a source with no quote does not say whether the model wrote
+        # none or wrote one the check refused. The quotes themselves stay at
+        # DEBUG - they carry source text - but the count that tells the two
+        # apart does not.
+        if (dropped := received - sum(len(kept) for kept in quotes.values())) > 0:
+            logger.info(
+                f"[citations] {dropped} of {received} quotes dropped, "
+                "not found in the source they were attributed to"
+            )
+
         return quotes
 
     def history_saver_node(self, state: GraphState) -> GraphState:
@@ -2539,6 +2552,7 @@ class RagGraph:
         # reported exactly the same way.
         outcome = "COMPLETED"
         cited_sources = []
+        kept_quotes = 0
         result_answer = ""
         # Counts every model call this request makes - the answer, the
         # router, the rewriting, the language resolver - not just the
@@ -2821,7 +2835,9 @@ class RagGraph:
                         last_state.values.get("citation_ordinals"),
                     )
 
-                cited_sources = list(last_state.values.get("citations") or {})
+                citations = last_state.values.get("citations") or {}
+                cited_sources = list(citations)
+                kept_quotes = sum(len(quotes) for quotes in citations.values())
 
             if last_state.values.get("guardrail_check"):
                 outcome = "BLOCKED_INPUT"
@@ -2860,7 +2876,7 @@ class RagGraph:
                 f"[request] end outcome={outcome} "
                 f"duration_ms={int((time.monotonic() - started_at) * 1000)} "
                 f"chain=agentic_rag {self._log_context()}"
-                + f" cited_sources={cited_sources}"
+                + f" cited_sources={cited_sources} quotes={kept_quotes}"
                 + f" {_render_token_usage(usage)}"
                 + debug_extra(logger, answer=result_answer)
             )

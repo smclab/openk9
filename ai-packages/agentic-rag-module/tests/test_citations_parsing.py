@@ -23,6 +23,8 @@ them. The two are parsed by one call so that a tail which is missing or
 malformed costs the evidence and never the attribution.
 """
 
+import logging
+
 from app.rag.agentic_rag import RagGraph
 
 # Three chunks over two sources: doc-1 is numbered 1 and holds two chunks,
@@ -178,3 +180,23 @@ def test_a_single_quote_not_in_a_list_is_accepted():
     citations, _ = _parse("I vetri [2].", '{"2": "copre la rottura dei vetri"}')
 
     assert citations == {"doc-2": ["copre la rottura dei vetri"]}
+
+
+# --- a dropped quote has to be visible without raising the log level -------
+
+
+def test_a_dropped_quote_is_counted_at_info(caplog):
+    # A source shown with no quote does not say, on its own, whether the model
+    # wrote none or wrote one that was refused. The quote itself stays at
+    # DEBUG, because it carries source text; the count does not.
+    with caplog.at_level(logging.INFO, logger="app.rag.agentic_rag"):
+        _parse("I vetri [2].", '{"2": ["una frase che la fonte non contiene"]}')
+
+    assert "1 of 1 quotes dropped" in caplog.text
+
+
+def test_nothing_is_logged_when_every_quote_survives(caplog):
+    with caplog.at_level(logging.INFO, logger="app.rag.agentic_rag"):
+        _parse("I vetri [2].", '{"2": ["copre la rottura dei vetri"]}')
+
+    assert "quotes dropped" not in caplog.text
