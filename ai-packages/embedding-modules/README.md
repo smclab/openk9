@@ -225,7 +225,10 @@ Titan and Cohere v3, 3072 for Nova 2). Things to know before choosing one:
   characters) and drops the rest silently: with longer chunks, the end of each
   chunk is not in its vector;
 - Cohere Embed v3 refuses a text longer than 2048 characters: a chunk or a
-  query longer than that fails the request;
+  query longer than that fails the request. It takes an image up to about
+  3.9 MB (a 5 MiB data URI): a larger image ref is skipped, the rest of the
+  document is indexed, and a query with a larger image is refused with
+  `FAILED_PRECONDITION`;
 - Nova 2 Multimodal Embeddings is offered in `us-east-1` only at the time of
   writing; langchain-aws embeds the queries with the same purpose as the
   documents (`GENERIC_INDEX`), which costs some precision on image search;

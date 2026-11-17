@@ -69,6 +69,18 @@ def _build_bedrock_langchain(configuration):
     return LangchainBedrockEmbedder(bedrock_embeddings(configuration))
 
 
+def _build_bedrock_langchain_cohere_v3(configuration):
+    from app.embedding.bedrock_langchain import (
+        COHERE_V3_MAX_IMAGE_BYTES,
+        LangchainBedrockEmbedder,
+        bedrock_embeddings,
+    )
+
+    return LangchainBedrockEmbedder(
+        bedrock_embeddings(configuration), max_image_bytes=COHERE_V3_MAX_IMAGE_BYTES
+    )
+
+
 def _build_vertex(configuration):
     from app.embedding.vertex import VertexMultimodalEmbedder
 
@@ -150,13 +162,13 @@ MODEL_REGISTRY = [
         "bedrock-cohere-english-v3",
         "aws_bedrock",
         lambda model: "cohere.embed-english-v3" in model,
-        _build_bedrock_langchain,
+        _build_bedrock_langchain_cohere_v3,
     ),
     RegisteredModel(
         "bedrock-cohere-multilingual-v3",
         "aws_bedrock",
         lambda model: "cohere.embed-multilingual-v3" in model,
-        _build_bedrock_langchain,
+        _build_bedrock_langchain_cohere_v3,
     ),
     RegisteredModel(
         "vertex-multimodalembedding",

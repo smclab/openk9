@@ -26,6 +26,9 @@ not, and an index built before keeps its vectors.
 
 No output dimension is passed: the text request of some families rejects it,
 and the vectors of an index built without it would change size.
+
+An image the model cannot take, by format or by size, is skipped: the rest of
+the document is indexed, as on a text-only model.
 """
 
 from langchain_aws import BedrockEmbeddings
@@ -52,12 +55,20 @@ def _is_supported_image(data):
     )
 
 
+# Cohere Embed v3 on Bedrock takes an image as a data URI of at most 5 MiB:
+# the bytes, in base64, behind the data: prefix. A larger image is rejected
+# ("Invalid parameter combination"), and with it the whole request.
+COHERE_V3_MAX_IMAGE_BYTES = (5 * 1024 * 1024 - 32) * 3 // 4
+
+
 class LangchainBedrockEmbedder:
     """Text and images of a Bedrock model through BedrockEmbeddings. There is
-    no mixed input: a query with text and image together is refused."""
+    no mixed input: a query with text and image together is refused.
+    max_image_bytes, when given, is the largest image the model takes."""
 
-    def __init__(self, embeddings):
+    def __init__(self, embeddings, max_image_bytes=None):
         self.embeddings = embeddings
+        self.max_image_bytes = max_image_bytes
 
     def embed_texts(self, texts, input_type="search_document"):
         """One vector per text, in order; queries go through embed_query,
@@ -69,12 +80,18 @@ class LangchainBedrockEmbedder:
 
     def embed_image(self, data, content_type):
         """Embeds a single image (raw bytes); SkipRef for a format other than
-        PNG, JPEG, GIF and WebP, so the ref is skipped as on a text-only
-        model."""
+        PNG, JPEG, GIF and WebP, or for an image larger than the model
+        takes, so the ref is skipped as on a text-only model."""
         if not _is_supported_image(data):
             raise SkipRef(
                 f"Bedrock embeds PNG, JPEG, GIF and WebP images only: the bytes "
                 f"of this {content_type} are none of them"
+            )
+
+        if self.max_image_bytes is not None and len(data) > self.max_image_bytes:
+            raise SkipRef(
+                f"the image is {len(data)} bytes, more than the "
+                f"{self.max_image_bytes} the model takes"
             )
 
         return self.embeddings.embed_image(data)

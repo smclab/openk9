@@ -30,7 +30,10 @@ import pytest
 from langchain_aws import BedrockEmbeddings
 
 from app.embedding import bedrock_langchain, multimodal
-from app.embedding.bedrock_langchain import LangchainBedrockEmbedder
+from app.embedding.bedrock_langchain import (
+    COHERE_V3_MAX_IMAGE_BYTES,
+    LangchainBedrockEmbedder,
+)
 from app.embedding.router import SkipRef
 
 NOVA = "amazon.nova-2-multimodal-embeddings-v1:0"
@@ -239,6 +242,44 @@ def test_png_jpeg_gif_and_webp_images_are_embedded(runtime, data, format):
 
     image = runtime.bodies[0]["singleEmbeddingParams"]["image"]
     assert image["format"] == format
+
+
+def _png_of(size):
+    return PNG + b"\x00" * (size - len(PNG))
+
+
+@pytest.mark.parametrize("model", [COHERE_EN, COHERE_ML])
+def test_an_image_larger_than_cohere_v3_takes_is_skipped_without_a_request(
+    runtime, model
+):
+    with pytest.raises(SkipRef):
+        _embedder(model).embed_image(
+            _png_of(COHERE_V3_MAX_IMAGE_BYTES + 1), "image/png"
+        )
+
+    assert runtime.bodies == []
+
+
+@pytest.mark.parametrize("model", [COHERE_EN, COHERE_ML])
+def test_an_image_at_the_cohere_v3_limit_is_embedded(runtime, model):
+    _embedder(model).embed_image(_png_of(COHERE_V3_MAX_IMAGE_BYTES), "image/png")
+
+    assert len(runtime.bodies) == 1
+
+
+@pytest.mark.parametrize("model", [NOVA, TITAN])
+def test_the_other_families_take_an_image_over_the_cohere_v3_limit(runtime, model):
+    _embedder(model).embed_image(_png_of(COHERE_V3_MAX_IMAGE_BYTES + 1), "image/png")
+
+    assert len(runtime.bodies) == 1
+
+
+def test_the_cohere_v3_limit_keeps_the_data_uri_within_5_mib():
+    # the longest prefix langchain puts in front of the base64 bytes
+    prefix = len("data:image/jpeg;base64,")
+    encoded = 4 * -(-COHERE_V3_MAX_IMAGE_BYTES // 3)
+
+    assert prefix + encoded <= 5 * 1024 * 1024
 
 
 def test_the_langchain_embedder_has_no_mixed_input():
