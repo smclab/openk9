@@ -145,19 +145,27 @@ CITATION_MARKERS_ONLY_INSTRUCTION = (
 # Quotes are keyed by ORDINAL, not document_id: the model is already writing
 # those numbers, and it sidesteps the int-vs-str document_id mismatch that
 # silently dropped every citation when the model wrote the id unquoted.
+# It opens by scoping the language rule, because the line right above it says
+# to write everything in the answer's language "regardless of the language used
+# in the context" - and the quotes come from the context. Without the
+# exception the model translates them, and then the grounding check drops
+# them, so the sources arrive with no evidence at all.
 CITATION_QUOTES_INSTRUCTION = (
-    " After the answer, on a new line, write the marker "
+    " The language rule above is about the answer and about nothing else. "
+    "After the answer, on a new line, write the marker "
     f"{CITATIONS_DELIMITER} followed by a JSON object mapping each source "
     "number you marked to its quotes, in this exact shape: "
     '{"2": ["..."], "5": ["..."]}. '
     "For each source, quote the passage your marked sentence took from it, "
-    "copied verbatim word for word and no longer than 25 words: never merge "
-    "two passages into one sentence, never rewrite them, and never quote "
-    "something your answer does not say. Give one quote per source unless the "
-    "answer takes two distinct statements from it, and if there is no second "
-    "passage you can copy word for word, give one only: a quote you had to "
-    "compose is worse than none. List every number you marked and no other. "
-    "Write nothing after the JSON object."
+    "copied character for character out of the context and left in the "
+    "language the context writes it in - a translated quote is worthless, "
+    "because the reader could not find it in the source. No longer than 25 "
+    "words: never merge two passages into one sentence, never rewrite them, "
+    "and never quote something your answer does not say. Give one quote per "
+    "source unless the answer takes two distinct statements from it, and if "
+    "there is no second passage you can copy word for word, give one only: a "
+    "quote you had to compose is worse than none. List every number you "
+    "marked and no other. Write nothing after the JSON object."
 )
 
 
