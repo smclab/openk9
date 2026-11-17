@@ -985,7 +985,7 @@
       "dimensionality-of-the-embedding-vectors-produced-by": "Dimensionalidad de los vectores de embedding que genera el modelo. Debe coincidir con la salida del modelo.",
       "type-of-the-vector-written-to-the": "Tipo del vector que se escribe en el índice. Determina la cuantización que aplica el módulo de embedding y el mapping knn_vector en OpenSearch. El valor predeterminado es FLOAT32 (sin cuantización). BINARY requiere un tamaño de vector múltiplo de 8.",
       "embedding-provider-integration-to-use-e-g": "Provider/integración de embedding que se usará (p. ej., OpenAI, Ollama, IBM WatsonX, Vertex AI, AWS Bedrock).",
-      "specific-embedding-model-identifier-of-the-selected": "Identificador específico del modelo de embedding del provider seleccionado (p. ej., text-embedding-3-small, nomic-embed-text). Las imágenes son compatibles con Cohere Embed v4 (AWS Bedrock) y multimodalembedding (Vertex AI); una query con texto e imagen a la vez, solo con Cohere Embed v4.",
+      "specific-embedding-model-identifier-of-the-selected": "Identificador específico del modelo de embedding del provider seleccionado (p. ej., text-embedding-3-small, nomic-embed-text). Las imágenes son compatibles con Cohere Embed v4, Cohere Embed v3, Titan Multimodal y Nova 2 Multimodal (AWS Bedrock), con multimodalembedding (Vertex AI) y con los modelos de Ollama con visión; una query con texto e imagen a la vez, solo con Cohere Embed v4 y los modelos de Ollama con visión.",
       "json-config-to-set-up-embedding-model": "Configuración JSON para definir los ajustes del modelo de embedding",
       "created-title": "Modelo de embedding creado",
       "updated-title": "Modelo de embedding actualizado",

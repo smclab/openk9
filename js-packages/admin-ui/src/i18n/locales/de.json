@@ -985,7 +985,7 @@
       "dimensionality-of-the-embedding-vectors-produced-by": "Dimensionalität der vom Modell erzeugten Embedding-Vektoren. Muss mit der Modellausgabe übereinstimmen.",
       "type-of-the-vector-written-to-the": "Typ des in den Index geschriebenen Vektors. Bestimmt die vom Embedding-Modul angewendete Quantisierung und das knn_vector-Mapping in OpenSearch. Standard ist FLOAT32 (keine Quantisierung). BINARY erfordert eine Vektorgröße, die ein Vielfaches von 8 ist.",
       "embedding-provider-integration-to-use-e-g": "Zu verwendender Embedding-Provider bzw. zu verwendende Integration (z. B. OpenAI, Ollama, IBM WatsonX, Vertex AI, AWS Bedrock).",
-      "specific-embedding-model-identifier-of-the-selected": "Kennung des konkreten Embedding-Modells des ausgewählten Providers (z. B. text-embedding-3-small, nomic-embed-text). Bilder werden von Cohere Embed v4 (AWS Bedrock) und multimodalembedding (Vertex AI) unterstützt; eine Query mit Text und Bild zusammen nur von Cohere Embed v4.",
+      "specific-embedding-model-identifier-of-the-selected": "Kennung des konkreten Embedding-Modells des ausgewählten Providers (z. B. text-embedding-3-small, nomic-embed-text). Bilder werden von Cohere Embed v4, Cohere Embed v3, Titan Multimodal und Nova 2 Multimodal (AWS Bedrock), von multimodalembedding (Vertex AI) und von den Ollama-Modellen mit Vision unterstützt; eine Query mit Text und Bild zusammen nur von Cohere Embed v4 und den Ollama-Modellen mit Vision.",
       "json-config-to-set-up-embedding-model": "JSON-Konfiguration für die Einstellungen des Embedding-Modells",
       "created-title": "Embedding-Modell erstellt",
       "updated-title": "Embedding-Modell aktualisiert",
