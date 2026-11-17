@@ -87,10 +87,10 @@ def test_the_flag_adds_the_quotes_block_on_top_of_the_markers():
 def test_the_quotes_are_exempt_from_the_language_rule():
     # The line above the instruction tells the model to write everything in
     # the answer's language "regardless of the language used in the context",
-    # and the quotes are copied from the context. Measured on gpt-4o-mini with
-    # English sources and an Italian answer: without this exception the model
-    # translated every quote and the grounding check dropped all of them
-    # (0 kept out of 12 over six runs), with it none were dropped.
+    # and the quotes are copied from the context. Measured on the module
+    # itself, gpt-4o-mini, English sources and an Italian answer: without this
+    # exception no run out of ten kept its quotes, with it twenty-four out of
+    # thirty did. The exception makes the translation sporadic, not impossible.
     graph = _graph(retrieve_citations=True, answer="Risposta.")
 
     graph.llm_response_node(_state())
