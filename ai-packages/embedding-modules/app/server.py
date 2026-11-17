@@ -182,7 +182,8 @@ def initialize_embedding_model(configuration):
             - "chat_vertex_ai_credentials": dict
                 Credentials for Google Vertex AI (required if using Vertexai).
             - "aws_bedrock": dict
-                Configurations for AWS Bedrock (required if using AWS_BEDROCK).
+                Configurations for AWS Bedrock (optional: without region_name
+                the AWS defaults apply, e.g. AWS_REGION).
             - "keep_alive": int
                 Seconds the model stays resident in Ollama after a call (OLLAMA only,
                 defaults to DEFAULT_KEEP_ALIVE).

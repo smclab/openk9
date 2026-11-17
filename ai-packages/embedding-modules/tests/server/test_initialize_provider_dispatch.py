@@ -98,6 +98,12 @@ def test_bedrock_gets_the_region():
     ) == ("BedrockEmbeddings", {"model_id": "m", "region_name": "eu-west-1"})
 
 
+def test_bedrock_without_its_block_leaves_the_region_to_the_aws_defaults():
+    assert server_module.initialize_embedding_model(
+        {"model_type": "aws_bedrock", "model": "m"}
+    ) == ("BedrockEmbeddings", {"model_id": "m", "region_name": None})
+
+
 def test_an_unknown_provider_falls_back_to_openai():
     assert server_module.initialize_embedding_model(
         {"model_type": "unknown", "model": "m", "api_url": ""}
