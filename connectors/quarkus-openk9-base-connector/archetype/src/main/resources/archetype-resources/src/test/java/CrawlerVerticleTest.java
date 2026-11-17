@@ -90,7 +90,10 @@ public class CrawlerVerticleTest {
             }
             cancelledFailure.complete(null);
         };
-        vertx.deployVerticle(new CrawlerVerticle(loopingWorker, cancelled));
+        String cancelledDeploymentId = await(
+                vertx.deployVerticle(new CrawlerVerticle(loopingWorker, cancelled))
+                        .toCompletionStage()
+                        .toCompletableFuture());
 
         // its next write fails, so the worker stops
         assertInstanceOf(CancellationException.class, await(cancelledFailure));
@@ -103,7 +106,9 @@ public class CrawlerVerticleTest {
                 .toCompletableFuture());
         await(activeLastReceived);
 
-        // 3. The cancelled execution sent neither LAST nor HALT
+        // 3. The cancelled execution was undeployed, and sent neither LAST nor HALT
+        assertFalse(vertx.deploymentIDs().contains(cancelledDeploymentId),
+                "cancelled CrawlerVerticle still deployed");
         assertFalse(received.stream().anyMatch(ingestionDTO ->
                 CANCELLED_SCHEDULE_ID.equals(ingestionDTO.getString("scheduleId"))
                         && !PayloadType.DOCUMENT.value().equals(ingestionDTO.getString("type"))));

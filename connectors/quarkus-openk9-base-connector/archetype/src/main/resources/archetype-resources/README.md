@@ -221,7 +221,7 @@ $h2 Connector Base Classes
   It overrides _work_ method from `Worker` interface, it sends a message through the producer for each data retrieved from the source, using the `producer.write()` method.  
   The body of the message is an `IngestionDTO` object.  
   The work is complete when _work_ returns, and fails if it throws an exception.  
-  When OpenK9 no longer accepts the data of the schedule, `producer.write()` throws `CancellationException`: do not catch it, so that the work stops.
+  When OpenK9 no longer accepts the data of the schedule, `producer.write()` throws `CancellationException`: do not catch it, so that the work stops. If you write inside a callback, hand the exception back to _work_, for example with `done.completeExceptionally(e)` on the future that _work_ waits for: otherwise _work_ never returns.
 
 
 - **WorkerFactory.java**  
@@ -258,7 +258,8 @@ $h2 Connector Base Classes
   A verticle responsible for consuming event bus messages and sending `IngestionDTO` objects one by one to OpenK9 using **_/ingest_** POST endpoint.  
   The HTTP client configuration is configured through `CrawlingService`.  
   The class name is used as the virtual address on the event bus to send messages to it.  
-  When OpenK9 answers 406, it has no queue for that schedule any more, for example because the schedule was cancelled: the verticle tells the `CrawlerVerticle` of that schedule to stop, and keeps sending the data of the other schedules.
+  When OpenK9 answers 406, it has no queue for that schedule any more, for example because the schedule was cancelled: the verticle tells the `CrawlerVerticle` of that schedule to stop, and keeps sending the data of the other schedules.  
+  Documents of that schedule already queued in the web client are still sent and rejected with 406, and the other schedules wait for them.
 
 ---
 
