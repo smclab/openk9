@@ -218,7 +218,7 @@ $h2 Connector Base Classes
   It overrides _work_ method from `Worker` interface, it sends a message through the producer for each data retrieved from the source, using the `producer.write()` method.  
   The body of the message is an `IngestionDTO` object.  
   Once the process is complete, it calls `promise.complete()`.  
-  When OpenK9 no longer accepts the data of the schedule, `producer.write()` throws `CancellationException`: do not catch it, so that the work stops.
+  When OpenK9 no longer accepts the data of the schedule, `producer.write()` throws `CancellationException`: do not catch it, so that the work stops. In an asynchronous worker the exception is thrown inside your callback: pass it to `promise.fail(e)`, otherwise the execution never ends.
 
 
 - **WorkerFactory.java**  
@@ -255,7 +255,8 @@ $h2 Connector Base Classes
   A verticle responsible for consuming event bus messages and sending `IngestionDTO` objects one by one to OpenK9 using **_/ingest_** POST endpoint.  
   The HTTP client configuration is configured through `CrawlingService`.  
   The class name is used as the virtual address on the event bus to send messages to it.  
-  When OpenK9 answers 406, it has no queue for that schedule any more, for example because the schedule was cancelled: the verticle tells the `CrawlerVerticle` of that schedule to stop, and keeps sending the data of the other schedules.
+  When OpenK9 answers 406, it has no queue for that schedule any more, for example because the schedule was cancelled: the verticle tells the `CrawlerVerticle` of that schedule to stop, and keeps sending the data of the other schedules.  
+  Documents of that schedule already queued in the web client are still sent and rejected with 406, and the other schedules wait for them.
 
 ---
 
@@ -396,28 +397,33 @@ Changes need to be made to the connector to create a concrete implementation(**I
     public void work(Promise<?> promise, MessageProducer<IngestionDTO> producer) {
         strapi.getStrapiData()
                 .onComplete(res -> {
-                    JsonObject jsonObject = res.result();
-                    JsonArray strapiData = jsonObject.getJsonArray("data");
+                    try {
+                        JsonObject jsonObject = res.result();
+                        JsonArray strapiData = jsonObject.getJsonArray("data");
 
-                    // Setting up IngestionDTO instance for each DatasourcePayload (strapiData) received
-                    for (int i = 0; i < strapiData.size(); i++) {
-                        JsonObject singleStrapiData = strapiData.getJsonObject(i);
-                        IngestionDTO ingestionDTO = new IngestionDTO();
-                        DatasourcePayload datasourcePayload = new DatasourcePayload();
+                        // Setting up IngestionDTO instance for each DatasourcePayload (strapiData) received
+                        for (int i = 0; i < strapiData.size(); i++) {
+                            JsonObject singleStrapiData = strapiData.getJsonObject(i);
+                            IngestionDTO ingestionDTO = new IngestionDTO();
+                            DatasourcePayload datasourcePayload = new DatasourcePayload();
 
-                        ingestionDTO.setContentId(UUID.randomUUID());
-                        ingestionDTO.setDatasourceId(invokeRequest.getDatasourceId());
-                        ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
-                        ingestionDTO.setTenantId(invokeRequest.getTenantId());
-                        ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
-                        ingestionDTO.setRawContent(singleStrapiData.toString());
-                        datasourcePayload.setAdditionalProperty("data", singleStrapiData);
-                        datasourcePayload.setAdditionalProperty("meta", jsonObject.getValue("meta"));
-                        ingestionDTO.setDatasourcePayload(datasourcePayload);
-                        ingestionDTO.setType(PayloadType.DOCUMENT);
-                        producer.write(ingestionDTO);
+                            ingestionDTO.setContentId(UUID.randomUUID());
+                            ingestionDTO.setDatasourceId(invokeRequest.getDatasourceId());
+                            ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
+                            ingestionDTO.setTenantId(invokeRequest.getTenantId());
+                            ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
+                            ingestionDTO.setRawContent(singleStrapiData.toString());
+                            datasourcePayload.setAdditionalProperty("data", singleStrapiData);
+                            datasourcePayload.setAdditionalProperty("meta", jsonObject.getValue("meta"));
+                            ingestionDTO.setDatasourcePayload(datasourcePayload);
+                            ingestionDTO.setType(PayloadType.DOCUMENT);
+                            producer.write(ingestionDTO);
+                        }
+                        promise.complete();
+                    } catch (Exception e) {
+                        // CancellationException included: otherwise the execution never ends
+                        promise.fail(e);
                     }
-                    promise.complete();
                 });
     }
    ```

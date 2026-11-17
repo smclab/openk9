@@ -18,6 +18,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -95,11 +96,53 @@ public class CrawlerVerticleTest {
             cancelledFailure.complete(null);
             promise.complete();
         };
-        vertx.deployVerticle(new CrawlerVerticle(loopingWorker, cancelled));
+        String cancelledDeploymentId = await(
+                vertx.deployVerticle(new CrawlerVerticle(loopingWorker, cancelled))
+                        .toCompletionStage()
+                        .toCompletableFuture());
 
         // its next write fails, so the worker stops
         assertInstanceOf(CancellationException.class, await(cancelledFailure));
 
+        assertOnlyTheCancelledExecutionStopped(cancelledDeploymentId);
+    }
+
+    @Test
+    public void a406StopsAnAsynchronousWorkerThatFailsThePromise() throws Exception {
+        // 1. The worker of the cancelled schedule writes inside a callback, as the README
+        // example does, and passes the exception to promise.fail
+        InvokeRequest cancelled = invokeRequest(CANCELLED_SCHEDULE_ID);
+        CompletableFuture<Exception> cancelledFailure = new CompletableFuture<>();
+        Worker asynchronousWorker = (promise, producer) -> {
+            AtomicInteger written = new AtomicInteger();
+            vertx.setPeriodic(50, timerId -> {
+                try {
+                    producer.write(document(cancelled));
+                    if (written.incrementAndGet() == 100) {
+                        vertx.cancelTimer(timerId);
+                        cancelledFailure.complete(null);
+                        promise.complete();
+                    }
+                } catch (Exception e) {
+                    vertx.cancelTimer(timerId);
+                    cancelledFailure.complete(e);
+                    promise.fail(e);
+                }
+            });
+        };
+        String cancelledDeploymentId = await(
+                vertx.deployVerticle(new CrawlerVerticle(asynchronousWorker, cancelled))
+                        .toCompletionStage()
+                        .toCompletableFuture());
+
+        // its next write fails inside the callback
+        assertInstanceOf(CancellationException.class, await(cancelledFailure));
+
+        assertOnlyTheCancelledExecutionStopped(cancelledDeploymentId);
+    }
+
+    private void assertOnlyTheCancelledExecutionStopped(String cancelledDeploymentId)
+            throws Exception {
         // 2. The connector still runs a new execution to the end
         InvokeRequest active = invokeRequest(ACTIVE_SCHEDULE_ID);
         Worker oneDocumentWorker = (promise, producer) -> {
@@ -111,7 +154,9 @@ public class CrawlerVerticleTest {
                 .toCompletableFuture());
         await(activeLastReceived);
 
-        // 3. The cancelled execution sent neither LAST nor HALT
+        // 3. The cancelled execution was undeployed, and sent neither LAST nor HALT
+        assertFalse(vertx.deploymentIDs().contains(cancelledDeploymentId),
+                "cancelled CrawlerVerticle still deployed");
         assertFalse(received.stream().anyMatch(ingestionDTO ->
                 CANCELLED_SCHEDULE_ID.equals(ingestionDTO.getString("scheduleId"))
                         && !PayloadType.DOCUMENT.value().equals(ingestionDTO.getString("type"))));

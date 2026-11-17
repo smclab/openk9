@@ -14,6 +14,8 @@ import io.vertx.core.eventbus.MessageProducer;
  * When OpenK9 no longer accepts the data of the schedule, for example because it
  * was cancelled, the next write throws {@link java.util.concurrent.CancellationException}:
  * let it propagate, so that the work stops.
+ * In an asynchronous worker the exception is thrown inside your callback: pass it to
+ * {@code promise.fail(e)}, otherwise the execution never ends.
  *
  * @see io.vertx.core.Promise
  * @see io.vertx.core.eventbus.MessageProducer
