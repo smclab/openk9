@@ -84,6 +84,24 @@ def test_the_flag_adds_the_quotes_block_on_top_of_the_markers():
     assert '{"2": ["..."], "5": ["..."]}' in prompt
 
 
+def test_the_quotes_are_exempt_from_the_language_rule():
+    # The line above the instruction tells the model to write everything in
+    # the answer's language "regardless of the language used in the context",
+    # and the quotes are copied from the context. Measured on gpt-4o-mini with
+    # English sources and an Italian answer: without this exception the model
+    # translated every quote and the grounding check dropped all of them
+    # (0 kept out of 12 over six runs), with it none were dropped.
+    graph = _graph(retrieve_citations=True, answer="Risposta.")
+
+    graph.llm_response_node(_state())
+
+    prompt = _rendered_prompt(graph)
+    assert (
+        "The language rule above is about the answer and about nothing else" in prompt
+    )
+    assert "left in the language the context writes it in" in prompt
+
+
 def test_flag_off_asks_for_no_quotes_block():
     graph = _graph(retrieve_citations=False, answer="Risposta.")
 
