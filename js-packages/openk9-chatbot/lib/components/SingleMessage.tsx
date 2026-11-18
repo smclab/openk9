@@ -151,7 +151,10 @@ export function SingleMessage({
       ? nameChatbot + " " + Translate({ label: "sendMessage" })
       : Translate({ label: "youSendMessage" })) + timeMessage;
 
-  const openSource = (source: Source) => window.open(source.url, "_blank");
+  // senza opener la scheda nuova non eredita il sessionStorage, e con esso la
+  // conversazione salvata
+  const openSource = (source: Source) =>
+    window.open(source.url, "_blank", "noopener,noreferrer");
 
   return (
     <div

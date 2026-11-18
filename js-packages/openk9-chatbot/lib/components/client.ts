@@ -68,16 +68,17 @@ export function OpenK9Client({
     // 		throw error;
     // 	}
     // },
-    async getInitialMessages(chatId: string): Promise<{
-      chat_id: string;
-      messages: [
-        { question: string; answer: string; chat_sequence_number: string }
-      ];
-    }> {
-      const response = await authFetch(`/api/rag/chat/${chatId}`);
+    /** the body of `GET /api/rag/chat/{chat_id}`, still to be validated */
+    async getInitialMessages({
+      url,
+      signal,
+    }: {
+      url: string;
+      signal: AbortSignal;
+    }): Promise<unknown> {
+      const response = await authFetch(url, { signal });
       if (!response.ok) throw new Error("Network response was not ok");
-      const data = await response.json();
-      return data || [];
+      return response.json();
     },
     // async getUserInfo(): Promise<getUserInfo> {
     // 	const response = await fetch(`/api/datasource/buckets/current`);

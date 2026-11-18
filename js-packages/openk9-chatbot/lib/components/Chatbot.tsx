@@ -23,6 +23,7 @@ import useGenerateResponse, {
   RagMode,
 } from "./useGenerateResponse";
 import { SingleMessage, type SourcesVariant } from "./SingleMessage";
+import { loadSavedConversation, saveConversation } from "./conversationStore";
 import { useFocusTrap } from "./useFocusTrap";
 import { Translate } from "./Translate";
 import { LanguageProvider } from "./LanguageContext";
@@ -56,8 +57,11 @@ export type ChatbotHandle = {
    */
   send(message: string): boolean;
   /**
-   * opens the panel and moves the focus to its input, sending nothing. No
-   * effect when the panel is already open or after the chatbot has unmounted.
+   * opens the panel and moves the focus to its input, sending nothing. On a
+   * panel that `persistConversation` reopened and the user has not entered
+   * yet, it moves the focus to the input and makes the panel modal. No effect
+   * when the panel is already open otherwise, or after the chatbot has
+   * unmounted.
    */
   open(): void;
   /**
@@ -141,6 +145,15 @@ type ChatbotProps = {
   showLauncher?: boolean;
   /** replaces the placeholder of the input. Defaults to the translated one */
   placeholder?: string;
+  /**
+   * keeps the conversation and the panel state across the pages of the same
+   * tab, in `sessionStorage` under a key per `tenant`: the concluded messages
+   * for an anonymous user, the chat id only for an authenticated one (the
+   * messages come back from the backend). A panel left open opens again on the
+   * next page without taking the focus; on screens narrower than 576px, where
+   * the panel fills the screen, it comes back closed. Off by default.
+   */
+  persistConversation?: boolean;
 };
 
 /** the two positions the disclosure can occupy inside the panel */
@@ -152,6 +165,14 @@ type AiDisclosureSlots = {
 };
 
 const DEFAULT_NUMBER_OF_SOURCES = 8;
+
+/** the panel floats beside the page from 576px up; narrower, it fills the screen */
+function isWideScreen() {
+  return (
+    typeof window.matchMedia !== "function" ||
+    window.matchMedia("(min-width: 576px)").matches
+  );
+}
 
 /** resolves the effective sources limit honoring the deprecated `useSource` flag */
 function resolveNumberOfSources(
@@ -208,6 +229,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
   onLoginRequest,
   showLauncher,
   placeholder,
+  persistConversation,
 }) => {
   const resolvedNumberOfSources = resolveNumberOfSources(
     numberOfSources,
@@ -234,6 +256,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
           onLoginRequest={onLoginRequest}
           showLauncher={showLauncher}
           placeholder={placeholder}
+          persistConversation={persistConversation}
         />
       </LanguageProvider>
     </React.Fragment>
@@ -258,11 +281,55 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   onLoginRequest,
   showLauncher = true,
   placeholder,
+  persistConversation = false,
 }) => {
-  const [isView, setIsView] = React.useState(false);
+  // letto una volta, al montaggio: e' quanto ha lasciato la pagina precedente
+  // della stessa scheda. Stesso test di useGenerateResponse: senza token
+  // l'utente e' anonimo. Una conversazione dell'altro tipo di utente (login o
+  // logout tra le due pagine, token non ancora pronto) non si riprende; il
+  // pannello si'. Sotto i 576px il pannello occupa lo schermo: si riprende chiuso
+  const [saved] = React.useState(() => {
+    const conversation = persistConversation
+      ? loadSavedConversation(tenant)
+      : null;
+    if (!conversation) return null;
+    const isAuthenticated = Boolean(callbackAuthorization?.());
+    const hasChatId = "chatId" in conversation;
+    const isOtherUser = isAuthenticated !== hasChatId;
+    return {
+      open: conversation.open && isWideScreen(),
+      startedAt: conversation.startedAt,
+      chatId:
+        isAuthenticated && "chatId" in conversation
+          ? conversation.chatId
+          : null,
+      messages:
+        !isAuthenticated && "messages" in conversation
+          ? conversation.messages
+          : [],
+      other: isOtherUser ? conversation : null,
+    };
+  });
+  const [isView, setIsView] = React.useState(saved?.open ?? false);
+  // il pannello riaperto al cambio pagina si vede ma non e' ancora modale: non
+  // prende il focus e non trattiene Tab finche' l'utente non ci entra
+  const [isPassive, setIsPassive] = React.useState(saved?.open ?? false);
   const [loginNoticeOpen, setLoginNoticeOpen] = React.useState(false);
-  const [welcomeMessageTime] = React.useState(() =>
-    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  const [startedAt] = React.useState(
+    () => saved?.startedAt ?? new Date().toISOString(),
+  );
+  const welcomeMessageTime = new Date(startedAt).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  // la chat dell'utente autenticato ancora da ricaricare dal backend
+  const [pendingChatId, setPendingChatId] = React.useState(
+    saved?.chatId ?? null,
+  );
+  // la conversazione dell'altro tipo di utente resta salvata com'e' finche'
+  // questa pagina non ne inizia o ne svuota una
+  const [otherUserConversation, setOtherUserConversation] = React.useState(
+    saved?.other ?? null,
   );
   const chatbotSearchRef = React.useRef<HTMLInputElement | null>(null);
   const aiDisclosureId = React.useId();
@@ -289,13 +356,15 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     isChatting,
     isLoading: isGenerateMessage,
     resetMessage,
+    getChatId,
+    restoreChat,
   } = useGenerateResponse({
-    initialMessages: [],
+    initialMessages: saved?.messages ?? [],
     tenant,
     callbackAuthorization,
     ragMode,
   });
-  const [trapRef] = useFocusTrap(isView);
+  const [trapRef] = useFocusTrap(isView && !isPassive);
   const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
 
   // same test as useGenerateResponse: no token at send time means anonymous.
@@ -306,8 +375,59 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
       return null;
     }
     setLoginNoticeOpen(false);
+    // una domanda inviata prima che la chat salvata arrivi ne apre una nuova
+    setPendingChatId(null);
+    setOtherUserConversation(null);
     return generateResponse(message);
   };
+
+  const resetConversation = () => {
+    setPendingChatId(null);
+    setOtherUserConversation(null);
+    resetMessage();
+  };
+
+  // in errore (401, 404, rete) o senza messaggi si riparte da una conversazione
+  // vuota, senza avvisi; il salvataggio sotto perde il chatId
+  const restoreSavedChat = React.useEffectEvent(
+    (chatId: string, signal: AbortSignal) => restoreChat(chatId, signal),
+  );
+  React.useEffect(() => {
+    if (pendingChatId === null) return;
+    const controller = new AbortController();
+    restoreSavedChat(pendingChatId, controller.signal)
+      .catch(() => undefined)
+      .finally(() => {
+        if (!controller.signal.aborted) setPendingChatId(null);
+      });
+    return () => controller.abort();
+  }, [pendingChatId]);
+
+  // finche' la chat salvata non e' arrivata il suo chatId resta nel salvataggio,
+  // cosi' un nuovo cambio pagina non la perde
+  React.useEffect(() => {
+    if (!persistConversation) return;
+    if (otherUserConversation !== null) {
+      saveConversation(tenant, { ...otherUserConversation, open: isView });
+      return;
+    }
+    const chatId = getChatId() ?? pendingChatId;
+    saveConversation(
+      tenant,
+      chatId !== null
+        ? { open: isView, startedAt, chatId }
+        : { open: isView, startedAt, messages },
+    );
+  }, [
+    persistConversation,
+    tenant,
+    isView,
+    startedAt,
+    messages,
+    pendingChatId,
+    otherUserConversation,
+    getChatId,
+  ]);
 
   // chi aveva il focus prima dell'apertura: il pulsante tondo o quello della
   // pagina. Alla chiusura il focus ci torna solo se stava dentro il pannello,
@@ -318,15 +438,21 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   const opener = React.useRef<HTMLElement | null>(null);
   const focusAfterClose = React.useRef<HTMLElement | null>(null);
   const launcherRef = React.useRef<HTMLButtonElement | null>(null);
+  // sul pannello riaperto al cambio pagina l'apertura lo rende modale e porta
+  // il focus all'input, come un'apertura normale
   const openPanel = () => {
-    if (!trapRef.current) {
+    if (!trapRef.current || isPassive) {
       opener.current =
         document.activeElement instanceof HTMLElement
           ? document.activeElement
           : null;
     }
+    if (isPassive) chatbotSearchRef.current?.focus();
+    setIsPassive(false);
     setIsView(true);
   };
+  // l'utente entra nel pannello riaperto con un clic o con Tab
+  const enterPanel = () => setIsPassive(false);
   const closePanel = () => {
     const previous = opener.current;
     const canReturn =
@@ -406,10 +532,13 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     }
   }, [messages]);
 
+  // il pannello riaperto al cambio pagina e' gia' visibile al montaggio, ma il
+  // focus resta alla pagina
+  const focusInputOnOpen = React.useEffectEvent(() => {
+    if (!isPassive) chatbotSearchRef.current?.focus();
+  });
   React.useEffect(() => {
-    if (isView && chatbotSearchRef.current) {
-      chatbotSearchRef.current.focus();
-    }
+    if (isView) focusInputOnOpen();
   }, [isView]);
 
   // se intanto il focus l'ha preso qualcun altro (la modale di login della
@@ -430,12 +559,15 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     <div className="openk9-chatbot-structure" data-color-scheme={colorScheme}>
       {isView && (
         // il focus trap copre solo il pannello: con `aria-modal` il resto della
-        // pagina, pulsante tondo compreso, e' fuori dalla finestra
+        // pagina, pulsante tondo compreso, e' fuori dalla finestra. Il pannello
+        // riaperto al cambio pagina diventa modale quando l'utente ci entra
         <div
           className="openk9-chatbot-container"
           ref={trapRef}
           role="dialog"
-          aria-modal="true"
+          aria-modal={isPassive ? undefined : "true"}
+          onFocus={enterPanel}
+          onPointerDown={enterPanel}
           aria-labelledby={title ? titleId : undefined}
           aria-label={title ? undefined : nameChatbot || "Chatbot"}
           onKeyDown={(event) => {
@@ -458,7 +590,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             titleId={titleId}
             icon={icon}
             isChatting={isChatting}
-            resetMessage={resetMessage}
+            resetMessage={resetConversation}
             onClose={closePanel}
           />
           {resolvedAiDisclosure.top !== undefined && (

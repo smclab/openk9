@@ -151,6 +151,62 @@ The header buttons fall back to default icons when `icon.refreshChatIcon` or
 <Chatbot icon={icon} title="Assistente" placeholder="Scrivi la tua domanda…" />
 ```
 
+## Keeping the conversation across pages
+
+When the chatbot is mounted on every page of a site, each page change creates it
+again. With `persistConversation` the conversation and the panel state survive the
+page change, so the user finds them where they left them:
+
+```tsx
+<Chatbot icon={icon} tenant={tenant} persistConversation />
+```
+
+It is off by default: without the prop nothing is stored and every page starts from
+an empty conversation, as before.
+
+- **Where:** `sessionStorage`, never `localStorage`: the data lives as long as the
+  tab, so closing it, or opening the site in a new tab, starts from an empty
+  conversation. The browser's "Duplicate tab" copies `sessionStorage`: the
+  duplicate starts with a copy of the conversation, which then goes its own way.
+  The sources of an answer open in a new tab without an opener, so that tab does
+  not inherit the conversation.
+- **Per tenant:** the key is `openk9-chatbot-conversation:<tenant>`, so two chatbots
+  of different tenants on the same domain keep separate conversations.
+- **Anonymous user:** the concluded messages are stored, those with a complete
+  answer or an error. An answer still streaming when the page changes is not resumed.
+  The next question continues the conversation: it goes out with the following
+  `chatSequenceNumber` and the restored messages in `chatHistory`.
+- **Authenticated user** (`callbackAuthorization` returns a token when the chatbot
+  mounts, the same test used at send time): only the chat id is stored, never the
+  messages. The next page reads them again from the backend with
+  `GET /api/rag/chat/{chat_id}` and the conversation continues on the same chat.
+  Each restored question shows the time its answer was saved by the backend, the
+  only time the backend returns. If that request fails (expired session, chat not
+  found, network error) the chatbot starts from an empty conversation, without
+  showing an error, and forgets the stored chat id.
+- **The token must be there when the chatbot mounts.** The kind of user is decided
+  once, at mount: if `callbackAuthorization` has no token yet (e.g. a login check
+  still running) the conversation starts empty. The same happens when the user
+  logged in or out between the two pages. In both cases the stored conversation is
+  kept as it is for the next page, until the user asks a question or starts a new
+  conversation here.
+- **Panel:** whether it was open or closed, and the time of the welcome message. A
+  panel left open opens again on the next page without taking the focus: it does
+  not trap Tab and is not `aria-modal` until the user clicks inside it or reaches it
+  with Tab. `open()` and `send()` move the focus to its input and make it modal,
+  as a normal opening does; the round button closes it, as it closes any open
+  panel. On screens narrower than 576px, where the panel fills the screen, a panel
+  left open comes back closed: only the conversation is restored.
+- **New conversation:** the clear button in the header empties the stored
+  conversation too.
+- **Storage unavailable or invalid:** when `sessionStorage` cannot be read or
+  written (private browsing, site data blocked, quota) or holds data that does not
+  match what the chatbot expects, the chatbot works as without the prop, without
+  errors.
+
+The colours of the source chips are picked again on every page, so a restored
+answer may show its sources in different colours.
+
 ## AI interaction disclosure
 
 The chatbot always renders a notice telling the user the conversation is held with an

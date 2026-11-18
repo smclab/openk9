@@ -89,6 +89,25 @@ function AiDisclosureBanner() {
   );
 }
 
+// le opzioni che devono sopravvivere al ricaricamento, cioe' al cambio pagina
+// da provare, stanno anche nell'url
+function useUrlFlag(name: string) {
+  const [value, setValue] = React.useState(() =>
+    new URLSearchParams(window.location.search).has(name),
+  );
+  const update = (next: boolean) => {
+    const url = new URL(window.location.href);
+    if (next) url.searchParams.set(name, "");
+    else url.searchParams.delete(name);
+    window.history.replaceState(null, "", url);
+    setValue(next);
+  };
+  return [value, update] as const;
+}
+
+// un token finto: basta perche' il chatbot tratti l'utente come autenticato
+const harnessToken = () => "Bearer harness-token";
+
 function App() {
   const chatbotRef = React.useRef<ChatbotHandle>(null);
   const [isDark, setIsDark] = React.useState(false);
@@ -99,6 +118,11 @@ function App() {
   const [showLauncher, setShowLauncher] = React.useState(true);
   const [hasSourcesList, setHasSourcesList] = React.useState(false);
   const [hasTimestamps, setHasTimestamps] = React.useState(true);
+  // il ripristino avviene al montaggio: si vede ricaricando la pagina
+  const [persistConversation, setPersistConversation] = useUrlFlag(
+    "persistConversation",
+  );
+  const [isAuthenticated, setIsAuthenticated] = useUrlFlag("authenticated");
 
   return (
     <React.Fragment>
@@ -151,10 +175,28 @@ function App() {
       <label>
         <input
           type="checkbox"
+          checked={persistConversation}
+          onChange={(event) =>
+            setPersistConversation(event.currentTarget.checked)
+          }
+        />
+        Conserva la conversazione tra le pagine
+      </label>
+      <label>
+        <input
+          type="checkbox"
           checked={hasTimestamps}
           onChange={(event) => setHasTimestamps(event.currentTarget.checked)}
         />
         Orari dei messaggi
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={isAuthenticated}
+          onChange={(event) => setIsAuthenticated(event.currentTarget.checked)}
+        />
+        Utente autenticato (token finto)
       </label>
       <div
         className={[
@@ -172,6 +214,8 @@ function App() {
           showLauncher={showLauncher}
           sourcesVariant={hasSourcesList ? "list" : "chips"}
           showTimestamps={hasTimestamps}
+          persistConversation={persistConversation}
+          callbackAuthorization={isAuthenticated ? harnessToken : undefined}
           initialMessage="Chiedimi pure qualcosa"
           nameChatbot="Openk9"
           tenant="https://k9-frontend.openk9.io"

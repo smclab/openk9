@@ -20,6 +20,7 @@ import type { Source } from "./client";
 import { useLanguage } from "./useLanguage";
 import { getTranslation } from "./Translate";
 import { OpenK9Client } from "./client";
+import { parseChatResponse } from "./conversationStore";
 
 
 export interface Message {
@@ -381,6 +382,28 @@ const useGenerateResponse = ({
     chatIdRef.current = null;
   };
 
+  /** the chat the next authenticated question continues, if any */
+  const getChatId = useCallback(() => chatIdRef.current, []);
+
+  /**
+   * reloads the messages of `chatId` from the backend and continues that chat.
+   * Rejects when the request fails or brings back no message, leaving the
+   * conversation as it is.
+   */
+  const restoreChat = async (chatId: string, signal: AbortSignal) => {
+    const restored = parseChatResponse(
+      await client.getInitialMessages({
+        url: `${tenant}/api/rag/chat/${encodeURIComponent(chatId)}`,
+        signal,
+      }),
+    );
+    // intanto e' partita una nuova chat (un `send` della pagina ospite): vince lei
+    if (signal.aborted || chatIdRef.current !== null) return;
+    if (restored.length === 0) throw new Error("No message to restore");
+    chatIdRef.current = chatId;
+    setMessages(restored);
+  };
+
   return {
     messages,
     generateResponse,
@@ -389,6 +412,8 @@ const useGenerateResponse = ({
     isChatting,
     isLoading,
     resetMessage,
+    getChatId,
+    restoreChat,
   };
 };
 
