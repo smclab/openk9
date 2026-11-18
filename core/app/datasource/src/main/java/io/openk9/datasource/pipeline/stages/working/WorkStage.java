@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.function.BiFunction;
 
 import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.actor.PartialUpdateWriter;
 import io.openk9.datasource.pipeline.actor.Scheduling;
@@ -153,7 +154,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
 
 		switch (dataPayload.getType()) {
-			case DOCUMENT -> {
+			case DOCUMENT, DELETED_DOCUMENT -> {
 				// Prepares for working on this dataPayload
 				var contentId = dataPayload.getContentId();
 
@@ -184,12 +185,25 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 					contentId
 				);
 
-				// If there are no documentTypes defined,
-				// then the associated documents has to be deleted.
+				// A DELETED_DOCUMENT deletes the documents of its contentId.
+				// So does a DOCUMENT without documentTypes, which is deprecated.
 
+				var deletedDocument =
+					dataPayload.getType() == PayloadType.DELETED_DOCUMENT;
 				var documentTypes = dataPayload.getDocumentTypes();
 
-				if (documentTypes == null || documentTypes.length == 0) {
+				if (deletedDocument
+					|| documentTypes == null
+					|| documentTypes.length == 0) {
+
+					if (!deletedDocument) {
+						log.warnf(
+							"%s: content %s of datasource %d is deleted by a DOCUMENT "
+							+ "without document types, which is deprecated: "
+							+ "send a DELETED_DOCUMENT instead.",
+							shardingKey.asString(), contentId,
+							dataPayload.getDatasourceId());
+					}
 
 					log.infof("%s: Document with this contentId has to be deleted.", heldMessage);
 

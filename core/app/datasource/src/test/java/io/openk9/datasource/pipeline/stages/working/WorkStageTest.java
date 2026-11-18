@@ -113,6 +113,96 @@ class WorkStageTest {
 	}
 
 	@Test
+	void should_delete_the_content_of_a_deleted_document() {
+		// setup a WorkStage with test inboxes
+		var replyToInbox = TestInbox.<WorkStage.Response>create();
+		var requesterInbox = TestInbox.<Scheduling.Response>create();
+		var workStage = BehaviorTestKit.create(WorkStage.create(
+			SHARDING_KEY,
+			replyToInbox.getRef(),
+			new WorkStage.Configurations(
+				new LinkedList<>(), (dto, writerAdapter) -> Behaviors.ignore())
+		));
+		workStage.getAllEffects();
+
+		// send a DELETED_DOCUMENT payload with a valid contentId
+		var payload = Json.encodeToBuffer(DataPayload.builder()
+				.type(PayloadType.DELETED_DOCUMENT)
+				.contentId("content-1")
+				.build())
+			.getBytes();
+
+		workStage.run(new WorkStage.StartWorker(
+			scheduler(), payload, requesterInbox.getRef()));
+
+		// the deletion is held as Working, so Scheduling can track it
+		var response = replyToInbox.receiveMessage();
+		var working = Assertions.assertInstanceOf(WorkStage.Working.class, response);
+		Assertions.assertEquals("content-1", working.heldMessage().contentId());
+
+		// the writer is asked to delete the content, with no ProcessorChain
+		assertOnlyTheWriterDeletes(workStage);
+	}
+
+	@Test
+	void should_reply_invalid_when_deleted_document_has_no_contentId() {
+		// setup a WorkStage with test inboxes
+		var replyToInbox = TestInbox.<WorkStage.Response>create();
+		var requesterInbox = TestInbox.<Scheduling.Response>create();
+		var workStage = BehaviorTestKit.create(WorkStage.create(
+			SHARDING_KEY,
+			replyToInbox.getRef(),
+			new WorkStage.Configurations(
+				new LinkedList<>(), (dto, writerAdapter) -> Behaviors.ignore())
+		));
+
+		// send a DELETED_DOCUMENT payload without contentId
+		var payload = Json.encodeToBuffer(DataPayload.builder()
+				.type(PayloadType.DELETED_DOCUMENT)
+				.build())
+			.getBytes();
+
+		workStage.run(new WorkStage.StartWorker(
+			scheduler(), payload, requesterInbox.getRef()));
+
+		// the validation fails with an Invalid response
+		var response = replyToInbox.receiveMessage();
+		var invalid = Assertions.assertInstanceOf(WorkStage.Invalid.class, response);
+		Assertions.assertEquals("content-id is null", invalid.errorMessage());
+	}
+
+	@Test
+	void should_delete_a_deleted_document_that_has_documentTypes() {
+		// setup a WorkStage with test inboxes
+		var replyToInbox = TestInbox.<WorkStage.Response>create();
+		var requesterInbox = TestInbox.<Scheduling.Response>create();
+		var workStage = BehaviorTestKit.create(WorkStage.create(
+			SHARDING_KEY,
+			replyToInbox.getRef(),
+			new WorkStage.Configurations(
+				new LinkedList<>(), (dto, writerAdapter) -> Behaviors.ignore())
+		));
+		workStage.getAllEffects();
+
+		// send a DELETED_DOCUMENT payload that also has documentTypes
+		var payload = Json.encodeToBuffer(DataPayload.builder()
+				.type(PayloadType.DELETED_DOCUMENT)
+				.contentId("content-1")
+				.documentTypes(new String[] {"web"})
+				.build())
+			.getBytes();
+
+		workStage.run(new WorkStage.StartWorker(
+			scheduler(), payload, requesterInbox.getRef()));
+
+		// the type wins over the documentTypes: the content is deleted
+		Assertions.assertInstanceOf(
+			WorkStage.Working.class, replyToInbox.receiveMessage());
+
+		assertOnlyTheWriterDeletes(workStage);
+	}
+
+	@Test
 	void should_give_a_distinct_process_key_to_each_instance() throws Exception {
 		// two WorkStages for the same scheduling, as after a restart
 		var first = workingKeyOf(newWorkStage());
@@ -138,6 +228,26 @@ class WorkStageTest {
 		Assertions.assertEquals(4, first.elements().length);
 		Assertions.assertEquals(first.elements()[2], second.elements()[2]);
 		Assertions.assertNotEquals(first, second);
+	}
+
+	// checks that the WorkStage spawned only the writer, with no
+	// ProcessorChain, and asked it to delete: a Start without payload
+	private static void assertOnlyTheWriterDeletes(
+		BehaviorTestKit<WorkStage.Command> workStage) {
+
+		var spawned = workStage.getAllEffects()
+			.stream()
+			.filter(effect -> effect instanceof Effect.SpawnedAnonymous<?>)
+			.map(effect -> (Effect.SpawnedAnonymous<?>) effect)
+			.toList();
+
+		Assertions.assertEquals(1, spawned.size());
+
+		var writerInbox = workStage.childInbox(spawned.get(0).ref());
+		var start = Assertions.assertInstanceOf(
+			Writer.Start.class, writerInbox.receiveMessage());
+
+		Assertions.assertNull(start.dataPayload());
 	}
 
 	private static BehaviorTestKit<WorkStage.Command> newWorkStage() {
