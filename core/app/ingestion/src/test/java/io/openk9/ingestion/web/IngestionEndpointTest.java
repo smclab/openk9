@@ -33,10 +33,12 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import static io.restassured.RestAssured.given;
@@ -113,6 +115,75 @@ class IngestionEndpointTest {
 		then(binaryStorageService).shouldHaveNoInteractions();
 
 		then(ingestionEmitter).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void should_ingest_a_deleted_document_without_datasourcePayload() {
+
+		// send a DELETED_DOCUMENT with only the content to delete
+		given()
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body(IngestionDTO.builder()
+				.contentId("content-1")
+				.type(PayloadType.DELETED_DOCUMENT)
+				.build())
+			.post()
+			.then()
+			//a 406 is expected because no queue exists with name "null#null"
+			.statusCode(406);
+
+		// the message is not rejected: it reaches the emitter
+		then(ingestionEmitter)
+			.should(times(1))
+			.emit(any(IngestionDTO.class));
+	}
+
+	@Test
+	void should_drop_the_fields_a_deleted_document_does_not_use() {
+
+		// send a DELETED_DOCUMENT with the fields of a content and a binary
+		given()
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body(IngestionDTO.builder()
+				.contentId("content-1")
+				.type(PayloadType.DELETED_DOCUMENT)
+				.datasourcePayload(Map.of("web", Map.of("title", "Lorem ipsum")))
+				.rawContent("Lorem ipsum")
+				.acl(Map.of("rolesName", List.of("admin")))
+				.resources(ResourcesDTO.builder()
+					.binaries(List.of(BinaryDTO.builder()
+						.data(Base64.getEncoder().encode("Lorem ipsum".getBytes()))
+						.contentType("text/plain")
+						.id("1102394")
+						.build()))
+					.build())
+				.build())
+			.post()
+			.then()
+			//a 406 is expected because no queue exists with name "null#null"
+			.statusCode(406);
+
+		// the binary is not stored
+		then(binaryStorageService).shouldHaveNoInteractions();
+
+		// the emitted message keeps only what the deletion needs
+		var emitted = ArgumentCaptor.forClass(IngestionDTO.class);
+
+		then(ingestionEmitter)
+			.should(times(1))
+			.emit(emitted.capture());
+
+		var ingestionDTO = emitted.getValue();
+
+		Assertions.assertEquals("content-1", ingestionDTO.getContentId());
+		Assertions.assertEquals(
+			PayloadType.DELETED_DOCUMENT, ingestionDTO.getType());
+		Assertions.assertNull(ingestionDTO.getDatasourcePayload());
+		Assertions.assertNull(ingestionDTO.getRawContent());
+		Assertions.assertNull(ingestionDTO.getAcl());
+		Assertions.assertNull(ingestionDTO.getResources());
 	}
 
 	@Test

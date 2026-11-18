@@ -48,6 +48,11 @@ public class IngestionDTO {
 	private long parsingDate;
 	@Schema(description = "Message raw content. Can be used to perform some elaboration or enrichment inside Openk9 pipeline.")
 	private String rawContent;
+	@Schema(description = "Content of the message: each top-level key is a "
+		+ "document type of the datasource. Required by DOCUMENT and "
+		+ "PARTIAL_DOCUMENT, not used by DELETED_DOCUMENT, LAST and HALT. "
+		+ "A DOCUMENT with an empty datasourcePayload deletes the content with "
+		+ "its contentId: this is deprecated, send a DELETED_DOCUMENT instead.")
 	private Map<String, Object> datasourcePayload;
 	@Schema(description = "Object to pass resources associated with message.")
 	private ResourcesDTO resources;
@@ -56,6 +61,12 @@ public class IngestionDTO {
 	@Schema(format = "uuid",
 			description = "Unique string that identifies the scheduling the ingested message belongs to.")
 	private String scheduleId;
-	@Schema(description = "String used to specify type associated with message. Default is DOCUMENT for message. HALT is used when a message to stop scheduling arrived.")
+	@Schema(description = "String used to specify type associated with "
+		+ "message. Default is DOCUMENT for message. PARTIAL_DOCUMENT updates "
+		+ "the indexed documents with the same contentId. DELETED_DOCUMENT "
+		+ "deletes the indexed documents with the same contentId, and needs "
+		+ "only datasourceId, tenantId, scheduleId, contentId and parsingDate. "
+		+ "LAST is sent when the extraction is finished. HALT is used when a "
+		+ "message to stop scheduling arrived.")
 	private PayloadType type;
 }

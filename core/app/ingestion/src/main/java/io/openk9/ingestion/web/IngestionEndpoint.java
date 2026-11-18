@@ -17,6 +17,9 @@
 
 package io.openk9.ingestion.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.ingestion.dto.IngestionDTO;
 import io.openk9.ingestion.dto.IngestionDtoExamples;
@@ -42,6 +45,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 
 
+import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
@@ -52,6 +56,8 @@ public class IngestionEndpoint {
 	private static final String EMPTY_JSON = "{}";
 	@Inject
 	BinaryStorageEmitter _binaryStorageEmitter;
+	@Inject
+	Logger _logger;
 
 	@Operation(operationId = "ingestion")
 	@Tag(name = "Ingestion API", description = "Permits to ingest data and associated resources inside Openk9 and perform elaboration and indexing.")
@@ -88,6 +94,10 @@ public class IngestionEndpoint {
 									@ExampleObject(
 											name = "Ingestion payload passing access control list on data",
 											value = IngestionDtoExamples.INGESTION_WITH_ACL_DTO
+									),
+									@ExampleObject(
+											name = "Deletion of an indexed content",
+											value = IngestionDtoExamples.INGESTION_DELETED_DOCUMENT_DTO
 									)
 							}
 					)
@@ -98,9 +108,14 @@ public class IngestionEndpoint {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<String> ingestion(IngestionDTO dto) {
 
-		if (dto.getDatasourcePayload() == null && !_isControlMessage(dto)) {
+		if (dto.getDatasourcePayload() == null && _carriesContent(dto)) {
 			return Uni.createFrom().failure(new MissingDatasourcePayloadException(
-				"datasourcePayload is required, except for LAST and HALT messages."));
+				"datasourcePayload is required for DOCUMENT and "
+				+ "PARTIAL_DOCUMENT messages."));
+		}
+
+		if (dto.getType() == PayloadType.DELETED_DOCUMENT) {
+			_dropUnusedFields(dto);
 		}
 
 		return _binaryStorageEmitter.emit(dto)
@@ -129,12 +144,50 @@ public class IngestionEndpoint {
 	}
 
 	/**
-	 * LAST and HALT only drive the scheduling, so they need no
-	 * datasourcePayload; a message without type is a DOCUMENT.
+	 * Only a DOCUMENT and a PARTIAL_DOCUMENT carry a content, so only they
+	 * need a datasourcePayload; a message without type is a DOCUMENT.
 	 */
-	private static boolean _isControlMessage(IngestionDTO dto) {
-		return dto.getType() == PayloadType.LAST
-			|| dto.getType() == PayloadType.HALT;
+	private static boolean _carriesContent(IngestionDTO dto) {
+		return dto.getType() == null
+			|| dto.getType() == PayloadType.DOCUMENT
+			|| dto.getType() == PayloadType.PARTIAL_DOCUMENT;
+	}
+
+	/**
+	 * A DELETED_DOCUMENT only names the content to delete: the fields that
+	 * describe a content are dropped, so its binaries are not stored and
+	 * the queue gets only what the deletion needs.
+	 */
+	private void _dropUnusedFields(IngestionDTO dto) {
+
+		List<String> unusedFields = new ArrayList<>();
+
+		if (dto.getDatasourcePayload() != null) {
+			unusedFields.add("datasourcePayload");
+			dto.setDatasourcePayload(null);
+		}
+
+		if (dto.getRawContent() != null) {
+			unusedFields.add("rawContent");
+			dto.setRawContent(null);
+		}
+
+		if (dto.getResources() != null) {
+			unusedFields.add("resources");
+			dto.setResources(null);
+		}
+
+		if (dto.getAcl() != null) {
+			unusedFields.add("acl");
+			dto.setAcl(null);
+		}
+
+		if (!unusedFields.isEmpty()) {
+			_logger.warnf(
+				"DELETED_DOCUMENT %s of datasource %d ignores the fields %s: "
+				+ "a deletion needs none of them.",
+				dto.getContentId(), dto.getDatasourceId(), unusedFields);
+		}
 	}
 
 }
