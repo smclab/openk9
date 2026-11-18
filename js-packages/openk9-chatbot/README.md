@@ -106,6 +106,51 @@ in development only), so `send` is never reachable.
 The library exposes no global event or API to send a message: mapping the host's
 own events (portal events, fragments) to `send` stays in the host project.
 
+## Opening and closing the panel
+
+The same handle opens and closes the panel without asking anything, e.g. from an
+"Ask the assistant" button in the header of the host site:
+
+```tsx
+<button onClick={() => chatbotRef.current?.open()}>Ask the assistant</button>
+<Chatbot ref={chatbotRef} icon={icon} showLauncher={false} />
+```
+
+- `open()` opens the panel and moves the focus to its input; no request starts.
+- `close()` closes it; the conversation is still there when it opens again.
+
+Both do nothing when the panel is already in that state, or once the chatbot has
+unmounted.
+
+`showLauncher` (default `true`) shows the round button that opens and closes the
+panel. With `showLauncher={false}` the button is not rendered: the panel opens only
+through `open()` or `send()`, and closes with the close button in its header, Esc
+or `close()`.
+
+The panel is a modal dialog (`role="dialog"`, `aria-modal="true"`) named after
+`title`, so a screen reader announces it with the title; without `title` it is
+named after `nameChatbot`, or "Chatbot". While it is open, Tab stays inside it; the
+close button in the header is there on every screen size, and Esc pressed while the
+focus is inside the panel closes it too. That Esc stops bubbling there, so the
+host's bubbling Esc listeners (e.g. on `document`) do not receive it; listeners in
+the capture phase still do. When the panel closes with the focus inside it, the
+focus goes back to the element that had it before opening: the round button or the
+host's own button. When that element is gone or hidden, or the browser never gave
+it the focus, the focus goes to the round button, if it is shown. If something else
+has taken the focus in the meantime (e.g. a login modal of the host page), the
+focus stays there.
+
+If `onLoginRequest` opens a login modal of the host page, call `close()` first:
+while the panel is open its focus trap pulls Tab back inside it.
+
+The header buttons fall back to default icons when `icon.refreshChatIcon` or
+`icon.closeModal` are not passed. `placeholder` replaces the placeholder of the input
+(default: the translation for the active language):
+
+```tsx
+<Chatbot icon={icon} title="Assistente" placeholder="Scrivi la tua domanda…" />
+```
+
 ## AI interaction disclosure
 
 The chatbot always renders a notice telling the user the conversation is held with an
@@ -178,8 +223,8 @@ depends on MUI or emotion.
 
 ### Changing the look with CSS variables
 
-Every colour, the fonts and the text sizes come from CSS variables with the
-`--openk9-chatbot-` prefix. Set them on `:root`, on any ancestor of the chatbot
+Every colour, the fonts, the text sizes and the size of the panel come from CSS
+variables with the `--openk9-chatbot-` prefix. Set them on `:root`, on any ancestor of the chatbot
 or on the chatbot itself (`.openk9-chatbot-structure`): your value wins over the
 default of either scheme. Those are the supported places: on a deeper element the
 variable still applies where it is read directly, but the defaults derived from it
@@ -241,6 +286,8 @@ it together with the primary colour.
 | `--openk9-chatbot-time-font-size` | `10px` | same | timestamps, sources count |
 | `--openk9-chatbot-disclosure-font-size` | `10px` | same | AI disclosure |
 | `--openk9-chatbot-sources-font-size` | `12px` | same | source titles, "show more / show less" |
+| `--openk9-chatbot-panel-width` | `365px` | same | width of the panel; on screens narrower than 576px the panel fills the screen |
+| `--openk9-chatbot-panel-height` | `460px` | same | height of the panel; on screens narrower than 576px the panel fills the screen |
 
 The colours of the single sources are computed per source and are not variables
 yet. Roboto and Titillium Web are still loaded by the library.

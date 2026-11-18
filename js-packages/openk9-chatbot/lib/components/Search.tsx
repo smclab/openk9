@@ -25,6 +25,7 @@ export default function Search({
   chatbotSearchRef,
   describedById,
   notice,
+  placeholder,
 }: {
   /** returns false when the message was not sent, so the input keeps it */
   handleSearch: (message: string) => boolean;
@@ -36,8 +37,11 @@ export default function Search({
   describedById?: string;
   /** shown above the input, e.g. why the last message was not sent */
   notice?: React.ReactNode;
+  /** replaces the translated placeholder of the input */
+  placeholder?: string;
 }) {
   const [search, setSearch] = React.useState("");
+  const defaultPlaceholder = Translate({ label: "customPlaceholder" });
   return (
     <form
       className="openk9-search-form"
@@ -55,7 +59,7 @@ export default function Search({
             type="text"
             value={search}
             onChange={(event) => setSearch(event.currentTarget.value)}
-            placeholder={Translate({ label: "customPlaceholder" })}
+            placeholder={placeholder ?? defaultPlaceholder}
             aria-invalid={false}
             aria-describedby={describedById}
           />

@@ -95,6 +95,8 @@ function App() {
   // le variabili ridefinite stanno in `index.css`, sotto `.harness-custom-vars`:
   // e' il modo in cui un integratore adatta il chatbot al suo design system
   const [hasCustomVars, setHasCustomVars] = React.useState(false);
+  // senza pulsante tondo il pannello si apre solo dai pulsanti qui sopra
+  const [showLauncher, setShowLauncher] = React.useState(true);
 
   return (
     <React.Fragment>
@@ -106,6 +108,20 @@ function App() {
       >
         Chiedi al chatbot: Che cos'è OpenK9?
       </button>
+      <button type="button" onClick={() => chatbotRef.current?.open()}>
+        Apri il chatbot
+      </button>
+      <button type="button" onClick={() => chatbotRef.current?.close()}>
+        Chiudi il chatbot
+      </button>
+      <label>
+        <input
+          type="checkbox"
+          checked={showLauncher}
+          onChange={(event) => setShowLauncher(event.currentTarget.checked)}
+        />
+        Pulsante tondo
+      </label>
       <label>
         <input
           type="checkbox"
@@ -135,6 +151,7 @@ function App() {
         <Chatbot
           ref={chatbotRef}
           colorScheme={isDark ? "dark" : "light"}
+          showLauncher={showLauncher}
           initialMessage="Chiedimi pure qualcosa"
           nameChatbot="Openk9"
           tenant="https://k9-frontend.openk9.io"

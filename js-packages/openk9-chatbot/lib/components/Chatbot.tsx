@@ -26,7 +26,7 @@ import { SingleMessage } from "./SingleMessage";
 import { useFocusTrap } from "./useFocusTrap";
 import { Translate } from "./Translate";
 import { LanguageProvider } from "./LanguageContext";
-import { CloseIcon, LockOutlinedIcon } from "./icons";
+import { CloseIcon, LockOutlinedIcon, RefreshIcon } from "./icons";
 import "@fontsource/roboto";
 import "@fontsource/titillium-web";
 import "./Chatbot.css";
@@ -55,6 +55,16 @@ export type ChatbotHandle = {
    * that case the panel opens on the login notice.
    */
   send(message: string): boolean;
+  /**
+   * opens the panel and moves the focus to its input, sending nothing. No
+   * effect when the panel is already open or after the chatbot has unmounted.
+   */
+  open(): void;
+  /**
+   * closes the panel, keeping the conversation for when it opens again. No
+   * effect when the panel is already closed or after the chatbot has unmounted.
+   */
+  close(): void;
 };
 
 type ChatbotProps = {
@@ -115,6 +125,14 @@ type ChatbotProps = {
    * belongs to the host page. Without it the notice shows the text only.
    */
   onLoginRequest?: () => void;
+  /**
+   * shows the round button that opens and closes the panel. On by default; with
+   * `false` the panel opens only from the host page, through `open()` or
+   * `send()` on `ref`, and closes with its own close button, Esc or `close()`.
+   */
+  showLauncher?: boolean;
+  /** replaces the placeholder of the input. Defaults to the translated one */
+  placeholder?: string;
 };
 
 /** the two positions the disclosure can occupy inside the panel */
@@ -178,6 +196,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
   ragMode,
   requireLogin,
   onLoginRequest,
+  showLauncher,
+  placeholder,
 }) => {
   const resolvedNumberOfSources = resolveNumberOfSources(
     numberOfSources,
@@ -200,6 +220,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
           ragMode={ragMode}
           requireLogin={requireLogin}
           onLoginRequest={onLoginRequest}
+          showLauncher={showLauncher}
+          placeholder={placeholder}
         />
       </LanguageProvider>
     </React.Fragment>
@@ -220,6 +242,8 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   ragMode = DEFAULT_RAG_MODE,
   requireLogin = false,
   onLoginRequest,
+  showLauncher = true,
+  placeholder,
 }) => {
   const [isView, setIsView] = React.useState(false);
   const [loginNoticeOpen, setLoginNoticeOpen] = React.useState(false);
@@ -240,6 +264,9 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   const loginRequiredText = Translate({ label: "loginRequired" });
   const loginText = Translate({ label: "login" });
   const closeText = Translate({ label: "close" });
+  const openChatbotText = Translate({ label: "openChatbot" });
+  const closeChatbotText = Translate({ label: "closeChatbot" });
+  const titleId = React.useId();
 
   const {
     messages,
@@ -268,6 +295,36 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     return generateResponse(message);
   };
 
+  // chi aveva il focus prima dell'apertura: il pulsante tondo o quello della
+  // pagina. Alla chiusura il focus ci torna solo se stava dentro il pannello,
+  // che smontando lo perderebbe; dopo il commit, perche' su mobile il pulsante
+  // tondo e' nascosto finche' il pannello e' aperto. Se chi apriva non c'e' piu'
+  // o era il body (Safari e Firefox su macOS non danno il focus al pulsante
+  // cliccato) il focus va al pulsante tondo, quando c'e'
+  const opener = React.useRef<HTMLElement | null>(null);
+  const focusAfterClose = React.useRef<HTMLElement | null>(null);
+  const launcherRef = React.useRef<HTMLButtonElement | null>(null);
+  const openPanel = () => {
+    if (!trapRef.current) {
+      opener.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+    }
+    setIsView(true);
+  };
+  const closePanel = () => {
+    const previous = opener.current;
+    const canReturn =
+      previous !== null && previous !== document.body && previous.isConnected;
+    focusAfterClose.current = trapRef.current?.contains(document.activeElement)
+      ? canReturn
+        ? previous
+        : launcherRef.current
+      : null;
+    setIsView(false);
+  };
+
   // `isChatting` si aggiorna solo al render dopo: due `send` nello stesso handler
   // lo vedrebbero entrambe a false. Il ref resta acceso finche' la richiesta
   // partita da `send` non e' finita (a fine stream, su errore o su annullamento)
@@ -275,9 +332,14 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   // l'handle e' creato una volta sola e legge da qui i valori dell'ultimo render:
   // `generateResponse` cambia a ogni chunk, e un handle ricreato ogni volta
   // resterebbe stantio in mano a chi lo ha salvato
-  const latest = React.useRef({ isChatting, startResponse });
+  const latest = React.useRef({
+    isChatting,
+    startResponse,
+    openPanel,
+    closePanel,
+  });
   React.useLayoutEffect(() => {
-    latest.current = { isChatting, startResponse };
+    latest.current = { isChatting, startResponse, openPanel, closePanel };
   });
   // un handle tenuto da parte non deve inviare a chatbot smontato: la richiesta
   // partirebbe e nessuno vedrebbe la risposta
@@ -293,7 +355,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     ref,
     () => ({
       send(message) {
-        const { isChatting, startResponse } = latest.current;
+        const { isChatting, startResponse, openPanel } = latest.current;
         if (
           !isMounted.current ||
           isSending.current ||
@@ -301,7 +363,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
           message.trim() === ""
         )
           return false;
-        setIsView(true);
+        openPanel();
         const request = startResponse(message);
         if (!request) return false;
         isSending.current = true;
@@ -309,6 +371,14 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
           isSending.current = false;
         });
         return true;
+      },
+      open() {
+        if (!isMounted.current) return;
+        latest.current.openPanel();
+      },
+      close() {
+        if (!isMounted.current) return;
+        latest.current.closePanel();
       },
     }),
     [],
@@ -328,20 +398,54 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     }
   }, [isView]);
 
+  // se intanto il focus l'ha preso qualcun altro (la modale di login della
+  // pagina, aperta da `onLoginRequest`) resta li'. Un opener ancora nel DOM ma
+  // nascosto (un menu richiuso) non lo accetta: allora va al pulsante tondo
+  React.useEffect(() => {
+    if (isView) return;
+    const target = focusAfterClose.current;
+    focusAfterClose.current = null;
+    if (!target) return;
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
+    target.focus();
+    if (document.activeElement !== target) launcherRef.current?.focus();
+  }, [isView]);
+
   return (
-    <div
-      className="openk9-chatbot-structure"
-      data-color-scheme={colorScheme}
-      ref={trapRef}
-    >
+    <div className="openk9-chatbot-structure" data-color-scheme={colorScheme}>
       {isView && (
-        <div className="openk9-chatbot-container">
+        // il focus trap copre solo il pannello: con `aria-modal` il resto della
+        // pagina, pulsante tondo compreso, e' fuori dalla finestra
+        <div
+          className="openk9-chatbot-container"
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={title ? titleId : undefined}
+          aria-label={title ? undefined : nameChatbot || "Chatbot"}
+          onKeyDown={(event) => {
+            // 229: Safari chiude la composizione prima del keydown, con
+            // `isComposing` gia' a false
+            if (
+              event.key !== "Escape" ||
+              event.nativeEvent.isComposing ||
+              event.keyCode === 229
+            )
+              return;
+            closePanel();
+            // l'Esc e' del chatbot: un listener della pagina (il menu che contiene
+            // il pulsante che lo ha aperto) non deve chiudersi anche lui
+            event.stopPropagation();
+          }}
+        >
           <ChatbotHeader
             title={title}
+            titleId={titleId}
             icon={icon}
             isChatting={isChatting}
             resetMessage={resetMessage}
-            setIsView={setIsView}
+            onClose={closePanel}
           />
           {resolvedAiDisclosure.top !== undefined && (
             <AiDisclosure
@@ -367,6 +471,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             icon={icon}
             chatbotSearchRef={chatbotSearchRef}
             describedById={aiDisclosureId}
+            placeholder={placeholder}
             notice={
               loginNoticeOpen && (
                 <div className="openk9-login-notice" role="alert">
@@ -407,35 +512,35 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
           )}
         </div>
       )}
-      <button
-        type="button"
-        className="openk9-toggle-chatbot-button"
-        aria-label={
-          isView
-            ? Translate({ label: "closeChatbot" })
-            : Translate({ label: "openChatbot" })
-        }
-        onClick={() => setIsView(!isView)}
-      >
-        <div className="openk9-toggle-icon-wrapper">
-          {isView ? icon.closeIcon : icon.buttonIcon}
-        </div>
-      </button>
+      {showLauncher && (
+        <button
+          ref={launcherRef}
+          type="button"
+          className="openk9-toggle-chatbot-button"
+          aria-label={isView ? closeChatbotText : openChatbotText}
+          onClick={isView ? closePanel : openPanel}
+        >
+          <div className="openk9-toggle-icon-wrapper">
+            {isView ? icon.closeIcon : icon.buttonIcon}
+          </div>
+        </button>
+      )}
     </div>
   );
 };
 
 const ChatbotHeader: React.FC<{
   title?: React.ReactNode;
+  titleId: string;
   icon: IconProps;
   isChatting: boolean;
   resetMessage: () => void;
-  setIsView: (isView: boolean) => void;
-}> = ({ title, icon, isChatting, resetMessage, setIsView }) => {
+  onClose: () => void;
+}> = ({ title, titleId, icon, isChatting, resetMessage, onClose }) => {
   return (
     <div className="openk9-chatbot-header">
       <div className="openk9-logo-icon">{icon.logoIcon}</div>
-      <div>{title}</div>
+      <div id={titleId}>{title}</div>
       <div className="openk9-header-buttons">
         <button
           type="button"
@@ -444,17 +549,17 @@ const ChatbotHeader: React.FC<{
           onClick={resetMessage}
           aria-label={Translate({ label: "clearChat" })}
         >
-          {icon.refreshChatIcon}
+          {icon.refreshChatIcon ?? <RefreshIcon />}
         </button>
 
         <button
           type="button"
           className="openk9-close-button"
-          onClick={() => setIsView(false)}
+          onClick={onClose}
           role="button"
           aria-label={Translate({ label: "closeChatbot" })}
         >
-          {icon.closeModal}
+          {icon.closeModal ?? <CloseIcon />}
         </button>
       </div>
     </div>

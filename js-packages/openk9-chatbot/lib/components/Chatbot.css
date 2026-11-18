@@ -1,7 +1,7 @@
 /*
- * Look of the chatbot. Every colour, the fonts and the text sizes come from the
- * public `--openk9-chatbot-*` variables, which integrators set on the chatbot or
- * on any ancestor (`:root` included).
+ * Look of the chatbot. Every colour, the fonts, the text sizes and the size of
+ * the panel come from the public `--openk9-chatbot-*` variables, which
+ * integrators set on the chatbot or on any ancestor (`:root` included).
  *
  * A rule never reads a public variable alone: it reads
  * `var(--openk9-chatbot-x, var(--_k9-x))`. The `--_k9-*` defaults are declared on
@@ -18,6 +18,8 @@
   --_k9-time-font-size: 10px;
   --_k9-disclosure-font-size: 10px;
   --_k9-sources-font-size: 12px;
+  --_k9-panel-width: 365px;
+  --_k9-panel-height: 460px;
 
   --_k9-primary: #c0272b;
   --_k9-primary-hover: #e77979;
@@ -190,8 +192,8 @@
     position: static;
     top: auto;
     left: auto;
-    width: 365px;
-    height: 460px;
+    width: var(--openk9-chatbot-panel-width, var(--_k9-panel-width));
+    height: var(--openk9-chatbot-panel-height, var(--_k9-panel-height));
     border: 1px solid var(--openk9-chatbot-border, var(--_k9-border));
     border-radius: 8px;
   }
@@ -227,6 +229,12 @@
   transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* the default icon, when the integrator passes none */
+.openk9-refresh-button > .openk9-chatbot-svg-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .openk9-refresh-button:hover {
   background-color: color-mix(
     in srgb,
@@ -241,7 +249,6 @@
   cursor: default;
 }
 
-/* only on mobile, where the panel covers the toggle button */
 .openk9-close-button {
   display: block;
   flex-shrink: 0;
@@ -257,12 +264,6 @@
     --openk9-chatbot-icon-button-hover-bg,
     var(--_k9-icon-button-hover-bg)
   );
-}
-
-@media (min-width: 576px) {
-  .openk9-close-button {
-    display: none;
-  }
 }
 
 .openk9-toggle-chatbot-button {
