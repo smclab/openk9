@@ -45,9 +45,10 @@ It is the class used to pass the data crawled.
 - **splitBinaries** : Specify if multiple binaries must be split up in differente messages.
 
 **PayloadType**  
-It has an enum with 4 values:
+It has an enum with 5 values:
 - **DOCUMENT**
 - **PARTIAL_DOCUMENT**: updates the indexed documents with the same `contentId`.
+- **DELETED_DOCUMENT**: deletes the indexed documents with the same `contentId`; it needs no `datasourcePayload`.
 - **HALT**
 - **LAST**
 

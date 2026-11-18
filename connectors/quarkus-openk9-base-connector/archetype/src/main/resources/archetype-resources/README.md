@@ -200,7 +200,7 @@ $h2 REST Classes
   }
   ```
   Each top-level key of `datasourcePayload` becomes a document type of the datasource when OpenK9 reads this sample, so it should have the same keys as the documents the connector sends.  
-  `type` is `DOCUMENT`, `PARTIAL_DOCUMENT` (updates the indexed documents with the same `contentId`), `LAST` or `HALT`; `CrawlerVerticle` sends `LAST` and `HALT`; the `rawContent` of a `HALT` becomes the error of the scheduling.
+  `type` is `DOCUMENT`, `PARTIAL_DOCUMENT` (updates the indexed documents with the same `contentId`), `DELETED_DOCUMENT` (deletes the indexed documents with the same `contentId`, with no `datasourcePayload`), `LAST` or `HALT`; `CrawlerVerticle` sends `LAST` and `HALT`; the `rawContent` of a `HALT` becomes the error of the scheduling.
 
 
 $h2 Connector Base Classes

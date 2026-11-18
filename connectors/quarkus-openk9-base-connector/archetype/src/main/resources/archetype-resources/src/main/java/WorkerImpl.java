@@ -33,7 +33,12 @@ public class WorkerImpl implements Worker {
         ingestionDTO.setTenantId(invokeRequest.getTenantId());
         ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
         ingestionDTO.setRawContent("Test-Ingestion-Payload");
-        ingestionDTO.setDatasourcePayload(new DatasourcePayload());
+        // Each top-level key is a document type: an empty datasourcePayload
+        // would delete the content instead of indexing it
+        DatasourcePayload datasourcePayload = new DatasourcePayload();
+        datasourcePayload.setAdditionalProperty("uuid", UUID.randomUUID());
+        datasourcePayload.setAdditionalProperty("test", "DatasourcePayload test");
+        ingestionDTO.setDatasourcePayload(datasourcePayload);
 
         ResourcesDTO resourcesDTO = new ResourcesDTO();
         resourcesDTO.setBinaries(new ArrayList<>());
