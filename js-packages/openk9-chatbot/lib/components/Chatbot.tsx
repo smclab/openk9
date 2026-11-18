@@ -526,10 +526,11 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
 
   const handleSearch = (message: string) => startResponse(message) !== null;
 
+  // scrollTo sulla lista, non scrollIntoView: in Chrome quello sposta il punto
+  // da cui parte Tab, e il primo Tab della pagina finirebbe nel pannello
   React.useEffect(() => {
-    if (messages && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    const list = messagesEndRef.current?.parentElement;
+    list?.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
   // il pannello riaperto al cambio pagina e' gia' visibile al montaggio, ma il
