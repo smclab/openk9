@@ -24,7 +24,7 @@ export function Translate({ label }: { label: TranslationKey }): string {
 export function getTranslation(label: TranslationKey, language: string): string {
   const htmlLang = language as Language;
   const translation = translations[label]?.[htmlLang];
-  return translation || label;
+  return translation || translations[label]?.en_US || label;
 }
 
 const translations: {

@@ -31,7 +31,7 @@ type LanguageProviderProps = {
 };
 
 function remappingLanguage(language: string): string {
-  switch (language) {
+  switch (language.split(/[-_]/)[0].toLowerCase()) {
     case "en":
       return "en_US";
     case "it":
@@ -43,6 +43,7 @@ function remappingLanguage(language: string): string {
     case "fr":
       return "fr_FR";
     default:
+      // sent to the backend as is; the texts fall back to en_US
       return language;
   }
 }
