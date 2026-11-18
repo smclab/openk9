@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import Markdown from "react-markdown";
+import Markdown, { type Components } from "react-markdown";
 import { Translate } from "./Translate";
 import { useState } from "react";
 import type { Source } from "./client";
@@ -28,6 +28,18 @@ import {
 
 type Theme = "light" | "dark";
 
+/** how the sources under an answer look */
+export type SourcesVariant = "chips" | "list";
+
+// a link in an answer opens in a new tab, so the conversation stays on the page
+const markdownComponents: Components = {
+  a: ({ href, title, children }) => (
+    <a href={href} title={title} target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  ),
+};
+
 export function SingleMessage({
   contentMessage,
   timeMessage,
@@ -38,6 +50,8 @@ export function SingleMessage({
   status,
   sources,
   numberOfSources = 8,
+  sourcesVariant = "chips",
+  showTimestamps = true,
   themeInfo = "light",
 }: {
   contentMessage: string;
@@ -49,6 +63,8 @@ export function SingleMessage({
   status?: "END" | "CHUNK" | "ERROR";
   sources?: Source[];
   numberOfSources?: number;
+  sourcesVariant?: SourcesVariant;
+  showTimestamps?: boolean;
   themeInfo?: Theme;
 }) {
   sources = sources || [];
@@ -182,7 +198,9 @@ export function SingleMessage({
                     {nameChatbot && (
                       <p className="openk9-paragraph-name">{nameChatbot}</p>
                     )}
-                    <Markdown>{contentMessage}</Markdown>
+                    <Markdown components={markdownComponents}>
+                      {contentMessage}
+                    </Markdown>
                   </section>
                 )}
               </div>
@@ -203,94 +221,115 @@ export function SingleMessage({
                     )}
                   </div>
 
-                  <div className="openk9-sources-list">
-                    {displayedSources.map((source, index) => {
-                      const typeColors = getTypeColor(source.url || "");
-                      return (
-                        // a div, not a <button>, because it holds the copy and
-                        // expand buttons: Enter and Space open the source
-                        <div
-                          key={source.url || index}
-                          className="openk9-source-chip"
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => openSource(source)}
-                          onKeyDown={(event) => {
-                            if (event.target !== event.currentTarget) return;
-                            if (event.key === " ") event.preventDefault();
-                            if (event.key === "Enter") {
-                              event.preventDefault();
-                              openSource(source);
-                            }
-                          }}
-                          onKeyUp={(event) => {
-                            if (event.target !== event.currentTarget) return;
-                            if (event.key === " ") openSource(source);
-                          }}
-                          style={{
-                            backgroundColor: typeColors.backgroundColor,
-                            color: typeColors.color,
-                            borderColor: typeColors.borderColor,
-                          }}
-                        >
-                          <span className="openk9-source-chip-label">
-                            <div
-                              className="openk9-source-chip-content"
-                              data-expanded={
-                                expandedChips.has(source.url || "") || undefined
-                              }
+                  {sourcesVariant === "list" ? (
+                    <ul className="openk9-sources-links">
+                      {displayedSources.map((source, index) => (
+                        <li key={`${source.url ?? ""}-${index}`}>
+                          {source.url ? (
+                            <a
+                              href={source.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
                             >
+                              {source.title || source.url}
+                            </a>
+                          ) : (
+                            source.title || source.filename || source.source
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="openk9-sources-list">
+                      {displayedSources.map((source, index) => {
+                        const typeColors = getTypeColor(source.url || "");
+                        return (
+                          // a div, not a <button>, because it holds the copy and
+                          // expand buttons: Enter and Space open the source
+                          <div
+                            key={`${source.url ?? ""}-${index}`}
+                            className="openk9-source-chip"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => openSource(source)}
+                            onKeyDown={(event) => {
+                              if (event.target !== event.currentTarget) return;
+                              if (event.key === " ") event.preventDefault();
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                openSource(source);
+                              }
+                            }}
+                            onKeyUp={(event) => {
+                              if (event.target !== event.currentTarget) return;
+                              if (event.key === " ") openSource(source);
+                            }}
+                            style={{
+                              backgroundColor: typeColors.backgroundColor,
+                              color: typeColors.color,
+                              borderColor: typeColors.borderColor,
+                            }}
+                          >
+                            <span className="openk9-source-chip-label">
                               <div
-                                className="openk9-source-chip-dot"
-                                style={{
-                                  backgroundColor: getStableColor(
-                                    source.url,
-                                    themeInfo,
-                                  ),
-                                }}
-                              />
-                              <span className="openk9-source-chip-title">
-                                {source?.title && source.title}
-                              </span>
-                              <div>
-                                <button
-                                  type="button"
-                                  className="openk9-source-chip-button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    copySource(source);
+                                className="openk9-source-chip-content"
+                                data-expanded={
+                                  expandedChips.has(source.url || "") ||
+                                  undefined
+                                }
+                              >
+                                <div
+                                  className="openk9-source-chip-dot"
+                                  style={{
+                                    backgroundColor: getStableColor(
+                                      source.url,
+                                      themeInfo,
+                                    ),
                                   }}
-                                >
-                                  {copiedSource === source.url ? (
-                                    <CheckIcon />
-                                  ) : (
-                                    <ContentCopyIcon />
-                                  )}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="openk9-source-chip-button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleChipExpansion(source.url || "");
-                                  }}
-                                >
-                                  <OpenInFullIcon />
-                                </button>
+                                />
+                                <span className="openk9-source-chip-title">
+                                  {source?.title && source.title}
+                                </span>
+                                <div>
+                                  <button
+                                    type="button"
+                                    className="openk9-source-chip-button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      copySource(source);
+                                    }}
+                                  >
+                                    {copiedSource === source.url ? (
+                                      <CheckIcon />
+                                    ) : (
+                                      <ContentCopyIcon />
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="openk9-source-chip-button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleChipExpansion(source.url || "");
+                                    }}
+                                  >
+                                    <OpenInFullIcon />
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
-      <p className="openk9-paragraph-time">{timeMessage}</p>
+      {showTimestamps && <p className="openk9-paragraph-time">{timeMessage}</p>}
     </div>
   );
 }
@@ -369,16 +408,12 @@ const sourceColorMap = new Map<string, { light: string; dark: string }>();
 function getStableColor(source: string | undefined, theme: Theme): string {
   if (!source) return theme === "light" ? "#666" : "#999";
 
+  // both schemes cached at once: `colorScheme` can change at runtime
   if (!sourceColorMap.has(source)) {
-    const mappedColor = mappingColors(source, theme);
-    if (mappedColor) {
-      sourceColorMap.set(source, { light: mappedColor, dark: mappedColor });
-    } else {
-      sourceColorMap.set(source, {
-        light: generateAccessibleColor("light"),
-        dark: generateAccessibleColor("dark"),
-      });
-    }
+    sourceColorMap.set(source, {
+      light: mappingColors(source, "light") ?? generateAccessibleColor("light"),
+      dark: mappingColors(source, "dark") ?? generateAccessibleColor("dark"),
+    });
   }
 
   return sourceColorMap.get(source)![theme];

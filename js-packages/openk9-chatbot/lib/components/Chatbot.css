@@ -162,6 +162,11 @@
   outline-offset: 0;
 }
 
+.openk9-chatbot-structure .openk9-sources-links a:focus-visible {
+  outline: 2px solid var(--openk9-chatbot-primary, var(--_k9-primary));
+  outline-offset: 2px;
+}
+
 /* panel */
 
 .openk9-chatbot-container {
@@ -319,11 +324,16 @@
   padding-inline: 16px;
 }
 
+/* as wide as the bubble, up to the width of the list */
 .openk9-single-message-container {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  width: 100%;
+  max-width: 100%;
+}
+
+.openk9-single-message-container[data-sender="user"] {
+  align-self: flex-end;
 }
 
 .openk9-message-box {
@@ -341,7 +351,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: 100%;
+  min-width: 0;
 }
 
 .openk9-message-content {
@@ -431,7 +441,7 @@
    on the dark bubble those would not be readable */
 .openk9-chatbot-structure[data-color-scheme="dark"]
   [data-sender="bot"]
-  .openk9-message-content
+  .openk9-paragraph-message
   a {
   color: var(--openk9-chatbot-link, var(--_k9-link));
 }
@@ -559,6 +569,29 @@
   flex-wrap: wrap;
   gap: 2px;
   overflow-x: hidden;
+}
+
+/* the list of links: colours from the variables, never per source. Scoped,
+   with the list style set, so that host rules on `ul` and `li` do not apply */
+.openk9-chatbot-structure .openk9-sources-links {
+  margin: 0;
+  padding: 0 0 0 16px;
+  list-style: disc;
+  font-family: var(--openk9-chatbot-font-family, var(--_k9-font-family));
+  font-size: var(
+    --openk9-chatbot-sources-font-size,
+    var(--_k9-sources-font-size)
+  );
+  line-height: 1.66;
+  overflow-wrap: anywhere;
+}
+
+.openk9-chatbot-structure .openk9-sources-links li {
+  margin: 0;
+}
+
+.openk9-chatbot-structure .openk9-sources-links a {
+  color: var(--openk9-chatbot-sources-control, var(--_k9-sources-control));
 }
 
 /* the colours of a source are computed per source and set inline */

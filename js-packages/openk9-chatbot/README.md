@@ -273,8 +273,8 @@ it together with the primary colour.
 | `--openk9-chatbot-error-border` | `#D32F2F` | `#F28B82` | error bubble border |
 | `--openk9-chatbot-error-text` | `#C62828` | `#F28B82` | error bubble text and icon |
 | `--openk9-chatbot-disclosure-text` | `#595959` | `#B3B3B3` | AI disclosure text |
-| `--openk9-chatbot-sources-control` | `#12518F` | `#8AB4F8` | "show more / show less" of the sources |
-| `--openk9-chatbot-sources-control-hover` | `#2782EA` | `#AECBFA` | the same, on hover |
+| `--openk9-chatbot-sources-control` | `#12518F` | `#8AB4F8` | "show more / show less" of the sources, links of the `list` sources |
+| `--openk9-chatbot-sources-control-hover` | `#2782EA` | `#AECBFA` | "show more / show less" on hover |
 | `--openk9-chatbot-notice-bg` | `#FFFFFF` | `#2A2A2A` | login notice background |
 | `--openk9-chatbot-notice-text` | `#000000` | `#EDEDED` | login notice text |
 | `--openk9-chatbot-notice-link` | primary | `#FF8A80` | login notice icon and "Log in" button |
@@ -289,11 +289,39 @@ it together with the primary colour.
 | `--openk9-chatbot-panel-width` | `365px` | same | width of the panel; on screens narrower than 576px the panel fills the screen |
 | `--openk9-chatbot-panel-height` | `460px` | same | height of the panel; on screens narrower than 576px the panel fills the screen |
 
-The colours of the single sources are computed per source and are not variables
+The colours of the single chips are computed per source and are not variables
 yet. Roboto and Titillium Web are still loaded by the library.
 
 The `openk9-*` class names stay available for anything the variables do not
 cover. The `--_k9-*` variables are internal: do not set or read them.
+
+### Sources, timestamps and bubbles
+
+`sourcesVariant` picks how the sources under an answer look:
+
+```tsx
+<Chatbot icon={icon} sourcesVariant="list" showTimestamps={false} />
+```
+
+| value | look |
+|---|---|
+| `chips` (default) | coloured chips with the copy and expand buttons, as before |
+| `list` | a list of links, each with the title of the source (its URL when the title is missing); a source without URL is plain text (its title, file name or source name) |
+
+The links of the list open in a new tab and take their colour from
+`--openk9-chatbot-sources-control`, never from the domain. `numberOfSources`, the
+sources count and "show more / show less" work the same in both views.
+
+`showTimestamps={false}` hides the time under every message, the welcome message
+included. Screen readers still read it in the label of the messages that have
+one (the welcome message, the questions and the answers, not the error and loading
+bubbles).
+
+Bubbles are as wide as their text, up to the width of the conversation: the
+question stays on the right, the answer on the left.
+
+Links in the answers open in a new tab (`rel="noopener noreferrer"`), so the
+conversation stays on the page. They used to open in the same tab.
 
 ### Migrating from `themeCustom`
 

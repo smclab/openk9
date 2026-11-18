@@ -18,4 +18,5 @@ import Chatbot from "./components/Chatbot";
 export { Chatbot };
 export type { ChatbotHandle, ColorScheme } from "./components/Chatbot";
 export type { RagMode } from "./components/useGenerateResponse";
+export type { SourcesVariant } from "./components/SingleMessage";
 

@@ -22,7 +22,7 @@ import useGenerateResponse, {
   Message,
   RagMode,
 } from "./useGenerateResponse";
-import { SingleMessage } from "./SingleMessage";
+import { SingleMessage, type SourcesVariant } from "./SingleMessage";
 import { useFocusTrap } from "./useFocusTrap";
 import { Translate } from "./Translate";
 import { LanguageProvider } from "./LanguageContext";
@@ -97,6 +97,14 @@ type ChatbotProps = {
    * entirely. When omitted, falls back to `useSource` (deprecated) or `8`.
    */
   numberOfSources?: number;
+  /**
+   * how the sources under an answer look: `chips` (default) are the coloured
+   * chips with the copy and expand buttons, `list` is a list of links that
+   * open in a new tab, coloured by the CSS variables.
+   */
+  sourcesVariant?: SourcesVariant;
+  /** `false` hides the time under every message, the welcome one included */
+  showTimestamps?: boolean;
   /**
    * where the AI interaction disclosure goes and what it says. Both slots are
    * optional and each takes a node: `top` renders above the message list,
@@ -192,6 +200,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
   callbackAuthorization,
   useSource,
   numberOfSources,
+  sourcesVariant,
+  showTimestamps,
   aiDisclosure,
   ragMode,
   requireLogin,
@@ -216,6 +226,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
           tenant={tenant}
           callbackAuthorization={callbackAuthorization}
           numberOfSources={resolvedNumberOfSources}
+          sourcesVariant={sourcesVariant}
+          showTimestamps={showTimestamps}
           aiDisclosure={aiDisclosure}
           ragMode={ragMode}
           requireLogin={requireLogin}
@@ -238,6 +250,8 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   tenant = "",
   callbackAuthorization,
   numberOfSources = DEFAULT_NUMBER_OF_SOURCES,
+  sourcesVariant = "chips",
+  showTimestamps = true,
   aiDisclosure,
   ragMode = DEFAULT_RAG_MODE,
   requireLogin = false,
@@ -462,6 +476,8 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             messagesEndRef={messagesEndRef}
             nameChatbot={nameChatbot}
             numberOfSources={numberOfSources}
+            sourcesVariant={sourcesVariant}
+            showTimestamps={showTimestamps}
             colorScheme={colorScheme}
           />
           <Search
@@ -575,6 +591,8 @@ const MessageList: React.FC<{
   nameChatbot?: string;
   welcomeMessageTime?: string;
   numberOfSources?: number;
+  sourcesVariant: SourcesVariant;
+  showTimestamps: boolean;
   colorScheme: ColorScheme;
 }> = ({
   messages,
@@ -585,6 +603,8 @@ const MessageList: React.FC<{
   nameChatbot,
   welcomeMessageTime = "",
   numberOfSources = DEFAULT_NUMBER_OF_SOURCES,
+  sourcesVariant,
+  showTimestamps,
   colorScheme,
 }) => (
   <section className="openk9-message-list-container">
@@ -596,6 +616,7 @@ const MessageList: React.FC<{
         icon={icon.chatbotIcon}
         isLoading={false}
         nameChatbot={nameChatbot}
+        showTimestamps={showTimestamps}
       />
       {messages.length > 0 &&
         messages.map((message, index) => {
@@ -619,12 +640,15 @@ const MessageList: React.FC<{
                 timeMessage={sendTime}
                 icon={icon.userIcon}
                 isLoading={false}
+                showTimestamps={showTimestamps}
               />
               <SingleMessage
                 contentMessage={message.answer}
                 status={message.status}
                 sources={message?.sources}
                 numberOfSources={numberOfSources}
+                sourcesVariant={sourcesVariant}
+                showTimestamps={showTimestamps}
                 isChatbot={true}
                 timeMessage={responseTime}
                 icon={icon.chatbotIcon}

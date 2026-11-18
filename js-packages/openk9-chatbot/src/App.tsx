@@ -97,6 +97,8 @@ function App() {
   const [hasCustomVars, setHasCustomVars] = React.useState(false);
   // senza pulsante tondo il pannello si apre solo dai pulsanti qui sopra
   const [showLauncher, setShowLauncher] = React.useState(true);
+  const [hasSourcesList, setHasSourcesList] = React.useState(false);
+  const [hasTimestamps, setHasTimestamps] = React.useState(true);
 
   return (
     <React.Fragment>
@@ -138,6 +140,22 @@ function App() {
         />
         Variabili CSS ridefinite
       </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={hasSourcesList}
+          onChange={(event) => setHasSourcesList(event.currentTarget.checked)}
+        />
+        Fonti come elenco di link
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={hasTimestamps}
+          onChange={(event) => setHasTimestamps(event.currentTarget.checked)}
+        />
+        Orari dei messaggi
+      </label>
       <div
         className={[
           "openk9-chatbot",
@@ -152,6 +170,8 @@ function App() {
           ref={chatbotRef}
           colorScheme={isDark ? "dark" : "light"}
           showLauncher={showLauncher}
+          sourcesVariant={hasSourcesList ? "list" : "chips"}
+          showTimestamps={hasTimestamps}
           initialMessage="Chiedimi pure qualcosa"
           nameChatbot="Openk9"
           tenant="https://k9-frontend.openk9.io"
