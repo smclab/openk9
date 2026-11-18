@@ -82,6 +82,17 @@ public final class IngestionDtoExamples {
                 },
                 "scheduleId": "string"
               }""";
+
+    public static final String INGESTION_DELETED_DOCUMENT_DTO =
+            """
+            {
+              "datasourceId": 12,
+              "tenantId": "tenantId",
+              "contentId": "12fs4e3cds3ew32",
+              "parsingDate": 1743007437740,
+              "scheduleId": "bf988b9c-92a2-4a44-9558-5ebeb94c790e",
+              "type": "DELETED_DOCUMENT"
+            }""";
     public static final String INGESTION_RESPONSE =
             """
                 {}""";
