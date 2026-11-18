@@ -296,7 +296,11 @@ const useGenerateResponse = ({
             ),
           );
         } else {
-          console.error("Errore nel generare la risposta");
+          console.error(
+            "Errore nel generare la risposta",
+            response.status,
+            response.statusText,
+          );
 
           showError();
           setIsChatting(false);
@@ -333,7 +337,7 @@ const useGenerateResponse = ({
             ? {
                 ...msg,
                 status: "END",
-                answer: "La risposta è stata annullata",
+                answer: getTranslation("responseCancelled", language),
               }
             : msg,
         ),
@@ -359,7 +363,10 @@ const useGenerateResponse = ({
           ? {
               ...msg,
               status: "END",
-              answer: msg.answer + "... La risposta è stata annullata",
+              answer:
+                msg.answer +
+                "... " +
+                getTranslation("responseCancelled", language),
             }
           : msg,
       ),

@@ -73,6 +73,16 @@ export function SingleMessage({
     ? visibleSources
     : visibleSources.slice(0, INITIAL_VISIBLE_SOURCES);
   const canToggleSources = visibleSources.length > INITIAL_VISIBLE_SOURCES;
+  const sourcesCountText = Translate({
+    label: visibleSources.length === 1 ? "sourcesCountOne" : "sourcesCount",
+  }).replace("{count}", String(visibleSources.length));
+  // "show less" carries no `{count}`, so the replace leaves it untouched
+  const toggleSourcesText = Translate({
+    label: showAllSources ? "showLessSources" : "showMoreSources",
+  }).replace(
+    "{count}",
+    String(visibleSources.length - INITIAL_VISIBLE_SOURCES),
+  );
 
   const copySource = async (source: Source) => {
     // `url` e' opzionale sulla sorgente: senza non c'e' nulla da copiare.
@@ -269,7 +279,7 @@ export function SingleMessage({
                     sx={{ overflowX: "hidden" }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      {visibleSources.length} sources
+                      {sourcesCountText}
                     </Typography>
                     {canToggleSources && (
                       <Box
@@ -289,11 +299,7 @@ export function SingleMessage({
                       >
                         <VisibilityIcon sx={{ fontSize: "0.75rem" }} />
                         <Typography variant="caption">
-                          {showAllSources
-                            ? "Show less"
-                            : `Show ${
-                                visibleSources.length - INITIAL_VISIBLE_SOURCES
-                              } more`}
+                          {toggleSourcesText}
                         </Typography>
                       </Box>
                     )}

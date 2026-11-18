@@ -152,7 +152,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
   ref,
   icon,
   title,
-  initialMessage = "Benvenuti su Openk9, hai dei dubbi? non esitare a chiedere",
+  initialMessage,
   nameChatbot,
   themeCustom,
   language,
@@ -193,7 +193,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   ref,
   icon,
   title,
-  initialMessage = "Benvenuti su Openk9, hai dei dubbi? non esitare a chiedere",
+  initialMessage,
   nameChatbot,
   tenant = "",
   callbackAuthorization,
@@ -216,6 +216,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   // due nodi con lo stesso id non sono validi. Lo porta quella sotto l'input,
   // la piu' vicina al campo; il top solo quando e' l'unica presente
   const describedSlotIsBottom = resolvedAiDisclosure.bottom !== undefined;
+  const defaultWelcomeMessage = Translate({ label: "welcomeMessage" });
 
   const {
     messages,
@@ -344,7 +345,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             messages={messages}
             icon={icon}
             welcomeMessageTime={welcomeMessageTime}
-            initialMessage={initialMessage}
+            initialMessage={initialMessage ?? defaultWelcomeMessage}
             isGenerateMessage={isGenerateMessage}
             messagesEndRef={messagesEndRef}
             nameChatbot={nameChatbot}

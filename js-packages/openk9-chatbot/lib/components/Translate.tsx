@@ -100,6 +100,51 @@ const translations: {
     es_ES: "Respuesta generada no disponible.",
     de_DE: "Generierte Antwort nicht verfügbar.",
   },
+  welcomeMessage: {
+    it_IT: "Benvenuti su Openk9, hai dei dubbi? non esitare a chiedere",
+    en_US: "Welcome to Openk9, any questions? Don't hesitate to ask",
+    fr_FR:
+      "Bienvenue sur Openk9, vous avez des questions ? N'hésitez pas à demander",
+    es_ES: "Bienvenido a Openk9, ¿tienes dudas? No dudes en preguntar",
+    de_DE:
+      "Willkommen bei Openk9, haben Sie Fragen? Zögern Sie nicht zu fragen",
+  },
+  responseCancelled: {
+    it_IT: "La risposta è stata annullata",
+    en_US: "The answer was canceled",
+    fr_FR: "La réponse a été annulée",
+    es_ES: "La respuesta ha sido cancelada",
+    de_DE: "Die Antwort wurde abgebrochen",
+  },
+  // `{count}` is replaced by the caller with the number of sources
+  sourcesCount: {
+    it_IT: "{count} fonti",
+    en_US: "{count} sources",
+    fr_FR: "{count} sources",
+    es_ES: "{count} fuentes",
+    de_DE: "{count} Quellen",
+  },
+  sourcesCountOne: {
+    it_IT: "{count} fonte",
+    en_US: "{count} source",
+    fr_FR: "{count} source",
+    es_ES: "{count} fuente",
+    de_DE: "{count} Quelle",
+  },
+  showMoreSources: {
+    it_IT: "Mostra {count} in più",
+    en_US: "Show {count} more",
+    fr_FR: "Afficher {count} de plus",
+    es_ES: "Mostrar {count} más",
+    de_DE: "{count} weitere anzeigen",
+  },
+  showLessSources: {
+    it_IT: "Mostra meno",
+    en_US: "Show less",
+    fr_FR: "Afficher moins",
+    es_ES: "Mostrar menos",
+    de_DE: "Weniger anzeigen",
+  },
   aiDisclosure: {
     it_IT:
       "Stai interagendo con un sistema di intelligenza artificiale. Le risposte sono generate automaticamente e possono contenere errori: verifica le informazioni importanti.",
@@ -127,5 +172,11 @@ type TranslationKey =
   | "searchLabel"
   | "guardrailViolation"
   | "generateError"
+  | "welcomeMessage"
+  | "responseCancelled"
+  | "sourcesCount"
+  | "sourcesCountOne"
+  | "showMoreSources"
+  | "showLessSources"
   | "aiDisclosure";
 
