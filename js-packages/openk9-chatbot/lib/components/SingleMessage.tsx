@@ -14,24 +14,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import styled from "@emotion/styled";
-import {
-  Box,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Typography,
-  useTheme,
-} from "@mui/material";
 import Markdown from "react-markdown";
 import { Translate } from "./Translate";
-import ErrorIcon from "@mui/icons-material/Error";
 import { useState } from "react";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import CheckIcon from "@mui/icons-material/Check";
-import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import type { Source } from "./client";
+import {
+  CheckIcon,
+  ContentCopyIcon,
+  ErrorIcon,
+  OpenInFullIcon,
+  VisibilityIcon,
+} from "./icons";
 
 type Theme = "light" | "dark";
 
@@ -59,7 +52,6 @@ export function SingleMessage({
   themeInfo?: Theme;
 }) {
   sources = sources || [];
-  const theme = useTheme();
 
   const [copiedSource, setCopiedSource] = useState<string | null>(null);
   const [showAllSources, setShowAllSources] = useState(false);
@@ -143,341 +135,165 @@ export function SingleMessage({
       ? nameChatbot + " " + Translate({ label: "sendMessage" })
       : Translate({ label: "youSendMessage" })) + timeMessage;
 
+  const openSource = (source: Source) => window.open(source.url, "_blank");
+
   return (
-    <Box
+    <div
       className="openk9-single-message-container"
-      display={"flex"}
-      flexDirection={"column"}
-      gap={"5px"}
-      width={"100%"}
+      data-sender={isChatbot ? "bot" : "user"}
     >
       {status?.toUpperCase() === "ERROR" ? (
-        <Box
-          className="openk9-message-box"
-          display="flex"
-          alignItems="flex-end"
-          gap={4}
-          sx={{
-            gap: "6px",
-            backgroundColor: "white",
-            flexDirection: isChatbot ? "row" : "row-reverse",
-          }}
-        >
-          {icon && <Box className="openk9-chatbot-icon">{icon}</Box>}
-          <Box
-            className="openk9-error-message-container"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              background: "#FCEAEA",
-              border: "1px solid #D32F2F",
-              borderRadius: "10px",
-              padding: "12px 16px",
-              gap: "10px",
-              width: "100%",
-            }}
-            aria-live="polite"
-          >
-            <ErrorIcon sx={{ color: "#D32F2F", fontSize: "20px" }} />
-            <ParagraphMessage
-              className="openk9-paragraph-message"
-              $font={theme.typography.fontFamily}
-              $color="#D32F2F"
-            >
-              {contentMessage}
-            </ParagraphMessage>
-          </Box>
-        </Box>
+        <div className="openk9-message-box">
+          {icon && <div className="openk9-chatbot-icon">{icon}</div>}
+          <div className="openk9-error-message-container" aria-live="polite">
+            <ErrorIcon />
+            <div className="openk9-paragraph-message">{contentMessage}</div>
+          </div>
+        </div>
       ) : (
-        <Box
-          className="openk9-message-box"
-          display="flex"
-          alignItems="flex-end"
-          gap={4}
-          sx={{
-            gap: "6px",
-            backgroundColor: "white",
-            flexDirection: isChatbot ? "row" : "row-reverse",
-          }}
-        >
-          {icon && <Box className="openk9-chatbot-icon">{icon}</Box>}
-          <Box
-            className="openk9-message-content-wrapper"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              width: ["-webkit-fill-available", "-moz-available", "100%"],
-              gap: "6px",
-            }}
-          >
-            <Box
-              className="openk9-message-content"
-              sx={{
-                overflow: "auto",
-                display: "flex",
-                flexDirection: "column",
-                backgroundColor: isChatbot
-                  ? theme.palette.background.default
-                  : theme.palette.primary.main,
-                border: "1px solid",
-                borderColor: theme.palette.primary.main,
-                paddingInline: "16px",
-                color: !isChatbot ? "white" : "black",
-                borderRadius: isChatbot
-                  ? "12px 12px 12px 2px"
-                  : "12px 12px 2px 12px",
-              }}
-              aria-live="polite"
-            >
-              <ParagraphMessage
+        <div className="openk9-message-box">
+          {icon && <div className="openk9-chatbot-icon">{icon}</div>}
+          <div className="openk9-message-content-wrapper">
+            <div className="openk9-message-content" aria-live="polite">
+              <div
                 className="openk9-paragraph-message"
-                $isLoading={isLoading}
-                $font={theme.typography.fontFamily}
+                data-loading={isLoading || undefined}
               >
                 {isLoading ? (
-                  <Box
-                    className="openk9-loading-icon-container"
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "5px",
-                    }}
-                  >
-                    <CircularProgress
-                      className="openk9-loader"
-                      disableShrink
-                      size={30}
-                      sx={{ color: theme.palette.primary.main }}
-                    />
-                  </Box>
+                  <div className="openk9-loading-icon-container">
+                    <span className="openk9-loader" role="progressbar">
+                      <svg viewBox="22 22 44 44">
+                        <circle
+                          cx="44"
+                          cy="44"
+                          r="20.2"
+                          fill="none"
+                          strokeWidth="3.6"
+                        />
+                      </svg>
+                    </span>
+                  </div>
                 ) : (
-                  <FocusableSection
+                  <section
                     className="openk9-focusable-section"
-                    $contraxtFocus={isChatbot ? "black" : "white"}
                     aria-label={ariaLabel}
                     tabIndex={0}
                   >
                     {nameChatbot && (
-                      <ParagraphName
-                        className="openk9-paragraph-name"
-                        $font={theme.typography.fontFamily || ""}
-                      >
-                        {nameChatbot}
-                      </ParagraphName>
+                      <p className="openk9-paragraph-name">{nameChatbot}</p>
                     )}
                     <Markdown>{contentMessage}</Markdown>
-                  </FocusableSection>
+                  </section>
                 )}
-              </ParagraphMessage>
+              </div>
               {maxVisibleSources > 0 && sources.length > 0 && (
-                <Box mb={6}>
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={2}
-                    sx={{ overflowX: "hidden" }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      {sourcesCountText}
-                    </Typography>
+                <div className="openk9-sources">
+                  <div className="openk9-sources-header">
+                    <p className="openk9-sources-count">{sourcesCountText}</p>
                     {canToggleSources && (
-                      <Box
-                        component="button"
+                      <button
+                        className="openk9-sources-toggle"
                         onClick={() => setShowAllSources((prev) => !prev)}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.5,
-                          color: "#12518f",
-                          fontSize: "0.75rem",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          "&:hover": { color: "#2782ea" },
-                        }}
                       >
-                        <VisibilityIcon sx={{ fontSize: "0.75rem" }} />
-                        <Typography variant="caption">
+                        <VisibilityIcon />
+                        <span className="openk9-sources-toggle-label">
                           {toggleSourcesText}
-                        </Typography>
-                      </Box>
+                        </span>
+                      </button>
                     )}
-                  </Box>
+                  </div>
 
-                  <Box
-                    display="flex"
-                    flexWrap="wrap"
-                    gap={1}
-                    sx={{ overflowX: "hidden" }}
-                  >
+                  <div className="openk9-sources-list">
                     {displayedSources.map((source, index) => {
                       const typeColors = getTypeColor(source.url || "");
                       return (
-                        <Chip
+                        // a div, not a <button>, because it holds the copy and
+                        // expand buttons: Enter and Space open the source
+                        <div
                           key={source.url || index}
-                          label={
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              gap={1}
-                              flex={1}
-                              sx={{
-                                width: expandedChips.has(source.url || "")
-                                  ? "230px"
-                                  : "170px",
-                                overflow: "hidden",
-                                textOverflow: expandedChips.has(
-                                  source.url || "",
-                                )
-                                  ? "unset"
-                                  : "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
+                          className="openk9-source-chip"
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => openSource(source)}
+                          onKeyDown={(event) => {
+                            if (event.target !== event.currentTarget) return;
+                            if (event.key === " ") event.preventDefault();
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              openSource(source);
+                            }
+                          }}
+                          onKeyUp={(event) => {
+                            if (event.target !== event.currentTarget) return;
+                            if (event.key === " ") openSource(source);
+                          }}
+                          style={{
+                            backgroundColor: typeColors.backgroundColor,
+                            color: typeColors.color,
+                            borderColor: typeColors.borderColor,
+                          }}
+                        >
+                          <span className="openk9-source-chip-label">
+                            <div
+                              className="openk9-source-chip-content"
+                              data-expanded={
+                                expandedChips.has(source.url || "") || undefined
+                              }
                             >
-                              <Box
-                                sx={{
-                                  flex: 1,
-                                  width: 8,
-                                  height: 8,
-                                  flexShrink: 0,
-                                  flexGrow: 0,
-                                  borderRadius: "50%",
+                              <div
+                                className="openk9-source-chip-dot"
+                                style={{
                                   backgroundColor: getStableColor(
                                     source.url,
                                     themeInfo,
                                   ),
                                 }}
                               />
-                              <Typography
-                                variant="caption"
-                                fontWeight={500}
-                                overflow={"hidden"}
-                                textOverflow={"ellipsis"}
-                              >
+                              <span className="openk9-source-chip-title">
                                 {source?.title && source.title}
-                              </Typography>
-                              <Box>
-                                <IconButton
-                                  size="small"
+                              </span>
+                              <div>
+                                <button
+                                  type="button"
+                                  className="openk9-source-chip-button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     copySource(source);
                                   }}
-                                  sx={{
-                                    p: 0.25,
-                                    ml: 0.5,
-                                    "&:hover": {
-                                      backgroundColor: "rgba(0,0,0,0.05)",
-                                    },
-                                  }}
                                 >
                                   {copiedSource === source.url ? (
-                                    <CheckIcon sx={{ fontSize: "0.75rem" }} />
+                                    <CheckIcon />
                                   ) : (
-                                    <ContentCopyIcon
-                                      sx={{ fontSize: "0.75rem" }}
-                                    />
+                                    <ContentCopyIcon />
                                   )}
-                                </IconButton>
-                                <IconButton
-                                  size="small"
+                                </button>
+                                <button
+                                  type="button"
+                                  className="openk9-source-chip-button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     toggleChipExpansion(source.url || "");
                                   }}
-                                  sx={{
-                                    p: 0.25,
-                                    "&:hover": {
-                                      backgroundColor: "rgba(0,0,0,0.05)",
-                                    },
-                                  }}
                                 >
-                                  <OpenInFullIcon
-                                    sx={{ fontSize: "0.75rem" }}
-                                  />
-                                </IconButton>
-                              </Box>
-                            </Box>
-                          }
-                          onClick={() => window.open(source.url, "_blank")}
-                          sx={{
-                            backgroundColor: typeColors.backgroundColor,
-                            color: typeColors.color,
-                            border: `1px solid ${typeColors.borderColor}`,
-                            cursor: "pointer",
-                            "&:hover": {
-                              backgroundColor: typeColors.backgroundColor,
-                              opacity: 0.8,
-                            },
-                          }}
-                          size="small"
-                        />
+                                  <OpenInFullIcon />
+                                </button>
+                              </div>
+                            </div>
+                          </span>
+                        </div>
                       );
                     })}
-                  </Box>
-                </Box>
+                  </div>
+                </div>
               )}
-            </Box>
-          </Box>
-        </Box>
+            </div>
+          </div>
+        </div>
       )}
-      <ParagraphTime
-        className="openk9-paragraph-time"
-        $color={theme.palette.text.secondary}
-        $font={theme.typography.body2.font || "Roboto"}
-        style={{ alignSelf: !isChatbot ? "start" : "end" }}
-      >
-        {timeMessage}
-      </ParagraphTime>
-    </Box>
+      <p className="openk9-paragraph-time">{timeMessage}</p>
+    </div>
   );
 }
-
-const ParagraphTime = styled.p<{ $color?: string; $font?: string }>`
-  color: ${(props) => props.$color};
-  margin: 0px;
-  align-self: end;
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 1.5;
-  letter-spacing: 1.2px;
-  word-spacing: 1.6px;
-  font-family: ${(props) => props.$font};
-`;
-
-const ParagraphMessage = styled.div<{
-  $color?: string;
-  $isLoading?: boolean;
-  $font?: string;
-  $width?: string;
-}>`
-  color: ${(props) => props.$color};
-  margin: ${(props) => (!props.$isLoading ? "0" : "16px")};
-  width: ${(props) => !props.$width};
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.5;
-  text-align: left;
-  font-family: ${(props) => props.$font};
-  padding-block: 3px;
-`;
-
-const ParagraphName = styled.p<{ $color?: string; $font?: string }>`
-  color: ${(props) => props.$color};
-  font-weight: 700;
-  size: 10px;
-  line-height: 15.21px;
-  font-family: ${(props) => props.$font};
-`;
-
-const FocusableSection = styled.section<{ $contraxtFocus: string }>`
-  padding-block: 0.2px;
-
-  &:focus {
-    outline: 2px solid ${(props) => props.$contraxtFocus};
-  }
-`;
 
 function generateAccessibleColor(theme: Theme): string {
   const MAX_TRIES = 20;

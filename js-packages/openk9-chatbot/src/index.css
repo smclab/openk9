@@ -9,3 +9,91 @@ body {
 .openk9-close-button {
   margin-top: 7px;
 }
+
+/* harness: the colours of the pieces the harness passes to the chatbot */
+.openk9-chatbot {
+  --harness-accent: var(--openk9-chatbot-primary, #c0272b);
+  --harness-banner-text: #666666;
+}
+
+.openk9-chatbot.harness-dark {
+  --harness-accent: #ff8a80;
+  --harness-banner-text: #b3b3b3;
+}
+
+.harness-title {
+  color: var(--harness-accent);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.openk9-chatbot .openk9-logo-icon,
+.openk9-chatbot .openk9-chatbot-icon,
+.openk9-chatbot .openk9-close-button {
+  color: var(--harness-accent);
+}
+
+/* example of an integrator adapting the chatbot to its design system */
+.openk9-chatbot.harness-custom-vars {
+  --openk9-chatbot-primary: #1565c0;
+  --openk9-chatbot-primary-hover: #0d47a1;
+  --openk9-chatbot-font-family: Roboto, sans-serif;
+  --openk9-chatbot-message-font-size: 16px;
+  --openk9-chatbot-input-font-size: 16px;
+  --openk9-chatbot-time-font-size: 12px;
+}
+
+.harness-ai-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--harness-accent) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--harness-accent) 20%, transparent);
+  color: var(--harness-banner-text);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.harness-ai-banner-text {
+  flex: 1;
+}
+
+.harness-ai-banner a {
+  font-weight: 700;
+  color: var(--harness-accent);
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--harness-accent) 40%,
+    transparent
+  );
+}
+
+.harness-ai-banner-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  fill: var(--harness-accent);
+}
+
+.harness-ai-banner-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--harness-banner-text);
+  cursor: pointer;
+}
+
+.harness-ai-banner-button:hover {
+  background-color: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.harness-ai-banner-close .openk9-chatbot-svg-icon {
+  font-size: 16px;
+}

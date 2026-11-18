@@ -14,18 +14,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import {
-  Alert,
-  Box,
-  Button,
-  IconButton,
-  Link,
-  Theme,
-  ThemeProvider,
-  useTheme,
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import React from "react";
 import AiDisclosure from "./AiDisclosure";
 import Search from "./Search";
@@ -37,10 +25,14 @@ import useGenerateResponse, {
 import { SingleMessage } from "./SingleMessage";
 import { useFocusTrap } from "./useFocusTrap";
 import { Translate } from "./Translate";
-import { defaultThemeK9 } from "../../src/theme";
 import { LanguageProvider } from "./LanguageContext";
+import { CloseIcon, LockOutlinedIcon } from "./icons";
 import "@fontsource/roboto";
 import "@fontsource/titillium-web";
+import "./Chatbot.css";
+
+/** which set of default colours the chatbot starts from */
+export type ColorScheme = "light" | "dark";
 
 export type IconProps = {
   buttonIcon?: React.ReactNode;
@@ -76,7 +68,12 @@ type ChatbotProps = {
   title?: React.ReactNode;
   initialMessage?: string;
   nameChatbot?: string;
-  themeCustom?: Theme;
+  /**
+   * the default colours: `light` (default) or `dark`. Every colour, the font and
+   * the text sizes can then be changed through the `--openk9-chatbot-*` CSS
+   * variables, set on the chatbot or on any ancestor, `:root` included.
+   */
+  colorScheme?: ColorScheme;
   language?: string;
   tenant?: string;
   callbackAuthorization?: () => string | undefined | null;
@@ -171,7 +168,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
   title,
   initialMessage,
   nameChatbot,
-  themeCustom,
+  colorScheme,
   language,
   tenant,
   callbackAuthorization,
@@ -188,24 +185,23 @@ const Chatbot: React.FC<ChatbotProps> = ({
   );
   return (
     <React.Fragment>
-      <ThemeProvider theme={themeCustom || defaultThemeK9}>
-        <LanguageProvider initialLanguage={language}>
-          <StructureChatbot
-            ref={ref}
-            icon={icon}
-            title={title}
-            initialMessage={initialMessage}
-            nameChatbot={nameChatbot}
-            tenant={tenant}
-            callbackAuthorization={callbackAuthorization}
-            numberOfSources={resolvedNumberOfSources}
-            aiDisclosure={aiDisclosure}
-            ragMode={ragMode}
-            requireLogin={requireLogin}
-            onLoginRequest={onLoginRequest}
-          />
-        </LanguageProvider>
-      </ThemeProvider>
+      <LanguageProvider initialLanguage={language}>
+        <StructureChatbot
+          ref={ref}
+          icon={icon}
+          title={title}
+          initialMessage={initialMessage}
+          nameChatbot={nameChatbot}
+          colorScheme={colorScheme}
+          tenant={tenant}
+          callbackAuthorization={callbackAuthorization}
+          numberOfSources={resolvedNumberOfSources}
+          aiDisclosure={aiDisclosure}
+          ragMode={ragMode}
+          requireLogin={requireLogin}
+          onLoginRequest={onLoginRequest}
+        />
+      </LanguageProvider>
     </React.Fragment>
   );
 };
@@ -216,6 +212,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   title,
   initialMessage,
   nameChatbot,
+  colorScheme = "light",
   tenant = "",
   callbackAuthorization,
   numberOfSources = DEFAULT_NUMBER_OF_SOURCES,
@@ -230,7 +227,6 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
   );
   const chatbotSearchRef = React.useRef<HTMLInputElement | null>(null);
-  const theme = useTheme();
   const aiDisclosureId = React.useId();
   const resolvedAiDisclosure = resolveAiDisclosure(
     aiDisclosure,
@@ -241,6 +237,9 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   // la piu' vicina al campo; il top solo quando e' l'unica presente
   const describedSlotIsBottom = resolvedAiDisclosure.bottom !== undefined;
   const defaultWelcomeMessage = Translate({ label: "welcomeMessage" });
+  const loginRequiredText = Translate({ label: "loginRequired" });
+  const loginText = Translate({ label: "login" });
+  const closeText = Translate({ label: "close" });
 
   const {
     messages,
@@ -330,44 +329,13 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   }, [isView]);
 
   return (
-    <Box
+    <div
       className="openk9-chatbot-structure"
+      data-color-scheme={colorScheme}
       ref={trapRef}
-      sx={{
-        display: "flex",
-        justifyContent: "flex-start",
-        alignItems: "flex-end",
-        bgcolor: "trasparent",
-        flexDirection: "column",
-        gap: "12px",
-      }}
     >
       {isView && (
-        <Box
-          className="openk9-chatbot-container"
-          sx={{
-            position: { xs: "fixed", sm: "unset" },
-            top: { xs: "0", sm: "unset" },
-            left: { xs: "0", sm: "unset" },
-            display: "flex",
-            flexDirection: "column",
-            border: {
-              xs: "unset",
-              sm: `1px solid ${theme.palette.divider}`,
-            },
-            borderRadius: { xs: "unset", sm: theme.shape.borderRadius * 2 },
-            backgroundColor: theme.palette.primary.contrastText,
-            height: { xs: "100vh", sm: "460px" },
-            // 100vh on mobile ignores the browser bars and pushes the input off screen;
-            // sm is repeated so this block, emitted after the one above, keeps the desktop size
-            "@supports (height: 100dvh)": {
-              height: { xs: "100dvh", sm: "460px" },
-            },
-            width: { xs: "100vw", sm: "365px" },
-            boxShadow: theme.shadows[3],
-            zIndex: 2,
-          }}
-        >
+        <div className="openk9-chatbot-container">
           <ChatbotHeader
             title={title}
             icon={icon}
@@ -390,6 +358,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             messagesEndRef={messagesEndRef}
             nameChatbot={nameChatbot}
             numberOfSources={numberOfSources}
+            colorScheme={colorScheme}
           />
           <Search
             handleSearch={handleSearch}
@@ -400,58 +369,33 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             describedById={aiDisclosureId}
             notice={
               loginNoticeOpen && (
-                <Alert
-                  className="openk9-login-notice"
-                  severity="info"
-                  icon={<LockOutlinedIcon fontSize="small" />}
-                  sx={{
-                    alignItems: "center",
-                    py: 0,
-                    px: "10px",
-                    fontSize: "12px",
-                    borderRadius: 2,
-                    border: 1,
-                    borderColor: "divider",
-                    backgroundColor: "background.paper",
-                    color: "text.primary",
-                    "& .MuiAlert-icon": { color: "primary.main" },
-                    // the panel is narrow: the message can wrap, keep the actions centred
-                    "& .MuiAlert-action": {
-                      alignItems: "center",
-                      pt: 0,
-                      pl: 1,
-                    },
-                  }}
-                  action={
-                    <>
-                      {onLoginRequest && (
-                        <Link
-                          component="button"
-                          type="button"
-                          underline="hover"
-                          onClick={onLoginRequest}
-                          sx={{
-                            mr: 1,
-                            color: "primary.main",
-                            fontSize: "12px",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {Translate({ label: "login" })}
-                        </Link>
-                      )}
-                      <IconButton
-                        size="small"
-                        aria-label={Translate({ label: "close" })}
-                        onClick={() => setLoginNoticeOpen(false)}
+                <div className="openk9-login-notice" role="alert">
+                  <div className="openk9-login-notice-icon">
+                    <LockOutlinedIcon />
+                  </div>
+                  <div className="openk9-login-notice-message">
+                    {loginRequiredText}
+                  </div>
+                  <div className="openk9-login-notice-actions">
+                    {onLoginRequest && (
+                      <button
+                        type="button"
+                        className="openk9-login-notice-login"
+                        onClick={onLoginRequest}
                       >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </>
-                  }
-                >
-                  {Translate({ label: "loginRequired" })}
-                </Alert>
+                        {loginText}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="openk9-login-notice-close"
+                      aria-label={closeText}
+                      onClick={() => setLoginNoticeOpen(false)}
+                    >
+                      <CloseIcon />
+                    </button>
+                  </div>
+                </div>
               )
             }
           />
@@ -461,46 +405,23 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
               text={resolvedAiDisclosure.bottom}
             />
           )}
-        </Box>
+        </div>
       )}
-      <Button
+      <button
+        type="button"
         className="openk9-toggle-chatbot-button"
         aria-label={
           isView
             ? Translate({ label: "closeChatbot" })
             : Translate({ label: "openChatbot" })
         }
-        sx={{
-          borderRadius: "50%",
-          color: "white",
-          display: { xs: isView ? "none" : "unset", sm: "flex" },
-          minWidth: "56px",
-          width: "56px",
-          height: "56px",
-          boxShadow: theme.shadows[3],
-          background: theme.palette.primary.main,
-          padding: 0,
-          "&:hover": {
-            background: theme.palette.primary.light,
-            boxShadow: theme.shadows[3],
-          },
-        }}
         onClick={() => setIsView(!isView)}
       >
-        <Box
-          className="openk9-toggle-icon-wrapper"
-          sx={{
-            justifyContent: "center",
-            display: "flex",
-            height: "100%",
-            width: "100%",
-            alignItems: "center",
-          }}
-        >
+        <div className="openk9-toggle-icon-wrapper">
           {isView ? icon.closeIcon : icon.buttonIcon}
-        </Box>
-      </Button>
-    </Box>
+        </div>
+      </button>
+    </div>
   );
 };
 
@@ -511,67 +432,32 @@ const ChatbotHeader: React.FC<{
   resetMessage: () => void;
   setIsView: (isView: boolean) => void;
 }> = ({ title, icon, isChatting, resetMessage, setIsView }) => {
-  const theme = useTheme();
-
   return (
-    <Box
-      className="openk9-chatbot-header"
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        borderBottom: `1px solid ${theme.palette.divider}`,
-        pb: theme.spacing(2),
-        mb: theme.spacing(2),
-        gap: theme.spacing(2),
-        padding: "12px",
-        paddingBottom: "0px",
-        marginBottom: "12px",
-        justifyContent: "space-between",
-      }}
-    >
-      <Box
-        className="openk9-logo-icon"
-        sx={{
-          minWidth: 0,
-          padding: 0,
-        }}
-      >
-        {icon.logoIcon}
-      </Box>
+    <div className="openk9-chatbot-header">
+      <div className="openk9-logo-icon">{icon.logoIcon}</div>
       <div>{title}</div>
-      <Box
-        className="openk9-header-buttons"
-        display={"flex"}
-        gap={"5px"}
-        alignItems={"center"}
-      >
-        <Button
+      <div className="openk9-header-buttons">
+        <button
+          type="button"
           className="openk9-refresh-button"
           disabled={isChatting}
           onClick={resetMessage}
           aria-label={Translate({ label: "clearChat" })}
-          sx={{
-            minWidth: 0,
-            padding: 0,
-            height: "24px",
-            width: "24px",
-          }}
         >
           {icon.refreshChatIcon}
-        </Button>
+        </button>
 
-        <IconButton
+        <button
+          type="button"
           className="openk9-close-button"
           onClick={() => setIsView(false)}
           role="button"
-          size="small"
-          sx={{ display: { xs: "block", sm: "none" } }}
           aria-label={Translate({ label: "closeChatbot" })}
         >
           {icon.closeModal}
-        </IconButton>
-      </Box>
-    </Box>
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -584,6 +470,7 @@ const MessageList: React.FC<{
   nameChatbot?: string;
   welcomeMessageTime?: string;
   numberOfSources?: number;
+  colorScheme: ColorScheme;
 }> = ({
   messages,
   icon,
@@ -593,30 +480,10 @@ const MessageList: React.FC<{
   nameChatbot,
   welcomeMessageTime = "",
   numberOfSources = DEFAULT_NUMBER_OF_SOURCES,
+  colorScheme,
 }) => (
-  <Box
-    className="openk9-message-list-container"
-    component="section"
-    sx={{
-      flex: 1,
-      display: "flex",
-      flexDirection: "column",
-      overflow: "hidden",
-    }}
-  >
-    <Box
-      className="openk9-message-list"
-      sx={{
-        flex: 1,
-        overflowY: "auto",
-        paddingInline: "16px",
-        gap: "12px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        bgcolor: "transparent",
-      }}
-    >
+  <section className="openk9-message-list-container">
+    <div className="openk9-message-list">
       <SingleMessage
         contentMessage={initialMessage}
         isChatbot={true}
@@ -661,13 +528,14 @@ const MessageList: React.FC<{
                   isGenerateMessage?.isLoading
                 }
                 nameChatbot={nameChatbot}
+                themeInfo={colorScheme}
               />
               {index === messages.length - 1 && <div ref={messagesEndRef} />}
             </React.Fragment>
           );
         })}
-    </Box>
-  </Box>
+    </div>
+  </section>
 );
 
 export default Chatbot;

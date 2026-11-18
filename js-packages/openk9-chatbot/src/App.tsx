@@ -14,103 +14,87 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-import { Box, IconButton, Link } from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import CloseRoundedIcon from "@mui/icons-material/Close";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import React from "react";
 import Chatbot, { ChatbotHandle } from "../lib/components/Chatbot";
+import { CloseIcon as CloseSmallIcon } from "../lib/components/icons";
 import { Logo } from "./svg/Logo";
 import { User } from "./svg/User";
 import { TrashIcon } from "./svg/Trash";
 import { SearchIcon } from "./svg/SearchSvg";
 import { CloseIcon } from "./svg/CloseIcon";
-import { defaultThemeK9 } from "./theme";
 
 // da sostituire con l'informativa privacy reale dell'integrazione
 const PRIVACY_POLICY_URL = "https://www.example.com/privacy";
+
+function InfoIcon() {
+  return (
+    <svg
+      className="harness-ai-banner-icon"
+      focusable="false"
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+    >
+      <path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8" />
+    </svg>
+  );
+}
 
 /**
  * Informativa AI richiudibile. Chiusa non sparisce: si riduce a una ⓘ che la
  * riapre, così resta sempre raggiungibile dall'utente.
  *
  * Tutto qui dentro è contenuto di frase (`span`, `a`, `button`, `svg`) perché il
- * pannello monta il nodo dentro un `<p>`: un `<div>` — per esempio un `Alert` di
- * MUI — verrebbe estratto dal paragrafo dal parser HTML, rompendo il layout e
- * l'associazione con `aria-describedby`.
+ * pannello monta il nodo dentro un `<p>`: un `<div>` verrebbe estratto dal
+ * paragrafo dal parser HTML, rompendo il layout e l'associazione con
+ * `aria-describedby`. I colori stanno in `index.css`.
  */
 function AiDisclosureBanner() {
   const [isOpen, setIsOpen] = React.useState(true);
 
   if (!isOpen) {
     return (
-      <IconButton
-        size="small"
+      <button
+        type="button"
+        className="harness-ai-banner-button harness-ai-banner-reopen"
         aria-label="Mostra l'informativa sull'uso dell'intelligenza artificiale"
         onClick={() => setIsOpen(true)}
-        sx={{ padding: "2px", color: "primary.main" }}
       >
-        <InfoOutlinedIcon sx={{ fontSize: 18 }} />
-      </IconButton>
+        <InfoIcon />
+      </button>
     );
   }
 
   return (
-    <Box
-      component="span"
-      sx={(theme) => ({
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "8px",
-        padding: "10px",
-        borderRadius: "8px",
-        // velo del primario invece di un colore fisso: resta armonioso anche
-        // se l'integratore passa un `themeCustom` con un'altra tinta
-        backgroundColor: alpha(theme.palette.primary.main, 0.07),
-        border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-        // #666 su questo velo resta sopra il 4.5:1 richiesto da WCAG AA
-        color: theme.palette.text.secondary,
-        fontSize: "11px",
-        lineHeight: 1.45,
-      })}
-    >
-      <InfoOutlinedIcon
-        sx={{
-          fontSize: 18,
-          color: "primary.main",
-          flexShrink: 0,
-          marginTop: "1px",
-        }}
-      />
-      <Box component="span" sx={{ flex: 1 }}>
+    <span className="harness-ai-banner">
+      <InfoIcon />
+      <span className="harness-ai-banner-text">
         Questo assistente virtuale utilizza tecnologie di Intelligenza
         Artificiale. Le risposte sono generate automaticamente e hanno finalità
         esclusivamente informative. È opportuno non inserire dati personali o
         informazioni riservate. Consulta l’
-        <Link
-          href={PRIVACY_POLICY_URL}
-          target="_blank"
-          rel="noreferrer"
-          sx={{ fontWeight: 700, color: "primary.main" }}
-        >
+        <a href={PRIVACY_POLICY_URL} target="_blank" rel="noreferrer">
           Informativa Privacy
-        </Link>{" "}
+        </a>{" "}
         per maggiori dettagli.
-      </Box>
-      <IconButton
-        size="small"
+      </span>
+      <button
+        type="button"
+        className="harness-ai-banner-button harness-ai-banner-close"
         aria-label="Chiudi l'informativa"
         onClick={() => setIsOpen(false)}
-        sx={{ padding: "2px", flexShrink: 0, color: "text.secondary" }}
       >
-        <CloseRoundedIcon sx={{ fontSize: 16 }} />
-      </IconButton>
-    </Box>
+        <CloseSmallIcon />
+      </button>
+    </span>
   );
 }
 
 function App() {
   const chatbotRef = React.useRef<ChatbotHandle>(null);
+  const [isDark, setIsDark] = React.useState(false);
+  // le variabili ridefinite stanno in `index.css`, sotto `.harness-custom-vars`:
+  // e' il modo in cui un integratore adatta il chatbot al suo design system
+  const [hasCustomVars, setHasCustomVars] = React.useState(false);
 
   return (
     <React.Fragment>
@@ -122,12 +106,35 @@ function App() {
       >
         Chiedi al chatbot: Che cos'è OpenK9?
       </button>
+      <label>
+        <input
+          type="checkbox"
+          checked={isDark}
+          onChange={(event) => setIsDark(event.currentTarget.checked)}
+        />
+        Tema scuro
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={hasCustomVars}
+          onChange={(event) => setHasCustomVars(event.currentTarget.checked)}
+        />
+        Variabili CSS ridefinite
+      </label>
       <div
-        className="openk9-chatbot"
+        className={[
+          "openk9-chatbot",
+          isDark && "harness-dark",
+          hasCustomVars && "harness-custom-vars",
+        ]
+          .filter(Boolean)
+          .join(" ")}
         style={{ position: "absolute", bottom: "20px", right: "20px" }}
       >
         <Chatbot
           ref={chatbotRef}
+          colorScheme={isDark ? "dark" : "light"}
           initialMessage="Chiedimi pure qualcosa"
           nameChatbot="Openk9"
           tenant="https://k9-frontend.openk9.io"
@@ -141,27 +148,15 @@ function App() {
           icon={{
             buttonIcon: <Logo size={35} color="white" />,
             userIcon: <User />,
-            chatbotIcon: <Logo size={25} />,
+            chatbotIcon: <Logo size={25} color="currentColor" />,
             refreshChatIcon: <TrashIcon />,
             searchIcon: <SearchIcon />,
-            logoIcon: <Logo size={35} />,
+            logoIcon: <Logo size={35} color="currentColor" />,
             closeIcon: <CloseIcon size="30px" color={"white"} />,
-            closeModal: (
-              <CloseIcon
-                size="18px"
-                color={defaultThemeK9.palette.primary.main}
-              />
-            ),
+            closeModal: <CloseIcon size="18px" color="currentColor" />,
           }}
           title={
-            <h3
-              style={{
-                color: defaultThemeK9.palette.primary.main,
-                fontWeight: 400,
-                fontSize: "14px",
-                lineHeight: "22px",
-              }}
-            >
+            <h3 className="harness-title">
               Chatta con <span style={{ fontWeight: 700 }}>Openk9</span>
             </h3>
           }

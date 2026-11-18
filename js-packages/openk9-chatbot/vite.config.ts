@@ -46,10 +46,6 @@ export default defineConfig({
         "react",
         "react-markdown",
         "react/jsx-runtime",
-        "@mui/material",
-        "@mui/system",
-        "@emotion/react",
-        "@emotion/styled",
         "style-to-object",
         "extend",
         "prop-types",
@@ -80,8 +76,6 @@ export default defineConfig({
     include: [
       "prop-types",
       "react-is",
-      "@mui/material",
-      "@mui/system",
     ],
   },
 });

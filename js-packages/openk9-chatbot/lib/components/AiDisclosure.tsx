@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { Box, Typography } from "@mui/material";
 import React from "react";
 
 /**
@@ -41,23 +40,8 @@ export default function AiDisclosure({
   text: React.ReactNode;
 }): React.ReactNode {
   return (
-    <Box className="openk9-ai-disclosure" sx={{ padding: "0 12px 10px" }}>
-      <Typography
-        id={id}
-        variant="caption"
-        component="p"
-        // #595959 on white is 7:1, above the 4.5:1 WCAG 2.1 AA threshold, and unlike a
-        // palette color it stays legible whatever `themeCustom` an integrator passes.
-        sx={{
-          margin: 0,
-          color: "#595959",
-          fontSize: "10px",
-          lineHeight: 1.4,
-          textAlign: "left",
-        }}
-      >
-        {text}
-      </Typography>
-    </Box>
+    <div className="openk9-ai-disclosure">
+      <p id={id}>{text}</p>
+    </div>
   );
 }

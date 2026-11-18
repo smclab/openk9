@@ -1,0 +1,840 @@
+/*
+ * Look of the chatbot. Every colour, the fonts and the text sizes come from the
+ * public `--openk9-chatbot-*` variables, which integrators set on the chatbot or
+ * on any ancestor (`:root` included).
+ *
+ * A rule never reads a public variable alone: it reads
+ * `var(--openk9-chatbot-x, var(--_k9-x))`. The `--_k9-*` defaults are declared on
+ * the root of the chatbot, one set per `colorScheme`; a public variable declared
+ * on the root itself would shadow the value an integrator sets on `:root`, while
+ * a fallback never does.
+ */
+
+.openk9-chatbot-structure {
+  --_k9-font-family: "Titillium Web", sans-serif;
+  --_k9-font-family-secondary: Roboto, sans-serif;
+  --_k9-message-font-size: 12px;
+  --_k9-input-font-size: 12px;
+  --_k9-time-font-size: 10px;
+  --_k9-disclosure-font-size: 10px;
+  --_k9-sources-font-size: 12px;
+
+  --_k9-primary: #c0272b;
+  --_k9-primary-hover: #e77979;
+  --_k9-on-primary: #ffffff;
+  --_k9-panel-bg: #ffffff;
+  /* no light default for --_k9-panel-text: the panel inherits the page colour */
+  --_k9-border: rgba(0, 0, 0, 0.12);
+  --_k9-user-message-bg: var(--openk9-chatbot-primary, var(--_k9-primary));
+  --_k9-user-message-text: var(
+    --openk9-chatbot-on-primary,
+    var(--_k9-on-primary)
+  );
+  --_k9-bot-message-bg: #ffffff;
+  --_k9-bot-message-text: #000000;
+  --_k9-message-border: var(--openk9-chatbot-primary, var(--_k9-primary));
+  --_k9-secondary-text: #666666;
+  --_k9-input-bg: #ffffff;
+  --_k9-input-text: #000000;
+  --_k9-input-border: rgba(0, 0, 0, 0.23);
+  --_k9-input-border-hover: #000000;
+  /* 4.6:1 on white */
+  --_k9-input-placeholder: #757575;
+  --_k9-search-border: #c7c7c7c7;
+  --_k9-icon-button: rgba(0, 0, 0, 0.54);
+  --_k9-icon-button-hover-bg: rgba(0, 0, 0, 0.04);
+  --_k9-disabled-bg: rgba(0, 0, 0, 0.12);
+  --_k9-disabled-text: rgba(0, 0, 0, 0.26);
+  --_k9-error-bg: #fceaea;
+  --_k9-error-border: #d32f2f;
+  /* 4.8:1 on the error background */
+  --_k9-error-text: #c62828;
+  /* 7:1 on white */
+  --_k9-disclosure-text: #595959;
+  --_k9-sources-control: #12518f;
+  --_k9-sources-control-hover: #2782ea;
+  --_k9-notice-bg: #ffffff;
+  --_k9-notice-text: #000000;
+  --_k9-notice-link: var(--openk9-chatbot-primary, var(--_k9-primary));
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.openk9-chatbot-structure[data-color-scheme="dark"] {
+  --_k9-primary: #cf3236;
+  --_k9-primary-hover: #a82125;
+  --_k9-on-primary: #ffffff;
+  --_k9-panel-bg: #1e1e1e;
+  --_k9-panel-text: #ededed;
+  --_k9-border: rgba(255, 255, 255, 0.12);
+  --_k9-bot-message-bg: #2a2a2a;
+  --_k9-bot-message-text: #ededed;
+  --_k9-secondary-text: #a8a8a8;
+  --_k9-input-bg: #2a2a2a;
+  --_k9-input-text: #ededed;
+  --_k9-input-border: rgba(255, 255, 255, 0.23);
+  --_k9-input-border-hover: #ededed;
+  --_k9-input-placeholder: #9e9e9e;
+  --_k9-search-border: rgba(255, 255, 255, 0.16);
+  --_k9-icon-button: rgba(255, 255, 255, 0.7);
+  --_k9-icon-button-hover-bg: rgba(255, 255, 255, 0.08);
+  --_k9-disabled-bg: rgba(255, 255, 255, 0.12);
+  --_k9-disabled-text: rgba(255, 255, 255, 0.3);
+  --_k9-error-bg: #3b1e1e;
+  --_k9-error-border: #f28b82;
+  --_k9-error-text: #f28b82;
+  --_k9-disclosure-text: #b3b3b3;
+  --_k9-sources-control: #8ab4f8;
+  --_k9-sources-control-hover: #aecbfa;
+  --_k9-notice-bg: #2a2a2a;
+  --_k9-notice-text: #ededed;
+  --_k9-notice-link: #ff8a80;
+  --_k9-link: #8ab4f8;
+
+  color-scheme: dark;
+}
+
+.openk9-chatbot-svg-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+  user-select: none;
+}
+
+.openk9-toggle-chatbot-button,
+.openk9-refresh-button,
+.openk9-close-button,
+.openk9-search-button,
+.openk9-source-chip-button,
+.openk9-login-notice-login,
+.openk9-login-notice-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  color: inherit;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+  appearance: none;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* scoped so that a host rule like `button:focus { outline: 0 }` cannot hide it */
+.openk9-chatbot-structure
+  :is(
+    .openk9-toggle-chatbot-button,
+    .openk9-refresh-button,
+    .openk9-close-button,
+    .openk9-search-button,
+    .openk9-sources-toggle,
+    .openk9-source-chip,
+    .openk9-source-chip-button,
+    .openk9-login-notice-login,
+    .openk9-login-notice-close
+  ):focus-visible {
+  outline: 2px solid var(--openk9-chatbot-primary, var(--_k9-primary));
+  outline-offset: 2px;
+}
+
+/* inside the list of sources and its header, which clip what overflows */
+.openk9-chatbot-structure .openk9-sources-toggle:focus-visible,
+.openk9-chatbot-structure .openk9-source-chip:focus-visible {
+  outline-offset: -2px;
+}
+
+.openk9-chatbot-structure .openk9-source-chip-button:focus-visible {
+  outline-offset: 0;
+}
+
+/* panel */
+
+.openk9-chatbot-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--openk9-chatbot-panel-bg, var(--_k9-panel-bg));
+  /* unset in light: the panel keeps inheriting the colour of the page */
+  color: var(--openk9-chatbot-panel-text, var(--_k9-panel-text));
+  box-shadow: 0px 3px 3px -2px rgba(0, 0, 0, 0.2),
+    0px 3px 4px 0px rgba(0, 0, 0, 0.14), 0px 1px 8px 0px rgba(0, 0, 0, 0.12);
+}
+
+/* 100vh on mobile ignores the browser bars and pushes the input off screen */
+@supports (height: 100dvh) {
+  .openk9-chatbot-container {
+    height: 100dvh;
+  }
+}
+
+@media (min-width: 576px) {
+  .openk9-chatbot-container {
+    position: static;
+    top: auto;
+    left: auto;
+    width: 365px;
+    height: 460px;
+    border: 1px solid var(--openk9-chatbot-border, var(--_k9-border));
+    border-radius: 8px;
+  }
+}
+
+.openk9-chatbot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--openk9-chatbot-border, var(--_k9-border));
+}
+
+.openk9-logo-icon {
+  min-width: 0;
+  padding: 0;
+}
+
+.openk9-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.openk9-refresh-button {
+  min-width: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+  color: var(--openk9-chatbot-primary, var(--_k9-primary));
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.openk9-refresh-button:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--openk9-chatbot-primary, var(--_k9-primary)) 4%,
+    transparent
+  );
+}
+
+.openk9-refresh-button:disabled {
+  color: var(--openk9-chatbot-disabled-text, var(--_k9-disabled-text));
+  pointer-events: none;
+  cursor: default;
+}
+
+/* only on mobile, where the panel covers the toggle button */
+.openk9-close-button {
+  display: block;
+  flex-shrink: 0;
+  padding: 5px;
+  border-radius: 50%;
+  font-size: 1.125rem;
+  color: var(--openk9-chatbot-icon-button, var(--_k9-icon-button));
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.openk9-close-button:hover {
+  background-color: var(
+    --openk9-chatbot-icon-button-hover-bg,
+    var(--_k9-icon-button-hover-bg)
+  );
+}
+
+@media (min-width: 576px) {
+  .openk9-close-button {
+    display: none;
+  }
+}
+
+.openk9-toggle-chatbot-button {
+  display: flex;
+  min-width: 56px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--openk9-chatbot-primary, var(--_k9-primary));
+  color: var(--openk9-chatbot-on-primary, var(--_k9-on-primary));
+  box-shadow: 0px 3px 3px -2px rgba(0, 0, 0, 0.2),
+    0px 3px 4px 0px rgba(0, 0, 0, 0.14), 0px 1px 8px 0px rgba(0, 0, 0, 0.12);
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.openk9-toggle-chatbot-button:hover {
+  background-color: var(
+    --openk9-chatbot-primary-hover,
+    var(--_k9-primary-hover)
+  );
+}
+
+@media (max-width: 575.98px) {
+  .openk9-chatbot-container ~ .openk9-toggle-chatbot-button {
+    display: none;
+  }
+}
+
+.openk9-toggle-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* messages */
+
+.openk9-message-list-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.openk9-message-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  overflow-y: auto;
+  padding-inline: 16px;
+}
+
+.openk9-single-message-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.openk9-message-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  background-color: var(--openk9-chatbot-panel-bg, var(--_k9-panel-bg));
+}
+
+[data-sender="user"] > .openk9-message-box {
+  flex-direction: row-reverse;
+}
+
+.openk9-message-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.openk9-message-content {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  padding-inline: 16px;
+  border: 1px solid
+    var(--openk9-chatbot-message-border, var(--_k9-message-border));
+  border-radius: 12px 12px 12px 2px;
+  background-color: var(
+    --openk9-chatbot-bot-message-bg,
+    var(--_k9-bot-message-bg)
+  );
+  color: var(--openk9-chatbot-bot-message-text, var(--_k9-bot-message-text));
+}
+
+[data-sender="user"] .openk9-message-content {
+  border-radius: 12px 12px 2px 12px;
+  background-color: var(
+    --openk9-chatbot-user-message-bg,
+    var(--_k9-user-message-bg)
+  );
+  color: var(--openk9-chatbot-user-message-text, var(--_k9-user-message-text));
+}
+
+.openk9-paragraph-message {
+  margin: 0;
+  padding-block: 3px;
+  font-family: var(--openk9-chatbot-font-family, var(--_k9-font-family));
+  font-size: var(
+    --openk9-chatbot-message-font-size,
+    var(--_k9-message-font-size)
+  );
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.openk9-paragraph-message[data-loading] {
+  margin: 16px;
+}
+
+.openk9-loading-icon-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.openk9-loader {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  color: var(--openk9-chatbot-primary, var(--_k9-primary));
+  animation: openk9-chatbot-spin 1.4s linear infinite;
+}
+
+.openk9-loader svg {
+  display: block;
+}
+
+.openk9-loader circle {
+  stroke: currentColor;
+  stroke-dasharray: 80px, 200px;
+  stroke-dashoffset: 0;
+}
+
+@keyframes openk9-chatbot-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.openk9-focusable-section {
+  padding-block: 0.2px;
+}
+
+/* currentColor: the text colour of the bubble, so it shows on both */
+.openk9-focusable-section:focus {
+  outline: 2px solid currentColor;
+}
+
+/* in light the answer keeps the link and code colours of the page, as before;
+   on the dark bubble those would not be readable */
+.openk9-chatbot-structure[data-color-scheme="dark"]
+  [data-sender="bot"]
+  .openk9-message-content
+  a {
+  color: var(--openk9-chatbot-link, var(--_k9-link));
+}
+
+/* on the user bubble the link takes the bubble's own text colour, underlined
+   so that it still reads as a link */
+.openk9-chatbot-structure[data-color-scheme="dark"]
+  [data-sender="user"]
+  .openk9-message-content
+  a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.openk9-chatbot-structure[data-color-scheme="dark"]
+  .openk9-message-content
+  code {
+  color: inherit;
+}
+
+.openk9-paragraph-name {
+  font-family: var(--openk9-chatbot-font-family, var(--_k9-font-family));
+  font-weight: 700;
+  line-height: 1.2675;
+}
+
+.openk9-paragraph-time {
+  align-self: end;
+  margin: 0;
+  font-family: var(
+    --openk9-chatbot-font-family-secondary,
+    var(--_k9-font-family-secondary)
+  );
+  font-size: var(--openk9-chatbot-time-font-size, var(--_k9-time-font-size));
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 1.2px;
+  word-spacing: 1.6px;
+  color: var(--openk9-chatbot-secondary-text, var(--_k9-secondary-text));
+}
+
+[data-sender="user"] > .openk9-paragraph-time {
+  align-self: start;
+}
+
+/* error bubble */
+
+.openk9-error-message-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--openk9-chatbot-error-border, var(--_k9-error-border));
+  border-radius: 10px;
+  background: var(--openk9-chatbot-error-bg, var(--_k9-error-bg));
+}
+
+.openk9-error-message-container > .openk9-chatbot-svg-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--openk9-chatbot-error-text, var(--_k9-error-text));
+}
+
+.openk9-error-message-container > .openk9-paragraph-message {
+  color: var(--openk9-chatbot-error-text, var(--_k9-error-text));
+}
+
+/* sources */
+
+.openk9-sources {
+  margin-bottom: 12px;
+}
+
+.openk9-sources-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  overflow-x: hidden;
+}
+
+.openk9-sources-count {
+  margin: 0;
+  font-family: var(
+    --openk9-chatbot-font-family-secondary,
+    var(--_k9-font-family-secondary)
+  );
+  font-size: var(--openk9-chatbot-time-font-size, var(--_k9-time-font-size));
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--openk9-chatbot-secondary-text, var(--_k9-secondary-text));
+}
+
+.openk9-sources-toggle {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  border: none;
+  background: none;
+  font-size: var(
+    --openk9-chatbot-sources-font-size,
+    var(--_k9-sources-font-size)
+  );
+  color: var(--openk9-chatbot-sources-control, var(--_k9-sources-control));
+  cursor: pointer;
+}
+
+.openk9-sources-toggle:hover {
+  color: var(
+    --openk9-chatbot-sources-control-hover,
+    var(--_k9-sources-control-hover)
+  );
+}
+
+.openk9-sources-toggle-label {
+  margin: 0;
+  font-family: var(--openk9-chatbot-font-family, var(--_k9-font-family));
+  font-weight: 400;
+  line-height: 1.66;
+}
+
+.openk9-sources-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  overflow-x: hidden;
+}
+
+/* the colours of a source are computed per source and set inline */
+.openk9-source-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  max-width: 100%;
+  height: 24px;
+  padding: 0;
+  border: 1px solid;
+  border-radius: 16px;
+  font-family: var(--openk9-chatbot-font-family, var(--_k9-font-family));
+  font-size: var(
+    --openk9-chatbot-sources-font-size,
+    var(--_k9-sources-font-size)
+  );
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.openk9-source-chip:hover {
+  opacity: 0.8;
+}
+
+.openk9-source-chip-label {
+  overflow: hidden;
+  padding-inline: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.openk9-source-chip-content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 2px;
+  width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.openk9-source-chip-content[data-expanded] {
+  width: 230px;
+  text-overflow: unset;
+}
+
+.openk9-source-chip-dot {
+  flex: 0 0 0%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.openk9-source-chip-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  line-height: 1.66;
+}
+
+.openk9-source-chip-button {
+  flex: 0 0 auto;
+  padding: 0.5px;
+  border-radius: 50%;
+  font-size: var(
+    --openk9-chatbot-sources-font-size,
+    var(--_k9-sources-font-size)
+  );
+  color: var(--openk9-chatbot-icon-button, var(--_k9-icon-button));
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.openk9-source-chip-button:first-child {
+  margin-left: 1px;
+}
+
+.openk9-source-chip-button:hover {
+  background-color: var(
+    --openk9-chatbot-icon-button-hover-bg,
+    var(--_k9-icon-button-hover-bg)
+  );
+}
+
+/* input */
+
+.openk9-search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid
+    var(--openk9-chatbot-search-border, var(--_k9-search-border));
+}
+
+.openk9-search-box {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+}
+
+/* the border is an inset shadow: thickening it on focus moves no text */
+.openk9-search-input {
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  border-radius: 2px;
+  background-color: var(--openk9-chatbot-input-bg, var(--_k9-input-bg));
+  box-shadow: inset 0 0 0 1px
+    var(--openk9-chatbot-input-border, var(--_k9-input-border));
+  cursor: text;
+}
+
+.openk9-search-input:hover {
+  box-shadow: inset 0 0 0 1px
+    var(--openk9-chatbot-input-border-hover, var(--_k9-input-border-hover));
+}
+
+.openk9-search-input:focus-within {
+  box-shadow: inset 0 0 0 2px var(--openk9-chatbot-primary, var(--_k9-primary));
+}
+
+.openk9-search-input input {
+  display: block;
+  box-sizing: content-box;
+  width: 100%;
+  min-width: 0;
+  height: 29px;
+  margin: 0;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 4px;
+  outline: 0;
+  background: none;
+  font-family: var(--openk9-chatbot-font-family, var(--_k9-font-family));
+  font-size: var(--openk9-chatbot-input-font-size, var(--_k9-input-font-size));
+  font-weight: 400;
+  line-height: 1.5208;
+  text-align: left;
+  color: var(--openk9-chatbot-input-text, var(--_k9-input-text));
+}
+
+.openk9-search-input input::placeholder {
+  color: var(--openk9-chatbot-input-placeholder, var(--_k9-input-placeholder));
+  opacity: 1;
+}
+
+.openk9-search-button {
+  min-width: 29px;
+  height: 29px;
+  border-radius: 4px;
+  background-color: var(--openk9-chatbot-primary, var(--_k9-primary));
+  color: var(--openk9-chatbot-on-primary, var(--_k9-on-primary));
+  stroke: var(--openk9-chatbot-on-primary, var(--_k9-on-primary));
+  fill: transparent;
+  box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2),
+    0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.openk9-search-button:hover {
+  box-shadow: 0px 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12);
+}
+
+.openk9-search-button:active {
+  box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2),
+    0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+.openk9-search-button:disabled {
+  background-color: var(--openk9-chatbot-disabled-bg, var(--_k9-disabled-bg));
+  color: var(--openk9-chatbot-disabled-text, var(--_k9-disabled-text));
+  box-shadow: none;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* AI disclosure */
+
+.openk9-ai-disclosure {
+  padding: 0 12px 10px;
+}
+
+.openk9-ai-disclosure > p {
+  margin: 0;
+  font-family: var(--openk9-chatbot-font-family, var(--_k9-font-family));
+  font-size: var(
+    --openk9-chatbot-disclosure-font-size,
+    var(--_k9-disclosure-font-size)
+  );
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  color: var(--openk9-chatbot-disclosure-text, var(--_k9-disclosure-text));
+}
+
+/* login notice */
+
+.openk9-login-notice {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--openk9-chatbot-border, var(--_k9-border));
+  border-radius: 4px;
+  background-color: var(--openk9-chatbot-notice-bg, var(--_k9-notice-bg));
+  color: var(--openk9-chatbot-notice-text, var(--_k9-notice-text));
+  font-family: var(
+    --openk9-chatbot-font-family-secondary,
+    var(--_k9-font-family-secondary)
+  );
+  font-size: var(
+    --openk9-chatbot-message-font-size,
+    var(--_k9-message-font-size)
+  );
+  font-weight: 500;
+  line-height: 1;
+}
+
+.openk9-login-notice-icon {
+  display: flex;
+  margin-right: 12px;
+  padding: 7px 0;
+  opacity: 0.9;
+  color: var(--openk9-chatbot-notice-link, var(--_k9-notice-link));
+}
+
+.openk9-login-notice-icon > .openk9-chatbot-svg-icon,
+.openk9-login-notice-close > .openk9-chatbot-svg-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.openk9-login-notice-message {
+  min-width: 0;
+  padding: 8px 0;
+  overflow: auto;
+}
+
+.openk9-login-notice-actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: -8px;
+  padding: 0 0 0 2px;
+}
+
+.openk9-login-notice-login {
+  margin-right: 2px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--openk9-chatbot-notice-link, var(--_k9-notice-link));
+}
+
+.openk9-login-notice-login:hover {
+  text-decoration: underline;
+}
+
+.openk9-login-notice-close {
+  padding: 5px;
+  border-radius: 50%;
+  color: var(--openk9-chatbot-icon-button, var(--_k9-icon-button));
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.openk9-login-notice-close:hover {
+  background-color: var(
+    --openk9-chatbot-icon-button-hover-bg,
+    var(--_k9-icon-button-hover-bg)
+  );
+}

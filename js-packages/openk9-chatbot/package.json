@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "main": "dist/main.js",
-  "types": "dist/types/lib/main.d.ts",
+  "types": "dist/types/main.d.ts",
   "files": [
     "dist"
   ],
@@ -16,11 +16,6 @@
     "preview": "vite preview"
   },
   "peerDependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/material": "^6.1.6",
-    "@mui/icons-material": "^6.1.6",
-    "@mui/system": "^6.1.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^9.1.0",
@@ -43,11 +38,6 @@
     "vite": "^7.3.6",
     "vite-plugin-dts": "^5.1.1",
     "vite-plugin-lib-inject-css": "^2.1.1",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/material": "^6.1.6",
-    "@mui/icons-material": "^6.1.6",
-    "@mui/system": "^6.1.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^9.1.0",

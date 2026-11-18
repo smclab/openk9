@@ -160,3 +160,112 @@ classes the widget exposes (`openk9-toggle-chatbot-button`,
 `openk9-toggle-icon-wrapper`). Note that the panel is one text line taller than before:
 check the layout if you constrain the container height or position elements over the
 panel with custom CSS.
+
+## Look and theming
+
+The chatbot has no UI library behind it: it renders plain HTML elements styled by
+its own stylesheet, which the package imports together with the components
+(`sideEffects: ["**/*.css"]`), so there is no CSS to import by hand. It no longer
+depends on MUI or emotion.
+
+### Light and dark
+
+`colorScheme` picks the set of default colours: `"light"` (default) or `"dark"`.
+
+```tsx
+<Chatbot icon={icon} colorScheme="dark" />
+```
+
+### Changing the look with CSS variables
+
+Every colour, the fonts and the text sizes come from CSS variables with the
+`--openk9-chatbot-` prefix. Set them on `:root`, on any ancestor of the chatbot
+or on the chatbot itself (`.openk9-chatbot-structure`): your value wins over the
+default of either scheme. Those are the supported places: on a deeper element the
+variable still applies where it is read directly, but the defaults derived from it
+(e.g. the user bubble from `--openk9-chatbot-primary`) do not follow.
+
+```css
+:root {
+  --openk9-chatbot-primary: #0b5394;
+  --openk9-chatbot-primary-hover: #3d85c6;
+  --openk9-chatbot-font-family: "Source Sans 3", sans-serif;
+  --openk9-chatbot-message-font-size: 16px;
+}
+```
+
+Variables left alone keep the default of the active `colorScheme`, so a dark
+integration can start from `colorScheme="dark"` and change only its brand colours.
+Some defaults follow `--openk9-chatbot-primary` (marked "primary" below): set the
+variable itself to break the link. `--openk9-chatbot-primary-hover` does not, so set
+it together with the primary colour.
+
+| variable | light | dark | used for |
+|---|---|---|---|
+| `--openk9-chatbot-primary` | `#C0272B` | `#CF3236` | toggle and send buttons, bubble borders, user bubble, loader, input focus, clear-chat button |
+| `--openk9-chatbot-primary-hover` | `#E77979` | `#A82125` | toggle button on hover |
+| `--openk9-chatbot-on-primary` | `#FFFFFF` | `#FFFFFF` | icons and text on the primary colour |
+| `--openk9-chatbot-panel-bg` | `#FFFFFF` | `#1E1E1E` | panel background |
+| `--openk9-chatbot-panel-text` | inherited from the page | `#EDEDED` | text colour of the panel (e.g. the `title`) |
+| `--openk9-chatbot-border` | `rgba(0, 0, 0, 0.12)` | `rgba(255, 255, 255, 0.12)` | panel, header and login notice borders |
+| `--openk9-chatbot-user-message-bg` | primary | primary | user bubble background |
+| `--openk9-chatbot-user-message-text` | on-primary | on-primary | user bubble text |
+| `--openk9-chatbot-bot-message-bg` | `#FFFFFF` | `#2A2A2A` | chatbot bubble background |
+| `--openk9-chatbot-bot-message-text` | `#000000` | `#EDEDED` | chatbot bubble text |
+| `--openk9-chatbot-message-border` | primary | primary | border of both bubbles |
+| `--openk9-chatbot-secondary-text` | `#666666` | `#A8A8A8` | timestamps, sources count |
+| `--openk9-chatbot-input-bg` | `#FFFFFF` | `#2A2A2A` | input background |
+| `--openk9-chatbot-input-text` | `#000000` | `#EDEDED` | input text |
+| `--openk9-chatbot-input-border` | `rgba(0, 0, 0, 0.23)` | `rgba(255, 255, 255, 0.23)` | input border |
+| `--openk9-chatbot-input-border-hover` | `#000000` | `#EDEDED` | input border on hover |
+| `--openk9-chatbot-input-placeholder` | `#757575` | `#9E9E9E` | input placeholder |
+| `--openk9-chatbot-search-border` | `#C7C7C7C7` | `rgba(255, 255, 255, 0.16)` | line above the input area |
+| `--openk9-chatbot-icon-button` | `rgba(0, 0, 0, 0.54)` | `rgba(255, 255, 255, 0.7)` | close buttons, copy and expand buttons of the sources |
+| `--openk9-chatbot-icon-button-hover-bg` | `rgba(0, 0, 0, 0.04)` | `rgba(255, 255, 255, 0.08)` | those buttons on hover |
+| `--openk9-chatbot-disabled-bg` | `rgba(0, 0, 0, 0.12)` | `rgba(255, 255, 255, 0.12)` | send button while disabled |
+| `--openk9-chatbot-disabled-text` | `rgba(0, 0, 0, 0.26)` | `rgba(255, 255, 255, 0.3)` | disabled send and clear-chat buttons |
+| `--openk9-chatbot-error-bg` | `#FCEAEA` | `#3B1E1E` | error bubble background |
+| `--openk9-chatbot-error-border` | `#D32F2F` | `#F28B82` | error bubble border |
+| `--openk9-chatbot-error-text` | `#C62828` | `#F28B82` | error bubble text and icon |
+| `--openk9-chatbot-disclosure-text` | `#595959` | `#B3B3B3` | AI disclosure text |
+| `--openk9-chatbot-sources-control` | `#12518F` | `#8AB4F8` | "show more / show less" of the sources |
+| `--openk9-chatbot-sources-control-hover` | `#2782EA` | `#AECBFA` | the same, on hover |
+| `--openk9-chatbot-notice-bg` | `#FFFFFF` | `#2A2A2A` | login notice background |
+| `--openk9-chatbot-notice-text` | `#000000` | `#EDEDED` | login notice text |
+| `--openk9-chatbot-notice-link` | primary | `#FF8A80` | login notice icon and "Log in" button |
+| `--openk9-chatbot-link` | not applied: links keep the page colour | `#8AB4F8` | links in the answers, dark scheme only |
+| `--openk9-chatbot-font-family` | `"Titillium Web", sans-serif` | same | messages, input, sources, AI disclosure |
+| `--openk9-chatbot-font-family-secondary` | `Roboto, sans-serif` | same | timestamps, sources count, login notice |
+| `--openk9-chatbot-message-font-size` | `12px` | same | message text, error bubble, login notice |
+| `--openk9-chatbot-input-font-size` | `12px` | same | input text |
+| `--openk9-chatbot-time-font-size` | `10px` | same | timestamps, sources count |
+| `--openk9-chatbot-disclosure-font-size` | `10px` | same | AI disclosure |
+| `--openk9-chatbot-sources-font-size` | `12px` | same | source titles, "show more / show less" |
+
+The colours of the single sources are computed per source and are not variables
+yet. Roboto and Titillium Web are still loaded by the library.
+
+The `openk9-*` class names stay available for anything the variables do not
+cover. The `--_k9-*` variables are internal: do not set or read them.
+
+### Migrating from `themeCustom`
+
+`themeCustom` and the `@mui/*` and `@emotion/*` peer dependencies are gone: remove
+the prop, and the packages too if nothing else in your project uses them. Carry your
+theme over to the variables:
+
+| MUI theme | variable |
+|---|---|
+| `palette.primary.main` | `--openk9-chatbot-primary` |
+| `palette.primary.light` | `--openk9-chatbot-primary-hover` |
+| `palette.primary.contrastText` | `--openk9-chatbot-on-primary`, `--openk9-chatbot-panel-bg` |
+| `palette.text.secondary` | `--openk9-chatbot-secondary-text` |
+| `palette.divider` | `--openk9-chatbot-border` |
+| `palette.background.default` | `--openk9-chatbot-bot-message-bg` |
+| `palette.background.paper` | `--openk9-chatbot-notice-bg` |
+| `palette.text.primary` | `--openk9-chatbot-notice-text` |
+| `typography.fontFamily` | `--openk9-chatbot-font-family` |
+| `typography.body2.fontFamily` | `--openk9-chatbot-font-family-secondary` |
+
+CSS written against the classes MUI and emotion generated (`Mui*`, `css-*`) no
+longer matches anything: move it to the variables or to the `openk9-*` classes.
