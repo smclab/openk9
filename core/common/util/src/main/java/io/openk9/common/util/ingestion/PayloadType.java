@@ -21,6 +21,7 @@ public enum PayloadType {
 
 	DOCUMENT,
 	PARTIAL_DOCUMENT,
+	DELETED_DOCUMENT,
 	LAST,
 	HALT
 }
