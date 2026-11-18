@@ -117,9 +117,11 @@ Validating this parameter is not mandatory. If you don't set it, Openk9 interpre
 #### Type
 
 Using *type* parameter is possibile to label message for its type.
-Three different types of types are supported:
+Five different types of types are supported:
 
 - **DOCUMENT**: is default type. Identify a message with document to be indexed
+- **PARTIAL_DOCUMENT**: updates the indexed documents with the same `contentId`
+- **DELETED_DOCUMENT**: deletes the indexed documents with the same `contentId`
 - **HALT**: HALT type identify a message that report to Openk9 to stop running schedulation. This can be used when an error occurs during data extraction and the expected behaviour is to stop extraction and stop also the correspondign schedulation inside Openk9
 - **LAST**: to report that data extraction is finished
 
@@ -130,7 +132,27 @@ Using this parameter it is possibile to report that data extraction is finished.
 Its behaviour is the same as Type parameter with value LAST.
 
 >**Note**  
-`parsingDate` is mandatory when the **Type** parameter is set to LAST or when using the **Last** parameter.
+`parsingDate` is mandatory when the **Type** parameter is set to LAST or DELETED_DOCUMENT, or when using the **Last** parameter.
+
+A **DELETED_DOCUMENT** names only the content to delete:
+
+```
+{
+    "datasourceId": 1,
+    "tenantId": "<tenant>",
+    "scheduleId": "<scheduleId>",
+    "contentId": "doc-42",
+    "parsingDate": 1762862400000,
+    "type": "DELETED_DOCUMENT"
+}
+```
+
+`datasourcePayload`, `rawContent`, `resources` and `acl` are not needed: if present, Openk9 ignores them and logs a warning.
+Like a document, a deletion moves forward the last ingestion date of the datasource to its `parsingDate`.
+
+>**Deprecated**  
+A **DOCUMENT** with an empty `datasourcePayload` (`{}`) also deletes the indexed documents with its `contentId`.
+This form is deprecated: Openk9 logs a warning for each such message. Send a **DELETED_DOCUMENT** instead.
 
 
 ### Asynchronous implementation of data extraction
