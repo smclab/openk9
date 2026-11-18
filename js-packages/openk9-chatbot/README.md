@@ -93,7 +93,9 @@ panel (moving the focus to its input, as the toggle button does) and shows the
 question in the conversation. It returns `true` when the message goes out and
 `false` when nothing is sent: an empty or whitespace-only message, an answer
 still streaming, or a chatbot that has been unmounted. Two calls in the same event
-handler send one message only.
+handler send one message only. With `requireLogin` and an anonymous user, `send`
+returns `false` too: the panel opens on the login notice, as after the send
+button, and the message is not kept.
 
 The handle stays the same for the life of the chatbot, so it can be kept aside
 and called later; once the chatbot unmounts, `send` returns `false`, so remove any

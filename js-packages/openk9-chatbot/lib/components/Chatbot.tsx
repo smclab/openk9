@@ -58,8 +58,9 @@ export type ChatbotHandle = {
   /**
    * sends `message` as if the user had typed and submitted it, opening the
    * panel. Returns `false` and sends nothing when the message is empty or
-   * whitespace only, when an answer is still streaming, or after the chatbot
-   * has unmounted.
+   * whitespace only, when an answer is still streaming, after the chatbot
+   * has unmounted, or when `requireLogin` is on and the user is anonymous: in
+   * that case the panel opens on the login notice.
    */
   send(message: string): boolean;
 };
@@ -256,6 +257,18 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   });
   const [trapRef] = useFocusTrap(isView);
   const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
+
+  // same test as useGenerateResponse: no token at send time means anonymous.
+  // Returns the request, or null when the login notice opens instead
+  const startResponse = (message: string) => {
+    if (requireLogin && !callbackAuthorization?.()) {
+      setLoginNoticeOpen(true);
+      return null;
+    }
+    setLoginNoticeOpen(false);
+    return generateResponse(message);
+  };
+
   // `isChatting` si aggiorna solo al render dopo: due `send` nello stesso handler
   // lo vedrebbero entrambe a false. Il ref resta acceso finche' la richiesta
   // partita da `send` non e' finita (a fine stream, su errore o su annullamento)
@@ -263,9 +276,9 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   // l'handle e' creato una volta sola e legge da qui i valori dell'ultimo render:
   // `generateResponse` cambia a ogni chunk, e un handle ricreato ogni volta
   // resterebbe stantio in mano a chi lo ha salvato
-  const latest = React.useRef({ isChatting, generateResponse });
+  const latest = React.useRef({ isChatting, startResponse });
   React.useLayoutEffect(() => {
-    latest.current = { isChatting, generateResponse };
+    latest.current = { isChatting, startResponse };
   });
   // un handle tenuto da parte non deve inviare a chatbot smontato: la richiesta
   // partirebbe e nessuno vedrebbe la risposta
@@ -281,7 +294,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     ref,
     () => ({
       send(message) {
-        const { isChatting, generateResponse } = latest.current;
+        const { isChatting, startResponse } = latest.current;
         if (
           !isMounted.current ||
           isSending.current ||
@@ -289,9 +302,11 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
           message.trim() === ""
         )
           return false;
-        isSending.current = true;
         setIsView(true);
-        generateResponse(message).finally(() => {
+        const request = startResponse(message);
+        if (!request) return false;
+        isSending.current = true;
+        request.finally(() => {
           isSending.current = false;
         });
         return true;
@@ -300,16 +315,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
     [],
   );
 
-  // same test as useGenerateResponse: no token at send time means anonymous
-  const handleSearch = (message: string) => {
-    if (requireLogin && !callbackAuthorization?.()) {
-      setLoginNoticeOpen(true);
-      return false;
-    }
-    setLoginNoticeOpen(false);
-    generateResponse(message);
-    return true;
-  };
+  const handleSearch = (message: string) => startResponse(message) !== null;
 
   React.useEffect(() => {
     if (messages && messagesEndRef.current) {
