@@ -53,7 +53,8 @@
 	},
 	"proxy": "https://k9-frontend.openk9.io",
 	"resolutions": {
-		"lodash": "4.18.1"
+		"lodash": "4.18.1",
+		"**/jsonpath/underscore": "^1.13.8"
 	},
 	"devDependencies": {
 		"@types/keycloak-js": "^3.4.1",

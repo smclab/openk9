@@ -85,6 +85,7 @@
     "**/@graphql-tools/executor-graphql-ws/ws": "^8.21.0",
     "**/@graphql-tools/executor-legacy-ws/ws": "^8.21.0",
     "**/graphql-config/minimatch": "^4.2.5",
+    "**/jsonpath/underscore": "^1.13.8",
     "**/styled-components/postcss": "^8.5.18"
   },
   "devDependencies": {
