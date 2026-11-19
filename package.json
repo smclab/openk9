@@ -31,6 +31,7 @@
     "**/@graphql-tools/executor-legacy-ws/ws": "^8.21.0",
     "**/@graphql-tools/url-loader/ws": "^8.21.0",
     "**/graphql-config/minimatch": "^4.2.5",
+    "**/styled-components/postcss": "^8.5.18",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.0",
     "react": "18.3.1",
