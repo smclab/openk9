@@ -80,7 +80,11 @@
     ]
   },
   "resolutions": {
-    "lodash": "4.18.1"
+    "lodash": "4.18.1",
+    "**/@ardatan/relay-compiler/immutable": "^3.8.4",
+    "**/@graphql-tools/executor-graphql-ws/ws": "^8.21.0",
+    "**/@graphql-tools/executor-legacy-ws/ws": "^8.21.0",
+    "**/graphql-config/minimatch": "^4.2.5"
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
