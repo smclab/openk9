@@ -2623,10 +2623,10 @@
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
-"@remix-run/router@1.14.2":
-  version "1.14.2"
-  resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.14.2.tgz#4d58f59908d9197ba3179310077f25c88e49ed17"
-  integrity sha512-ACXpdMM9hmKZww21yEqWwiLws/UPLhNKvimN8RrYSqPSvB3ov7sLvAcfvaxePeLvccTQKGdkDIhLYApZVDFuKg==
+"@remix-run/router@1.23.4":
+  version "1.23.4"
+  resolved "https://registry.npmjs.org/@remix-run/router/-/router-1.23.4.tgz#d2becd2afca4a40c30a659d913b9b0bcc28bced8"
+  integrity sha512-q7j5geK7xs3UJSdm9/iytUNclBnLmYx1EnSeCFXHPeutdqgIMeFeHtUZgS3EhlKxdBEAu8OwtJCwmLrEzpSs7Q==
 
 "@repeaterjs/repeater@3.0.4":
   version "3.0.4"
@@ -9068,10 +9068,10 @@ mz@^2.7.0:
     object-assign "^4.0.1"
     thenify-all "^1.0.0"
 
-nanoid@^3.3.7:
-  version "3.3.7"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.7.tgz#d0c301a691bc8d54efa0a2226ccf3fe2fd656bd8"
-  integrity sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==
+nanoid@^3.3.20, nanoid@^3.3.7:
+  version "3.3.20"
+  resolved "https://registry.npmjs.org/nanoid/-/nanoid-3.3.20.tgz#dfd4444d85aa10111ef66ba85ed72e08ba0855d8"
+  integrity sha512-uKdg2G3GNCKQn9byYOpxbGqrT2fGO5KRt5J/8b3pok8rT6qxGWF6hxMyJiEYtAf+FVyYuD9hRaDqX5uPFYJ4ZQ==
 
 natural-compare-lite@^1.4.0:
   version "1.4.0"
@@ -10142,14 +10142,14 @@ postcss-value-parser@^4.0.0, postcss-value-parser@^4.0.2, postcss-value-parser@^
   resolved "https://registry.yarnpkg.com/postcss-value-parser/-/postcss-value-parser-4.2.0.tgz#723c09920836ba6d3e5af019f92bc0971c02e514"
   integrity sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==
 
-postcss@8.4.38:
-  version "8.4.38"
-  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.38.tgz#b387d533baf2054288e337066d81c6bee9db9e0e"
-  integrity sha512-Wglpdk03BSfXkHoQa3b/oulrotAkwrlLDRSOb9D0bN86FdRyE9lppSp33aHNPgBa0JKCoB+drFLZkQoRRYae5A==
+postcss@8.4.38, postcss@^8.5.18:
+  version "8.5.33"
+  resolved "https://registry.npmjs.org/postcss/-/postcss-8.5.33.tgz#088a2fee1bdee7ea1ffaf8abb4288513e7097ab0"
+  integrity sha512-RVHEU9/Pp1Fnjr/MpAJsZoADukCKhfIi15OunEYiGktIkYLkPVvC1sioWolGDS7XByMTx9m/IGbro0Js13zhnQ==
   dependencies:
-    nanoid "^3.3.7"
-    picocolors "^1.0.0"
-    source-map-js "^1.2.0"
+    nanoid "^3.3.20"
+    picocolors "^1.1.1"
+    source-map-js "^1.2.2"
 
 postcss@^7.0.35:
   version "7.0.39"
@@ -10441,19 +10441,19 @@ react-refresh@^0.11.0:
   integrity sha512-F27qZr8uUqwhWZboondsPx8tnC3Ct3SxZA3V5WyEvujRyyNv0VYPhoBg1gZ8/MV5tubQp76Trw8lTv9hzRBa+A==
 
 react-router-dom@^6.3.0:
-  version "6.21.3"
-  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-6.21.3.tgz#ef3a7956a3699c7b82c21fcb3dbc63c313ed8c5d"
-  integrity sha512-kNzubk7n4YHSrErzjLK72j0B5i969GsuCGazRl3G6j1zqZBLjuSlYBdVdkDOgzGdPIffUOc9nmgiadTEVoq91g==
+  version "6.30.6"
+  resolved "https://registry.npmjs.org/react-router-dom/-/react-router-dom-6.30.6.tgz#acaf0db65efeddabd0840616243c97f578b3baf3"
+  integrity sha512-0RHKZz7wwffvkU+2MFVT2NnjK44ssLEV+m0CAJaS2Ksmorrwj7WxH00jO0SOCW26/tINUnJHToXblDs33I38YQ==
   dependencies:
-    "@remix-run/router" "1.14.2"
-    react-router "6.21.3"
+    "@remix-run/router" "1.23.4"
+    react-router "6.30.6"
 
-react-router@6.21.3:
-  version "6.21.3"
-  resolved "https://registry.yarnpkg.com/react-router/-/react-router-6.21.3.tgz#8086cea922c2bfebbb49c6594967418f1f167d70"
-  integrity sha512-a0H638ZXULv1OdkmiK6s6itNhoy33ywxmUFT/xtSoVyf9VnC7n7+VT4LjVzdIHSaF5TIh9ylUgxMXksHTgGrKg==
+react-router@6.30.6:
+  version "6.30.6"
+  resolved "https://registry.npmjs.org/react-router/-/react-router-6.30.6.tgz#a2ad70f3472de61c61e44182b3e5a25fd91f9f68"
+  integrity sha512-5HfK7k5im7LTOB0EqCQmfvy4C13G92Ssj1VTmouTK3AJvyjKTnFuCV0vcMAD/JS+JC4DvDIBRrlAeJIFjh5VWg==
   dependencies:
-    "@remix-run/router" "1.14.2"
+    "@remix-run/router" "1.23.4"
 
 react-scripts@5.0.1:
   version "5.0.1"
@@ -11272,10 +11272,10 @@ source-map-js@^1.0.1, source-map-js@^1.0.2:
   resolved "https://registry.yarnpkg.com/source-map-js/-/source-map-js-1.0.2.tgz#adbc361d9c62df380125e7f161f71c826f1e490c"
   integrity sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==
 
-source-map-js@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/source-map-js/-/source-map-js-1.2.0.tgz#16b809c162517b5b8c3e7dcd315a2a5c2612b2af"
-  integrity sha512-itJW8lvSA0TXEphiRoawsCksnlf8SyvmFzIhltqAHluXd88pkCd+cXJVHTDwdCr0IzwptSm035IHQktUu1QUMg==
+source-map-js@^1.2.2:
+  version "1.2.3"
+  resolved "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.3.tgz#4cf1e31a10db87e8234840ebc2b85a255cf7705e"
+  integrity sha512-xj+WrAkyv5Qp+t7r9N5HvCBu7g1qOe6CKRNpq22X1GGcPEQADFU54v5qsPVs3/vrUFQ7XivFrcAVKA2stI0kWA==
 
 source-map-loader@^3.0.0:
   version "3.0.2"

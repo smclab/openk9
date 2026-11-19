@@ -84,7 +84,8 @@
     "**/@ardatan/relay-compiler/immutable": "^3.8.4",
     "**/@graphql-tools/executor-graphql-ws/ws": "^8.21.0",
     "**/@graphql-tools/executor-legacy-ws/ws": "^8.21.0",
-    "**/graphql-config/minimatch": "^4.2.5"
+    "**/graphql-config/minimatch": "^4.2.5",
+    "**/styled-components/postcss": "^8.5.18"
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
