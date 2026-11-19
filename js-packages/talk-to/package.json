@@ -28,7 +28,8 @@
 		"web-vitals": "^2.1.4"
 	},
 	"resolutions": {
-		"lodash": "4.18.1"
+		"lodash": "4.18.1",
+		"**/jsonpath/underscore": "^1.13.8"
 	},
 	"scripts": {
 		"start": "react-scripts start",
