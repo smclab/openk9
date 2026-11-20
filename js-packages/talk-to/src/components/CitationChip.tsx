@@ -84,24 +84,40 @@ function CitationChip({
 		},
 		[],
 	);
+	const chipRef = React.useRef<HTMLButtonElement>(null);
+	const closeOnEscape = (event: React.KeyboardEvent) => {
+		if (event.key !== "Escape" || !open) return;
+		// back to the chip first: unmounting the panel under a focused link
+		// would leave the focus on the body
+		chipRef.current?.focus();
+		if (closing.current) clearTimeout(closing.current);
+		releasePanel(closeNow.current);
+		setOpen(false);
+	};
 
 	const first = byOrdinal.get(ordinals[0]);
 	const extra = ordinals.length - 1;
 	const label = shortTitle(first, ordinals[0]);
 
 	return (
+		// Focus is handled on the container: moving with Tab from the chip to
+		// the link in the panel blurs one and focuses the other, and the two
+		// cancel out instead of closing the panel under the keyboard.
 		<Box
 			component="span"
 			sx={{ position: "relative", display: "inline-block" }}
 			onMouseEnter={show}
 			onMouseLeave={hide}
+			onFocus={show}
+			onBlur={hide}
+			onKeyDown={closeOnEscape}
 		>
 			<Box
-				component="span"
-				tabIndex={0}
-				onFocus={show}
-				onBlur={hide}
-				aria-label={label}
+				component="button"
+				type="button"
+				ref={chipRef}
+				aria-expanded={open}
+				onClick={show}
 				sx={{
 					display: "inline-flex",
 					alignItems: "baseline",
@@ -109,6 +125,8 @@ function CitationChip({
 					ml: "3px",
 					px: "6px",
 					py: "1px",
+					border: "none",
+					fontFamily: "inherit",
 					borderRadius: "999px",
 					fontSize: "0.72em",
 					lineHeight: 1.6,
@@ -127,8 +145,10 @@ function CitationChip({
 			</Box>
 
 			{open && (
+				// not a tooltip: it holds links the reader moves into
 				<Box
-					role="tooltip"
+					role="group"
+					aria-label={label}
 					onMouseEnter={show}
 					onMouseLeave={hide}
 					sx={{
@@ -252,7 +272,19 @@ export function markdownComponentsWithCitations(
 			if (typeof raw !== "string") return <span {...props}>{children}</span>;
 			const ordinals = raw.split(",").map(Number).filter(Number.isInteger);
 			if (ordinals.length === 0) return <span {...props}>{children}</span>;
-			return <CitationChip ordinals={ordinals} byOrdinal={byOrdinal} quoteOf={quoteOf} />;
+			// a number no source resolves stays the bare "[n]": a chip for it
+			// would open a panel with nothing to reach
+			const resolved = ordinals.filter((ordinal) => byOrdinal.has(ordinal));
+			const unresolved = ordinals.filter((ordinal) => !byOrdinal.has(ordinal));
+			const bare =
+				unresolved.length > 0 ? <span>{unresolved.map((ordinal) => `[${ordinal}]`).join("")}</span> : null;
+			if (resolved.length === 0) return bare;
+			return (
+				<>
+					<CitationChip ordinals={resolved} byOrdinal={byOrdinal} quoteOf={quoteOf} />
+					{bare}
+				</>
+			);
 		},
 	};
 }

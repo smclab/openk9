@@ -8,7 +8,7 @@
  * in the tree - the `data-citation-ordinals` span this renders by hand - is
  * covered in `inlineCitations.test.ts`, code blocks included.
  */
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 // user-event is at v13 here: no setup(), and the helpers are synchronous.
 import userEvent from "@testing-library/user-event";
 import React from "react";
@@ -78,10 +78,10 @@ describe("il chip che cita la fonte", () => {
 	it("apre il pannello col dominio e il link al passaggio del mouse", async () => {
 		renderChips(["1"]);
 
-		expect(screen.queryByRole("tooltip")).toBeNull();
+		expect(screen.queryByRole("group")).toBeNull();
 		userEvent.hover(screen.getByText("Primo documento"));
 
-		const panel = screen.getByRole("tooltip");
+		const panel = screen.getByRole("group");
 		expect(within(panel).getByText("smc.it")).toBeTruthy();
 		const link = within(panel).getByRole("link", { name: "Primo documento" });
 		expect(link).toHaveAttribute("href", "https://smc.it/uno");
@@ -94,7 +94,7 @@ describe("il chip che cita la fonte", () => {
 
 		userEvent.hover(screen.getByText("Primo documento"));
 
-		expect(within(screen.getByRole("tooltip")).getByText(/un passaggio copiato/)).toBeTruthy();
+		expect(within(screen.getByRole("group")).getByText(/un passaggio copiato/)).toBeTruthy();
 	});
 
 	it("mostra il pannello anche senza citazione testuale", async () => {
@@ -103,7 +103,7 @@ describe("il chip che cita la fonte", () => {
 
 		userEvent.hover(screen.getByText("Primo documento"));
 
-		expect(within(screen.getByRole("tooltip")).getByRole("link")).toBeTruthy();
+		expect(within(screen.getByRole("group")).getByRole("link")).toBeTruthy();
 	});
 
 	it("elenca tutte le fonti raggruppate nel pannello", async () => {
@@ -111,7 +111,7 @@ describe("il chip che cita la fonte", () => {
 
 		userEvent.hover(screen.getByText("Primo documento"));
 
-		const panel = screen.getByRole("tooltip");
+		const panel = screen.getByRole("group");
 		expect(within(panel).getByRole("link", { name: "Primo documento" })).toBeTruthy();
 		expect(within(panel).getByRole("link", { name: "Secondo documento" })).toBeTruthy();
 	});
@@ -123,20 +123,20 @@ describe("il chip che cita la fonte", () => {
 		renderChips(["1"]);
 
 		userEvent.hover(screen.getByText("Primo documento"));
-		const panel = screen.getByRole("tooltip");
+		const panel = screen.getByRole("group");
 		userEvent.hover(within(panel).getByRole("link"));
 
-		expect(screen.getByRole("tooltip")).toBeTruthy();
+		expect(screen.getByRole("group")).toBeTruthy();
 	});
 
 	it("il pannello si chiude lasciando sia chip sia pannello", async () => {
 		renderChips(["1"]);
 
 		userEvent.hover(screen.getByText("Primo documento"));
-		expect(screen.getByRole("tooltip")).toBeTruthy();
+		expect(screen.getByRole("group")).toBeTruthy();
 
-		userEvent.unhover(screen.getByRole("tooltip"));
-		await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
+		userEvent.unhover(screen.getByRole("group"));
+		await waitFor(() => expect(screen.queryByRole("group")).toBeNull());
 	});
 
 	it("ne resta aperto uno solo passando in fretta da un chip all'altro", async () => {
@@ -148,14 +148,53 @@ describe("il chip che cita la fonte", () => {
 		userEvent.hover(screen.getByText("Primo documento"));
 		userEvent.hover(screen.getByText("Secondo documento"));
 
-		expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+		expect(screen.getAllByRole("group")).toHaveLength(1);
 	});
 
 	it("lascia il numero visibile se nessuna fonte lo risolve", () => {
 		// Il server non sopprime il marcatore proprio perche' degradi in
-		// qualcosa di leggibile.
+		// qualcosa di leggibile: resta testo, non un chip con un pannello vuoto.
 		renderChips(["9"]);
 
 		expect(screen.getByText("[9]")).toBeTruthy();
+		expect(screen.queryByRole("button")).toBeNull();
+	});
+
+	it("tiene nel chip solo le fonti risolte e lascia il numero delle altre", () => {
+		renderChips(["1,9"]);
+
+		expect(screen.getByRole("button", { name: "Primo documento" })).toBeTruthy();
+		expect(screen.queryByText("+1")).toBeNull();
+		expect(screen.getByText("[9]")).toBeTruthy();
+	});
+
+	it("da tastiera si arriva al link del pannello senza che si chiuda", async () => {
+		// Il blur del chip e il focus del link si annullano: prima il blur
+		// avviava la chiusura e dopo 200 ms il pannello spariva sotto il focus.
+		renderChips(["1"]);
+
+		const chip = screen.getByRole("button", { name: "Primo documento" });
+		fireEvent.focus(chip);
+		expect(chip.getAttribute("aria-expanded")).toBe("true");
+		const link = within(screen.getByRole("group")).getByRole("link");
+		fireEvent.blur(chip);
+		fireEvent.focus(link);
+		await act(() => new Promise((resolve) => setTimeout(resolve, 300)));
+
+		expect(screen.getByRole("group")).toBeTruthy();
+	});
+
+	it("Esc chiude il pannello e riporta il focus sul chip", () => {
+		renderChips(["1"]);
+
+		const chip = screen.getByRole("button", { name: "Primo documento" });
+		act(() => chip.focus());
+		const link = within(screen.getByRole("group")).getByRole("link");
+		act(() => link.focus());
+		fireEvent.keyDown(link, { key: "Escape" });
+
+		expect(screen.queryByRole("group")).toBeNull();
+		expect(chip).toHaveFocus();
+		expect(chip.getAttribute("aria-expanded")).toBe("false");
 	});
 });

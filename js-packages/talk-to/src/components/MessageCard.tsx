@@ -4,11 +4,11 @@ import ErrorIcon from "@mui/icons-material/Error";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Box, Chip, IconButton, Skeleton, Typography } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import { markdownComponentsWithCitations } from "./CitationChip";
-import { quotesByOrdinal, remarkCitationMarkers } from "./inlineCitations";
+import { parseSourcesEvent, quotesByOrdinal, remarkCitationMarkers } from "./inlineCitations";
 import { Logo } from "../Svg/Logo";
 import { Message } from "./useGenerateResponse";
 
@@ -31,6 +31,18 @@ export function MessageCard({
 	const [showAllSources, setShowAllSources] = useState(false);
 	const [expandedChips, setExpandedChips] = useState<Set<string>>(new Set());
 	const { t } = useTranslation();
+	// Built once per answer, not on every render: a new `span` on each
+	// streamed token would remount every chip and close an open panel.
+	const citationComponents = useMemo(
+		() =>
+			markdownComponentsWithCitations(
+				// a chat reloaded from history has no `SOURCES` event, but its
+				// stored sources carry the same ordinal, title and url
+				message.citedSources ?? parseSourcesEvent(message.sources),
+				quotesByOrdinal(message.sources),
+			),
+		[message.citedSources, message.sources],
+	);
 
 	const sources = message.sources || [];
 	const maxVisibleSources = 8;
@@ -308,7 +320,7 @@ export function MessageCard({
 											</code>
 										);
 									},
-									...markdownComponentsWithCitations(message.citedSources, quotesByOrdinal(message.sources)),
+									...citationComponents,
 								}}
 							>
 								{message.answer}
