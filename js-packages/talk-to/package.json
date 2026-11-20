@@ -20,7 +20,7 @@
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0",
 		"react-i18next": "^17.0.15",
-		"react-markdown": "^9.1.0",
+		"react-markdown": "^10.1.0",
 		"remark-gfm": "^4.0.0",
 		"typescript": "6.0.3",
 		"uuid": "^11.1.1"
