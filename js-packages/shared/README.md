@@ -9,6 +9,9 @@ js-packages/shared/
 ├── image-query/        immagine come query per la ricerca vettoriale
 │   ├── imageQuery.ts
 │   └── imageQuery.test.ts
+├── inline-citations/   marcatori [n] della risposta RAG e fonti che li risolvono
+│   ├── inlineCitations.ts
+│   └── inlineCitations.test.ts
 └── safe-external-url/  protocolli ammessi per i link esterni
     └── safeExternalUrl.ts
 ```
@@ -38,10 +41,11 @@ source folder, not a workspace member.
 
 ## How a frontend consumes it
 
-Today only `talk-to` imports these modules (`image-query` and
-`safe-external-url`). Every frontend builds with Vite, so another one needs just
-a relative import, plus `COPY ./js-packages/shared` in its Dockerfile (see
-below): the sources get compiled and bundled like any other file.
+Today `talk-to` and `search-frontend` import these modules (`talk-to` all
+three, `search-frontend` `image-query` and `inline-citations`). Every frontend
+builds with Vite, so another one needs just a relative import, plus
+`COPY ./js-packages/shared` in its Dockerfile (see below): the sources get
+compiled and bundled like any other file.
 
 ## Docker
 
