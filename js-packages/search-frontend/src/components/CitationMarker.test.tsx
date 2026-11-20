@@ -91,9 +91,7 @@ describe("CitedAnswer", () => {
       screen.getByRole("button", { name: "Primo documento" }),
     );
 
-    expect(
-      within(screen.getByRole("group")).queryByRole("link"),
-    ).toBeNull();
+    expect(within(screen.getByRole("group")).queryByRole("link")).toBeNull();
   });
 
   test("un numero senza fonte resta testo", () => {

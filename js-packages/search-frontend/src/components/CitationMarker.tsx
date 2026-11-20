@@ -153,7 +153,15 @@ function CitationChip({
         css={chipStyle}
       >
         {label}
-        {extra > 0 && <span css={css`opacity: 0.7;`}>+{extra}</span>}
+        {extra > 0 && (
+          <span
+            css={css`
+              opacity: 0.7;
+            `}
+          >
+            +{extra}
+          </span>
+        )}
       </button>
 
       {open && (
@@ -252,7 +260,12 @@ function CitationChip({
                     {source?.title ?? url}
                   </a>
                 ) : (
-                  <span css={css`display: block; font-weight: 600;`}>
+                  <span
+                    css={css`
+                      display: block;
+                      font-weight: 600;
+                    `}
+                  >
                     {source?.title ?? `[${ordinal}]`}
                   </span>
                 )}
@@ -262,7 +275,10 @@ function CitationChip({
                       display: block;
                       margin-top: 2px;
                       font-style: italic;
-                      color: var(--openk9-embeddable-search--text-muted, #6c757d);
+                      color: var(
+                        --openk9-embeddable-search--text-muted,
+                        #6c757d
+                      );
                       /* above the stretched link, so the passage copied from
                          the source can still be selected */
                       position: relative;
@@ -333,7 +349,11 @@ type CitedAnswerProps = {
  * answer, not on every render: a new `span` on each streamed token would
  * remount every chip and close an open panel.
  */
-export function CitedAnswer({ answer, citedSources, sources }: CitedAnswerProps) {
+export function CitedAnswer({
+  answer,
+  citedSources,
+  sources,
+}: CitedAnswerProps) {
   const components = React.useMemo(
     () =>
       citationComponents(
