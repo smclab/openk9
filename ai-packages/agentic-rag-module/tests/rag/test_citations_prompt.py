@@ -96,10 +96,17 @@ def test_the_quotes_are_exempt_from_the_language_rule():
     graph.llm_response_node(_state())
 
     prompt = _rendered_prompt(graph)
-    assert (
-        "The language rule above is about the answer and about nothing else" in prompt
-    )
+    exception = "The language rule above is about the answer and about nothing else"
+    assert exception in prompt
     assert "left in the language the context writes it in" in prompt
+    # Where it sits is the point: the same words further down, inside the
+    # quotes block, were measured and they are not enough. It has to come
+    # after the rule it scopes and before the rest of the block.
+    assert (
+        prompt.index("IMPORTANT: Write your entire answer")
+        < prompt.index(exception)
+        < prompt.index(CITATIONS_DELIMITER)
+    )
 
 
 def test_flag_off_asks_for_no_quotes_block():

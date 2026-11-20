@@ -145,11 +145,13 @@ CITATION_MARKERS_ONLY_INSTRUCTION = (
 # Quotes are keyed by ORDINAL, not document_id: the model is already writing
 # those numbers, and it sidesteps the int-vs-str document_id mismatch that
 # silently dropped every citation when the model wrote the id unquoted.
-# It opens by scoping the language rule, because the line right above it says
-# to write everything in the answer's language "regardless of the language used
-# in the context" - and the quotes come from the context. Without the
-# exception the model translates them, and then the grounding check drops
-# them, so the sources arrive with no evidence at all.
+# It opens by scoping the language rule, because the IMPORTANT line that
+# precedes the citation instructions says to write everything in the answer's
+# language "regardless of the language used in the context" - and the quotes
+# come from the context. Without the exception the model translates them, and
+# then the grounding check drops them, so the sources arrive with no evidence
+# at all. The exception has to open this block: said further down, inside the
+# instruction, it is weaker and it does not hold.
 CITATION_QUOTES_INSTRUCTION = (
     " The language rule above is about the answer and about nothing else. "
     "After the answer, on a new line, write the marker "
