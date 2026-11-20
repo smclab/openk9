@@ -5,7 +5,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Box, ButtonBase, Chip, IconButton, Skeleton, Typography } from "@mui/material";
-import { ComponentPropsWithoutRef, isValidElement, useState } from "react";
+import { ComponentPropsWithoutRef, isValidElement, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -18,6 +18,7 @@ import {
 	markdownComponentsWithCitations,
 } from "./MarkdownRenderer";
 import {
+	parseSourcesEvent,
 	quotesByOrdinal,
 	remarkCitationMarkers,
 } from "../../../shared/inline-citations/inlineCitations";
@@ -94,6 +95,18 @@ export function MessageCard({
 	const [showAllSources, setShowAllSources] = useState(false);
 	const [expandedChips, setExpandedChips] = useState<Set<string>>(new Set());
 	const { t } = useTranslation();
+	// Built once per answer, not on every render: a new `span` on each
+	// streamed token would remount every chip and close an open panel.
+	const citationComponents = useMemo(
+		() =>
+			markdownComponentsWithCitations(
+				// a chat reloaded from history has no `SOURCES` event, but its
+				// stored sources carry the same ordinal, title and url
+				message.citedSources ?? parseSourcesEvent(message.sources),
+				quotesByOrdinal(message.sources),
+			),
+		[message.citedSources, message.sources],
+	);
 
 	const sources = message.sources || [];
 	const maxVisibleSources = numberOfSources;
@@ -388,10 +401,7 @@ export function MessageCard({
 							<Markdown
 								remarkPlugins={[remarkGfm, remarkCitationMarkers]}
 								components={{
-									...markdownComponentsWithCitations(
-										message.citedSources,
-										quotesByOrdinal(message.sources),
-									),
+									...citationComponents,
 									pre: (props) => <PreBlock {...props} />,
 									code: (props: ComponentPropsWithoutRef<"code"> & { inline?: boolean }) => {
 										const { inline, style, children, ...rest } = props || {};
