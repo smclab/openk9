@@ -15,14 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import { css } from "styled-components";
-import type { Components } from "react-markdown";
+import Markdown, { type Components } from "react-markdown";
 
 import {
   type CitedSource,
   claimPanel,
+  parseSourcesEvent,
+  quotesByOrdinal,
   releasePanel,
+  remarkCitationMarkers,
   sourcesByOrdinal,
 } from "../../../shared/inline-citations/inlineCitations";
+import { safeExternalUrl } from "../renderer-components/safeExternalUrl";
+import type { ChatSource } from "./client";
 
 import React from "react";
 
@@ -33,6 +38,8 @@ const chipStyle = css`
   margin-left: 3px;
   padding: 1px 6px;
   border-radius: 999px;
+  border: none;
+  font-family: inherit;
   font-size: 0.72em;
   line-height: 1.6;
   cursor: default;
@@ -108,12 +115,25 @@ function CitationChip({
     },
     [],
   );
+  const chipRef = React.useRef<HTMLButtonElement>(null);
+  const closeOnEscape = (event: React.KeyboardEvent) => {
+    if (event.key !== "Escape" || !open) return;
+    // back to the chip first: unmounting the panel under a focused link
+    // would leave the focus on the body
+    chipRef.current?.focus();
+    if (closing.current) clearTimeout(closing.current);
+    releasePanel(closeNow.current);
+    setOpen(false);
+  };
 
   const first = byOrdinal.get(ordinals[0]);
   const extra = ordinals.length - 1;
   const label = shortTitle(first, ordinals[0]);
 
   return (
+    // Focus is handled on the container: moving with Tab from the chip to
+    // the link in the panel blurs one and focuses the other, and the two
+    // cancel out instead of closing the panel under the keyboard.
     <span
       css={css`
         position: relative;
@@ -121,21 +141,26 @@ function CitationChip({
       `}
       onMouseEnter={show}
       onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+      onKeyDown={closeOnEscape}
     >
-      <span
-        tabIndex={0}
-        aria-label={label}
-        onFocus={show}
-        onBlur={hide}
+      <button
+        type="button"
+        ref={chipRef}
+        aria-expanded={open}
+        onClick={show}
         css={chipStyle}
       >
         {label}
         {extra > 0 && <span css={css`opacity: 0.7;`}>+{extra}</span>}
-      </span>
+      </button>
 
       {open && (
+        // not a tooltip: it holds links the reader moves into
         <span
-          role="tooltip"
+          role="group"
+          aria-label={label}
           onMouseEnter={show}
           onMouseLeave={hide}
           css={css`
@@ -150,7 +175,10 @@ function CitationChip({
                both and the panel closes under it */
             padding: 8px;
             border-radius: 12px;
-            background: #fff;
+            background: var(
+              --openk9-embeddable-search--primary-background-color,
+              #fff
+            );
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
             text-align: left;
             font-size: 0.85rem;
@@ -159,7 +187,9 @@ function CitationChip({
         >
           {ordinals.map((ordinal) => {
             const source = byOrdinal.get(ordinal);
-            const url = source?.url;
+            // the url comes off the wire as the index holds it: only a safe
+            // protocol becomes a link, the rest shows the title alone
+            const url = safeExternalUrl(source?.url);
             const quote = quotes?.get(ordinal);
             return (
               <span
@@ -180,10 +210,13 @@ function CitationChip({
                     font-size: 0.75rem;
                     font-weight: 600;
                     letter-spacing: 0.02em;
-                    color: #495057;
+                    color: var(
+                      --openk9-embeddable-search--secondary-text-color,
+                      #495057
+                    );
                   `}
                 >
-                  {hostOf(url) ?? `[${ordinal}]`}
+                  {hostOf(source?.url) ?? `[${ordinal}]`}
                 </span>
                 {url ? (
                   <a
@@ -193,9 +226,12 @@ function CitationChip({
                     css={css`
                       display: block;
                       font-weight: 600;
-                      /* an explicit colour: the theme's primary can land
-                         almost white against the panel */
-                      color: #212529;
+                      /* not the theme's primary: it can land almost white
+                         against the panel */
+                      color: var(
+                        --openk9-embeddable-search--strong-text-color,
+                        #212529
+                      );
                       text-decoration: underline;
                       text-underline-offset: 2px;
                       &:hover {
@@ -263,9 +299,54 @@ export function citationComponents(
       if (typeof raw !== "string") return <span {...props}>{children}</span>;
       const ordinals = raw.split(",").map(Number).filter(Number.isInteger);
       if (ordinals.length === 0) return <span {...props}>{children}</span>;
+      // a number no source resolves stays the bare "[n]": a chip for it
+      // would open a panel with nothing to reach
+      const resolved = ordinals.filter((ordinal) => byOrdinal.has(ordinal));
+      const unresolved = ordinals.filter((ordinal) => !byOrdinal.has(ordinal));
+      const bare =
+        unresolved.length > 0 ? (
+          <span>{unresolved.map((ordinal) => `[${ordinal}]`).join("")}</span>
+        ) : null;
+      if (resolved.length === 0) return bare;
       return (
-        <CitationChip ordinals={ordinals} byOrdinal={byOrdinal} quotes={quotes} />
+        <>
+          <CitationChip
+            ordinals={resolved}
+            byOrdinal={byOrdinal}
+            quotes={quotes}
+          />
+          {bare}
+        </>
       );
     },
   };
+}
+
+type CitedAnswerProps = {
+  answer: string;
+  citedSources?: CitedSource[];
+  sources?: ChatSource[];
+};
+
+/**
+ * An answer with its citations as chips. The components are built once per
+ * answer, not on every render: a new `span` on each streamed token would
+ * remount every chip and close an open panel.
+ */
+export function CitedAnswer({ answer, citedSources, sources }: CitedAnswerProps) {
+  const components = React.useMemo(
+    () =>
+      citationComponents(
+        // a chat reloaded from history has no `SOURCES` event, but its
+        // stored sources carry the same ordinal, title and url
+        citedSources ?? parseSourcesEvent(sources),
+        quotesByOrdinal(sources),
+      ),
+    [citedSources, sources],
+  );
+  return (
+    <Markdown remarkPlugins={[remarkCitationMarkers]} components={components}>
+      {answer}
+    </Markdown>
+  );
 }

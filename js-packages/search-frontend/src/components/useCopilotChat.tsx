@@ -61,8 +61,19 @@ function toChatSource(chunk: unknown): ChatSource | null {
     // the number the answer marks this source with, and the passages it
     // quoted from it: what turns a marker into a chip with evidence
     ordinal: typeof fields.ordinal === "number" ? fields.ordinal : undefined,
+    // narrowed like the rest: an entry that is not an object carries no quote
     citations: Array.isArray(fields.citations)
-      ? (fields.citations as Array<{ quote?: string }>)
+      ? fields.citations.flatMap((citation: unknown) =>
+          typeof citation === "object" && citation !== null
+            ? [
+                {
+                  quote: optionalString(
+                    (citation as Record<string, unknown>).quote,
+                  ),
+                },
+              ]
+            : [],
+        )
       : undefined,
   };
   return Object.values(source).some((value) => value !== undefined)

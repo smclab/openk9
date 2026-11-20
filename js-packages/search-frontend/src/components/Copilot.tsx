@@ -1,16 +1,11 @@
 import React from "react";
-import Markdown from "react-markdown";
 import { css, keyframes } from "styled-components";
 import { useTranslation } from "react-i18next";
 import { useCopilotChat } from "./useCopilotChat";
 import { ChatSource, useOpenK9Client } from "./client";
 import { Message } from "./useGenerateResponse";
 import { toCitations } from "./chatSources";
-import { citationComponents } from "./CitationMarker";
-import {
-  quotesByOrdinal,
-  remarkCitationMarkers,
-} from "../../../shared/inline-citations/inlineCitations";
+import { CitedAnswer } from "./CitationMarker";
 
 type CopilotProps = {
   endpoint?: string | null;
@@ -565,15 +560,11 @@ export function Copilot({
                 {isStreaming ? (
                   <TypingIndicator label={t("copilot-loading") ?? undefined} />
                 ) : (
-                  <Markdown
-                    remarkPlugins={[remarkCitationMarkers]}
-                    components={citationComponents(
-                      message.citedSources,
-                      quotesByOrdinal(message.sources),
-                    )}
-                  >
-                    {message.answer}
-                  </Markdown>
+                  <CitedAnswer
+                    answer={message.answer}
+                    citedSources={message.citedSources}
+                    sources={message.sources}
+                  />
                 )}
                 {citations.length > 0 && (
                   <div

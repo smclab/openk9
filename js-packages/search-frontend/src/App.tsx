@@ -18,7 +18,6 @@
 import debounce from "lodash/debounce";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import Markdown from "react-markdown";
 import { css, keyframes } from "styled-components";
 import "./app.css";
 import "./index.css";
@@ -29,12 +28,8 @@ import { Logo } from "./components/Logo";
 import { type Citation, toCitations } from "./components/chatSources";
 import { fadingSeparator } from "./components/fadingSeparator";
 import { type Turn } from "./components/useCopilotChat";
-import { citationComponents } from "./components/CitationMarker";
-import {
-  quotesByOrdinal,
-  remarkCitationMarkers,
-  stripCitationMarkers,
-} from "../../shared/inline-citations/inlineCitations";
+import { CitedAnswer } from "./components/CitationMarker";
+import { stripCitationMarkers } from "../../shared/inline-citations/inlineCitations";
 import { OpenK9 } from "./embeddable/entry";
 
 const isOAuth2Enabled = import.meta.env.VITE_OAUTH2_ENABLED !== "false";
@@ -2305,15 +2300,11 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                     {message.status === "CHUNK" && message.answer === "" ? (
                       <TypingDots />
                     ) : (
-                      <Markdown
-                        remarkPlugins={[remarkCitationMarkers]}
-                        components={citationComponents(
-                          message.citedSources,
-                          quotesByOrdinal(message.sources),
-                        )}
-                      >
-                        {message.answer}
-                      </Markdown>
+                      <CitedAnswer
+                        answer={message.answer}
+                        citedSources={message.citedSources}
+                        sources={message.sources}
+                      />
                     )}
                   </div>
                 </div>
