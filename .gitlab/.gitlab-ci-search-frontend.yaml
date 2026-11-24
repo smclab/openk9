@@ -18,7 +18,7 @@ stages:
 #################
 Fetch version:
   stage: build
-  image: node:22.15.0-alpine
+  image: node:22.23.5-alpine
   script:
   - cd js-packages/search-frontend
   - export VERSION=$(node -p "require('./package.json').version") # Reads version from package.json
@@ -151,10 +151,11 @@ Trigger Restart:
 ####################### PUBLISH SEARCH FRONTEND #######################
 Publish Search Frontend:
   stage: publish
-  # node:22.15.0 (baseline di tutte le pipeline frontend): il yarn.lock condiviso
-  # del workspace risolve http-proxy-middleware@4.0.0 (dep di tenant-ui) che richiede
-  # node ^22.15.0, per cui yarn install --frozen-lockfile falliva su 22.14.0.
-  image: node:22.15.0
+  # node:22.23.5 (baseline di tutte le pipeline frontend): il yarn.lock condiviso
+  # del workspace risolve @inquirer/prompts@8 (dep del codegen GraphQL di admin-ui e
+  # tenant-ui) che richiede node ^22.22.2, per cui yarn install --frozen-lockfile
+  # falliva su 22.15.0.
+  image: node:22.23.5
   needs:
   - job: Fetch version
     artifacts: true
@@ -226,7 +227,7 @@ Build Search Frontend Release:
 
 Build Verifier Search Frontend Release MR:
   stage: build-verifier
-  image: node:22.15.0
+  image: node:22.23.5
   cache:
     - key:
         prefix: "shared-yarn"

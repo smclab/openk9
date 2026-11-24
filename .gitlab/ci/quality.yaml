@@ -35,7 +35,7 @@
 # JS Dependency Versions (Issue #2454): syncpack, the same check as `yarn lint:versions`
 JS Dependency Versions:
   stage: quality
-  image: node:22.15.0-alpine
+  image: node:22.23.5-alpine
   needs: []
   script:
     - SYNCPACK_VERSION=$(node -p "require('./package.json').devDependencies.syncpack")

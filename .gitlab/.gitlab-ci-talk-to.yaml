@@ -17,7 +17,7 @@ stages:
 #################
 Fetch version:
   stage: build
-  image: node:22.15.0-alpine
+  image: node:22.23.5-alpine
   script:
   - cd js-packages/talk-to
   - export VERSION=$(node -p "require('./package.json').version")
@@ -201,7 +201,7 @@ Build Talk-To Release:
 
 Build Verifier Talk-To Release MR:
   stage: build-verifier
-  image: node:22.15.0
+  image: node:22.23.5
   cache:
     - key:
         prefix: "shared-yarn"
