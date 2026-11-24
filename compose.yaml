@@ -25,7 +25,8 @@ services:
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
       - "DISABLE_SECURITY_PLUGIN=true"
       - "DISABLE_PERFORMANCE_ANALYZER_AGENT_CLI=true"
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      # The flag mitigates CVE-2026-114938 until the image ships JDK 21.0.13.1.
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m -XX:-UseBASE64Intrinsics"
       # The environment variable below is necessary when you
       # run the opensearch image with an ARM64 chip.
       # More details at https://github.com/elastic/elasticsearch/issues/118583#issuecomment-2567270484
