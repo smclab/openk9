@@ -28,7 +28,7 @@ WORKDIR /app
 
 # Install all workspace dependencies - For Yarn v4: RUN yarn install --immutable --immutable-cache
 RUN yarn config set registry https://registry.npmjs.org/ && \
-  yarn install --network-timeout 600000
+  yarn install --frozen-lockfile --network-timeout 600000
 
 
 COPY ./js-packages/search-frontend /app/js-packages/search-frontend

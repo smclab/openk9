@@ -1,27 +1,20 @@
-FROM node:20-alpine as deps
+# Stage 1 - Build
+FROM node:20-alpine as builder
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
 WORKDIR /app
 
-# Copy only package files for better caching
-COPY ./yarn.lock ./js-packages/admin-ui/package.json ./js-packages/admin-ui/
-WORKDIR /app/js-packages/admin-ui
+# Install from the workspace root so the root package.json
+# resolutions apply; copy only manifests for better caching
+COPY ./package.json ./yarn.lock ./
+COPY ./js-packages/admin-ui/package.json ./js-packages/admin-ui/package.json
 RUN yarn config set registry https://registry.npmjs.org/ && \
-	yarn install --network-timeout 600000
-
-# Stage 2 - Build
-FROM node:20-alpine as builder
-ARG NODE_OPTIONS
-ENV NODE_OPTIONS=${NODE_OPTIONS}
-
-WORKDIR /app/js-packages/admin-ui
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/js-packages/admin-ui/node_modules ./node_modules
+	yarn install --frozen-lockfile --network-timeout 600000
 
 # Copy source code
-COPY ./js-packages/admin-ui .
+COPY ./js-packages/admin-ui ./js-packages/admin-ui
+WORKDIR /app/js-packages/admin-ui
 
 # Build
 # CI=false prevents warnings (like outdated babel plugins) from being treated as errors
@@ -29,7 +22,7 @@ COPY ./js-packages/admin-ui .
 
 RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=3072" yarn build
 
-# Stage 3 - Production
+# Stage 2 - Production
 # Name the nginx version: stable-alpine3.x tags freeze when nginx moves Alpine.
 FROM nginx:1.30.7-alpine3.24-slim@sha256:8c950211a641ec5b23f265450517001f6bcca533666120ebe36cb4cff3d00a55
 RUN apk upgrade --no-cache
