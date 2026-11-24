@@ -1,12 +1,16 @@
 FROM node:18-alpine as react-build
 
-COPY ./js-packages/tenant-ui /app
-COPY ./yarn.lock /app
-
 WORKDIR /app
 
-RUN yarn install --network-timeout 600000 || \
-    (echo "retry yarn install after network failure" && yarn install --network-timeout 600000)
+# Install from the workspace root so the root package.json
+# resolutions apply; copy only manifests for better caching
+COPY ./package.json ./yarn.lock ./
+COPY ./js-packages/tenant-ui/package.json ./js-packages/tenant-ui/package.json
+RUN yarn install --frozen-lockfile --network-timeout 600000 || \
+    (echo "retry yarn install after network failure" && yarn install --frozen-lockfile --network-timeout 600000)
+
+COPY ./js-packages/tenant-ui ./js-packages/tenant-ui
+WORKDIR /app/js-packages/tenant-ui
 RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" NODE_ENV=production yarn build
 
 # Stage 2 - the production environment
@@ -19,7 +23,7 @@ COPY ./js-packages/tenant-ui/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY ./js-packages/tenant-ui/nginx.conf.default /etc/nginx/nginx.conf.default
 
 RUN mkdir -p /usr/share/nginx/html/admin/
-COPY --from=react-build /app/build /usr/share/nginx/html/admin/
+COPY --from=react-build /app/js-packages/tenant-ui/build /usr/share/nginx/html/admin/
 RUN sed -i 's|/run/nginx.pid|/tmp/nginx.pid|' /etc/nginx/nginx.conf \
     && sed -i 's/^user .*;//' /etc/nginx/nginx.conf \
     && rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
