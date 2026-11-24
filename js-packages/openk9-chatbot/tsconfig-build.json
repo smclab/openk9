@@ -4,6 +4,7 @@
     "jsx": "react-jsx",
     "declaration": true,
     "emitDeclarationOnly": false,
+    "rootDir": "./lib",
     "outDir": "./dist",
     "declarationDir": "./dist/types",
     "esModuleInterop": true,
