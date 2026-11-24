@@ -1,5 +1,8 @@
 singleNode: true
 
+# The flag mitigates CVE-2026-114938 until the image ships JDK 21.0.13.1.
+opensearchJavaOpts: "-Xmx512M -Xms512M -XX:-UseBASE64Intrinsics"
+
 resources:
   requests:
     cpu: "100m"

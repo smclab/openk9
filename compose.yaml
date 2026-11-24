@@ -25,7 +25,8 @@ services:
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
       - "DISABLE_SECURITY_PLUGIN=true"
       - "DISABLE_PERFORMANCE_ANALYZER_AGENT_CLI=true"
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      # The flag mitigates CVE-2026-114938 until the image ships JDK 21.0.13.1.
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m -XX:-UseBASE64Intrinsics"
     ports:
       - 9200:9200
     healthcheck:
