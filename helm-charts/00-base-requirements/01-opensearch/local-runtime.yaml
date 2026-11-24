@@ -1,7 +1,12 @@
 singleNode: true
 
-# The flag mitigates CVE-2026-114938 until the image ships JDK 21.0.13.1.
+# CVE-2026-114938 mitigation: drop it on OpenSearch 2.19.8+ (JDK 21.0.13.1).
 opensearchJavaOpts: "-Xmx512M -Xms512M -XX:-UseBASE64Intrinsics"
+# The Performance Analyzer agent is a second JVM that ignores
+# opensearchJavaOpts: keep it off, as compose does.
+extraEnvs:
+  - name: DISABLE_PERFORMANCE_ANALYZER_AGENT_CLI
+    value: "true"
 
 resources:
   requests:
