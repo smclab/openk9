@@ -52,7 +52,8 @@
     "vite-plugin-dts": "^4.3.0",
     "@fontsource/roboto": "^5.1.0",
     "@fontsource/titillium-web": "^5.1.0",
-    "vite-plugin-lib-inject-css": "^2.1.1"
+    "vite-plugin-lib-inject-css": "^2.1.1",
+    "uuid": "^11.0.2"
   },
   "resolutions": {
     "prop-types": "^15.7.2"
