@@ -30,7 +30,8 @@ COPY ./js-packages/admin-ui .
 RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=3072" yarn build
 
 # Stage 3 - Production
-FROM nginx:stable-alpine3.23-slim
+# Name the nginx version: stable-alpine3.x tags freeze when nginx moves Alpine.
+FROM nginx:1.30.7-alpine3.24-slim@sha256:8c950211a641ec5b23f265450517001f6bcca533666120ebe36cb4cff3d00a55
 RUN apk upgrade --no-cache
 RUN mkdir -p /usr/share/nginx/html/admin/
 COPY --from=builder /app/js-packages/admin-ui/build /usr/share/nginx/html/admin/
