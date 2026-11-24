@@ -144,7 +144,7 @@
 						     Pinned by digest because Temurin rebuilds every tag in place; the tag
 						     only labels the version. To bump, take the multi-arch index digest of
 						     the tag (docker buildx imagetools inspect), not a per-platform one. -->
-						<image>eclipse-temurin:21.0.12.1_1-jre-ubi9-minimal@sha256:23eaa405eb81abb72d2ccddf407ba8896ea7d336a9102c7bd9edbefaa6675958</image>
+						<image>eclipse-temurin:21.0.13.1_2-jre-ubi9-minimal@sha256:e964f2fe934c406fa0a3c73111617d3d65c85aef8c744e49b7e9b206389a8cb2</image>
 						<platforms>
 							<platform>
 								<architecture>${jib.platform.architecture}</architecture>
