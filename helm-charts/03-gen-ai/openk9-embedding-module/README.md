@@ -64,7 +64,7 @@ To configure connection to RabbitMQ following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `rabbitmq.host`    | RabbitMQ host (supports cross-namespace format: service.namespace.svc.cluster.local)                         | `rabbitmq.k9-requirements.svc.cluster.local`            |
+| `rabbitmq.host`    | RabbitMQ host (supports cross-namespace format: service.namespace.svc.cluster.local)                         | `rabbitmq-headless`            |
 | `rabbitmq.port`    | RabbitMQ port                         | `5672`            |
 | `rabbitmq.user`    | RabbitMQ username                         | `openk9`            |
 | `rabbitmq.password.secretName`    | Secret name containing RabbitMQ password                         | `rabbitmq-password`            |

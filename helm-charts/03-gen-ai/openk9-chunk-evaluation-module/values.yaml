@@ -59,7 +59,7 @@ service:
   port: 8080
 
 rabbitmq:
-  host: "rabbitmq.k9-requirements.svc.cluster.local"
+  host: "rabbitmq-headless"
   port: 5672
   user: "openk9"
   password:
