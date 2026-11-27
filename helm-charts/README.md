@@ -675,6 +675,26 @@ For advanced configurations read [README.md](./01-base-core/openk9-ingestion/REA
 
 #### Installation
 
+Ingestion and Datasource read the credentials of the S3 storage from the `s3-secret` secret, and do not start without it. Create it before installing them, also when the installation has no file handling. The same secret is read later by [SeaweedFS](#seaweedfs).
+
+For Kubernetes execute:
+
+```bash
+kubectl -n openk9 create secret generic s3-secret \
+  --from-literal=user=openk9 \
+  --from-literal=password=openk9-secret
+```
+
+For OpenShift execute:
+
+```bash
+oc -n openk9 create secret generic s3-secret \
+  --from-literal=user=openk9 \
+  --from-literal=password=openk9-secret
+```
+
+Install Ingestion.
+
 For Kubernetes execute:
 
 ```bash
@@ -1397,23 +1417,7 @@ For every charts, there is also a scenarios folder, with files to install compon
 
 To install SeaweedFS we use the official [SeaweedFS Helm Chart](https://github.com/seaweedfs/seaweedfs/tree/master/k8s/charts/seaweedfs) in all-in-one mode. The chart needs Helm >= 3.17.
 
-Create a secret with the S3 credentials. The same secret is read by SeaweedFS, Ingestion and Datasource:
-
-For Kubernetes execute:
-
-```bash
-kubectl -n openk9 create secret generic s3-secret \
-  --from-literal=user=openk9 \
-  --from-literal=password=openk9-secret
-```
-
-Per OpenShift execute:
-
-```bash
-oc -n openk9 create secret generic s3-secret \
-  --from-literal=user=openk9 \
-  --from-literal=password=openk9-secret
-```
+SeaweedFS reads its credentials from the `s3-secret` secret, the one created before the [Ingestion](#ingestion) installation. Ingestion and Datasource read the same secret.
 
 Install SeaweedFS
 
