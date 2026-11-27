@@ -18,15 +18,16 @@ spec:
         image: {{ .Values.databaseJob.image.registry }}/{{ .Values.databaseJob.image.name }}:{{ .Values.databaseJob.image.tag }}
         command: ["/bin/sh", "-c"]
         args:
+          {{- /* Kubernetes reads "$$" in args as an escaped "$". */}}
           - |
             psql -v ON_ERROR_STOP=1 <<'EOSQL'
-            DO $$
+            DO $$$$
             BEGIN
               IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{ .Values.database.postgresql.username }}') THEN
                 CREATE ROLE {{ .Values.database.postgresql.username }} WITH LOGIN ENCRYPTED PASSWORD '{{ .Values.database.postgresql.username }}';
               END IF;
             END
-            $$;
+            $$$$;
             SELECT 'CREATE DATABASE {{ .Values.database.postgresql.database }} OWNER {{ .Values.database.postgresql.username }}'
             WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ .Values.database.postgresql.database }}')\gexec
             EOSQL

@@ -12,7 +12,7 @@ debug:
   enabled: true
 
 databaseJob:
-  enabled: false
+  enabled: true
 
 database:
   postgresql:
