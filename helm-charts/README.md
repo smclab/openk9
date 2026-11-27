@@ -25,10 +25,10 @@ Read more about compatibility matrix on Github.
     - [Keycloak](#keycloak-v2614)
 3. [Openk9 Base core components installation](#base-core-components-installation)
     - [Ingestion](#ingestion)
+    - [K8s Client](#k8s-client)
     - [Tenant Manager](#tenant-manager)
     - [Datasource](#datasource)
     - [Searcher](#searcher)
-    - [K8s Client](#k8s-client)
 4. [Openk9 Uis installation](#openk9-uis-installation)
     - [Tenant Ui](#tenant-ui)
     - [Admin Ui](#admin-ui)
@@ -43,6 +43,9 @@ Read more about compatibility matrix on Github.
     - [SeaweedFS](#seaweedfs)
     - [Tika](#tika)
     - [Docling Processor](#docling-processor)
+7. [Openk9 Connectors installation](#connectors)
+    - [Web Connector](#web-connector)
+    - [S3 Connector](#s3-connector)
 
     
 ## Prerequisites
@@ -702,6 +705,73 @@ oc -n openk9 port-forward svc/openk9-ingestion 8080:8080
 
 Access to console using url [http://localhost:8080/q/health](http://localhost:8080/q/health). If status is UP service is OK.
 
+### K8s Client
+
+Install it before the Tenant Manager: a Tenant Manager started without the K8s Client fails to create tenants until it is restarted.
+
+The K8s Client component exposes and implements Search Api use to search and filter indexed data.
+
+To learn more on K8s Client component, read [official documentation](https://www.openk9.io/docs/searcher).
+
+#### Main Configurations
+
+Edit your local yaml file to overwrite main configurations and configure k8s client to run correctly in your cluster.
+
+Following are main configurations to edit:
+
+```bash
+## Keycloak configuration
+keycloak:
+  host: "keycloak.openk9.local"   ## Change to configure correctly 
+
+## Quarkus configuration
+quarkus:
+  HttpCors: true
+  HttpCorsOrigin: "/https://.*.openk9.local/," ## Change to configure Cors for your domain
+  kubernetes:
+    namespace: "openk9" ## Change to insert correct namespace name
+    secretName: openk9-tls-star-secret
+
+## K8s Namespace
+k8s:
+  namespace: "openk9"
+```
+
+For advanced configurations read [README.md](./06-utilities/openk9-k8s-client/README.md) inside K8s Client chart folder.
+
+#### Installation
+
+For Kubernetes execute:
+
+```bash
+helm upgrade -i k8s-client 06-utilities/openk9-k8s-client -n openk9 -f 06-utilities/openk9-k8s-client/scenarios/local-runtime.yaml
+```
+
+For Openshift execute:
+
+```bash
+helm upgrade -i k8s-client 06-utilities/openk9-k8s-client -n openk9 -f 06-utilities/openk9-k8s-client/scenarios/local-crc.yaml
+```
+
+#### Verify Installation
+keycloak-tls
+Expose the http interface on the host PC and use health endpoint to verify status of component.
+
+For Kubernetes execute:
+
+```bash
+kubectl -n openk9 port-forward svc/openk9-k8s-client 8080:8080
+```
+
+For Openshift execute:
+
+```bash
+oc -n openk9 port-forward svc/openk9-k8s-client 8080:8080
+```
+
+Access to console using url [http://localhost:8080/q/health](http://localhost:8080/q/health). If status is UP service is OK.
+
+
 ### Tenant Manager
 
 The Tenant Manager component defines the logic for managing and creating tenants.
@@ -1016,71 +1086,6 @@ oc -n openk9 port-forward svc/openk9-searcher 8080:8080
 ```
 
 Access to console using url [http://localhost:8080/q/health](http://localhost:8080/q/health). If status is UP service is OK.
-
-### K8s Client
-
-The K8s Client component exposes and implements Search Api use to search and filter indexed data.
-
-To learn more on K8s Client component, read [official documentation](https://www.openk9.io/docs/searcher).
-
-#### Main Configurations
-
-Edit your local yaml file to overwrite main configurations and configure k8s client to run correctly in your cluster.
-
-Following are main configurations to edit:
-
-```bash
-## Keycloak configuration
-keycloak:
-  host: "keycloak.openk9.local"   ## Change to configure correctly 
-
-## Quarkus configuration
-quarkus:
-  HttpCors: true
-  HttpCorsOrigin: "/https://.*.openk9.local/," ## Change to configure Cors for your domain
-  kubernetes:
-    namespace: "openk9" ## Change to insert correct namespace name
-    secretName: openk9-tls-star-secret
-
-## K8s Namespace
-k8s:
-  namespace: "openk9"
-```
-
-For advanced configurations read [README.md](./06-utilities/openk9-k8s-client/README.md) inside K8s Client chart folder.
-
-#### Installation
-
-For Kubernetes execute:
-
-```bash
-helm upgrade -i k8s-client 06-utilities/openk9-k8s-client -n openk9 -f 06-utilities/openk9-k8s-client/scenarios/local-runtime.yaml
-```
-
-For Openshift execute:
-
-```bash
-helm upgrade -i k8s-client 06-utilities/openk9-k8s-client -n openk9 -f 06-utilities/openk9-k8s-client/scenarios/local-crc.yaml
-```
-
-#### Verify Installation
-keycloak-tls
-Expose the http interface on the host PC and use health endpoint to verify status of component.
-
-For Kubernetes execute:
-
-```bash
-kubectl -n openk9 port-forward svc/openk9-k8s-client 8080:8080
-```
-
-For Openshift execute:
-
-```bash
-oc -n openk9 port-forward svc/openk9-k8s-client 8080:8080
-```
-
-Access to console using url [http://localhost:8080/q/health](http://localhost:8080/q/health). If status is UP service is OK.
-
 
 ## Openk9 UIs Installation
 
@@ -1569,4 +1574,32 @@ Explore Connectors section on [official site](https://staging-site.openk9.io/plu
 
 Some universal connectors are open and is possibile to install them from Tenant Ui.
 
-Check [official document]() to view how to install and configure it to index data.
+You can also install a connector with its Helm chart. Every connector has its chart in the [connectors](../connectors/) folder of this repository. A connector must be running before you create its plugin driver: Datasource calls the connector to read its sample document.
+
+Run the following commands from the root of the repository.
+
+### Web Connector
+
+The Web Connector crawls web sites, from a sitemap or from a list of start urls.
+
+For Kubernetes/OpenShift execute:
+
+```bash
+helm upgrade -i web-connector connectors/openk9-crawler/chart/openk9-web-connector -n openk9
+```
+
+The connector is then available inside the cluster at `http://openk9-web-connector:5000`.
+
+### S3 Connector
+
+The S3 Connector indexes the objects of a bucket of any S3 compatible storage.
+
+For Kubernetes/OpenShift execute:
+
+```bash
+helm upgrade -i s3-connector connectors/s3-connector/chart/openk9-s3-connector -n openk9
+```
+
+The connector is then available inside the cluster at `http://openk9-s3-connector:5000`.
+
+Both charts send the documents to `openk9-ingestion:8080`. Change `openk9.ingestion.host` and `openk9.ingestion.port` if your Ingestion has another address.
