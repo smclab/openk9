@@ -35,10 +35,10 @@ An installation uses one RAG module or the other, never both. The two modules an
 To switch to this module:
 
 1. install this chart, as above;
-2. point the API Gateway at it, upgrading its chart with `--set openk9.rag.host=openk9-orchestrated-rag-module` (or the same key in its values file);
+2. point the API Gateway at it, upgrading its chart with `--set openk9.rag.host=openk9-orchestrated-rag-module` (or the same key in its values file), then restart its deployment: the running pod keeps the old host until it restarts;
 3. uninstall the Agentic Rag Module chart.
 
-To go back, reinstall the Agentic Rag Module chart, set `openk9.rag.host` back to `openk9-agentic-rag-module` and uninstall this chart. The saved chats stay readable by both modules: this module saves them in the same documents as the Agentic Rag Module.
+To go back, reinstall the Agentic Rag Module chart, set `openk9.rag.host` back to `openk9-agentic-rag-module`, restart the API Gateway deployment and uninstall this chart. The saved chats stay readable by both modules: this module saves them in the same documents as the Agentic Rag Module.
 
 ## Parameters
 

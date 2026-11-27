@@ -1305,6 +1305,7 @@ For kubernetes/K3s execute:
 ```bash
 helm upgrade -i orchestrated-rag-module 03-gen-ai/openk9-orchestrated-rag-module -n openk9 -f 03-gen-ai/openk9-orchestrated-rag-module/scenarios/local-runtime.yaml
 helm upgrade -i api-gateway 01-base-core/openk9-api-gateway -n openk9 --reuse-values --set openk9.rag.host=openk9-orchestrated-rag-module
+kubectl -n openk9 rollout restart deployment/openk9-api-gateway
 ```
 
 For Openshift execute:
@@ -1312,7 +1313,10 @@ For Openshift execute:
 ```bash
 helm upgrade -i orchestrated-rag-module 03-gen-ai/openk9-orchestrated-rag-module -n openk9 -f 03-gen-ai/openk9-orchestrated-rag-module/scenarios/local-crc.yaml
 helm upgrade -i api-gateway 01-base-core/openk9-api-gateway -n openk9 --reuse-values --set openk9.rag.host=openk9-orchestrated-rag-module
+oc -n openk9 rollout restart deployment/openk9-api-gateway
 ```
+
+The last command restarts the API Gateway: the upgrade changes its configuration, and the running pod keeps the old RAG host until it restarts.
 
 #### Verify Installation
 
