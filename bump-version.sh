@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Bump the OpenK9 project version across Maven, Helm, JS, Python and Docker Compose.
+# Bump the OpenK9 project version across Maven, Helm, JS, Python, Docker Compose
+# and the version examples in .env.example and docs/openapi-yaml.
 # Usage: ./bump-version.sh <new-version>
 # Example: ./bump-version.sh 2026.2.0-SNAPSHOT
 set -euo pipefail
@@ -42,7 +43,7 @@ OLD_RE=$(printf '%s' "$OLD" | sed 's/[][\.*^$/]/\\&/g')
 # run, which is unrelated to the version bump and would break idempotency.
 OUTPUT_TS=$(sed -n 's|.*<project.build.outputTimestamp>\(.*\)</project.build.outputTimestamp>.*|\1|p' "$ROOT/core/pom.xml" | head -n1)
 
-echo "==> [1/9] Maven: core reactor (excluding vendor/)"
+echo "==> [1/10] Maven: core reactor (excluding vendor/)"
 (cd "$ROOT/core" && mvn -q versions:set \
   -DnewVersion="$NEW" \
   -DgenerateBackupPoms=false \
@@ -67,7 +68,7 @@ fi
 # ---------------------------------------------------------------------------
 # 2) Helm Chart.yaml — version + appVersion on every chart.
 # ---------------------------------------------------------------------------
-echo "==> [2/9] Helm Chart.yaml (version + appVersion)"
+echo "==> [2/10] Helm Chart.yaml (version + appVersion)"
 while IFS= read -r -d '' chart; do
   yq -i ".version = \"$NEW\" | .appVersion = \"$NEW\"" "$chart"
   echo "    $chart"
@@ -78,7 +79,7 @@ done < <(find "$ROOT/helm-charts" "$ROOT/connectors" "$ROOT/enrichers" \
 # 3) Helm values.yaml — image.tag, only when it matches the old version
 #    (avoids clobbering third-party image tags like postgres:17).
 # ---------------------------------------------------------------------------
-echo "==> [3/9] Helm values.yaml (image.tag)"
+echo "==> [3/10] Helm values.yaml (image.tag)"
 while IFS= read -r -d '' values; do
   cur=$(yq '.image.tag // ""' "$values")
   if [[ "$cur" == "$OLD" ]]; then
@@ -91,7 +92,7 @@ done < <(find "$ROOT/helm-charts" "$ROOT/connectors" "$ROOT/enrichers" \
 # ---------------------------------------------------------------------------
 # 4) JS package.json + lerna.json — aligns every OpenK9 JS package to the new version.
 # ---------------------------------------------------------------------------
-echo "==> [4/9] JS package.json + lerna.json"
+echo "==> [4/10] JS package.json + lerna.json"
 for f in \
   "$ROOT/js-packages/admin-ui/package.json" \
   "$ROOT/js-packages/openk9-chatbot/package.json" \
@@ -108,7 +109,7 @@ done
 # ---------------------------------------------------------------------------
 # 5) Python pyproject.toml — top-level `version = "..."`.
 # ---------------------------------------------------------------------------
-echo "==> [5/9] Python pyproject.toml"
+echo "==> [5/10] Python pyproject.toml"
 for f in \
   "$ROOT/ai-packages/embedding-modules/pyproject.toml"; do
   [[ -f "$f" ]] || continue
@@ -120,7 +121,7 @@ done
 # 6) Python FastAPI — `version="..."` argument in the service entrypoints
 #    (agentic-rag-module and orchestrated-rag-module server.py).
 # ---------------------------------------------------------------------------
-echo "==> [6/9] Python FastAPI version"
+echo "==> [6/10] Python FastAPI version"
 for f in \
   "$ROOT/ai-packages/agentic-rag-module/app/server.py" \
   "$ROOT/ai-packages/orchestrated-rag-module/app/server.py"; do
@@ -134,7 +135,7 @@ done
 #    service's generated OpenAPI document. Restricted to the current product
 #    version so unrelated version literals are left untouched.
 # ---------------------------------------------------------------------------
-echo "==> [7/9] Java OpenAPI @Info version"
+echo "==> [7/10] Java OpenAPI @Info version"
 while IFS= read -r -d '' f; do
   if grep -qE "version[[:space:]]*=[[:space:]]*\"${OLD_RE}\"" "$f"; then
     sed -i -E "s/(version[[:space:]]*=[[:space:]]*\")${OLD_RE}(\")/\1$NEW\2/g" "$f"
@@ -145,7 +146,7 @@ done < <(find "$ROOT/core/app" -name '*Application.java' -print0 2>/dev/null)
 # ---------------------------------------------------------------------------
 # 8) Version config file — `OPENK9_VERSION=...` in python_modules_config.txt.
 # ---------------------------------------------------------------------------
-echo "==> [8/9] Version config file"
+echo "==> [8/10] Version config file"
 if [[ -f "$ROOT/python_modules_config.txt" ]]; then
   sed -i -E "s/^(OPENK9_VERSION=)${OLD_RE}$/\1$NEW/" "$ROOT/python_modules_config.txt"
   echo "    $ROOT/python_modules_config.txt"
@@ -156,12 +157,38 @@ fi
 #    `smclab/openk9-*:<OLD>` image tags. A trailing tag suffix on the default
 #    (e.g. `<OLD>-chatbot` for search-frontend) is preserved.
 # ---------------------------------------------------------------------------
-echo "==> [9/9] Docker Compose"
+echo "==> [9/10] Docker Compose"
 shopt -s nullglob
 for f in "$ROOT"/compose*.yaml; do
   sed -i -E "s|(\\\$\\{IMAGE_TAG:-)${OLD_RE}([-A-Za-z0-9]*\\})|\1$NEW\2|g" "$f"
   sed -i -E "s|(smclab/openk9-[a-z0-9-]+:)${OLD_RE}([[:space:]]*$)|\1$NEW\2|g" "$f"
   echo "    $f"
+done
+shopt -u nullglob
+
+# ---------------------------------------------------------------------------
+# 10) Version examples kept by hand — the `IMAGE_TAG` example in .env.example
+#     (commented or not) and `info.version` of the OpenAPI documents under
+#     docs/openapi-yaml. Only a value equal to the old version is replaced:
+#     a document left on an older version is not touched.
+# ---------------------------------------------------------------------------
+echo "==> [10/10] .env.example + docs OpenAPI"
+if [[ -f "$ROOT/.env.example" ]]; then
+  sed -i -E "s|^(#?[[:space:]]*IMAGE_TAG=)${OLD_RE}$|\1$NEW|" "$ROOT/.env.example"
+  echo "    $ROOT/.env.example"
+fi
+shopt -s nullglob
+for f in "$ROOT"/docs/openapi-yaml/*.yaml; do
+  if grep -qE "^  version:[[:space:]]*${OLD_RE}$" "$f"; then
+    sed -i -E "s|^(  version:[[:space:]]*)${OLD_RE}$|\1$NEW|" "$f"
+    echo "    $f"
+  fi
+done
+for f in "$ROOT"/docs/openapi-yaml/*.json; do
+  if grep -qE "\"version\":[[:space:]]*\"${OLD_RE}\"" "$f"; then
+    sed -i -E "s|(\"version\":[[:space:]]*\")${OLD_RE}(\")|\1$NEW\2|g" "$f"
+    echo "    $f"
+  fi
 done
 shopt -u nullglob
 
