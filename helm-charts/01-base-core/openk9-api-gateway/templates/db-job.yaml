@@ -57,6 +57,11 @@ spec:
             secretKeyRef:
               name: {{ .Values.database.postgresql.postgresPasswordSecret }}
               key: {{ .Values.database.postgresql.postgresPasswordSecret }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.postgresql.passwordSecretName }}
+              key: {{ .Values.database.postgresql.keyPasswordSecret }}
       volumes:
       - name: scripts
         configMap:
