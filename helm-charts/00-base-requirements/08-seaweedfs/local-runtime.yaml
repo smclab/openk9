@@ -1,13 +1,13 @@
-# SeaweedFS - Configurazione Semplificata per OpenK9
-# Chart: https://seaweedfs.github.io/seaweedfs/helm (seaweedfs 4.47.0, richiede Helm >= 3.17)
+# SeaweedFS - simplified configuration for OpenK9
+# Chart: https://seaweedfs.github.io/seaweedfs/helm (seaweedfs 4.47.0, needs Helm >= 3.17)
 
-## Nessuna ClusterRole: serve solo alla migrazione dei master in modalità
-## distribuita e richiederebbe permessi a livello di cluster per l'install
+## No ClusterRole: only the master migration of the distributed mode needs
+## it, and the install would require cluster-wide permissions
 global:
   seaweedfs:
     createClusterRole: false
 
-## Deployment all-in-one: master, volume, filer e gateway S3 in un solo pod
+## All-in-one deployment: master, volume, filer and S3 gateway in one pod
 master:
   enabled: false
   ## 64 MB volumes (default 1000): each bucket takes 7, read by all-in-one too
@@ -26,7 +26,7 @@ allInOne:
   enabled: true
   replicas: 1
 
-  ## Gateway S3 (porta 8333) con autenticazione
+  ## S3 gateway (port 8333) with authentication
   s3:
     enabled: true
     enableAuth: true
@@ -38,7 +38,7 @@ allInOne:
     accessModes:
     - ReadWriteOnce
 
-  ## Risorse
+  ## Resources
   resources:
     requests:
       cpu: 100m
@@ -56,8 +56,8 @@ allInOne:
     runAsNonRoot: true
     runAsUser: 1000
 
-## Credenziali S3 - USA SECRET
-## Lo stesso secret è letto dalle chart openk9-ingestion e openk9-datasource
+## S3 credentials, from a secret
+## The openk9-ingestion and openk9-datasource charts read the same secret
 s3:
   credentials:
     admin:
