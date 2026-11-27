@@ -1,4 +1,19 @@
 {{- if .Values.databaseJob.enabled }}
+{{- /* The SQL is a chart file: nothing to escape for Helm, Kubernetes or the shell. */}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "common.names.name" . }}-db
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-6"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  create-database.sql: |
+{{ .Files.Get "files/create-database.sql" | indent 4 }}
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -16,21 +31,20 @@ spec:
       containers:
       - name: {{ template "common.names.name" . }}-db
         image: {{ .Values.databaseJob.image.registry }}/{{ .Values.databaseJob.image.name }}:{{ .Values.databaseJob.image.tag }}
-        command: ["/bin/sh", "-c"]
-        args:
-          {{- /* Kubernetes reads "$$" in args as an escaped "$". */}}
-          - |
-            psql -v ON_ERROR_STOP=1 <<'EOSQL'
-            DO $$$$
-            BEGIN
-              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{ .Values.database.postgresql.username }}') THEN
-                CREATE ROLE {{ .Values.database.postgresql.username }} WITH LOGIN ENCRYPTED PASSWORD '{{ .Values.database.postgresql.username }}';
-              END IF;
-            END
-            $$$$;
-            SELECT 'CREATE DATABASE {{ .Values.database.postgresql.database }} OWNER {{ .Values.database.postgresql.username }}'
-            WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ .Values.database.postgresql.database }}')\gexec
-            EOSQL
+        command:
+        - psql
+        - -v
+        - ON_ERROR_STOP=1
+        - -v
+        - db_user={{ .Values.database.postgresql.username }}
+        - -v
+        - db_name={{ .Values.database.postgresql.database }}
+        - -f
+        - /scripts/create-database.sql
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+          readOnly: true
         env:
         - name: PGHOST
           value: {{ .Values.database.postgresql.host | quote }}
@@ -43,5 +57,9 @@ spec:
             secretKeyRef:
               name: {{ .Values.database.postgresql.postgresPasswordSecret }}
               key: {{ .Values.database.postgresql.postgresPasswordSecret }}
+      volumes:
+      - name: scripts
+        configMap:
+          name: {{ template "common.names.name" . }}-db
       restartPolicy: Never
 {{- end }}
