@@ -122,7 +122,8 @@ podAnnotations: {}
 ##
 podSecurityContext:
   runAsNonRoot: true
-  # runAsUser: 1000
+  ## The image user is "appuser": runAsNonRoot needs its numeric id.
+  runAsUser: 1001
   # runAsGroup: 1000
   # fsGroup: 1000
 
