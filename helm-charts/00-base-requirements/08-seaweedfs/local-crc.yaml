@@ -34,7 +34,6 @@ allInOne:
   ## Storage
   data:
     type: persistentVolumeClaim
-    storageClass: "ibmc-vpc-block-general-purpose"
     size: 10Gi
     accessModes:
     - ReadWriteOnce

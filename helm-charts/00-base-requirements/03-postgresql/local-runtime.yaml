@@ -27,10 +27,8 @@ service:
   type: ClusterIP
   port: 5432
 
-# IBM Cloud VPC block storage
 persistence:
   enabled: true
-  storageClass: "ibmc-vpc-block-general-purpose"
   size: 10Gi
   accessModes:
   - ReadWriteOnce

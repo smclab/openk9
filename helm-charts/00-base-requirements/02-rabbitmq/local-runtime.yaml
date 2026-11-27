@@ -52,7 +52,6 @@ resources:
 ## Storage
 persistence:
   enabled: true
-  storageClass: "ibmc-vpc-block-general-purpose"
   size: 8Gi
   accessModes:
   - ReadWriteOnce
