@@ -197,6 +197,10 @@ fails if the two are out of sync.
 
 ## Deployment with Docker
 
+The released image is on Docker Hub as `smclab/openk9-orchestrated-rag-module`.
+The Helm chart in `helm-charts/03-gen-ai/openk9-orchestrated-rag-module` uses it
+by default.
+
 ### Using Makefile Commands
 
 The module includes a comprehensive Makefile for easy Docker management:
