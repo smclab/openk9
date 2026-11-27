@@ -51,7 +51,7 @@ COPY --from=test /tmp/tests.passed /tmp/tests.passed
 RUN useradd -m -u 1001 appuser && \
     chown -R appuser:appuser /app
 
-USER appuser
+USER 1001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

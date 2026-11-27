@@ -67,7 +67,7 @@ openk9:
 
 ## RabbitMQ configuration
 rabbitmq:
-  host: "rabbitmq-headless"
+  host: "rabbitmq.k9-requirements.svc.cluster.local"
   port: 5672
   user: "openk9"
   password:

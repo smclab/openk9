@@ -64,7 +64,7 @@ The following table lists the configurable parameters of the chart and their def
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `rabbitmq.host` | RabbitMQ host (supports cross-namespace format: service.namespace.svc.cluster.local) | `rabbitmq-headless` |
+| `rabbitmq.host` | RabbitMQ host (supports cross-namespace format: service.namespace.svc.cluster.local) | `rabbitmq.k9-requirements.svc.cluster.local` |
 | `rabbitmq.port` | RabbitMQ port | `5672` |
 | `rabbitmq.user` | RabbitMQ username | `openk9` |
 | `rabbitmq.password.secretName` | Secret name containing RabbitMQ password | `rabbitmq-password` |
@@ -110,7 +110,7 @@ image:
   tag: "latest"
 
 rabbitmq:
-  host: "rabbitmq-headless"
+  host: "rabbitmq.k9-requirements.svc.cluster.local"
   user: "myuser"
   password:
     secretName: "rabbitmq-password"

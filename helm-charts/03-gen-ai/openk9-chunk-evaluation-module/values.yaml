@@ -59,7 +59,7 @@ service:
   port: 8080
 
 rabbitmq:
-  host: "rabbitmq-headless"
+  host: "rabbitmq.k9-requirements.svc.cluster.local"
   port: 5672
   user: "openk9"
   password:
@@ -122,8 +122,7 @@ podAnnotations: {}
 ##
 podSecurityContext:
   runAsNonRoot: true
-  ## The image user is "appuser": runAsNonRoot needs its numeric id.
-  runAsUser: 1001
+  # runAsUser: 1000
   # runAsGroup: 1000
   # fsGroup: 1000
 

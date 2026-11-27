@@ -1,1 +1,3 @@
-# The chart defaults fit this scenario.
+## RabbitMQ installed by the guide, in the same namespace
+rabbitmq:
+  host: "rabbitmq-headless"
