@@ -176,7 +176,7 @@ info:
     name: GNU Affero General Public License v3.0
     url: https://github.com/smclab/openk9/blob/main/LICENSE
   title: Tenant Manager Service
-  version: 2026.3.0-SNAPSHOT
+  version: 2026.4.0-SNAPSHOT
 tags:
 - name: Tenant Provisioning
   description: "Endpoints that create new tenants, request deletion, and bootstrap\

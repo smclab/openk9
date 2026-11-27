@@ -137,7 +137,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="OpenK9 RAG API",
     description="API for Retrieval-Augmented Generation (RAG) operations and chat interactions",
-    version="2026.3.0-SNAPSHOT",
+    version="2026.4.0-SNAPSHOT",
     openapi_tags=openapi.OPENAPI_TAGS,
     contact=openapi.CONTACT,
     license_info=openapi.LICENSE_INFO,

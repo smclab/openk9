@@ -6,7 +6,7 @@
 # RAG requests to the new module.
 services:
   orchestrated-rag-module:
-    image: ${IMAGE_GROUP:-openk9}/openk9-orchestrated-rag-module:${IMAGE_TAG:-2026.3.0-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-orchestrated-rag-module:${IMAGE_TAG:-2026.4.0-SNAPSHOT}
     container_name: openk9-orchestrated-rag-module
     hostname: openk9-orchestrated-rag-module
     environment:
