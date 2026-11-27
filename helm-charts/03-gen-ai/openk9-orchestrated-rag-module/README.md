@@ -21,7 +21,7 @@ helm repo add openk9 https://registry.smc.it/repository/helm-private/
 Then install using following command:
 
 ```bash
-helm upgrade -i orchestrated-rag-module openk9/openk9-orchestrated-rag-module
+helm upgrade -i orchestrated-rag-module smclab/openk9-orchestrated-rag-module
 ```
 
 The command deploys Openk9 Orchestrated Rag Module on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.

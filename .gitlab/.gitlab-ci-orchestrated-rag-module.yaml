@@ -125,8 +125,7 @@ Container Scanning Orchestrated Rag:
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-deploy-release, rules]
 
-# No restart and no Docker Hub copy yet: no environment deploys the module
-# until it has its Helm chart, and the image is not public before then.
+# No restart yet: no environment deploys the module.
 
 # --- RELEASE BRANCH JOBS ---
 
@@ -173,3 +172,23 @@ Build Verifier Orchestrated Rag Release MR:
   - echo "=== Syntax check passed ==="
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
+
+######################## COPY TO DOCKER HUB ########################
+# Runs on main, release branch (N.N.x) and tag. Copies the already-built image to Docker Hub without rebuilding.
+# See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
+Copy Orchestrated Rag to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-orchestrated-rag-module"
+  needs:
+    # Fetch config runs in every context and carries config.env (the image version).
+    - job: Fetch config
+      artifacts: true  # downloads config.env — needed to resolve the image version
+    # Order gate only (image already on the registry): wait for whichever build ran.
+    #   main / branch N.N.x → Build Orchestrated Rag Image; tag vN.N.N → Build Orchestrated Rag Release.
+    - job: Build Orchestrated Rag Image
+      artifacts: false
+      optional: true
+    - job: Build Orchestrated Rag Release
+      artifacts: false
+      optional: true
